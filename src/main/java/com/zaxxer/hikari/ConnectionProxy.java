@@ -73,7 +73,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
         this.delegate = connection;
     }
 
-    void unregisterStatement(Statement statement)
+    void unregisterStatement(Object statement)
     {
         openStatements.remove(statement);
     }
@@ -128,9 +128,9 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     {
         if (isClosed.compareAndSet(false, true))
         {
-            for (Statement statement : openStatements)
+            for (Object statement : openStatements)
             {
-                statement.close();
+                ((Statement) statement).close();
             }
 
             parentPool.releaseConnection((IHikariConnectionProxy) proxy);

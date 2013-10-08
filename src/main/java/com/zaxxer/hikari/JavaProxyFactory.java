@@ -36,11 +36,11 @@ import java.util.Set;
  */
 public class JavaProxyFactory implements ProxyFactory {
 
-    private ProxyFactory<Connection> proxyConnectionFactory;
-    private ProxyFactory<Statement> proxyStatementFactory;
-    private ProxyFactory<CallableStatement> proxyCallableStatementFactory;
-    private ProxyFactory<PreparedStatement> proxyPreparedStatementFactory;
-    private ProxyFactory<ResultSet> proxyResultSetFactory;
+    private JProxyFactory<Connection> proxyConnectionFactory;
+    private JProxyFactory<Statement> proxyStatementFactory;
+    private JProxyFactory<CallableStatement> proxyCallableStatementFactory;
+    private JProxyFactory<PreparedStatement> proxyPreparedStatementFactory;
+    private JProxyFactory<ResultSet> proxyResultSetFactory;
 
     JavaProxyFactory() {
         proxyConnectionFactory = createProxyConnectionFactory();
@@ -53,8 +53,8 @@ public class JavaProxyFactory implements ProxyFactory {
     /** {@inheritDoc} */
     public Connection getProxyConnection(HikariPool parentPool, Connection connection) {
         try {
-            ConnectionProxy jdbcConnectionProxy = new ConnectionProxy(parentPool, connection);
-            return proxyConnectionFactory.getConstructor().newInstance(jdbcConnectionProxy);
+            ConnectionProxy connectionProxy = new ConnectionProxy(parentPool, connection);
+            return proxyConnectionFactory.getConstructor().newInstance(connectionProxy);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -104,46 +104,46 @@ public class JavaProxyFactory implements ProxyFactory {
     //  Generate high-efficiency Java Proxy Classes
     // ---------------------------------------------------------------
 
-    private ProxyFactory<Connection> createProxyConnectionFactory() {
+    private JProxyFactory<Connection> createProxyConnectionFactory() {
 
         Set<Class<?>> interfaces = ClassLoaderUtils.getAllInterfaces(Connection.class);
         interfaces.add(IHikariConnectionProxy.class);
 
-        return new ProxyFactory<Connection>(interfaces.toArray(new Class<?>[0]));
+        return new JProxyFactory<Connection>(interfaces.toArray(new Class<?>[0]));
     }
 
-    private ProxyFactory<Statement> createProxyStatementFactory() {
+    private JProxyFactory<Statement> createProxyStatementFactory() {
 
         Set<Class<?>> interfaces = ClassLoaderUtils.getAllInterfaces(Statement.class);
 
-        return new ProxyFactory<Statement>(interfaces.toArray(new Class<?>[0]));
+        return new JProxyFactory<Statement>(interfaces.toArray(new Class<?>[0]));
     }
 
-    private ProxyFactory<PreparedStatement> createProxyPreparedStatementFactory() {
+    private JProxyFactory<PreparedStatement> createProxyPreparedStatementFactory() {
 
         Set<Class<?>> interfaces = ClassLoaderUtils.getAllInterfaces(PreparedStatement.class);
 
-        return new ProxyFactory<PreparedStatement>(interfaces.toArray(new Class<?>[0]));
+        return new JProxyFactory<PreparedStatement>(interfaces.toArray(new Class<?>[0]));
     }
 
-    private ProxyFactory<ResultSet> createProxyResultSetFactory() {
+    private JProxyFactory<ResultSet> createProxyResultSetFactory() {
         Set<Class<?>> interfaces = ClassLoaderUtils.getAllInterfaces(ResultSet.class);
 
-        return new ProxyFactory<ResultSet>(interfaces.toArray(new Class<?>[0]));
+        return new JProxyFactory<ResultSet>(interfaces.toArray(new Class<?>[0]));
     }
 
-    private ProxyFactory<CallableStatement> createProxyCallableStatementFactory() {
+    private JProxyFactory<CallableStatement> createProxyCallableStatementFactory() {
 
         Set<Class<?>> interfaces = ClassLoaderUtils.getAllInterfaces(CallableStatement.class);
 
-        return new ProxyFactory<CallableStatement>(interfaces.toArray(new Class<?>[0]));
+        return new JProxyFactory<CallableStatement>(interfaces.toArray(new Class<?>[0]));
     }
 
-    public static class ProxyFactory<T> {
+    public static class JProxyFactory<T> {
         private final Class<?>[] interfaces;
         private Reference<Constructor<T>> ctorRef;
 
-        public ProxyFactory(Class<?>[] interfaces) {
+        public JProxyFactory(Class<?>[] interfaces) {
             this.interfaces = interfaces;
         }
 

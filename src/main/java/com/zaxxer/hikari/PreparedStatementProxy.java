@@ -63,8 +63,9 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
             return;
         }
 
-        connection.unregisterStatement(delegate);
+        connection.unregisterStatement(proxy);
         delegate.close();
+        delegate = null;
     }
 
     public ResultSet getResultSet() throws SQLException

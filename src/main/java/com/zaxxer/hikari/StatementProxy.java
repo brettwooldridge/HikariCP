@@ -57,8 +57,9 @@ public class StatementProxy extends HikariProxyBase<Statement>
             return;
         }
 
-        connection.unregisterStatement(delegate);
+        connection.unregisterStatement(proxy);
         delegate.close();
+        delegate = null;
     }
 
     public ResultSet executeQuery(String sql) throws SQLException

@@ -116,6 +116,10 @@ public class HikariPool
                     totalConnections.decrementAndGet();
                     Thread.sleep(50l);
                     timeout -= (System.currentTimeMillis() - start);
+                    if (timeout < 0)
+                    {
+                        throw new SQLException("Timeout of encountered waiting for connection");    
+                    }
                     continue;
                 }
     
@@ -191,6 +195,7 @@ public class HikariPool
                     idleConnectionCount.incrementAndGet();
                     totalConnections.incrementAndGet();
                     idleConnections.add(connection);
+                    LOGGER.trace("Added connection");
                     return;
                 }
             }
@@ -236,6 +241,7 @@ public class HikariPool
         }
         catch (SQLException e)
         {
+            LOGGER.error("Exception during keep alive check.  Connection must be dead.");
             return false;
         }
     }
