@@ -108,10 +108,17 @@ public class MockDataSource implements DataSource
         when(mockConnection.prepareStatement(anyString(), (String[]) anyObject())).thenReturn(mockPreparedStatement);
         when(mockConnection.prepareStatement(anyString(), anyInt(), anyInt())).thenReturn(mockPreparedStatement);
         when(mockConnection.prepareStatement(anyString(), anyInt(), anyInt(), anyInt())).thenReturn(mockPreparedStatement);
+        doAnswer(new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) throws Throwable
+            {
+                return null;
+            }
+        }).doNothing().when(mockPreparedStatement).setInt(anyInt(), anyInt());
 
         ResultSet mockResultSet = mock(ResultSet.class);
         when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
         when(mockResultSet.getString(anyInt())).thenReturn("aString");
+        when(mockResultSet.next()).thenReturn(true);
 
         // Handle Connection.prepareCall()
         CallableStatement mockCallableStatement = mock(CallableStatement.class);
@@ -120,25 +127,25 @@ public class MockDataSource implements DataSource
         when(mockConnection.prepareCall(anyString(), anyInt(), anyInt(), anyInt())).thenReturn(mockCallableStatement);
 
         // Handle Connection.close()
-        doAnswer(new Answer<Void>() {
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                return null;
-            }
-        }).doThrow(new SQLException("Connection is already closed")).when(mockConnection).close();
+//        doAnswer(new Answer<Void>() {
+//            public Void answer(InvocationOnMock invocation) throws Throwable {
+//                return null;
+//            }
+//        }).doThrow(new SQLException("Connection is already closed")).when(mockConnection).close();
 
         // Handle Connection.commit()
-        doAnswer(new Answer<Void>() {
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                return null;
-            }
-        }).doThrow(new SQLException("Transaction already commited")).when(mockConnection).commit();
+//        doAnswer(new Answer<Void>() {
+//            public Void answer(InvocationOnMock invocation) throws Throwable {
+//                return null;
+//            }
+//        }).doThrow(new SQLException("Transaction already commited")).when(mockConnection).commit();
 
         // Handle Connection.rollback()
-        doAnswer(new Answer<Void>() {
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                return null;
-            }
-        }).doThrow(new SQLException("Transaction already rolledback")).when(mockConnection).rollback();
+//        doAnswer(new Answer<Void>() {
+//            public Void answer(InvocationOnMock invocation) throws Throwable {
+//                return null;
+//            }
+//        }).doThrow(new SQLException("Transaction already rolledback")).when(mockConnection).rollback();
 
         return mockConnection;
     }
