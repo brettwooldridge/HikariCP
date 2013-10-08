@@ -103,7 +103,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
 
     public void captureStack()
     {
-        this.stackTrace = new Throwable().getStackTrace();
+        this.stackTrace = Thread.currentThread().getStackTrace();
     }
 
     public StackTraceElement[] getStackTrace()
