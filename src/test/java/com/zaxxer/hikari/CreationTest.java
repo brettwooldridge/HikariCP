@@ -41,7 +41,7 @@ public class CreationTest
         config.setMinimumPoolSize(1);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.MockDataSource");
-        config.setProxyFactoryClassName(System.getProperty("testProxy", "auto"));
+        config.setProxyFactoryType(System.getProperty("testProxy", "auto"));
 
         HikariDataSource ds = new HikariDataSource();
         ds.setConfiguration(config);
@@ -82,7 +82,7 @@ public class CreationTest
         config.setMaxLifetimeMs(500);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.MockDataSource");
-        config.setProxyFactoryClassName(System.getProperty("testProxy", "auto"));
+        config.setProxyFactoryType(System.getProperty("testProxy", "auto"));
 
         HikariDataSource ds = new HikariDataSource();
         ds.setConfiguration(config);

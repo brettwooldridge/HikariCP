@@ -27,7 +27,6 @@ import java.util.Map;
  */
 public class ResultSetProxy extends HikariProxyBase<ResultSet>
 {
-
     private final static Map<String, Method> selfMethodMap = createMethodMap(ResultSetProxy.class);
 
     private Statement statement;

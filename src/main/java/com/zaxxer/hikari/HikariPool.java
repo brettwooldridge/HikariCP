@@ -20,10 +20,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -45,6 +45,7 @@ public class HikariPool
     private final DataSource dataSource;
 
     private final int maxLifeTime;
+    private final boolean jdbc4ConnectionTest;
 
     /**
      * @param configuration
@@ -56,10 +57,12 @@ public class HikariPool
         this.configuration = configuration;
         this.totalConnections = new AtomicInteger();
         this.idleConnectionCount = new AtomicInteger();
-        this.idleConnections = new LinkedBlockingQueue<IHikariConnectionProxy>();
-        this.inUseConnections = Collections.synchronizedSet(Collections.newSetFromMap(new LinkedHashMap<IHikariConnectionProxy, Boolean>()));
+        this.idleConnections = new LinkedTransferQueue<IHikariConnectionProxy>();
+        //this.inUseConnections = Collections.synchronizedSet(Collections.newSetFromMap(new LinkedHashMap<IHikariConnectionProxy, Boolean>()));
+        this.inUseConnections = Collections.newSetFromMap(new ConcurrentHashMap<IHikariConnectionProxy, Boolean>(configuration.getMaximumPoolSize() * 2, 0.75f, 100));
 
         this.maxLifeTime = configuration.getMaxLifetimeMs();
+        this.jdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
 
         try
         {
@@ -71,7 +74,7 @@ public class HikariPool
             throw new RuntimeException("Could not create datasource class: " + configuration.getDataSourceClassName(), e);
         }
 
-        System.setProperty("hikariProxyGeneratorClass", configuration.getProxyFactoryClassName());
+        System.setProperty("hikariProxyGeneratorType", configuration.getProxyFactoryType());
 
         while (totalConnections.get() < configuration.getMinimumPoolSize())
         {
@@ -110,7 +113,7 @@ public class HikariPool
                 }
 
                 Connection connection = (Connection) connectionProxy; 
-                if (!isConnectionAlive(connection))
+                if (!isConnectionAlive(connection, timeout))
                 {
                     // Throw away the connection, and nap for a few ms
                     totalConnections.decrementAndGet();
@@ -189,14 +192,14 @@ public class HikariPool
             try
             {
                 IHikariConnectionProxy connection = createConnection();
-                boolean alive = isConnectionAlive((Connection) connection);
+                boolean alive = isConnectionAlive((Connection) connection, configuration.getConnectionTimeoutMs());
                 if (alive)
                 {
                     idleConnectionCount.incrementAndGet();
                     totalConnections.incrementAndGet();
                     idleConnections.add(connection);
                     LOGGER.trace("Added connection");
-                    return;
+                    break;
                 }
             }
             catch (SQLException e)
@@ -219,13 +222,13 @@ public class HikariPool
         }
     }
 
-    private boolean isConnectionAlive(Connection connection)
+    private boolean isConnectionAlive(Connection connection, int timeoutMs)
     {
         try
         {
-            if (configuration.isJdbc4ConnectionTest())
+            if (jdbc4ConnectionTest)
             {
-                return connection.isValid(0);
+                return connection.isValid(timeoutMs * 1000);
             }
 
             Statement statement = connection.createStatement();

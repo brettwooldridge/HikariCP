@@ -33,7 +33,7 @@ public class HikariConfig
     private int connectionTimeout;
     private String connectionTestQuery;
     private String dataSourceClassName;
-    private String proxyFactoryClassName;
+    private String proxyFactoryType;
     private boolean isJdbc4connectionTest;
     private int maxLifetime;
     private int leakDetectionThreshold;
@@ -46,7 +46,7 @@ public class HikariConfig
         acquireIncrement = 1;
         connectionTimeout = Integer.MAX_VALUE;
         maxPoolSize = 1;
-        proxyFactoryClassName = "auto";
+        proxyFactoryType = "auto";
     }
 
     public int getAcquireIncrement()
@@ -193,14 +193,14 @@ public class HikariConfig
         this.maxPoolSize = maxPoolSize;
     }
 
-    public String getProxyFactoryClassName()
+    public String getProxyFactoryType()
     {
-        return proxyFactoryClassName;
+        return proxyFactoryType;
     }
 
-    public void setProxyFactoryClassName(String proxyFactoryClassName)
+    public void setProxyFactoryType(String proxyFactoryClassName)
     {
-        this.proxyFactoryClassName = proxyFactoryClassName;
+        this.proxyFactoryType = proxyFactoryClassName;
     }
 
     public void validate()
@@ -219,10 +219,10 @@ public class HikariConfig
             maxPoolSize = minPoolSize;
         }
 
-        if (proxyFactoryClassName == null)
+        if (proxyFactoryType == null)
         {
-            logger.error("proxyFactoryClassName cannot be null");
-            throw new IllegalStateException("proxyFactoryClassName cannot be null");
+            logger.error("proxyFactoryType cannot be null");
+            throw new IllegalStateException("proxyFactoryType cannot be null");
         }
     }
 }

@@ -29,6 +29,7 @@ import java.util.Map;
 public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
 {
     private final static Map<String, Method> selfMethodMap = createMethodMap(PreparedStatementProxy.class);
+    private final static ProxyFactory proxyFactory = ProxyFactory.INSTANCE;
 
     private ConnectionProxy connection;
     
@@ -39,7 +40,9 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
 
     protected PreparedStatementProxy(ConnectionProxy connection, PreparedStatement statement)
     {
-        initialize(connection, statement);
+        this.proxy = this;
+        this.connection = connection;
+        this.delegate = statement;
     }
 
     void initialize(ConnectionProxy connection, PreparedStatement statement)
@@ -51,7 +54,7 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
 
     public String toString()
     {
-        return "a PreparedStatementJavaProxy wrapping [" + delegate + "]";
+        return "a PreparedStatementProxy wrapping [" + delegate + "]";
     }
 
     /* Overridden methods of java.sql.PreparedStatement */
@@ -75,7 +78,7 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         {
             return null;
         }
-        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), resultSet);
+        return proxyFactory.getProxyResultSet(this.getProxy(), resultSet);
     }
 
     public ResultSet executeQuery() throws SQLException
@@ -85,7 +88,8 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         {
             return null;
         }
-        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), resultSet);
+        // return proxyFactory.getProxyResultSet(this.getProxy(), resultSet);
+        return resultSet;
     }
 
     public ResultSet executeQuery(String sql) throws SQLException
@@ -95,7 +99,7 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         {
             return null;
         }
-        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), resultSet);
+        return proxyFactory.getProxyResultSet(this.getProxy(), resultSet);
     }
 
     public ResultSet getGeneratedKeys() throws SQLException
@@ -105,7 +109,7 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         {
             return null;
         }
-        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), generatedKeys);
+        return proxyFactory.getProxyResultSet(this.getProxy(), generatedKeys);
     }
 
     /* java.sql.Wrapper implementation */

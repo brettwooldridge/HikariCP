@@ -16,6 +16,7 @@
 
 package com.zaxxer.hikari;
 
+import java.lang.reflect.Method;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -29,10 +30,8 @@ import org.slf4j.LoggerFactory;
  */
 public interface ProxyFactory
 {
-    /* Classes should use JdbcProxyFactory.INSTANCE to access the factory */
+    /* Classes should use ProxyFactory.INSTANCE to access the factory */
     final ProxyFactory INSTANCE = Initializer.initialize();
-
-    /* Methods used to create the proxies around various JDBC classes */
 
     Connection getProxyConnection(HikariPool parentPool, Connection connection);
 
@@ -44,7 +43,8 @@ public interface ProxyFactory
 
     ResultSet getProxyResultSet(Statement statement, ResultSet resultSet);
 
-    /**
+    /**************************************************************************
+     *
      * Initializer class used to initialize the proxy factory. 
      */
     class Initializer
@@ -53,37 +53,74 @@ public interface ProxyFactory
         {
             try
             {
-                String jdbcProxyFactoryClass = System.getProperty("hikariProxyGeneratorClass", "auto");
-                if ("auto".equals(jdbcProxyFactoryClass))
+                String proxyFactoryType = System.getProperty("hikariProxyGeneratorType", "auto");
+                if ("auto".equals(proxyFactoryType))
                 {
                     try
                     {
-                        ClassLoaderUtils.loadClass("javassist.CtClass");
-                        jdbcProxyFactoryClass = "com.zaxxer.hikari.JavassistProxyFactory";
-                        LoggerFactory.getLogger(ProxyFactory.class).info("Using javassist proxy factory.");
+                        return tryJavassist();
                     }
                     catch (ClassNotFoundException cnfe)
                     {
                         try
                         {
-                            ClassLoaderUtils.loadClass("net.sf.cglib.proxy.Enhancer");
-                            jdbcProxyFactoryClass = "com.zaxxer.hikari.CglibProxyFactory";
-                            LoggerFactory.getLogger(ProxyFactory.class).info("Using CGLIB proxy factory.");
+                            return tryCglib();
                         }
                         catch (ClassNotFoundException cnfe2)
                         {
-                            jdbcProxyFactoryClass = "com.zaxxer.hikari.JavaProxyFactory";
-                            LoggerFactory.getLogger(ProxyFactory.class).info("Using java.lang.Proxy proxy factory.");
+                            return tryJava();
                         }
                     }
                 }
-                Class<?> proxyFactoryClass = ClassLoaderUtils.loadClass(jdbcProxyFactoryClass);
-                return (ProxyFactory) proxyFactoryClass.newInstance();
+                else if ("javassist".equals(proxyFactoryType))
+                {
+                    return tryJavassist();
+                }
+                else if ("cglib".equals(proxyFactoryType))
+                {
+                    return tryCglib();
+                }
+                else if ("java".equals(proxyFactoryType))
+                {
+                    return tryJava();
+                }
+                else
+                {
+                    LoggerFactory.getLogger(ProxyFactory.class).warn("Unknown proxyFactoryType '{}', falling back to java.lang.Proxy", proxyFactoryType);
+                    return tryJava();
+                }
             }
             catch (Exception ex)
             {
+                LoggerFactory.getLogger(ProxyFactory.class).error("Error initializing ProxyFactory", ex);
                 throw new RuntimeException("Error initializing ProxyFactory", ex);
             }
+        }
+
+        private static ProxyFactory tryJavassist() throws ClassNotFoundException, Exception
+        {
+            LoggerFactory.getLogger(ProxyFactory.class).info("Using javassist proxy factory.");
+            ClassLoader classLoader = Initializer.class.getClassLoader();
+            classLoader.loadClass("javassist.CtClass");
+            Class<?> proxyFactoryClass = classLoader.loadClass("com.zaxxer.hikari.JavassistProxyFactoryFactory");
+            Object factoryFactory = proxyFactoryClass.newInstance();
+            Method getter = factoryFactory.getClass().getMethod("getProxyFactory");
+            return (ProxyFactory) getter.invoke(factoryFactory);
+        }
+
+        private static ProxyFactory tryCglib() throws ClassNotFoundException, Exception
+        {
+            LoggerFactory.getLogger(ProxyFactory.class).info("Using CGLIB proxy factory.");
+            ClassLoaderUtils.loadClass("net.sf.cglib.proxy.Enhancer");
+            Class<?> proxyFactoryClass = ClassLoaderUtils.loadClass("com.zaxxer.hikari.CglibProxyFactory");
+            return (ProxyFactory) proxyFactoryClass.newInstance();
+        }
+
+        private static ProxyFactory tryJava() throws ClassNotFoundException, Exception
+        {
+            LoggerFactory.getLogger(ProxyFactory.class).info("Using java.lang.Proxy proxy factory.");
+            Class<?> proxyFactoryClass = ClassLoaderUtils.loadClass("com.zaxxer.hikari.JavaProxyFactory");
+            return (ProxyFactory) proxyFactoryClass.newInstance();
         }
     }
 }

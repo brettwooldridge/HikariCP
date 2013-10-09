@@ -38,7 +38,9 @@ public class StatementProxy extends HikariProxyBase<Statement>
 
     protected StatementProxy(ConnectionProxy connection, Statement statement)
     {
-        initialize(connection, statement);
+        this.proxy = this;
+        this.connection = connection;
+        this.delegate = statement;
     }
 
     void initialize(ConnectionProxy connection, Statement statement)

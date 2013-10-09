@@ -23,10 +23,9 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.sql.Statement;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -37,19 +36,20 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
 {
     private final static Map<String, Method> selfMethodMap = createMethodMap(ConnectionProxy.class);
 
-    private Set<Statement> openStatements;
-    private AtomicBoolean isClosed;
+    private final Set<Statement> openStatements;
+    private final AtomicBoolean isClosed;
 
     private HikariPool parentPool;
 
+    private final long creationTime;
     private long lastAccess;
-    private long creationTime;
 
     private StackTraceElement[] stackTrace;
 
     // Instance initializer
     {
-        openStatements = Collections.newSetFromMap(new ConcurrentHashMap<Statement, Boolean>());
+        // openStatements = Collections.newSetFromMap(new ConcurrentHashMap<Statement, Boolean>(64));
+        openStatements = new HashSet<Statement>(64);
         isClosed = new AtomicBoolean();
         creationTime = System.currentTimeMillis();
     }
@@ -63,7 +63,9 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
 
     protected ConnectionProxy(HikariPool parentPool, Connection connection)
     {
-        initialize(parentPool, connection);
+        this.parentPool = parentPool;
+        this.proxy = this;
+        this.delegate = connection;
     }
 
     void initialize(HikariPool parentPool, Connection connection)
@@ -128,9 +130,10 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     {
         if (isClosed.compareAndSet(false, true))
         {
-            for (Object statement : openStatements)
+            final Statement[] statements = openStatements.toArray(new Statement[0]);
+            for (int i = 0; i < statements.length; i++)
             {
-                ((Statement) statement).close();
+                statements[i].close();
             }
 
             parentPool.releaseConnection((IHikariConnectionProxy) proxy);

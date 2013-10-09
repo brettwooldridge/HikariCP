@@ -3,11 +3,15 @@ package com.zaxxer.hikari.performance;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 
+import com.jolbox.bonecp.BoneCPConfig;
+import com.jolbox.bonecp.BoneCPDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -29,24 +33,59 @@ public class Benchmarks
         if (args[0].equals("hikari"))
         {
             benchmarks.ds = benchmarks.setupHikari();
+            System.out.println("Testing HikariCP");
+        }
+        else if (args[0].equals("bone"))
+        {
+            benchmarks.ds = benchmarks.setupBone();
+            System.out.println("Testing BoneCP");
         }
 
+        System.out.println("  Warming up JIT");
+        benchmarks.start();
+        benchmarks.start();
+        System.out.println("\n  Final Timing Run");
         benchmarks.start();
     }
 
     private DataSource setupHikari()
     {
         HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(1);
-        config.setMaximumPoolSize(100);
+        config.setMinimumPoolSize(20);
+        config.setMaximumPoolSize(50);
         config.setConnectionTimeoutMs(5000);
-        config.setConnectionTestQuery("VALUES 1");
-        config.setDataSourceClassName("com.zaxxer.hikari.mocks.MockDataSource");
-        config.setProxyFactoryClassName(System.getProperty("testProxy", "auto"));
-        config.setProxyFactoryClassName(System.getProperty("testProxy", "com.zaxxer.hikari.CglibProxyFactory"));
+        config.setJdbc4ConnectionTest(true);
+        config.setDataSourceClassName("com.zaxxer.hikari.performance.StubDataSource");
+        config.setProxyFactoryType(System.getProperty("testProxy", "javassist"));
 
         HikariDataSource ds = new HikariDataSource();
         ds.setConfiguration(config);
+        return ds;
+    }
+
+    private DataSource setupBone()
+    {
+        try
+        {
+            Class.forName("com.zaxxer.hikari.performance.StubDriver");
+        }
+        catch (ClassNotFoundException e)
+        {
+            throw new RuntimeException(e);
+        }
+
+        BoneCPConfig config = new BoneCPConfig();
+        config.setMinConnectionsPerPartition(20);
+        config.setMaxConnectionsPerPartition(50);
+        config.setConnectionTimeoutInMs(5000);
+        config.setConnectionTestStatement("VALUES 1");
+        config.setCloseOpenStatements(true);
+        config.setDisableConnectionTracking(true);
+        config.setJdbcUrl("jdbc:stub");
+        config.setUsername("nobody");
+        config.setPassword("nopass");
+
+        BoneCPDataSource ds = new BoneCPDataSource(config);
         return ds;
     }
 
@@ -78,9 +117,13 @@ public class Benchmarks
             long elapsed = runner.getElapsed();
             min = Math.min(min, elapsed);
             max = Math.max(max, elapsed);
+            if (runner.getCounter() != 505000000)
+            {
+                System.err.println("Incorrect counter value from runner: " + runner.getCounter());
+            }
         }
         long avg = min + ((max - min) / 2);
-        System.out.printf("min=%d, max=%d, avg=%d\n", min, max, avg);
+        System.out.printf("  min=%d, max=%d, avg=%d\n", min, max, avg);
     }
 
     private class Runner implements Runnable
@@ -89,6 +132,7 @@ public class Benchmarks
         private CountDownLatch latch;
         private long start;
         private long finish;
+        private int counter;
 
         public Runner(CyclicBarrier barrier, CountDownLatch latch)
         {
@@ -101,21 +145,30 @@ public class Benchmarks
             try
             {
                 barrier.await();
-                
+
                 start = System.currentTimeMillis();
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < 1000; i++)
                 {
                     Connection connection = ds.getConnection();
-                    for (int j = 0; j < 20; j++)
+                    for (int j = 0; j < 100; j++)
                     {
-                        PreparedStatement statement = connection.prepareStatement("SELECT * FROM test WHERE foo=?");
-                        for (int k = 0; k < 30; k++)
+                        PreparedStatement statement = connection.prepareStatement("INSERT INTO test (column) VALUES (?)");
+                        for (int k = 0; k < 100; k++)
                         {
                             statement.setInt(1, i);
-                            ResultSet resultSet = statement.executeQuery();
-                            resultSet.next();
-                            resultSet.close();
+                            statement.setInt(1, j);
+                            statement.setInt(1, k);
                         }
+                        statement.close();
+
+                        statement = connection.prepareStatement("SELECT * FROM test WHERE foo=?");
+                        ResultSet resultSet = statement.executeQuery();
+                        for (int k = 0; k < 100; k++)
+                        {
+                            resultSet.next();
+                            counter += resultSet.getInt(1);
+                        }
+                        resultSet.close();
                         statement.close();
                     }
                     connection.close();
@@ -135,6 +188,11 @@ public class Benchmarks
         public long getElapsed()
         {
             return finish - start;
+        }
+
+        public long getCounter()
+        {
+            return counter;
         }
     }
 }

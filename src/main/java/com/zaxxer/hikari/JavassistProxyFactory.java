@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javassist.CannotCompileException;
-import javassist.ClassClassPath;
 import javassist.ClassMap;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -44,7 +43,6 @@ import javassist.NotFoundException;
  */
 public class JavassistProxyFactory implements ProxyFactory
 {
-
     private ClassMap classMap;
     private ClassPool classPool;
 
@@ -54,14 +52,8 @@ public class JavassistProxyFactory implements ProxyFactory
     private Constructor<PreparedStatement> proxyPreparedStatementConstructor;
     private Constructor<ResultSet> proxyResultSetConstructor;
 
-    JavassistProxyFactory()
+    JavassistProxyFactory(ClassMap classMap, ClassPool classPool)
     {
-        classMap = new ClassMap();
-        ClassPool defaultPool = ClassPool.getDefault();
-        classPool = new ClassPool(defaultPool);
-        classPool.insertClassPath(new ClassClassPath(this.getClass()));
-        classPool.childFirstLookup = true;
-
         createProxyConnectionClass();
         createProxyStatementClass();
         createProxyCallableStatementClass();
@@ -69,8 +61,8 @@ public class JavassistProxyFactory implements ProxyFactory
         createProxyResultSetClass();
 
         // Clear the map, we don't need it anymore
-        classMap.clear();
-        classPool = null;
+        // classMap.clear();
+        // classPool = null;
     }
 
     /** {@inheritDoc} */
@@ -225,7 +217,6 @@ public class JavassistProxyFactory implements ProxyFactory
     private <T> Class<T> generateProxyClass(Class<T> primaryInterface, Class<?> superClass) throws NotFoundException, CannotCompileException,
             NoSuchMethodException, SecurityException
     {
-
         // Make a new class that extends one of the JavaProxy classes (ie. superClass); use the name to XxxJavassistProxy instead of XxxJavaProxy
         String superClassName = superClass.getName();
         CtClass superClassCt = classPool.getCtClass(superClassName);
