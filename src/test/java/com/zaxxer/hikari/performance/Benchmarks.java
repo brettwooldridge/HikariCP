@@ -3,10 +3,9 @@ package com.zaxxer.hikari.performance;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 
@@ -33,26 +32,38 @@ public class Benchmarks
         if (args[0].equals("hikari"))
         {
             benchmarks.ds = benchmarks.setupHikari();
-            System.out.println("Testing HikariCP");
+            System.out.println("Benchmarking HikariCP");
         }
         else if (args[0].equals("bone"))
         {
             benchmarks.ds = benchmarks.setupBone();
-            System.out.println("Testing BoneCP");
+            System.out.println("Benchmarking BoneCP");
         }
 
-        System.out.println("  Warming up JIT");
-        benchmarks.start();
-        benchmarks.start();
-        System.out.println("\n  Final Timing Run");
-        benchmarks.start();
+        System.out.println("\nMixedBench");
+        System.out.println(" Warming up JIT");
+        benchmarks.startMixedBench();
+        benchmarks.startMixedBench();
+        System.out.println(" MixedBench Final Timing Runs");
+        benchmarks.startMixedBench();
+        benchmarks.startMixedBench();
+        benchmarks.startMixedBench();
+
+        System.out.println("\nBoneBench");
+        System.out.println(" Warming up JIT");
+        benchmarks.startSillyBench();
+        System.out.println(" BoneBench Final Timing Run");
+        benchmarks.startSillyBench();
+        benchmarks.startSillyBench();
+        benchmarks.startSillyBench();
     }
 
     private DataSource setupHikari()
     {
         HikariConfig config = new HikariConfig();
+        config.setAcquireIncrement(5);
         config.setMinimumPoolSize(20);
-        config.setMaximumPoolSize(50);
+        config.setMaximumPoolSize(200);
         config.setConnectionTimeoutMs(5000);
         config.setJdbc4ConnectionTest(true);
         config.setDataSourceClassName("com.zaxxer.hikari.performance.StubDataSource");
@@ -75,8 +86,9 @@ public class Benchmarks
         }
 
         BoneCPConfig config = new BoneCPConfig();
+        config.setAcquireIncrement(5);
         config.setMinConnectionsPerPartition(20);
-        config.setMaxConnectionsPerPartition(50);
+        config.setMaxConnectionsPerPartition(200);
         config.setConnectionTimeoutInMs(5000);
         config.setConnectionTestStatement("VALUES 1");
         config.setCloseOpenStatements(true);
@@ -89,15 +101,38 @@ public class Benchmarks
         return ds;
     }
 
-    private void start()
+    private void startMixedBench()
     {
         CyclicBarrier barrier = new CyclicBarrier(THREADS);
         CountDownLatch latch = new CountDownLatch(THREADS);
 
-        Runner[] runners = new Runner[THREADS];
+        Measurable[] runners = new Measurable[THREADS];
         for (int i = 0; i < THREADS; i++)
         {
-            runners[i] = new Runner(barrier, latch);
+            runners[i] = new MixedRunner(barrier, latch);
+        }
+
+        runAndMeasure(runners, latch, "ms");
+    }
+
+    private void startSillyBench()
+    {
+        CyclicBarrier barrier = new CyclicBarrier(THREADS);
+        CountDownLatch latch = new CountDownLatch(THREADS);
+
+        Measurable[] runners = new Measurable[THREADS];
+        for (int i = 0; i < THREADS; i++)
+        {
+            runners[i] = new SillyRunner(barrier, latch);
+        }
+
+        runAndMeasure(runners, latch, "ns");
+    }
+
+    private void runAndMeasure(Measurable[] runners, CountDownLatch latch, String timeUnit)
+    {
+        for (int i = 0; i < THREADS; i++)
+        {
             Thread t = new Thread(runners[i]);
             t.start();
         }
@@ -111,22 +146,24 @@ public class Benchmarks
             e.printStackTrace();
         }
 
+        int i = 0;
+        long[] track = new long[THREADS];
         long min = Integer.MAX_VALUE, max = 0;
-        for (Runner runner : runners)
+        for (Measurable runner : runners)
         {
             long elapsed = runner.getElapsed();
+            track[i++] = elapsed;
             min = Math.min(min, elapsed);
             max = Math.max(max, elapsed);
-            if (runner.getCounter() != 505000000)
-            {
-                System.err.println("Incorrect counter value from runner: " + runner.getCounter());
-            }
         }
+
         long avg = min + ((max - min) / 2);
-        System.out.printf("  min=%d, max=%d, avg=%d\n", min, max, avg);
+        Arrays.sort(track);
+        long med = track[THREADS / 2];
+        System.out.printf("  max=%d%4$s, avg=%d%4$s, med=%d%4$s\n", max, avg, med, timeUnit);
     }
 
-    private class Runner implements Runnable
+    private class MixedRunner implements Measurable
     {
         private CyclicBarrier barrier;
         private CountDownLatch latch;
@@ -134,7 +171,7 @@ public class Benchmarks
         private long finish;
         private int counter;
 
-        public Runner(CyclicBarrier barrier, CountDownLatch latch)
+        public MixedRunner(CyclicBarrier barrier, CountDownLatch latch)
         {
             this.barrier = barrier;
             this.latch = latch;
@@ -158,7 +195,9 @@ public class Benchmarks
                             statement.setInt(1, i);
                             statement.setInt(1, j);
                             statement.setInt(1, k);
+                            statement.addBatch();
                         }
+                        statement.executeBatch();
                         statement.close();
 
                         statement = connection.prepareStatement("SELECT * FROM test WHERE foo=?");
@@ -166,7 +205,7 @@ public class Benchmarks
                         for (int k = 0; k < 100; k++)
                         {
                             resultSet.next();
-                            counter += resultSet.getInt(1);
+                            counter += resultSet.getInt(1); // ensures the JIT doesn't optimize this loop away
                         }
                         resultSet.close();
                         statement.close();
@@ -194,5 +233,53 @@ public class Benchmarks
         {
             return counter;
         }
+    }
+
+    private class SillyRunner implements Measurable
+    {
+        private CyclicBarrier barrier;
+        private CountDownLatch latch;
+        private long start;
+        private long finish;
+
+        public SillyRunner(CyclicBarrier barrier, CountDownLatch latch)
+        {
+            this.barrier = barrier;
+            this.latch = latch;
+        }
+
+        public void run()
+        {
+            try
+            {
+                barrier.await();
+
+                start = System.nanoTime();
+                for (int i = 0; i < 100; i++)
+                {
+                    Connection connection = ds.getConnection();
+                    connection.close();
+                }
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+            finally
+            {
+                finish = System.nanoTime();
+                latch.countDown();
+            }
+        }
+
+        public long getElapsed()
+        {
+            return finish - start;
+        }
+    }
+
+    private interface Measurable extends Runnable
+    {
+        long getElapsed();
     }
 }
