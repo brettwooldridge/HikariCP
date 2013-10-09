@@ -88,8 +88,7 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         {
             return null;
         }
-        // return proxyFactory.getProxyResultSet(this.getProxy(), resultSet);
-        return resultSet;
+        return proxyFactory.getProxyResultSet(this.getProxy(), resultSet);
     }
 
     public ResultSet executeQuery(String sql) throws SQLException
