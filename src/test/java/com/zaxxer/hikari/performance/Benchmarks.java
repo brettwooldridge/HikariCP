@@ -43,8 +43,8 @@ public class Benchmarks
         System.out.println("\nMixedBench");
         System.out.println(" Warming up JIT");
         benchmarks.startMixedBench();
-        benchmarks.startMixedBench();
         System.out.println(" MixedBench Final Timing Runs");
+        benchmarks.startMixedBench();
         benchmarks.startMixedBench();
         benchmarks.startMixedBench();
         benchmarks.startMixedBench();
@@ -52,8 +52,8 @@ public class Benchmarks
         System.out.println("\nBoneBench");
         System.out.println(" Warming up JIT");
         benchmarks.startSillyBench();
-        benchmarks.startSillyBench();
         System.out.println(" BoneBench Final Timing Run");
+        benchmarks.startSillyBench();
         benchmarks.startSillyBench();
         benchmarks.startSillyBench();
         benchmarks.startSillyBench();
@@ -65,7 +65,7 @@ public class Benchmarks
         config.setAcquireIncrement(5);
         config.setMinimumPoolSize(20);
         config.setMaximumPoolSize(200);
-        config.setConnectionTimeoutMs(5000);
+        config.setConnectionTimeout(5000);
         config.setJdbc4ConnectionTest(true);
         config.setDataSourceClassName("com.zaxxer.hikari.performance.StubDataSource");
         config.setProxyFactoryType(System.getProperty("testProxy", "javassist"));
@@ -149,18 +149,17 @@ public class Benchmarks
 
         int i = 0;
         long[] track = new long[THREADS];
-        long min = Integer.MAX_VALUE, max = 0;
+        long max = 0, avg = 0, med = 0;
         for (Measurable runner : runners)
         {
             long elapsed = runner.getElapsed();
             track[i++] = elapsed;
-            min = Math.min(min, elapsed);
             max = Math.max(max, elapsed);
+            avg = (avg + elapsed) / 2;
         }
 
-        long avg = min + ((max - min) / 2);
         Arrays.sort(track);
-        long med = track[THREADS / 2];
+        med = track[THREADS / 2];
         System.out.printf("  max=%d%4$s, avg=%d%4$s, med=%d%4$s\n", max, avg, med, timeUnit);
     }
 
