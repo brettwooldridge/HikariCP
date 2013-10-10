@@ -21,6 +21,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collections;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedTransferQueue;
@@ -45,10 +47,16 @@ public class HikariPool
     private final DataSource dataSource;
 
     private final int maxLifeTime;
+    private final int leakDetectionThreshold;
     private final boolean jdbc4ConnectionTest;
 
+    private final Timer houseKeepingTimer;
+
+
     /**
-     * @param configuration
+     * Construct a HikariPool with the specified configuration.
+     *
+     * @param configuration a HikariConfig instance
      */
     HikariPool(HikariConfig configuration)
     {
@@ -58,10 +66,10 @@ public class HikariPool
         this.totalConnections = new AtomicInteger();
         this.idleConnectionCount = new AtomicInteger();
         this.idleConnections = new LinkedTransferQueue<IHikariConnectionProxy>();
-        //this.inUseConnections = Collections.synchronizedSet(Collections.newSetFromMap(new LinkedHashMap<IHikariConnectionProxy, Boolean>()));
         this.inUseConnections = Collections.newSetFromMap(new ConcurrentHashMap<IHikariConnectionProxy, Boolean>(configuration.getMaximumPoolSize() * 2, 0.75f, 100));
+        this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
 
-        this.maxLifeTime = configuration.getMaxLifetimeMs();
+        this.maxLifeTime = configuration.getMaxLifetime();
         this.jdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
 
         try
@@ -72,6 +80,14 @@ public class HikariPool
         catch (Exception e)
         {
             throw new RuntimeException("Could not create datasource class: " + configuration.getDataSourceClassName(), e);
+        }
+
+        houseKeepingTimer = new Timer("Hikari Housekeeping Timer", true);
+
+        int idleTimeout = configuration.getIdleTimeout();
+        if (idleTimeout > 0 || maxLifeTime > 0 || leakDetectionThreshold > 0)
+        {
+            houseKeepingTimer.scheduleAtFixedRate(new HouseKeeper(), idleTimeout, idleTimeout);
         }
 
         System.setProperty("hikariProxyGeneratorType", configuration.getProxyFactoryType());
@@ -86,7 +102,7 @@ public class HikariPool
     {
         try
         {
-            int timeout = configuration.getConnectionTimeoutMs();
+            int timeout = configuration.getConnectionTimeout();
             final long start = System.currentTimeMillis();
             do
             {
@@ -98,7 +114,7 @@ public class HikariPool
                 IHikariConnectionProxy connectionProxy = idleConnections.poll(timeout, TimeUnit.MILLISECONDS);
                 if (connectionProxy == null)
                 {
-                    LOGGER.error("Timeout of {}ms encountered waiting for connection", configuration.getConnectionTimeoutMs());
+                    LOGGER.error("Timeout of {}ms encountered waiting for connection", configuration.getConnectionTimeout());
                     throw new SQLException("Timeout of encountered waiting for connection");
                 }
 
@@ -107,8 +123,8 @@ public class HikariPool
                 if (maxLifeTime > 0 && start - connectionProxy.getCreationTime() > maxLifeTime)
                 {
                     // Throw away the connection
-                    totalConnections.decrementAndGet();
                     closeConnection(connectionProxy);
+                    timeout -= (System.currentTimeMillis() - start);
                     continue;
                 }
 
@@ -116,7 +132,7 @@ public class HikariPool
                 if (!isConnectionAlive(connection, timeout))
                 {
                     // Throw away the connection, and nap for a few ms
-                    totalConnections.decrementAndGet();
+                    closeConnection(connectionProxy);
                     Thread.sleep(50l);
                     timeout -= (System.currentTimeMillis() - start);
                     if (timeout < 0)
@@ -126,9 +142,9 @@ public class HikariPool
                     continue;
                 }
     
-                if (configuration.getLeakDetectionThresholdMs() > 0)
+                if (leakDetectionThreshold > 0)
                 {
-                    connectionProxy.captureStack();
+                    connectionProxy.captureStack(configuration.getLeakDetectionThreshold(), houseKeepingTimer);
                 }
 
                 inUseConnections.add(connectionProxy);
@@ -191,13 +207,15 @@ public class HikariPool
         {
             try
             {
-                IHikariConnectionProxy connection = createConnection();
-                boolean alive = isConnectionAlive((Connection) connection, configuration.getConnectionTimeoutMs());
+                Connection connection = dataSource.getConnection();
+                IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) ProxyFactory.INSTANCE.getProxyConnection(this, connection);
+
+                boolean alive = isConnectionAlive((Connection) proxyConnection, configuration.getConnectionTimeout());
                 if (alive)
                 {
                     idleConnectionCount.incrementAndGet();
                     totalConnections.incrementAndGet();
-                    idleConnections.add(connection);
+                    idleConnections.add(proxyConnection);
                     LOGGER.trace("Added connection");
                     break;
                 }
@@ -212,7 +230,7 @@ public class HikariPool
 
                 try
                 {
-                    Thread.sleep(configuration.getAcquireRetryDelayMs());
+                    Thread.sleep(configuration.getAcquireRetryDelay());
                 }
                 catch (InterruptedException e1)
                 {
@@ -253,6 +271,7 @@ public class HikariPool
     {
         try
         {
+            totalConnections.decrementAndGet();
             connectionProxy.getDelegate().close();
         }
         catch (SQLException e)
@@ -260,10 +279,44 @@ public class HikariPool
             return;
         }
     }
-    
-    private IHikariConnectionProxy createConnection() throws SQLException
+
+    private class HouseKeeper extends TimerTask
     {
-        Connection connection = dataSource.getConnection();
-        return (IHikariConnectionProxy) ProxyFactory.INSTANCE.getProxyConnection(this, connection);
+        public void run()
+        {
+            houseKeepingTimer.purge();
+
+            final long now = System.currentTimeMillis();
+            final int idleTimeout = configuration.getIdleTimeout();
+            final int idleCount = idleConnectionCount.get();
+
+            for (int i = 0; i < idleCount; i++)
+            {
+                IHikariConnectionProxy connectionProxy = idleConnections.poll();
+                if (connectionProxy == null)
+                {
+                    break;
+                }
+
+                if ((idleTimeout > 0 && now > connectionProxy.getLastAccess() + idleTimeout)
+                    ||
+                    (maxLifeTime > 0 && now > connectionProxy.getCreationTime() + maxLifeTime))
+                {
+                    idleConnectionCount.decrementAndGet();
+                    closeConnection(connectionProxy);
+                }
+                else
+                {
+                    idleConnections.add(connectionProxy);
+                    idleConnectionCount.incrementAndGet();
+                }
+            }
+
+            int maxIters = configuration.getMinimumPoolSize() / configuration.getAcquireIncrement();
+            while (totalConnections.get() < configuration.getMinimumPoolSize() && --maxIters > 0)
+            {
+                fillPool();
+            }            
+        }
     }
 }

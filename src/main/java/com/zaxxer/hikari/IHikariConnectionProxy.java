@@ -17,7 +17,7 @@
 package com.zaxxer.hikari;
 
 import java.sql.Connection;
-
+import java.util.Timer;
 
 /**
  *
@@ -33,7 +33,6 @@ public interface IHikariConnectionProxy
 
     Connection getDelegate();
 
-    void captureStack();
-
-    StackTraceElement[] getStackTrace();
+    /* Leak Detection API */
+    void captureStack(long leakThreshold, Timer houseKeepingTimer);
 }

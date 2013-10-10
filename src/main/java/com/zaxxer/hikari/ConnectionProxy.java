@@ -26,7 +26,11 @@ import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -34,7 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class ConnectionProxy extends HikariProxyBase<Connection> implements IHikariConnectionProxy
 {
-    private final static Map<String, Method> selfMethodMap = createMethodMap(ConnectionProxy.class);
+    private static final Map<String, Method> selfMethodMap = createMethodMap(ConnectionProxy.class);
 
     private final Set<Statement> openStatements;
     private final AtomicBoolean isClosed;
@@ -46,9 +50,10 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
 
     private StackTraceElement[] stackTrace;
 
+    private TimerTask leakTask;
+
     // Instance initializer
     {
-        // openStatements = Collections.newSetFromMap(new ConcurrentHashMap<Statement, Boolean>(64));
         openStatements = new HashSet<Statement>(64);
         isClosed = new AtomicBoolean();
         creationTime = System.currentTimeMillis();
@@ -103,14 +108,26 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
         return delegate;
     }
 
-    public void captureStack()
+    public void captureStack(long leakDetectionThreshold, Timer scheduler)
     {
-        this.stackTrace = Thread.currentThread().getStackTrace();
-    }
+        StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+        stackTrace = new StackTraceElement[trace.length - 4];
+        System.arraycopy(trace, 4, stackTrace, 0, stackTrace.length);
+        
+        final long leakTime = System.currentTimeMillis() + leakDetectionThreshold;
+        leakTask = new TimerTask() {
+            public void run() {
+                if (System.currentTimeMillis() > leakTime)
+                {
+                    Exception e = new Exception();
+                    e.setStackTrace(stackTrace);
+                    LoggerFactory.getLogger(ConnectionProxy.this.getClass()).warn("Connection leak detection triggered, stack trace follows", e);
+                    stackTrace = null;
+                }
+            }
+        };
 
-    public StackTraceElement[] getStackTrace()
-    {
-        return stackTrace;
+        scheduler.schedule(leakTask, leakDetectionThreshold);
     }
 
     @Override
@@ -130,6 +147,12 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     {
         if (isClosed.compareAndSet(false, true))
         {
+            if (leakTask != null)
+            {
+                leakTask.cancel();
+                leakTask = null;
+            }
+
             final Statement[] statements = openStatements.toArray(new Statement[0]);
             for (int i = 0; i < statements.length; i++)
             {
