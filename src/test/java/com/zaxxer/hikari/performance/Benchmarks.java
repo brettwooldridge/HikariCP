@@ -52,6 +52,7 @@ public class Benchmarks
         System.out.println("\nBoneBench");
         System.out.println(" Warming up JIT");
         benchmarks.startSillyBench();
+        benchmarks.startSillyBench();
         System.out.println(" BoneBench Final Timing Run");
         benchmarks.startSillyBench();
         benchmarks.startSillyBench();
@@ -229,7 +230,7 @@ public class Benchmarks
             return finish - start;
         }
 
-        public long getCounter()
+        public int getCounter()
         {
             return counter;
         }
@@ -276,10 +277,17 @@ public class Benchmarks
         {
             return finish - start;
         }
+
+        public int getCounter()
+        {
+            return 0;
+        }
     }
 
     private interface Measurable extends Runnable
     {
         long getElapsed();
+
+        int getCounter();
     }
 }
