@@ -3,6 +3,8 @@
  */
 package com.zaxxer.hikari;
 
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +39,7 @@ public class HikariConfig
     private boolean isJdbc4connectionTest;
     private int maxLifetime;
     private int leakDetectionThreshold;
+    private int idleTimeout;
 
     /**
      * Default constructor
@@ -44,8 +47,9 @@ public class HikariConfig
     public HikariConfig()
     {
         acquireIncrement = 1;
-        connectionTimeout = Integer.MAX_VALUE;
         maxPoolSize = 1;
+        connectionTimeout = Integer.MAX_VALUE;
+        idleTimeout = (int) TimeUnit.MINUTES.toMillis(30);
         proxyFactoryType = "auto";
     }
 
@@ -77,18 +81,18 @@ public class HikariConfig
         this.acquireRetries = acquireRetries;
     }
 
-    public int getAcquireRetryDelayMs()
+    public int getAcquireRetryDelay()
     {
         return acquireRetryDelay;
     }
 
-    public void setAcquireRetryDelayMs(int acquireRetryDelay)
+    public void setAcquireRetryDelay(int acquireRetryDelayMs)
     {
-        if (acquireRetryDelay < 0)
+        if (acquireRetryDelayMs < 0)
         {
             throw new IllegalArgumentException("acquireRetryDelay cannot be negative");
         }
-        this.acquireRetryDelay = acquireRetryDelay;
+        this.acquireRetryDelay = acquireRetryDelayMs;
     }
 
     public String getConnectionTestQuery()
@@ -101,18 +105,18 @@ public class HikariConfig
         this.connectionTestQuery = connectionTestQuery;
     }
 
-    public int getConnectionTimeoutMs()
+    public int getConnectionTimeout()
     {
         return connectionTimeout;
     }
 
-    public void setConnectionTimeoutMs(int connectionTimeout)
+    public void setConnectionTimeout(int connectionTimeoutMs)
     {
-        if (connectionTimeout < 0)
+        if (connectionTimeoutMs < 0)
         {
             throw new IllegalArgumentException("connectionTimeout cannot be negative");
         }
-        this.connectionTimeout = connectionTimeout;
+        this.connectionTimeout = connectionTimeoutMs;
     }
 
     public String getConnectionUrl()
@@ -135,6 +139,16 @@ public class HikariConfig
         this.dataSourceClassName = className;
     }
 
+    public int getIdleTimeout()
+    {
+        return idleTimeout;
+    }
+
+    public void setIdleTimeout(int idleTimeoutMs)
+    {
+        this.idleTimeout = idleTimeoutMs;
+    }
+
     public boolean isJdbc4ConnectionTest()
     {
         return isJdbc4connectionTest;
@@ -145,24 +159,24 @@ public class HikariConfig
         this.isJdbc4connectionTest = useIsValid;
     }
 
-    public int getLeakDetectionThresholdMs()
+    public int getLeakDetectionThreshold()
     {
         return leakDetectionThreshold;
     }
 
-    public void setLeakDetectionThresholdMs(int leakDetectionThreshold)
+    public void setLeakDetectionThreshold(int leakDetectionThresholdMs)
     {
-        this.leakDetectionThreshold = leakDetectionThreshold; 
+        this.leakDetectionThreshold = leakDetectionThresholdMs; 
     }
 
-    public int getMaxLifetimeMs()
+    public int getMaxLifetime()
     {
         return maxLifetime;
     }
 
-    public void setMaxLifetimeMs(int maxLifetime)
+    public void setMaxLifetime(int maxLifetimeMs)
     {
-        this.maxLifetime = maxLifetime;
+        this.maxLifetime = maxLifetimeMs;
     }
 
     public int getMinimumPoolSize()
