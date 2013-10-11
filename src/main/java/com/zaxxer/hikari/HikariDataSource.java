@@ -26,6 +26,11 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The HikariCP pooled DataSource.
+ *
+ * @author Brett Wooldridge
+ */
 public class HikariDataSource implements DataSource
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariDataSource.class);
@@ -35,13 +40,14 @@ public class HikariDataSource implements DataSource
     // Package scope for testing
     HikariPool pool;
 
-    public HikariDataSource()
+    /**
+     * Construct a HikariDataSource with the specified configuration.
+     *
+     * @param configuration a HikariConfig instance
+     */
+    public HikariDataSource(HikariConfig configuration)
     {
-    }
-
-    public void setConfiguration(HikariConfig configuration)
-    {
-        this.pool = new HikariPool(configuration);
+        pool = new HikariPool(configuration);
     }
 
     /** {@inheritDoc} */

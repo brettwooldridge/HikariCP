@@ -43,8 +43,7 @@ public class CreationTest
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.MockDataSource");
         config.setProxyFactoryType(System.getProperty("testProxy", "auto"));
 
-        HikariDataSource ds = new HikariDataSource();
-        ds.setConfiguration(config);
+        HikariDataSource ds = new HikariDataSource(config);
 
         Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnectionCount());
         Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnectionCount());
@@ -84,8 +83,7 @@ public class CreationTest
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.MockDataSource");
         config.setProxyFactoryType(System.getProperty("testProxy", "auto"));
 
-        HikariDataSource ds = new HikariDataSource();
-        ds.setConfiguration(config);
+        HikariDataSource ds = new HikariDataSource(config);
 
         Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnectionCount());
         Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnectionCount());

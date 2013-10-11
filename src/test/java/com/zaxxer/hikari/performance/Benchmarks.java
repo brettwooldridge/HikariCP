@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 
@@ -14,9 +15,18 @@ import com.jolbox.bonecp.BoneCPDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
+/**
+ * This test requires the Javassist library to be present in the classpath.
+ * To reproduce our results, it should be run as follows:
+ * 
+ *    JVM parameters: -server -XX:+UseParallelGC -Xss256k -Dthreads=200
+ *
+ * @author Brett Wooldridge
+ */
 public class Benchmarks
 {
     private static final int THREADS = Integer.getInteger("threads", 100);
+    private static final int POOL_MAX = Integer.getInteger("poolMax", 100);
 
     private DataSource ds;
 
@@ -43,11 +53,11 @@ public class Benchmarks
         System.out.println("\nMixedBench");
         System.out.println(" Warming up JIT");
         benchmarks.startMixedBench();
-        System.out.println(" MixedBench Final Timing Runs");
-        benchmarks.startMixedBench();
-        benchmarks.startMixedBench();
-        benchmarks.startMixedBench();
-        benchmarks.startMixedBench();
+//        System.out.println(" MixedBench Final Timing Runs");
+//        benchmarks.startMixedBench();
+//        benchmarks.startMixedBench();
+//        benchmarks.startMixedBench();
+//        benchmarks.startMixedBench();
 
         System.out.println("\nBoneBench");
         System.out.println(" Warming up JIT");
@@ -64,14 +74,14 @@ public class Benchmarks
         HikariConfig config = new HikariConfig();
         config.setAcquireIncrement(5);
         config.setMinimumPoolSize(20);
-        config.setMaximumPoolSize(200);
+        config.setMaximumPoolSize(POOL_MAX);
         config.setConnectionTimeout(5000);
+        config.setIdleTimeout(TimeUnit.MINUTES.toMillis(30));
         config.setJdbc4ConnectionTest(true);
         config.setDataSourceClassName("com.zaxxer.hikari.performance.StubDataSource");
         config.setProxyFactoryType(System.getProperty("testProxy", "javassist"));
 
-        HikariDataSource ds = new HikariDataSource();
-        ds.setConfiguration(config);
+        HikariDataSource ds = new HikariDataSource(config);
         return ds;
     }
 
@@ -89,8 +99,9 @@ public class Benchmarks
         BoneCPConfig config = new BoneCPConfig();
         config.setAcquireIncrement(5);
         config.setMinConnectionsPerPartition(20);
-        config.setMaxConnectionsPerPartition(200);
+        config.setMaxConnectionsPerPartition(POOL_MAX);
         config.setConnectionTimeoutInMs(5000);
+        config.setIdleMaxAgeInMinutes(30);
         config.setConnectionTestStatement("VALUES 1");
         config.setCloseOpenStatements(true);
         config.setDisableConnectionTracking(true);

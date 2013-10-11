@@ -3,6 +3,10 @@
  */
 package com.zaxxer.hikari;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -31,15 +35,15 @@ public class HikariConfig
     private String connectionUrl;
     private int acquireIncrement;
     private int acquireRetries;
-    private int acquireRetryDelay;
-    private int connectionTimeout;
+    private long acquireRetryDelay;
+    private long connectionTimeout;
     private String connectionTestQuery;
     private String dataSourceClassName;
     private String proxyFactoryType;
     private boolean isJdbc4connectionTest;
-    private int maxLifetime;
-    private int leakDetectionThreshold;
-    private int idleTimeout;
+    private long maxLifetime;
+    private long leakDetectionThreshold;
+    private long idleTimeout;
 
     /**
      * Default constructor
@@ -49,8 +53,30 @@ public class HikariConfig
         acquireIncrement = 1;
         maxPoolSize = 1;
         connectionTimeout = Integer.MAX_VALUE;
-        idleTimeout = (int) TimeUnit.MINUTES.toMillis(30);
+        idleTimeout = TimeUnit.MINUTES.toMillis(30);
         proxyFactoryType = "auto";
+    }
+
+    public HikariConfig(String propertyFileName)
+    {
+        this();
+
+        File propFile = new File(propertyFileName);
+        if (!propFile.isFile())
+        {
+            throw new IllegalArgumentException("Property file " + propertyFileName + " was not found.");
+        }
+
+        try
+        {
+            FileInputStream fis = new FileInputStream(propFile);
+            Properties props = new Properties();
+            props.load(fis);
+        }
+        catch (IOException io)
+        {
+            throw new RuntimeException("Error loading properties file", io);
+        }
     }
 
     public int getAcquireIncrement()
@@ -81,12 +107,12 @@ public class HikariConfig
         this.acquireRetries = acquireRetries;
     }
 
-    public int getAcquireRetryDelay()
+    public long getAcquireRetryDelay()
     {
         return acquireRetryDelay;
     }
 
-    public void setAcquireRetryDelay(int acquireRetryDelayMs)
+    public void setAcquireRetryDelay(long acquireRetryDelayMs)
     {
         if (acquireRetryDelayMs < 0)
         {
@@ -105,12 +131,12 @@ public class HikariConfig
         this.connectionTestQuery = connectionTestQuery;
     }
 
-    public int getConnectionTimeout()
+    public long getConnectionTimeout()
     {
         return connectionTimeout;
     }
 
-    public void setConnectionTimeout(int connectionTimeoutMs)
+    public void setConnectionTimeout(long connectionTimeoutMs)
     {
         if (connectionTimeoutMs < 0)
         {
@@ -139,12 +165,12 @@ public class HikariConfig
         this.dataSourceClassName = className;
     }
 
-    public int getIdleTimeout()
+    public long getIdleTimeout()
     {
         return idleTimeout;
     }
 
-    public void setIdleTimeout(int idleTimeoutMs)
+    public void setIdleTimeout(long idleTimeoutMs)
     {
         this.idleTimeout = idleTimeoutMs;
     }
@@ -159,22 +185,22 @@ public class HikariConfig
         this.isJdbc4connectionTest = useIsValid;
     }
 
-    public int getLeakDetectionThreshold()
+    public long getLeakDetectionThreshold()
     {
         return leakDetectionThreshold;
     }
 
-    public void setLeakDetectionThreshold(int leakDetectionThresholdMs)
+    public void setLeakDetectionThreshold(long leakDetectionThresholdMs)
     {
         this.leakDetectionThreshold = leakDetectionThresholdMs; 
     }
 
-    public int getMaxLifetime()
+    public long getMaxLifetime()
     {
         return maxLifetime;
     }
 
-    public void setMaxLifetime(int maxLifetimeMs)
+    public void setMaxLifetime(long maxLifetimeMs)
     {
         this.maxLifetime = maxLifetimeMs;
     }

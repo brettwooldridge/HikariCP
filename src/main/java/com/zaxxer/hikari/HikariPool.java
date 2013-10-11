@@ -46,8 +46,8 @@ public class HikariPool
     private final AtomicInteger idleConnectionCount;
     private final DataSource dataSource;
 
-    private final int maxLifeTime;
-    private final int leakDetectionThreshold;
+    private final long maxLifeTime;
+    private final long leakDetectionThreshold;
     private final boolean jdbc4ConnectionTest;
 
     private final Timer houseKeepingTimer;
@@ -84,10 +84,10 @@ public class HikariPool
 
         houseKeepingTimer = new Timer("Hikari Housekeeping Timer", true);
 
-        int idleTimeout = configuration.getIdleTimeout();
+        long idleTimeout = configuration.getIdleTimeout();
         if (idleTimeout > 0 || maxLifeTime > 0 || leakDetectionThreshold > 0)
         {
-            houseKeepingTimer.scheduleAtFixedRate(new HouseKeeper(), idleTimeout, idleTimeout);
+            houseKeepingTimer.scheduleAtFixedRate(new HouseKeeper(), TimeUnit.MINUTES.toMillis(1), TimeUnit.MINUTES.toMillis(1));
         }
 
         System.setProperty("hikariProxyGeneratorType", configuration.getProxyFactoryType());
@@ -102,7 +102,7 @@ public class HikariPool
     {
         try
         {
-            int timeout = configuration.getConnectionTimeout();
+            long timeout = configuration.getConnectionTimeout();
             final long start = System.currentTimeMillis();
             do
             {
@@ -240,13 +240,13 @@ public class HikariPool
         }
     }
 
-    private boolean isConnectionAlive(Connection connection, int timeoutMs)
+    private boolean isConnectionAlive(Connection connection, long timeoutMs)
     {
         try
         {
             if (jdbc4ConnectionTest)
             {
-                return connection.isValid(timeoutMs * 1000);
+                return connection.isValid((int) timeoutMs * 1000);
             }
 
             Statement statement = connection.createStatement();
@@ -287,7 +287,7 @@ public class HikariPool
             houseKeepingTimer.purge();
 
             final long now = System.currentTimeMillis();
-            final int idleTimeout = configuration.getIdleTimeout();
+            final long idleTimeout = configuration.getIdleTimeout();
             final int idleCount = idleConnectionCount.get();
 
             for (int i = 0; i < idleCount; i++)
