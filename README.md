@@ -149,11 +149,12 @@ parameter logging.
 
 HikariCP is focused (primarily) on reliability and performance in a Production environment, so
 it is doubtful that we will ever implement this kind of feature given inherent driver support
-and alternative solutions.  Trust us, you don't want this feature -- even disabled -- in a
-production connection pool.  *We consider even checking a boolean as inducing too much overhead
-into your queries and results.*  HikariCP is *fast*, given the time we have spent shaving off
-byte-codes off the the execution path, it is hard to imagine that there will ever be a something
-faster.
+and alternative solutions.
+
+Trust us, you don't want this feature -- even disabled -- in a production connection pool.
+*We consider even checking a boolean as inducing too much overhead into your queries and results.*
+HikariCP is *fast*.  Given the time we have spent shaving off byte-codes off the the execution
+path, we say with confidence it is hard to imagine that there will ever be a anything faster.
 
 ----------------------------------------------------
 
