@@ -150,8 +150,10 @@ parameter logging.
 HikariCP is focused (primarily) on reliability and performance in a Production environment, so
 it is doubtful that we will ever implement this kind of feature given inherent driver support
 and alternative solutions.  Trust us, you don't want this feature -- even disabled -- in a
-production connection pool.  *We consider even checking a boolean too induce too much overhead
-into your queries and results.*
+production connection pool.  *We consider even checking a boolean as inducing too much overhead
+into your queries and results.*  HikariCP is *fast*, given the time we have spent shaving off
+byte-codes off the the execution path, it is hard to imagine that there will ever be a something
+faster.
 
 ----------------------------------------------------
 
@@ -212,16 +214,16 @@ preferred if supported by the JDBC driver.  *Default: true*
 This property controls the amount of time that a connection can be out of the pool before a
 message is logged indicating a possible connection leak.  A value of 0 means leak detection
 is disabled.  While the default is 0, and other connection pool implementations state that
-leak detection is "not for production"as it imposes a high overhead, at least in the case
-of HikariCP the imposed overhead is only 5μs (*microseconds*).  Maybe other pools are doing
-it wrong, but feel free to use leak detection under HikariCP in production environments if
-you wish.  *Default: 0*
+leak detection is "not for production" as it imposes a high overhead, at least in the case
+of HikariCP the imposed overhead is only 5μs (*microseconds*) split between getConnection()
+and close().  Maybe other pools are doing it wrong, but feel free to use leak detection under
+HikariCP in production environments if you wish.  *Default: 0*
 
 ``maxLifetime``<br/>
 This property controls the maximum lifetime of a connection in the pool.  When a connection
 reaches this timeout, even if recently used, it will be retired from the pool.  An in-use
 connection will never be retired, only when it is idle will it be removed.  We strongly
-recommend setting this value, and to something reasonable like 30 minutes, or 1 hour.  A
+recommend setting this value, and using something reasonable like 30 minutes or 1 hour.  A
 value of 0 indicates no maximum lifetime (infinite lifetime), subject of course to the
 ``idleTimeout`` setting.  *Default: 0*
 
@@ -229,7 +231,9 @@ value of 0 indicates no maximum lifetime (infinite lifetime), subject of course 
 The property controls the maximum size that the pool is allowed to reach, including both
 idle and in-use connections.  Basically this value will determine the maximum number of
 actual connections to the database backend.  A reasonable value for this is best determined
-by your execution environment.  *Default: 1*
+by your execution environment.  When the pool reaches this size, and no idle connections are
+available, calls to getConnection() will block for up to ``connectionTimeout`` milliseconds
+before timing out.  *Default: 1*
 
 ``minimumPoolSize``<br/>
 The property controls the minimum number of connections that HikariCP tries to maintain in
