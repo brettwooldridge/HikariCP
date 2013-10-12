@@ -10,7 +10,7 @@ DBCP and C3P0 are old and slow.
 ##### MixedBench #####
 This is the so called "Mixed" benchmark, and it executes a representative array of JDBC
 operations in a realistic mix.  We think *median* is the number to pay attention to, rather
-than average (which can get skewed).  *Median* meaning 50% of the iterations were slower, %50 were faster
+than average (which can get skewed).  *Median* meaning 50% of the iterations were slower, %50 were faster.
 200 threads were started, and the underlying connection pool contained 100 connections.
 
 | Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
@@ -46,7 +46,7 @@ The test was performed on an Intel Core i7 (2600) 3.4GHz iMac with 24GB of RAM. 
 JVM benchmark was run with: ``-server -XX:+UseParallelGC -Xss256k -Dthreads=200 -DpoolMax=100``.
 
 ##### In Summary #####
-200 threads ran 60,702,000 JDBC operations each, HikariCP did this in a median of *191ms* per thread.
+200 threads ran 60,702,000 JDBC operations each, HikariCP did this in a median of *169ms* per thread.
 
 ------------------------------
 
@@ -90,7 +90,8 @@ Microseconds):
 
 Probably the reason they put up this test is, because BoneCP is not testing connections
 (except when there is a SQLException) and other pools are, this test makes BoneCP really
-seem to blaze
+seem to blaze (compared to DBCP and C3P0), but is not representative of performance you 
+will see in your application.
 
 ------------------------------------------
 
@@ -98,10 +99,18 @@ seem to blaze
 Where are all the knobs?  HikariCP has plenty of "knobs" as you can see in the configuration 
 section below, but comparatively less than some other pools.  This is a design philosophy.
 Configuring a connection pool, even for a large production environment, is not rocket science.
+
 The HikariCP design semantic is minimalist.  You probably need to configure the idle timeout
 for connections in the pool, but do you really need to configure how often the pool is swept
 to retire them?  You might *think* you do, but if you do you're probably doing something
 wrong.
+
+We're not going to (overly) question the design decisions of other pools, but we will say
+that some other pools seem to implement a lot of "gimmicks" that proportedly improve
+performance.  HikariCP achieves high-performance even in pools of unrealistic sizes (5,000
+connections anyone?).  Either these "gimmicks" are a case of premature optimization or
+reflective of a poor design/lack of understanding of how to leaverage the JVM JIT to full
+effect.
 
 ##### ***Missing Knobs*** #####
 In keeping with the *simple is better* or *less is more* design philosophy, some knobs and 
@@ -122,11 +131,10 @@ Data was inserted into a table lets call X1.  Every night, programatically X1 wa
 and a new X1 was created with identical structure.  Basically, the application was
 "rolling" tables over daily (while running).  In spite of the structure of X1 being identical
 after rolling, the database considered a PreparedStatement compiled against the old table to be
-invalid (probably there was some kind of UUID contained within).  When the statement pool
-returned one of these statements, the application blew up.  Turning off the cache in the
-connection pool, and enabling it in the driver fixed the issue.  How?  It is only speculation,
-but it seems likely that driver in this case checks with the DB to ensure the statement is
-still valid and if not recompiles it transparently.
+invalid.  When the statement pool returned one of these statements, the application blew up.
+Turning off the cache in the connection pool, and enabling it in the driver fixed the issue.
+How?  It is only speculation, but it seems likely that driver in this case checks with the DB
+to ensure the statement is still valid and if not recompiles it transparently.
 
 Regardless of correctness or not (the behavior varies by DB vendor), it is unnecessary with
 modern database drivers to implement this at the pool level.
@@ -141,7 +149,9 @@ parameter logging.
 
 HikariCP is focused (primarily) on reliability and performance in a Production environment, so
 it is doubtful that we will ever implement this kind of feature given inherent driver support
-and alternative solutions.
+and alternative solutions.  Trust us, you don't want this feature -- even disabled -- in a
+production connection pool.  *We consider even checking a boolean too induce too much overhead
+into your queries and results.*
 
 ----------------------------------------------------
 
