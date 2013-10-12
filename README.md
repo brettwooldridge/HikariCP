@@ -3,22 +3,20 @@ HikariCP <sub><sub>Ultimate JDBC Connection Pool<sup><sup>&nbsp;&nbsp;[We came, 
 
 There is nothing faster.  There is nothing more reliable.  There is nothing more correct.
 
-Are you using DBCP, C3P0 or BoneCP?  *Stop.*
-
 #### TL;DR ####
 Let's look at some performance numbers.  HikariCP was only compared to BoneCP because, really,
-DBCP and C3P0 are old and slow and I don't know why anyone would use them.
+DBCP and C3P0 are old and slow.
 
 ##### MixedBench #####
 This is the so called "Mixed" benchmark, and it executes a representative array of JDBC
 operations in a realistic mix.  We think *median* is the number to pay attention to, rather
-than average (which can get skewed).  *Median* meaning 50% of the iterations were slower, %50 were faster.  200 threads were started, and the underlying connection pool contained 100
-connections.
+than average (which can get skewed).  *Median* meaning 50% of the iterations were slower, %50 were faster
+200 threads were started, and the underlying connection pool contained 100 connections.
 
 | Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
 | -------- | ---------:| ---------:| ---------:|
-| BoneCP   | 2155      | 1541      | 3265      |
-| HikariCP | 230       | 139       | 526       |
+| BoneCP   | 976       | 909       | 1463      |
+| HikariCP | 169       | 146       | 441       |
 
 A breakdown of the mix operations is:
 
@@ -44,11 +42,11 @@ The benchmark was run using a stub (nop) implementation of an underlying DataSou
 PreparedStatement, and ResultSet, so the driver was taken completely out of the equation so
 that the performance and overhead of the pools themselves could be measured.
 
-The test was performed on an Intel Core i7 (3770 Ivy Bridge) 3.4GHz iMac with 32GB of RAM.  The
-JVM benchmark was run with: ``-server -XX:+UseParallelGC -Xss256k``.
+The test was performed on an Intel Core i7 (2600) 3.4GHz iMac with 24GB of RAM.  The
+JVM benchmark was run with: ``-server -XX:+UseParallelGC -Xss256k -Dthreads=200 -DpoolMax=100``.
 
 ##### In Summary #####
-200 threads ran 60,702,000 JDBC operations each, HikariCP did this in a median of *230ms* per thread.
+200 threads ran 60,702,000 JDBC operations each, HikariCP did this in a median of *191ms* per thread.
 
 ------------------------------
 
@@ -66,18 +64,18 @@ If BoneCP were to wrap ResultSet, which comprises 20,100,000 of the 60,702,000 o
 MixedBench, its performance numbers would be far poorer.  Also take note that HikariCP *does*
 properly wrap ResultSet and still achives the numbers above.
 
-One example of *subjective* incorrectness -- being my personal opinion -- is that
-BoneCP does not test a ``Connection`` immediately before dispatching it from the pool.  It is
-through this mechanism that it achives some of it's speed.  In my opinion, this one "flaw"
-(or "feature") renders BoneCP insuitable for Production use.  The number one responsibility of
-a connection pool is to **not** give out possibly bad connections.  If you have ever run a
-load-balancer in front of read-slaves, or have ever needed to bounce the DB while the
-application was running, you certainly didn't do it with BoneCP.
+One example of *subjective* incorrectness is that BoneCP does not test a ``Connection`` immediately
+before dispatching it from the pool.  In my opinion, this one "flaw" (or "feature") alone renders BoneCP
+unsuitable for Production use.  The number one responsibility of a connection pool is to **not** give 
+out possibly bad connections.  If you have ever run a load-balancer in front of read-slaves (and had
+one fail), or have ever needed to bounce the DB while the application was running, you certainly didn't
+do it with BoneCP.
 
 Over on the BoneCP site, you can find a comparison of BoneCP vs. DBCP and C3P0.  DBCP and C3P0,
 as poor as they are, at least are performing aliveness tests before dispatching connections.
 So, it's not really a fair comparison.  HikariCP supports the JDBC4 ``Connection.isValid()``
-API, which for many drivers provides a fast non-query based aliveness test.
+API, which for many drivers provides a fast non-query based aliveness test.  Regardless, it
+will always test a connection just microseconds before handing it to you.
 
 A particularly silly "benchmark" on the BoneCP site starts 500 threads each performing 100
 DataSource.getConnection() / connection.close() calls with 0ms delay between.  Who does that?
@@ -90,12 +88,15 @@ Microseconds):
 | BoneCP   | 19467     | 8762      | 30851     |
 | HikariCP | 76        | 65        | 112       |
 
-The times are per-thread reflecting 100 getConnection()/close() operations with no wait between.
+Probably the reason they put up this test is, because BoneCP is not testing connections
+(except when there is a SQLException) and other pools are, this test makes BoneCP really
+seem to blaze
 
 ------------------------------------------
 
 #### Knobs ####
-Where are all the knobs?  HikariCP has plenty of "knobs" as you can see in the configuration section below, but comparatively less than some other pools.  This is a design philosophy.
+Where are all the knobs?  HikariCP has plenty of "knobs" as you can see in the configuration 
+section below, but comparatively less than some other pools.  This is a design philosophy.
 Configuring a connection pool, even for a large production environment, is not rocket science.
 The HikariCP design semantic is minimalist.  You probably need to configure the idle timeout
 for connections in the pool, but do you really need to configure how often the pool is swept
@@ -103,10 +104,11 @@ to retire them?  You might *think* you do, but if you do you're probably doing s
 wrong.
 
 ##### ***Missing Knobs*** #####
-In keeping with the *simple is better* or *less is more* design philosophy, some knobs and features are intentionally left out.  Here are some, and the reasons.
+In keeping with the *simple is better* or *less is more* design philosophy, some knobs and 
+features are intentionally left out.  Here are some, and the reasons.
 
 **Statement Cache**<br/>
-Many (most?) major database JDBC drivers already have a PreparedStatement cache that can be
+Most major database JDBC drivers already have a PreparedStatement cache that can be
 configured (Oracle, MySQL, PostgreSQL, Derby, etc).  A statement cache in the pool would add
 unneeded weight, no additional functionality, and possibly incorrect behavior...
 
@@ -116,7 +118,8 @@ inherently unsafe to cache PreparedStatements outside of the driver.**  Why?  Ag
 have the advantage of deep knowledge of the the database for which they are designed.
 
 Take for example DDL.  This is from a real world application we encountered (using BoneCP btw).
-Data was inserted into a table lets call X1.  Every night, programatically X1 was renamed to X2, and a new X1 was created with identical structure.  Basically, the application was
+Data was inserted into a table lets call X1.  Every night, programatically X1 was renamed to X2,
+and a new X1 was created with identical structure.  Basically, the application was
 "rolling" tables over daily (while running).  In spite of the structure of X1 being identical
 after rolling, the database considered a PreparedStatement compiled against the old table to be
 invalid (probably there was some kind of UUID contained within).  When the statement pool
@@ -125,18 +128,20 @@ connection pool, and enabling it in the driver fixed the issue.  How?  It is onl
 but it seems likely that driver in this case checks with the DB to ensure the statement is
 still valid and if not recompiles it transparently.
 
-Regardless of correctness or not (I'm sure it varies by DB vendor), it is unnecessary with
+Regardless of correctness or not (the behavior varies by DB vendor), it is unnecessary with
 modern database drivers to implement this at the pool level.
 
-**Log Statement Text**<br/>
+**Log Statement Text / Slow Query Logging**<br/>
 Like Statement caching, most major database vendors support statement logging through
-properties of their own driver.  This includes Oracle, MySQL, Derby, MSSQL.  We consider this
-a "development-time" feature.  For those few databases that do not support it,
-[log4jdbc](https://code.google.com/p/log4jdbc/) is a good option.  Actually *log4jdbc* provides some nice additional stuff like various timings, and PreparedStatement bound parameter logging.
+properties of their own driver.  This includes Oracle, MySQL, Derby, MSSQL, and others.  We
+consider this a "development-time" feature.  For those few databases that do not support it,
+[jdbcdslog-exp](https://code.google.com/p/jdbcdslog-exp/) is a good option.  It also provides
+some nice additional stuff like timing, logging slow queries only, and PreparedStatement bound
+parameter logging.
 
-HikariCP is focused (primarily) on performance in a Production environment, so it is doubtful
-that we will ever implement this kind of feature given inherent driver support and alternative
-solutions.
+HikariCP is focused (primarily) on reliability and performance in a Production environment, so
+it is doubtful that we will ever implement this kind of feature given inherent driver support
+and alternative solutions.
 
 ----------------------------------------------------
 
@@ -182,4 +187,43 @@ are not supported.  XA requires a real transaction manager like [bitronix](https
 
 ``idleTimeout``<br/>
 This property controls the maximum amount of time (in milliseconds) that a connection is
-allowed to sit idle in the pool.
+allowed to sit idle in the pool.  Whether a connection is retired as idle or not is subject
+to a maximum variation of +60 seconds, and average variation of +30 seconds.  A connection
+will never be retired as idle *before* this timeout.  A value of 0 means that idle connections
+are never removed from the pool.  *Default: 0*
+
+``jdbc4ConnectionTest``<br/>
+This property is a boolean value that determines whether the JDBC4 Connection.isValid() method
+is used to check that a connection is still alive.  This value is mutually exlusive with the
+``connectionTestQuery`` property, and this method of testing connection validity should be
+preferred if supported by the JDBC driver.  *Default: true*
+
+``leakDetectionThreshold``<br/>
+This property controls the amount of time that a connection can be out of the pool before a
+message is logged indicating a possible connection leak.  A value of 0 means leak detection
+is disabled.  While the default is 0, and other connection pool implementations state that
+leak detection is "not for production"as it imposes a high overhead, at least in the case
+of HikariCP the imposed overhead is only 5μs (*microseconds*).  Maybe other pools are doing
+it wrong, but feel free to use leak detection under HikariCP in production environments if
+you wish.  *Default: 0*
+
+``maxLifetime``<br/>
+This property controls the maximum lifetime of a connection in the pool.  When a connection
+reaches this timeout, even if recently used, it will be retired from the pool.  An in-use
+connection will never be retired, only when it is idle will it be removed.  We strongly
+recommend setting this value, and to something reasonable like 30 minutes, or 1 hour.  A
+value of 0 indicates no maximum lifetime (infinite lifetime), subject of course to the
+``idleTimeout`` setting.  *Default: 0*
+
+``maximumPoolSize``<br/>
+The property controls the maximum size that the pool is allowed to reach, including both
+idle and in-use connections.  Basically this value will determine the maximum number of
+actual connections to the database backend.  A reasonable value for this is best determined
+by your execution environment.  *Default: 1*
+
+``minimumPoolSize``<br/>
+The property controls the minimum number of connections that HikariCP tries to maintain in
+the pool, including both idle and in-use connections.  If the connections dip below this
+value, HikariCP will make a best effort to restore them quickly and efficiently.  A reasonable
+value for this is best determined by your execution environment.  *Default: 0*
+
