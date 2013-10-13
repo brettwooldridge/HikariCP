@@ -153,8 +153,6 @@ and alternative solutions.
 
 Trust us, you don't want this feature -- even disabled -- in a production connection pool.
 *We consider even checking a boolean as inducing too much overhead into your queries and results.*
-HikariCP is *fast*.  Given the time we have spent shaving off byte-codes off the the execution
-path, we say with confidence it is hard to imagine that there will ever be a anything faster.
 
 ----------------------------------------------------
 
