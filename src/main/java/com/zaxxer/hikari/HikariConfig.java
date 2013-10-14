@@ -55,6 +55,7 @@ public class HikariConfig
         connectionTimeout = Integer.MAX_VALUE;
         idleTimeout = TimeUnit.MINUTES.toMillis(30);
         proxyFactoryType = "auto";
+        isJdbc4connectionTest = true;
     }
 
     public HikariConfig(String propertyFileName)
