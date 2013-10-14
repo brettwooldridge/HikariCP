@@ -99,6 +99,7 @@ public class MockDataSource implements DataSource
         when(mockConnection.createStatement()).thenReturn(statement);
         when(mockConnection.createStatement(anyInt(), anyInt())).thenReturn(statement);
         when(mockConnection.createStatement(anyInt(), anyInt(), anyInt())).thenReturn(statement);
+        when(mockConnection.isValid(anyInt())).thenReturn(true);
 
         // Handle Connection.prepareStatement()
         PreparedStatement mockPreparedStatement = mock(PreparedStatement.class);
