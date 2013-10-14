@@ -24,14 +24,12 @@ import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
 
-import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.CtMethod;
 import javassist.CtNewConstructor;
 import javassist.CtNewMethod;
-import javassist.NotFoundException;
 
 /**
  *
@@ -46,6 +44,7 @@ public class JavassistProxyFactoryFactory
     {
         ClassPool defaultPool = ClassPool.getDefault();
         classPool = new ClassPool(defaultPool);
+        classPool.importPackage("java.sql");
         classPool.childFirstLookup = true;
 
         try
@@ -114,8 +113,7 @@ public class JavassistProxyFactoryFactory
      *  Generate Javassist Proxy Classes
      */
     @SuppressWarnings("unchecked")
-    private <T> Class<T> generateProxyClass(Class<T> primaryInterface, Class<?> superClass) throws NotFoundException, CannotCompileException,
-            NoSuchMethodException, SecurityException
+    private <T> Class<T> generateProxyClass(Class<T> primaryInterface, Class<?> superClass) throws Exception
     {
         // Make a new class that extends one of the JavaProxy classes (ie. superClass); use the name to XxxJavassistProxy instead of XxxJavaProxy
         String superClassName = superClass.getName();
@@ -150,30 +148,29 @@ public class JavassistProxyFactoryFactory
                     continue;
                 }
 
-                CtMethod method = CtNewMethod.copy(intfMethod, targetCt, null);
                 // Ignore already added methods that come from other interfaces
                 if (methods.contains(intfMethod.getName() + intfMethod.getSignature()))
                 {
                     continue;
                 }
 
+                CtMethod method = CtNewMethod.copy(intfMethod, targetCt, null);
                 methods.add(intfMethod.getName() + intfMethod.getSignature());
 
                 // Generate a method that simply invokes the same method on the delegate
-                StringBuilder call = new StringBuilder("{");
-                if (method.getReturnType() != CtClass.voidType)
+                String methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { throw checkException(e); } }";
+                if (method.getReturnType() == CtClass.voidType)
                 {
-                    call.append("return ");
+                    methodBody = methodBody.replace("return", "");
                 }
-                call.append("((").append(primaryInterface.getName()).append(')'); // cast to primary interface
-                call.append("delegate).");
-                call.append(method.getName()).append("($$);");
-                call.append('}');
-                method.setBody(call.toString());
+
+                methodBody = methodBody.replace("cast", primaryInterface.getName());
+                methodBody = methodBody.replace("method", method.getName());
+                method.setBody(methodBody);
                 targetCt.addMethod(method);
             }
         }
 
-        return targetCt.toClass(classPool.getClassLoader(), null); //ClassLoaderUtils.getClassLoader(), null);
+        return targetCt.toClass(classPool.getClassLoader(), null);
     }
 }

@@ -33,33 +33,44 @@ public class ResultSetProxy extends HikariProxyBase<ResultSet>
     
     protected ResultSetProxy()
     {
-        // Default constructor
+        super(null);
     }
 
     protected ResultSetProxy(Statement statement, ResultSet resultSet)
     {
-        initialize(statement, resultSet);
-    }
-
-    void initialize(Statement statement, ResultSet resultSet)
-    {
+        super(resultSet);
         this.proxy = this;
         this.statement = statement;
-        this.delegate = resultSet;
     }
 
-    /* Overridden methods of java.sql.ResultSet */
+//    void initialize(Statement statement, ResultSet resultSet)
+//    {
+//        this.proxy = this;
+//        this.statement = statement;
+//        this.delegate = resultSet;
+//    }
 
-    public Statement getStatement() throws SQLException
+    protected SQLException checkException(SQLException e)
     {
-        return statement;
+        return ((HikariProxyBase<?>) statement).checkException(e);
     }
-
+    
     /* Overridden methods of ProxyBase */
-
+    
     @Override
     protected Map<String, Method> getMethodMap()
     {
         return selfMethodMap;
+    }
+
+    // **********************************************************************
+    //                 Overridden java.sql.ResultSet Methods
+    //                      other methods are injected
+    // **********************************************************************
+
+
+    public Statement getStatement() throws SQLException
+    {
+        return statement;
     }
 }

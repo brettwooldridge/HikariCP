@@ -34,22 +34,39 @@ public class CallableStatementProxy extends HikariProxyBase<CallableStatement>
 
     protected CallableStatementProxy()
     {
-        // Default constructor
+        super(null);
     }
 
-    protected CallableStatementProxy(ConnectionProxy jdbcPooledConnection, CallableStatement statement)
+    protected CallableStatementProxy(ConnectionProxy connection, CallableStatement statement)
     {
-        initialize(jdbcPooledConnection, statement);
-    }
-
-    void initialize(ConnectionProxy connection, CallableStatement statement)
-    {
+        super(statement);
         this.proxy = this;
         this.connection = connection;
-        this.delegate = statement;
     }
 
-    /* Overridden methods of java.sql.CallableStatement */
+//    void initialize(ConnectionProxy connection, CallableStatement statement)
+//    {
+//        this.proxy = this;
+//        this.connection = connection;
+//        this.delegate = statement;
+//    }
+
+    SQLException checkException(SQLException e)
+    {
+        return connection.checkException(e);
+    }
+
+    @Override
+    protected Map<String, Method> getMethodMap()
+    {
+        return selfMethodMap;
+    }
+
+    // **********************************************************************
+    //               Overridden java.sql.CallableStatement Methods
+    //                       other methods are injected
+    // **********************************************************************
+
 
     public void close() throws SQLException
     {
@@ -96,11 +113,5 @@ public class CallableStatementProxy extends HikariProxyBase<CallableStatement>
             return unwrap(delegate, iface);
         }
         throw new SQLException(getClass().getName() + " is not a wrapper for " + iface);
-    }
-
-    @Override
-    protected Map<String, Method> getMethodMap()
-    {
-        return selfMethodMap;
     }
 }

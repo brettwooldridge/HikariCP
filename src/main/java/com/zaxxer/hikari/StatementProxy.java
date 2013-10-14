@@ -33,24 +33,40 @@ public class StatementProxy extends HikariProxyBase<Statement>
     
     protected StatementProxy()
     {
-        // Default constructor
+        super(null);
     }
 
     protected StatementProxy(ConnectionProxy connection, Statement statement)
     {
+        super(statement);
         this.proxy = this;
         this.connection = connection;
-        this.delegate = statement;
     }
 
-    void initialize(ConnectionProxy connection, Statement statement)
+//    void initialize(ConnectionProxy connection, Statement statement)
+//    {
+//        this.proxy = this;
+//        this.connection = connection;
+//        this.delegate = statement;
+//    }
+
+    SQLException checkException(SQLException e)
     {
-        this.proxy = this;
-        this.connection = connection;
-        this.delegate = statement;
+        return connection.checkException(e);
     }
 
-    /* Overridden methods of java.sql.Statement */
+    /* Overridden methods of ProxyBase */
+
+    @Override
+    protected Map<String, Method> getMethodMap()
+    {
+        return selfMethodMap;
+    }
+
+    // **********************************************************************
+    //                 Overridden java.sql.Statement Methods
+    //                      other methods are injected
+    // **********************************************************************
 
     public void close() throws SQLException
     {
@@ -61,7 +77,6 @@ public class StatementProxy extends HikariProxyBase<Statement>
 
         connection.unregisterStatement(proxy);
         delegate.close();
-        delegate = null;
     }
 
     public ResultSet executeQuery(String sql) throws SQLException
@@ -103,13 +118,5 @@ public class StatementProxy extends HikariProxyBase<Statement>
             return unwrap(delegate, iface);
         }
         throw new SQLException(getClass().getName() + " is not a wrapper for " + iface);
-    }
-
-    /* Overridden methods of ProxyBase */
-
-    @Override
-    protected Map<String, Method> getMethodMap()
-    {
-        return selfMethodMap;
     }
 }

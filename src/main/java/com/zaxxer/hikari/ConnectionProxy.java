@@ -21,7 +21,6 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Map;
@@ -64,21 +63,22 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
      */
     protected ConnectionProxy()
     {
+        super(null);
     }
 
     protected ConnectionProxy(HikariPool parentPool, Connection connection)
     {
+        super(connection);
         this.parentPool = parentPool;
         this.proxy = this;
-        this.delegate = connection;
     }
 
-    void initialize(HikariPool parentPool, Connection connection)
-    {
-        this.parentPool = parentPool;
-        this.proxy = this;
-        this.delegate = connection;
-    }
+//    void initialize(HikariPool parentPool, Connection connection)
+//    {
+//        this.parentPool = parentPool;
+//        this.proxy = this;
+//        this.delegate = connection;
+//    }
 
     void unregisterStatement(Object statement)
     {
@@ -113,10 +113,12 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
         StackTraceElement[] trace = Thread.currentThread().getStackTrace();
         stackTrace = new StackTraceElement[trace.length - 4];
         System.arraycopy(trace, 4, stackTrace, 0, stackTrace.length);
-        
+
         final long leakTime = System.currentTimeMillis() + leakDetectionThreshold;
-        leakTask = new TimerTask() {
-            public void run() {
+        leakTask = new TimerTask()
+        {
+            public void run()
+            {
                 if (System.currentTimeMillis() > leakTime)
                 {
                     Exception e = new Exception();
@@ -130,6 +132,11 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
         scheduler.schedule(leakTask, leakDetectionThreshold);
     }
 
+    SQLException checkException(SQLException e)
+    {
+        return e;
+    }
+
     @Override
     protected Map<String, Method> getMethodMap()
     {
@@ -138,6 +145,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
 
     // **********************************************************************
     //                   Overridden java.sql.Connection Methods
+    //                        other methods are injected
     // **********************************************************************
 
     /* (non-Javadoc)
@@ -153,13 +161,22 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
                 leakTask = null;
             }
 
-            final Statement[] statements = openStatements.toArray(new Statement[0]);
-            for (int i = 0; i < statements.length; i++)
+            try
             {
-                statements[i].close();
+                final Statement[] statements = openStatements.toArray(new Statement[0]);
+                for (int i = 0; i < statements.length; i++)
+                {
+                    statements[i].close();
+                }
             }
-
-            parentPool.releaseConnection((IHikariConnectionProxy) proxy);
+            catch (SQLException e)
+            {
+                throw checkException(e);
+            }
+            finally
+            {
+                parentPool.releaseConnection((IHikariConnectionProxy) proxy);
+            }
         }
     }
 
@@ -176,11 +193,18 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
      */
     public Statement createStatement() throws SQLException
     {
-        Statement statement = delegate.createStatement();
-        Statement statementProxy = ProxyFactory.INSTANCE.getProxyStatement(this, statement);
-        openStatements.add(statementProxy);
+        try
+        {
+            Statement statement = delegate.createStatement();
+            Statement statementProxy = ProxyFactory.INSTANCE.getProxyStatement(this, statement);
+            openStatements.add(statementProxy);
 
-        return statementProxy;
+            return statementProxy;
+        }
+        catch (SQLException e)
+        {
+            throw checkException(e);
+        }
     }
 
     /* (non-Javadoc)
@@ -188,11 +212,18 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
      */
     public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException
     {
-        Statement statement = delegate.createStatement(resultSetType, resultSetConcurrency);
-        Statement statementProxy = ProxyFactory.INSTANCE.getProxyStatement(this, statement);
-        openStatements.add(statementProxy);
+        try
+        {
+            Statement statement = delegate.createStatement(resultSetType, resultSetConcurrency);
+            Statement statementProxy = ProxyFactory.INSTANCE.getProxyStatement(this, statement);
+            openStatements.add(statementProxy);
 
-        return statementProxy;
+            return statementProxy;
+        }
+        catch (SQLException e)
+        {
+            throw checkException(e);
+        }
     }
 
     /* (non-Javadoc)
@@ -200,11 +231,18 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
      */
     public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
     {
-        Statement statement = delegate.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
-        Statement statementProxy = ProxyFactory.INSTANCE.getProxyStatement(this, statement);
-        openStatements.add(statementProxy);
+        try
+        {
+            Statement statement = delegate.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
+            Statement statementProxy = ProxyFactory.INSTANCE.getProxyStatement(this, statement);
+            openStatements.add(statementProxy);
 
-        return statementProxy;
+            return statementProxy;
+        }
+        catch (SQLException e)
+        {
+            throw checkException(e);
+        }
     }
 
     /* (non-Javadoc)
@@ -212,11 +250,18 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
      */
     public CallableStatement prepareCall(String sql) throws SQLException
     {
-        CallableStatement statement = delegate.prepareCall(sql);
-        CallableStatement statementProxy = ProxyFactory.INSTANCE.getProxyCallableStatement(this, statement);
-        openStatements.add(statementProxy);
-        
-        return statementProxy;
+        try
+        {
+            CallableStatement statement = delegate.prepareCall(sql);
+            CallableStatement statementProxy = ProxyFactory.INSTANCE.getProxyCallableStatement(this, statement);
+            openStatements.add(statementProxy);
+
+            return statementProxy;
+        }
+        catch (SQLException e)
+        {
+            throw checkException(e);
+        }
     }
 
     /* (non-Javadoc)
@@ -224,11 +269,18 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
      */
     public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException
     {
-        CallableStatement statement = delegate.prepareCall(sql, resultSetType, resultSetConcurrency);
-        CallableStatement statementProxy = ProxyFactory.INSTANCE.getProxyCallableStatement(this, statement);
-        openStatements.add(statementProxy);
-        
-        return statementProxy;
+        try
+        {
+            CallableStatement statement = delegate.prepareCall(sql, resultSetType, resultSetConcurrency);
+            CallableStatement statementProxy = ProxyFactory.INSTANCE.getProxyCallableStatement(this, statement);
+            openStatements.add(statementProxy);
+
+            return statementProxy;
+        }
+        catch (SQLException e)
+        {
+            throw checkException(e);
+        }
     }
 
     /* (non-Javadoc)
@@ -236,11 +288,18 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
      */
     public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
     {
-        CallableStatement statement = delegate.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
-        CallableStatement statementProxy = ProxyFactory.INSTANCE.getProxyCallableStatement(this, statement);
-        openStatements.add(statementProxy);
-        
-        return statementProxy;
+        try
+        {
+            CallableStatement statement = delegate.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
+            CallableStatement statementProxy = ProxyFactory.INSTANCE.getProxyCallableStatement(this, statement);
+            openStatements.add(statementProxy);
+
+            return statementProxy;
+        }
+        catch (SQLException e)
+        {
+            throw checkException(e);
+        }
     }
 
     /* (non-Javadoc)
@@ -248,11 +307,18 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
      */
     public PreparedStatement prepareStatement(String sql) throws SQLException
     {
-        PreparedStatement statement = delegate.prepareStatement(sql);
-        PreparedStatement statementProxy = ProxyFactory.INSTANCE.getProxyPreparedStatement(this, statement);
-        openStatements.add(statementProxy);
+        try
+        {
+            PreparedStatement statement = delegate.prepareStatement(sql);
+            PreparedStatement statementProxy = ProxyFactory.INSTANCE.getProxyPreparedStatement(this, statement);
+            openStatements.add(statementProxy);
 
-        return statementProxy;
+            return statementProxy;
+        }
+        catch (SQLException e)
+        {
+            throw checkException(e);
+        }
     }
 
     /* (non-Javadoc)
@@ -260,23 +326,37 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
      */
     public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException
     {
-        PreparedStatement statement = delegate.prepareStatement(sql, autoGeneratedKeys);
-        PreparedStatement statementProxy = ProxyFactory.INSTANCE.getProxyPreparedStatement(this, statement);
-        openStatements.add(statementProxy);
+        try
+        {
+            PreparedStatement statement = delegate.prepareStatement(sql, autoGeneratedKeys);
+            PreparedStatement statementProxy = ProxyFactory.INSTANCE.getProxyPreparedStatement(this, statement);
+            openStatements.add(statementProxy);
 
-        return statementProxy;
+            return statementProxy;
+        }
+        catch (SQLException e)
+        {
+            throw checkException(e);
+        }
     }
-    
+
     /* (non-Javadoc)
      * @see java.sql.Connection#prepareStatement(java.lang.String, int, int)
      */
     public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException
     {
-        PreparedStatement statement = delegate.prepareStatement(sql, resultSetType, resultSetConcurrency);
-        PreparedStatement statementProxy = ProxyFactory.INSTANCE.getProxyPreparedStatement(this, statement);
-        openStatements.add(statementProxy);
+        try
+        {
+            PreparedStatement statement = delegate.prepareStatement(sql, resultSetType, resultSetConcurrency);
+            PreparedStatement statementProxy = ProxyFactory.INSTANCE.getProxyPreparedStatement(this, statement);
+            openStatements.add(statementProxy);
 
-        return statementProxy;
+            return statementProxy;
+        }
+        catch (SQLException e)
+        {
+            throw checkException(e);
+        }
     }
 
     /* (non-Javadoc)
@@ -284,11 +364,18 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
      */
     public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
     {
-        PreparedStatement statement = delegate.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
-        PreparedStatement statementProxy = ProxyFactory.INSTANCE.getProxyPreparedStatement(this, statement);
-        openStatements.add(statementProxy);
+        try
+        {
+            PreparedStatement statement = delegate.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
+            PreparedStatement statementProxy = ProxyFactory.INSTANCE.getProxyPreparedStatement(this, statement);
+            openStatements.add(statementProxy);
 
-        return statementProxy;
+            return statementProxy;
+        }
+        catch (SQLException e)
+        {
+            throw checkException(e);
+        }
     }
 
     /* (non-Javadoc)
@@ -296,11 +383,18 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
      */
     public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException
     {
-        PreparedStatement statement = delegate.prepareStatement(sql, columnIndexes);
-        PreparedStatement statementProxy = ProxyFactory.INSTANCE.getProxyPreparedStatement(this, statement);
-        openStatements.add(statementProxy);
+        try
+        {
+            PreparedStatement statement = delegate.prepareStatement(sql, columnIndexes);
+            PreparedStatement statementProxy = ProxyFactory.INSTANCE.getProxyPreparedStatement(this, statement);
+            openStatements.add(statementProxy);
 
-        return statementProxy;
+            return statementProxy;
+        }
+        catch (SQLException e)
+        {
+            throw checkException(e);
+        }
     }
 
     /* (non-Javadoc)
@@ -308,26 +402,17 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
      */
     public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException
     {
-        PreparedStatement statement = delegate.prepareStatement(sql, columnNames);
-        PreparedStatement statementProxy = ProxyFactory.INSTANCE.getProxyPreparedStatement(this, statement);
-        openStatements.add(statementProxy);
+        try
+        {
+            PreparedStatement statement = delegate.prepareStatement(sql, columnNames);
+            PreparedStatement statementProxy = ProxyFactory.INSTANCE.getProxyPreparedStatement(this, statement);
+            openStatements.add(statementProxy);
 
-        return statementProxy;
-    }
-
-    /* (non-Javadoc)
-     * @see java.sql.Connection#rollback()
-     */
-    public void rollback() throws SQLException
-    {
-        // TODO Auto-generated method stub
-    }
-
-    /* (non-Javadoc)
-     * @see java.sql.Connection#rollback(java.sql.Savepoint)
-     */
-    public void rollback(Savepoint savepoint) throws SQLException
-    {
-        // TODO Auto-generated method stub
+            return statementProxy;
+        }
+        catch (SQLException e)
+        {
+            throw checkException(e);
+        }
     }
 }

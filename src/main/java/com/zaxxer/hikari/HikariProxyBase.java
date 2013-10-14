@@ -20,6 +20,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,12 +30,16 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class HikariProxyBase<T> implements InvocationHandler
 {
-
     private final static Map<Method, String> methodKeyMap = new ConcurrentHashMap<Method, String>();
 
     protected Object proxy;
 
-    protected T delegate;
+    final protected T delegate;
+
+    protected HikariProxyBase(T delegate)
+    {
+        this.delegate = delegate;
+    }
 
     protected abstract Map<String, Method> getMethodMap();
 
@@ -43,6 +48,8 @@ public abstract class HikariProxyBase<T> implements InvocationHandler
     {
         return (T) proxy;
     }
+
+    abstract SQLException checkException(SQLException e);
 
     @SuppressWarnings("unchecked")
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable

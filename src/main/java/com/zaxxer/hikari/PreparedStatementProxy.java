@@ -28,28 +28,31 @@ import java.util.Map;
  */
 public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
 {
-    private final static Map<String, Method> selfMethodMap = createMethodMap(PreparedStatementProxy.class);
-    private final static ProxyFactory proxyFactory = ProxyFactory.INSTANCE;
+    private final static Map<String, Method> selfMethodMap;
 
     private ConnectionProxy connection;
     
+    static
+    {
+        selfMethodMap = createMethodMap(PreparedStatementProxy.class);
+    }
+
     protected PreparedStatementProxy()
     {
-        // Default constructor
+        super(null);
     }
 
     protected PreparedStatementProxy(ConnectionProxy connection, PreparedStatement statement)
     {
+        super(statement);
         this.proxy = this;
         this.connection = connection;
-        this.delegate = statement;
     }
 
     void initialize(ConnectionProxy connection, PreparedStatement statement)
     {
         this.proxy = this;
         this.connection = connection;
-        this.delegate = statement;
     }
 
     public String toString()
@@ -57,7 +60,23 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         return "a PreparedStatementProxy wrapping [" + delegate + "]";
     }
 
-    /* Overridden methods of java.sql.PreparedStatement */
+    SQLException checkException(SQLException e)
+    {
+        return connection.checkException(e);
+    }
+
+    /* Overridden methods of ProxyBase */
+
+    @Override
+    protected Map<String, Method> getMethodMap()
+    {
+        return selfMethodMap;
+    }
+
+    // **********************************************************************
+    //              Overridden java.sql.PreparedStatement Methods
+    //                      other methods are injected
+    // **********************************************************************
 
     public void close() throws SQLException
     {
@@ -68,7 +87,6 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
 
         connection.unregisterStatement(proxy);
         delegate.close();
-        delegate = null;
     }
 
     public ResultSet getResultSet() throws SQLException
@@ -78,7 +96,7 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         {
             return null;
         }
-        return proxyFactory.getProxyResultSet(this.getProxy(), resultSet);
+        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), resultSet);
     }
 
     public ResultSet executeQuery() throws SQLException
@@ -88,7 +106,7 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         {
             return null;
         }
-        return proxyFactory.getProxyResultSet(this.getProxy(), resultSet);
+        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), resultSet);
     }
 
     public ResultSet executeQuery(String sql) throws SQLException
@@ -98,7 +116,7 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         {
             return null;
         }
-        return proxyFactory.getProxyResultSet(this.getProxy(), resultSet);
+        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), resultSet);
     }
 
     public ResultSet getGeneratedKeys() throws SQLException
@@ -108,7 +126,7 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         {
             return null;
         }
-        return proxyFactory.getProxyResultSet(this.getProxy(), generatedKeys);
+        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), generatedKeys);
     }
 
     /* java.sql.Wrapper implementation */
@@ -130,13 +148,5 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
             return unwrap(delegate, iface);
         }
         throw new SQLException(getClass().getName() + " is not a wrapper for " + iface);
-    }
-
-    /* Overridden methods of ProxyBase */
-
-    @Override
-    protected Map<String, Method> getMethodMap()
-    {
-        return selfMethodMap;
     }
 }
