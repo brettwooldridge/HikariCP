@@ -194,7 +194,7 @@ public class Benchmarks
             {
                 barrier.await();
 
-                start = System.currentTimeMillis();
+                start = System.nanoTime();
                 for (int i = 0; i < 1000; i++)
                 {
                     Connection connection = ds.getConnection();
@@ -230,14 +230,14 @@ public class Benchmarks
             }
             finally
             {
-                finish = System.currentTimeMillis();
+                finish = System.nanoTime();
                 latch.countDown();
             }
         }
 
         public long getElapsed()
         {
-            return finish - start;
+            return TimeUnit.NANOSECONDS.toMillis(finish - start);
         }
 
         public int getCounter()
