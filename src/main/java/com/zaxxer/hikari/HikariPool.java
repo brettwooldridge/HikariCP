@@ -106,7 +106,7 @@ public class HikariPool
             final long start = System.currentTimeMillis();
             do
             {
-                if (idleConnectionCount.get() == 0 || totalConnections.get() < configuration.getMinimumPoolSize())
+                if (idleConnectionCount.get() == 0)
                 {
                     fillPool();
                 }
