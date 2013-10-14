@@ -74,7 +74,9 @@ public class HikariPool
 
         try
         {
-            Class<?> clazz = ClassLoaderUtils.loadClass(configuration.getDataSourceClassName());
+            HikariClassLoader loader = new HikariClassLoader(configuration.getDataSourceClassName());
+            Class<?> clazz = loader.loadClass(configuration.getDataSourceClassName());
+            // Class<?> clazz = ClassLoaderUtils.loadClass(configuration.getDataSourceClassName());
             this.dataSource = (DataSource) clazz.newInstance();
         }
         catch (Exception e)
