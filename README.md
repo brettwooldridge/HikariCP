@@ -58,10 +58,10 @@ wrap the underlying ``Connection``, ``Statement``, ``CallableStatement``, and
 
 ``ResultSet`` *must* be wrapped, because ``ResultSet.getStatement()`` *must* return the
 **wrapped** ``Statement`` that generated it, not the **underlying** ``Statement``.
-Hibernate 4.3 for one relies on this semantic.
+Hibernate 4.3 for one [relies on this semantic](http://jira.codehaus.org/browse/BTM-126).
 
 If BoneCP were to wrap ResultSet, which comprises 20,100,000 of the 60,702,000 operations in
-MixedBench, its performance numbers would be far poorer.  Also take note that HikariCP *does*
+MixedBench, its performance numbers would be poorer.  Also take note that HikariCP *does*
 properly wrap ResultSet and still achives the numbers above.
 
 One example of *subjective* incorrectness is that BoneCP does not test a ``Connection`` immediately
@@ -69,13 +69,14 @@ before dispatching it from the pool.  In my opinion, this one "flaw" (or "featur
 unsuitable for Production use.  The number one responsibility of a connection pool is to **not** give 
 out possibly bad connections.  If you have ever run a load-balancer in front of read-slaves (and had
 one fail), or have ever needed to bounce the DB while the application was running, you certainly didn't
-do it with BoneCP.
+do reliabily it with BoneCP.
 
-Over on the BoneCP site, you can find a comparison of BoneCP vs. DBCP and C3P0.  DBCP and C3P0,
-as poor as they are, at least are performing aliveness tests before dispatching connections.
-So, it's not really a fair comparison.  HikariCP supports the JDBC4 ``Connection.isValid()``
-API, which for many drivers provides a fast non-query based aliveness test.  Regardless, it
-will always test a connection just microseconds before handing it to you.
+BoneCP may claim that testing a connection on dispatch from the pool negatively impacts performance.
+However, not doing so negatively impacts reliability.  Addtionatlly, HikariCP supports the JDBC4 
+``Connection.isValid()`` API, which for many drivers provides a fast non-query based aliveness test.
+Regardless, it will always test a connection just microseconds before handing it to you.  Add to that
+the fact that the ratio of getConnection() calls to other wrapped JDBC calls is extremely small you
+you'll find that at an application level there is very little (if any) performance difference.
 
 A particularly silly "benchmark" on the BoneCP site starts 500 threads each performing 100
 DataSource.getConnection() / connection.close() calls with 0ms delay between.  Who does that?
@@ -107,14 +108,13 @@ wrong.
 
 We're not going to (overly) question the design decisions of other pools, but we will say
 that some other pools seem to implement a lot of "gimmicks" that proportedly improve
-performance.  HikariCP achieves high-performance even in pools of unrealistic sizes (5,000
-connections anyone?).  Either these "gimmicks" are a case of premature optimization or
-reflective of a poor design/lack of understanding of how to leaverage the JVM JIT to full
-effect.
+performance.  HikariCP achieves high-performance even in pools beyond unrealistic deployment
+sizes.  Either these "gimmicks" are a case of premature optimization or reflective of a poor
+design/lack of understanding of how to leaverage the JVM JIT to full effect.
 
 ##### ***Missing Knobs*** #####
 In keeping with the *simple is better* or *less is more* design philosophy, some knobs and 
-features are intentionally left out.  Here are some, and the reasons.
+features are intentionally left out.  Here are two, and the rationale.
 
 **Statement Cache**<br/>
 Most major database JDBC drivers already have a PreparedStatement cache that can be
@@ -126,18 +126,19 @@ connected and can share internal state that is synchronized with the backend.  *
 inherently unsafe to cache PreparedStatements outside of the driver.**  Why?  Again, drivers
 have the advantage of deep knowledge of the the database for which they are designed.
 
-Take for example DDL.  This is from a real world application we encountered (using BoneCP btw).
-Data was inserted into a table lets call X1.  Every night, programatically X1 was renamed to X2,
-and a new X1 was created with identical structure.  Basically, the application was
-"rolling" tables over daily (while running).  In spite of the structure of X1 being identical
-after rolling, the database considered a PreparedStatement compiled against the old table to be
-invalid.  When the statement pool returned one of these statements, the application blew up.
-Turning off the cache in the connection pool, and enabling it in the driver fixed the issue.
-How?  It is only speculation, but it seems likely that driver in this case checks with the DB
-to ensure the statement is still valid and if not recompiles it transparently.
+Take for example DDL.  This is from a real world application we encountered.  Data was inserted
+into a table lets call X1.  Every night, programatically X1 was renamed to X2, and a new X1 was
+created with identical structure.  Basically, the application was "rolling" tables over daily
+(while running).  In spite of the structure of X1 being identical after rolling, the database
+considered a PreparedStatement compiled against the old table to be invalid.  When the statement
+pool returned one of these statements, the application failed.  Turning off the cache in the
+connection pool, and enabling it in the driver fixed the issue. How?  It is only speculation,
+but it seems likely that driver in this case checks with the DB to ensure the statement is still
+valid and if not recompiles it transparently. *Just because a connection is still valid does
+not mean that prepared statements previously generated by it are valid.*
 
-Regardless of correctness or not (the behavior varies by DB vendor), it is unnecessary with
-modern database drivers to implement this at the pool level.
+Regardless of correctness or not it is unnecessary with modern database drivers to implement this
+at the pool level.
 
 **Log Statement Text / Slow Query Logging**<br/>
 Like Statement caching, most major database vendors support statement logging through
@@ -147,16 +148,12 @@ consider this a "development-time" feature.  For those few databases that do not
 some nice additional stuff like timing, logging slow queries only, and PreparedStatement bound
 parameter logging.
 
-HikariCP is focused (primarily) on reliability and performance in a Production environment, so
-it is doubtful that we will ever implement this kind of feature given inherent driver support
-and alternative solutions.
-
 Trust us, you don't want this feature -- even disabled -- in a production connection pool.
 *We consider even checking a boolean as inducing too much overhead into your queries and results.*
 
 ----------------------------------------------------
 
-#### Configuration (knobs baby!) ####
+#### Configuration (Knobs, baby!) ####
 The following is the various properties that can be configured in the pool, their behavior,
 and their defaults.  HikariCP uses milliseconds for *all* time values, be careful.
 
@@ -240,3 +237,7 @@ the pool, including both idle and in-use connections.  If the connections dip be
 value, HikariCP will make a best effort to restore them quickly and efficiently.  A reasonable
 value for this is best determined by your execution environment.  *Default: 0*
 
+#### Requirements ####
+ * Java 6 and above
+ * Javassist library
+ * slf4j library
