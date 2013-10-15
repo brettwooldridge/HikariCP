@@ -49,7 +49,9 @@ PreparedStatement, and ResultSet, so the driver was taken completely out of the 
 that the performance and overhead of the pools themselves could be measured.
 
 The test was performed on an Intel Core i7 (2600) 3.4GHz iMac, MacOS X 10.8, 24GB RAM.  The
-JVM benchmark was run with: ``-server -XX:+UseParallelGC -Xss256k -Dthreads=200 -DpoolMax=100``.
+JVM benchmark was run with: ``-server -XX:+UseParallelGC -Xss256k -Dthreads=500 -DpoolMax=200``.
+The benchmark is available in the ``src/test/java`` folder in the package ``com.zaxxer.hikari.performance``
+in a main class called ``Benchmark``.
 
 ##### In Summary #####
 500 threads ran 60,702,000 JDBC operations each, HikariCP did this in a median of *19ms* per thread.
