@@ -7,7 +7,7 @@ There is nothing faster.  There is nothing more reliable.  There is nothing more
 essentially zero-overhead Production-ready connection pool.
 
 Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations
-were performed in 25ms on a commodity PC.  More than 40x faster that the next fastest connection pool.
+were performed in 19ms on a commodity PC.  Almost 300x faster that the next fastest connection pool.
 
 #### Performance ####
 Let's look at some performance numbers.  HikariCP was only compared to BoneCP because, really, DBCP and C3P0 
@@ -17,12 +17,12 @@ are old and slow.
 This is the so called "Mixed" benchmark, and it executes a representative array of JDBC
 operations in a realistic mix.  We think *median* is the number to pay attention to, rather
 than average (which can get skewed).  *Median* meaning 50% of the iterations were slower, %50 were faster.
-200 threads were started, and the underlying connection pool contained 100 connections.
+500 threads were started, and the underlying connection pool contained 200 connections.
 
 | Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
 | -------- | ---------:| ---------:| ---------:|
-| BoneCP   | 918       | 662       | 1648      |
-| HikariCP | 16        | 13        | 35        |
+| BoneCP   | 5533      | 3756      | 8189      |
+| HikariCP | 19        | 21        | 96        |
 
 A breakdown of the mix operations is:
 
@@ -51,7 +51,7 @@ The test was performed on an Intel Core i7 (2600) 3.4GHz iMac, MacOS X 10.8, 24G
 JVM benchmark was run with: ``-server -XX:+UseParallelGC -Xss256k -Dthreads=200 -DpoolMax=100``.
 
 ##### In Summary #####
-200 threads ran 60,702,000 JDBC operations each, HikariCP did this in a median of *25ms* per thread.
+500 threads ran 60,702,000 JDBC operations each, HikariCP did this in a median of *19ms* per thread.
 
 ------------------------------
 
@@ -81,13 +81,12 @@ However, not doing so negatively impacts reliability.  Addtionatlly, HikariCP su
 ``Connection.isValid()`` API, which for many drivers provides a fast non-query based aliveness test.
 Regardless, it will always test a connection just microseconds before handing it to you.  Add to that
 the fact that the ratio of getConnection() calls to other wrapped JDBC calls is extremely small you
-you'll find that at an application level there is very little (if any) performance difference.
+you'll find that at an application level there is very little performance impact.
 
-A particularly silly "benchmark" on the BoneCP site starts 500 threads each performing 100
-DataSource.getConnection() / connection.close() calls with 0ms delay between.  Who does that?
-The typical "mix" is dozens or hundreds of JDBC operations between obtaining the connection and
-closing it (hence the "MixBench") above.  But ok, we can run this "benchmark" too (times in
-*Microseconds*):
+A particularly silly "benchmark" on the BoneCP site starts 500 threads each performing 100 ds.getConnection() /
+connection.close() calls with 0ms delay between.  Who does that? The typical "mix" is dozens or hundreds of
+JDBC operations between obtaining the connection and closing it (hence the "MixBench") above.  But ok, we can
+run this "benchmark" too (times in *Microseconds*):
 
 | Pool     |  Med (μs) |  Avg (μs) |  Max (μs) |
 | -------- | ---------:| ---------:| ---------:|
