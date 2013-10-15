@@ -3,11 +3,11 @@ HikariCP <sub><sub>Ultimate JDBC Connection Pool<sup><sup>&nbsp;&nbsp;[We came, 
 
 #### TL;DR ####
 
-There is nothing faster.  There is nothing more reliable.  There is nothing more correct.
+There is nothing faster.  There is nothing more reliable.  There is nothing more correct.  HikariCP is an
+essentially zero-overhead Production-ready connection pool.
 
-HikariCP is an essentially zero-overhead Production-ready connection pool.  Using a stub-JDBC implementation
-to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations were performed in 25ms on a
-commodity PC.  Almost 40x faster that the next fastest connection pool.
+Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations
+were performed in 25ms on a commodity PC.  More than 40x faster that the next fastest connection pool.
 
 #### Performance ####
 Let's look at some performance numbers.  HikariCP was only compared to BoneCP because, really, DBCP and C3P0 
@@ -21,8 +21,8 @@ than average (which can get skewed).  *Median* meaning 50% of the iterations wer
 
 | Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
 | -------- | ---------:| ---------:| ---------:|
-| BoneCP   | 976       | 909       | 1463      |
-| HikariCP | 25        | 22        | 90       |
+| BoneCP   | 918       | 662       | 1648      |
+| HikariCP | 16        | 13        | 35        |
 
 A breakdown of the mix operations is:
 
@@ -41,14 +41,13 @@ A breakdown of the mix operations is:
 | Connection.close()                   | 1000        |
 
 The JVM JIT was "warmed up" with a single run through, then 4 runs were made from which the run
-with the lowest median time was chosen.  Not surprisingly, the run with the lowest *median* was
-also the run with the lowest *average*.
+with the lowest median time was chosen.
 
 The benchmark was run using a stub (nop) implementation of an underlying DataSource, Connection,
 PreparedStatement, and ResultSet, so the driver was taken completely out of the equation so
 that the performance and overhead of the pools themselves could be measured.
 
-The test was performed on an Intel Core i7 (2600) 3.4GHz iMac with 24GB of RAM.  The
+The test was performed on an Intel Core i7 (2600) 3.4GHz iMac, MacOS X 10.8, 24GB RAM.  The
 JVM benchmark was run with: ``-server -XX:+UseParallelGC -Xss256k -Dthreads=200 -DpoolMax=100``.
 
 ##### In Summary #####
