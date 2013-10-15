@@ -164,6 +164,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
             try
             {
                 final Statement[] statements = openStatements.toArray(new Statement[0]);
+                openStatements.clear();
                 for (int i = 0; i < statements.length; i++)
                 {
                     statements[i].close();
