@@ -31,11 +31,6 @@
   		<scope>test</scope>
   	</dependency>
   	<dependency>
-  		<groupId>cglib</groupId>
-  		<artifactId>cglib</artifactId>
-  		<version>2.2.2</version>
-  	</dependency>
-  	<dependency>
   		<groupId>org.slf4j</groupId>
   		<artifactId>slf4j-simple</artifactId>
   		<version>1.7.5</version>
