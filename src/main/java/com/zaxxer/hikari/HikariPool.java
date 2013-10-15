@@ -161,7 +161,7 @@ public class HikariPool
         }
     }
 
-    void releaseConnection(IHikariConnectionProxy connection)
+    public void releaseConnection(IHikariConnectionProxy connection)
     {
         boolean existing = inUseConnections.remove(connection);
         if (existing)
@@ -210,9 +210,10 @@ public class HikariPool
             try
             {
                 Connection connection = dataSource.getConnection();
-                IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) ProxyFactory.INSTANCE.getProxyConnection(this, connection);
+                IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) connection;
+                proxyConnection.setHikariPool(this);
 
-                boolean alive = isConnectionAlive((Connection) proxyConnection, configuration.getConnectionTimeout());
+                boolean alive = isConnectionAlive(connection, configuration.getConnectionTimeout());
                 if (alive)
                 {
                     idleConnectionCount.incrementAndGet();
@@ -274,7 +275,7 @@ public class HikariPool
         try
         {
             totalConnections.decrementAndGet();
-            connectionProxy.getDelegate().close();
+            connectionProxy.realClose();
         }
         catch (SQLException e)
         {

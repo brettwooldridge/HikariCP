@@ -16,7 +16,7 @@
 
 package com.zaxxer.hikari;
 
-import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Timer;
 
 /**
@@ -25,14 +25,16 @@ import java.util.Timer;
  */
 public interface IHikariConnectionProxy
 {
+    void setHikariPool(HikariPool hikariPool);
+
     long getCreationTime();
 
     long getLastAccess();
 
     void setLastAccess(long timestamp);
 
-    Connection getDelegate();
-
     /* Leak Detection API */
     void captureStack(long leakThreshold, Timer houseKeepingTimer);
+
+    void realClose() throws SQLException;
 }

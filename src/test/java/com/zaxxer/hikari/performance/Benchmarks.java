@@ -53,11 +53,15 @@ public class Benchmarks
         System.out.println("\nMixedBench");
         System.out.println(" Warming up JIT");
         benchmarks.startMixedBench();
-//        System.out.println(" MixedBench Final Timing Runs");
-//        benchmarks.startMixedBench();
-//        benchmarks.startMixedBench();
-//        benchmarks.startMixedBench();
-//        benchmarks.startMixedBench();
+        System.out.println(" MixedBench Final Timing Runs");
+        benchmarks.startMixedBench();
+        benchmarks.startMixedBench();
+        benchmarks.startMixedBench();
+        benchmarks.startMixedBench();
+        benchmarks.startMixedBench();
+        benchmarks.startMixedBench();
+        benchmarks.startMixedBench();
+        benchmarks.startMixedBench();
 
         System.out.println("\nBoneBench");
         System.out.println(" Warming up JIT");

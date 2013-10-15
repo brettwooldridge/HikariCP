@@ -17,11 +17,11 @@
 package com.zaxxer.hikari;
 
 import javassist.ClassPool;
+import javassist.CodeConverter;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.Loader;
 import javassist.NotFoundException;
-import javassist.bytecode.ClassFile;
 
 public class HikariClassLoader extends Loader
 {
@@ -39,7 +39,6 @@ public class HikariClassLoader extends Loader
         this.dataSourceClassName = dataSourceClassName;
         ClassPool parentPool = ClassPool.getDefault();
         this.classPool = new ClassPool(parentPool);
-        this.classPool.childFirstLookup = true;
     }
 
     @Override
@@ -57,23 +56,68 @@ public class HikariClassLoader extends Loader
             throw new ClassNotFoundException("HikariClassLoader could not load class " + className, e);
         }
 
-        boolean modified = false;
-//        ClassFile classFile = ctClass.getClassFile();
-//        String[] interfaces = classFile.getInterfaces();
         for (CtClass interf : interfaces)
         {
             if ("java.sql.Connection".equals(interf.getName()))
             {
-                modified = true;
-                break;
+                return enhanceConnection(ctClass);
             }
         }
 
-        if (!modified)
-        {
-            ctClass.detach();
-        }
+        ctClass.detach();
 
         return super.findClass(className);
+    }
+
+    private Class<?> enhanceConnection(CtClass connectionClass)
+    {
+        try
+        {
+            String connectionClassName = connectionClass.getName();
+            // Rename the original class
+            connectionClass.setName(connectionClassName + "Hikari");
+            connectionClass.toClass();
+
+            CtClass throwaway = classPool.get("com.zaxxer.hikari.ThrowawayConnection");
+            CtClass proxy = classPool.get("com.zaxxer.hikari.ConnectionProxy");
+            CtMethod[] methods = proxy.getMethods();
+            proxy.setName(connectionClassName);
+            proxy.setSuperclass(connectionClass);
+
+            // General method to fix "super" delegation
+            for (CtMethod method : methods)
+            {
+                CtMethod realMethod;
+                CtMethod throwawayMethod;
+                try
+                {
+                    throwawayMethod = throwaway.getMethod(method.getName(), method.getSignature());
+                    realMethod = connectionClass.getMethod(method.getName(), method.getSignature());
+                }
+                catch (NotFoundException nfe)
+                {
+                    continue;
+                }
+
+                CodeConverter converter = new CodeConverter();
+                converter.redirectMethodCall(throwawayMethod, realMethod);
+                method.instrument(converter);
+            }
+
+            // Special case for realClose() handling
+            CtMethod method = proxy.getMethod("realClose", "()V");
+            CtMethod throwawayMethod = throwaway.getMethod("close", method.getSignature());
+            CtMethod realMethod = connectionClass.getMethod("close", method.getSignature());
+            CodeConverter converter = new CodeConverter();
+            converter.redirectMethodCall(throwawayMethod, realMethod);
+            method.instrument(converter);
+            
+            proxy.debugWriteFile("/tmp");
+            return proxy.toClass();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 }
