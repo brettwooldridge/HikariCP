@@ -17,7 +17,8 @@ are old and slow.
 This is the so called "Mixed" benchmark, and it executes a representative array of JDBC
 operations in a realistic mix.  We think *median* is the number to pay attention to, rather
 than average (which can get skewed).  *Median* meaning 50% of the iterations were slower, %50 were faster.
-500 threads were started, and the underlying connection pool contained 200 connections.
+500 threads were started, and the underlying connection pool contained 200 connections.  Measurements taken
+in nanoseconds and converted to milliseconds.
 
 | Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
 | -------- | ---------:| ---------:| ---------:|
