@@ -22,9 +22,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.Map;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -39,7 +38,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
 {
     private static final Map<String, Method> selfMethodMap = createMethodMap(ConnectionProxy.class);
 
-    private final Set<Statement> openStatements;
+    private final ArrayList<Statement> openStatements;
     private final AtomicBoolean isClosed;
 
     private HikariPool parentPool;
@@ -53,7 +52,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
 
     // Instance initializer
     {
-        openStatements = new HashSet<Statement>(64);
+        openStatements = new ArrayList<Statement>(64);
         isClosed = new AtomicBoolean();
         creationTime = System.currentTimeMillis();
     }
@@ -163,11 +162,9 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
 
             try
             {
-                final Statement[] statements = openStatements.toArray(new Statement[0]);
-                openStatements.clear();
-                for (int i = 0; i < statements.length; i++)
+                for (Statement statement : openStatements)
                 {
-                    statements[i].close();
+                    statement.close();
                 }
             }
             catch (SQLException e)
@@ -176,6 +173,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
             }
             finally
             {
+                openStatements.clear();
                 parentPool.releaseConnection((IHikariConnectionProxy) proxy);
             }
         }
