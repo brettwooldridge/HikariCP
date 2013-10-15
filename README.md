@@ -1,11 +1,17 @@
 HikariCP <sub><sub>Ultimate JDBC Connection Pool<sup><sup>&nbsp;&nbsp;[We came, we saw, we kicked its ass](http://youtu.be/-xMGRA_FePw)</sup></sup></sub></sub>
 ========
 
+#### TL;DR ####
+
 There is nothing faster.  There is nothing more reliable.  There is nothing more correct.
 
-#### TL;DR ####
-Let's look at some performance numbers.  HikariCP was only compared to BoneCP because, really,
-DBCP and C3P0 are old and slow.
+HikariCP is an essentially zero-overhead Production-ready connection pool.  Using a stub-JDBC implementation
+to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations were performed in 25ms on a
+commodity PC.  Almost 40x faster that the next fastest connection pool.
+
+#### Performance ####
+Let's look at some performance numbers.  HikariCP was only compared to BoneCP because, really, DBCP and C3P0 
+are old and slow.
 
 ##### MixedBench #####
 This is the so called "Mixed" benchmark, and it executes a representative array of JDBC
@@ -16,7 +22,7 @@ than average (which can get skewed).  *Median* meaning 50% of the iterations wer
 | Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
 | -------- | ---------:| ---------:| ---------:|
 | BoneCP   | 976       | 909       | 1463      |
-| HikariCP | 169       | 146       | 441       |
+| HikariCP | 25        | 22        | 90       |
 
 A breakdown of the mix operations is:
 
@@ -46,7 +52,7 @@ The test was performed on an Intel Core i7 (2600) 3.4GHz iMac with 24GB of RAM. 
 JVM benchmark was run with: ``-server -XX:+UseParallelGC -Xss256k -Dthreads=200 -DpoolMax=100``.
 
 ##### In Summary #####
-200 threads ran 60,702,000 JDBC operations each, HikariCP did this in a median of *169ms* per thread.
+200 threads ran 60,702,000 JDBC operations each, HikariCP did this in a median of *25ms* per thread.
 
 ------------------------------
 
@@ -61,15 +67,15 @@ wrap the underlying ``Connection``, ``Statement``, ``CallableStatement``, and
 Hibernate 4.3 for one [relies on this semantic](http://jira.codehaus.org/browse/BTM-126).
 
 If BoneCP were to wrap ResultSet, which comprises 20,100,000 of the 60,702,000 operations in
-MixedBench, its performance numbers would be poorer.  Also take note that HikariCP *does*
-properly wrap ResultSet and still achives the numbers above.
+MixedBench, its performance numbers would be poorer.  Take note that HikariCP *does* properly wrap
+ResultSet and still achives the numbers above.
 
 One example of *subjective* incorrectness is that BoneCP does not test a ``Connection`` immediately
-before dispatching it from the pool.  In my opinion, this one "flaw" (or "feature") alone renders BoneCP
+before dispatching it from the pool.  In our opinion, this one "flaw" (or "feature") alone renders BoneCP
 unsuitable for Production use.  The number one responsibility of a connection pool is to **not** give 
-out possibly bad connections.  If you have ever run a load-balancer in front of read-slaves (and had
-one fail), or have ever needed to bounce the DB while the application was running, you certainly didn't
-do reliabily it with BoneCP.
+out possibly bad connections.  Of course there are no guarantees, and the connection could drop in the
+few tens of microseconds between the test and its use in your code, but it is much more reliable than
+testing once a minute or only when a SQLException has already occurred.
 
 BoneCP may claim that testing a connection on dispatch from the pool negatively impacts performance.
 However, not doing so negatively impacts reliability.  Addtionatlly, HikariCP supports the JDBC4 
@@ -87,12 +93,7 @@ Microseconds):
 | Pool     |  Med (μs) |  Avg (μs) |  Max (μs) |
 | -------- | ---------:| ---------:| ---------:|
 | BoneCP   | 19467     | 8762      | 30851     |
-| HikariCP | 76        | 65        | 112       |
-
-Probably the reason they put up this test is, because BoneCP is not testing connections
-(except when there is a SQLException) and other pools are, this test makes BoneCP really
-seem to blaze (compared to DBCP and C3P0), but is not representative of performance you 
-will see in your application.
+| HikariCP | 74        | 62        | 112       |
 
 ------------------------------------------
 
