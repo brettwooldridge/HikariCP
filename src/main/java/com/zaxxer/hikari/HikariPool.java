@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +38,7 @@ public class HikariPool
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
 
     private final HikariConfig configuration;
-    private final BlockingQueue<IHikariConnectionProxy> idleConnections;
+    private final LinkedTransferQueue<IHikariConnectionProxy> idleConnections;
     private final Set<IHikariConnectionProxy> inUseConnections;
 
     private final AtomicInteger totalConnections;
@@ -165,7 +164,7 @@ public class HikariPool
         if (existing)
         {
             connection.setLastAccess(System.currentTimeMillis());
-            idleConnections.add(connection);
+            idleConnections.put(connection);
             idleConnectionCount.incrementAndGet();
         }
         else
