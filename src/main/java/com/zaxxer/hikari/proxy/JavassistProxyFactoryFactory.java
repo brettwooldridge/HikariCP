@@ -30,8 +30,9 @@ import javassist.CtConstructor;
 import javassist.CtMethod;
 import javassist.CtNewConstructor;
 import javassist.CtNewMethod;
+import javassist.Modifier;
 
-import com.zaxxer.hikari.ClassLoaderUtils;
+import com.zaxxer.hikari.util.ClassLoaderUtils;
 
 /**
  *
@@ -121,6 +122,7 @@ public class JavassistProxyFactoryFactory
         String superClassName = superClass.getName();
         CtClass superClassCt = classPool.getCtClass(superClassName);
         CtClass targetCt = classPool.makeClass(superClassName.replace("Proxy", "JavassistProxy"), superClassCt);
+        targetCt.setModifiers(Modifier.FINAL);
 
         // Generate constructors that simply call super(..)
         for (CtConstructor constructor : superClassCt.getConstructors())
