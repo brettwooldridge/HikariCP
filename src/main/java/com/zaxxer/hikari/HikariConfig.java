@@ -28,34 +28,44 @@ import org.slf4j.LoggerFactory;
  * limitations under the License.
  */
 
-public class HikariConfig
+public class HikariConfig implements HikariConfigMBean
 {
-    private int minPoolSize;
-    private int maxPoolSize;
-    private String connectionUrl;
-    private int acquireIncrement;
-    private int acquireRetries;
-    private long acquireRetryDelay;
-    private long connectionTimeout;
+    private static int poolNumber;
+
+    private volatile int acquireIncrement;
+    private volatile  int acquireRetries;
+    private volatile  long acquireRetryDelay;
+    private volatile  long connectionTimeout;
     private String connectionTestQuery;
+    private String connectionUrl;
     private String dataSourceClassName;
-    private String proxyFactoryType;
+    private volatile long idleTimeout;
     private boolean isJdbc4connectionTest;
-    private long maxLifetime;
-    private long leakDetectionThreshold;
-    private long idleTimeout;
+    private volatile long leakDetectionThreshold;
+    private volatile long maxLifetime;
+    private volatile int minPoolSize;
+    private volatile int maxPoolSize;
+    private String poolName;
+
+    private Properties driverProperties;
 
     /**
      * Default constructor
      */
     public HikariConfig()
     {
-        acquireIncrement = 1;
-        maxPoolSize = 1;
-        connectionTimeout = Integer.MAX_VALUE;
-        idleTimeout = TimeUnit.MINUTES.toMillis(30);
-        proxyFactoryType = "auto";
+        driverProperties = new Properties();
+
+        acquireIncrement = 5;
+        acquireRetries = 3;
+        acquireRetryDelay = 750;
+        connectionTimeout = 5000;
+        idleTimeout = TimeUnit.MINUTES.toMillis(10);
         isJdbc4connectionTest = true;
+        minPoolSize = 10;
+        maxPoolSize = 60;
+        maxLifetime = TimeUnit.MINUTES.toMillis(30);
+        poolName = "HikariPool-" + poolNumber++;
     }
 
     public HikariConfig(String propertyFileName)
@@ -80,11 +90,23 @@ public class HikariConfig
         }
     }
 
+    public void addDriverProperty(String propertyName, String value)
+    {
+        driverProperties.put(propertyName, value);
+    }
+
+    public Properties getDriverProperties()
+    {
+        return driverProperties;
+    }
+
+    /** {@inheritDoc} */
     public int getAcquireIncrement()
     {
         return acquireIncrement;
     }
 
+    /** {@inheritDoc} */
     public void setAcquireIncrement(int acquireIncrement)
     {
         if (acquireIncrement < 1)
@@ -94,11 +116,13 @@ public class HikariConfig
         this.acquireIncrement = acquireIncrement;
     }
 
+    /** {@inheritDoc} */
     public int getAcquireRetries()
     {
         return acquireRetries;
     }
 
+    /** {@inheritDoc} */
     public void setAcquireRetries(int acquireRetries)
     {
         if (acquireRetries < 0)
@@ -108,11 +132,13 @@ public class HikariConfig
         this.acquireRetries = acquireRetries;
     }
 
+    /** {@inheritDoc} */
     public long getAcquireRetryDelay()
     {
         return acquireRetryDelay;
     }
 
+    /** {@inheritDoc} */
     public void setAcquireRetryDelay(long acquireRetryDelayMs)
     {
         if (acquireRetryDelayMs < 0)
@@ -132,16 +158,22 @@ public class HikariConfig
         this.connectionTestQuery = connectionTestQuery;
     }
 
+    /** {@inheritDoc} */
     public long getConnectionTimeout()
     {
         return connectionTimeout;
     }
 
+    /** {@inheritDoc} */
     public void setConnectionTimeout(long connectionTimeoutMs)
     {
         if (connectionTimeoutMs < 0)
         {
             throw new IllegalArgumentException("connectionTimeout cannot be negative");
+        }
+        if (connectionTimeoutMs == 0)
+        {
+            this.connectionTimeout = Integer.MAX_VALUE;
         }
         this.connectionTimeout = connectionTimeoutMs;
     }
@@ -166,11 +198,13 @@ public class HikariConfig
         this.dataSourceClassName = className;
     }
 
+    /** {@inheritDoc} */
     public long getIdleTimeout()
     {
         return idleTimeout;
     }
 
+    /** {@inheritDoc} */
     public void setIdleTimeout(long idleTimeoutMs)
     {
         this.idleTimeout = idleTimeoutMs;
@@ -186,31 +220,37 @@ public class HikariConfig
         this.isJdbc4connectionTest = useIsValid;
     }
 
+    /** {@inheritDoc} */
     public long getLeakDetectionThreshold()
     {
         return leakDetectionThreshold;
     }
 
+    /** {@inheritDoc} */
     public void setLeakDetectionThreshold(long leakDetectionThresholdMs)
     {
         this.leakDetectionThreshold = leakDetectionThresholdMs; 
     }
 
+    /** {@inheritDoc} */
     public long getMaxLifetime()
     {
         return maxLifetime;
     }
 
+    /** {@inheritDoc} */
     public void setMaxLifetime(long maxLifetimeMs)
     {
         this.maxLifetime = maxLifetimeMs;
     }
 
+    /** {@inheritDoc} */
     public int getMinimumPoolSize()
     {
         return minPoolSize;
     }
 
+    /** {@inheritDoc} */
     public void setMinimumPoolSize(int minPoolSize)
     {
         if (minPoolSize < 0)
@@ -220,11 +260,13 @@ public class HikariConfig
         this.minPoolSize = minPoolSize;
     }
 
+    /** {@inheritDoc} */
     public int getMaximumPoolSize()
     {
         return maxPoolSize;
     }
 
+    /** {@inheritDoc} */
     public void setMaximumPoolSize(int maxPoolSize)
     {
         if (maxPoolSize < 0)
@@ -234,14 +276,21 @@ public class HikariConfig
         this.maxPoolSize = maxPoolSize;
     }
 
-    public String getProxyFactoryType()
+    /** {@inheritDoc} */
+    public String getPoolName()
     {
-        return proxyFactoryType;
+        return poolName;
     }
 
-    public void setProxyFactoryType(String proxyFactoryClassName)
+    /**
+     * Set the name of the connection pool.  This is primarily used for the MBean
+     * to uniquely identify the pool configuration.
+     *
+     * @param poolName the name of the connection pool to use
+     */
+    public void setPoolName(String poolName)
     {
-        this.proxyFactoryType = proxyFactoryClassName;
+        this.poolName = poolName;
     }
 
     public void validate()
@@ -254,16 +303,39 @@ public class HikariConfig
             throw new IllegalStateException("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified.");
         }
 
+        if (minPoolSize < 0)
+        {
+            logger.error("minPoolSize cannot be negative.");
+            throw new IllegalStateException("minPoolSize cannot be negative.");
+        }
+
+        if (maxLifetime < 0)
+        {
+            logger.error("maxLifetime cannot be negative.");
+            throw new IllegalStateException("maxLifetime cannot be negative.");
+        }
+
+        if (idleTimeout < 0)
+        {
+            logger.error("idleTimeout cannot be negative.");
+            throw new IllegalStateException("idleTimeout cannot be negative.");
+        }
+
+        if (acquireRetryDelay < 0)
+        {
+            logger.error("acquireRetryDelay cannot be negative.");
+            throw new IllegalStateException("acquireRetryDelay cannot be negative.");
+        }
+
         if (maxPoolSize < minPoolSize)
         {
             logger.warn("maxPoolSize is less than minPoolSize, forcing them equal.");
             maxPoolSize = minPoolSize;
         }
 
-        if (proxyFactoryType == null)
+        if (connectionTimeout == Integer.MAX_VALUE)
         {
-            logger.error("proxyFactoryType cannot be null");
-            throw new IllegalStateException("proxyFactoryType cannot be null");
+            logger.warn("No connection wait timeout is set, this might cause an infinite wait.");
         }
     }
 }
