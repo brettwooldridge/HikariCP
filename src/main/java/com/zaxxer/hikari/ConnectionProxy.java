@@ -54,7 +54,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     {
         openStatements = new ArrayList<Statement>(64);
         isClosed = new AtomicBoolean();
-        creationTime = System.currentTimeMillis();
+        creationTime = lastAccess = System.currentTimeMillis();
     }
 
     /**
