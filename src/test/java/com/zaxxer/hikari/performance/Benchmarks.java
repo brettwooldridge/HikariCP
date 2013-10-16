@@ -73,13 +73,13 @@ public class Benchmarks
     {
         HikariConfig config = new HikariConfig();
         config.setAcquireIncrement(5);
-        config.setMinimumPoolSize(20);
+        config.setMinimumPoolSize(POOL_MAX / 2);
         config.setMaximumPoolSize(POOL_MAX);
-        config.setConnectionTimeout(5000);
+        config.setConnectionTimeout(8000);
         config.setIdleTimeout(TimeUnit.MINUTES.toMillis(30));
         config.setJdbc4ConnectionTest(true);
+        config.setPoolName("This has spaces");
         config.setDataSourceClassName("com.zaxxer.hikari.performance.StubDataSource");
-        config.setProxyFactoryType(System.getProperty("testProxy", "javassist"));
 
         HikariDataSource ds = new HikariDataSource(config);
         return ds;
@@ -98,9 +98,9 @@ public class Benchmarks
 
         BoneCPConfig config = new BoneCPConfig();
         config.setAcquireIncrement(5);
-        config.setMinConnectionsPerPartition(20);
+        config.setMinConnectionsPerPartition(POOL_MAX / 2);
         config.setMaxConnectionsPerPartition(POOL_MAX);
-        config.setConnectionTimeoutInMs(5000);
+        config.setConnectionTimeoutInMs(8000);
         config.setIdleMaxAgeInMinutes(30);
         config.setConnectionTestStatement("VALUES 1");
         config.setCloseOpenStatements(true);
