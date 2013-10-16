@@ -7,23 +7,24 @@ There is nothing faster.  There is nothing more reliable.  There is nothing more
 essentially zero-overhead Production-ready connection pool.
 
 Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations
-were performed in 19ms on a commodity PC.  Almost 300x faster that the next fastest connection pool.
+were performed in 12ms on a commodity PC.  460x faster that the next fastest connection pool.
 
 #### Performance ####
 Let's look at some performance numbers.  HikariCP was only compared to BoneCP because, really, DBCP and C3P0 
-are old and slow.
+are old and slow.  We would have run the BoneCP benchmarks but their [methodolgy is flawed]
+(https://github.com/brettwooldridge/HikariCP/wiki/Benchmarking) so we wrote our own.
 
 ##### MixedBench #####
 This is the so called "Mixed" benchmark, and it executes a representative array of JDBC
 operations in a realistic mix.  We think *median* is the number to pay attention to, rather
 than average (which can get skewed).  *Median* meaning 50% of the iterations were slower, 50% were faster.
 500 threads were started, and the underlying connection pool contained 200 connections.  Measurements taken
-in nanoseconds and converted to milliseconds.
+in *nanoseconds* and converted to *milliseconds*.
 
 | Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
 | -------- | ---------:| ---------:| ---------:|
 | BoneCP   | 5533      | 3756      | 8189      |
-| HikariCP | 19        | 21        | 96        |
+| HikariCP | 12        | 11        | 32        |
 
 A breakdown of the mix operations is:
 
@@ -46,15 +47,16 @@ with the lowest median time was chosen.
 
 The benchmark was run using a stub (nop) implementation of an underlying DataSource, Connection,
 PreparedStatement, and ResultSet, so the driver was taken completely out of the equation so
-that the performance and overhead of the pools themselves could be measured.
+that the performance and overhead of the pools themselves could be measured.  Care was taken to
+ensure that the JIT does not eliminate or "optimize away" the stub code.
 
-The test was performed on an Intel Core i7 (2600) 3.4GHz iMac, MacOS X 10.8, 24GB RAM.  The
-JVM benchmark was run with: ``-server -XX:+UseParallelGC -Xss256k -Dthreads=500 -DpoolMax=200``.
+The test was performed on an Intel Core i7 (3770) 3.4GHz iMac, MacOS X 10.8, 32GB RAM.  The
+JVM benchmark was run with: ``-server -XX:+UseParallelGC -Xms256m -Xss256k -Dthreads=500 -DpoolMax=200``.
 The benchmark is available in the ``src/test/java`` folder in the package ``com.zaxxer.hikari.performance``
 in a main class called ``Benchmark``.
 
 ##### In Summary #####
-500 threads ran 60,702,000 JDBC operations each, HikariCP did this in a median of *19ms* per thread.
+500 threads ran 60,702,000 JDBC operations each, HikariCP did this in a median of *12ms* per thread.
 
 ------------------------------
 
@@ -191,7 +193,7 @@ are not supported.  XA requires a real transaction manager like [bitronix](https
 ``idleTimeout``<br/>
 This property controls the maximum amount of time (in milliseconds) that a connection is
 allowed to sit idle in the pool.  Whether a connection is retired as idle or not is subject
-to a maximum variation of +60 seconds, and average variation of +30 seconds.  A connection
+to a maximum variation of +30 seconds, and average variation of +15 seconds.  A connection
 will never be retired as idle *before* this timeout.  A value of 0 means that idle connections
 are never removed from the pool.  *Default: 600000 (10 minutes)*
 
@@ -219,7 +221,7 @@ value of 0 indicates no maximum lifetime (infinite lifetime), subject of course 
 ``idleTimeout`` setting.  *Default: 1800000 (30 minutes)*
 
 ``maximumPoolSize``<br/>
-The property controls the maximum size that the pool is allowed to reach, including both
+This property controls the maximum size that the pool is allowed to reach, including both
 idle and in-use connections.  Basically this value will determine the maximum number of
 actual connections to the database backend.  A reasonable value for this is best determined
 by your execution environment.  When the pool reaches this size, and no idle connections are
@@ -227,10 +229,30 @@ available, calls to getConnection() will block for up to ``connectionTimeout`` m
 before timing out.  *Default: 60*
 
 ``minimumPoolSize``<br/>
-The property controls the minimum number of connections that HikariCP tries to maintain in
+This property controls the minimum number of connections that HikariCP tries to maintain in
 the pool, including both idle and in-use connections.  If the connections dip below this
 value, HikariCP will make a best effort to restore them quickly and efficiently.  A reasonable
 value for this is best determined by your execution environment.  *Default: 10*
+
+``poolName``<br/>
+This property represents a user-defined name for the connection pool and appears mainly
+in a JMX management console to identify pools and pool configurations.  *Default: auto-generated*
+
+----------------------------------------------------
+
+#### JMX Management ####
+The following properties are configurable in real-time as the pool is running via a JMX
+management console such as JConsole:
+
+ * ``acquireIncrement``
+ * ``acquireRetries``
+ * ``acquireRetryDelay``
+ * ``connectionTimeout``
+ * ``idleTimeout``
+ * ``leakDetectionThreshold``
+ * ``maxLifetime``
+ * ``minimumPoolSize``
+ * ``maximumPoolSize``
 
 #### Requirements ####
  * Java 6 and above
