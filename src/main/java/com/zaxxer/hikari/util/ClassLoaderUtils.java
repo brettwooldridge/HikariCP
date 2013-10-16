@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari;
+package com.zaxxer.hikari.util;
 
 import java.util.Arrays;
 import java.util.HashSet;
