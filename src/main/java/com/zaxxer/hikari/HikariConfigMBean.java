@@ -41,7 +41,7 @@ public interface HikariConfigMBean
 
     /**
      * This is a per-connection attempt retry count used during new connection creation (acquisition).
-     * If a connection creation attempt fails there will be a wait of {@link getAcquireRetryDelay} milliseconds
+     * If a connection creation attempt fails there will be a wait of {@link #getAcquireRetryDelay} milliseconds
      * followed by another attempt, up to the number of retries configured by this property.
      * 
      * @return the acquire retry count
@@ -50,7 +50,7 @@ public interface HikariConfigMBean
 
     /**
      * This is a per-connection attempt retry count used during new connection creation (acquisition).
-     * If a connection creation attempt fails there will be a wait of {@link setAcquireRetryDelay} milliseconds
+     * If a connection creation attempt fails there will be a wait of {@link #setAcquireRetryDelay} milliseconds
      * followed by another attempt, up to the number of retries configured by this property.
      *
      * @param acquireRetries the acquire retry count
@@ -74,10 +74,10 @@ public interface HikariConfigMBean
     void setAcquireRetryDelay(long acquireRetryDelayMs);
 
     /**
-     * This is for "legacy" databases that do not support the JDBC4 {@link Connection.isValid()} API. This is the 
+     * This is for "legacy" databases that do not support the JDBC4 {@code Connection.isValid()} API. This is the 
      * query that will be executed just before a connection is given to you from the pool to validate that
      * the connection to the database is still alive. It is database dependent and should be a query that
-     * takes very little processing by the database (eg. "VALUES 1"). See the {@link getJdbc4ConnectionTest} property
+     * takes very little processing by the database (eg. "VALUES 1"). See the {code getJdbc4ConnectionTest()} property
      * for a more efficent alive test. One of either this property or jdbc4ConnectionTest must be specified.
      *
      * @return the connection timeout in milliseconds
@@ -85,10 +85,10 @@ public interface HikariConfigMBean
     long getConnectionTimeout();
 
     /**
-     * This is for "legacy" databases that do not support the JDBC4 Connection.isValid() API. This is the 
+     * This is for "legacy" databases that do not support the JDBC4 {code Connection.isValid()} API. This is the 
      * query that will be executed just before a connection is given to you from the pool to validate that
      * the connection to the database is still alive. It is database dependent and should be a query that
-     * takes very little processing by the database (eg. "VALUES 1"). See the {@link setJdbc4ConnectionTest} property
+     * takes very little processing by the database (eg. "VALUES 1"). See the {@code setJdbc4ConnectionTest()} property
      * for a more efficent alive test. One of either this property or jdbc4ConnectionTest must be specified.
 
      * @param connectionTimeoutMs the connection timeout in milliseconds
