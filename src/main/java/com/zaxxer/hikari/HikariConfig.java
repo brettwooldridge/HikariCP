@@ -32,20 +32,25 @@ public class HikariConfig implements HikariConfigMBean
 {
     private static int poolNumber;
 
+    // Properties changeable at runtime through the MBean
+    //
     private volatile int acquireIncrement;
     private volatile  int acquireRetries;
     private volatile  long acquireRetryDelay;
     private volatile  long connectionTimeout;
-    private String connectionTestQuery;
-    private String connectionUrl;
-    private String dataSourceClassName;
     private volatile long idleTimeout;
-    private boolean isJdbc4connectionTest;
     private volatile long leakDetectionThreshold;
     private volatile long maxLifetime;
     private volatile int minPoolSize;
     private volatile int maxPoolSize;
+
+    // Properties NOT changeable at runtime
+    //
     private String poolName;
+    private String connectionTestQuery;
+    private String connectionUrl;
+    private String dataSourceClassName;
+    private boolean isJdbc4connectionTest;
 
     private Properties driverProperties;
 
@@ -68,6 +73,11 @@ public class HikariConfig implements HikariConfigMBean
         poolName = "HikariPool-" + poolNumber++;
     }
 
+    /**
+     * Construct a HikariConfig from the specified property file name.
+     *
+     * @param propertyFileName the name of the property file
+     */
     public HikariConfig(String propertyFileName)
     {
         this();
