@@ -41,18 +41,17 @@ public class CreationTest
         config.setMinimumPoolSize(1);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.MockDataSource");
-        config.setProxyFactoryType(System.getProperty("testProxy", "auto"));
 
         HikariDataSource ds = new HikariDataSource(config);
 
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnectionCount());
-        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnectionCount());
+        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
 
         Connection connection = ds.getConnection();
         Assert.assertNotNull(connection);
 
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnectionCount());
-        Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnectionCount());
+        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
 
         PreparedStatement statement = connection.prepareStatement("SELECT some, thing FROM somewhere WHERE something=?");
         Assert.assertNotNull(statement);
@@ -69,8 +68,8 @@ public class CreationTest
         statement.close();
         connection.close();
 
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnectionCount());
-        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnectionCount());
+        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
     }
 
     @Test
@@ -81,21 +80,20 @@ public class CreationTest
         config.setMaxLifetime(500);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.MockDataSource");
-        config.setProxyFactoryType(System.getProperty("testProxy", "auto"));
 
         HikariDataSource ds = new HikariDataSource(config);
 
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnectionCount());
-        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnectionCount());
+        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
 
         Connection connection = ds.getConnection();
         Assert.assertNotNull(connection);
 
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnectionCount());
-        Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnectionCount());
+        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
         connection.close();
 
-        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnectionCount());
+        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
 
         Connection connection2 = ds.getConnection();
         Assert.assertSame("Expected the same connection", connection, connection2);
@@ -108,7 +106,7 @@ public class CreationTest
 
         connection2.close();
 
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnectionCount());
-        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnectionCount());
+        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
     }   
 }
