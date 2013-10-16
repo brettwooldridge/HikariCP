@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari;
+package com.zaxxer.hikari.proxy;
 
 import java.lang.reflect.Method;
 import java.sql.CallableStatement;
@@ -29,6 +29,8 @@ import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.LoggerFactory;
+
+import com.zaxxer.hikari.HikariPool;
 
 /**
  *

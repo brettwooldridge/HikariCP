@@ -14,36 +14,37 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari;
+package com.zaxxer.hikari.proxy;
 
 import java.lang.reflect.Method;
+import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Map;
 
 /**
+ *
  * @author Brett Wooldridge
  */
-public class StatementProxy extends HikariProxyBase<Statement>
+public class CallableStatementProxy extends HikariProxyBase<CallableStatement>
 {
-    private final static Map<String, Method> selfMethodMap = createMethodMap(StatementProxy.class);
+    private final static Map<String, Method> selfMethodMap = createMethodMap(CallableStatementProxy.class);
 
     private ConnectionProxy connection;
-    
-    protected StatementProxy()
+
+    protected CallableStatementProxy()
     {
         super(null);
     }
 
-    protected StatementProxy(ConnectionProxy connection, Statement statement)
+    protected CallableStatementProxy(ConnectionProxy connection, CallableStatement statement)
     {
         super(statement);
         this.proxy = this;
         this.connection = connection;
     }
 
-//    void initialize(ConnectionProxy connection, Statement statement)
+//    void initialize(ConnectionProxy connection, CallableStatement statement)
 //    {
 //        this.proxy = this;
 //        this.connection = connection;
@@ -55,8 +56,6 @@ public class StatementProxy extends HikariProxyBase<Statement>
         return connection.checkException(e);
     }
 
-    /* Overridden methods of ProxyBase */
-
     @Override
     protected Map<String, Method> getMethodMap()
     {
@@ -64,9 +63,10 @@ public class StatementProxy extends HikariProxyBase<Statement>
     }
 
     // **********************************************************************
-    //                 Overridden java.sql.Statement Methods
-    //                      other methods are injected
+    //               Overridden java.sql.CallableStatement Methods
+    //                       other methods are injected
     // **********************************************************************
+
 
     public void close() throws SQLException
     {
@@ -75,28 +75,23 @@ public class StatementProxy extends HikariProxyBase<Statement>
             return;
         }
 
-        connection.unregisterStatement(proxy);
+        connection.unregisterStatement(delegate);
         delegate.close();
+    }
+
+    public ResultSet executeQuery() throws SQLException
+    {
+        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), delegate.executeQuery());
     }
 
     public ResultSet executeQuery(String sql) throws SQLException
     {
-        ResultSet resultSet = delegate.executeQuery(sql);
-        if (resultSet == null)
-        {
-            return null;
-        }
-        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), resultSet);
+        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), delegate.executeQuery(sql));
     }
 
     public ResultSet getGeneratedKeys() throws SQLException
     {
-        ResultSet generatedKeys = delegate.getGeneratedKeys();
-        if (generatedKeys == null)
-        {
-            return null;
-        }
-        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), generatedKeys);
+        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), delegate.getGeneratedKeys());
     }
 
     /* java.sql.Wrapper implementation */

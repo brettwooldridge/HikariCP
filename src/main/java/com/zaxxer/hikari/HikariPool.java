@@ -36,6 +36,9 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
+import com.zaxxer.hikari.proxy.ProxyFactory;
+
 public class HikariPool implements HikariPoolMBean
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
@@ -149,7 +152,7 @@ public class HikariPool implements HikariPoolMBean
         }
     }
 
-    void releaseConnection(IHikariConnectionProxy connection)
+    public void releaseConnection(IHikariConnectionProxy connection)
     {
         boolean existing = inUseConnections.remove(connection);
         if (existing)

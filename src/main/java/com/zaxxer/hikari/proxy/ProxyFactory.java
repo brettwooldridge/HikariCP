@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari;
+package com.zaxxer.hikari.proxy;
 
 import java.lang.reflect.Method;
 import java.sql.CallableStatement;
@@ -24,6 +24,8 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 import org.slf4j.LoggerFactory;
+
+import com.zaxxer.hikari.HikariPool;
 
 public interface ProxyFactory
 {
@@ -50,10 +52,9 @@ public interface ProxyFactory
         {
             try
             {
-                LoggerFactory.getLogger(ProxyFactory.class).info("Using javassist proxy factory.");
                 ClassLoader classLoader = Initializer.class.getClassLoader();
                 classLoader.loadClass("javassist.CtClass");
-                Class<?> proxyFactoryClass = classLoader.loadClass("com.zaxxer.hikari.JavassistProxyFactoryFactory");
+                Class<?> proxyFactoryClass = classLoader.loadClass("com.zaxxer.hikari.proxy.JavassistProxyFactoryFactory");
                 Object factoryFactory = proxyFactoryClass.newInstance();
                 Method getter = factoryFactory.getClass().getMethod("getProxyFactory");
                 return (ProxyFactory) getter.invoke(factoryFactory);

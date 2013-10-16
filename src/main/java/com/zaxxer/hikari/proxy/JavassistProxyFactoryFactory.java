@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari;
+package com.zaxxer.hikari.proxy;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -30,6 +30,8 @@ import javassist.CtConstructor;
 import javassist.CtMethod;
 import javassist.CtNewConstructor;
 import javassist.CtNewMethod;
+
+import com.zaxxer.hikari.ClassLoaderUtils;
 
 /**
  *
@@ -70,9 +72,9 @@ public class JavassistProxyFactoryFactory
 
     private ProxyFactory generateProxyFactory() throws Exception
     {
-        CtClass targetCt = classPool.makeClass("com.zaxxer.hikari.JavassistProxyFactoryImpl");
+        CtClass targetCt = classPool.makeClass("com.zaxxer.hikari.proxy.JavassistProxyFactoryImpl");
 
-        CtClass anInterface = classPool.getCtClass("com.zaxxer.hikari.ProxyFactory");
+        CtClass anInterface = classPool.getCtClass("com.zaxxer.hikari.proxy.ProxyFactory");
         targetCt.addInterface(anInterface);
 
         for (CtMethod intfMethod : anInterface.getDeclaredMethods())
@@ -82,23 +84,23 @@ public class JavassistProxyFactoryFactory
             StringBuilder call = new StringBuilder("{");
             if ("getProxyConnection".equals(method.getName()))
             {
-                call.append("return new com.zaxxer.hikari.ConnectionJavassistProxy($$);");
+                call.append("return new com.zaxxer.hikari.proxy.ConnectionJavassistProxy($$);");
             }
             if ("getProxyStatement".equals(method.getName()))
             {
-                call.append("return new com.zaxxer.hikari.StatementJavassistProxy($$);");
+                call.append("return new com.zaxxer.hikari.proxy.StatementJavassistProxy($$);");
             }
             if ("getProxyPreparedStatement".equals(method.getName()))
             {
-                call.append("return new com.zaxxer.hikari.PreparedStatementJavassistProxy($$);");
+                call.append("return new com.zaxxer.hikari.proxy.PreparedStatementJavassistProxy($$);");
             }
             if ("getProxyResultSet".equals(method.getName()))
             {
-                call.append("return new com.zaxxer.hikari.ResultSetJavassistProxy($$);");
+                call.append("return new com.zaxxer.hikari.proxy.ResultSetJavassistProxy($$);");
             }
             if ("getProxyCallableStatement".equals(method.getName()))
             {
-                call.append("return new com.zaxxer.hikari.CallableStatementJavassistProxy($$);");
+                call.append("return new com.zaxxer.hikari.proxy.CallableStatementJavassistProxy($$);");
             }
             call.append('}');
             method.setBody(call.toString());

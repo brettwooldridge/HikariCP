@@ -24,7 +24,7 @@ import java.util.Set;
  *
  * @author Brett Wooldridge
  */
-final class ClassLoaderUtils
+public final class ClassLoaderUtils
 {
     /**
      * Get the class loader which can be used to generate proxies without leaking memory.
