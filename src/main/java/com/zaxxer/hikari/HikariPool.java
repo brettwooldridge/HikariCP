@@ -153,20 +153,23 @@ public class HikariPool implements HikariPoolMBean
         }
     }
 
-    public void releaseConnection(IHikariConnectionProxy connection)
+    public void releaseConnection(IHikariConnectionProxy connectionProxy)
     {
-        boolean existing = inUseConnections.remove(connection);
-        if (existing)
+        boolean existing = inUseConnections.remove(connectionProxy);
+        if (!existing)
         {
-            connection.setLastAccess(System.currentTimeMillis());
+            LOGGER.warn("Internal pool state inconsistency", new Throwable());
+        }
+
+        if (!connectionProxy.isBrokenConnection())
+        {
+            connectionProxy.setLastAccess(System.currentTimeMillis());
             idleConnectionCount.incrementAndGet();
-            idleConnections.put(connection);
+            idleConnections.put(connectionProxy);
         }
         else
         {
-            // Should never happen, just a precaution
-            LOGGER.error("Connection not found in inUseConnections set upon return");
-            totalConnections.decrementAndGet();
+            closeConnection(connectionProxy);
         }
     }
 

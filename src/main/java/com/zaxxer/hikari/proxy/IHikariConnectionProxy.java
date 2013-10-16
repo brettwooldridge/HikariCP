@@ -25,6 +25,8 @@ import java.util.Timer;
  */
 public interface IHikariConnectionProxy
 {
+    boolean isBrokenConnection();
+
     long getCreationTime();
 
     long getLastAccess();

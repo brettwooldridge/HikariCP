@@ -22,6 +22,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -36,10 +38,15 @@ import com.zaxxer.hikari.HikariPool;
  */
 public class ConnectionProxy extends HikariProxyBase<Connection> implements IHikariConnectionProxy
 {
+    private static final Set<String> POSTGRESQL_ERRORS;
+    private static final Set<String> SPECIAL_ERRORS;
+
     private final ArrayList<Statement> openStatements;
     private final AtomicBoolean isClosed;
 
     private final HikariPool parentPool;
+
+    private volatile boolean forceClose;
 
     private final long creationTime;
     private long lastAccess;
@@ -47,6 +54,19 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     private StackTraceElement[] stackTrace;
 
     private TimerTask leakTask;
+
+    // static initializer
+    static
+    {
+        POSTGRESQL_ERRORS = new HashSet<String>();
+        POSTGRESQL_ERRORS.add("57P01");  // ADMIN SHUTDOWN
+        POSTGRESQL_ERRORS.add("57P02");  // CRASH SHUTDOWN
+        POSTGRESQL_ERRORS.add("57P03");  // CANNOT CONNECT NOW
+        POSTGRESQL_ERRORS.add("57P02");  // CRASH SHUTDOWN
+
+        SPECIAL_ERRORS = new HashSet<String>();
+        SPECIAL_ERRORS.add("01002");  // SQL92 disconnect error
+    }
 
     // Instance initializer
     {
@@ -113,9 +133,30 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
         scheduler.schedule(leakTask, leakDetectionThreshold);
     }
 
-    protected SQLException checkException(SQLException e)
+    public boolean isBrokenConnection()
     {
-        return e;
+        return forceClose;
+    }
+    
+    protected SQLException checkException(SQLException sqle)
+    {
+        String sqlState = sqle.getSQLState();
+        if (sqlState == null)
+        {
+            return sqle;
+        }
+
+        sqlState = sqlState.toUpperCase();
+        if (sqlState.startsWith("08"))
+        {
+            forceClose = true;
+        }
+        else if (POSTGRESQL_ERRORS.contains(sqlState.toUpperCase()) || SPECIAL_ERRORS.contains(sqlState))
+        {
+            forceClose = true;
+        }
+
+        return sqle;
     }
 
     // **********************************************************************
