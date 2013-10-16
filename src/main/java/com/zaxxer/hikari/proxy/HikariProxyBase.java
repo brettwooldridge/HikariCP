@@ -25,19 +25,11 @@ import java.sql.SQLException;
  */
 public abstract class HikariProxyBase<T>
 {
-    protected Object proxy;
-
     final protected T delegate;
 
     protected HikariProxyBase(T delegate)
     {
         this.delegate = delegate;
-    }
-
-    @SuppressWarnings("unchecked")
-    protected T getProxy()
-    {
-        return (T) proxy;
     }
 
     protected abstract SQLException checkException(SQLException e);

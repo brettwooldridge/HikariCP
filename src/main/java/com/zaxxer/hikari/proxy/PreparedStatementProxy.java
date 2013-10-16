@@ -31,7 +31,6 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
     protected PreparedStatementProxy(ConnectionProxy connection, PreparedStatement statement)
     {
         super(statement);
-        this.proxy = this;
         this.connection = connection;
     }
 
@@ -52,7 +51,7 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
             return;
         }
 
-        connection.unregisterStatement(proxy);
+        connection.unregisterStatement(this);
         delegate.close();
     }
 
@@ -63,7 +62,7 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         {
             return null;
         }
-        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), resultSet);
+        return ProxyFactory.INSTANCE.getProxyResultSet((PreparedStatement) this, resultSet);
     }
 
     public ResultSet executeQuery() throws SQLException
@@ -73,7 +72,7 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         {
             return null;
         }
-        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), resultSet);
+        return ProxyFactory.INSTANCE.getProxyResultSet((PreparedStatement) this, resultSet);
     }
 
     public ResultSet executeQuery(String sql) throws SQLException
@@ -83,7 +82,7 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         {
             return null;
         }
-        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), resultSet);
+        return ProxyFactory.INSTANCE.getProxyResultSet((PreparedStatement) this, resultSet);
     }
 
     public ResultSet getGeneratedKeys() throws SQLException
@@ -93,7 +92,7 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         {
             return null;
         }
-        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), generatedKeys);
+        return ProxyFactory.INSTANCE.getProxyResultSet((PreparedStatement) this, generatedKeys);
     }
 
     /* java.sql.Wrapper implementation */

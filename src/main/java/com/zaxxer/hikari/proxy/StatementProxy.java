@@ -30,7 +30,6 @@ public class StatementProxy extends HikariProxyBase<Statement>
     protected StatementProxy(ConnectionProxy connection, Statement statement)
     {
         super(statement);
-        this.proxy = this;
         this.connection = connection;
     }
 
@@ -51,7 +50,7 @@ public class StatementProxy extends HikariProxyBase<Statement>
             return;
         }
 
-        connection.unregisterStatement(proxy);
+        connection.unregisterStatement(this);
         delegate.close();
     }
 
@@ -62,7 +61,8 @@ public class StatementProxy extends HikariProxyBase<Statement>
         {
             return null;
         }
-        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), resultSet);
+
+        return ProxyFactory.INSTANCE.getProxyResultSet((Statement) this, resultSet);
     }
 
     public ResultSet getGeneratedKeys() throws SQLException
@@ -72,7 +72,8 @@ public class StatementProxy extends HikariProxyBase<Statement>
         {
             return null;
         }
-        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), generatedKeys);
+
+        return ProxyFactory.INSTANCE.getProxyResultSet((Statement) this, generatedKeys);
     }
 
     /* java.sql.Wrapper implementation */

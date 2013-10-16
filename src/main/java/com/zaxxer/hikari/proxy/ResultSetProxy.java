@@ -30,7 +30,6 @@ public class ResultSetProxy extends HikariProxyBase<ResultSet>
     protected ResultSetProxy(Statement statement, ResultSet resultSet)
     {
         super(resultSet);
-        this.proxy = this;
         this.statement = statement;
     }
 

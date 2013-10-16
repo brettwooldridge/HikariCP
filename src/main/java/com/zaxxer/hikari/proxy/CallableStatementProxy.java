@@ -31,7 +31,6 @@ public class CallableStatementProxy extends HikariProxyBase<CallableStatement>
     protected CallableStatementProxy(ConnectionProxy connection, CallableStatement statement)
     {
         super(statement);
-        this.proxy = this;
         this.connection = connection;
     }
 
@@ -59,17 +58,17 @@ public class CallableStatementProxy extends HikariProxyBase<CallableStatement>
 
     public ResultSet executeQuery() throws SQLException
     {
-        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), delegate.executeQuery());
+        return ProxyFactory.INSTANCE.getProxyResultSet((CallableStatement) this, delegate.executeQuery());
     }
 
     public ResultSet executeQuery(String sql) throws SQLException
     {
-        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), delegate.executeQuery(sql));
+        return ProxyFactory.INSTANCE.getProxyResultSet((CallableStatement) this, delegate.executeQuery(sql));
     }
 
     public ResultSet getGeneratedKeys() throws SQLException
     {
-        return ProxyFactory.INSTANCE.getProxyResultSet(this.getProxy(), delegate.getGeneratedKeys());
+        return ProxyFactory.INSTANCE.getProxyResultSet((CallableStatement) this, delegate.getGeneratedKeys());
     }
 
     /* java.sql.Wrapper implementation */
