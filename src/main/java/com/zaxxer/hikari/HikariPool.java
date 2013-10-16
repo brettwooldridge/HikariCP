@@ -164,7 +164,7 @@ public class HikariPool implements HikariPoolMBean
         else
         {
             // Should never happen, just a precaution
-            LOGGER.warn("Connection not found in inUseConnections set upon return");
+            LOGGER.error("Connection not found in inUseConnections set upon return");
             totalConnections.decrementAndGet();
         }
     }

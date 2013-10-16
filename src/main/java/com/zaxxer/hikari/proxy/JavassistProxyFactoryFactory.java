@@ -117,7 +117,7 @@ public class JavassistProxyFactoryFactory
     @SuppressWarnings("unchecked")
     private <T> Class<T> generateProxyClass(Class<T> primaryInterface, Class<?> superClass) throws Exception
     {
-        // Make a new class that extends one of the JavaProxy classes (ie. superClass); use the name to XxxJavassistProxy instead of XxxJavaProxy
+        // Make a new class that extends one of the JavaProxy classes (ie. superClass); use the name to XxxJavassistProxy instead of XxxProxy
         String superClassName = superClass.getName();
         CtClass superClassCt = classPool.getCtClass(superClassName);
         CtClass targetCt = classPool.makeClass(superClassName.replace("Proxy", "JavassistProxy"), superClassCt);

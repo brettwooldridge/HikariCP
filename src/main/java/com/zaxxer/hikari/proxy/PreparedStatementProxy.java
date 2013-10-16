@@ -16,11 +16,9 @@
 
 package com.zaxxer.hikari.proxy;
 
-import java.lang.reflect.Method;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Map;
 
 /**
  *
@@ -28,19 +26,7 @@ import java.util.Map;
  */
 public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
 {
-    private final static Map<String, Method> selfMethodMap;
-
-    private ConnectionProxy connection;
-    
-    static
-    {
-        selfMethodMap = createMethodMap(PreparedStatementProxy.class);
-    }
-
-    protected PreparedStatementProxy()
-    {
-        super(null);
-    }
+    private final ConnectionProxy connection;
 
     protected PreparedStatementProxy(ConnectionProxy connection, PreparedStatement statement)
     {
@@ -49,28 +35,9 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         this.connection = connection;
     }
 
-    void initialize(ConnectionProxy connection, PreparedStatement statement)
-    {
-        this.proxy = this;
-        this.connection = connection;
-    }
-
-    public String toString()
-    {
-        return "a PreparedStatementProxy wrapping [" + delegate + "]";
-    }
-
-    SQLException checkException(SQLException e)
+    protected SQLException checkException(SQLException e)
     {
         return connection.checkException(e);
-    }
-
-    /* Overridden methods of ProxyBase */
-
-    @Override
-    protected Map<String, Method> getMethodMap()
-    {
-        return selfMethodMap;
     }
 
     // **********************************************************************

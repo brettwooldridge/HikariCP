@@ -16,14 +16,12 @@
 
 package com.zaxxer.hikari.proxy;
 
-import java.lang.reflect.Method;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -38,12 +36,10 @@ import com.zaxxer.hikari.HikariPool;
  */
 public class ConnectionProxy extends HikariProxyBase<Connection> implements IHikariConnectionProxy
 {
-    private static final Map<String, Method> selfMethodMap = createMethodMap(ConnectionProxy.class);
-
     private final ArrayList<Statement> openStatements;
     private final AtomicBoolean isClosed;
 
-    private HikariPool parentPool;
+    private final HikariPool parentPool;
 
     private final long creationTime;
     private long lastAccess;
@@ -59,27 +55,12 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
         creationTime = lastAccess = System.currentTimeMillis();
     }
 
-    /**
-     * Default constructor.
-     */
-    protected ConnectionProxy()
-    {
-        super(null);
-    }
-
     protected ConnectionProxy(HikariPool parentPool, Connection connection)
     {
         super(connection);
         this.parentPool = parentPool;
         this.proxy = this;
     }
-
-//    void initialize(HikariPool parentPool, Connection connection)
-//    {
-//        this.parentPool = parentPool;
-//        this.proxy = this;
-//        this.delegate = connection;
-//    }
 
     void unregisterStatement(Object statement)
     {
@@ -133,15 +114,9 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
         scheduler.schedule(leakTask, leakDetectionThreshold);
     }
 
-    SQLException checkException(SQLException e)
+    protected SQLException checkException(SQLException e)
     {
         return e;
-    }
-
-    @Override
-    protected Map<String, Method> getMethodMap()
-    {
-        return selfMethodMap;
     }
 
     // **********************************************************************

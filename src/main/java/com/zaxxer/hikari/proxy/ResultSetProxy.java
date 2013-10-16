@@ -16,26 +16,17 @@
 
 package com.zaxxer.hikari.proxy;
 
-import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Map;
 
 /**
  * @author Brett Wooldridge
  */
 public class ResultSetProxy extends HikariProxyBase<ResultSet>
 {
-    private final static Map<String, Method> selfMethodMap = createMethodMap(ResultSetProxy.class);
-
-    private Statement statement;
+    private final Statement statement;
     
-    protected ResultSetProxy()
-    {
-        super(null);
-    }
-
     protected ResultSetProxy(Statement statement, ResultSet resultSet)
     {
         super(resultSet);
@@ -43,31 +34,15 @@ public class ResultSetProxy extends HikariProxyBase<ResultSet>
         this.statement = statement;
     }
 
-//    void initialize(Statement statement, ResultSet resultSet)
-//    {
-//        this.proxy = this;
-//        this.statement = statement;
-//        this.delegate = resultSet;
-//    }
-
     protected SQLException checkException(SQLException e)
     {
         return ((HikariProxyBase<?>) statement).checkException(e);
     }
     
-    /* Overridden methods of ProxyBase */
-    
-    @Override
-    protected Map<String, Method> getMethodMap()
-    {
-        return selfMethodMap;
-    }
-
     // **********************************************************************
     //                 Overridden java.sql.ResultSet Methods
     //                      other methods are injected
     // **********************************************************************
-
 
     public Statement getStatement() throws SQLException
     {
