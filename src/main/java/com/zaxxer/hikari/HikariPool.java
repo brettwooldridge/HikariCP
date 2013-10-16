@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.ProxyFactory;
+import com.zaxxer.hikari.util.ClassLoaderUtils;
 
 public class HikariPool implements HikariPoolMBean
 {
