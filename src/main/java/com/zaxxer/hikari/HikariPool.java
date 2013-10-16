@@ -217,7 +217,7 @@ public class HikariPool implements HikariPoolMBean
 
     private void fillPool()
     {
-        int maxIters = configuration.getMinimumPoolSize() / configuration.getAcquireIncrement();
+        int maxIters = (configuration.getMinimumPoolSize() / configuration.getAcquireIncrement()) + 1;
         while (totalConnections.get() < configuration.getMinimumPoolSize() && maxIters-- > 0)
         {
             addConnections();
