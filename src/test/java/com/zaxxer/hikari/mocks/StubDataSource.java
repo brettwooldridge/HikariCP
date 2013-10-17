@@ -14,77 +14,71 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.performance;
+package com.zaxxer.hikari.mocks;
 
+import java.io.PrintWriter;
 import java.sql.Connection;
-import java.sql.Driver;
-import java.sql.DriverManager;
-import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.util.Properties;
 import java.util.logging.Logger;
+
+import javax.sql.DataSource;
 
 /**
  *
  * @author Brett Wooldridge
  */
-public class StubDriver implements Driver
+public class StubDataSource implements DataSource
 {
-    private static final Driver driver;
-
-    static
-    {
-        driver = new StubDriver();
-        try
-        {
-            DriverManager.registerDriver(driver);
-        }
-        catch (SQLException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
     /** {@inheritDoc} */
-    public Connection connect(String url, Properties info) throws SQLException
-    {
-        return new StubConnection();
-    }
-
-    /** {@inheritDoc} */
-    public boolean acceptsURL(String url) throws SQLException
-    {
-        return true;
-    }
-
-    /** {@inheritDoc} */
-    public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException
+    public PrintWriter getLogWriter() throws SQLException
     {
         return null;
     }
 
     /** {@inheritDoc} */
-    public int getMajorVersion()
+    public void setLogWriter(PrintWriter out) throws SQLException
     {
-        return 0;
     }
 
     /** {@inheritDoc} */
-    public int getMinorVersion()
+    public void setLoginTimeout(int seconds) throws SQLException
     {
-        return 0;
     }
 
     /** {@inheritDoc} */
-    public boolean jdbcCompliant()
+    public int getLoginTimeout() throws SQLException
     {
-        return true;
+        return 0;
     }
 
     /** {@inheritDoc} */
     public Logger getParentLogger() throws SQLFeatureNotSupportedException
     {
         return null;
+    }
+
+    /** {@inheritDoc} */
+    public <T> T unwrap(Class<T> iface) throws SQLException
+    {
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    public boolean isWrapperFor(Class<?> iface) throws SQLException
+    {
+        return false;
+    }
+
+    /** {@inheritDoc} */
+    public Connection getConnection() throws SQLException
+    {
+        return new StubConnection();
+    }
+
+    /** {@inheritDoc} */
+    public Connection getConnection(String username, String password) throws SQLException
+    {
+        return new StubConnection();
     }
 }

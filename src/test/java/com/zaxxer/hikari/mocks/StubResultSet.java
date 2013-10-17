@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.performance;
+package com.zaxxer.hikari.mocks;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -78,7 +78,7 @@ public class StubResultSet implements ResultSet
     /** {@inheritDoc} */
     public String getString(int columnIndex) throws SQLException
     {
-        return null;
+        return "aString";
     }
 
     /** {@inheritDoc} */

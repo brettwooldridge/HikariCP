@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.performance;
+package com.zaxxer.hikari.mocks;
 
 import java.sql.Array;
 import java.sql.Blob;
