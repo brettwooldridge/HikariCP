@@ -103,6 +103,13 @@
       	<artifactId>hsqldb</artifactId>
       	<version>2.3.0</version>
       </dependency>
+      <dependency>
+         <groupId>com.sun</groupId>
+         <artifactId>tools</artifactId>
+         <version>1.6.0</version>
+         <scope>system</scope>
+         <systemPath>${java.home}/../lib/tools.jar</systemPath>
+      </dependency>
    </dependencies>
 
    <build>
@@ -118,8 +125,9 @@
                <instructions>
                   <Bundle-Name>HikariCP</Bundle-Name>
                   <Export-Package>com.zaxxer.hikari</Export-Package>
-                  <Import-Package>javassist.*,javax.management,javax.sql,javax.sql.rowset,,javax.sql.rowset.serial,,javax.sql.rowset.spi,org.slf4j</Import-Package>
+                  <Import-Package>com.sun.tools.attach,javassist.*,javax.management,javax.sql,javax.sql.rowset,,javax.sql.rowset.serial,,javax.sql.rowset.spi,org.slf4j</Import-Package>
                   <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
+                  <Agent-Class>com.zaxxer.hikari.proxy.HikariClassTransformer</Agent-Class>
                </instructions>
             </configuration>
          </plugin>
