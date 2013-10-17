@@ -37,8 +37,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
-import com.zaxxer.hikari.proxy.ProxyFactory;
+import com.zaxxer.hikari.proxy.JavassistProxyFactoryFactory;
 import com.zaxxer.hikari.util.ClassLoaderUtils;
+import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 public class HikariPool implements HikariPoolMBean
 {
@@ -77,6 +78,7 @@ public class HikariPool implements HikariPoolMBean
         {
             Class<?> clazz = ClassLoaderUtils.loadClass(configuration.getDataSourceClassName());
             this.dataSource = (DataSource) clazz.newInstance();
+            PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
         }
         catch (Exception e)
         {
@@ -141,6 +143,7 @@ public class HikariPool implements HikariPoolMBean
                     connectionProxy.captureStack(configuration.getLeakDetectionThreshold(), houseKeepingTimer);
                 }
 
+                connectionProxy.unclose();
                 inUseConnections.add(connectionProxy);
 
                 return connection;
@@ -242,11 +245,12 @@ public class HikariPool implements HikariPoolMBean
             try
             {
                 Connection connection = dataSource.getConnection();
-                IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) ProxyFactory.INSTANCE.getProxyConnection(this, connection);
+                IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) JavassistProxyFactoryFactory.getProxyFactory().getProxyConnection(this, connection);
 
                 boolean alive = isConnectionAlive((Connection) proxyConnection, configuration.getConnectionTimeout());
                 if (alive)
                 {
+                    connection.setAutoCommit(configuration.isAutoCommit());
                     idleConnectionCount.incrementAndGet();
                     totalConnections.incrementAndGet();
                     idleConnections.add(proxyConnection);

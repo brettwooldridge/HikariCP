@@ -48,6 +48,7 @@ public class HikariConfig implements HikariConfigMBean
     private String connectionUrl;
     private String dataSourceClassName;
     private boolean isJdbc4connectionTest;
+    private boolean isAutoCommit;
 
     private Properties driverProperties;
 
@@ -63,6 +64,7 @@ public class HikariConfig implements HikariConfigMBean
         acquireRetryDelay = 750;
         connectionTimeout = 5000;
         idleTimeout = TimeUnit.MINUTES.toMillis(10);
+        isAutoCommit = true;
         isJdbc4connectionTest = true;
         minPoolSize = 10;
         maxPoolSize = 60;
@@ -97,12 +99,12 @@ public class HikariConfig implements HikariConfigMBean
         }
     }
 
-    public void addDriverProperty(String propertyName, String value)
+    public void addDataSourceProperty(String propertyName, String value)
     {
         driverProperties.put(propertyName, value);
     }
 
-    public Properties getDriverProperties()
+    public Properties getDataSourceProperties()
     {
         return driverProperties;
     }
@@ -215,6 +217,16 @@ public class HikariConfig implements HikariConfigMBean
     public void setIdleTimeout(long idleTimeoutMs)
     {
         this.idleTimeout = idleTimeoutMs;
+    }
+
+    public boolean isAutoCommit()
+    {
+        return isAutoCommit;
+    }
+
+    public void setAutoCommit(boolean isAutoCommit)
+    {
+        this.isAutoCommit = isAutoCommit;
     }
 
     public boolean isJdbc4ConnectionTest()
