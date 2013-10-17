@@ -24,6 +24,8 @@ import java.sql.SQLException;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.zaxxer.hikari.proxy.HikariClassTransformer;
+
 /**
  * System property testProxy can be one of:
  *    "com.zaxxer.hikari.JavaProxyFactory"
@@ -37,11 +39,13 @@ public class CreationTest
     @Test
     public void testCreate() throws SQLException
     {
+        HikariClassTransformer.loadTransformerAgent("com.zaxxer.hikari.mocks");
+
         HikariConfig config = new HikariConfig();
         config.setMinimumPoolSize(1);
         config.setAcquireIncrement(1);
         config.setConnectionTestQuery("VALUES 1");
-        config.setDataSourceClassName("com.zaxxer.hikari.mocks.MockDataSource");
+        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
         HikariDataSource ds = new HikariDataSource(config);
 
@@ -81,7 +85,7 @@ public class CreationTest
         config.setAcquireIncrement(1);
         config.setMaxLifetime(500);
         config.setConnectionTestQuery("VALUES 1");
-        config.setDataSourceClassName("com.zaxxer.hikari.mocks.MockDataSource");
+        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
         HikariDataSource ds = new HikariDataSource(config);
 
@@ -120,7 +124,7 @@ public class CreationTest
         config.setAcquireIncrement(1);
         config.setMaxLifetime(500);
         config.setConnectionTestQuery("VALUES 1");
-        config.setDataSourceClassName("com.zaxxer.hikari.mocks.MockDataSource");
+        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
         HikariDataSource ds = new HikariDataSource(config);
         Connection connection = ds.getConnection();
