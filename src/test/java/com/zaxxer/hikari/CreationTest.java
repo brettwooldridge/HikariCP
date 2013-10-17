@@ -110,5 +110,21 @@ public class CreationTest
 
         Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
         Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
-    }   
+    }
+
+    @Test
+    public void testDoubleClose() throws Exception
+    {
+        HikariConfig config = new HikariConfig();
+        config.setMinimumPoolSize(1);
+        config.setAcquireIncrement(1);
+        config.setMaxLifetime(500);
+        config.setConnectionTestQuery("VALUES 1");
+        config.setDataSourceClassName("com.zaxxer.hikari.mocks.MockDataSource");
+
+        HikariDataSource ds = new HikariDataSource(config);
+        Connection connection = ds.getConnection();
+        connection.close();
+        connection.close();
+    }
 }
