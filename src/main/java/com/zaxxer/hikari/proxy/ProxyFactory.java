@@ -16,54 +16,51 @@
 
 package com.zaxxer.hikari.proxy;
 
-import java.lang.reflect.Method;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import org.slf4j.LoggerFactory;
-
 import com.zaxxer.hikari.HikariPool;
 
-public interface ProxyFactory
+public abstract class ProxyFactory
 {
     /* Classes should use ProxyFactory.INSTANCE to access the factory */
-    final ProxyFactory INSTANCE = Initializer.initialize();
+    // final ProxyFactory INSTANCE = Initializer.initialize();
 
-    Connection getProxyConnection(HikariPool parentPool, Connection connection);
+    public abstract Connection getProxyConnection(HikariPool parentPool, Connection connection);
 
-    Statement getProxyStatement(ConnectionProxy connection, Statement statement);
+    public abstract Statement getProxyStatement(ConnectionProxy connection, Statement statement);
 
-    CallableStatement getProxyCallableStatement(ConnectionProxy connection, CallableStatement statement);
+    public abstract CallableStatement getProxyCallableStatement(ConnectionProxy connection, CallableStatement statement);
 
-    PreparedStatement getProxyPreparedStatement(ConnectionProxy connection, PreparedStatement statement);
+    public abstract PreparedStatement getProxyPreparedStatement(ConnectionProxy connection, PreparedStatement statement);
 
-    ResultSet getProxyResultSet(Statement statement, ResultSet resultSet);
+    public abstract ResultSet getProxyResultSet(Statement statement, ResultSet resultSet);
 
     /**************************************************************************
      *
      * Initializer class used to initialize the proxy factory. 
      */
-    class Initializer
-    {
-        private static ProxyFactory initialize()
-        {
-            try
-            {
-                ClassLoader classLoader = Initializer.class.getClassLoader();
-                classLoader.loadClass("javassist.CtClass");
-                Class<?> proxyFactoryClass = classLoader.loadClass("com.zaxxer.hikari.proxy.JavassistProxyFactoryFactory");
-                Object factoryFactory = proxyFactoryClass.newInstance();
-                Method getter = factoryFactory.getClass().getMethod("getProxyFactory");
-                return (ProxyFactory) getter.invoke(factoryFactory);
-            }
-            catch (Exception ex)
-            {
-                LoggerFactory.getLogger(ProxyFactory.class).error("Error initializing ProxyFactory", ex);
-                throw new RuntimeException("Error initializing ProxyFactory", ex);
-            }
-        }
-    }
+//    class Initializer
+//    {
+//        private static ProxyFactory initialize()
+//        {
+//            try
+//            {
+//                ClassLoader classLoader = Initializer.class.getClassLoader();
+//                classLoader.loadClass("javassist.CtClass");
+//                Class<?> proxyFactoryClass = classLoader.loadClass("com.zaxxer.hikari.proxy.JavassistProxyFactoryFactory");
+//                Object factoryFactory = proxyFactoryClass.newInstance();
+//                Method getter = factoryFactory.getClass().getMethod("getProxyFactory");
+//                return (ProxyFactory) getter.invoke(factoryFactory);
+//            }
+//            catch (Exception ex)
+//            {
+//                LoggerFactory.getLogger(ProxyFactory.class).error("Error initializing ProxyFactory", ex);
+//                throw new RuntimeException("Error initializing ProxyFactory", ex);
+//            }
+//        }
+//    }
 }

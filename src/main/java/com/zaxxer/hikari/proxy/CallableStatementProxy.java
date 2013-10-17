@@ -24,14 +24,23 @@ import java.sql.SQLException;
  *
  * @author Brett Wooldridge
  */
-public class CallableStatementProxy extends HikariProxyBase<CallableStatement>
+public class CallableStatementProxy extends HikariProxyBase
 {
+    private static final ProxyFactory PROXY_FACTORY;
+
     private final ConnectionProxy connection;
+
+    protected final CallableStatement delegate;
+
+    static
+    {
+        PROXY_FACTORY = JavassistProxyFactoryFactory.getProxyFactory();
+    }
 
     protected CallableStatementProxy(ConnectionProxy connection, CallableStatement statement)
     {
-        super(statement);
         this.connection = connection;
+        this.delegate = statement;
     }
 
     protected SQLException checkException(SQLException e)
@@ -58,37 +67,37 @@ public class CallableStatementProxy extends HikariProxyBase<CallableStatement>
 
     public ResultSet executeQuery() throws SQLException
     {
-        return ProxyFactory.INSTANCE.getProxyResultSet((CallableStatement) this, delegate.executeQuery());
+        return PROXY_FACTORY.getProxyResultSet((CallableStatement) this, delegate.executeQuery());
     }
 
     public ResultSet executeQuery(String sql) throws SQLException
     {
-        return ProxyFactory.INSTANCE.getProxyResultSet((CallableStatement) this, delegate.executeQuery(sql));
+        return PROXY_FACTORY.getProxyResultSet((CallableStatement) this, delegate.executeQuery(sql));
     }
 
     public ResultSet getGeneratedKeys() throws SQLException
     {
-        return ProxyFactory.INSTANCE.getProxyResultSet((CallableStatement) this, delegate.getGeneratedKeys());
+        return PROXY_FACTORY.getProxyResultSet((CallableStatement) this, delegate.getGeneratedKeys());
     }
 
     /* java.sql.Wrapper implementation */
-
-    public boolean isWrapperFor(Class<?> iface) throws SQLException
-    {
-        return iface.isAssignableFrom(delegate.getClass()) || isWrapperFor(delegate, iface);
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T unwrap(Class<T> iface) throws SQLException
-    {
-        if (iface.isAssignableFrom(delegate.getClass()))
-        {
-            return (T) delegate;
-        }
-        if (isWrapperFor(iface))
-        {
-            return unwrap(delegate, iface);
-        }
-        throw new SQLException(getClass().getName() + " is not a wrapper for " + iface);
-    }
+    // TODO implement wrapper
+//    public boolean isWrapperFor(Class<?> iface) throws SQLException
+//    {
+//        return iface.isAssignableFrom(delegate.getClass()) || isWrapperFor(delegate, iface);
+//    }
+//
+//    @SuppressWarnings("unchecked")
+//    public <T> T unwrap(Class<T> iface) throws SQLException
+//    {
+//        if (iface.isAssignableFrom(delegate.getClass()))
+//        {
+//            return (T) delegate;
+//        }
+//        if (isWrapperFor(iface))
+//        {
+//            return unwrap(delegate, iface);
+//        }
+//        throw new SQLException(getClass().getName() + " is not a wrapper for " + iface);
+//    }
 }

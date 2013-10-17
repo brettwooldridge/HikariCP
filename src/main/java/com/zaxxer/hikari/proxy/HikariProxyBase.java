@@ -23,15 +23,8 @@ import java.sql.SQLException;
 /**
  * @author Brett Wooldridge
  */
-public abstract class HikariProxyBase<T>
+public abstract class HikariProxyBase
 {
-    final protected T delegate;
-
-    protected HikariProxyBase(T delegate)
-    {
-        this.delegate = delegate;
-    }
-
     protected abstract SQLException checkException(SQLException e);
 
     protected static boolean isWrapperFor(Object obj, Class<?> param)

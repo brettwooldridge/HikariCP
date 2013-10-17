@@ -36,8 +36,10 @@ import com.zaxxer.hikari.HikariPool;
  *
  * @author Brett Wooldridge
  */
-public class ConnectionProxy extends HikariProxyBase<Connection> implements IHikariConnectionProxy
+public class ConnectionProxy extends HikariProxyBase implements IHikariConnectionProxy
 {
+    private static final ProxyFactory PROXY_FACTORY;
+
     private static final Set<String> POSTGRESQL_ERRORS;
     private static final Set<String> SPECIAL_ERRORS;
 
@@ -45,6 +47,8 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     private final AtomicBoolean isClosed;
 
     private final HikariPool parentPool;
+    
+    protected final Connection delegate;
 
     private volatile boolean forceClose;
 
@@ -66,6 +70,8 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
 
         SPECIAL_ERRORS = new HashSet<String>();
         SPECIAL_ERRORS.add("01002");  // SQL92 disconnect error
+
+        PROXY_FACTORY = JavassistProxyFactoryFactory.getProxyFactory();
     }
 
     // Instance initializer
@@ -77,13 +83,19 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
 
     protected ConnectionProxy(HikariPool parentPool, Connection connection)
     {
-        super(connection);
         this.parentPool = parentPool;
+        this.delegate = connection;
     }
 
     void unregisterStatement(Object statement)
     {
-        openStatements.remove(statement);
+        // If the connection is not closed.  If it is closed, it means this is being
+        // called back as a result of the close() method below in which case we
+        // will clear the openStatements collection en mass.
+        if (!isClosed.get())
+        {
+            openStatements.remove(statement);
+        }
     }
 
     public long getCreationTime()
@@ -99,9 +111,11 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     public void setLastAccess(long timestamp)
     {
         this.lastAccess = timestamp;
+    }
 
+    public void unclose()
+    {
         isClosed.set(false);
-        openStatements.clear();
     }
 
     public Connection getDelegate()
@@ -177,6 +191,11 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
                 leakTask = null;
             }
 
+            if (delegate.getAutoCommit())
+            {
+                delegate.commit();
+            }
+
             try
             {
                 for (Statement statement : openStatements)
@@ -211,8 +230,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     {
         try
         {
-            Statement statement = delegate.createStatement();
-            Statement statementProxy = ProxyFactory.INSTANCE.getProxyStatement(this, statement);
+            Statement statementProxy = PROXY_FACTORY.getProxyStatement(this, delegate.createStatement());
             openStatements.add(statementProxy);
 
             return statementProxy;
@@ -230,8 +248,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     {
         try
         {
-            Statement statement = delegate.createStatement(resultSetType, resultSetConcurrency);
-            Statement statementProxy = ProxyFactory.INSTANCE.getProxyStatement(this, statement);
+            Statement statementProxy = PROXY_FACTORY.getProxyStatement(this, delegate.createStatement(resultSetType, resultSetConcurrency));
             openStatements.add(statementProxy);
 
             return statementProxy;
@@ -249,8 +266,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     {
         try
         {
-            Statement statement = delegate.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
-            Statement statementProxy = ProxyFactory.INSTANCE.getProxyStatement(this, statement);
+            Statement statementProxy = PROXY_FACTORY.getProxyStatement(this, delegate.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability));
             openStatements.add(statementProxy);
 
             return statementProxy;
@@ -268,8 +284,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     {
         try
         {
-            CallableStatement statement = delegate.prepareCall(sql);
-            CallableStatement statementProxy = ProxyFactory.INSTANCE.getProxyCallableStatement(this, statement);
+            CallableStatement statementProxy = PROXY_FACTORY.getProxyCallableStatement(this, delegate.prepareCall(sql));
             openStatements.add(statementProxy);
 
             return statementProxy;
@@ -287,8 +302,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     {
         try
         {
-            CallableStatement statement = delegate.prepareCall(sql, resultSetType, resultSetConcurrency);
-            CallableStatement statementProxy = ProxyFactory.INSTANCE.getProxyCallableStatement(this, statement);
+            CallableStatement statementProxy = PROXY_FACTORY.getProxyCallableStatement(this, delegate.prepareCall(sql, resultSetType, resultSetConcurrency));
             openStatements.add(statementProxy);
 
             return statementProxy;
@@ -306,8 +320,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     {
         try
         {
-            CallableStatement statement = delegate.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
-            CallableStatement statementProxy = ProxyFactory.INSTANCE.getProxyCallableStatement(this, statement);
+            CallableStatement statementProxy = PROXY_FACTORY.getProxyCallableStatement(this, delegate.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability));
             openStatements.add(statementProxy);
 
             return statementProxy;
@@ -325,8 +338,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     {
         try
         {
-            PreparedStatement statement = delegate.prepareStatement(sql);
-            PreparedStatement statementProxy = ProxyFactory.INSTANCE.getProxyPreparedStatement(this, statement);
+            PreparedStatement statementProxy = PROXY_FACTORY.getProxyPreparedStatement(this, delegate.prepareStatement(sql));
             openStatements.add(statementProxy);
 
             return statementProxy;
@@ -344,8 +356,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     {
         try
         {
-            PreparedStatement statement = delegate.prepareStatement(sql, autoGeneratedKeys);
-            PreparedStatement statementProxy = ProxyFactory.INSTANCE.getProxyPreparedStatement(this, statement);
+            PreparedStatement statementProxy = PROXY_FACTORY.getProxyPreparedStatement(this, delegate.prepareStatement(sql, autoGeneratedKeys));
             openStatements.add(statementProxy);
 
             return statementProxy;
@@ -363,8 +374,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     {
         try
         {
-            PreparedStatement statement = delegate.prepareStatement(sql, resultSetType, resultSetConcurrency);
-            PreparedStatement statementProxy = ProxyFactory.INSTANCE.getProxyPreparedStatement(this, statement);
+            PreparedStatement statementProxy = PROXY_FACTORY.getProxyPreparedStatement(this, delegate.prepareStatement(sql, resultSetType, resultSetConcurrency));
             openStatements.add(statementProxy);
 
             return statementProxy;
@@ -382,8 +392,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     {
         try
         {
-            PreparedStatement statement = delegate.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
-            PreparedStatement statementProxy = ProxyFactory.INSTANCE.getProxyPreparedStatement(this, statement);
+            PreparedStatement statementProxy = PROXY_FACTORY.getProxyPreparedStatement(this, delegate.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability));
             openStatements.add(statementProxy);
 
             return statementProxy;
@@ -401,8 +410,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     {
         try
         {
-            PreparedStatement statement = delegate.prepareStatement(sql, columnIndexes);
-            PreparedStatement statementProxy = ProxyFactory.INSTANCE.getProxyPreparedStatement(this, statement);
+            PreparedStatement statementProxy = PROXY_FACTORY.getProxyPreparedStatement(this, delegate.prepareStatement(sql, columnIndexes));
             openStatements.add(statementProxy);
 
             return statementProxy;
@@ -420,8 +428,7 @@ public class ConnectionProxy extends HikariProxyBase<Connection> implements IHik
     {
         try
         {
-            PreparedStatement statement = delegate.prepareStatement(sql, columnNames);
-            PreparedStatement statementProxy = ProxyFactory.INSTANCE.getProxyPreparedStatement(this, statement);
+            PreparedStatement statementProxy = PROXY_FACTORY.getProxyPreparedStatement(this, delegate.prepareStatement(sql, columnNames));
             openStatements.add(statementProxy);
 
             return statementProxy;

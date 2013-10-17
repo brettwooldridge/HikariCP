@@ -24,14 +24,23 @@ import java.sql.SQLException;
  *
  * @author Brett Wooldridge
  */
-public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
+public class PreparedStatementProxy extends HikariProxyBase
 {
+    private static final ProxyFactory PROXY_FACTORY;
+
     private final ConnectionProxy connection;
+
+    protected final PreparedStatement delegate;
+
+    static
+    {
+        PROXY_FACTORY = JavassistProxyFactoryFactory.getProxyFactory();
+    }
 
     protected PreparedStatementProxy(ConnectionProxy connection, PreparedStatement statement)
     {
-        super(statement);
         this.connection = connection;
+        this.delegate = statement;
     }
 
     protected SQLException checkException(SQLException e)
@@ -62,7 +71,7 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         {
             return null;
         }
-        return ProxyFactory.INSTANCE.getProxyResultSet((PreparedStatement) this, resultSet);
+        return PROXY_FACTORY.getProxyResultSet((PreparedStatement) this, resultSet);
     }
 
     public ResultSet executeQuery() throws SQLException
@@ -72,7 +81,7 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         {
             return null;
         }
-        return ProxyFactory.INSTANCE.getProxyResultSet((PreparedStatement) this, resultSet);
+        return PROXY_FACTORY.getProxyResultSet((PreparedStatement) this, resultSet);
     }
 
     public ResultSet executeQuery(String sql) throws SQLException
@@ -82,7 +91,7 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         {
             return null;
         }
-        return ProxyFactory.INSTANCE.getProxyResultSet((PreparedStatement) this, resultSet);
+        return PROXY_FACTORY.getProxyResultSet((PreparedStatement) this, resultSet);
     }
 
     public ResultSet getGeneratedKeys() throws SQLException
@@ -92,27 +101,28 @@ public class PreparedStatementProxy extends HikariProxyBase<PreparedStatement>
         {
             return null;
         }
-        return ProxyFactory.INSTANCE.getProxyResultSet((PreparedStatement) this, generatedKeys);
+        return PROXY_FACTORY.getProxyResultSet((PreparedStatement) this, generatedKeys);
     }
 
     /* java.sql.Wrapper implementation */
 
-    public boolean isWrapperFor(Class<?> iface) throws SQLException
-    {
-        return iface.isAssignableFrom(delegate.getClass()) || isWrapperFor(delegate, iface);
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T unwrap(Class<T> iface) throws SQLException
-    {
-        if (iface.isAssignableFrom(delegate.getClass()))
-        {
-            return (T) delegate;
-        }
-        if (isWrapperFor(iface))
-        {
-            return unwrap(delegate, iface);
-        }
-        throw new SQLException(getClass().getName() + " is not a wrapper for " + iface);
-    }
+    // TODO: fix wrapper
+//    public boolean isWrapperFor(Class<?> iface) throws SQLException
+//    {
+//        return iface.isAssignableFrom(delegate.getClass()) || isWrapperFor(delegate, iface);
+//    }
+//
+//    @SuppressWarnings("unchecked")
+//    public <T> T unwrap(Class<T> iface) throws SQLException
+//    {
+//        if (iface.isAssignableFrom(delegate.getClass()))
+//        {
+//            return (T) delegate;
+//        }
+//        if (isWrapperFor(iface))
+//        {
+//            return unwrap(delegate, iface);
+//        }
+//        throw new SQLException(getClass().getName() + " is not a wrapper for " + iface);
+//    }
 }

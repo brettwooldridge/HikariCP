@@ -23,19 +23,21 @@ import java.sql.Statement;
 /**
  * @author Brett Wooldridge
  */
-public class ResultSetProxy extends HikariProxyBase<ResultSet>
+public class ResultSetProxy extends HikariProxyBase
 {
     private final Statement statement;
-    
+
+    protected final ResultSet delegate;
+
     protected ResultSetProxy(Statement statement, ResultSet resultSet)
     {
-        super(resultSet);
         this.statement = statement;
+        this.delegate = resultSet;
     }
 
     protected SQLException checkException(SQLException e)
     {
-        return ((HikariProxyBase<?>) statement).checkException(e);
+        return ((HikariProxyBase) statement).checkException(e);
     }
     
     // **********************************************************************

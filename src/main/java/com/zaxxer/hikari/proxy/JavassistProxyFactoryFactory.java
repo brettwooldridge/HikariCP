@@ -26,9 +26,7 @@ import java.util.Set;
 
 import javassist.ClassPool;
 import javassist.CtClass;
-import javassist.CtConstructor;
 import javassist.CtMethod;
-import javassist.CtNewConstructor;
 import javassist.CtNewMethod;
 import javassist.Modifier;
 
@@ -38,12 +36,27 @@ import com.zaxxer.hikari.util.ClassLoaderUtils;
  *
  * @author Brett Wooldridge
  */
-public class JavassistProxyFactoryFactory
+public final class JavassistProxyFactoryFactory
 {
-    private ClassPool classPool;
-    private ProxyFactory proxyFactory;
+    private static final ProxyFactory proxyFactory;
 
-    public JavassistProxyFactoryFactory()
+    private static ClassPool classPool;
+
+    static
+    {
+        JavassistProxyFactoryFactory proxyFactoryFactory = new JavassistProxyFactoryFactory();
+
+        try
+        {
+            proxyFactory = proxyFactoryFactory.generateProxyFactory();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private JavassistProxyFactoryFactory()
     {
         ClassPool defaultPool = ClassPool.getDefault();
         classPool = new ClassPool(defaultPool);
@@ -57,8 +70,6 @@ public class JavassistProxyFactoryFactory
             generateProxyClass(CallableStatement.class, CallableStatementProxy.class);
             generateProxyClass(PreparedStatement.class, PreparedStatementProxy.class);
             generateProxyClass(ResultSet.class, ResultSetProxy.class);
-
-            proxyFactory = generateProxyFactory();
         }
         catch (Exception e)
         {
@@ -66,19 +77,19 @@ public class JavassistProxyFactoryFactory
         }
     }
 
-    public ProxyFactory getProxyFactory()
+    public static ProxyFactory getProxyFactory()
     {
         return proxyFactory;
     }
 
     private ProxyFactory generateProxyFactory() throws Exception
     {
-        CtClass targetCt = classPool.makeClass("com.zaxxer.hikari.proxy.JavassistProxyFactoryImpl");
+        CtClass targetCt = classPool.makeClass("com.zaxxer.hikari.proxy.JavassistProxyFactory");
+        CtClass superCt = classPool.getCtClass("com.zaxxer.hikari.proxy.ProxyFactory");
+        targetCt.setSuperclass(superCt);
+        targetCt.setModifiers(Modifier.FINAL);
 
-        CtClass anInterface = classPool.getCtClass("com.zaxxer.hikari.proxy.ProxyFactory");
-        targetCt.addInterface(anInterface);
-
-        for (CtMethod intfMethod : anInterface.getDeclaredMethods())
+        for (CtMethod intfMethod : superCt.getDeclaredMethods())
         {
             CtMethod method = CtNewMethod.copy(intfMethod, targetCt, null);
 
@@ -123,13 +134,6 @@ public class JavassistProxyFactoryFactory
         CtClass superClassCt = classPool.getCtClass(superClassName);
         CtClass targetCt = classPool.makeClass(superClassName.replace("Proxy", "JavassistProxy"), superClassCt);
         targetCt.setModifiers(Modifier.FINAL);
-
-        // Generate constructors that simply call super(..)
-        for (CtConstructor constructor : superClassCt.getConstructors())
-        {
-            CtConstructor ctConstructor = CtNewConstructor.make(constructor.getParameterTypes(), constructor.getExceptionTypes(), targetCt);
-            targetCt.addConstructor(ctConstructor);
-        }
 
         // Make a set of method signatures we inherit implementation for, so we don't generate delegates for these
         Set<String> superSigs = new HashSet<String>();
