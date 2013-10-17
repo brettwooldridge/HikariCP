@@ -98,6 +98,11 @@
          <version>2.3.7</version>
          <type>maven-plugin</type>
       </dependency>
+      <dependency>
+      	<groupId>org.hsqldb</groupId>
+      	<artifactId>hsqldb</artifactId>
+      	<version>2.3.0</version>
+      </dependency>
    </dependencies>
 
    <build>
