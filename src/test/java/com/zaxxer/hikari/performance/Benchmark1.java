@@ -23,7 +23,7 @@ import com.zaxxer.hikari.HikariDataSource;
  *
  * @author Brett Wooldridge
  */
-public class Benchmarks
+public class Benchmark1
 {
     private static final int THREADS = Integer.getInteger("threads", 100);
     private static final int POOL_MAX = Integer.getInteger("poolMax", 100);
@@ -34,11 +34,11 @@ public class Benchmarks
     {
         if (args.length == 0)
         {
-            System.err.println("Start with one of: hikari, bone, c3p0, dbcp");
+            System.err.println("Start with one of: hikari, bone");
             System.exit(0);
         }
 
-        Benchmarks benchmarks = new Benchmarks();
+        Benchmark1 benchmarks = new Benchmark1();
         if (args[0].equals("hikari"))
         {
             benchmarks.ds = benchmarks.setupHikari();
@@ -48,6 +48,11 @@ public class Benchmarks
         {
             benchmarks.ds = benchmarks.setupBone();
             System.out.println("Benchmarking BoneCP");
+        }
+        else
+        {
+            System.err.println("Start with one of: hikari, bone");
+            System.exit(0);
         }
 
         System.out.println("\nMixedBench");
