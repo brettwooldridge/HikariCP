@@ -39,13 +39,12 @@ public class CreationTest
     @Test
     public void testCreate() throws SQLException
     {
-        HikariClassTransformer.loadTransformerAgent("com.zaxxer.hikari.mocks");
-
         HikariConfig config = new HikariConfig();
         config.setMinimumPoolSize(1);
         config.setAcquireIncrement(1);
         config.setConnectionTestQuery("VALUES 1");
-        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+        // config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+        config.setDataSourceClassName("org.hsqldb.jdbc.JDBCDataSource");
 
         HikariDataSource ds = new HikariDataSource(config);
 

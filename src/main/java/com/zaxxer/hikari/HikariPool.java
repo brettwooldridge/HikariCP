@@ -36,6 +36,7 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.zaxxer.hikari.proxy.HikariInstrumentationAgent;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.JavassistProxyFactoryFactory;
 import com.zaxxer.hikari.util.ClassLoaderUtils;
@@ -53,9 +54,9 @@ public class HikariPool implements HikariPoolMBean
     private final AtomicInteger idleConnectionCount;
     private final DataSource dataSource;
     private final boolean jdbc4ConnectionTest;
+    private volatile boolean delegationProxies;
 
     private final Timer houseKeepingTimer;
-
 
     /**
      * Construct a HikariPool with the specified configuration.
@@ -79,6 +80,13 @@ public class HikariPool implements HikariPoolMBean
             Class<?> clazz = ClassLoaderUtils.loadClass(configuration.getDataSourceClassName());
             this.dataSource = (DataSource) clazz.newInstance();
             PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
+
+            HikariInstrumentationAgent instrumentationAgent = new HikariInstrumentationAgent(dataSource);
+            if (!instrumentationAgent.loadTransformerAgent())
+            {
+                delegationProxies = true;
+                LOGGER.info("Falling back to Javassist delegate-based proxies.");
+            }
         }
         catch (Exception e)
         {
@@ -245,7 +253,15 @@ public class HikariPool implements HikariPoolMBean
             try
             {
                 Connection connection = dataSource.getConnection();
-                IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) JavassistProxyFactoryFactory.getProxyFactory().getProxyConnection(this, connection);
+                IHikariConnectionProxy proxyConnection;
+                if (delegationProxies)
+                {
+                    proxyConnection = (IHikariConnectionProxy) JavassistProxyFactoryFactory.getProxyFactory().getProxyConnection(this, connection);
+                }
+                else
+                {
+                    proxyConnection = (IHikariConnectionProxy) connection;
+                }
 
                 boolean alive = isConnectionAlive((Connection) proxyConnection, configuration.getConnectionTimeout());
                 if (alive)
