@@ -82,7 +82,7 @@ public class HikariPool implements HikariPoolMBean
             PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
 
             HikariInstrumentationAgent instrumentationAgent = new HikariInstrumentationAgent(dataSource);
-            if (!instrumentationAgent.loadTransformerAgent())
+            if (true || !instrumentationAgent.loadTransformerAgent())
             {
                 delegationProxies = true;
                 LOGGER.info("Falling back to Javassist delegate-based proxies.");

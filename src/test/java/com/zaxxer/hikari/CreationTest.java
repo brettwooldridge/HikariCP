@@ -24,8 +24,6 @@ import java.sql.SQLException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.zaxxer.hikari.proxy.HikariClassTransformer;
-
 /**
  * System property testProxy can be one of:
  *    "com.zaxxer.hikari.JavaProxyFactory"
@@ -43,8 +41,8 @@ public class CreationTest
         config.setMinimumPoolSize(1);
         config.setAcquireIncrement(1);
         config.setConnectionTestQuery("VALUES 1");
-        // config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-        config.setDataSourceClassName("org.hsqldb.jdbc.JDBCDataSource");
+        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+        // config.setDataSourceClassName("org.hsqldb.jdbc.JDBCDataSource");
 
         HikariDataSource ds = new HikariDataSource(config);
 

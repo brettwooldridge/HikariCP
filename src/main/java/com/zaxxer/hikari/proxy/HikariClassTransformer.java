@@ -84,23 +84,23 @@ public class HikariClassTransformer implements ClassFileTransformer
 
                 if (iface.equals("java.sql.Connection"))
                 {
-
+                    transformConnection(classFile);
                 }
                 else if (iface.equals("java.sql.PreparedStatement"))
                 {
-
+                    transformPreparedStatement(classFile);
                 }
                 else if (iface.equals("java.sql.CallableStatement"))
                 {
-
+                    transformCallableStatement(classFile);
                 }
                 else if (iface.equals("java.sql.Statement"))
                 {
-
+                    transformStatement(classFile);
                 }
                 else if (iface.equals("java.sql.ResultSet"))
                 {
-
+                    transformResultSet(classFile);
                 }
             }
 
@@ -111,6 +111,41 @@ public class HikariClassTransformer implements ClassFileTransformer
         {
             return classfileBuffer;
         }
+    }
+
+    /**
+     * @param classFile
+     */
+    private void transformConnection(ClassFile classFile)
+    {
+    }
+
+    /**
+     * @param classFile
+     */
+    private void transformPreparedStatement(ClassFile classFile)
+    {
+    }
+
+    /**
+     * @param classFile
+     */
+    private void transformCallableStatement(ClassFile classFile)
+    {
+    }
+
+    /**
+     * @param classFile
+     */
+    private void transformStatement(ClassFile classFile)
+    {
+    }
+
+    /**
+     * @param classFile
+     */
+    private void transformResultSet(ClassFile classFile)
+    {
     }
 
     /**
