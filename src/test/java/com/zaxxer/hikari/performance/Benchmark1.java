@@ -58,6 +58,7 @@ public class Benchmark1
         System.out.println("\nMixedBench");
         System.out.println(" Warming up JIT");
         benchmarks.startMixedBench();
+        benchmarks.startMixedBench();
         System.out.println(" MixedBench Final Timing Runs");
         benchmarks.startMixedBench();
         benchmarks.startMixedBench();
@@ -66,6 +67,7 @@ public class Benchmark1
 
         System.out.println("\nBoneBench");
         System.out.println(" Warming up JIT");
+        benchmarks.startSillyBench();
         benchmarks.startSillyBench();
         System.out.println(" BoneBench Final Timing Run");
         benchmarks.startSillyBench();
@@ -83,7 +85,6 @@ public class Benchmark1
         config.setConnectionTimeout(8000);
         config.setIdleTimeout(TimeUnit.MINUTES.toMillis(30));
         config.setJdbc4ConnectionTest(true);
-        config.setPoolName("This has spaces");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
         HikariDataSource ds = new HikariDataSource(config);
@@ -94,7 +95,7 @@ public class Benchmark1
     {
         try
         {
-            Class.forName("com.zaxxer.hikari.performance.StubDriver");
+            Class.forName("com.zaxxer.hikari.mocks.StubDriver");
         }
         catch (ClassNotFoundException e)
         {
