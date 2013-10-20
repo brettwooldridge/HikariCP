@@ -16,7 +16,6 @@
 
 package com.zaxxer.hikari.proxy;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -46,9 +45,9 @@ public class StatementProxy extends HikariProxyBase implements IHikariStatementP
     }
 
     @HikariInject
-    public void setConnectionProxy(Connection connection)
+    public void setConnectionProxy(IHikariConnectionProxy connection)
     {
-        this._connection = (IHikariConnectionProxy) connection;
+        this._connection = connection;
     }
 
     @HikariInject

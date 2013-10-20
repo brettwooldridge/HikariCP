@@ -54,7 +54,7 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     @HikariInject private static final Set<String> POSTGRESQL_ERRORS;
     @HikariInject private static final Set<String> SPECIAL_ERRORS;
 
-    @HikariInject private ArrayList<IHikariStatementProxy> _openStatements;
+    @HikariInject private ArrayList<Statement> _openStatements;
     @HikariInject private AtomicBoolean _isClosed;
     @HikariInject private HikariPool _parentPool;
     
@@ -82,18 +82,11 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
         __static();
     }
 
-    @HikariInject
-    private void __init()
-    {
-        _openStatements = new ArrayList<IHikariStatementProxy>(64);
-        _isClosed = new AtomicBoolean();
-        _creationTime = _lastAccess = System.currentTimeMillis();
-    }
-
     protected ConnectionProxy(HikariPool parentPool, Connection connection)
     {
         this._parentPool = parentPool;
         this.delegate = connection;
+
         __init();
     }
 
@@ -139,11 +132,6 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
         _isClosed.set(false);
     }
 
-    public final Connection getDelegate()
-    {
-        return delegate;
-    }
-
     @HikariInject 
     public void captureStack(long leakDetectionThreshold, Timer scheduler)
     {
@@ -183,6 +171,19 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
         return sqle;
     }
 
+    @HikariInject
+    private void __init()
+    {
+        _openStatements = new ArrayList<Statement>(64);
+        _isClosed = new AtomicBoolean();
+        _creationTime = _lastAccess = System.currentTimeMillis();
+    }
+
+    public final Connection getDelegate()
+    {
+        return delegate;
+    }
+
     // **********************************************************************
     //                   "Overridden" java.sql.Connection Methods
     // **********************************************************************
@@ -205,7 +206,7 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
 
             try
             {
-                for (IHikariStatementProxy statement : _openStatements)
+                for (Statement statement : _openStatements)
                 {
                     statement.close();
                 }
@@ -233,11 +234,11 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     {
         try
         {
-            IHikariStatementProxy statementProxy = (IHikariStatementProxy) __createStatement();
-            statementProxy.setConnectionProxy((Connection) this);
+            Statement statementProxy = __createStatement();
+            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
-            return (Statement) statementProxy;
+            return statementProxy;
         }
         catch (SQLException e)
         {
@@ -250,11 +251,11 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     {
         try
         {
-            IHikariStatementProxy statementProxy = (IHikariStatementProxy) __createStatement(resultSetType, resultSetConcurrency);
-            statementProxy.setConnectionProxy((Connection) this);
+            Statement statementProxy = __createStatement(resultSetType, resultSetConcurrency);
+            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
-            return (Statement) statementProxy;
+            return statementProxy;
         }
         catch (SQLException e)
         {
@@ -267,11 +268,11 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     {
         try
         {
-            IHikariStatementProxy statementProxy = (IHikariStatementProxy) __createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
-            statementProxy.setConnectionProxy((Connection) this);
+            Statement statementProxy = __createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
+            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
-            return (Statement) statementProxy;
+            return statementProxy;
         }
         catch (SQLException e)
         {
@@ -284,11 +285,11 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     {
         try
         {
-            IHikariStatementProxy statementProxy = (IHikariStatementProxy) __prepareCall(sql);
-            statementProxy.setConnectionProxy((Connection) this);
+            CallableStatement statementProxy = __prepareCall(sql);
+            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
-            return (CallableStatement) statementProxy;
+            return statementProxy;
         }
         catch (SQLException e)
         {
@@ -301,11 +302,11 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     {
         try
         {
-            IHikariStatementProxy statementProxy = (IHikariStatementProxy) __prepareCall(sql, resultSetType, resultSetConcurrency);
-            statementProxy.setConnectionProxy((Connection) this);
+            CallableStatement statementProxy = __prepareCall(sql, resultSetType, resultSetConcurrency);
+            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
-            return (CallableStatement) statementProxy;
+            return statementProxy;
         }
         catch (SQLException e)
         {
@@ -318,11 +319,11 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     {
         try
         {
-            IHikariStatementProxy statementProxy = (IHikariStatementProxy) __prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
-            statementProxy.setConnectionProxy((Connection) this);
+            CallableStatement statementProxy = __prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
+            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
-            return (CallableStatement) statementProxy;
+            return statementProxy;
         }
         catch (SQLException e)
         {
@@ -335,11 +336,11 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     {
         try
         {
-            IHikariStatementProxy statementProxy = (IHikariStatementProxy) __prepareStatement(sql);
-            statementProxy.setConnectionProxy((Connection) this);
+            PreparedStatement statementProxy = __prepareStatement(sql);
+            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
-            return (PreparedStatement) statementProxy;
+            return statementProxy;
         }
         catch (SQLException e)
         {
@@ -352,11 +353,11 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     {
         try
         {
-            IHikariStatementProxy statementProxy = (IHikariStatementProxy) __prepareStatement(sql, autoGeneratedKeys);
-            statementProxy.setConnectionProxy((Connection) this);
+            PreparedStatement statementProxy = __prepareStatement(sql, autoGeneratedKeys);
+            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
-            return (PreparedStatement) statementProxy;
+            return statementProxy;
         }
         catch (SQLException e)
         {
@@ -369,11 +370,11 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     {
         try
         {
-            IHikariStatementProxy statementProxy = (IHikariStatementProxy) __prepareStatement(sql, resultSetType, resultSetConcurrency);
-            statementProxy.setConnectionProxy((Connection) this);
+            PreparedStatement statementProxy = __prepareStatement(sql, resultSetType, resultSetConcurrency);
+            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
-            return (PreparedStatement) statementProxy;
+            return statementProxy;
         }
         catch (SQLException e)
         {
@@ -386,10 +387,11 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     {
         try
         {
-            IHikariStatementProxy statementProxy = (IHikariStatementProxy) __prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
+            PreparedStatement statementProxy = __prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
+            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
-            return (PreparedStatement) statementProxy;
+            return statementProxy;
         }
         catch (SQLException e)
         {
@@ -402,11 +404,11 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     {
         try
         {
-            IHikariStatementProxy statementProxy = (IHikariStatementProxy) __prepareStatement(sql, columnIndexes);
-            statementProxy.setConnectionProxy((Connection) this);
+            PreparedStatement statementProxy = __prepareStatement(sql, columnIndexes);
+            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
-            return (PreparedStatement) statementProxy;
+            return statementProxy;
         }
         catch (SQLException e)
         {
@@ -419,11 +421,11 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     {
         try
         {
-            IHikariStatementProxy statementProxy = (IHikariStatementProxy) __prepareStatement(sql, columnNames);
-            statementProxy.setConnectionProxy((Connection) this);
+            PreparedStatement statementProxy = __prepareStatement(sql, columnNames);
+            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
-            return (PreparedStatement) statementProxy;
+            return statementProxy;
         }
         catch (SQLException e)
         {
