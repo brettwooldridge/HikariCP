@@ -57,12 +57,6 @@
          <scope>test</scope>
       </dependency>
       <dependency>
-         <groupId>javassist</groupId>
-         <artifactId>javassist</artifactId>
-         <version>3.12.1.GA</version>
-         <scope>provided</scope>
-      </dependency>
-      <dependency>
          <groupId>org.slf4j</groupId>
          <artifactId>slf4j-api</artifactId>
          <version>1.7.5</version>
@@ -109,6 +103,12 @@
          <version>1.6.0</version>
          <scope>system</scope>
          <systemPath>${java.home}/../lib/tools.jar</systemPath>
+      </dependency>
+      <dependency>
+      	<groupId>org.javassist</groupId>
+      	<artifactId>javassist</artifactId>
+      	<version>3.18.1-GA</version>
+      	<type>bundle</type>
       </dependency>
    </dependencies>
 
