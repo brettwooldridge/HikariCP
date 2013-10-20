@@ -20,24 +20,33 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import com.zaxxer.hikari.javassist.HikariInject;
+
 /**
  * @author Brett Wooldridge
  */
-public class ResultSetProxy extends HikariProxyBase
+public class ResultSetProxy extends HikariProxyBase implements IHikariResultSetProxy
 {
-    private final Statement statement;
+    @HikariInject private IHikariStatementProxy _statement;
 
     protected final ResultSet delegate;
 
-    protected ResultSetProxy(Statement statement, ResultSet resultSet)
+    protected ResultSetProxy(IHikariStatementProxy statement, ResultSet resultSet)
     {
-        this.statement = statement;
+        this._statement = statement;
         this.delegate = resultSet;
     }
 
-    protected SQLException checkException(SQLException e)
+    @HikariInject
+    public SQLException checkException(SQLException e)
     {
-        return ((HikariProxyBase) statement).checkException(e);
+        return _statement.checkException(e);
+    }
+    
+    @HikariInject
+    public void setProxyStatement(IHikariStatementProxy statement)
+    {
+        this._statement = statement;
     }
     
     // **********************************************************************
@@ -47,6 +56,6 @@ public class ResultSetProxy extends HikariProxyBase
 
     public Statement getStatement() throws SQLException
     {
-        return statement;
+        return (Statement) _statement;
     }
 }

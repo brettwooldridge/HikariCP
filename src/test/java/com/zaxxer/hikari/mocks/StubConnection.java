@@ -41,6 +41,13 @@ import java.util.concurrent.Executor;
  */
 public class StubConnection implements Connection
 {
+    private static long foo;
+
+    static
+    {
+        foo = System.currentTimeMillis();
+    }
+
     /** {@inheritDoc} */
     public <T> T unwrap(Class<T> iface) throws SQLException
     {
@@ -200,7 +207,7 @@ public class StubConnection implements Connection
     /** {@inheritDoc} */
     public int getHoldability() throws SQLException
     {
-        return 0;
+        return (int) foo;
     }
 
     /** {@inheritDoc} */

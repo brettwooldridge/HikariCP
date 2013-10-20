@@ -40,7 +40,7 @@ public final class JavassistProxyFactoryFactory
 {
     private static final ProxyFactory proxyFactory;
 
-    private static ClassPool classPool;
+    private ClassPool classPool;
 
     static
     {
@@ -178,7 +178,7 @@ public final class JavassistProxyFactoryFactory
                 targetCt.addMethod(method);
             }
         }
-
+        targetCt.debugWriteFile("/tmp");
         return targetCt.toClass(classPool.getClassLoader(), null);
     }
 }

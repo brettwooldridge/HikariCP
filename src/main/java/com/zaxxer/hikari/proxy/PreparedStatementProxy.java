@@ -20,109 +20,47 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import com.zaxxer.hikari.javassist.HikariInject;
+
 /**
  *
  * @author Brett Wooldridge
  */
-public class PreparedStatementProxy extends HikariProxyBase
+public class PreparedStatementProxy extends StatementProxy
 {
-    private static final ProxyFactory PROXY_FACTORY;
-
-    private final ConnectionProxy connection;
-
-    protected final PreparedStatement delegate;
-
-    static
-    {
-        PROXY_FACTORY = JavassistProxyFactoryFactory.getProxyFactory();
-    }
-
     protected PreparedStatementProxy(ConnectionProxy connection, PreparedStatement statement)
     {
-        this.connection = connection;
-        this.delegate = statement;
-    }
-
-    protected SQLException checkException(SQLException e)
-    {
-        return connection.checkException(e);
+        super(connection, statement);
     }
 
     // **********************************************************************
     //              Overridden java.sql.PreparedStatement Methods
-    //                      other methods are injected
     // **********************************************************************
 
-    public void close() throws SQLException
-    {
-        if (delegate == null)
-        {
-            return;
-        }
-
-        connection.unregisterStatement(this);
-        delegate.close();
-    }
-
-    public ResultSet getResultSet() throws SQLException
-    {
-        ResultSet resultSet = delegate.getResultSet();
-        if (resultSet == null)
-        {
-            return null;
-        }
-        return PROXY_FACTORY.getProxyResultSet((PreparedStatement) this, resultSet);
-    }
-
+    @HikariInject
     public ResultSet executeQuery() throws SQLException
     {
-        ResultSet resultSet = delegate.executeQuery();
+        IHikariResultSetProxy resultSet = (IHikariResultSetProxy) __executeQuery();
+        resultSet.setProxyStatement(this);
+        return (ResultSet) resultSet;
+    }
+
+    // ***********************************************************************
+    // These methods contain code we do not want injected into the actual
+    // java.sql.Connection implementation class.  These methods are only
+    // used when instrumentation is not available and "conventional" Javassist
+    // delegating proxies are used.
+    // ***********************************************************************
+
+    public ResultSet __executeQuery() throws SQLException
+    {
+        ResultSet resultSet = ((PreparedStatement) delegate).executeQuery();
         if (resultSet == null)
         {
             return null;
         }
-        return PROXY_FACTORY.getProxyResultSet((PreparedStatement) this, resultSet);
+        return PROXY_FACTORY.getProxyResultSet(this, resultSet);
     }
-
-    public ResultSet executeQuery(String sql) throws SQLException
-    {
-        ResultSet resultSet = delegate.executeQuery(sql);
-        if (resultSet == null)
-        {
-            return null;
-        }
-        return PROXY_FACTORY.getProxyResultSet((PreparedStatement) this, resultSet);
-    }
-
-    public ResultSet getGeneratedKeys() throws SQLException
-    {
-        ResultSet generatedKeys = delegate.getGeneratedKeys();
-        if (generatedKeys == null)
-        {
-            return null;
-        }
-        return PROXY_FACTORY.getProxyResultSet((PreparedStatement) this, generatedKeys);
-    }
-
-    /* java.sql.Wrapper implementation */
 
     // TODO: fix wrapper
-//    public boolean isWrapperFor(Class<?> iface) throws SQLException
-//    {
-//        return iface.isAssignableFrom(delegate.getClass()) || isWrapperFor(delegate, iface);
-//    }
-//
-//    @SuppressWarnings("unchecked")
-//    public <T> T unwrap(Class<T> iface) throws SQLException
-//    {
-//        if (iface.isAssignableFrom(delegate.getClass()))
-//        {
-//            return (T) delegate;
-//        }
-//        if (isWrapperFor(iface))
-//        {
-//            return unwrap(delegate, iface);
-//        }
-//        throw new SQLException(getClass().getName() + " is not a wrapper for " + iface);
-//    }
 }

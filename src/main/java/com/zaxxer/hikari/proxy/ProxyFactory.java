@@ -37,7 +37,7 @@ public abstract class ProxyFactory
 
     public abstract PreparedStatement getProxyPreparedStatement(ConnectionProxy connection, PreparedStatement statement);
 
-    public abstract ResultSet getProxyResultSet(Statement statement, ResultSet resultSet);
+    public abstract ResultSet getProxyResultSet(IHikariStatementProxy statement, ResultSet resultSet);
 
     /**************************************************************************
      *

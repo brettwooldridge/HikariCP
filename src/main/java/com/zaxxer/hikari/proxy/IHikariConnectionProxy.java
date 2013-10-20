@@ -17,7 +17,10 @@
 package com.zaxxer.hikari.proxy;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Timer;
+
+import com.zaxxer.hikari.HikariPool;
 
 /**
  *
@@ -27,6 +30,12 @@ public interface IHikariConnectionProxy
 {
     void unclose();
 
+    void __close() throws SQLException;
+
+    void unregisterStatement(Object statement);
+
+    SQLException checkException(SQLException sqle);
+
     boolean isBrokenConnection();
 
     long getCreationTime();
@@ -34,6 +43,8 @@ public interface IHikariConnectionProxy
     long getLastAccess();
 
     void setLastAccess(long timestamp);
+
+    void setParentPool(HikariPool parentPool);
 
     Connection getDelegate();
 

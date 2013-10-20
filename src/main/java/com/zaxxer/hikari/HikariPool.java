@@ -36,7 +36,7 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.zaxxer.hikari.proxy.HikariInstrumentationAgent;
+import com.zaxxer.hikari.javassist.HikariInstrumentationAgent;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.JavassistProxyFactoryFactory;
 import com.zaxxer.hikari.util.ClassLoaderUtils;
@@ -82,7 +82,7 @@ public class HikariPool implements HikariPoolMBean
             PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
 
             HikariInstrumentationAgent instrumentationAgent = new HikariInstrumentationAgent(dataSource);
-            if (true || !instrumentationAgent.loadTransformerAgent())
+            if (false || !instrumentationAgent.loadTransformerAgent())
             {
                 delegationProxies = true;
                 LOGGER.info("Falling back to Javassist delegate-based proxies.");
@@ -261,6 +261,7 @@ public class HikariPool implements HikariPoolMBean
                 else
                 {
                     proxyConnection = (IHikariConnectionProxy) connection;
+                    proxyConnection.setParentPool(this);
                 }
 
                 boolean alive = isConnectionAlive((Connection) proxyConnection, configuration.getConnectionTimeout());
@@ -329,7 +330,7 @@ public class HikariPool implements HikariPoolMBean
         try
         {
             totalConnections.decrementAndGet();
-            connectionProxy.getDelegate().close();
+            connectionProxy.__close();
         }
         catch (SQLException e)
         {

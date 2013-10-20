@@ -16,55 +16,100 @@
 
 package com.zaxxer.hikari.proxy;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import com.zaxxer.hikari.javassist.HikariInject;
+
 /**
  * @author Brett Wooldridge
  */
-public class StatementProxy extends HikariProxyBase
+public class StatementProxy extends HikariProxyBase implements IHikariStatementProxy
 {
-    private static final ProxyFactory PROXY_FACTORY;
+    protected static ProxyFactory PROXY_FACTORY;
 
-    protected final ConnectionProxy connection;
+    @HikariInject protected IHikariConnectionProxy _connection;
     
-    protected final Statement delegate;
+    protected Statement delegate;
 
     static
     {
-        PROXY_FACTORY = JavassistProxyFactoryFactory.getProxyFactory();
+        __static();
     }
 
-    protected StatementProxy(ConnectionProxy connection, Statement statement)
+    protected StatementProxy(IHikariConnectionProxy connection, Statement statement)
     {
-        this.connection = connection;
+        this._connection = connection;
         this.delegate = statement;
     }
 
-    protected SQLException checkException(SQLException e)
+    @HikariInject
+    public void setConnectionProxy(Connection connection)
     {
-        return connection.checkException(e);
+        this._connection = (IHikariConnectionProxy) connection;
+    }
+
+    @HikariInject
+    public SQLException checkException(SQLException e)
+    {
+        return _connection.checkException(e);
     }
 
     // **********************************************************************
     //                 Overridden java.sql.Statement Methods
-    //                      other methods are injected
     // **********************************************************************
 
+    @HikariInject
     public void close() throws SQLException
     {
-        connection.unregisterStatement(this);
+        _connection.unregisterStatement(this);
+        __close();
+    }
 
+    public ResultSet executeQuery(String sql) throws SQLException
+    {
+        IHikariResultSetProxy resultSet = (IHikariResultSetProxy) __executeQuery(sql);
+        resultSet.setProxyStatement(this);
+
+        return (ResultSet) resultSet;
+    }
+
+    public ResultSet getGeneratedKeys() throws SQLException
+    {
+        IHikariResultSetProxy resultSet = (IHikariResultSetProxy) __getGeneratedKeys();
+        resultSet.setProxyStatement(this);
+
+        return (ResultSet) resultSet;
+    }
+
+    // ***********************************************************************
+    // These methods contain code we do not want injected into the actual
+    // java.sql.Connection implementation class.  These methods are only
+    // used when instrumentation is not available and "conventional" Javassist
+    // delegating proxies are used.
+    // ***********************************************************************
+
+    private static void __static()
+    {
+        if (PROXY_FACTORY == null)
+        {
+            PROXY_FACTORY = JavassistProxyFactoryFactory.getProxyFactory();
+        }
+    }
+    
+    public void __close() throws SQLException
+    {
         if (delegate.isClosed())
         {
             return;
         }
 
-        delegate.close();
+        delegate.close();        
     }
 
-    public ResultSet executeQuery(String sql) throws SQLException
+    public ResultSet __executeQuery(String sql) throws SQLException
     {
         ResultSet resultSet = delegate.executeQuery(sql);
         if (resultSet == null)
@@ -72,10 +117,10 @@ public class StatementProxy extends HikariProxyBase
             return null;
         }
 
-        return PROXY_FACTORY.getProxyResultSet((Statement) this, resultSet);
+        return PROXY_FACTORY.getProxyResultSet(this, resultSet);
     }
 
-    public ResultSet getGeneratedKeys() throws SQLException
+    public ResultSet __getGeneratedKeys() throws SQLException
     {
         ResultSet generatedKeys = delegate.getGeneratedKeys();
         if (generatedKeys == null)
@@ -83,28 +128,8 @@ public class StatementProxy extends HikariProxyBase
             return null;
         }
 
-        return PROXY_FACTORY.getProxyResultSet((Statement) this, generatedKeys);
+        return PROXY_FACTORY.getProxyResultSet(this, generatedKeys);
     }
 
-    /* java.sql.Wrapper implementation */
-
     // TODO: fix wrapper
-//  public boolean isWrapperFor(Class<?> iface) throws SQLException
-//  {
-//      return iface.isAssignableFrom(delegate.getClass()) || isWrapperFor(delegate, iface);
-//  }
-//
-//  @SuppressWarnings("unchecked")
-//  public <T> T unwrap(Class<T> iface) throws SQLException
-//  {
-//      if (iface.isAssignableFrom(delegate.getClass()))
-//      {
-//          return (T) delegate;
-//      }
-//      if (isWrapperFor(iface))
-//      {
-//          return unwrap(delegate, iface);
-//      }
-//      throw new SQLException(getClass().getName() + " is not a wrapper for " + iface);
-//  }
 }

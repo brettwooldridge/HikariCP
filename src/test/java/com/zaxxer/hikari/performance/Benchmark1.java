@@ -84,7 +84,7 @@ public class Benchmark1
         config.setIdleTimeout(TimeUnit.MINUTES.toMillis(30));
         config.setJdbc4ConnectionTest(true);
         config.setPoolName("This has spaces");
-        config.setDataSourceClassName("com.zaxxer.hikari.performance.StubDataSource");
+        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
         HikariDataSource ds = new HikariDataSource(config);
         return ds;
