@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.proxy;
+package com.zaxxer.hikari.javassist;
 
 import java.io.DataInputStream;
 import java.io.File;
@@ -239,6 +239,11 @@ public class HikariInstrumentationAgent
     private void loadIfInstrumentable(String className, DataInputStream classInputStream) throws IOException, ClassNotFoundException
     {
         ClassFile classFile = new ClassFile(classInputStream);
+        if (classFile.isAbstract())
+        {
+            return;
+        }
+
         for (String iface : classFile.getInterfaces())
         {
             if (!iface.startsWith("java.sql"))
