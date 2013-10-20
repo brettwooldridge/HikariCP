@@ -43,7 +43,7 @@ A breakdown of the mix operations is:
 | ResultSet.close()                    | 100,000     |
 | Connection.close()                   | 1000        |
 
-The JVM JIT was "warmed up" with a single run through, then 4 runs were made from which the run
+The JVM JIT was "warmed up" with two runs through, then 4 runs were made from which the run
 with the lowest median time was chosen.
 
 The benchmark was run using a stub (nop) implementation of an underlying DataSource, Connection,
@@ -54,21 +54,22 @@ ensure that the JIT does not eliminate or "optimize away" the stub code.
 The test was performed on an Intel Core i7 (3770) 3.4GHz iMac, MacOS X 10.8, 32GB RAM.  The
 JVM benchmark was run with: ``-server -XX:+UseParallelGC -Xms256m -Xss256k -Dthreads=500 -DpoolMax=200``.
 The benchmark is available in the ``src/test/java`` folder in the package ``com.zaxxer.hikari.performance``
-in a main class called ``Benchmark``.
+in a main class called ``Benchmark1``.
 
 ##### In Summary #####
-500 threads ran 60,702,000 JDBC operations each, HikariCP did this in a median of *12ms* per thread.
+500 threads ran 60,702,000 JDBC operations each, HikariCP did this in a median of *12ms* per thread
+compared to 5533ms for the next leading connection pool.
 
 ------------------------------
 
 #### (In)correctness ####
 Sometimes "correctness" is objective, and sometimes it is subjective.  One example of
-objective *incorrectness* in BoneCP is ``ResultSet`` handling.  Every connection pool needs to
+objective *incorrectness* in BoneCP is ``ResultSet`` handling.  Connection pools need to
 wrap the underlying ``Connection``, ``Statement``, ``CallableStatement``, and
 ``PreparedStatement``, and ``ResultSet`` classes.  However, BoneCP does not wrap ResultSet.
 
 ``ResultSet`` *must* be wrapped, because ``ResultSet.getStatement()`` *must* return the
-**wrapped** ``Statement`` that generated it, not the **underlying** ``Statement``.
+same ``Statement`` that generated it (the **wrapped** one), not the **underlying** ``Statement``.
 Hibernate 4.3 for one [relies on this semantic](http://jira.codehaus.org/browse/BTM-126).
 
 If BoneCP were to wrap ResultSet, which comprises 20,100,000 of the 60,702,000 operations in
@@ -87,7 +88,7 @@ However, not doing so negatively impacts reliability.  Addtionatlly, HikariCP su
 ``Connection.isValid()`` API, which for many drivers provides a fast non-query based aliveness test.
 Regardless, it will always test a connection just microseconds before handing it to you.  Add to that
 the fact that the ratio of getConnection() calls to other wrapped JDBC calls is extremely small you
-you'll find that at an application level there is very little performance impact.
+you'll find that at an application level there is no measurable cost.
 
 A particularly silly "benchmark" on the BoneCP site starts 500 threads each performing 100 ds.getConnection() /
 connection.close() calls with 0ms delay between.  Who does that? The typical "mix" is dozens or hundreds of
@@ -124,13 +125,8 @@ features are intentionally left out.  Here are two, and the rationale.
 **Statement Cache**<br/>
 Most major database JDBC drivers already have a PreparedStatement cache that can be
 configured (Oracle, MySQL, PostgreSQL, Derby, etc).  A statement cache in the pool would add
-unneeded weight and no additional functionality.
-
-JDBC drivers have a special relationship with the remote database in that they are directly
-connected and can share internal state that is synchronized with the backend in a way that
-an external cache cannot.
-
-It is simply unnecessary with modern database drivers to implement this at the pool level.
+unneeded weight and no additional functionality.  It is simply unnecessary with modern database
+drivers to implement a cache at the pool level.
 
 **Log Statement Text / Slow Query Logging**<br/>
 Like Statement caching, most major database vendors support statement logging through
@@ -257,5 +253,5 @@ management console such as JConsole:
 
 #### Requirements ####
  * Java 6 and above
- * Javassist library
+ * Javassist 3.18.1+ library
  * slf4j library
