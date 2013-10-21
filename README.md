@@ -4,19 +4,19 @@ HikariCP <sub><sub>Ultimate JDBC Connection Pool<sup><sup>&nbsp;&nbsp;[We came, 
 
 #### TL;DR ####
 
-There is nothing [faster](https://github.com/brettwooldridge/HikariCP/wiki/How-we-do-it).  There is nothing more 
-reliable.  There is nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctness).  HikariCP
+There is nothing [faster](https://github.com/brettwooldridge/HikariCP/wiki/How-we-do-it).  There is nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctness).  HikariCP
 is an essentially zero-overhead Production-ready connection pool.
 
 Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations
-were performed in 12ms on a commodity PC.  The next fastest connection pool (BoneCP) was 5049ms.
+were performed in ***8ms*** on a commodity PC.  The next fastest connection pool (BoneCP) was ***5049ms***.
 
 | Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
 | -------- | ---------:| ---------:| ---------:|
 | BoneCP   | 5049      | 3249      | 6929      |
 | HikariCP | 8         | 7         | 13        |
 
-<sub>Measurements taken in *nanoseconds* and converted to *milliseconds*.</sub>
+<sub>400 threads, 50 connection pool. Measurements taken in *nanoseconds* and converted to *milliseconds*.
+See benchmarks [here]([faster](https://github.com/brettwooldridge/HikariCP/wiki/How-we-do-it)</sub>
 
 ------------------------------
 
