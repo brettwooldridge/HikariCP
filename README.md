@@ -1,7 +1,7 @@
 ![](https://raw.github.com/wiki/brettwooldridge/HikariCP/Hikari.png)&nbsp;HikariCP <sup><sup>Ultimate JDBC Connection Pool</sup></sup>&nbsp;[![Build Status](https://travis-ci.org/brettwooldridge/HikariCP.png?branch=master)](https://travis-ci.org/brettwooldridge/HikariCP)
 ==========
 
-There is nothing [faster](https://github.com/brettwooldridge/HikariCP/wiki/How-we-do-it).<sup>1</sup>  There is 
+There is nothing [faster](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks).<sup>1</sup>  There is 
 nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctness).  HikariCP is a "zero-overhead"
 production-quality connection pool.
 
@@ -15,7 +15,7 @@ were performed in ***8ms*** on a commodity PC.  The next fastest connection pool
 
 <sub><sup>1</sup>We contend HikariCP is near the theoretical maximum on current JVM technology.</sub><br/>
 <sub><sup>2</sup>400 threads, 50 connection pool. Measurements taken in *nanoseconds* and converted to *milliseconds*.
-See benchmarks [here](https://github.com/brettwooldridge/HikariCP/wiki/How-we-do-it)</sub><br/>
+See benchmarks [here](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks)</sub><br/>
 
 ------------------------------
 
