@@ -5,8 +5,8 @@ There is nothing [faster](https://github.com/brettwooldridge/HikariCP/wiki/Bench
 nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctness).  HikariCP is a "zero-overhead"
 production-quality connection pool.
 
-Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP<sup>2</sup>, 60+ Million JDBC operations
-were performed in ***8ms*** on a commodity PC.  The next fastest connection pool (BoneCP) was ***5049ms***.
+Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations
+were performed in ***8ms*** on a commodity PC.<sup>2</sup>  The next fastest connection pool (BoneCP) was ***5049ms***.
 
 | Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
 | -------- | ---------:| ---------:| ---------:|
