@@ -5,27 +5,27 @@ There is nothing [faster](https://github.com/brettwooldridge/HikariCP/wiki/How-w
 nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctness).  HikariCP is a "zero-overhead"
 production-quality connection pool.
 
-Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations
-were performed in ***8ms*** on a commodity PC.  The next fastest connection pool (BoneCP) was ***5049ms***.<sup>2</sup>
+Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP<sup>2</sup>, 60+ Million JDBC operations
+were performed in ***8ms*** on a commodity PC.  The next fastest connection pool (BoneCP) was ***5049ms***.
 
 | Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
 | -------- | ---------:| ---------:| ---------:|
 | BoneCP   | 5049      | 3249      | 6929      |
 | HikariCP | 8         | 7         | 13        |
 
-<sub><sup>1</sup>We contend HikariCP is near the theoretical maximum possible on current JVM technology.</sub><br/>
+<sub><sup>1</sup>We contend HikariCP is near the theoretical maximum on current JVM technology.</sub><br/>
 <sub><sup>2</sup>400 threads, 50 connection pool. Measurements taken in *nanoseconds* and converted to *milliseconds*.
-See benchmarks [here]([faster](https://github.com/brettwooldridge/HikariCP/wiki/How-we-do-it)</sub>
+See benchmarks [here](https://github.com/brettwooldridge/HikariCP/wiki/How-we-do-it)</sub><br/>
 
 ------------------------------
 
-#### Configuration (Knobs, baby!) ####
+#### Configuration (knobs, baby!) ####
 The following are the various properties that can be configured in the pool, their behavior,
 and their defaults.  **HikariCP uses milliseconds for *all* time values, be careful.**
 
 Rather than coming out of the box with almost nothing configured, HikariCP comes with *sane*
 defaults that let a great many deployments run without any additional tweaking (except for
-the DataSource, connection URL, and driver properties).
+the DataSource and DataSource properties).
 
 ``acquireIncrement``<br/>
 This property controls the maximum number of connections that are acquired at one time, with
