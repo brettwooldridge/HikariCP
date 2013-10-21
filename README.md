@@ -14,8 +14,8 @@ were performed in ***8ms*** on a commodity PC.<sup>2</sup>  The next fastest con
 | HikariCP | 8         | 7         | 13        |
 
 <sub><sup>1</sup>We contend HikariCP is near the theoretical maximum on current JVM technology.</sub><br/>
-<sub><sup>2</sup>400 threads, 50 connection pool. Measurements taken in *nanoseconds* and converted to *milliseconds*.
-See benchmarks [here](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks)</sub><br/>
+<sub><sup>2</sup>400 threads, 50 connection pool. Measurements in *nanoseconds* and converted to *milliseconds*.
+See benchmarks [here](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks).  See how we do it [here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).</sub><br/>
 
 ------------------------------
 
