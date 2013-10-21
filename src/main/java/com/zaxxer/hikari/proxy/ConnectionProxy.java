@@ -199,16 +199,13 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
                 _leakTask = null;
             }
 
-            if (getAutoCommit())
-            {
-                commit();
-            }
-
             try
             {
-                for (Statement statement : _openStatements)
+                
+                // Faster than an iterator
+                for (int i = _openStatements.size() - 1; i >= 0; i--)
                 {
-                    statement.close();
+                    _openStatements.get(i).close();
                 }
             }
             catch (SQLException e)

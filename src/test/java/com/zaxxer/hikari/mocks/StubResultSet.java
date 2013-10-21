@@ -49,6 +49,7 @@ public class StubResultSet implements ResultSet
     /** {@inheritDoc} */
     public <T> T unwrap(Class<T> iface) throws SQLException
     {
+        
         return null;
     }
 
@@ -61,7 +62,7 @@ public class StubResultSet implements ResultSet
     /** {@inheritDoc} */
     public boolean next() throws SQLException
     {
-        return false;
+        return (counter < 10);
     }
 
     /** {@inheritDoc} */
