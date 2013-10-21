@@ -4,113 +4,26 @@ HikariCP <sub><sub>Ultimate JDBC Connection Pool<sup><sup>&nbsp;&nbsp;[We came, 
 
 #### TL;DR ####
 
-There is nothing faster.  There is nothing more reliable.  There is nothing more correct.  HikariCP is an
-essentially zero-overhead Production-ready connection pool.
+There is nothing [faster](https://github.com/brettwooldridge/HikariCP/wiki/How-we-do-it).  There is nothing more 
+reliable.  There is nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctness).  HikariCP
+is an essentially zero-overhead Production-ready connection pool.
 
 Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations
-were performed in 12ms on a commodity PC.  460x faster that the next fastest connection pool.
-
-#### Performance ####
-Let's look at some performance numbers.  HikariCP was only compared to BoneCP because, really, DBCP and C3P0 
-are old and slow.  We would have run the BoneCP benchmarks but their [methodolgy is flawed]
-(https://github.com/brettwooldridge/HikariCP/wiki/Benchmarking) so we wrote our own.
-
-##### MixedBench #####
-This is the so called "Mixed" benchmark, and it executes a representative array of JDBC
-operations in a realistic mix.  We think *median* is the number to pay attention to, rather
-than average (which can get skewed).  *Median* meaning 50% of the iterations were slower, 50% were faster.
-500 threads were started, and the underlying connection pool contained 200 connections.  Measurements taken
-in *nanoseconds* and converted to *milliseconds*.
+were performed in 12ms on a commodity PC.  The next fastest connection pool (BoneCP) was 5049ms.
 
 | Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
 | -------- | ---------:| ---------:| ---------:|
-| BoneCP   | 5533      | 3756      | 8189      |
-| HikariCP | 12        | 11        | 32        |
+| BoneCP   | 5049      | 3249      | 6929      |
+| HikariCP | 8         | 7         | 13        |
 
-A breakdown of the mix operations is:
-
-| Operation                            | Invocations |
-| ------------------------------------ | -----------:|
-| DataSource.getConnection()           | 1000        |
-| PreparedStatement.prepareStatement() | 200,000     |
-| PreparedStatement.setInt()           | 30,000,000  |
-| PreparedStatement.addBatch()         | 10,000,000  |
-| PreparedStatement.executeBatch()     | 100,000     |
-| PreparedStatement.executeQuery()     | 100,000     |
-| PreparedStatement.close()            | 200,000     |
-| ResultSet.next()                     | 10,000,000  |
-| ResultSet.getInt()                   | 10,000,000  |
-| ResultSet.close()                    | 100,000     |
-| Connection.close()                   | 1000        |
-
-The JVM JIT was "warmed up" with two runs through, then 4 runs were made from which the run
-with the lowest median time was chosen.
-
-The benchmark was run using a stub (nop) implementation of an underlying DataSource, Connection,
-PreparedStatement, and ResultSet, so the driver was taken completely out of the equation so
-that the performance and overhead of the pools themselves could be measured.  Care was taken to
-ensure that the JIT does not eliminate or "optimize away" the stub code.
-
-The test was performed on an Intel Core i7 (3770) 3.4GHz iMac, MacOS X 10.8, 32GB RAM.  The
-JVM benchmark was run with: ``-server -XX:+UseParallelGC -Xms256m -Xss256k -Dthreads=500 -DpoolMax=200``.
-The benchmark is available in the ``src/test/java`` folder in the package ``com.zaxxer.hikari.performance``
-in a main class called ``Benchmark1``.
-
-##### In Summary #####
-500 threads ran 60,702,000 JDBC operations each, HikariCP did this in a median of *12ms* per thread
-compared to 5533ms for the next leading connection pool.
+<sub>Measurements taken in *nanoseconds* and converted to *milliseconds*.</sub>
 
 ------------------------------
-
-#### (In)correctness ####
-Sometimes "correctness" is objective, and sometimes it is subjective.  One example of
-objective *incorrectness* in BoneCP is ``ResultSet`` handling.  Connection pools need to
-wrap the underlying ``Connection``, ``Statement``, ``CallableStatement``, and
-``PreparedStatement``, and ``ResultSet`` classes.  However, BoneCP does not wrap ResultSet.
-
-``ResultSet`` *must* be wrapped, because ``ResultSet.getStatement()`` *must* return the
-same ``Statement`` that generated it (the **wrapped** one), not the **underlying** ``Statement``.
-Hibernate 4.3 for one [relies on this semantic](http://jira.codehaus.org/browse/BTM-126).
-
-If BoneCP were to wrap ResultSet, which comprises 20,100,000 of the 60,702,000 operations in
-MixedBench, its performance numbers would be poorer.  Take note that HikariCP *does* properly wrap
-ResultSet and still achives the numbers above.
-
-One example of *subjective* incorrectness is that BoneCP does not test a ``Connection`` immediately
-before dispatching it from the pool.  In our opinion, this one "flaw" (or "feature") alone renders BoneCP
-unsuitable for Production use.  The number one responsibility of a connection pool is to **not** give 
-out possibly bad connections.  Of course there are no guarantees, and the connection could drop in the
-few tens of microseconds between the test and its use in your code, but it is much more reliable than
-testing once a minute or only when a SQLException has already occurred.
-
-BoneCP may claim that testing a connection on dispatch from the pool negatively impacts performance.
-However, not doing so negatively impacts reliability.  Addtionatlly, HikariCP supports the JDBC4 
-``Connection.isValid()`` API, which for many drivers provides a fast non-query based aliveness test.
-Regardless, it will always test a connection just microseconds before handing it to you.  Add to that
-the fact that the ratio of getConnection() calls to other wrapped JDBC calls is extremely small you
-you'll find that at an application level there is no measurable cost.
-
-A particularly silly "benchmark" on the BoneCP site starts 500 threads each performing 100 ds.getConnection() /
-connection.close() calls with 0ms delay between.  Who does that? The typical "mix" is dozens or hundreds of
-JDBC operations between obtaining the connection and closing it (hence the "MixBench") above.  But ok, we can
-run this "benchmark" too; times in *Microseconds* and measure the per-thread times across all 500 threads.
-
-| Pool     |  Med (μs) |  Avg (μs) |  Max (μs) |
-| -------- | ---------:| ---------:| ---------:|
-| BoneCP   | 19467     | 8762      | 30851     |
-| HikariCP | 74        | 62        | 112       |
-
-------------------------------------------
 
 #### Knobs ####
 Where are all the knobs?  HikariCP has plenty of "knobs" as you can see in the configuration 
 section below, but comparatively less than some other pools.  This is a design philosophy.
-Configuring a connection pool, even for a large production environment, is not rocket science.
-
-The HikariCP design semantic is minimalist.  You probably need to configure the idle timeout
-for connections in the pool, but do you really need to configure how often the pool is swept
-to retire them?  You might *think* you do, but if you do you're probably doing something
-wrong.
+The HikariCP design asthetic is Minimalism.
 
 We're not going to (overly) question the design decisions of other pools, but we will say
 that some other pools seem to implement a lot of "gimmicks" that proportedly improve
@@ -135,11 +48,6 @@ consider this a "development-time" feature.  For those few databases that do not
 [jdbcdslog-exp](https://code.google.com/p/jdbcdslog-exp/) is a good option.  It also provides
 some nice additional stuff like timing, logging slow queries only, and PreparedStatement bound
 parameter logging.   Great stuff during development, and even pre-Production.
-
-Trust us, you don't want this feature -- even disabled -- in a production connection pool.  If
-we can figure out how to do it without impacting performance we *might* implement it, but *we
-consider even checking a additional boolean as inducing too much overhead into your queries and
-results.*
 
 ----------------------------------------------------
 
