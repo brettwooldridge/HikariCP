@@ -32,7 +32,11 @@ import javassist.CtField;
 import javassist.CtMethod;
 import javassist.CtNewConstructor;
 import javassist.CtNewMethod;
+import javassist.Modifier;
+import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.ClassFile;
+import javassist.bytecode.ConstPool;
+import javassist.bytecode.annotation.Annotation;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -157,6 +161,7 @@ public class HikariClassTransformer implements ClassFileTransformer
         copyFields(proxy, target);
         copyMethods(proxy, target, classFile);
         mergeClassInitializers(proxy, target, classFile);
+        injectTryCatch(target);
 
         for (CtConstructor constructor : target.getConstructors())
         {
@@ -184,6 +189,7 @@ public class HikariClassTransformer implements ClassFileTransformer
         copyFields(proxy, target);
         copyMethods(proxy, target, classFile);
         mergeClassInitializers(proxy, target, classFile);
+        injectTryCatch(target);
 
         target.debugWriteFile("/tmp");
         return target.toBytecode();
@@ -206,6 +212,7 @@ public class HikariClassTransformer implements ClassFileTransformer
         copyFields(proxy, target);
         copyMethods(proxy, target, classFile);
         mergeClassInitializers(proxy, target, classFile);
+        injectTryCatch(target);
 
         target.debugWriteFile("/tmp");
         return target.toBytecode();
@@ -228,6 +235,7 @@ public class HikariClassTransformer implements ClassFileTransformer
         copyFields(proxy, target);
         copyMethods(proxy, target, classFile);
         mergeClassInitializers(proxy, target, classFile);
+        injectTryCatch(target);
 
         target.debugWriteFile("/tmp");
         return target.toBytecode();
@@ -250,6 +258,7 @@ public class HikariClassTransformer implements ClassFileTransformer
         copyFields(proxy, target);
         copyMethods(proxy, target, classFile);
         mergeClassInitializers(proxy, target, classFile);
+        injectTryCatch(target);
 
         target.debugWriteFile("/tmp");
         return target.toBytecode();
@@ -278,6 +287,7 @@ public class HikariClassTransformer implements ClassFileTransformer
     private void copyMethods(CtClass srcClass, CtClass destClass, ClassFile destClassFile) throws Exception
     {
         CtMethod[] destMethods = destClass.getMethods();
+        ConstPool constPool = destClassFile.getConstPool();
 
         HashSet<CtMethod> srcMethods = new HashSet<CtMethod>();
         srcMethods.addAll(Arrays.asList(srcClass.getMethods()));
@@ -305,6 +315,10 @@ public class HikariClassTransformer implements ClassFileTransformer
             }
 
             CtMethod copy = CtNewMethod.copy(method, destClass, null);
+            AnnotationsAttribute attr = new AnnotationsAttribute(constPool, AnnotationsAttribute.visibleTag);
+            Annotation annotation = new Annotation("com.zaxxer.hikari.javassist.HikariInject", constPool);
+            attr.setAnnotation(annotation);
+            copy.getMethodInfo().addAttribute(attr);
             destClass.addMethod(copy);
             LOGGER.debug("Copied method {}.{} to {}", srcClass.getSimpleName(), method.getName(), destClass.getSimpleName());
         }
@@ -332,6 +346,27 @@ public class HikariClassTransformer implements ClassFileTransformer
             destClass.removeConstructor(destInitializer);
             LOGGER.debug("Move static initializer of {}", destClass.getSimpleName());
             mergeClassInitializers(srcClass, destClass, destClassFile);
+        }
+    }
+
+    private void injectTryCatch(CtClass destClass) throws Exception
+    {
+        for (CtMethod method : destClass.getMethods())
+        {
+            if ((method.getModifiers() & Modifier.PUBLIC) != Modifier.PUBLIC ||  // only public methods
+                method.getAnnotation(HikariInject.class) != null)                // ignore methods we've injected, they already try..catch
+            {
+                continue;
+            }
+
+            for (CtClass exception : method.getExceptionTypes())
+            {
+                if ("java.sql.SQLException".equals(exception.getName()))         // only add try..catch to methods throwing SQLException
+                {
+                    method.addCatch("throw checkException($e);", exception);
+                    break;
+                }
+            }
         }
     }
 
