@@ -45,7 +45,6 @@ public class HikariConfig implements HikariConfigMBean
     //
     private String poolName;
     private String connectionTestQuery;
-    private String connectionUrl;
     private String dataSourceClassName;
     private boolean isJdbc4connectionTest;
     private boolean isAutoCommit;
@@ -185,16 +184,6 @@ public class HikariConfig implements HikariConfigMBean
             this.connectionTimeout = Integer.MAX_VALUE;
         }
         this.connectionTimeout = connectionTimeoutMs;
-    }
-
-    public String getConnectionUrl()
-    {
-        return connectionUrl;
-    }
-
-    public void setConnectionUrl(String url)
-    {
-        this.connectionUrl = url;
     }
 
     public String getDataSourceClassName()
