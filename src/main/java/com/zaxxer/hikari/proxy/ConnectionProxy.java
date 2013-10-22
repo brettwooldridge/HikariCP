@@ -50,8 +50,7 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
 {
     private static ProxyFactory PROXY_FACTORY;
 
-    @HikariInject private static final Set<String> POSTGRESQL_ERRORS;
-    @HikariInject private static final Set<String> SPECIAL_ERRORS;
+    @HikariInject private static final Set<String> SQL_ERRORS;
 
     @HikariInject private ArrayList<Statement> _openStatements;
     @HikariInject private volatile boolean _isClosed;
@@ -69,14 +68,12 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     // static initializer
     static
     {
-        POSTGRESQL_ERRORS = new HashSet<String>();
-        POSTGRESQL_ERRORS.add("57P01");  // ADMIN SHUTDOWN
-        POSTGRESQL_ERRORS.add("57P02");  // CRASH SHUTDOWN
-        POSTGRESQL_ERRORS.add("57P03");  // CANNOT CONNECT NOW
-        POSTGRESQL_ERRORS.add("57P02");  // CRASH SHUTDOWN
-
-        SPECIAL_ERRORS = new HashSet<String>();
-        SPECIAL_ERRORS.add("01002");  // SQL92 disconnect error
+        SQL_ERRORS = new HashSet<String>();
+        SQL_ERRORS.add("57P01");  // ADMIN SHUTDOWN
+        SQL_ERRORS.add("57P02");  // CRASH SHUTDOWN
+        SQL_ERRORS.add("57P03");  // CANNOT CONNECT NOW
+        SQL_ERRORS.add("57P02");  // CRASH SHUTDOWN
+        SQL_ERRORS.add("01002");  // SQL92 disconnect error
 
         __static();
     }
@@ -114,9 +111,9 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     }
 
     @HikariInject 
-    public void setLastAccess(long timestamp)
+    public void markLastAccess()
     {
-        this._lastAccess = timestamp;
+        this._lastAccess = System.currentTimeMillis();
     }
 
     @HikariInject
@@ -152,22 +149,12 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     public SQLException checkException(SQLException sqle)
     {
         String sqlState = sqle.getSQLState();
-        if (sqlState == null)
+        if (sqlState != null)
         {
-            return sqle;
+            _forceClose |= sqlState.startsWith("08") | SQL_ERRORS.contains(sqlState);
         }
 
-        sqlState = sqlState.toUpperCase();
-        if (sqlState.startsWith("08"))
-        {
-            _forceClose = true;
-        }
-        else if (POSTGRESQL_ERRORS.contains(sqlState.toUpperCase()) || SPECIAL_ERRORS.contains(sqlState))
-        {
-            _forceClose = true;
-        }
-
-        return sqle;
+         return sqle;
     }
 
     @HikariInject

@@ -184,7 +184,7 @@ public class HikariPool implements HikariPoolMBean
     {
         if (!connectionProxy.isBrokenConnection())
         {
-            connectionProxy.setLastAccess(System.currentTimeMillis());
+            connectionProxy.markLastAccess();
             idleConnectionCount.incrementAndGet();
             idleConnections.put(connectionProxy);
         }

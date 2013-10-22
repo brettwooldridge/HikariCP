@@ -42,7 +42,7 @@ public interface IHikariConnectionProxy
 
     long getLastAccess();
 
-    void setLastAccess(long timestamp);
+    void markLastAccess();
 
     void setParentPool(HikariPool parentPool);
 
