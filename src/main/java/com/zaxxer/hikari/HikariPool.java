@@ -20,11 +20,8 @@ import java.lang.management.ManagementFactory;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Collections;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,19 +39,25 @@ import com.zaxxer.hikari.proxy.JavassistProxyFactoryFactory;
 import com.zaxxer.hikari.util.ClassLoaderUtils;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
+/**
+ * This is the primary connection pool class that provides the basic
+ * pooling behavior for HikariCP.
+ *
+ * @author Brett Wooldridge
+ */
 public class HikariPool implements HikariPoolMBean
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
 
     private final HikariConfig configuration;
     private final LinkedTransferQueue<IHikariConnectionProxy> idleConnections;
-    private final Set<IHikariConnectionProxy> inUseConnections;
 
     private final AtomicInteger totalConnections;
     private final AtomicInteger idleConnectionCount;
     private final DataSource dataSource;
+    private final long leakDetectionThreshold;
     private final boolean jdbc4ConnectionTest;
-    private volatile boolean delegationProxies;
+    private final boolean delegationProxies;
 
     private final Timer houseKeepingTimer;
 
@@ -71,9 +74,9 @@ public class HikariPool implements HikariPoolMBean
         this.totalConnections = new AtomicInteger();
         this.idleConnectionCount = new AtomicInteger();
         this.idleConnections = new LinkedTransferQueue<IHikariConnectionProxy>();
-        this.inUseConnections = Collections.newSetFromMap(new ConcurrentHashMap<IHikariConnectionProxy, Boolean>(configuration.getMaximumPoolSize() * 2, 0.75f, 100));
 
         this.jdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
+        this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
 
         try
         {
@@ -82,9 +85,9 @@ public class HikariPool implements HikariPoolMBean
             PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
 
             HikariInstrumentationAgent instrumentationAgent = new HikariInstrumentationAgent(dataSource);
-            if (false || !instrumentationAgent.loadTransformerAgent())
+            delegationProxies = !instrumentationAgent.loadTransformerAgent(); 
+            if (delegationProxies)
             {
-                delegationProxies = true;
                 LOGGER.info("Falling back to Javassist delegate-based proxies.");
             }
         }
@@ -106,6 +109,12 @@ public class HikariPool implements HikariPoolMBean
         fillPool();            
     }
 
+    /**
+     * Get a connection from the pool, or timeout trying.
+     *
+     * @return a java.sql.Connection instance
+     * @throws SQLException thrown if a timeout occurs trying to obtain a connection
+     */
     Connection getConnection() throws SQLException
     {
         try
@@ -131,32 +140,33 @@ public class HikariPool implements HikariPoolMBean
                 final long maxLifetime = configuration.getMaxLifetime();
                 if (maxLifetime > 0 && start - connectionProxy.getCreationTime() > maxLifetime)
                 {
-                    // Throw away the connection that has passed its lifetime
+                    // Throw away the connection that has passed its lifetime, try again
                     closeConnection(connectionProxy);
                     timeout -= (System.currentTimeMillis() - start);
                     continue;
                 }
 
+                connectionProxy.unclose();
+
                 Connection connection = (Connection) connectionProxy; 
                 if (!isConnectionAlive(connection, timeout))
                 {
-                    // Throw away the dead connection
+                    // Throw away the dead connection, try again
                     closeConnection(connectionProxy);
                     timeout -= (System.currentTimeMillis() - start);
                     continue;
                 }
     
-                if (configuration.getLeakDetectionThreshold() > 0)
+                if (leakDetectionThreshold > 0)
                 {
-                    connectionProxy.captureStack(configuration.getLeakDetectionThreshold(), houseKeepingTimer);
+                    connectionProxy.captureStack(leakDetectionThreshold, houseKeepingTimer);
                 }
-
-                connectionProxy.unclose();
-                inUseConnections.add(connectionProxy);
 
                 return connection;
 
-            } while (true);
+            } while (timeout > 0);
+
+            throw new SQLException("Timeout of encountered waiting for connection");            
         }
         catch (InterruptedException e)
         {
@@ -164,14 +174,14 @@ public class HikariPool implements HikariPoolMBean
         }
     }
 
+    /**
+     * Release a connection back to the pool, or permanently close it if it
+     * is broken.
+     *
+     * @param connectionProxy the connection to release back to the pool
+     */
     public void releaseConnection(IHikariConnectionProxy connectionProxy)
     {
-        boolean existing = inUseConnections.remove(connectionProxy);
-        if (!existing)
-        {
-            LOGGER.warn("Internal pool state inconsistency", new Throwable());
-        }
-
         if (!connectionProxy.isBrokenConnection())
         {
             connectionProxy.setLastAccess(System.currentTimeMillis());
@@ -184,6 +194,10 @@ public class HikariPool implements HikariPoolMBean
         }
     }
 
+    // ***********************************************************************
+    //                        HikariPoolMBean methods
+    // ***********************************************************************
+    
     /** {@inheritDoc} */
     public int getActiveConnections()
     {
@@ -226,6 +240,13 @@ public class HikariPool implements HikariPoolMBean
         }
     }
 
+    // ***********************************************************************
+    //                           Private methods
+    // ***********************************************************************
+    
+    /**
+     * Fill the pool up to the minimum size.
+     */
     private void fillPool()
     {
         int maxIters = (configuration.getMinimumPoolSize() / configuration.getAcquireIncrement()) + 1;
@@ -235,16 +256,22 @@ public class HikariPool implements HikariPoolMBean
         }
     }
 
+    /**
+     * Add connections to the pool, not exceeding the maximum allowed.
+     */
     private synchronized void addConnections()
     {
         final int max = configuration.getMaximumPoolSize();
         final int increment = configuration.getAcquireIncrement();
-        for (int i = 0; i < increment && totalConnections.get() < max; i++)
+        for (int i = 0; totalConnections.get() < max && i < increment; i++)
         {
             addConnection();
         }
     }
 
+    /**
+     * Create and add a single connection to the pool.
+     */
     private void addConnection()
     {
         int retries = 0;
@@ -298,8 +325,21 @@ public class HikariPool implements HikariPoolMBean
         }
     }
 
-    private boolean isConnectionAlive(Connection connection, long timeoutMs)
+    /**
+     * Check whether the connection is alive or not.
+     *
+     * @param connection the connection to test
+     * @param timeoutMs the timeout before we consider the test a failure
+     * @return true if the connection is alive, false if it is not alive or we timed out
+     */
+    private boolean isConnectionAlive(final Connection connection, long timeoutMs)
     {
+        // Set a realistic minimum timeout
+        if (timeoutMs < 500)
+        {
+            timeoutMs = 500;
+        }
+
         try
         {
             if (jdbc4ConnectionTest)
@@ -311,12 +351,13 @@ public class HikariPool implements HikariPoolMBean
             try
             {
                 statement.executeQuery(configuration.getConnectionTestQuery());
-                return true;
             }
             finally
             {
                 statement.close();
             }
+
+            return true;
         }
         catch (SQLException e)
         {
@@ -325,6 +366,11 @@ public class HikariPool implements HikariPoolMBean
         }
     }
 
+    /**
+     * Permanently close a connection.
+     *
+     * @param connectionProxy the connection to actually close
+     */
     private void closeConnection(IHikariConnectionProxy connectionProxy)
     {
         try
@@ -338,6 +384,9 @@ public class HikariPool implements HikariPoolMBean
         }
     }
 
+    /**
+     * Register the pool and pool configuration objects with the MBean server.
+     */
     private void registerMBean()
     {
         try
@@ -362,6 +411,9 @@ public class HikariPool implements HikariPoolMBean
         }
     }
 
+    /**
+     * The house keeping task to retire idle and maxAge connections.
+     */
     private class HouseKeeper extends TimerTask
     {
         public void run()

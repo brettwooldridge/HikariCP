@@ -112,19 +112,19 @@ public class HikariClassTransformer implements ClassFileTransformer
                 }
                 else if (iface.equals("java.sql.PreparedStatement"))
                 {
-                    return transformPreparedStatement(classFile);
+                    return transformClass(classFile, "com.zaxxer.hikari.proxy.PreparedStatementProxy", "com.zaxxer.hikari.proxy.IHikariStatementProxy");
                 }
                 else if (iface.equals("java.sql.CallableStatement"))
                 {
-                    return transformCallableStatement(classFile);
+                    return transformClass(classFile, "com.zaxxer.hikari.proxy.CallableStatementProxy", "com.zaxxer.hikari.proxy.IHikariStatementProxy");
                 }
                 else if (iface.equals("java.sql.Statement"))
                 {
-                    return transformStatement(classFile);
+                    return transformClass(classFile, "com.zaxxer.hikari.proxy.StatementProxy", "com.zaxxer.hikari.proxy.IHikariStatementProxy");
                 }
                 else if (iface.equals("java.sql.ResultSet"))
                 {
-                    return transformResultSet(classFile);
+                    return transformClass(classFile, "com.zaxxer.hikari.proxy.ResultSetProxy", "com.zaxxer.hikari.proxy.IHikariResultSetProxy");
                 }
             }
 
@@ -161,6 +161,7 @@ public class HikariClassTransformer implements ClassFileTransformer
         copyFields(proxy, target);
         copyMethods(proxy, target, classFile);
         mergeClassInitializers(proxy, target, classFile);
+        specialConnectionInjectCloseCheck(target);
         injectTryCatch(target);
 
         for (CtConstructor constructor : target.getConstructors())
@@ -175,85 +176,16 @@ public class HikariClassTransformer implements ClassFileTransformer
     /**
      * @param classFile
      */
-    private byte[] transformPreparedStatement(ClassFile classFile) throws Exception
+    private byte[] transformClass(ClassFile classFile, String proxyClassName, String intfName) throws Exception
     {
         String className = classFile.getName();
         CtClass target = classPool.getCtClass(className);
 
-        CtClass intf = classPool.get("com.zaxxer.hikari.proxy.IHikariStatementProxy");
+        CtClass intf = classPool.get(intfName);
         target.addInterface(intf);
         LOGGER.debug("Added interface {} to {}", intf.getName(), className);
 
-        CtClass proxy = classPool.get("com.zaxxer.hikari.proxy.PreparedStatementProxy");
-
-        copyFields(proxy, target);
-        copyMethods(proxy, target, classFile);
-        mergeClassInitializers(proxy, target, classFile);
-        injectTryCatch(target);
-
-        target.debugWriteFile("/tmp");
-        return target.toBytecode();
-    }
-
-    /**
-     * @param classFile
-     */
-    private byte[] transformCallableStatement(ClassFile classFile) throws Exception
-    {
-        String className = classFile.getName();
-        CtClass target = classPool.getCtClass(className);
-
-        CtClass intf = classPool.get("com.zaxxer.hikari.proxy.IHikariStatementProxy");
-        target.addInterface(intf);
-        LOGGER.debug("Added interface {} to {}", intf.getName(), className);
-
-        CtClass proxy = classPool.get("com.zaxxer.hikari.proxy.CallableStatementProxy");
-
-        copyFields(proxy, target);
-        copyMethods(proxy, target, classFile);
-        mergeClassInitializers(proxy, target, classFile);
-        injectTryCatch(target);
-
-        target.debugWriteFile("/tmp");
-        return target.toBytecode();
-    }
-
-    /**
-     * @param classFile
-     */
-    private byte[] transformStatement(ClassFile classFile) throws Exception
-    {
-        String className = classFile.getName();
-        CtClass target = classPool.getCtClass(className);
-
-        CtClass intf = classPool.get("com.zaxxer.hikari.proxy.IHikariStatementProxy");
-        target.addInterface(intf);
-        LOGGER.debug("Added interface {} to {}", intf.getName(), className);
-
-        CtClass proxy = classPool.get("com.zaxxer.hikari.proxy.StatementProxy");
-
-        copyFields(proxy, target);
-        copyMethods(proxy, target, classFile);
-        mergeClassInitializers(proxy, target, classFile);
-        injectTryCatch(target);
-
-        target.debugWriteFile("/tmp");
-        return target.toBytecode();
-    }
-
-    /**
-     * @param classFile
-     */
-    private byte[] transformResultSet(ClassFile classFile) throws Exception
-    {
-        String className = classFile.getName();
-        CtClass target = classPool.getCtClass(className);
-
-        CtClass intf = classPool.get("com.zaxxer.hikari.proxy.IHikariResultSetProxy");
-        target.addInterface(intf);
-        LOGGER.debug("Added interface {} to {}", intf.getName(), className);
-
-        CtClass proxy = classPool.get("com.zaxxer.hikari.proxy.ResultSetProxy");
+        CtClass proxy = classPool.get(proxyClassName);
 
         copyFields(proxy, target);
         copyMethods(proxy, target, classFile);
@@ -359,11 +291,42 @@ public class HikariClassTransformer implements ClassFileTransformer
                 continue;
             }
 
+            if (method.getMethodInfo().getCodeAttribute() == null)
+            {
+                continue;
+            }
+
             for (CtClass exception : method.getExceptionTypes())
             {
                 if ("java.sql.SQLException".equals(exception.getName()))         // only add try..catch to methods throwing SQLException
                 {
                     method.addCatch("throw checkException($e);", exception);
+                    break;
+                }
+            }
+        }
+    }
+
+    private void specialConnectionInjectCloseCheck(CtClass destClass) throws Exception
+    {
+        for (CtMethod method : destClass.getMethods())
+        {
+            if ((method.getModifiers() & Modifier.PUBLIC) != Modifier.PUBLIC ||  // only public methods
+                method.getAnnotation(HikariInject.class) != null)                // ignore methods we've injected, they already try..catch
+            {
+                continue;
+            }
+
+            if (method.getMethodInfo().getCodeAttribute() == null)
+            {
+                continue;
+            }
+
+            for (CtClass exception : method.getExceptionTypes())
+            {
+                if ("java.sql.SQLException".equals(exception.getName()))         // only add check to methods throwing SQLException
+                {
+                    method.insertBefore("if (_isClosed) { throw new java.sql.SQLException(\"Connection is closed\"); }");
                     break;
                 }
             }

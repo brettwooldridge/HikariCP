@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.zaxxer.hikari.HikariPool;
 import com.zaxxer.hikari.javassist.HikariInject;
@@ -55,7 +54,7 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     @HikariInject private static final Set<String> SPECIAL_ERRORS;
 
     @HikariInject private ArrayList<Statement> _openStatements;
-    @HikariInject private AtomicBoolean _isClosed;
+    @HikariInject private volatile boolean _isClosed;
     @HikariInject private HikariPool _parentPool;
     
     protected final Connection delegate;
@@ -96,7 +95,7 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
         // If the connection is not closed.  If it is closed, it means this is being
         // called back as a result of the close() method below in which case we
         // will clear the openStatements collection en mass.
-        if (!_isClosed.get())
+        if (!_isClosed)
         {
             _openStatements.remove(statement);
         }
@@ -129,7 +128,7 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     @HikariInject 
     public void unclose()
     {
-        _isClosed.set(false);
+        _isClosed = false;
     }
 
     @HikariInject 
@@ -175,8 +174,16 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     private void __init()
     {
         _openStatements = new ArrayList<Statement>(64);
-        _isClosed = new AtomicBoolean();
         _creationTime = _lastAccess = System.currentTimeMillis();
+    }
+
+    @HikariInject
+    private void checkClosed() throws SQLException
+    {
+        if (_isClosed)
+        {
+            throw new SQLException("Connection is closed");
+        }
     }
 
     public final Connection getDelegate()
@@ -191,8 +198,9 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     @HikariInject
     public void close() throws SQLException
     {
-        if (_isClosed.compareAndSet(false, true))
+        if (!_isClosed)
         {
+            _isClosed = true;
             if (_leakTask != null)
             {
                 _leakTask.cancel();
@@ -201,7 +209,6 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
 
             try
             {
-                
                 // Faster than an iterator
                 for (int i = _openStatements.size() - 1; i >= 0; i--)
                 {
@@ -223,12 +230,13 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     @HikariInject
     public boolean isClosed() throws SQLException
     {
-        return _isClosed.get();
+        return _isClosed;
     }
 
     @HikariInject
     public Statement createStatement() throws SQLException
     {
+        checkClosed();
         try
         {
             Statement statementProxy = __createStatement();
@@ -246,6 +254,7 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     @HikariInject
     public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException
     {
+        checkClosed();
         try
         {
             Statement statementProxy = __createStatement(resultSetType, resultSetConcurrency);
@@ -263,6 +272,7 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     @HikariInject
     public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
     {
+        checkClosed();
         try
         {
             Statement statementProxy = __createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
@@ -280,6 +290,7 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     @HikariInject
     public CallableStatement prepareCall(String sql) throws SQLException
     {
+        checkClosed();
         try
         {
             CallableStatement statementProxy = __prepareCall(sql);
@@ -297,6 +308,7 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     @HikariInject
     public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException
     {
+        checkClosed();
         try
         {
             CallableStatement statementProxy = __prepareCall(sql, resultSetType, resultSetConcurrency);
@@ -314,6 +326,7 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     @HikariInject
     public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
     {
+        checkClosed();
         try
         {
             CallableStatement statementProxy = __prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
@@ -331,6 +344,7 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     @HikariInject
     public PreparedStatement prepareStatement(String sql) throws SQLException
     {
+        checkClosed();
         try
         {
             PreparedStatement statementProxy = __prepareStatement(sql);
@@ -348,6 +362,7 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     @HikariInject
     public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException
     {
+        checkClosed();
         try
         {
             PreparedStatement statementProxy = __prepareStatement(sql, autoGeneratedKeys);
@@ -365,6 +380,7 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     @HikariInject
     public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException
     {
+        checkClosed();
         try
         {
             PreparedStatement statementProxy = __prepareStatement(sql, resultSetType, resultSetConcurrency);
@@ -382,6 +398,7 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     @HikariInject
     public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
     {
+        checkClosed();
         try
         {
             PreparedStatement statementProxy = __prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
@@ -399,6 +416,7 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     @HikariInject
     public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException
     {
+        checkClosed();
         try
         {
             PreparedStatement statementProxy = __prepareStatement(sql, columnIndexes);
@@ -416,6 +434,7 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
     @HikariInject
     public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException
     {
+        checkClosed();
         try
         {
             PreparedStatement statementProxy = __prepareStatement(sql, columnNames);

@@ -105,7 +105,7 @@ public class Benchmark2
         HikariDataSource ds = new HikariDataSource(config);
         return ds;
     }
-
+    
     private DataSource setupBone()
     {
         try

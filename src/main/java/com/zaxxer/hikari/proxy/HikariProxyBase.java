@@ -18,15 +18,12 @@ package com.zaxxer.hikari.proxy;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.SQLException;
 
 /**
  * @author Brett Wooldridge
  */
 public abstract class HikariProxyBase
 {
-    protected abstract SQLException checkException(SQLException e);
-
     protected static boolean isWrapperFor(Object obj, Class<?> param)
     {
         try
