@@ -35,8 +35,6 @@ import javassist.CtNewMethod;
 import javassist.Modifier;
 import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.ClassFile;
-import javassist.bytecode.CodeAttribute;
-import javassist.bytecode.CodeIterator;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.annotation.Annotation;
 
@@ -165,14 +163,12 @@ public class HikariClassTransformer implements ClassFileTransformer
         mergeClassInitializers(proxy, target, classFile);
         specialConnectionInjectCloseCheck(target);
         injectTryCatch(target);
-        // redactCheckcast(target);
 
         for (CtConstructor constructor : target.getConstructors())
         {
             constructor.insertAfter("__init();");
         }
 
-        target.debugWriteFile("/tmp");
         return target.toBytecode();
     }
 
@@ -194,10 +190,7 @@ public class HikariClassTransformer implements ClassFileTransformer
         copyMethods(proxy, target, classFile);
         mergeClassInitializers(proxy, target, classFile);
         injectTryCatch(target);
-        // redactCheckcast(target);
-        target.rebuildClassFile();
 
-        target.debugWriteFile("/tmp");
         return target.toBytecode();
     }
 
@@ -333,28 +326,6 @@ public class HikariClassTransformer implements ClassFileTransformer
                 {
                     method.insertBefore("if (_isClosed) { throw new java.sql.SQLException(\"Connection is closed\"); }");
                     break;
-                }
-            }
-        }
-    }
-
-    private void redactCheckcast(CtClass targetClass) throws Exception
-    {
-        for (CtMethod method : targetClass.getMethods())
-        {
-            CodeAttribute codeAttribute = method.getMethodInfo().getCodeAttribute();
-            if (codeAttribute == null)
-            {
-                continue;
-            }
-
-            CodeIterator byteCodeIterator = codeAttribute.iterator();
-            while (byteCodeIterator.hasNext()) {
-                int index = byteCodeIterator.next();
-                int op = byteCodeIterator.byteAt(index);
-                if (op == CodeIterator.CHECKCAST)
-                {
-                    byteCodeIterator.write(new byte[3], index); // replace with NOP
                 }
             }
         }
