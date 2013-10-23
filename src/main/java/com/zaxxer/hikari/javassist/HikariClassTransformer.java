@@ -35,6 +35,8 @@ import javassist.CtNewMethod;
 import javassist.Modifier;
 import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.ClassFile;
+import javassist.bytecode.CodeAttribute;
+import javassist.bytecode.CodeIterator;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.annotation.Annotation;
 
@@ -163,6 +165,7 @@ public class HikariClassTransformer implements ClassFileTransformer
         mergeClassInitializers(proxy, target, classFile);
         specialConnectionInjectCloseCheck(target);
         injectTryCatch(target);
+        // redactCheckcast(target);
 
         for (CtConstructor constructor : target.getConstructors())
         {
@@ -191,12 +194,14 @@ public class HikariClassTransformer implements ClassFileTransformer
         copyMethods(proxy, target, classFile);
         mergeClassInitializers(proxy, target, classFile);
         injectTryCatch(target);
+        // redactCheckcast(target);
+        target.rebuildClassFile();
 
         target.debugWriteFile("/tmp");
         return target.toBytecode();
     }
 
-    private void copyFields(CtClass srcClass, CtClass destClass) throws Exception
+    private void copyFields(CtClass srcClass, CtClass targetClass) throws Exception
     {
         HashSet<CtField> srcFields = new HashSet<CtField>();
         srcFields.addAll(Arrays.asList(srcClass.getDeclaredFields()));
@@ -209,17 +214,17 @@ public class HikariClassTransformer implements ClassFileTransformer
                 continue;
             }
 
-            CtField copy = new CtField(field.getType(), field.getName(), destClass);
+            CtField copy = new CtField(field.getType(), field.getName(), targetClass);
             copy.setModifiers(field.getModifiers());
-            destClass.addField(copy);
-            LOGGER.debug("Copied field {}.{} to {}", srcClass.getSimpleName(), field.getName(), destClass.getSimpleName());
+            targetClass.addField(copy);
+            LOGGER.debug("Copied field {}.{} to {}", srcClass.getSimpleName(), field.getName(), targetClass.getSimpleName());
         }
     }
 
-    private void copyMethods(CtClass srcClass, CtClass destClass, ClassFile destClassFile) throws Exception
+    private void copyMethods(CtClass srcClass, CtClass targetClass, ClassFile targetClassFile) throws Exception
     {
-        CtMethod[] destMethods = destClass.getMethods();
-        ConstPool constPool = destClassFile.getConstPool();
+        CtMethod[] destMethods = targetClass.getMethods();
+        ConstPool constPool = targetClassFile.getConstPool();
 
         HashSet<CtMethod> srcMethods = new HashSet<CtMethod>();
         srcMethods.addAll(Arrays.asList(srcClass.getMethods()));
@@ -232,31 +237,31 @@ public class HikariClassTransformer implements ClassFileTransformer
                 continue;
             }
 
-            if (destClassFile.getMethod(method.getName()) != null)  // maybe we have a name collision
+            if (targetClassFile.getMethod(method.getName()) != null)  // maybe we have a name collision
             {
                 String signature = method.getSignature();
                 for (CtMethod destMethod : destMethods)
                 {
                     if (destMethod.getName().equals(method.getName()) && destMethod.getSignature().equals(signature))
                     {
-                        LOGGER.debug("Rename method {}.{} to __{}", destClass.getSimpleName(), destMethod.getName(), destMethod.getName());
+                        LOGGER.debug("Rename method {}.{} to __{}", targetClass.getSimpleName(), destMethod.getName(), destMethod.getName());
                         destMethod.setName("__" + destMethod.getName());
                         break;
                     }
                 }
             }
 
-            CtMethod copy = CtNewMethod.copy(method, destClass, null);
+            CtMethod copy = CtNewMethod.copy(method, targetClass, null);
             AnnotationsAttribute attr = new AnnotationsAttribute(constPool, AnnotationsAttribute.visibleTag);
             Annotation annotation = new Annotation("com.zaxxer.hikari.javassist.HikariInject", constPool);
             attr.setAnnotation(annotation);
             copy.getMethodInfo().addAttribute(attr);
-            destClass.addMethod(copy);
-            LOGGER.debug("Copied method {}.{} to {}", srcClass.getSimpleName(), method.getName(), destClass.getSimpleName());
+            targetClass.addMethod(copy);
+            LOGGER.debug("Copied method {}.{} to {}", srcClass.getSimpleName(), method.getName(), targetClass.getSimpleName());
         }
     }
 
-    private void mergeClassInitializers(CtClass srcClass, CtClass destClass, ClassFile destClassFile) throws Exception
+    private void mergeClassInitializers(CtClass srcClass, CtClass targetClass, ClassFile targetClassFile) throws Exception
     {
         CtConstructor srcInitializer = srcClass.getClassInitializer();
         if (srcInitializer == null)
@@ -264,26 +269,26 @@ public class HikariClassTransformer implements ClassFileTransformer
             return;
         }
 
-        CtConstructor destInitializer = destClass.getClassInitializer();
+        CtConstructor destInitializer = targetClass.getClassInitializer();
         if (destInitializer == null && srcInitializer != null)
         {
-            CtConstructor copy = CtNewConstructor.copy(srcInitializer, destClass, null);
-            destClass.addConstructor(copy);
-            LOGGER.debug("Copied static initializer of {} to {}", srcClass.getSimpleName(), destClass.getSimpleName());
+            CtConstructor copy = CtNewConstructor.copy(srcInitializer, targetClass, null);
+            targetClass.addConstructor(copy);
+            LOGGER.debug("Copied static initializer of {} to {}", srcClass.getSimpleName(), targetClass.getSimpleName());
         }
         else
         {
-            CtMethod method = destInitializer.toMethod("__static", destClass);
-            destClass.addMethod(method);
-            destClass.removeConstructor(destInitializer);
-            LOGGER.debug("Move static initializer of {}", destClass.getSimpleName());
-            mergeClassInitializers(srcClass, destClass, destClassFile);
+            CtMethod method = destInitializer.toMethod("__static", targetClass);
+            targetClass.addMethod(method);
+            targetClass.removeConstructor(destInitializer);
+            LOGGER.debug("Move static initializer of {}", targetClass.getSimpleName());
+            mergeClassInitializers(srcClass, targetClass, targetClassFile);
         }
     }
 
-    private void injectTryCatch(CtClass destClass) throws Exception
+    private void injectTryCatch(CtClass targetClass) throws Exception
     {
-        for (CtMethod method : destClass.getMethods())
+        for (CtMethod method : targetClass.getMethods())
         {
             if ((method.getModifiers() & Modifier.PUBLIC) != Modifier.PUBLIC ||  // only public methods
                 method.getAnnotation(HikariInject.class) != null)                // ignore methods we've injected, they already try..catch
@@ -307,9 +312,9 @@ public class HikariClassTransformer implements ClassFileTransformer
         }
     }
 
-    private void specialConnectionInjectCloseCheck(CtClass destClass) throws Exception
+    private void specialConnectionInjectCloseCheck(CtClass targetClass) throws Exception
     {
-        for (CtMethod method : destClass.getMethods())
+        for (CtMethod method : targetClass.getMethods())
         {
             if ((method.getModifiers() & Modifier.PUBLIC) != Modifier.PUBLIC ||  // only public methods
                 method.getAnnotation(HikariInject.class) != null)                // ignore methods we've injected, they already try..catch
@@ -328,6 +333,28 @@ public class HikariClassTransformer implements ClassFileTransformer
                 {
                     method.insertBefore("if (_isClosed) { throw new java.sql.SQLException(\"Connection is closed\"); }");
                     break;
+                }
+            }
+        }
+    }
+
+    private void redactCheckcast(CtClass targetClass) throws Exception
+    {
+        for (CtMethod method : targetClass.getMethods())
+        {
+            CodeAttribute codeAttribute = method.getMethodInfo().getCodeAttribute();
+            if (codeAttribute == null)
+            {
+                continue;
+            }
+
+            CodeIterator byteCodeIterator = codeAttribute.iterator();
+            while (byteCodeIterator.hasNext()) {
+                int index = byteCodeIterator.next();
+                int op = byteCodeIterator.byteAt(index);
+                if (op == CodeIterator.CHECKCAST)
+                {
+                    byteCodeIterator.write(new byte[3], index); // replace with NOP
                 }
             }
         }
