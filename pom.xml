@@ -157,6 +157,7 @@
                <show>public</show>
                <excludePackageNames>com.zaxxer.hikari.*</excludePackageNames>
                <attach>true</attach>
+               <maxmemory>1024m</maxmemory>
             </configuration>
             <executions>
                <execution>
