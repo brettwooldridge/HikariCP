@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HikariConfig implements HikariConfigMBean
+public final class HikariConfig implements HikariConfigMBean
 {
     private static int poolNumber;
 
