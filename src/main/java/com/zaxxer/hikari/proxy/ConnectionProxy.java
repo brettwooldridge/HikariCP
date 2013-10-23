@@ -46,7 +46,7 @@ import com.zaxxer.hikari.javassist.HikariInject;
  *
  * @author Brett Wooldridge
  */
-public class ConnectionProxy extends HikariProxyBase implements IHikariConnectionProxy
+public class ConnectionProxy implements IHikariConnectionProxy
 {
     private static ProxyFactory PROXY_FACTORY;
 
@@ -78,9 +78,8 @@ public class ConnectionProxy extends HikariProxyBase implements IHikariConnectio
         __static();
     }
 
-    protected ConnectionProxy(HikariPool parentPool, Connection connection)
+    protected ConnectionProxy(Connection connection)
     {
-        this._parentPool = parentPool;
         this.delegate = connection;
 
         __init();

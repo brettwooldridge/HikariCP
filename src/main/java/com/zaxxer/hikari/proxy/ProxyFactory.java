@@ -22,14 +22,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import com.zaxxer.hikari.HikariPool;
-
 public abstract class ProxyFactory
 {
     /* Classes should use ProxyFactory.INSTANCE to access the factory */
     // final ProxyFactory INSTANCE = Initializer.initialize();
 
-    public abstract Connection getProxyConnection(HikariPool parentPool, Connection connection);
+    public abstract Connection getProxyConnection(Connection connection);
 
     public abstract Statement getProxyStatement(ConnectionProxy connection, Statement statement);
 

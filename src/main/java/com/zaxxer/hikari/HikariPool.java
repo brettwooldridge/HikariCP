@@ -45,7 +45,7 @@ import com.zaxxer.hikari.util.PropertyBeanSetter;
  *
  * @author Brett Wooldridge
  */
-public class HikariPool implements HikariPoolMBean
+public final class HikariPool implements HikariPoolMBean
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
 
@@ -283,13 +283,14 @@ public class HikariPool implements HikariPoolMBean
                 IHikariConnectionProxy proxyConnection;
                 if (delegationProxies)
                 {
-                    proxyConnection = (IHikariConnectionProxy) JavassistProxyFactoryFactory.getProxyFactory().getProxyConnection(this, connection);
+                    proxyConnection = (IHikariConnectionProxy) JavassistProxyFactoryFactory.getProxyFactory().getProxyConnection(connection);
                 }
                 else
                 {
                     proxyConnection = (IHikariConnectionProxy) connection;
-                    proxyConnection.setParentPool(this);
                 }
+
+                proxyConnection.setParentPool(this);
 
                 boolean alive = isConnectionAlive((Connection) proxyConnection, configuration.getConnectionTimeout());
                 if (alive)
