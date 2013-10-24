@@ -161,6 +161,9 @@ management console such as JConsole:
  * ``minimumPoolSize``
  * ``maximumPoolSize``
 
+#### Support ####
+Google discussion group [HikariCP here](https://groups.google.com/d/forum/hikari-cp)
+
 #### Requirements ####
  * Oracle Java 6 and above
  * Javassist 3.18.1+ library
