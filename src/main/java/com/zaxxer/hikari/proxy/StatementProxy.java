@@ -64,23 +64,54 @@ public class StatementProxy implements IHikariStatementProxy
     public void close() throws SQLException
     {
         _connection.unregisterStatement(this);
-        __close();
+        try
+        {
+        	__close();
+        }
+        catch (SQLException e)
+        {
+        	throw checkException(e);
+        }
     }
 
+    @HikariInject
     public ResultSet executeQuery(String sql) throws SQLException
     {
-        IHikariResultSetProxy resultSet = (IHikariResultSetProxy) __executeQuery(sql);
-        resultSet.setProxyStatement(this);
+    	try
+    	{
+    		IHikariResultSetProxy resultSet = (IHikariResultSetProxy) __executeQuery(sql);
+    		if (resultSet == null)
+    		{
+    			return null;
+    		}
 
-        return (ResultSet) resultSet;
+	        resultSet.setProxyStatement(this);	
+	        return (ResultSet) resultSet;
+    	}
+    	catch (SQLException e)
+    	{
+    		throw checkException(e);
+    	}
     }
 
+    @HikariInject
     public ResultSet getGeneratedKeys() throws SQLException
     {
-        IHikariResultSetProxy resultSet = (IHikariResultSetProxy) __getGeneratedKeys();
-        resultSet.setProxyStatement(this);
+    	try
+    	{
+	        IHikariResultSetProxy resultSet = (IHikariResultSetProxy) __getGeneratedKeys();
+    		if (resultSet == null)
+    		{
+    			return null;
+    		}
 
-        return (ResultSet) resultSet;
+	        resultSet.setProxyStatement(this);	
+	        return (ResultSet) resultSet;
+    	}
+    	catch (SQLException e)
+    	{
+    		throw checkException(e);
+    	}
     }
 
     // ***********************************************************************
@@ -111,22 +142,12 @@ public class StatementProxy implements IHikariStatementProxy
     public ResultSet __executeQuery(String sql) throws SQLException
     {
         ResultSet resultSet = delegate.executeQuery(sql);
-        if (resultSet == null)
-        {
-            return null;
-        }
-
         return PROXY_FACTORY.getProxyResultSet(this, resultSet);
     }
 
     public ResultSet __getGeneratedKeys() throws SQLException
     {
         ResultSet generatedKeys = delegate.getGeneratedKeys();
-        if (generatedKeys == null)
-        {
-            return null;
-        }
-
         return PROXY_FACTORY.getProxyResultSet(this, generatedKeys);
     }
 

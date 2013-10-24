@@ -100,19 +100,19 @@ public final class JavassistProxyFactoryFactory
             }
             if ("getProxyStatement".equals(method.getName()))
             {
-                call.append("return new com.zaxxer.hikari.proxy.StatementJavassistProxy($$);");
+                call.append("return $2 != null ? new com.zaxxer.hikari.proxy.StatementJavassistProxy($$) : null;");
             }
             if ("getProxyPreparedStatement".equals(method.getName()))
             {
-                call.append("return new com.zaxxer.hikari.proxy.PreparedStatementJavassistProxy($$);");
+                call.append("return $2 != null ? new com.zaxxer.hikari.proxy.PreparedStatementJavassistProxy($$) : null;");
             }
             if ("getProxyResultSet".equals(method.getName()))
             {
-                call.append("return new com.zaxxer.hikari.proxy.ResultSetJavassistProxy($$);");
+                call.append("return $2 != null ? new com.zaxxer.hikari.proxy.ResultSetJavassistProxy($$) : null;");
             }
             if ("getProxyCallableStatement".equals(method.getName()))
             {
-                call.append("return new com.zaxxer.hikari.proxy.CallableStatementJavassistProxy($$);");
+                call.append("return $2 != null ? new com.zaxxer.hikari.proxy.CallableStatementJavassistProxy($$) : null;");
             }
             call.append('}');
             method.setBody(call.toString());

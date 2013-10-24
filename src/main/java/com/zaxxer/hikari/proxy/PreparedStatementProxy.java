@@ -40,9 +40,21 @@ public class PreparedStatementProxy extends StatementProxy
     @HikariInject
     public ResultSet executeQuery() throws SQLException
     {
-        IHikariResultSetProxy resultSet = (IHikariResultSetProxy) __executeQuery();
-        resultSet.setProxyStatement(this);
-        return (ResultSet) resultSet;
+    	try
+    	{
+	        IHikariResultSetProxy resultSet = (IHikariResultSetProxy) __executeQuery();
+    		if (resultSet == null)
+    		{
+    			return null;
+    		}
+
+    		resultSet.setProxyStatement(this);
+	        return (ResultSet) resultSet;
+    	}
+    	catch (SQLException e)
+    	{
+    		throw checkException(e);
+    	}
     }
 
     // ***********************************************************************
@@ -55,10 +67,6 @@ public class PreparedStatementProxy extends StatementProxy
     public ResultSet __executeQuery() throws SQLException
     {
         ResultSet resultSet = ((PreparedStatement) delegate).executeQuery();
-        if (resultSet == null)
-        {
-            return null;
-        }
         return PROXY_FACTORY.getProxyResultSet(this, resultSet);
     }
 
