@@ -166,7 +166,7 @@ public final class JavassistProxyFactoryFactory
                 methods.add(intfMethod.getName() + intfMethod.getSignature());
 
                 // Generate a method that simply invokes the same method on the delegate
-                String methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { throw checkException(e); } }";
+                String methodBody = "{ checkClosed(); try { return ((cast) delegate).method($$); } catch (SQLException e) { throw checkException(e); } }";
                 if (method.getReturnType() == CtClass.voidType)
                 {
                     methodBody = methodBody.replace("return", "");

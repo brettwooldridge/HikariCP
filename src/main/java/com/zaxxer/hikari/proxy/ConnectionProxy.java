@@ -148,10 +148,7 @@ public class ConnectionProxy implements IHikariConnectionProxy
     public SQLException checkException(SQLException sqle)
     {
         String sqlState = sqle.getSQLState();
-        if (sqlState != null)
-        {
-            _forceClose |= sqlState.startsWith("08") | SQL_ERRORS.contains(sqlState);
-        }
+        _forceClose |= (sqlState != null && (sqlState.startsWith("08") || SQL_ERRORS.contains(sqlState)));
 
          return sqle;
     }
@@ -428,6 +425,24 @@ public class ConnectionProxy implements IHikariConnectionProxy
             _openStatements.add(statementProxy);
 
             return statementProxy;
+        }
+        catch (SQLException e)
+        {
+            throw checkException(e);
+        }
+    }
+
+    @HikariInject
+    public boolean isValid(int timeout) throws SQLException
+    {
+        if (_isClosed)
+        {
+            return false;
+        }
+
+        try
+        {
+            return delegate.isValid(timeout);
         }
         catch (SQLException e)
         {
