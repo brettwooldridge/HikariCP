@@ -57,13 +57,12 @@ public class Benchmark1
 
         System.out.println("\nMixedBench");
         System.out.println(" Warming up JIT");
-        benchmarks.startMixedBench();
-        benchmarks.startMixedBench();
+        benchmarks.startMixedBench(10000);
         System.out.println(" MixedBench Final Timing Runs");
-        benchmarks.startMixedBench();
-        benchmarks.startMixedBench();
-        benchmarks.startMixedBench();
-        benchmarks.startMixedBench();
+        benchmarks.startMixedBench(1000);
+        benchmarks.startMixedBench(1000);
+        benchmarks.startMixedBench(1000);
+        benchmarks.startMixedBench(1000);
 
         System.out.println("\nBoneBench");
         System.out.println(" Warming up JIT");
@@ -119,7 +118,7 @@ public class Benchmark1
         return ds;
     }
 
-    private void startMixedBench()
+    private void startMixedBench(int iter)
     {
         CyclicBarrier barrier = new CyclicBarrier(THREADS);
         CountDownLatch latch = new CountDownLatch(THREADS);
@@ -127,7 +126,7 @@ public class Benchmark1
         Measurable[] runners = new Measurable[THREADS];
         for (int i = 0; i < THREADS; i++)
         {
-            runners[i] = new MixedRunner(barrier, latch);
+            runners[i] = new MixedRunner(barrier, latch, iter);
         }
 
         runAndMeasure(runners, latch, "ms");
@@ -187,11 +186,13 @@ public class Benchmark1
         private long start;
         private long finish;
         private int counter;
+        private final int iter;
 
-        public MixedRunner(CyclicBarrier barrier, CountDownLatch latch)
+        public MixedRunner(CyclicBarrier barrier, CountDownLatch latch, int iter)
         {
             this.barrier = barrier;
             this.latch = latch;
+            this.iter = iter;
         }
 
         public void run()
@@ -201,7 +202,7 @@ public class Benchmark1
                 barrier.await();
 
                 start = System.nanoTime();
-                for (int i = 0; i < 1000; i++)
+                for (int i = 0; i < iter; i++)
                 {
                     Connection connection = ds.getConnection();
                     for (int j = 0; j < 100; j++)
