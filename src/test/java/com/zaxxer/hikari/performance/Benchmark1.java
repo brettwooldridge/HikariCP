@@ -25,29 +25,33 @@ import com.zaxxer.hikari.HikariDataSource;
  */
 public class Benchmark1
 {
-    private static final int THREADS = Integer.getInteger("threads", 100);
-    private static final int POOL_MAX = Integer.getInteger("poolMax", 100);
+    private static int THREADS = Integer.getInteger("threads", 100);
+    private static int POOL_MAX = Integer.getInteger("poolMax", 100);
 
     private DataSource ds;
 
     public static void main(String... args)
     {
-        if (args.length == 0)
+        if (args.length < 3)
         {
-            System.err.println("Start with one of: hikari, bone");
+            System.err.println("Usage: <poolname> <threads> <poolsize>");
+            System.err.println("  <poolname>  'hikari' or 'bone'");
             System.exit(0);
         }
 
+        THREADS = Integer.parseInt(args[1]);
+        POOL_MAX = Integer.parseInt(args[2]);
+        
         Benchmark1 benchmarks = new Benchmark1();
         if (args[0].equals("hikari"))
         {
             benchmarks.ds = benchmarks.setupHikari();
-            System.out.println("Benchmarking HikariCP");
+            System.out.printf("Benchmarking HikariCP - %d threads, %d connections", THREADS, POOL_MAX);
         }
         else if (args[0].equals("bone"))
         {
             benchmarks.ds = benchmarks.setupBone();
-            System.out.println("Benchmarking BoneCP");
+            System.out.printf("Benchmarking BoneCP - %d threads, %d connections", THREADS, POOL_MAX);
         }
         else
         {
@@ -57,22 +61,23 @@ public class Benchmark1
 
         System.out.println("\nMixedBench");
         System.out.println(" Warming up JIT");
-        benchmarks.startMixedBench(10000);
+        benchmarks.startMixedBench(100, 10000);
         System.out.println(" MixedBench Final Timing Runs");
-        benchmarks.startMixedBench(1000);
-        benchmarks.startMixedBench(1000);
-        benchmarks.startMixedBench(1000);
-        benchmarks.startMixedBench(1000);
+        long elapsed = 0;
+        elapsed += benchmarks.startMixedBench(THREADS, 1000);
+        elapsed += benchmarks.startMixedBench(THREADS, 1000);
+        elapsed += benchmarks.startMixedBench(THREADS, 1000);
+        elapsed += benchmarks.startMixedBench(THREADS, 1000);
+        System.out.printf("Elapsed time for timing runs (excluding thread start): %dms\n", TimeUnit.NANOSECONDS.toMillis(elapsed));
 
         System.out.println("\nBoneBench");
         System.out.println(" Warming up JIT");
-        benchmarks.startSillyBench();
-        benchmarks.startSillyBench();
+        benchmarks.startSillyBench(THREADS);
         System.out.println(" BoneBench Final Timing Run");
-        benchmarks.startSillyBench();
-        benchmarks.startSillyBench();
-        benchmarks.startSillyBench();
-        benchmarks.startSillyBench();
+        benchmarks.startSillyBench(THREADS);
+        benchmarks.startSillyBench(THREADS);
+        benchmarks.startSillyBench(THREADS);
+        benchmarks.startSillyBench(THREADS);
     }
 
     private DataSource setupHikari()
@@ -118,37 +123,37 @@ public class Benchmark1
         return ds;
     }
 
-    private void startMixedBench(int iter)
+    private long startMixedBench(int threads, int iter)
     {
-        CyclicBarrier barrier = new CyclicBarrier(THREADS);
-        CountDownLatch latch = new CountDownLatch(THREADS);
+        CyclicBarrier barrier = new CyclicBarrier(threads);
+        CountDownLatch latch = new CountDownLatch(threads);
 
-        Measurable[] runners = new Measurable[THREADS];
-        for (int i = 0; i < THREADS; i++)
+        Measurable[] runners = new Measurable[threads];
+        for (int i = 0; i < threads; i++)
         {
             runners[i] = new MixedRunner(barrier, latch, iter);
         }
 
-        runAndMeasure(runners, latch, "ms");
+        return runAndMeasure(runners, latch, "ms");
     }
 
-    private void startSillyBench()
+    private long startSillyBench(int threads)
     {
-        CyclicBarrier barrier = new CyclicBarrier(THREADS);
-        CountDownLatch latch = new CountDownLatch(THREADS);
+        CyclicBarrier barrier = new CyclicBarrier(threads);
+        CountDownLatch latch = new CountDownLatch(threads);
 
-        Measurable[] runners = new Measurable[THREADS];
-        for (int i = 0; i < THREADS; i++)
+        Measurable[] runners = new Measurable[threads];
+        for (int i = 0; i < threads; i++)
         {
             runners[i] = new SillyRunner(barrier, latch);
         }
 
-        runAndMeasure(runners, latch, "ns");
+        return runAndMeasure(runners, latch, "ns");
     }
 
-    private void runAndMeasure(Measurable[] runners, CountDownLatch latch, String timeUnit)
+    private long runAndMeasure(Measurable[] runners, CountDownLatch latch, String timeUnit)
     {
-        for (int i = 0; i < THREADS; i++)
+        for (int i = 0; i < runners.length; i++)
         {
             Thread t = new Thread(runners[i]);
             t.start();
@@ -164,19 +169,24 @@ public class Benchmark1
         }
 
         int i = 0;
-        long[] track = new long[THREADS];
+        long[] track = new long[runners.length];
         long max = 0, avg = 0, med = 0;
+        long absoluteStart = Long.MAX_VALUE, absoluteFinish = Long.MIN_VALUE;
         for (Measurable runner : runners)
         {
             long elapsed = runner.getElapsed();
+            absoluteStart = Math.min(absoluteStart, runner.getStart());
+            absoluteFinish = Math.max(absoluteFinish, runner.getFinish());
             track[i++] = elapsed;
             max = Math.max(max, elapsed);
             avg = (avg + elapsed) / 2;
         }
 
         Arrays.sort(track);
-        med = track[THREADS / 2];
+        med = track[runners.length / 2];
         System.out.printf("  max=%d%4$s, avg=%d%4$s, med=%d%4$s\n", max, avg, med, timeUnit);
+
+        return absoluteFinish - absoluteStart;
     }
 
     private class MixedRunner implements Measurable
@@ -242,6 +252,16 @@ public class Benchmark1
             }
         }
 
+        public long getStart()
+        {
+            return start;
+        }
+
+        public long getFinish()
+        {
+            return finish;
+        }
+
         public long getElapsed()
         {
             return TimeUnit.NANOSECONDS.toMillis(finish - start);
@@ -290,6 +310,16 @@ public class Benchmark1
             }
         }
 
+        public long getStart()
+        {
+            return start;
+        }
+
+        public long getFinish()
+        {
+            return finish;
+        }
+
         public long getElapsed()
         {
             return finish - start;
@@ -303,6 +333,10 @@ public class Benchmark1
 
     private interface Measurable extends Runnable
     {
+        long getStart();
+        
+        long getFinish();
+
         long getElapsed();
 
         int getCounter();
