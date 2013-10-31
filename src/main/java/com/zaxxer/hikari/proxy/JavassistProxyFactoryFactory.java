@@ -65,11 +65,13 @@ public final class JavassistProxyFactoryFactory
 
         try
         {
-            generateProxyClass(Connection.class, ConnectionProxy.class);
-            generateProxyClass(Statement.class, StatementProxy.class);
-            generateProxyClass(CallableStatement.class, CallableStatementProxy.class);
-            generateProxyClass(PreparedStatement.class, PreparedStatementProxy.class);
-            generateProxyClass(ResultSet.class, ResultSetProxy.class);
+            String methodBody = "{ checkClosed(); try { return ((cast) delegate).method($$); } catch (SQLException e) { throw checkException(e); } }";
+            generateProxyClass(Connection.class, ConnectionProxy.class, methodBody);
+            methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { throw checkException(e); } }";
+            generateProxyClass(Statement.class, StatementProxy.class, methodBody);
+            generateProxyClass(CallableStatement.class, CallableStatementProxy.class, methodBody);
+            generateProxyClass(PreparedStatement.class, PreparedStatementProxy.class, methodBody);
+            generateProxyClass(ResultSet.class, ResultSetProxy.class, methodBody);
         }
         catch (Exception e)
         {
@@ -127,7 +129,7 @@ public final class JavassistProxyFactoryFactory
      *  Generate Javassist Proxy Classes
      */
     @SuppressWarnings("unchecked")
-    private <T> Class<T> generateProxyClass(Class<T> primaryInterface, Class<?> superClass) throws Exception
+    private <T> Class<T> generateProxyClass(Class<T> primaryInterface, Class<?> superClass, String methodBody) throws Exception
     {
         // Make a new class that extends one of the JavaProxy classes (ie. superClass); use the name to XxxJavassistProxy instead of XxxProxy
         String superClassName = superClass.getName();
@@ -141,6 +143,8 @@ public final class JavassistProxyFactoryFactory
         {
             superSigs.add(method.getName() + method.getSignature());
         }
+
+        methodBody = methodBody.replace("cast", primaryInterface.getName());
 
         Set<String> methods = new HashSet<String>();
         Set<Class<?>> interfaces = ClassLoaderUtils.getAllInterfaces(primaryInterface);
@@ -166,15 +170,13 @@ public final class JavassistProxyFactoryFactory
                 methods.add(intfMethod.getName() + intfMethod.getSignature());
 
                 // Generate a method that simply invokes the same method on the delegate
-                String methodBody = "{ checkClosed(); try { return ((cast) delegate).method($$); } catch (SQLException e) { throw checkException(e); } }";
+                String modifiedBody = methodBody.replace("method", method.getName());
                 if (method.getReturnType() == CtClass.voidType)
                 {
-                    methodBody = methodBody.replace("return", "");
+                    modifiedBody = modifiedBody.replace("return", "");
                 }
 
-                methodBody = methodBody.replace("cast", primaryInterface.getName());
-                methodBody = methodBody.replace("method", method.getName());
-                method.setBody(methodBody);
+                method.setBody(modifiedBody);
                 targetCt.addMethod(method);
             }
         }
