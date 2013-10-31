@@ -450,16 +450,6 @@ public class ConnectionProxy implements IHikariConnectionProxy
         }
     }
 
-    public boolean getAutoCommit() throws SQLException
-    {
-        return delegate.getAutoCommit();
-    }
-
-    public void commit() throws SQLException
-    {
-        delegate.commit();
-    }
-
     // ***********************************************************************
     // These methods contain code we do not want injected into the actual
     // java.sql.Connection implementation class.  These methods are only
