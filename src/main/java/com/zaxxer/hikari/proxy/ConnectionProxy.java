@@ -161,7 +161,7 @@ public class ConnectionProxy implements IHikariConnectionProxy
     }
 
     @HikariInject
-    private void checkClosed() throws SQLException
+    protected void checkClosed() throws SQLException
     {
         if (_isClosed)
         {
@@ -432,7 +432,6 @@ public class ConnectionProxy implements IHikariConnectionProxy
         }
     }
 
-    @HikariInject
     public boolean isValid(int timeout) throws SQLException
     {
         if (_isClosed)
