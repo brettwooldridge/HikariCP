@@ -17,6 +17,9 @@ were performed in ***8ms*** on a commodity PC.<sup>2</sup>  The next fastest con
 <sub><sup>2</sup>400 threads, 50 connection pool. Measurements in *nanoseconds* and converted to *milliseconds*.
 See benchmarks [here](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks).  See how we do it [here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).</sub><br/>
 
+Or look at this:
+![](http://github.com/brettwooldridge/HikariCP/wiki/50Connection_MixedBench.png)
+
 ------------------------------
 
 #### Configuration (knobs, baby!) ####
