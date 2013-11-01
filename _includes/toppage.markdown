@@ -21,8 +21,10 @@ in and let your code run like its pants are on fire.
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
         <version>1.1.2</version>
-        <scope>runtime</scope>
+        <scope>compile</scope>
     </dependency>
+
+If you don't use programmatic initialization, you can change the *scope* to 'runtime'.
 
 ### Initialization ###
     HikariConfig config = new HikariConfig();
@@ -39,8 +41,6 @@ or property file based:
 
     HikariConfig config = new HikariConfig("some/path/hikari.properties");
     HikariDataSource ds = new HikariDataSource(config);
-
-You're smart enough to figure out the Spring, Jetty, Tomcat, etc. configuration, right?
 
 You can find information about the [configuration properties here](https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby).
 
