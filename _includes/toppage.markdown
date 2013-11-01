@@ -24,24 +24,25 @@ in and let your code run like its pants are on fire.
         <scope>runtime</scope>
     </dependency>
 
-### Programmatic Initialization ###
-```java
-HikariConfig config = new HikariConfig();
-config.setMaximumPoolSize(100);
-config.setDataSourceClassName("com.mysql.jdbc.Driver");
-config.addDataSourceProperty("url", "jdbc:mysql://localhost/database");
-config.addDataSourceProperty("user", "bart");
-config.addDataSourceProperty("password", "51mp50n");
+### Initialization ###
+    HikariConfig config = new HikariConfig();
+    config.setMaximumPoolSize(100);
+    config.setDataSourceClassName("com.mysql.jdbc.Driver");
+    config.addDataSourceProperty("url", "jdbc:mysql://localhost/database");
+    config.addDataSourceProperty("user", "bart");
+    config.addDataSourceProperty("password", "51mp50n");
 
-HikariDataSource ds = new HikariDataSource(config);
-```
+    HikariDataSource ds = new HikariDataSource(config);
+
 
 or property file based:
 
-```java
-HikariConfig config = new HikariConfig("some/path/hikari.properties");
-HikariDataSource ds = new HikariDataSource(config);
-```
+    HikariConfig config = new HikariConfig("some/path/hikari.properties");
+    HikariDataSource ds = new HikariDataSource(config);
+
+You're smart enough to figure out the Spring, Jetty, Tomcat, etc. configuration, right?
+
+You can find information about the [configuration properties here](https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby).
 
 ### Support ###
 Google discussion group [HikariCP here](https://groups.google.com/d/forum/hikari-cp).
