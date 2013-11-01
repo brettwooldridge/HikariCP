@@ -1,4 +1,4 @@
-## World Class ##
+## It's Faster. ##
 There is nothing [faster](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks).  There is
 nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctness).  HikariCP is a "zero-overhead"
 production-quality connection pool.
