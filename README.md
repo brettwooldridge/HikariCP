@@ -150,6 +150,24 @@ development and pre-Production.
 
 ----------------------------------------------------
 
+### Initialization ###
+    HikariConfig config = new HikariConfig();
+    config.setMaximumPoolSize(100);
+    config.setDataSourceClassName("com.mysql.jdbc.Driver");
+    config.addDataSourceProperty("url", "jdbc:mysql://localhost/database");
+    config.addDataSourceProperty("user", "bart");
+    config.addDataSourceProperty("password", "51mp50n");
+
+    HikariDataSource ds = new HikariDataSource(config);
+
+
+or property file based:
+
+    HikariConfig config = new HikariConfig("some/path/hikari.properties");
+    HikariDataSource ds = new HikariDataSource(config);
+
+----------------------------------------------------
+
 #### JMX Management ####
 The following properties are configurable in real-time as the pool is running via a JMX
 management console such as JConsole:
