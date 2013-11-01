@@ -25,7 +25,7 @@ in and let your code run like its pants are on fire.
     </dependency>
 
 ### Programmatic Initialization ###
-~~~ java
+```java
 HikariConfig config = new HikariConfig();
 config.setMaximumPoolSize(100);
 config.setDataSourceClassName("com.mysql.jdbc.Driver");
@@ -35,15 +35,15 @@ config.addDataSourceProperty("password", "51mp50n");
 
 HikariDataSource ds = new HikariDataSource(config);
 ...
-~~~
+```
 <br/>
 or property file based:
 
-~~~ java
+```java
 HikariConfig config = new HikariConfig("some/path/hikari.properties");
 HikariDataSource ds = new HikariDataSource(config);
 ...
-~~~
+```
 
 ### Support ###
 Google discussion group [HikariCP here](https://groups.google.com/d/forum/hikari-cp).
