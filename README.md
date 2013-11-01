@@ -6,7 +6,7 @@ nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctn
 production-quality connection pool.
 
 Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations
-were performed in ***8ms*** on a commodity PC.<sup>2</sup>  The next fastest connection pool (BoneCP) was ***5049ms***.
+were performed in ***8ms*** on a commodity PC.<sup>2</sup>  The next fastest connection pool (BoneCP) was ***5298ms***.
 
 | Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
 | -------- | ---------:| ---------:| ---------:|
