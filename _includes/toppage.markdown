@@ -34,15 +34,13 @@ config.addDataSourceProperty("user", "bart");
 config.addDataSourceProperty("password", "51mp50n");
 
 HikariDataSource ds = new HikariDataSource(config);
-...
 ```
-<br/>
+
 or property file based:
 
 ```java
 HikariConfig config = new HikariConfig("some/path/hikari.properties");
 HikariDataSource ds = new HikariDataSource(config);
-...
 ```
 
 ### Support ###
