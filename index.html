@@ -1,3 +1,6 @@
+---
+title: HikariCP.  It's faster.
+---
 <!DOCTYPE html>
 <html>
   <head>
@@ -11,8 +14,10 @@
     <meta http-equiv="pragma" content="no-cache" />
 
     <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/coderay.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
 
     <!--[if lt IE 9]>
@@ -37,39 +42,10 @@
     <div id="content-wrapper">
       <div class="inner clearfix">
         <section id="main-content">
-
-<section data-markdown>
-   ## World Class ##
-   There is nothing [faster](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks).  There is
-   nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctness).  HikariCP is a "zero-overhead"
-   production-quality connection pool.
-   <p>
-   Using a stub-JDBC (nop) implementation to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations
-   were performed in *8ms* on a commodity PC.  The test below is a run with a "constrained" pool of 50 connections,
-   with comparison to BoneCP.
-   <p>
-   <a href="http://github.com/brettwooldridge/HikariCP/wiki/50Connection_MixedBench.png"><img src="http://github.com/brettwooldridge/HikariCP/wiki/50Connection_MixedBench.png" width="680"/></a>
-</section>
-<section data-markdown>
-   The same test was run for an "unconstrained" pool, meaning that connections in the pool outnumber the number of
-   threads that are executing.  This should be the "best case" for a connection pool due to low contention.
-   <p>
-   <a href="http://github.com/brettwooldridge/HikariCP/wiki/Unconstrained_MixedBench.png"><img src="http://github.com/brettwooldridge/HikariCP/wiki/Unconstrained_MixedBench.png" width="680"/></a>
-</section>
-<section data-markdown>
-   How does HikariCP stay flat?  And how does it achieve such incredible performance?  If you're really technically
-   minded, read [here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).  Otherwise, just drop it
-   in and let your code run like its pants are on fire.
-   
-   ### Support ###
-   Google discussion group [HikariCP here](https://groups.google.com/d/forum/hikari-cp).
-   
-   ### Requirements ###
-   * Oracle Java 7 and above
-   * Javassist 3.18.1+ library
-   * slf4j library
-</section>
-
+{% capture toppage %}
+{% include toppage.markdown %}
+{% endcapture %}
+{{ toppage | markdownify }}
         </section>
 
         <aside id="sidebar">
@@ -88,7 +64,7 @@
       </div>
     </div>
 
-  <script src="javascripts/data-markdown.user.js"></script>
+  <!-- script src="javascripts/data-markdown.user.js"></script -->
 
   </body>
 </html>
