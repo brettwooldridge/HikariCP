@@ -12,7 +12,8 @@ The same test was run for an "unconstrained" pool, meaning that connections in t
 threads that are executing.  This should be the "best case" for a connection pool due to low contention.
 
 <a href="http://github.com/brettwooldridge/HikariCP/wiki/Unconstrained_MixedBench.png"><img src="http://github.com/brettwooldridge/HikariCP/wiki/Unconstrained_MixedBench.png" width="680"/></a>
-<p>
+
+
 How does HikariCP stay flat?  And how does it achieve such incredible performance?  If you're really technically
 minded, read [here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).  Otherwise, just drop it
 in and let your code run like its pants are on fire.
