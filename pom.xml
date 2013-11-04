@@ -109,6 +109,18 @@
       	<version>3.18.1-GA</version>
       	<type>bundle</type>
       </dependency>
+      <dependency>
+         <groupId>net.snaq</groupId>
+         <artifactId>dbpool</artifactId>
+         <version>5.1</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>c3p0</groupId>
+         <artifactId>c3p0</artifactId>
+         <version>0.9.1.2</version>
+         <scope>test</scope>
+      </dependency>
    </dependencies>
 
    <build>

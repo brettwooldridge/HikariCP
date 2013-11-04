@@ -10,8 +10,11 @@ import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 
+import snaq.db.DBPoolDataSource;
+
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.BoneCPDataSource;
+import com.mchange.v2.c3p0.ComboPooledDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -53,6 +56,16 @@ public class Benchmark1
             benchmarks.ds = benchmarks.setupBone();
             System.out.printf("Benchmarking BoneCP - %d threads, %d connections", THREADS, POOL_MAX);
         }
+        else if (args[0].equals("dbpool"))
+        {
+            benchmarks.ds = benchmarks.setupDbPool();
+            System.out.printf("Benchmarking DbPool - %d threads, %d connections", THREADS, POOL_MAX);
+        }
+        else if (args[0].equals("c3p0"))
+        {
+            benchmarks.ds = benchmarks.setupC3P0();
+            System.out.printf("Benchmarking C3P0 - %d threads, %d connections", THREADS, POOL_MAX);
+        }
         else
         {
             System.err.println("Start with one of: hikari, bone");
@@ -78,49 +91,6 @@ public class Benchmark1
         benchmarks.startSillyBench(THREADS);
         benchmarks.startSillyBench(THREADS);
         benchmarks.startSillyBench(THREADS);
-    }
-
-    private DataSource setupHikari()
-    {
-        HikariConfig config = new HikariConfig();
-        config.setAcquireIncrement(5);
-        config.setMinimumPoolSize(POOL_MAX / 2);
-        config.setMaximumPoolSize(POOL_MAX);
-        config.setConnectionTimeout(8000);
-        config.setIdleTimeout(TimeUnit.MINUTES.toMillis(30));
-        config.setJdbc4ConnectionTest(true);
-        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-
-        HikariDataSource ds = new HikariDataSource(config);
-        return ds;
-    }
-
-    private DataSource setupBone()
-    {
-        try
-        {
-            Class.forName("com.zaxxer.hikari.mocks.StubDriver");
-        }
-        catch (ClassNotFoundException e)
-        {
-            throw new RuntimeException(e);
-        }
-
-        BoneCPConfig config = new BoneCPConfig();
-        config.setAcquireIncrement(5);
-        config.setMinConnectionsPerPartition(POOL_MAX / 2);
-        config.setMaxConnectionsPerPartition(POOL_MAX);
-        config.setConnectionTimeoutInMs(8000);
-        config.setIdleMaxAgeInMinutes(30);
-        config.setConnectionTestStatement("VALUES 1");
-        config.setCloseOpenStatements(true);
-        config.setDisableConnectionTracking(true);
-        config.setJdbcUrl("jdbc:stub");
-        config.setUsername("nobody");
-        config.setPassword("nopass");
-
-        BoneCPDataSource ds = new BoneCPDataSource(config);
-        return ds;
     }
 
     private long startMixedBench(int threads, int iter)
@@ -187,6 +157,86 @@ public class Benchmark1
         System.out.printf("  max=%d%4$s, avg=%d%4$s, med=%d%4$s\n", max, avg, med, timeUnit);
 
         return absoluteFinish - absoluteStart;
+    }
+
+    private DataSource setupHikari()
+    {
+        HikariConfig config = new HikariConfig();
+        config.setAcquireIncrement(5);
+        config.setMinimumPoolSize(POOL_MAX / 2);
+        config.setMaximumPoolSize(POOL_MAX);
+        config.setConnectionTimeout(8000);
+        config.setIdleTimeout(TimeUnit.MINUTES.toMillis(30));
+        config.setJdbc4ConnectionTest(true);
+        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+        HikariDataSource ds = new HikariDataSource(config);
+        return ds;
+    }
+
+    private DataSource setupBone()
+    {
+        try
+        {
+            Class.forName("com.zaxxer.hikari.mocks.StubDriver");
+        }
+        catch (ClassNotFoundException e)
+        {
+            throw new RuntimeException(e);
+        }
+
+        BoneCPConfig config = new BoneCPConfig();
+        config.setAcquireIncrement(5);
+        config.setMinConnectionsPerPartition(POOL_MAX / 2);
+        config.setMaxConnectionsPerPartition(POOL_MAX);
+        config.setConnectionTimeoutInMs(8000);
+        config.setIdleMaxAgeInMinutes(30);
+        config.setConnectionTestStatement("VALUES 1");
+        config.setCloseOpenStatements(true);
+        config.setDisableConnectionTracking(true);
+        config.setJdbcUrl("jdbc:stub");
+        config.setUsername("nobody");
+        config.setPassword("nopass");
+
+        BoneCPDataSource ds = new BoneCPDataSource(config);
+        return ds;
+    }
+
+    private DataSource setupDbPool()
+    {
+        DBPoolDataSource ds = new DBPoolDataSource();
+        ds.setDriverClassName("com.zaxxer.hikari.mocks.StubDriver");
+        ds.setUrl("jdbc:stub");
+        ds.setMinPool(POOL_MAX / 2);
+        ds.setMaxPool(POOL_MAX);
+        ds.setMaxSize(POOL_MAX);
+        ds.setIdleTimeout(180);
+        ds.setLoginTimeout(8);
+        ds.setValidationQuery("VALUES 1");
+        
+        return ds;
+    }
+
+    private DataSource setupC3P0()
+    {
+        try
+        {
+            ComboPooledDataSource cpds = new ComboPooledDataSource();
+            cpds.setDriverClass( "com.zaxxer.hikari.mocks.StubDriver" );            
+            cpds.setJdbcUrl( "jdbc:stub" );
+            cpds.setMinPoolSize(POOL_MAX / 2);
+            cpds.setMaxPoolSize(POOL_MAX);
+            cpds.setCheckoutTimeout(8000);
+            cpds.setLoginTimeout(8);
+            cpds.setTestConnectionOnCheckout(true);
+            cpds.setPreferredTestQuery("VALUES 1");
+    
+            return cpds;
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
     private class MixedRunner implements Measurable
