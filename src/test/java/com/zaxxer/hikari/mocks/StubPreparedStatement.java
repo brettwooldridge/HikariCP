@@ -43,7 +43,7 @@ import java.util.Calendar;
  *
  * @author Brett Wooldridge
  */
-public class StubPreparedStatement implements PreparedStatement
+public class StubPreparedStatement extends StubStatement implements PreparedStatement
 {
 
     /** {@inheritDoc} */
@@ -56,11 +56,6 @@ public class StubPreparedStatement implements PreparedStatement
     public int executeUpdate(String sql) throws SQLException
     {
         return 0;
-    }
-
-    /** {@inheritDoc} */
-    public void close() throws SQLException
-    {
     }
 
     /** {@inheritDoc} */
@@ -254,12 +249,6 @@ public class StubPreparedStatement implements PreparedStatement
     public int getResultSetHoldability() throws SQLException
     {
         return 0;
-    }
-
-    /** {@inheritDoc} */
-    public boolean isClosed() throws SQLException
-    {
-        return false;
     }
 
     /** {@inheritDoc} */

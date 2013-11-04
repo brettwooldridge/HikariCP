@@ -45,6 +45,7 @@ import java.util.Map;
 public class StubResultSet implements ResultSet
 {
     private int counter;
+    private boolean closed;
 
     /** {@inheritDoc} */
     public <T> T unwrap(Class<T> iface) throws SQLException
@@ -68,6 +69,7 @@ public class StubResultSet implements ResultSet
     /** {@inheritDoc} */
     public void close() throws SQLException
     {
+        closed = true;
     }
 
     /** {@inheritDoc} */
@@ -115,7 +117,7 @@ public class StubResultSet implements ResultSet
     /** {@inheritDoc} */
     public float getFloat(int columnIndex) throws SQLException
     {
-        return 0;
+        throw new SQLException("No reason", "08999");
     }
 
     /** {@inheritDoc} */
@@ -865,7 +867,7 @@ public class StubResultSet implements ResultSet
     /** {@inheritDoc} */
     public boolean isClosed() throws SQLException
     {
-        return false;
+        return closed;
     }
 
     /** {@inheritDoc} */
