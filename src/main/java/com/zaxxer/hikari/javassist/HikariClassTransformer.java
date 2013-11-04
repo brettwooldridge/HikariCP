@@ -219,10 +219,7 @@ public class HikariClassTransformer implements ClassFileTransformer
         CtMethod[] destMethods = targetClass.getMethods();
         ConstPool constPool = targetClassFile.getConstPool();
 
-        HashSet<CtMethod> srcMethods = new HashSet<CtMethod>();
-        srcMethods.addAll(Arrays.asList(srcClass.getMethods()));
-        srcMethods.addAll(Arrays.asList(srcClass.getDeclaredMethods()));
-        for (CtMethod method : srcMethods)
+        for (CtMethod method : srcClass.getDeclaredMethods())
         {
             if (method.getAnnotation(HikariInject.class) == null)
             {
@@ -267,6 +264,8 @@ public class HikariClassTransformer implements ClassFileTransformer
         {
             CtConstructor copy = CtNewConstructor.copy(srcInitializer, targetClass, null);
             targetClass.addConstructor(copy);
+            CtMethod __static = CtNewMethod.make(Modifier.STATIC, CtClass.voidType, "__static", null, null, "{}", targetClass);
+            targetClass.addMethod(__static);
             LOGGER.debug("Copied static initializer of {} to {}", srcClass.getSimpleName(), targetClass.getSimpleName());
         }
         else
@@ -275,13 +274,16 @@ public class HikariClassTransformer implements ClassFileTransformer
             targetClass.addMethod(method);
             targetClass.removeConstructor(destInitializer);
             LOGGER.debug("Move static initializer of {}", targetClass.getSimpleName());
-            mergeClassInitializers(srcClass, targetClass, targetClassFile);
+            // mergeClassInitializers(srcClass, targetClass, targetClassFile);
+            CtConstructor copy = CtNewConstructor.copy(srcInitializer, targetClass, null);
+            targetClass.addConstructor(copy);
+            LOGGER.debug("Copied static initializer of {} to {}", srcClass.getSimpleName(), targetClass.getSimpleName());
         }
     }
 
     private void injectTryCatch(CtClass targetClass) throws Exception
     {
-        for (CtMethod method : targetClass.getMethods())
+        for (CtMethod method : targetClass.getDeclaredMethods())
         {
             if ((method.getModifiers() & Modifier.PUBLIC) != Modifier.PUBLIC ||  // only public methods
                 method.getAnnotation(HikariInject.class) != null)                // ignore methods we've injected, they already try..catch
@@ -298,6 +300,7 @@ public class HikariClassTransformer implements ClassFileTransformer
             {
                 if ("java.sql.SQLException".equals(exception.getName()))         // only add try..catch to methods throwing SQLException
                 {
+                    LOGGER.debug("Injecting try..catch into {}{}", method.getName(), method.getSignature());
                     method.addCatch("throw checkException($e);", exception);
                     break;
                 }

@@ -27,9 +27,9 @@ import com.zaxxer.hikari.javassist.HikariInject;
  */
 public class StatementProxy implements IHikariStatementProxy
 {
-    protected static ProxyFactory PROXY_FACTORY;
+    private static ProxyFactory PROXY_FACTORY;
 
-    @HikariInject protected IHikariConnectionProxy _connection;
+    @HikariInject private IHikariConnectionProxy _connection;
     
     protected Statement delegate;
 

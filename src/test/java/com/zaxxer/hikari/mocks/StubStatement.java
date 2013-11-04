@@ -21,7 +21,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import java.util.ArrayList;
 
 /**
  *
@@ -30,7 +29,6 @@ import java.util.ArrayList;
 public class StubStatement implements Statement
 {
     private boolean closed;
-    private ArrayList<ResultSet> resultSets = new ArrayList<ResultSet>();
 
     /** {@inheritDoc} */
     public <T> T unwrap(Class<T> iface) throws SQLException
@@ -48,7 +46,6 @@ public class StubStatement implements Statement
     public ResultSet executeQuery(String sql) throws SQLException
     {
         StubResultSet resultSet = new StubResultSet();
-        resultSets.add(resultSet);
         return resultSet;
     }
 
@@ -61,11 +58,6 @@ public class StubStatement implements Statement
     /** {@inheritDoc} */
     public void close() throws SQLException
     {
-        for (ResultSet resultSet : resultSets)
-        {
-            resultSet.close();
-        }
-
         closed = true;
     }
 

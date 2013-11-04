@@ -58,9 +58,9 @@ public class HikariInstrumentationAgent
         completionMap = new HashMap<String, Boolean>();
         completionMap.put("java.sql.Connection", false);
         completionMap.put("java.sql.ResultSet", false);
-        completionMap.put("java.sql.Statement", false);
-        completionMap.put("java.sql.CallableStatement", false);
-        completionMap.put("java.sql.PreparedStatement", false);
+//        completionMap.put("java.sql.Statement", false);
+//        completionMap.put("java.sql.CallableStatement", false);
+//        completionMap.put("java.sql.PreparedStatement", false);
     }
 
     private DataSource dataSource;
@@ -112,10 +112,10 @@ public class HikariInstrumentationAgent
         {
             return false;
         }
-        finally
-        {
-            unregisterInstrumenation();
-        }
+//        finally
+//        {
+//            unregisterInstrumenation();
+//        }
     }
 
     /**
