@@ -169,7 +169,7 @@ or property file based:
 ----------------------------------------------------
 
 #### JMX Management ####
-The following properties are configurable in real-time as the pool is running via a JMX
+The following properties are also configurable in real-time as the pool is running via a JMX
 management console such as JConsole:
 
  * ``acquireIncrement``
