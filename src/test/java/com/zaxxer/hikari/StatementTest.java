@@ -6,11 +6,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.junit.Assert;
-import org.junit.Test;
 
 public class StatementTest
 {
-    @Test
     public void testStatementClose() throws SQLException
     {
         HikariConfig config = new HikariConfig();
