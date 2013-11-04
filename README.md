@@ -153,7 +153,7 @@ development and pre-Production.
 ### Initialization ###
     HikariConfig config = new HikariConfig();
     config.setMaximumPoolSize(100);
-    config.setDataSourceClassName("com.mysql.jdbc.Driver");
+    config.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource);
     config.addDataSourceProperty("url", "jdbc:mysql://localhost/database");
     config.addDataSourceProperty("user", "bart");
     config.addDataSourceProperty("password", "51mp50n");
