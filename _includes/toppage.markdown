@@ -12,10 +12,18 @@ The same test was run for an "unconstrained" pool, meaning that connections in t
 threads that are executing.  This should be the "best case" for a connection pool due to low contention.
 
 <a href="http://github.com/brettwooldridge/HikariCP/wiki/Unconstrained_MixedBench.png"><img src="http://github.com/brettwooldridge/HikariCP/wiki/Unconstrained_MixedBench.png" width="680"/></a>
-
+<p>
 How does HikariCP stay flat?  And how does it achieve such incredible performance?  If you're really technically
 minded, read [here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).  Otherwise, just drop it
 in and let your code run like its pants are on fire.
+
+DBPool and C3PO were tested but both failed to complete the MixedBench test without connection timeouts and OutOfMemory errors.
+The "benchmarks" published on the BoneCP site do little to reflect real world usage: *"500 Threads each attempting 100 get/release
+connection with no delays"*.  Does your application do this?  Or maybe it does real work.  How about, *"500 Threads each attempting
+100 get/release connection with no delays...75ms delay between open connection/release connection to simulate work done by the
+application"* Does sleeping between getConnection()/close() sound like what your application does?  What is really being tested?
+Take a look at our [MixedBench](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks) benchmark for a test involving
+60+ million JDBC operations per-thread.
 
 ### Maven Respository ###
     <dependency>
