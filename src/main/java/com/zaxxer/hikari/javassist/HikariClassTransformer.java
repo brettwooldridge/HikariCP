@@ -99,6 +99,11 @@ public class HikariClassTransformer implements ClassFileTransformer
         try
         {
             ClassFile classFile = new ClassFile(new DataInputStream(new ByteArrayInputStream(classfileBuffer)));
+            if (classFile.isInterface())
+            {
+                return classfileBuffer;
+            }
+
             for (String iface : classFile.getInterfaces())
             {
                 if (!iface.startsWith("java.sql"))
@@ -210,7 +215,7 @@ public class HikariClassTransformer implements ClassFileTransformer
             CtField copy = new CtField(field.getType(), field.getName(), targetClass);
             copy.setModifiers(field.getModifiers());
             targetClass.addField(copy);
-            LOGGER.debug("Copied field {}.{} to {}", srcClass.getSimpleName(), field.getName(), targetClass.getSimpleName());
+            LOGGER.debug("Copied field {}.{} to {}", field.getDeclaringClass().getSimpleName(), field.getName(), targetClass.getSimpleName());
         }
     }
 
@@ -247,7 +252,7 @@ public class HikariClassTransformer implements ClassFileTransformer
             attr.setAnnotation(annotation);
             copy.getMethodInfo().addAttribute(attr);
             targetClass.addMethod(copy);
-            LOGGER.debug("Copied method {}.{} to {}", srcClass.getSimpleName(), method.getName(), targetClass.getSimpleName());
+            LOGGER.debug("Copied method {}.{} to {}", method.getDeclaringClass().getSimpleName(), method.getName(), targetClass.getSimpleName());
         }
     }
 
@@ -310,7 +315,7 @@ public class HikariClassTransformer implements ClassFileTransformer
 
     private void specialConnectionInjectCloseCheck(CtClass targetClass) throws Exception
     {
-        for (CtMethod method : targetClass.getMethods())
+        for (CtMethod method : targetClass.getDeclaredMethods())
         {
             if ((method.getModifiers() & Modifier.PUBLIC) != Modifier.PUBLIC ||  // only public methods
                 method.getAnnotation(HikariInject.class) != null)                // ignore methods we've injected, they already try..catch

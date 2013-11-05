@@ -24,8 +24,11 @@ import java.io.InputStream;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -50,17 +53,18 @@ public class HikariInstrumentationAgent
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariInstrumentationAgent.class);
 
-    private static final HashMap<String, Boolean> completionMap;
+    private static final LinkedHashMap<String, Boolean> completionMap;
+    private final HashMap<String, HashSet<String>> instrumentableClasses;
 
     // Static initializer
     static
     {
-        completionMap = new HashMap<String, Boolean>();
+        completionMap = new LinkedHashMap<>();
         completionMap.put("java.sql.Connection", false);
         completionMap.put("java.sql.ResultSet", false);
-//        completionMap.put("java.sql.Statement", false);
-//        completionMap.put("java.sql.CallableStatement", false);
-//        completionMap.put("java.sql.PreparedStatement", false);
+        completionMap.put("java.sql.CallableStatement", false);
+        completionMap.put("java.sql.PreparedStatement", false);
+        completionMap.put("java.sql.Statement", false);
     }
 
     private DataSource dataSource;
@@ -70,6 +74,12 @@ public class HikariInstrumentationAgent
     {
         this.dataSource = dataSource;
         this.sniffPackage = getDataSourcePackage(dataSource);
+
+        instrumentableClasses = new HashMap<>();
+        for (String intf : completionMap.keySet())
+        {
+            instrumentableClasses.put(intf, new HashSet<String>());
+        }
     }
 
     public boolean loadTransformerAgent()
@@ -179,7 +189,37 @@ public class HikariInstrumentationAgent
             {
                 String className = entryName.replace(".class", "").replace('/', '.');
                 InputStream inputStream = jarFile.getInputStream(jarEntry);
-                loadIfInstrumentable(className, new DataInputStream(inputStream));
+
+                DataInputStream dis = new DataInputStream(inputStream);
+                ClassFile classFile = new ClassFile(dis);
+                if (classFile.isInterface())
+                {
+                    inputStream.close();
+                    continue;
+                }
+
+                String intfKey = null;
+                HashSet<String> interfaces = new HashSet<>(Arrays.asList(classFile.getInterfaces()));
+                for (String intf : interfaces)
+                {
+                    if (completionMap.containsKey(intf))
+                    {
+                        intfKey = intf;
+                        break;
+                    }
+                }
+
+                if (intfKey != null)
+                {
+                    instrumentableClasses.get(intfKey).add(className);
+                    String superclass = classFile.getSuperclass();
+                    if (superclass != null)
+                    {
+                        instrumentableClasses.get(intfKey).add(superclass);
+                    }
+                }
+
+                // loadIfInstrumentable(className, );
                 inputStream.close();
             }
         }
@@ -239,7 +279,7 @@ public class HikariInstrumentationAgent
     private void loadIfInstrumentable(String className, DataInputStream classInputStream) throws IOException, ClassNotFoundException
     {
         ClassFile classFile = new ClassFile(classInputStream);
-        if (classFile.isAbstract())
+        if (classFile.isInterface())
         {
             return;
         }

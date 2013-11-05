@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.mocks;
+package com.zaxxer.hikari.performance;
 
 import java.sql.Array;
 import java.sql.Blob;
@@ -39,7 +39,7 @@ import java.util.concurrent.Executor;
  *
  * @author Brett Wooldridge
  */
-public class StubConnection extends StubBaseConnection implements Connection
+public class StubConnection implements Connection
 {
     private static long foo;
 
@@ -58,6 +58,18 @@ public class StubConnection extends StubBaseConnection implements Connection
     public boolean isWrapperFor(Class<?> iface) throws SQLException
     {
         return false;
+    }
+
+    /** {@inheritDoc} */
+    public Statement createStatement() throws SQLException
+    {
+        return new StubStatement();
+    }
+
+    /** {@inheritDoc} */
+    public PreparedStatement prepareStatement(String sql) throws SQLException
+    {
+        return new StubPreparedStatement();
     }
 
     /** {@inheritDoc} */

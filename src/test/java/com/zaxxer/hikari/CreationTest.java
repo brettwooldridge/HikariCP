@@ -42,8 +42,8 @@ public class CreationTest
         config.setMaximumPoolSize(1);
         config.setAcquireIncrement(1);
         config.setConnectionTestQuery("VALUES 1");
-        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-        // config.setDataSourceClassName("org.hsqldb.jdbc.JDBCDataSource");
+        // config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+        config.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
 
         HikariDataSource ds = new HikariDataSource(config);
 
