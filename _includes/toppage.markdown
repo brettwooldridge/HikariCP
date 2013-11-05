@@ -3,6 +3,10 @@ There is nothing [faster](https://github.com/brettwooldridge/HikariCP/wiki/Bench
 nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctness).  HikariCP is a "zero-overhead"
 production-quality connection pool.
 
+**UPDATE: Apparently somebody posted us to reddit.  One comment was along the lines of "when has a connection pool ever been a bottleneck?"
+If connection pools were just about getConnection()/close() that might be a point, but the reality is that connection pools have to wrap
+every JDBC class to track statements, result sets, etc.  And in doing so, each pool imposes different overheads on *all* JDBC operations.**
+
 Using a stub-JDBC (nop) implementation to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations
 were performed in *8ms* on a commodity PC.  The test below is a run with a "constrained" pool of 50 connections,
 with comparison to BoneCP.
@@ -44,13 +48,13 @@ If you don't use programmatic initialization, you can change the *scope* to 'run
     config.addDataSourceProperty("user", "bart");
     config.addDataSourceProperty("password", "51mp50n");
 
-    HikariDataSource ds = new HikariDataSource(config);
+    DataSource ds = new HikariDataSource(config);
 
 
 or property file based:
 
     HikariConfig config = new HikariConfig("some/path/hikari.properties");
-    HikariDataSource ds = new HikariDataSource(config);
+    DataSource ds = new HikariDataSource(config);
 
 You can find information about the [configuration properties here](https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby).
 
