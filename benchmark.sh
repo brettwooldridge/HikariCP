@@ -7,7 +7,7 @@ CLASSPATH=$CLASSPATH:~/.m2/repository/org/slf4j/slf4j-simple/1.7.5/slf4j-simple-
 CLASSPATH=$CLASSPATH:~/.m2/repository/com/jolbox/bonecp/0.8.0-rc3/bonecp-0.8.0-rc3.jar
 CLASSPATH=$CLASSPATH:~/.m2/repository/com/google/guava/guava/15.0/guava-15.0.jar
 CLASSPATH=$CLASSPATH:$JAVA_HOME/lib/tools.jar
-CLASSPATH=$CLASSPATH:./target/HikariCP-0.9-SNAPSHOT.jar
+CLASSPATH=$CLASSPATH:./target/HikariCP-1.1.4-SNAPSHOT.jar
 CLASSPATH=$CLASSPATH:./target/test-classes
 
 java -classpath $CLASSPATH \
