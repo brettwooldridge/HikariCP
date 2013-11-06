@@ -16,18 +16,22 @@
 
 package com.zaxxer.hikari.javassist;
 
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Properties;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -64,47 +68,67 @@ public class HikariClassScanner
     
     private String sniffPackage;
 
+    private Properties codex;
+
     public HikariClassScanner(HikariClassTransformer transformer)
     {
         instrumentableClasses = new HashMap<>();
         this.transformer = transformer;
     }
 
+    @SuppressWarnings("unchecked")
     public boolean scanClasses(String dsClassName)
     {
         try
         {
             long start = System.currentTimeMillis();
 
-            sniffPackage = getDataSourceSubPackage(dsClassName);
-
-            boolean couldScan = searchInstrumentable(dsClassName);
-            if (!couldScan)
+            if (!loadCodex())
             {
-                LOGGER.warn("Unable to find and instrument necessary classes.  Please report at http://github.com/brettwooldridge/HikariCP.");
+                LOGGER.warn("Unable to load instrumentation codex.  Please report at http://github.com/brettwooldridge/HikariCP.");
                 LOGGER.info("Using delegation instead of instrumentation");
                 return false;
             }
 
-            HashSet<String> interfaces = findInterfaces("java.sql.Connection");
-            HashSet<String> rootClasses = findRootClasses(interfaces, HikariClassTransformer.CONNECTION);
-            findSubclasses(rootClasses, HikariClassTransformer.CONNECTION_SUBCLASS);
+            HashSet<String> hash = (HashSet<String>) codex.get(dsClassName);
+            if (hash == null)
+            {
+                LOGGER.warn("DataSource {} not found in instrumentation codex.  Please report at http://github.com/brettwooldridge/HikariCP.", dsClassName);
+                LOGGER.info("Using delegation instead of instrumentation");
+                return false;
+            }
 
-            interfaces = findInterfaces("java.sql.Statement");
-            rootClasses = findRootClasses(interfaces, HikariClassTransformer.STATEMENT);
-            findSubclasses(rootClasses, HikariClassTransformer.STATEMENT_SUBCLASS);
+            String keyPrefix = hash.iterator().next();
 
-            interfaces = findInterfaces("java.sql.PreparedStatement");
-            rootClasses = findRootClasses(interfaces, HikariClassTransformer.PREPARED_STATEMENT);
-            findSubclasses(rootClasses, HikariClassTransformer.PREPARED_STATEMENT_SUBCLASS);
+            HashSet<String> classes = (HashSet<String>) codex.get(keyPrefix + ".baseConnection");
+            loadClasses(classes, HikariClassTransformer.CONNECTION);
 
-            interfaces = findInterfaces("java.sql.CallableStatement");
-            rootClasses = findRootClasses(interfaces, HikariClassTransformer.CALLABLE_STATEMENT);
-            findSubclasses(rootClasses, HikariClassTransformer.CALLABLE_STATEMENT_SUBCLASS);
+            classes = (HashSet<String>) codex.get(keyPrefix + ".subConnection");
+            loadClasses(            classes, HikariClassTransformer.CONNECTION_SUBCLASS);
 
-            interfaces = findInterfaces("java.sql.ResultSet");
-            rootClasses = findRootClasses(interfaces, HikariClassTransformer.RESULTSET);
-            findSubclasses(rootClasses, HikariClassTransformer.RESULTSET_SUBCLASS);
+            classes = (HashSet<String>) codex.get(keyPrefix + ".baseStatement");
+            loadClasses(classes, HikariClassTransformer.STATEMENT);
+
+            classes = (HashSet<String>) codex.get(keyPrefix + ".subStatement");
+            loadClasses(classes, HikariClassTransformer.STATEMENT_SUBCLASS);
+
+            classes = (HashSet<String>) codex.get(keyPrefix + ".basePreparedStatement");
+            loadClasses(classes, HikariClassTransformer.PREPARED_STATEMENT);
+
+            classes = (HashSet<String>) codex.get(keyPrefix + ".subPreparedStatement");
+            loadClasses(classes, HikariClassTransformer.PREPARED_STATEMENT_SUBCLASS);
+
+            classes = (HashSet<String>) codex.get(keyPrefix + ".baseCallableStatement");
+            loadClasses(classes, HikariClassTransformer.CALLABLE_STATEMENT);
+
+            classes = (HashSet<String>) codex.get(keyPrefix + ".subCallableStatement");
+            loadClasses(classes, HikariClassTransformer.CALLABLE_STATEMENT_SUBCLASS);
+
+            classes = (HashSet<String>) codex.get(keyPrefix + ".baseResultSet");
+            loadClasses(classes, HikariClassTransformer.RESULTSET);
+
+            classes = (HashSet<String>) codex.get(keyPrefix + ".subResultSet");
+            loadClasses(classes, HikariClassTransformer.RESULTSET_SUBCLASS);
 
             LOGGER.info("Instrumented JDBC classes in {}ms.", System.currentTimeMillis() - start);
 
@@ -117,287 +141,67 @@ public class HikariClassScanner
     }
 
     /**
-     * Search the jar (or directory hierarchy) that contains the DataSource and force the class
-     * loading of the classes we are about instrumenting.  See loadIfInstrumentable() for more
-     * detail.
-     *
-     * @param dataSource
      * @throws IOException 
      */
-    private boolean searchInstrumentable(String dsClassName) throws Exception
+    @SuppressWarnings("unchecked")
+    private boolean loadCodex() throws IOException
     {
-        String searchPath = getSearchPath(dsClassName);
-        if (searchPath == null)
+        codex = new Properties();
+
+        InputStream inputStream = this.getClass().getResourceAsStream("/META-INF/codex.properties");
+        if (inputStream == null)
         {
             return false;
         }
 
-        if (searchPath.endsWith(".jar"))
-        {
-            return scanInstrumentableJar(searchPath);
-        }
-        else
-        {
-            String dsSubPath = getDataSourceSubPackage(dsClassName).replace('.', '/');
-            String classRoot = searchPath.replace(dsSubPath, "");
-            // Drop one segment off of the path for a slightly broader search
-            searchPath = searchPath.substring(0, searchPath.lastIndexOf('/'));
-            return scanInstrumentableDirectory(classRoot, searchPath);
-        }
-    }
-
-    private boolean scanInstrumentableJar(String searchPath) throws IOException, ClassNotFoundException
-    {
-        File jarPath = new File(URI.create(searchPath));
-        if (!jarPath.isFile())
-        {
-            return false;
-        }
-
-        JarFile jarFile = new JarFile(jarPath, false, JarFile.OPEN_READ);
-        Enumeration<JarEntry> entries = jarFile.entries();
-        while (entries.hasMoreElements())
-        {
-            JarEntry jarEntry = entries.nextElement();
-            if (jarEntry.isDirectory())
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        String line;
+        do {
+            line = reader.readLine();
+            if (line != null)
             {
-                continue;
+                line = line.trim();
+                if (line.startsWith("#") || line.length() == 0)
+                {
+                    continue;
+                }
+    
+                String[] split = line.split("=");
+                String key = split[0];
+                String value = split[1];
+                HashSet<String> existing = (HashSet<String>) codex.get(key);
+                if (existing == null)
+                {
+                    HashSet<String> array = new HashSet<>();
+                    array.add(value);
+                    codex.put(key, array);
+                }
+                else
+                {
+                    existing.add(value);
+                }
             }
-
-            String entryName = jarEntry.getName();
-            if (entryName.endsWith(".class") && entryName.startsWith(sniffPackage) && entryName.indexOf('$') == -1)
-            {
-                InputStream inputStream = jarFile.getInputStream(jarEntry);
-                trackClass(inputStream);
-                inputStream.close();
-            }
-        }
-
-        jarFile.close();
+        } while (line != null);
 
         return true;
     }
 
     /**
-     * @param classRoot
-     * @param searchPath 
-     * @return true if the search completed without error
-     * @throws IOException 
+     * @param baseConnections
+     * @param connection
      * @throws ClassNotFoundException 
      */
-    private boolean scanInstrumentableDirectory(String classRoot, String searchPath) throws IOException, ClassNotFoundException
+    private void loadClasses(HashSet<String> classes, int classType) throws ClassNotFoundException
     {
-        File directory = new File(searchPath);
-        if (!directory.isDirectory())
+        if (classes == null)
         {
-            return false;
+            return;
         }
 
-        for (File fileEntry : directory.listFiles())
+        transformer.setScanClass(classes, classType);
+        for (String clazz : classes)
         {
-            if (fileEntry.isDirectory())
-            {
-                scanInstrumentableDirectory(classRoot, fileEntry.getPath());
-                continue;
-            }
-
-            String fileName = fileEntry.getPath();
-            String className = fileName.replace(classRoot, "");
-            if (className.endsWith(".class") && className.startsWith(sniffPackage) && className.indexOf('$') == -1)
-            {
-                className = className.replace(".class", "").replace('/', '.');
-                InputStream inputStream = new FileInputStream(fileEntry);
-                trackClass(inputStream);
-                inputStream.close();
-            }
+            ClassLoaderUtils.loadClass(clazz);
         }
-
-        return true;
-    }
-
-    private void trackClass(InputStream inputStream) throws IOException
-    {
-        DataInputStream dis = new DataInputStream(inputStream);
-        ClassFile classFile = new ClassFile(dis);
-
-        instrumentableClasses.put(classFile.getName(), classFile);
-    }
-
-    private HashSet<String> findInterfaces(String interfaceName)
-    {
-        HashSet<String> subInterfaces = new HashSet<>();
-        subInterfaces.add(interfaceName);
-
-        for (ClassFile classFile : instrumentableClasses.values())
-        {
-            if (!classFile.isInterface())
-            {
-                continue;
-            }
-
-            HashSet<String> interfaces = new HashSet<>(Arrays.asList(classFile.getInterfaces()));
-            if (interfaces.contains(interfaceName))
-            {
-                subInterfaces.add(classFile.getName());
-            }
-        }
-
-        return subInterfaces;
-    }
-
-    private HashSet<String> findRootClasses(HashSet<String> interfaces, int classType) throws ClassNotFoundException
-    {
-        HashSet<String> rootClasses = new HashSet<>();
-
-        for (ClassFile classFile : instrumentableClasses.values())
-        {
-            if (classFile.isInterface())
-            {
-                continue;
-            }
-
-            HashSet<String> ifaces = new HashSet<>(Arrays.asList(classFile.getInterfaces()));
-            ifaces.retainAll(interfaces);
-            if (ifaces.size() == 0)
-            {
-                continue;
-            }
-
-            // Now we found a class that implements java.sql.Connection
-            // ... walk up to the top of the hierarchy
-            String currentClass = classFile.getName();
-            while (true)
-            {
-                ClassFile superClass = instrumentableClasses.get(currentClass);
-                if (superClass == null)
-                {
-                    break;
-                }
-
-                String maybeSuper = superClass.getSuperclass();
-                if (maybeSuper.equals("java.lang.Object"))
-                {
-                    rootClasses.add(superClass.getName());
-                    break;
-                }
-                
-                currentClass = maybeSuper; 
-            }
-        }
-
-        if (rootClasses.isEmpty())
-        {
-            throw new RuntimeException("Unable to find root class implementation of " + interfaces);
-        }
-
-        transformer.setScanClass(rootClasses, classType);
-        for (String rootClass : rootClasses)
-        {
-            ClassLoaderUtils.loadClass(rootClass);
-        }
-
-        transformer.setScanClass(new HashSet<String>(), HikariClassTransformer.UNDEFINED);
-
-        return rootClasses;
-    }
-
-    private void findSubclasses(HashSet<String> rootClasses, int classType) throws ClassNotFoundException
-    {
-        HashSet<String> subClasses = new HashSet<>();
-        subClasses.addAll(rootClasses);
-
-        boolean exhausted;
-        do {
-            exhausted = true;
-            for (ClassFile classFile : instrumentableClasses.values())
-            {
-                if (subClasses.contains(classFile.getSuperclass()) && !subClasses.contains(classFile.getName()))
-                {
-                    exhausted = false;
-                    subClasses.add(classFile.getName());
-                }
-            }
-        } while (!exhausted);
-
-        if (subClasses.size() > 1)
-        {
-            subClasses.removeAll(rootClasses);
-        }
-
-        transformer.setScanClass(subClasses, classType);
-        for (String subClass : subClasses)
-        {
-            ClassLoaderUtils.loadClass(subClass);
-        }
-
-        subClasses.clear();
-        transformer.setScanClass(subClasses, HikariClassTransformer.UNDEFINED);
-    }
-
-    /**
-     * Get the path to the JAR or file system directory where the class of the user
-     * specified DataSource implementation resides.
-     *
-     * @param dataSource the user specified DataSource
-     * @return the path to the JAR (including the .jar file name) or a file system classes directory
-     */
-    private String getSearchPath(String dsClassName)
-    {
-        URL resource = this.getClass().getResource('/' + dsClassName.replace('.', '/') + ".class");
-        if (resource == null)
-        {
-            return null;
-        }
-
-        String path = resource.toString();
-        if (path.startsWith("jar:"))
-        {
-            // original form jar:file:/path, make a path like file:///path
-            path = path.substring(4, path.indexOf('!')).replace(":/", ":///");
-        }
-        else if (path.startsWith("file:"))
-        {
-            path = path.substring(0, path.lastIndexOf('/')).replace("file:", "");
-        }
-        else
-        {
-            LOGGER.warn("Could not determine path type of {}", path);
-            return null;
-        }
-
-        return path;
-    }
-
-    /**
-     * Given a DataSource class, find the package name that is one-level above the package of
-     * the DataSource.  For example, org.hsqldb.jdbc.DataSource -> org.hsqldb.  This is used
-     * to filter out packages quickly that we are not interested in instrumenting.
-     *
-     * @param dataSource a DataSource
-     * @return the shortened package name used for filtering
-     */
-    static String getDataSourceSubPackage(String dsClassName)
-    {
-        String packageName = dsClassName.substring(0, dsClassName.lastIndexOf('.'));
-
-        // Count how many segments in the package name.  For example, org.hsqldb.jdbc has three segments.
-        int dots = 0;
-        int[] offset = new int[16];
-        for (int ndx = packageName.indexOf('.'); ndx != -1; ndx = packageName.indexOf('.', ndx + 1))
-        {
-            offset[dots] = ndx;
-            dots++;
-        }
-
-        if (dots > 3)
-        {
-            packageName = packageName.substring(0, offset[dots - 2]);
-        }
-        else if (dots > 1)
-        {
-            packageName = packageName.substring(0, offset[dots - 1]);
-        }
-
-        return packageName.replace('.', '/');
     }
 }
