@@ -50,7 +50,6 @@ public class AgentRegistrationElf
         {
 
             Properties systemProperties = System.getProperties();
-            systemProperties.put("com.zaxxer.hikari.classloader", AgentRegistrationElf.class.getClassLoader());
 
             HikariClassTransformer transformer = new HikariClassTransformer();
             systemProperties.put("com.zaxxer.hikari.transformer", transformer);
@@ -59,19 +58,20 @@ public class AgentRegistrationElf
             LOGGER.info("Successfully loaded instrumentation agent.  Scanning classes...");
 
             HikariClassScanner scanner = new HikariClassScanner(transformer);
-            scanner.scanClasses(dsClassName);
-
-            return true;
+            return scanner.scanClasses(dsClassName);
         }
         catch (Exception e)
         {
             LOGGER.warn("Instrumentation agent could not be loaded.  Please report at http://github.com/brettwooldridge/HikariCP.", e);
             return false;
         }
-//        finally
-//        {
-//            unregisterInstrumenation();
-//        }
+        finally
+        {
+            if (HikariInstrumentationAgent.unregisterInstrumenation())
+            {
+                LOGGER.info("Unloaded instrumentation agent.");
+            }
+        }
     }
 
     /**

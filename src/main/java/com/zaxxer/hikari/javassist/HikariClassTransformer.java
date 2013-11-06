@@ -172,9 +172,9 @@ public class HikariClassTransformer implements ClassFileTransformer
         copyFields(proxy, target);
         copyMethods(proxy, target, classFile);
 
-        for (CtConstructor constructor : target.getConstructors())
+        for (CtConstructor constructor : target.getDeclaredConstructors())
         {
-            constructor.insertAfter("__init();");
+            constructor.insertBeforeBody("__init();");
         }
         
         mergeClassInitializers(proxy, target, classFile);
@@ -197,7 +197,7 @@ public class HikariClassTransformer implements ClassFileTransformer
 
         for (CtConstructor constructor : target.getDeclaredConstructors())
         {
-            constructor.insertAfter("__init();");
+            constructor.insertBeforeBody("__init();");
         }
 
         return target.toBytecode();
@@ -261,7 +261,6 @@ public class HikariClassTransformer implements ClassFileTransformer
 
     private void copyMethods(CtClass srcClass, CtClass targetClass, ClassFile targetClassFile) throws Exception
     {
-        CtMethod[] destMethods = targetClass.getMethods();
         ConstPool constPool = targetClassFile.getConstPool();
 
         for (CtMethod method : srcClass.getDeclaredMethods())
@@ -269,20 +268,6 @@ public class HikariClassTransformer implements ClassFileTransformer
             if (method.getAnnotation(HikariInject.class) == null)
             {
                 continue;
-            }
-
-            if (targetClassFile.getMethod(method.getName()) != null)  // maybe we have a name collision
-            {
-                String signature = method.getSignature();
-                for (CtMethod destMethod : destMethods)
-                {
-                    if (destMethod.getName().equals(method.getName()) && destMethod.getSignature().equals(signature))
-                    {
-                        LOGGER.debug("Rename method {}.{} to __{}", targetClass.getSimpleName(), destMethod.getName(), destMethod.getName());
-                        destMethod.setName("__" + destMethod.getName());
-                        break;
-                    }
-                }
             }
 
             CtMethod copy = CtNewMethod.copy(method, targetClass, null);

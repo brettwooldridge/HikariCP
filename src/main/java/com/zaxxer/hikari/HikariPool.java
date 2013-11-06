@@ -80,15 +80,15 @@ public final class HikariPool implements HikariPoolMBean
 
         try
         {
-            Class<?> clazz = ClassLoaderUtils.loadClass(configuration.getDataSourceClassName());
-            this.dataSource = (DataSource) clazz.newInstance();
-            PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
-
             delegationProxies = !AgentRegistrationElf.loadTransformerAgent(configuration.getDataSourceClassName());
             if (delegationProxies)
             {
                 LOGGER.info("Falling back to Javassist delegate-based proxies.");
             }
+            
+            Class<?> clazz = ClassLoaderUtils.loadClass(configuration.getDataSourceClassName());
+            this.dataSource = (DataSource) clazz.newInstance();
+            PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
         }
         catch (Exception e)
         {

@@ -63,7 +63,7 @@ public class StubResultSet implements ResultSet
     /** {@inheritDoc} */
     public boolean next() throws SQLException
     {
-        return (counter < 10);
+        return (counter > 100000);
     }
 
     /** {@inheritDoc} */

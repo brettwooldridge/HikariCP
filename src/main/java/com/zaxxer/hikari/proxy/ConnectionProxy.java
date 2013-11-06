@@ -58,8 +58,6 @@ public class ConnectionProxy implements IHikariConnectionProxy
     @HikariInject protected ArrayList<Statement> _openStatements;
     @HikariInject protected HikariPool _parentPool;
     
-    protected final Connection delegate;
-
     @HikariInject protected volatile boolean _forceClose;
     @HikariInject protected long _creationTime;
     @HikariInject protected long _lastAccess;
@@ -67,6 +65,8 @@ public class ConnectionProxy implements IHikariConnectionProxy
     @HikariInject protected StackTraceElement[] _stackTrace;
     @HikariInject protected TimerTask _leakTask;
 
+    protected final Connection delegate;
+    
     // static initializer
     static
     {
@@ -158,8 +158,11 @@ public class ConnectionProxy implements IHikariConnectionProxy
     @HikariInject
     protected void __init()
     {
-        _openStatements = new ArrayList<Statement>(64);
-        _creationTime = _lastAccess = System.currentTimeMillis();
+        if (_openStatements == null)
+        {
+            _openStatements = new ArrayList<Statement>(64);
+            _creationTime = _lastAccess = System.currentTimeMillis();
+        }
     }
 
     @HikariInject
@@ -194,8 +197,9 @@ public class ConnectionProxy implements IHikariConnectionProxy
 
             try
             {
-                // Faster than an iterator
-                for (int i = _openStatements.size() - 1; i >= 0; i--)
+                // Faster than an iterator most times
+                final int length = _openStatements.size();
+                for (int i = 0; i < length; i++)
                 {
                     _openStatements.get(i).close();
                 }

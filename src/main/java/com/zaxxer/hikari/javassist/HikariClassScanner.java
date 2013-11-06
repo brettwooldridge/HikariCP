@@ -17,25 +17,11 @@
 package com.zaxxer.hikari.javassist;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Properties;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-
-import javassist.bytecode.ClassFile;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,29 +36,12 @@ public class HikariClassScanner
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariClassScanner.class);
 
-    private static final LinkedHashMap<String, Boolean> completionMap;
-    private final HashMap<String, ClassFile> instrumentableClasses;
-
-    // Static initializer
-    static
-    {
-        completionMap = new LinkedHashMap<>();
-        completionMap.put("java.sql.Connection", false);
-        completionMap.put("java.sql.ResultSet", false);
-        completionMap.put("java.sql.CallableStatement", false);
-        completionMap.put("java.sql.PreparedStatement", false);
-        completionMap.put("java.sql.Statement", false);
-    }
-
     private HikariClassTransformer transformer;
     
-    private String sniffPackage;
-
     private Properties codex;
 
     public HikariClassScanner(HikariClassTransformer transformer)
     {
-        instrumentableClasses = new HashMap<>();
         this.transformer = transformer;
     }
 
@@ -93,7 +62,7 @@ public class HikariClassScanner
             HashSet<String> hash = (HashSet<String>) codex.get(dsClassName);
             if (hash == null)
             {
-                LOGGER.warn("DataSource {} not found in instrumentation codex.  Please report at http://github.com/brettwooldridge/HikariCP.", dsClassName);
+                LOGGER.warn("DataSource {} not found in the instrumentation codex.  Please report at http://github.com/brettwooldridge/HikariCP.", dsClassName);
                 LOGGER.info("Using delegation instead of instrumentation");
                 return false;
             }

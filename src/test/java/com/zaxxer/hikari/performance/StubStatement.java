@@ -45,8 +45,7 @@ public class StubStatement implements Statement
     /** {@inheritDoc} */
     public ResultSet executeQuery(String sql) throws SQLException
     {
-        StubResultSet resultSet = new StubResultSet();
-        return resultSet;
+        return new StubResultSet();
     }
 
     /** {@inheritDoc} */

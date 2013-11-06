@@ -117,7 +117,7 @@ public class StubResultSet implements ResultSet
     /** {@inheritDoc} */
     public float getFloat(int columnIndex) throws SQLException
     {
-        throw new SQLException("No reason", "08999");
+        return 0;
     }
 
     /** {@inheritDoc} */

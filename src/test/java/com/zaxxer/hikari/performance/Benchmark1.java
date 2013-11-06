@@ -76,12 +76,10 @@ public class Benchmark1
         System.out.println(" Warming up JIT");
         benchmarks.startMixedBench(100, 10000);
         System.out.println(" MixedBench Final Timing Runs");
-        long elapsed = 0;
-        elapsed += benchmarks.startMixedBench(THREADS, 1000);
-        elapsed += benchmarks.startMixedBench(THREADS, 1000);
-        elapsed += benchmarks.startMixedBench(THREADS, 1000);
-        elapsed += benchmarks.startMixedBench(THREADS, 1000);
-        System.out.printf("Elapsed time for timing runs (excluding thread start): %dms\n", TimeUnit.NANOSECONDS.toMillis(elapsed));
+        benchmarks.startMixedBench(THREADS, 1000);
+        benchmarks.startMixedBench(THREADS, 1000);
+        benchmarks.startMixedBench(THREADS, 1000);
+        benchmarks.startMixedBench(THREADS, 1000);
 
         System.out.println("\nBoneBench");
         System.out.println(" Warming up JIT");
@@ -168,7 +166,7 @@ public class Benchmark1
         config.setConnectionTimeout(8000);
         config.setIdleTimeout(TimeUnit.MINUTES.toMillis(30));
         config.setJdbc4ConnectionTest(true);
-        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+        config.setDataSourceClassName("com.zaxxer.hikari.performance.StubDataSource");
 
         HikariDataSource ds = new HikariDataSource(config);
         return ds;
@@ -178,7 +176,7 @@ public class Benchmark1
     {
         try
         {
-            Class.forName("com.zaxxer.hikari.mocks.StubDriver");
+            Class.forName("com.zaxxer.hikari.performance.StubDriver");
         }
         catch (ClassNotFoundException e)
         {
@@ -205,7 +203,7 @@ public class Benchmark1
     private DataSource setupDbPool()
     {
         DBPoolDataSource ds = new DBPoolDataSource();
-        ds.setDriverClassName("com.zaxxer.hikari.mocks.StubDriver");
+        ds.setDriverClassName("com.zaxxer.hikari.performance.StubDriver");
         ds.setUrl("jdbc:stub");
         ds.setMinPool(POOL_MAX / 2);
         ds.setMaxPool(POOL_MAX);
@@ -222,7 +220,7 @@ public class Benchmark1
         try
         {
             ComboPooledDataSource cpds = new ComboPooledDataSource();
-            cpds.setDriverClass( "com.zaxxer.hikari.mocks.StubDriver" );            
+            cpds.setDriverClass( "com.zaxxer.hikari.performance.StubDriver" );            
             cpds.setJdbcUrl( "jdbc:stub" );
             cpds.setMinPoolSize(POOL_MAX / 2);
             cpds.setMaxPoolSize(POOL_MAX);

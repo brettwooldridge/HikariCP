@@ -26,8 +26,6 @@ import java.util.Properties;
  */
 public class HikariInstrumentationAgent
 {
-    private static Instrumentation ourInstrumentation;
-
     /**
      * The method that is called when VirtualMachine.loadAgent() is invoked to register our
      * class transformer.
@@ -37,11 +35,29 @@ public class HikariInstrumentationAgent
      */
     public static void agentmain(String agentArgs, Instrumentation instrumentation)
     {
-        ourInstrumentation = instrumentation;
+        Properties systemProperties = System.getProperties();
+        systemProperties.put("com.zaxxer.hikari.instrumentation", instrumentation);
+
+        ClassFileTransformer transformer = (ClassFileTransformer) systemProperties.get("com.zaxxer.hikari.transformer");
+        instrumentation.addTransformer(transformer, false);
+    }
+
+    static boolean unregisterInstrumenation()
+    {
+        boolean unregistered = false;
 
         Properties systemProperties = System.getProperties();
-        ClassFileTransformer transformer = (ClassFileTransformer) systemProperties.get("com.zaxxer.hikari.transformer");
+        Instrumentation instrumentation = (Instrumentation) systemProperties.get("com.zaxxer.hikari.instrumentation");
+        if (instrumentation != null)
+        {
+            ClassFileTransformer transformer = (ClassFileTransformer) systemProperties.get("com.zaxxer.hikari.transformer");
+            instrumentation.removeTransformer(transformer);
+            unregistered = true;
+        }
 
-        ourInstrumentation.addTransformer(transformer, false);
+        systemProperties.remove("com.zaxxer.hikari.instrumentation");
+        systemProperties.remove("com.zaxxer.hikari.transformer");
+
+        return unregistered;
     }
 }
