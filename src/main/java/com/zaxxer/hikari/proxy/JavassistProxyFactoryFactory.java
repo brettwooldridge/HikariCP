@@ -65,9 +65,9 @@ public final class JavassistProxyFactoryFactory
 
         try
         {
-            String methodBody = "{ checkClosed(); try { return ((cast) delegate).method($$); } catch (SQLException e) { throw checkException(e); } }";
+            String methodBody = "{ _checkClosed(); try { return ((cast) delegate).method($$); } catch (SQLException e) { throw _checkException(e); } }";
             generateProxyClass(Connection.class, ConnectionProxy.class, methodBody);
-            methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { throw checkException(e); } }";
+            methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { throw _checkException(e); } }";
             generateProxyClass(Statement.class, StatementProxy.class, methodBody);
             generateProxyClass(CallableStatement.class, CallableStatementProxy.class, methodBody);
             generateProxyClass(PreparedStatement.class, PreparedStatementProxy.class, methodBody);

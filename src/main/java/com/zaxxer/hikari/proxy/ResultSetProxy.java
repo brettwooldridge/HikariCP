@@ -27,7 +27,7 @@ import com.zaxxer.hikari.javassist.HikariInject;
  */
 public class ResultSetProxy implements IHikariResultSetProxy
 {
-    @HikariInject private IHikariStatementProxy _statement;
+    private IHikariStatementProxy _statement;
 
     protected final ResultSet delegate;
 
@@ -38,13 +38,12 @@ public class ResultSetProxy implements IHikariResultSetProxy
     }
 
     @HikariInject
-    public SQLException checkException(SQLException e)
+    public SQLException _checkException(SQLException e)
     {
-        return _statement.checkException(e);
+        return _statement._checkException(e);
     }
     
-    @HikariInject
-    public void setProxyStatement(IHikariStatementProxy statement)
+    public void _setProxyStatement(IHikariStatementProxy statement)
     {
         this._statement = statement;
     }

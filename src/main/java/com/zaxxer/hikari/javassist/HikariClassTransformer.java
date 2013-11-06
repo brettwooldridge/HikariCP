@@ -20,7 +20,6 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
-import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -32,7 +31,9 @@ import javassist.CtField;
 import javassist.CtMethod;
 import javassist.CtNewConstructor;
 import javassist.CtNewMethod;
+import javassist.LoaderClassPath;
 import javassist.Modifier;
+import javassist.NotFoundException;
 import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.ClassFile;
 import javassist.bytecode.ConstPool;
@@ -49,98 +50,103 @@ public class HikariClassTransformer implements ClassFileTransformer
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariClassTransformer.class);
 
-    private static Instrumentation ourInstrumentation;
-    private static HikariClassTransformer transformer;
+    public static final int UNDEFINED = 0;
+    public static final int CONNECTION = 1;
+    public static final int STATEMENT = 2;
+    public static final int PREPARED_STATEMENT = 3;
+    public static final int CALLABLE_STATEMENT = 4;
+    public static final int RESULTSET = 5;
+    public static final int CONNECTION_SUBCLASS = 6;
+    public static final int STATEMENT_SUBCLASS = 7;
+    public static final int PREPARED_STATEMENT_SUBCLASS = 8;
+    public static final int CALLABLE_STATEMENT_SUBCLASS = 9;
+    public static final int RESULTSET_SUBCLASS = 10;
+
     private static ClassPool classPool;
 
-    private String sniffPackage;
-
     private volatile boolean agentFailed;
+
+    private volatile HashSet<String> scanClasses;
+    private int classType;
 
     /**
      * Private constructor.
      * 
      * @param sniffPackage the package name used to filter only classes we are interested in
      */
-    private HikariClassTransformer(String sniffPackage)
+    public HikariClassTransformer()
     {
-        this.sniffPackage = sniffPackage;
-        HikariClassTransformer.transformer = this;
     }
 
-    /**
-     * The method that is called when VirtualMachine.loadAgent() is invoked to register our
-     * class transformer.
-     *
-     * @param agentArgs arguments to pass to the agent
-     * @param inst the virtual machine Instrumentation instance used to register our transformer 
-     */
-    public static void agentmain(String agentArgs, Instrumentation instrumentation)
+    public void setScanClass(HashSet<String> scanClasses, int classType)
     {
-        ourInstrumentation = instrumentation;
-
-        ClassPool defaultPool = ClassPool.getDefault();
-        classPool = new ClassPool(defaultPool);
-        classPool.importPackage("java.sql");
-        classPool.childFirstLookup = true;
-
-        ourInstrumentation.addTransformer(new HikariClassTransformer(agentArgs), false);
+        this.scanClasses = new HashSet<>();
+        for (String scanClass : scanClasses)
+        {
+            this.scanClasses.add(scanClass.replace('.', '/'));
+        }
+                
+        this.classType = classType;
     }
 
     /** {@inheritDoc} */
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer)
             throws IllegalClassFormatException
     {
-        if (!className.startsWith(sniffPackage))
+        if (classType == UNDEFINED || !scanClasses.contains(className))
         {
             return classfileBuffer;
+        }
+
+        if (classPool == null)
+        {
+            classPool = new ClassPool();
+            classPool.appendClassPath(new LoaderClassPath(loader));
         }
 
         try
         {
             ClassFile classFile = new ClassFile(new DataInputStream(new ByteArrayInputStream(classfileBuffer)));
-            if (classFile.isInterface())
+
+            LOGGER.info("Instrumenting class {}", className);
+
+            switch (classType)
             {
+            case CONNECTION:
+                return transformBaseConnection(classFile);
+            case CONNECTION_SUBCLASS:
+                return transformConnectionSubclass(classFile);
+            case STATEMENT:
+                return transformBaseClass(classFile, "com.zaxxer.hikari.proxy.StatementProxy", "com.zaxxer.hikari.proxy.IHikariStatementProxy");
+            case STATEMENT_SUBCLASS:
+                return transformClass(classFile, "com.zaxxer.hikari.proxy.StatementProxy");
+            case PREPARED_STATEMENT:
+                return transformBaseClass(classFile, "com.zaxxer.hikari.proxy.PreparedStatementProxy", "com.zaxxer.hikari.proxy.IHikariStatementProxy");
+            case PREPARED_STATEMENT_SUBCLASS:
+                return transformClass(classFile, "com.zaxxer.hikari.proxy.PreparedStatementProxy");
+            case CALLABLE_STATEMENT:
+                return transformBaseClass(classFile, "com.zaxxer.hikari.proxy.CallableStatementProxy", "com.zaxxer.hikari.proxy.IHikariStatementProxy");
+            case CALLABLE_STATEMENT_SUBCLASS:
+                return transformClass(classFile, "com.zaxxer.hikari.proxy.CallableStatementProxy");
+            case RESULTSET:
+                return transformBaseClass(classFile, "com.zaxxer.hikari.proxy.ResultSetProxy", "com.zaxxer.hikari.proxy.IHikariResultSetProxy");
+            case RESULTSET_SUBCLASS:
+                return transformClass(classFile, "com.zaxxer.hikari.proxy.ResultSetProxy");
+            default:
+                // None of the interfaces we care about were found, so just return the class file buffer
                 return classfileBuffer;
             }
-
-            for (String iface : classFile.getInterfaces())
-            {
-                if (!iface.startsWith("java.sql"))
-                {
-                    continue;
-                }
-
-                if (iface.equals("java.sql.Connection"))
-                {
-                    return transformConnection(classFile);
-                }
-                else if (iface.equals("java.sql.PreparedStatement"))
-                {
-                    return transformClass(classFile, "com.zaxxer.hikari.proxy.PreparedStatementProxy", "com.zaxxer.hikari.proxy.IHikariStatementProxy");
-                }
-                else if (iface.equals("java.sql.CallableStatement"))
-                {
-                    return transformClass(classFile, "com.zaxxer.hikari.proxy.CallableStatementProxy", "com.zaxxer.hikari.proxy.IHikariStatementProxy");
-                }
-                else if (iface.equals("java.sql.Statement"))
-                {
-                    return transformClass(classFile, "com.zaxxer.hikari.proxy.StatementProxy", "com.zaxxer.hikari.proxy.IHikariStatementProxy");
-                }
-                else if (iface.equals("java.sql.ResultSet"))
-                {
-                    return transformClass(classFile, "com.zaxxer.hikari.proxy.ResultSetProxy", "com.zaxxer.hikari.proxy.IHikariResultSetProxy");
-                }
-            }
-
-            // None of the interfaces we care about were found, so just return the class file buffer
-            return classfileBuffer;
         }
         catch (Exception e)
         {
             agentFailed = true;
             LOGGER.error("Error transforming class {}", className, e);
             return classfileBuffer;
+        }
+        finally
+        {
+            LOGGER.debug("--------------------------------------------------------------------------");
+            //classType = UNDEFINED;
         }
     }
 
@@ -152,7 +158,7 @@ public class HikariClassTransformer implements ClassFileTransformer
     /**
      * @param classFile
      */
-    private byte[] transformConnection(ClassFile classFile) throws Exception
+    private byte[] transformBaseConnection(ClassFile classFile) throws Exception
     {
         String className = classFile.getName();
         CtClass target = classPool.getCtClass(className);
@@ -165,11 +171,31 @@ public class HikariClassTransformer implements ClassFileTransformer
 
         copyFields(proxy, target);
         copyMethods(proxy, target, classFile);
-        mergeClassInitializers(proxy, target, classFile);
-        specialConnectionInjectCloseCheck(target);
-        injectTryCatch(target);
 
         for (CtConstructor constructor : target.getConstructors())
+        {
+            constructor.insertAfter("__init();");
+        }
+        
+        mergeClassInitializers(proxy, target, classFile);
+
+        return transformConnectionSubclass(classFile);
+    }
+
+    /**
+     * @param classFile
+     */
+    private byte[] transformConnectionSubclass(ClassFile classFile) throws Exception
+    {
+        String className = classFile.getName();
+        CtClass target = classPool.getCtClass(className);
+        CtClass proxy = classPool.get("com.zaxxer.hikari.proxy.ConnectionProxy");
+
+        overrideMethods(proxy, target, classFile);
+        injectTryCatch(target);
+        specialConnectionInjectCloseCheck(target);
+
+        for (CtConstructor constructor : target.getDeclaredConstructors())
         {
             constructor.insertAfter("__init();");
         }
@@ -180,7 +206,7 @@ public class HikariClassTransformer implements ClassFileTransformer
     /**
      * @param classFile
      */
-    private byte[] transformClass(ClassFile classFile, String proxyClassName, String intfName) throws Exception
+    private byte[] transformBaseClass(ClassFile classFile, String proxyClassName, String intfName) throws Exception
     {
         String className = classFile.getName();
         CtClass target = classPool.getCtClass(className);
@@ -194,6 +220,21 @@ public class HikariClassTransformer implements ClassFileTransformer
         copyFields(proxy, target);
         copyMethods(proxy, target, classFile);
         mergeClassInitializers(proxy, target, classFile);
+
+        return transformClass(classFile, proxyClassName);
+    }
+
+    /**
+     * @param classFile
+     */
+    private byte[] transformClass(ClassFile classFile, String proxyClassName) throws Exception
+    {
+        String className = classFile.getName();
+        CtClass target = classPool.getCtClass(className);
+
+        CtClass proxy = classPool.get(proxyClassName);
+
+        overrideMethods(proxy, target, classFile);
         injectTryCatch(target);
 
         return target.toBytecode();
@@ -208,7 +249,6 @@ public class HikariClassTransformer implements ClassFileTransformer
         {
             if (field.getAnnotation(HikariInject.class) == null)
             {
-                LOGGER.debug("Skipped field {}", field.getName());
                 continue;
             }
 
@@ -228,7 +268,6 @@ public class HikariClassTransformer implements ClassFileTransformer
         {
             if (method.getAnnotation(HikariInject.class) == null)
             {
-                LOGGER.debug("Skipped method {}", method.getName());
                 continue;
             }
 
@@ -253,6 +292,39 @@ public class HikariClassTransformer implements ClassFileTransformer
             copy.getMethodInfo().addAttribute(attr);
             targetClass.addMethod(copy);
             LOGGER.debug("Copied method {}.{} to {}", method.getDeclaringClass().getSimpleName(), method.getName(), targetClass.getSimpleName());
+        }
+    }
+
+    private void overrideMethods(CtClass srcClass, CtClass targetClass, ClassFile targetClassFile) throws Exception
+    {
+        ConstPool constPool = targetClassFile.getConstPool();
+        AnnotationsAttribute attr = new AnnotationsAttribute(constPool, AnnotationsAttribute.visibleTag);
+        Annotation annotation = new Annotation("com.zaxxer.hikari.javassist.HikariOverride", constPool);
+        attr.setAnnotation(annotation);
+
+        for (CtMethod method : srcClass.getDeclaredMethods())
+        {
+            if (method.getAnnotation(HikariOverride.class) == null)
+            {
+                continue;
+            }
+
+            try
+            {
+                CtMethod destMethod = targetClass.getDeclaredMethod(method.getName(), method.getParameterTypes());
+                LOGGER.debug("Rename method {}{} to __{}", destMethod.getName(), destMethod.getSignature(), destMethod.getName());
+                destMethod.setName("__" + destMethod.getName());
+                destMethod.getMethodInfo().addAttribute(attr);
+                
+                CtMethod copy = CtNewMethod.copy(method, targetClass, null);
+                copy.getMethodInfo().addAttribute(attr);
+                targetClass.addMethod(copy);
+                LOGGER.debug("Override method {}.{} in {}", method.getDeclaringClass().getSimpleName(), method.getName(), targetClass.getSimpleName());
+            }
+            catch (NotFoundException nfe)
+            {
+                continue;
+            }
         }
     }
 
@@ -291,7 +363,9 @@ public class HikariClassTransformer implements ClassFileTransformer
         for (CtMethod method : targetClass.getDeclaredMethods())
         {
             if ((method.getModifiers() & Modifier.PUBLIC) != Modifier.PUBLIC ||  // only public methods
-                method.getAnnotation(HikariInject.class) != null)                // ignore methods we've injected, they already try..catch
+                (method.getModifiers() & Modifier.STATIC) == Modifier.STATIC ||  // no static methods
+                method.getAnnotation(HikariInject.class) != null ||
+                method.getAnnotation(HikariOverride.class) != null) // ignore methods we've injected, they already try..catch
             {
                 continue;
             }
@@ -306,7 +380,7 @@ public class HikariClassTransformer implements ClassFileTransformer
                 if ("java.sql.SQLException".equals(exception.getName()))         // only add try..catch to methods throwing SQLException
                 {
                     LOGGER.debug("Injecting try..catch into {}{}", method.getName(), method.getSignature());
-                    method.addCatch("throw checkException($e);", exception);
+                    method.addCatch("throw _checkException($e);", exception);
                     break;
                 }
             }
@@ -337,13 +411,5 @@ public class HikariClassTransformer implements ClassFileTransformer
                 }
             }
         }
-    }
-
-    /**
-     * 
-     */
-    static void unregisterInstrumenation()
-    {
-        ourInstrumentation.removeTransformer(transformer);
     }
 }

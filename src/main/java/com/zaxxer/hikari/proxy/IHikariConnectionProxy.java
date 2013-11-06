@@ -28,26 +28,26 @@ import com.zaxxer.hikari.HikariPool;
  */
 public interface IHikariConnectionProxy
 {
-    void unclose();
+    void _unclose();
 
     void __close() throws SQLException;
 
-    void unregisterStatement(Object statement);
+    void _unregisterStatement(Object statement);
 
-    SQLException checkException(SQLException sqle);
+    SQLException _checkException(SQLException sqle);
 
-    boolean isBrokenConnection();
+    boolean _isBrokenConnection();
 
-    long getCreationTime();
+    long _getCreationTime();
 
-    long getLastAccess();
+    long _getLastAccess();
 
-    void markLastAccess();
+    void _markLastAccess();
 
-    void setParentPool(HikariPool parentPool);
+    void _setParentPool(HikariPool parentPool);
 
     Connection getDelegate();
 
     /* Leak Detection API */
-    void captureStack(long leakThreshold, Timer houseKeepingTimer);
+    void _captureStack(long leakThreshold, Timer houseKeepingTimer);
 }

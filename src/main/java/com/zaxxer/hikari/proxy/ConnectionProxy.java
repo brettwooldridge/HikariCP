@@ -29,6 +29,7 @@ import java.util.TimerTask;
 
 import com.zaxxer.hikari.HikariPool;
 import com.zaxxer.hikari.javassist.HikariInject;
+import com.zaxxer.hikari.javassist.HikariOverride;
 
 /**
  * This is the proxy class for java.sql.Connection.  It is used in
@@ -50,20 +51,21 @@ public class ConnectionProxy implements IHikariConnectionProxy
 {
     private static ProxyFactory PROXY_FACTORY;
 
-    @HikariInject private static final Set<String> SQL_ERRORS;
+    @HikariInject protected static final Set<String> SQL_ERRORS;
 
-    @HikariInject private ArrayList<Statement> _openStatements;
-    @HikariInject private volatile boolean _isClosed;
-    @HikariInject private HikariPool _parentPool;
+    @HikariInject protected volatile boolean _isClosed;
+
+    @HikariInject protected ArrayList<Statement> _openStatements;
+    @HikariInject protected HikariPool _parentPool;
     
     protected final Connection delegate;
 
-    @HikariInject private volatile boolean _forceClose;
-    @HikariInject private long _creationTime;
-    @HikariInject private long _lastAccess;
+    @HikariInject protected volatile boolean _forceClose;
+    @HikariInject protected long _creationTime;
+    @HikariInject protected long _lastAccess;
 
-    @HikariInject private StackTraceElement[] _stackTrace;
-    @HikariInject private TimerTask _leakTask;
+    @HikariInject protected StackTraceElement[] _stackTrace;
+    @HikariInject protected TimerTask _leakTask;
 
     // static initializer
     static
@@ -86,7 +88,7 @@ public class ConnectionProxy implements IHikariConnectionProxy
     }
 
     @HikariInject 
-    public void unregisterStatement(Object statement)
+    public void _unregisterStatement(Object statement)
     {
         // If the connection is not closed.  If it is closed, it means this is being
         // called back as a result of the close() method below in which case we
@@ -98,37 +100,37 @@ public class ConnectionProxy implements IHikariConnectionProxy
     }
 
     @HikariInject 
-    public long getCreationTime()
+    public long _getCreationTime()
     {
         return _creationTime;
     }
 
     @HikariInject 
-    public long getLastAccess()
+    public long _getLastAccess()
     {
         return _lastAccess;
     }
 
     @HikariInject 
-    public void markLastAccess()
+    public void _markLastAccess()
     {
         this._lastAccess = System.currentTimeMillis();
     }
 
     @HikariInject
-    public void setParentPool(HikariPool parentPool)
+    public void _setParentPool(HikariPool parentPool)
     {
         this._parentPool = parentPool;
     }
 
     @HikariInject 
-    public void unclose()
+    public void _unclose()
     {
         _isClosed = false;
     }
 
     @HikariInject 
-    public void captureStack(long leakDetectionThreshold, Timer scheduler)
+    public void _captureStack(long leakDetectionThreshold, Timer scheduler)
     {
         StackTraceElement[] trace = Thread.currentThread().getStackTrace();
         _stackTrace = new StackTraceElement[trace.length - 4];
@@ -139,13 +141,13 @@ public class ConnectionProxy implements IHikariConnectionProxy
     }
 
     @HikariInject 
-    public boolean isBrokenConnection()
+    public boolean _isBrokenConnection()
     {
         return _forceClose;
     }
 
     @HikariInject 
-    public SQLException checkException(SQLException sqle)
+    public SQLException _checkException(SQLException sqle)
     {
         String sqlState = sqle.getSQLState();
         _forceClose |= (sqlState != null && (sqlState.startsWith("08") || SQL_ERRORS.contains(sqlState)));
@@ -154,14 +156,14 @@ public class ConnectionProxy implements IHikariConnectionProxy
     }
 
     @HikariInject
-    private void __init()
+    protected void __init()
     {
         _openStatements = new ArrayList<Statement>(64);
         _creationTime = _lastAccess = System.currentTimeMillis();
     }
 
     @HikariInject
-    protected void checkClosed() throws SQLException
+    protected void _checkClosed() throws SQLException
     {
         if (_isClosed)
         {
@@ -178,7 +180,7 @@ public class ConnectionProxy implements IHikariConnectionProxy
     //                   "Overridden" java.sql.Connection Methods
     // **********************************************************************
 
-    @HikariInject
+    @HikariOverride
     public void close() throws SQLException
     {
         if (!_isClosed)
@@ -200,7 +202,7 @@ public class ConnectionProxy implements IHikariConnectionProxy
             }
             catch (SQLException e)
             {
-                throw checkException(e);
+                throw _checkException(e);
             }
             finally
             {
@@ -210,225 +212,225 @@ public class ConnectionProxy implements IHikariConnectionProxy
         }
     }
 
-    @HikariInject
+    @HikariOverride
     public boolean isClosed() throws SQLException
     {
         return _isClosed;
     }
 
-    @HikariInject
+    @HikariOverride
     public Statement createStatement() throws SQLException
     {
-        checkClosed();
+        _checkClosed();
         try
         {
             Statement statementProxy = __createStatement();
-            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
+            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
             return statementProxy;
         }
         catch (SQLException e)
         {
-            throw checkException(e);
+            throw _checkException(e);
         }
     }
 
-    @HikariInject
+    @HikariOverride
     public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException
     {
-        checkClosed();
+        _checkClosed();
         try
         {
             Statement statementProxy = __createStatement(resultSetType, resultSetConcurrency);
-            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
+            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
             return statementProxy;
         }
         catch (SQLException e)
         {
-            throw checkException(e);
+            throw _checkException(e);
         }
     }
 
-    @HikariInject
+    @HikariOverride
     public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
     {
-        checkClosed();
+        _checkClosed();
         try
         {
             Statement statementProxy = __createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
-            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
+            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
             return statementProxy;
         }
         catch (SQLException e)
         {
-            throw checkException(e);
+            throw _checkException(e);
         }
     }
 
-    @HikariInject
+    @HikariOverride
     public CallableStatement prepareCall(String sql) throws SQLException
     {
-        checkClosed();
+        _checkClosed();
         try
         {
             CallableStatement statementProxy = __prepareCall(sql);
-            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
+            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
             return statementProxy;
         }
         catch (SQLException e)
         {
-            throw checkException(e);
+            throw _checkException(e);
         }
     }
 
-    @HikariInject
+    @HikariOverride
     public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException
     {
-        checkClosed();
+        _checkClosed();
         try
         {
             CallableStatement statementProxy = __prepareCall(sql, resultSetType, resultSetConcurrency);
-            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
+            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
             return statementProxy;
         }
         catch (SQLException e)
         {
-            throw checkException(e);
+            throw _checkException(e);
         }
     }
 
-    @HikariInject
+    @HikariOverride
     public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
     {
-        checkClosed();
+        _checkClosed();
         try
         {
             CallableStatement statementProxy = __prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
-            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
+            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
             return statementProxy;
         }
         catch (SQLException e)
         {
-            throw checkException(e);
+            throw _checkException(e);
         }
     }
 
-    @HikariInject
+    @HikariOverride
     public PreparedStatement prepareStatement(String sql) throws SQLException
     {
-        checkClosed();
+        _checkClosed();
         try
         {
             PreparedStatement statementProxy = __prepareStatement(sql);
-            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
+            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
             return statementProxy;
         }
         catch (SQLException e)
         {
-            throw checkException(e);
+            throw _checkException(e);
         }
     }
 
-    @HikariInject
+    @HikariOverride
     public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException
     {
-        checkClosed();
+        _checkClosed();
         try
         {
             PreparedStatement statementProxy = __prepareStatement(sql, autoGeneratedKeys);
-            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
+            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
             return statementProxy;
         }
         catch (SQLException e)
         {
-            throw checkException(e);
+            throw _checkException(e);
         }
     }
 
-    @HikariInject
+    @HikariOverride
     public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException
     {
-        checkClosed();
+        _checkClosed();
         try
         {
             PreparedStatement statementProxy = __prepareStatement(sql, resultSetType, resultSetConcurrency);
-            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
+            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
             return statementProxy;
         }
         catch (SQLException e)
         {
-            throw checkException(e);
+            throw _checkException(e);
         }
     }
 
-    @HikariInject
+    @HikariOverride
     public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
     {
-        checkClosed();
+        _checkClosed();
         try
         {
             PreparedStatement statementProxy = __prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
-            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
+            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
             return statementProxy;
         }
         catch (SQLException e)
         {
-            throw checkException(e);
+            throw _checkException(e);
         }
     }
 
-    @HikariInject
+    @HikariOverride
     public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException
     {
-        checkClosed();
+        _checkClosed();
         try
         {
             PreparedStatement statementProxy = __prepareStatement(sql, columnIndexes);
-            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
+            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
             return statementProxy;
         }
         catch (SQLException e)
         {
-            throw checkException(e);
+            throw _checkException(e);
         }
     }
 
-    @HikariInject
+    @HikariOverride
     public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException
     {
-        checkClosed();
+        _checkClosed();
         try
         {
             PreparedStatement statementProxy = __prepareStatement(sql, columnNames);
-            ((IHikariStatementProxy) statementProxy).setConnectionProxy(this);
+            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
             _openStatements.add(statementProxy);
 
             return statementProxy;
         }
         catch (SQLException e)
         {
-            throw checkException(e);
+            throw _checkException(e);
         }
     }
 
@@ -445,7 +447,7 @@ public class ConnectionProxy implements IHikariConnectionProxy
         }
         catch (SQLException e)
         {
-            throw checkException(e);
+            throw _checkException(e);
         }
     }
 

@@ -6,7 +6,7 @@ public interface IHikariStatementProxy
 {
     void close() throws SQLException;
 
-    void setConnectionProxy(IHikariConnectionProxy connectionProxy);
+    void _setConnectionProxy(IHikariConnectionProxy connectionProxy);
 
-    SQLException checkException(SQLException e);
+    SQLException _checkException(SQLException e);
 }

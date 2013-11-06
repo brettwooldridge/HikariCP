@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import com.zaxxer.hikari.javassist.HikariInject;
+import com.zaxxer.hikari.javassist.HikariOverride;
 
 /**
  *
@@ -31,7 +32,7 @@ public class PreparedStatementProxy implements IHikariStatementProxy
 {
     private static ProxyFactory PROXY_FACTORY;
 
-    @HikariInject private IHikariConnectionProxy _connection;
+    @HikariInject protected IHikariConnectionProxy _connection;
     
     protected Statement delegate;
 
@@ -47,22 +48,35 @@ public class PreparedStatementProxy implements IHikariStatementProxy
     }
 
     @HikariInject
-    public void setConnectionProxy(IHikariConnectionProxy connection)
+    public void _setConnectionProxy(IHikariConnectionProxy connection)
     {
         this._connection = connection;
     }
 
     @HikariInject
-    public SQLException checkException(SQLException e)
+    public SQLException _checkException(SQLException e)
     {
-        return _connection.checkException(e);
+        return _connection._checkException(e);
     }
 
     // **********************************************************************
     //              Overridden java.sql.PreparedStatement Methods
     // **********************************************************************
+    
+    @HikariOverride
+    public void close() throws SQLException
+    {
+        _connection._unregisterStatement(this);
+        try
+        {
+            __close();
+        }
+        catch (SQLException e)
+        {
+            throw _checkException(e);
+        }
+    }
 
-    @HikariInject
     public ResultSet executeQuery() throws SQLException
     {
     	try
@@ -73,30 +87,15 @@ public class PreparedStatementProxy implements IHikariStatementProxy
     			return null;
     		}
 
-    		resultSet.setProxyStatement(this);
+    		resultSet._setProxyStatement(this);
 	        return (ResultSet) resultSet;
     	}
     	catch (SQLException e)
     	{
-    		throw checkException(e);
+    		throw _checkException(e);
     	}
     }
 
-    @HikariInject
-    public void close() throws SQLException
-    {
-        _connection.unregisterStatement(this);
-        try
-        {
-            __close();
-        }
-        catch (SQLException e)
-        {
-            throw checkException(e);
-        }
-    }
-
-    @HikariInject
     public ResultSet executeQuery(String sql) throws SQLException
     {
         try
@@ -107,16 +106,15 @@ public class PreparedStatementProxy implements IHikariStatementProxy
                 return null;
             }
 
-            resultSet.setProxyStatement(this);  
+            resultSet._setProxyStatement(this);  
             return (ResultSet) resultSet;
         }
         catch (SQLException e)
         {
-            throw checkException(e);
+            throw _checkException(e);
         }
     }
 
-    @HikariInject
     public ResultSet getGeneratedKeys() throws SQLException
     {
         try
@@ -127,12 +125,12 @@ public class PreparedStatementProxy implements IHikariStatementProxy
                 return null;
             }
 
-            resultSet.setProxyStatement(this);  
+            resultSet._setProxyStatement(this);  
             return (ResultSet) resultSet;
         }
         catch (SQLException e)
         {
-            throw checkException(e);
+            throw _checkException(e);
         }
     }
 
