@@ -3,7 +3,7 @@
 
 There is nothing [faster](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks).<sup>1</sup>  There is 
 nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctness).  HikariCP is a "zero-overhead"
-production-quality connection pool.
+production-quality connection pool.  Coming in at roughly 50Kb, the library is extremely light.
 
 Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations
 were performed in ***8ms*** on a commodity PC.<sup>2</sup>  The next fastest connection pool (BoneCP) was ***5298ms***.
