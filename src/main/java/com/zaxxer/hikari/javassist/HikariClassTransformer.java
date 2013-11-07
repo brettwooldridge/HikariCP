@@ -377,6 +377,7 @@ public class HikariClassTransformer implements ClassFileTransformer
         for (CtMethod method : targetClass.getDeclaredMethods())
         {
             if ((method.getModifiers() & Modifier.PUBLIC) != Modifier.PUBLIC ||  // only public methods
+                (method.getModifiers() & Modifier.STATIC) == Modifier.STATIC ||
                 method.getAnnotation(HikariInject.class) != null ||
                 method.getAnnotation(HikariOverride.class) != null)  // ignore methods we've injected, they already try..catch
             {
