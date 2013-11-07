@@ -17,9 +17,6 @@
 package com.zaxxer.hikari.proxy;
 
 import java.sql.CallableStatement;
-import java.sql.SQLException;
-
-import com.zaxxer.hikari.javassist.HikariOverride;
 
 /**
  *
@@ -36,20 +33,6 @@ public abstract class CallableStatementProxy extends PreparedStatementProxy impl
     //               Overridden java.sql.CallableStatement Methods
     // **********************************************************************
 
-    @HikariOverride
-    public void close() throws SQLException
-    {
-        _connection._unregisterStatement(this);
-        try
-        {
-            __close();
-        }
-        catch (SQLException e)
-        {
-            throw _checkException(e);
-        }
-    }
-    
     // ***********************************************************************
     // These methods contain code we do not want injected into the actual
     // java.sql.Connection implementation class.  These methods are only

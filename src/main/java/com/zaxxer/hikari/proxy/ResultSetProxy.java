@@ -42,7 +42,8 @@ public abstract class ResultSetProxy implements IHikariResultSetProxy, ResultSet
     {
         return _statement._checkException(e);
     }
-    
+
+    @HikariInject
     public void _setProxyStatement(IHikariStatementProxy statement)
     {
         this._statement = statement;

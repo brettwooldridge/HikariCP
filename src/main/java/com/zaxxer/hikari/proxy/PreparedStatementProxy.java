@@ -20,6 +20,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import com.zaxxer.hikari.javassist.HikariOverride;
+
 /**
  *
  * @author Brett Wooldridge
@@ -35,19 +37,18 @@ public abstract class PreparedStatementProxy extends StatementProxy implements I
     //              Overridden java.sql.PreparedStatement Methods
     // **********************************************************************
     
+    @HikariOverride
     public ResultSet executeQuery() throws SQLException
     {
     	try
     	{
-	        ResultSet rs = ((PreparedStatement) delegate).executeQuery();
-    		if (rs == null)
+	        ResultSet rs = __executeQuery();
+    		if (rs != null)
     		{
-    			return null;
+    		    ((IHikariResultSetProxy) rs)._setProxyStatement(this);
     		}
 
-    		IHikariResultSetProxy resultSet = (IHikariResultSetProxy) PROXY_FACTORY.getProxyResultSet(this, rs);
-    		resultSet._setProxyStatement(this);
-	        return (ResultSet) resultSet;
+	        return rs;
     	}
     	catch (SQLException e)
     	{
@@ -62,4 +63,13 @@ public abstract class PreparedStatementProxy extends StatementProxy implements I
     // delegating proxies are used.
     // ***********************************************************************
 
+    public ResultSet __executeQuery() throws SQLException
+    {
+        ResultSet resultSet = ((PreparedStatement) delegate).executeQuery();
+        if (resultSet != null)
+        {
+            resultSet = PROXY_FACTORY.getProxyResultSet(this, resultSet);
+        }
+        return resultSet;
+    }
 }

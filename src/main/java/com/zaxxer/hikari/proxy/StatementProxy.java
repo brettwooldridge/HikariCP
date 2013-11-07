@@ -35,7 +35,7 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
 
     @HikariInject protected boolean _isClosed;
 
-    protected Statement delegate;
+    protected final Statement delegate;
 
     static
     {
@@ -89,14 +89,14 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
         }
     }
 
+    @HikariOverride
     public ResultSet executeQuery(String sql) throws SQLException
     {
         try
         {
-            ResultSet rs = delegate.executeQuery(sql);
-            if (rs == null)
+            ResultSet rs = __executeQuery(sql);
+            if (rs != null)
             {
-                rs = PROXY_FACTORY.getProxyResultSet(this, rs);
                 ((IHikariResultSetProxy) rs)._setProxyStatement(this);
             }
 
@@ -108,14 +108,14 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
         }
     }
 
+    @HikariOverride
     public ResultSet getResultSet() throws SQLException
     {
         try
         {
-            ResultSet rs = delegate.getResultSet();
+            ResultSet rs = __getResultSet();
             if (rs != null)
             {
-                rs = PROXY_FACTORY.getProxyResultSet(this, rs);
                 ((IHikariResultSetProxy) rs)._setProxyStatement(this);
             }
 
@@ -127,14 +127,14 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
         }
     }
 
+    @HikariOverride
     public ResultSet getGeneratedKeys() throws SQLException
     {
         try
         {
-            ResultSet rs = delegate.getGeneratedKeys();
-            if (rs == null)
+            ResultSet rs = __getGeneratedKeys();
+            if (rs != null)
             {
-                rs = PROXY_FACTORY.getProxyResultSet(this, rs);
                 ((IHikariResultSetProxy) rs)._setProxyStatement(this);
             }
 
@@ -158,7 +158,7 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
     // delegating proxies are used.
     // ***********************************************************************
 
-    protected static void __static()
+    private static void __static()
     {
         if (PROXY_FACTORY == null)
         {
@@ -174,5 +174,35 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
         }
 
         delegate.close();
+    }
+
+    public ResultSet __executeQuery(String sql) throws SQLException
+    {
+        ResultSet resultSet = delegate.executeQuery(sql);
+        if (resultSet != null)
+        {
+            resultSet = PROXY_FACTORY.getProxyResultSet(this, resultSet);
+        }
+        return resultSet;
+    }
+
+    public ResultSet __getGeneratedKeys() throws SQLException
+    {
+        ResultSet generatedKeys = delegate.getGeneratedKeys();
+        if (generatedKeys != null)
+        {
+            generatedKeys = PROXY_FACTORY.getProxyResultSet(this, generatedKeys);
+        }
+        return generatedKeys;
+    }
+
+    public ResultSet __getResultSet() throws SQLException
+    {
+        ResultSet resultSet = delegate.getResultSet();
+        if (resultSet != null)
+        {
+            resultSet = PROXY_FACTORY.getProxyResultSet(this, resultSet);
+        }
+        return resultSet;
     }
 }
