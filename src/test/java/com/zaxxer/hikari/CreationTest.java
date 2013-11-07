@@ -34,7 +34,7 @@ import org.junit.Test;
  */
 public class CreationTest
 {
-    //@Test
+    @Test
     public void testCreate() throws SQLException
     {
         HikariConfig config = new HikariConfig();
@@ -42,7 +42,7 @@ public class CreationTest
         config.setMaximumPoolSize(1);
         config.setAcquireIncrement(1);
         config.setConnectionTestQuery("VALUES 1");
-        // config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
 //        config.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
 //        config.addDataSourceProperty("username", "brettw");
@@ -50,11 +50,11 @@ public class CreationTest
 //        config.addDataSourceProperty("databaseName", "netld");
 //        config.addDataSourceProperty("serverName", "localhost");
 
-        config.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
-        config.addDataSourceProperty("user", "root");
-        config.addDataSourceProperty("password", "");
-        config.addDataSourceProperty("databaseName", "netld");
-        config.addDataSourceProperty("serverName", "localhost");
+//        config.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
+//        config.addDataSourceProperty("user", "root");
+//        config.addDataSourceProperty("password", "");
+//        config.addDataSourceProperty("databaseName", "netld");
+//        config.addDataSourceProperty("serverName", "localhost");
 
         HikariDataSource ds = new HikariDataSource(config);
 
@@ -85,7 +85,7 @@ public class CreationTest
         Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
     }
 
-    //@Test
+    @Test
     public void testMaxLifetime() throws Exception
     {
         HikariConfig config = new HikariConfig();
@@ -125,7 +125,7 @@ public class CreationTest
         Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
     }
 
-    //@Test
+    @Test
     public void testDoubleClose() throws Exception
     {
         HikariConfig config = new HikariConfig();
