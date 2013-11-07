@@ -21,6 +21,35 @@ Or look at this:
 ![](http://github.com/brettwooldridge/HikariCP/wiki/50Connection_MixedBench.png)
 
 ------------------------------
+#### Driver Support ####
+HikariCP has two modes of operation: *Delegation* and *Instrumentation*.  *Instrumentation* is approximately 20-40% more
+performant, but both are exceedingly fast.
+
+##### Delegation #####
+Delegation mode is supported for *all* JDBC drivers.
+
+##### Instrumentation #####
+Instrumentation mode is supported for specific JDBC drivers.  If your favorite database is not supported, drop us a note
+in the [Google group]() and we'll try to add support for it.  Below is a table of drivers that are supported and their
+status:
+
+| Driver            | Version<sup>1</sup>      |  Status   |  DataSource<sup>2</sup>  | 
+| ----------------- | --------------:| --------- | ------------ |
+| Derby             | 10.10.1.1      | Tested    | org.apache.derby.jdbc.ClientDataSource40      |
+| jTDS              | 1.3.1          | Untested  | net.sourceforge.jtds.jdbcx.JtdsDataSource     |
+| HSQLDB            | 2.3.1          | Tested    | org.hsqldb.jdbc.JDBCDataSource                |
+| MariaDB           | 1.1.5          | Tested    | org.mariadb.jdbc.MySQLDataSource              |
+| MySQL Connector/J | 5.1.56         | Tested    | com.mysql.jdbc.jdbc2.optional.MysqlDataSource |
+| Oracle            | 12.1.0.1       | Untested  | oracle.jdbc.pool.OracleDataSource             |
+| PostgreSQL        | 9.2-1003.jdbc4 | Tested    | org.postgresql.ds.PGSimpleDataSource          |
+
+<sub><sup>1</sup>Other driver versions for a given database will *probably* work, because class names are rarely changed.  But
+if it does not work, you will known quickly because HikariCP will likely fail to start.  In this case, you can simply
+force *delegation mode* (see properties below).</sub><br/>
+<sub><sup>2</sup>The *DataSource* is specified because it is by the specified DataSource name that HikariCP looks up the instrumentation
+information in the internal codex.</sub>
+
+------------------------------
 
 #### Configuration (knobs, baby!) ####
 The following are the various properties that can be configured in the pool, their behavior,
