@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
    <modelVersion>4.0.0</modelVersion>
@@ -91,11 +92,13 @@
          <artifactId>maven-bundle-plugin</artifactId>
          <version>2.3.7</version>
          <type>maven-plugin</type>
+         <scope>provided</scope>
       </dependency>
       <dependency>
          <groupId>org.hsqldb</groupId>
          <artifactId>hsqldb</artifactId>
          <version>2.3.0</version>
+         <scope>test</scope>
       </dependency>
       <dependency>
          <groupId>com.sun</groupId>
@@ -108,7 +111,6 @@
          <groupId>org.javassist</groupId>
          <artifactId>javassist</artifactId>
          <version>3.18.1-GA</version>
-         <type>bundle</type>
       </dependency>
       <dependency>
          <groupId>net.snaq</groupId>
