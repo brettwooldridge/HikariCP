@@ -163,8 +163,7 @@ This is a design philosophy.  The HikariCP design asthetic is Minimalism.
 We're not going to (overly) question the design decisions of other pools, but we will say
 that some other pools seem to implement a lot of "gimmicks" that proportedly improve
 performance.  HikariCP achieves high-performance even in pools beyond realistic deployment
-sizes.  Either these "gimmicks" are a case of premature optimization, poor design, or lack
-of understanding of how to leaverage what the JVM JIT can do to full effect.
+sizes.
 
 In keeping with the *simple is better* or *less is more* design philosophy, some knobs and 
 features are intentionally left out.  Here are two, and the rationale.
