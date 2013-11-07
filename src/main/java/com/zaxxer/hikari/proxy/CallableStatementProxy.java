@@ -17,6 +17,7 @@
 package com.zaxxer.hikari.proxy;
 
 import java.sql.CallableStatement;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -83,12 +84,13 @@ public class CallableStatementProxy implements IHikariStatementProxy
     {
         try
         {
-            IHikariResultSetProxy resultSet = (IHikariResultSetProxy) __executeQuery();
-            if (resultSet == null)
+            ResultSet rs = ((PreparedStatement) delegate).executeQuery();
+            if (rs == null)
             {
                 return null;
             }
 
+            IHikariResultSetProxy resultSet = (IHikariResultSetProxy) PROXY_FACTORY.getProxyResultSet(this, rs);
             resultSet._setProxyStatement(this);
             return (ResultSet) resultSet;
         }
@@ -102,13 +104,14 @@ public class CallableStatementProxy implements IHikariStatementProxy
     {
         try
         {
-            IHikariResultSetProxy resultSet = (IHikariResultSetProxy) __executeQuery(sql);
-            if (resultSet == null)
+            ResultSet rs = delegate.executeQuery(sql);
+            if (rs == null)
             {
                 return null;
             }
 
-            resultSet._setProxyStatement(this);  
+            ResultSet resultSet =  PROXY_FACTORY.getProxyResultSet(this, rs);
+            ((IHikariResultSetProxy) resultSet)._setProxyStatement(this);  
             return (ResultSet) resultSet;
         }
         catch (SQLException e)
@@ -121,19 +124,25 @@ public class CallableStatementProxy implements IHikariStatementProxy
     {
         try
         {
-            IHikariResultSetProxy resultSet = (IHikariResultSetProxy) __getGeneratedKeys();
-            if (resultSet == null)
+            ResultSet rs = delegate.getGeneratedKeys();
+            if (rs == null)
             {
                 return null;
             }
 
-            resultSet._setProxyStatement(this);  
-            return (ResultSet) resultSet;
+            ResultSet resultSet = PROXY_FACTORY.getProxyResultSet(this, rs);
+            ((IHikariResultSetProxy) resultSet)._setProxyStatement(this);   
+            return resultSet;
         }
         catch (SQLException e)
         {
             throw _checkException(e);
         }
+    }
+
+    public Connection getConnection()
+    {
+        return (Connection) _connection;
     }
 
     // ***********************************************************************
@@ -142,12 +151,6 @@ public class CallableStatementProxy implements IHikariStatementProxy
     // used when instrumentation is not available and "conventional" Javassist
     // delegating proxies are used.
     // ***********************************************************************
-
-    public ResultSet __executeQuery() throws SQLException
-    {
-        ResultSet resultSet = ((PreparedStatement) delegate).executeQuery();
-        return PROXY_FACTORY.getProxyResultSet(this, resultSet);
-    }
 
     private static void __static()
     {
@@ -165,17 +168,5 @@ public class CallableStatementProxy implements IHikariStatementProxy
         }
 
         delegate.close();        
-    }
-
-    public ResultSet __executeQuery(String sql) throws SQLException
-    {
-        ResultSet resultSet = delegate.executeQuery(sql);
-        return PROXY_FACTORY.getProxyResultSet(this, resultSet);
-    }
-
-    public ResultSet __getGeneratedKeys() throws SQLException
-    {
-        ResultSet generatedKeys = delegate.getGeneratedKeys();
-        return PROXY_FACTORY.getProxyResultSet(this, generatedKeys);
     }
 }
