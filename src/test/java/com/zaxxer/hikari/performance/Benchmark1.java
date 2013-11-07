@@ -167,6 +167,7 @@ public class Benchmark1
         config.setIdleTimeout(TimeUnit.MINUTES.toMillis(30));
         config.setJdbc4ConnectionTest(true);
         config.setDataSourceClassName("com.zaxxer.hikari.performance.StubDataSource");
+        config.setUseInstrumentation(true);
 
         HikariDataSource ds = new HikariDataSource(config);
         return ds;
