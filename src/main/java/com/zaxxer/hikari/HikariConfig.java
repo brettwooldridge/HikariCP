@@ -51,6 +51,8 @@ public final class HikariConfig implements HikariConfigMBean
 
     private Properties driverProperties;
 
+    private boolean isUseInstrumentation;
+
     /**
      * Default constructor
      */
@@ -65,6 +67,7 @@ public final class HikariConfig implements HikariConfigMBean
         idleTimeout = TimeUnit.MINUTES.toMillis(10);
         isAutoCommit = true;
         isJdbc4connectionTest = true;
+        isUseInstrumentation = true;
         minPoolSize = 10;
         maxPoolSize = 60;
         maxLifetime = TimeUnit.MINUTES.toMillis(30);
@@ -238,6 +241,16 @@ public final class HikariConfig implements HikariConfigMBean
     public void setLeakDetectionThreshold(long leakDetectionThresholdMs)
     {
         this.leakDetectionThreshold = leakDetectionThresholdMs; 
+    }
+
+    public boolean isUseInstrumentation()
+    {
+        return isUseInstrumentation;
+    }
+
+    public void setUseInstrumentation(boolean useInstrumentation)
+    {
+        this.isUseInstrumentation = useInstrumentation;
     }
 
     /** {@inheritDoc} */

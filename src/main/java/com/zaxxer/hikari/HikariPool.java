@@ -80,10 +80,10 @@ public final class HikariPool implements HikariPoolMBean
 
         try
         {
-            delegationProxies = !AgentRegistrationElf.loadTransformerAgent(configuration.getDataSourceClassName());
+            delegationProxies = !configuration.isUseInstrumentation() || !AgentRegistrationElf.loadTransformerAgent(configuration.getDataSourceClassName());
             if (delegationProxies)
             {
-                LOGGER.info("Falling back to Javassist delegate-based proxies.");
+                LOGGER.info("Using Javassist delegate-based proxies.");
             }
             
             Class<?> clazz = ClassLoaderUtils.loadClass(configuration.getDataSourceClassName());
