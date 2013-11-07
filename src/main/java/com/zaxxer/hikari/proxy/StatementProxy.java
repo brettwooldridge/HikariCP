@@ -33,6 +33,8 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
 
     @HikariInject protected IHikariConnectionProxy _connection;
 
+    @HikariInject protected boolean _isClosed;
+
     protected Statement delegate;
 
     static
@@ -70,6 +72,12 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
     @HikariOverride
     public void close() throws SQLException
     {
+        if (_isClosed)
+        {
+            return;
+        }
+
+        _isClosed = true;
         _connection._unregisterStatement(this);
         try
         {
