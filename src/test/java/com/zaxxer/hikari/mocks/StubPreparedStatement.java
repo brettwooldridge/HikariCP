@@ -45,6 +45,10 @@ import java.util.Calendar;
  */
 public class StubPreparedStatement extends StubStatement implements PreparedStatement
 {
+    public StubPreparedStatement(Connection connection)
+    {
+        super(connection);
+    }
 
     /** {@inheritDoc} */
     public ResultSet executeQuery(String sql) throws SQLException
@@ -187,12 +191,6 @@ public class StubPreparedStatement extends StubStatement implements PreparedStat
 
     /** {@inheritDoc} */
     public int[] executeBatch() throws SQLException
-    {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    public Connection getConnection() throws SQLException
     {
         return null;
     }

@@ -29,6 +29,12 @@ import java.sql.Statement;
 public class StubStatement implements Statement
 {
     private boolean closed;
+    private Connection connection;
+
+    public StubStatement(Connection connection)
+    {
+        this.connection = connection;
+    }
 
     /** {@inheritDoc} */
     public <T> T unwrap(Class<T> iface) throws SQLException
@@ -197,7 +203,7 @@ public class StubStatement implements Statement
     /** {@inheritDoc} */
     public Connection getConnection() throws SQLException
     {
-        return null;
+        return connection;
     }
 
     /** {@inheritDoc} */

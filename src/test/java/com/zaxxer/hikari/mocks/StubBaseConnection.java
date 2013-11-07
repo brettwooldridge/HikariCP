@@ -10,12 +10,12 @@ public abstract class StubBaseConnection implements Connection
     /** {@inheritDoc} */
     public Statement createStatement() throws SQLException
     {
-        return new StubStatement();
+        return new StubStatement(this);
     }
 
     /** {@inheritDoc} */
     public PreparedStatement prepareStatement(String sql) throws SQLException
     {
-        return new StubPreparedStatement();
+        return new StubPreparedStatement(this);
     }
 }
