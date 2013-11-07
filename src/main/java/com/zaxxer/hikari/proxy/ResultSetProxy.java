@@ -25,9 +25,9 @@ import com.zaxxer.hikari.javassist.HikariInject;
 /**
  * @author Brett Wooldridge
  */
-public class ResultSetProxy implements IHikariResultSetProxy
+public abstract class ResultSetProxy implements IHikariResultSetProxy, ResultSet
 {
-    private IHikariStatementProxy _statement;
+    @HikariInject protected IHikariStatementProxy _statement;
 
     protected final ResultSet delegate;
 

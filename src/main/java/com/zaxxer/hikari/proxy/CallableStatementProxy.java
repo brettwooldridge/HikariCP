@@ -17,50 +17,20 @@
 package com.zaxxer.hikari.proxy;
 
 import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
-import com.zaxxer.hikari.javassist.HikariInject;
 import com.zaxxer.hikari.javassist.HikariOverride;
 
 /**
  *
  * @author Brett Wooldridge
  */
-public class CallableStatementProxy implements IHikariStatementProxy
+public abstract class CallableStatementProxy extends PreparedStatementProxy implements IHikariStatementProxy, CallableStatement
 {
-    private static ProxyFactory PROXY_FACTORY;
-
-    @HikariInject protected IHikariConnectionProxy _connection;
-    
-    protected Statement delegate;
-
-    static
-    {
-        __static();
-    }
-
     protected CallableStatementProxy(ConnectionProxy connection, CallableStatement statement)
     {
-        this._connection = connection;
-        this.delegate = statement;
+        super(connection, statement);
     }
-
-    @HikariInject
-    public void _setConnectionProxy(IHikariConnectionProxy connection)
-    {
-        this._connection = connection;
-    }
-
-    @HikariInject
-    public SQLException _checkException(SQLException e)
-    {
-        return _connection._checkException(e);
-    }
-
 
     // **********************************************************************
     //               Overridden java.sql.CallableStatement Methods
@@ -80,71 +50,6 @@ public class CallableStatementProxy implements IHikariStatementProxy
         }
     }
     
-    public ResultSet executeQuery() throws SQLException
-    {
-        try
-        {
-            ResultSet rs = ((PreparedStatement) delegate).executeQuery();
-            if (rs == null)
-            {
-                return null;
-            }
-
-            IHikariResultSetProxy resultSet = (IHikariResultSetProxy) PROXY_FACTORY.getProxyResultSet(this, rs);
-            resultSet._setProxyStatement(this);
-            return (ResultSet) resultSet;
-        }
-        catch (SQLException e)
-        {
-            throw _checkException(e);
-        }
-    }
-
-    public ResultSet executeQuery(String sql) throws SQLException
-    {
-        try
-        {
-            ResultSet rs = delegate.executeQuery(sql);
-            if (rs == null)
-            {
-                return null;
-            }
-
-            ResultSet resultSet =  PROXY_FACTORY.getProxyResultSet(this, rs);
-            ((IHikariResultSetProxy) resultSet)._setProxyStatement(this);  
-            return (ResultSet) resultSet;
-        }
-        catch (SQLException e)
-        {
-            throw _checkException(e);
-        }
-    }
-
-    public ResultSet getGeneratedKeys() throws SQLException
-    {
-        try
-        {
-            ResultSet rs = delegate.getGeneratedKeys();
-            if (rs == null)
-            {
-                return null;
-            }
-
-            ResultSet resultSet = PROXY_FACTORY.getProxyResultSet(this, rs);
-            ((IHikariResultSetProxy) resultSet)._setProxyStatement(this);   
-            return resultSet;
-        }
-        catch (SQLException e)
-        {
-            throw _checkException(e);
-        }
-    }
-
-    public Connection getConnection()
-    {
-        return (Connection) _connection;
-    }
-
     // ***********************************************************************
     // These methods contain code we do not want injected into the actual
     // java.sql.Connection implementation class.  These methods are only
@@ -152,21 +57,4 @@ public class CallableStatementProxy implements IHikariStatementProxy
     // delegating proxies are used.
     // ***********************************************************************
 
-    private static void __static()
-    {
-        if (PROXY_FACTORY == null)
-        {
-            PROXY_FACTORY = JavassistProxyFactoryFactory.getProxyFactory();
-        }
-    }
-    
-    public void __close() throws SQLException
-    {
-        if (delegate.isClosed())
-        {
-            return;
-        }
-
-        delegate.close();        
-    }
 }

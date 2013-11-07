@@ -27,12 +27,11 @@ import com.zaxxer.hikari.javassist.HikariOverride;
 /**
  * @author Brett Wooldridge
  */
-public class StatementProxy implements IHikariStatementProxy
+public abstract class StatementProxy implements IHikariStatementProxy, Statement
 {
-    private static ProxyFactory PROXY_FACTORY;
+    protected static ProxyFactory PROXY_FACTORY;
 
-    @HikariInject
-    protected IHikariConnectionProxy _connection;
+    @HikariInject protected IHikariConnectionProxy _connection;
 
     protected Statement delegate;
 
@@ -57,6 +56,11 @@ public class StatementProxy implements IHikariStatementProxy
     public SQLException _checkException(SQLException e)
     {
         return _connection._checkException(e);
+    }
+
+    @HikariInject
+    public void _releaseResultSet(IHikariResultSetProxy resultSet)
+    {
     }
 
     // **********************************************************************
@@ -84,12 +88,30 @@ public class StatementProxy implements IHikariStatementProxy
             ResultSet rs = delegate.executeQuery(sql);
             if (rs == null)
             {
-                return null;
+                rs = PROXY_FACTORY.getProxyResultSet(this, rs);
+                ((IHikariResultSetProxy) rs)._setProxyStatement(this);
             }
 
-            ResultSet resultSet = PROXY_FACTORY.getProxyResultSet(this, rs);
-            ((IHikariResultSetProxy) resultSet)._setProxyStatement(this);
-            return resultSet;
+            return rs;
+        }
+        catch (SQLException e)
+        {
+            throw _checkException(e);
+        }
+    }
+
+    public ResultSet getResultSet() throws SQLException
+    {
+        try
+        {
+            ResultSet rs = delegate.getResultSet();
+            if (rs != null)
+            {
+                rs = PROXY_FACTORY.getProxyResultSet(this, rs);
+                ((IHikariResultSetProxy) rs)._setProxyStatement(this);
+            }
+
+            return rs;
         }
         catch (SQLException e)
         {
@@ -104,12 +126,11 @@ public class StatementProxy implements IHikariStatementProxy
             ResultSet rs = delegate.getGeneratedKeys();
             if (rs == null)
             {
-                return null;
+                rs = PROXY_FACTORY.getProxyResultSet(this, rs);
+                ((IHikariResultSetProxy) rs)._setProxyStatement(this);
             }
 
-            ResultSet resultSet = PROXY_FACTORY.getProxyResultSet(this, rs);
-            ((IHikariResultSetProxy) resultSet)._setProxyStatement(this);
-            return resultSet;
+            return rs;
         }
         catch (SQLException e)
         {
@@ -129,7 +150,7 @@ public class StatementProxy implements IHikariStatementProxy
     // delegating proxies are used.
     // ***********************************************************************
 
-    private static void __static()
+    protected static void __static()
     {
         if (PROXY_FACTORY == null)
         {

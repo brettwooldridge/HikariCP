@@ -263,7 +263,7 @@ public class HikariClassTransformer implements ClassFileTransformer
     {
         ConstPool constPool = targetClassFile.getConstPool();
 
-        for (CtMethod method : srcClass.getDeclaredMethods())
+        for (CtMethod method : srcClass.getMethods())
         {
             if (method.getAnnotation(HikariInject.class) == null)
             {
@@ -287,7 +287,7 @@ public class HikariClassTransformer implements ClassFileTransformer
         Annotation annotation = new Annotation("com.zaxxer.hikari.javassist.HikariOverride", constPool);
         attr.setAnnotation(annotation);
 
-        for (CtMethod method : srcClass.getDeclaredMethods())
+        for (CtMethod method : srcClass.getMethods())
         {
             if (method.getAnnotation(HikariOverride.class) == null)
             {
@@ -377,7 +377,8 @@ public class HikariClassTransformer implements ClassFileTransformer
         for (CtMethod method : targetClass.getDeclaredMethods())
         {
             if ((method.getModifiers() & Modifier.PUBLIC) != Modifier.PUBLIC ||  // only public methods
-                method.getAnnotation(HikariInject.class) != null)                // ignore methods we've injected, they already try..catch
+                method.getAnnotation(HikariInject.class) != null ||
+                method.getAnnotation(HikariOverride.class) != null)  // ignore methods we've injected, they already try..catch
             {
                 continue;
             }

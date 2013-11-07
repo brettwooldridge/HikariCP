@@ -141,7 +141,10 @@ public final class JavassistProxyFactoryFactory
         Set<String> superSigs = new HashSet<String>();
         for (CtMethod method : superClassCt.getMethods())
         {
-            superSigs.add(method.getName() + method.getSignature());
+            if ((method.getModifiers() & Modifier.ABSTRACT) != Modifier.ABSTRACT)
+            {
+                superSigs.add(method.getName() + method.getSignature());
+            }
         }
 
         methodBody = methodBody.replace("cast", primaryInterface.getName());
