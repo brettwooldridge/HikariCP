@@ -30,7 +30,7 @@ Delegation mode is supported for *all* JDBC drivers.
 
 ##### Instrumentation #####
 Instrumentation mode is supported for specific JDBC drivers.  If your favorite database is not supported, drop us a note
-in the [Google group]() and we'll try to add support for it.  Below is a table of drivers that are supported and their
+in the [Google group](https://groups.google.com/d/forum/hikari-cp) and we'll try to add support for it.  Below is a table of drivers that are supported and their
 status:
 
 | Driver            | Version<sup>1</sup>      |  Status   |  DataSource<sup>2</sup>  | 
