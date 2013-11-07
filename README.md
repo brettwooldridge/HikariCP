@@ -22,7 +22,7 @@ Or look at this:
 
 ------------------------------
 #### Driver Support ####
-HikariCP has two modes of operation: *Delegation* and *Instrumentation*.  *Instrumentation* is approximately 20-40% more
+HikariCP has two modes of operation: **Delegation** and **Instrumentation**.  *Instrumentation* is approximately 20-40% more
 performant, but both are exceedingly fast.
 
 ##### Delegation #####
@@ -43,9 +43,9 @@ status:
 | Oracle            | 12.1.0.1       | Untested  | oracle.jdbc.pool.OracleDataSource             |
 | PostgreSQL        | 9.2-1003.jdbc4 | Tested    | org.postgresql.ds.PGSimpleDataSource          |
 
-<sub><sup>1</sup>Other driver versions for a given database will *probably* work, because class names are rarely changed.  But
-if it does not work, you will known quickly because HikariCP will likely fail to start.  In this case, you can simply
-force *delegation mode* (see properties below).</sub><br/>
+<sub><sup>1</sup>Older/newer driver versions for a given database will *probably* work, because class names are rarely
+changed.  But if it does not work, you will known quickly because HikariCP will likely fail to start.  In this case, you
+can simply force *delegation mode* (see properties below).</sub><br/>
 <sub><sup>2</sup>The *DataSource* is specified because it is by the specified DataSource name that HikariCP looks up the instrumentation
 information in the internal codex.</sub>
 
@@ -139,6 +139,13 @@ value for this is best determined by your execution environment.  *Default: 10*
 ``poolName``<br/>
 This property represents a user-defined name for the connection pool and appears mainly
 in a JMX management console to identify pools and pool configurations.  *Default: auto-generated*
+
+``useInstrumentation``<br/>
+This property controls whether HikariCP will attempt to use bytecode instrumentation to boost
+performance.  Instrumentation is enabled by default, but whether it is used or not is based on
+whether the DataSource that is specified is recognized as supported.  Otherwise, delegation 
+mode will be used.  If you experience a failure due to instrumentation, you can manually disable
+instrumentation with this property.  *Default: true*
 
 ##### DataSource Properties #####
 DataSource properies can be set on the ``HikariConfig`` object through the use of the ``addDataSourcePropery``
