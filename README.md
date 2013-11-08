@@ -185,16 +185,26 @@ development and pre-Production.
 
 ----------------------------------------------------
 
+### Maven Repository ###
+
+    <dependency>
+        <groupId>com.zaxxer</groupId>
+        <artifactId>HikariCP</artifactId>
+        <version>1.1.4</version>
+        <scope>compile</scope>
+    </dependency>
+----------------------------------------------------
+
 ### Initialization ###
+
     HikariConfig config = new HikariConfig();
     config.setMaximumPoolSize(100);
     config.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource);
     config.addDataSourceProperty("url", "jdbc:mysql://localhost/database");
     config.addDataSourceProperty("user", "bart");
     config.addDataSourceProperty("password", "51mp50n");
-
+    
     HikariDataSource ds = new HikariDataSource(config);
-
 
 or property file based:
 
