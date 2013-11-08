@@ -55,6 +55,12 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
     }
 
     @HikariInject
+    public IHikariConnectionProxy _getConnectionProxy()
+    {
+        return _connection;
+    }
+
+    @HikariInject
     public SQLException _checkException(SQLException e)
     {
         return _connection._checkException(e);

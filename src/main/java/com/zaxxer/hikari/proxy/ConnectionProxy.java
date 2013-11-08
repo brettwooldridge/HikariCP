@@ -174,6 +174,19 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
         }
     }
 
+    @HikariInject
+    protected <T extends Statement> T _trackStatement(T statement)
+    {
+        IHikariStatementProxy statementProxy = (IHikariStatementProxy) statement;
+        if (statementProxy._getConnectionProxy() == null)
+        {
+            statementProxy._setConnectionProxy(this);
+            _openStatements.add(statement);
+        }
+
+        return statement;
+    }
+
     public final Connection getDelegate()
     {
         return delegate;
@@ -228,11 +241,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
         _checkClosed();
         try
         {
-            Statement statementProxy = __createStatement();
-            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
-            _openStatements.add(statementProxy);
+            Statement statement = __createStatement();
 
-            return statementProxy;
+            return _trackStatement(statement);
         }
         catch (SQLException e)
         {
@@ -246,11 +257,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
         _checkClosed();
         try
         {
-            Statement statementProxy = __createStatement(resultSetType, resultSetConcurrency);
-            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
-            _openStatements.add(statementProxy);
+            Statement statement = __createStatement(resultSetType, resultSetConcurrency);
 
-            return statementProxy;
+            return _trackStatement(statement);
         }
         catch (SQLException e)
         {
@@ -264,11 +273,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
         _checkClosed();
         try
         {
-            Statement statementProxy = __createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
-            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
-            _openStatements.add(statementProxy);
+            Statement statement = __createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
 
-            return statementProxy;
+            return _trackStatement(statement);
         }
         catch (SQLException e)
         {
@@ -282,11 +289,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
         _checkClosed();
         try
         {
-            CallableStatement statementProxy = __prepareCall(sql);
-            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
-            _openStatements.add(statementProxy);
+            CallableStatement statement = __prepareCall(sql);
 
-            return statementProxy;
+            return _trackStatement(statement);
         }
         catch (SQLException e)
         {
@@ -300,11 +305,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
         _checkClosed();
         try
         {
-            CallableStatement statementProxy = __prepareCall(sql, resultSetType, resultSetConcurrency);
-            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
-            _openStatements.add(statementProxy);
+            CallableStatement statement = __prepareCall(sql, resultSetType, resultSetConcurrency);
 
-            return statementProxy;
+            return _trackStatement(statement);
         }
         catch (SQLException e)
         {
@@ -318,11 +321,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
         _checkClosed();
         try
         {
-            CallableStatement statementProxy = __prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
-            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
-            _openStatements.add(statementProxy);
+            CallableStatement statement = __prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
 
-            return statementProxy;
+            return _trackStatement(statement);
         }
         catch (SQLException e)
         {
@@ -336,11 +337,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
         _checkClosed();
         try
         {
-            PreparedStatement statementProxy = __prepareStatement(sql);
-            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
-            _openStatements.add(statementProxy);
+            PreparedStatement statement = __prepareStatement(sql);
 
-            return statementProxy;
+            return _trackStatement(statement);
         }
         catch (SQLException e)
         {
@@ -354,11 +353,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
         _checkClosed();
         try
         {
-            PreparedStatement statementProxy = __prepareStatement(sql, autoGeneratedKeys);
-            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
-            _openStatements.add(statementProxy);
+            PreparedStatement statement = __prepareStatement(sql, autoGeneratedKeys);
 
-            return statementProxy;
+            return _trackStatement(statement);
         }
         catch (SQLException e)
         {
@@ -372,11 +369,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
         _checkClosed();
         try
         {
-            PreparedStatement statementProxy = __prepareStatement(sql, resultSetType, resultSetConcurrency);
-            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
-            _openStatements.add(statementProxy);
+            PreparedStatement statement = __prepareStatement(sql, resultSetType, resultSetConcurrency);
 
-            return statementProxy;
+            return _trackStatement(statement);
         }
         catch (SQLException e)
         {
@@ -390,11 +385,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
         _checkClosed();
         try
         {
-            PreparedStatement statementProxy = __prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
-            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
-            _openStatements.add(statementProxy);
+            PreparedStatement statement = __prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
 
-            return statementProxy;
+            return _trackStatement(statement);
         }
         catch (SQLException e)
         {
@@ -408,11 +401,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
         _checkClosed();
         try
         {
-            PreparedStatement statementProxy = __prepareStatement(sql, columnIndexes);
-            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
-            _openStatements.add(statementProxy);
+            PreparedStatement statement = __prepareStatement(sql, columnIndexes);
 
-            return statementProxy;
+            return _trackStatement(statement);
         }
         catch (SQLException e)
         {
@@ -426,11 +417,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
         _checkClosed();
         try
         {
-            PreparedStatement statementProxy = __prepareStatement(sql, columnNames);
-            ((IHikariStatementProxy) statementProxy)._setConnectionProxy(this);
-            _openStatements.add(statementProxy);
+            PreparedStatement statement = __prepareStatement(sql, columnNames);
 
-            return statementProxy;
+            return _trackStatement(statement);
         }
         catch (SQLException e)
         {
@@ -438,6 +427,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
         }
     }
 
+    @HikariOverride
     public boolean isValid(int timeout) throws SQLException
     {
         if (_isClosed)
@@ -447,7 +437,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
 
         try
         {
-            return delegate.isValid(timeout);
+            return __isValid(timeout);
         }
         catch (SQLException e)
         {
@@ -473,6 +463,11 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
     public final void __close() throws SQLException
     {
         delegate.close();
+    }
+
+    public final boolean __isValid(int timeout) throws SQLException
+    {
+        return delegate.isValid(timeout);
     }
 
     public final Statement __createStatement() throws SQLException
