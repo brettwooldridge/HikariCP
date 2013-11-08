@@ -25,6 +25,24 @@ import com.zaxxer.hikari.javassist.HikariInject;
 import com.zaxxer.hikari.javassist.HikariOverride;
 
 /**
+ * This is the proxy class for java.sql.Statement.  It is used in two ways:
+ * 
+ *  1) If instrumentation is not used, Javassist will generate a new class
+ *     that extends this class and delegates all method calls to the 'delegate'
+ *     member (which points to the real Connection).
+ *
+ *  2) If instrumentation IS used, Javassist will be used to inject all of
+ *     the &amp;HikariInject and &amp;HikariOverride annotated fields and methods
+ *     of this class into the actual Statement implementation provided by the
+ *     JDBC driver.  In order to avoid name conflicts some of the fields and
+ *     methods are prefixed with _ or __.
+ *     
+ *     Methods prefixed with __, like __executeQuery() are especially
+ *     important because when we inject out own executeQuery() into the
+ *     target implementation, the original method is renamed to __executeQuery()
+ *     so that the call operates the same whether delegation or instrumentation
+ *     is used.
+ *
  * @author Brett Wooldridge
  */
 public abstract class StatementProxy implements IHikariStatementProxy, Statement
@@ -39,6 +57,8 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
 
     static
     {
+        // This is important when injecting in instrumentation mode.  Do not change
+        // this name without also fixing the HikariClassTransformer.
         __static();
     }
 
@@ -71,6 +91,16 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
     {
     }
 
+    @HikariInject
+    protected <T extends ResultSet> T _trackResultSet(T resultSet)
+    {
+        if (resultSet != null)
+        {
+            ((IHikariResultSetProxy) resultSet)._setProxyStatement(this);
+        }
+        return resultSet;
+    }
+
     // **********************************************************************
     //                 Overridden java.sql.Statement Methods
     // **********************************************************************
@@ -85,6 +115,7 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
 
         _isClosed = true;
         _connection._unregisterStatement(this);
+
         try
         {
             __close();
@@ -100,13 +131,7 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
     {
         try
         {
-            ResultSet rs = __executeQuery(sql);
-            if (rs != null)
-            {
-                ((IHikariResultSetProxy) rs)._setProxyStatement(this);
-            }
-
-            return rs;
+            return _trackResultSet(__executeQuery(sql));
         }
         catch (SQLException e)
         {
@@ -119,13 +144,7 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
     {
         try
         {
-            ResultSet rs = __getResultSet();
-            if (rs != null)
-            {
-                ((IHikariResultSetProxy) rs)._setProxyStatement(this);
-            }
-
-            return rs;
+            return _trackResultSet(__getResultSet());
         }
         catch (SQLException e)
         {
@@ -138,13 +157,7 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
     {
         try
         {
-            ResultSet rs = __getGeneratedKeys();
-            if (rs != null)
-            {
-                ((IHikariResultSetProxy) rs)._setProxyStatement(this);
-            }
-
-            return rs;
+            return _trackResultSet(__getGeneratedKeys());
         }
         catch (SQLException e)
         {
@@ -184,31 +197,26 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
 
     public ResultSet __executeQuery(String sql) throws SQLException
     {
-        ResultSet resultSet = delegate.executeQuery(sql);
-        if (resultSet != null)
-        {
-            resultSet = PROXY_FACTORY.getProxyResultSet(this, resultSet);
-        }
-        return resultSet;
+        return wrapResultSet(delegate.executeQuery(sql));
     }
 
     public ResultSet __getGeneratedKeys() throws SQLException
     {
-        ResultSet generatedKeys = delegate.getGeneratedKeys();
-        if (generatedKeys != null)
-        {
-            generatedKeys = PROXY_FACTORY.getProxyResultSet(this, generatedKeys);
-        }
-        return generatedKeys;
+        return wrapResultSet(delegate.getGeneratedKeys());
     }
 
     public ResultSet __getResultSet() throws SQLException
     {
-        ResultSet resultSet = delegate.getResultSet();
+        return wrapResultSet(delegate.getResultSet());
+    }
+
+    protected ResultSet wrapResultSet(ResultSet resultSet)
+    {
         if (resultSet != null)
         {
             resultSet = PROXY_FACTORY.getProxyResultSet(this, resultSet);
         }
-        return resultSet;
+
+        return resultSet;        
     }
 }
