@@ -3,10 +3,6 @@ There is nothing [faster](https://github.com/brettwooldridge/HikariCP/wiki/Bench
 nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctness).  HikariCP is a "zero-overhead"
 production-quality connection pool.
 
-**UPDATE: Apparently somebody posted us to reddit.  One comment was along the lines of "when has a connection pool ever been a bottleneck?"
-If connection pools were just about getConnection()/close() that might be a point, but the reality is that connection pools have to wrap
-every JDBC class to track statements, result sets, etc.  And in doing so, each pool imposes different overheads on *all* JDBC operations.**
-
 Using a stub-JDBC (nop) implementation to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations
 were performed in *8ms* on a commodity PC.  The test below is a run with a "constrained" pool of 50 connections,
 with comparison to BoneCP.
@@ -22,19 +18,11 @@ How does HikariCP stay flat?  And how does it achieve such incredible performanc
 minded, read [here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).  Otherwise, just drop it
 in and let your code run like its pants are on fire.
 
-DBPool and C3PO were tested but both failed to complete the MixedBench test without connection timeouts and OutOfMemory errors.
-The "benchmarks" published on the BoneCP site do little to reflect real world usage: *"500 Threads each attempting 100 get/release
-connection with no delays"*.  Does your application do this?  Or maybe it does real work.  How about, *"500 Threads each attempting
-100 get/release connection with no delays...75ms delay between open connection/release connection to simulate work done by the
-application"* Does sleeping between getConnection()/close() sound like what your application does?  What is really being tested?
-Take a look at our [MixedBench](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks) benchmark for a test involving
-60+ million JDBC operations per-thread.
-
 ### Maven Respository ###
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>1.1.3</version>
+        <version>1.1.4</version>
         <scope>compile</scope>
     </dependency>
 
