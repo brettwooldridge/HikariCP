@@ -23,6 +23,18 @@ import java.sql.Statement;
 import com.zaxxer.hikari.javassist.HikariInject;
 
 /**
+ * This is the proxy class for java.sql.ResultSet.  It is used in two ways:
+ * 
+ *  1) If instrumentation is not used, Javassist will generate a new class
+ *     that extends this class and delegates all method calls to the 'delegate'
+ *     member (which points to the real Connection).
+ *
+ *  2) If instrumentation IS used, Javassist will be used to inject all of
+ *     the &amp;HikariInject and &amp;HikariOverride annotated fields and methods
+ *     of this class into the actual ResultSet implementation provided by the
+ *     JDBC driver.  In order to avoid name conflicts some of the fields and
+ *     methods are prefixed with _ or __.
+ *
  * @author Brett Wooldridge
  */
 public abstract class ResultSetProxy implements IHikariResultSetProxy, ResultSet
