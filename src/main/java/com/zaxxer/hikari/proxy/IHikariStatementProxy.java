@@ -8,6 +8,8 @@ public interface IHikariStatementProxy
 
     void _setConnectionProxy(IHikariConnectionProxy connectionProxy);
 
+    IHikariConnectionProxy _getConnectionProxy();
+
     void _releaseResultSet(IHikariResultSetProxy resultSet);
 
     SQLException _checkException(SQLException e);
