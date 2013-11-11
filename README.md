@@ -237,3 +237,5 @@ Google discussion group [HikariCP here](https://groups.google.com/d/forum/hikari
 
 <sup>1</sup>It might work with other JVM, but defintely won't work with Java 6 and below because of the use of
 classes that are only available in Java 7.
+
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/63472d76ad0d494e3c4d8fc4a13ea4ce "githalytics.com")](http://githalytics.com/brettwooldridge/HikariCP)
