@@ -28,6 +28,7 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.CtNewMethod;
+import javassist.LoaderClassPath;
 import javassist.Modifier;
 
 import com.zaxxer.hikari.util.ClassLoaderUtils;
@@ -58,10 +59,9 @@ public final class JavassistProxyFactoryFactory
 
     private JavassistProxyFactoryFactory()
     {
-        ClassPool defaultPool = ClassPool.getDefault();
-        classPool = new ClassPool(defaultPool);
+        classPool = new ClassPool();
         classPool.importPackage("java.sql");
-        classPool.childFirstLookup = true;
+        classPool.appendClassPath(new LoaderClassPath(this.getClass().getClassLoader()));
 
         try
         {
