@@ -86,8 +86,9 @@ public final class JavassistProxyFactoryFactory
 
     private ProxyFactory generateProxyFactory() throws Exception
     {
-        CtClass targetCt = classPool.makeClass("com.zaxxer.hikari.proxy.JavassistProxyFactory");
-        CtClass superCt = classPool.getCtClass("com.zaxxer.hikari.proxy.ProxyFactory");
+        String packageName = ProxyFactory.class.getPackage().getName();
+        CtClass targetCt = classPool.makeClass(packageName + ".JavassistProxyFactory");
+        CtClass superCt = classPool.getCtClass(ProxyFactory.class.getName());
         targetCt.setSuperclass(superCt);
         targetCt.setModifiers(Modifier.FINAL);
 
@@ -98,23 +99,23 @@ public final class JavassistProxyFactoryFactory
             StringBuilder call = new StringBuilder("{");
             if ("getProxyConnection".equals(method.getName()))
             {
-                call.append("return new com.zaxxer.hikari.proxy.ConnectionJavassistProxy($$);");
+                call.append("return new ").append(packageName).append(".ConnectionJavassistProxy($$);");
             }
             if ("getProxyStatement".equals(method.getName()))
             {
-                call.append("return $2 != null ? new com.zaxxer.hikari.proxy.StatementJavassistProxy($$) : null;");
+                call.append("return $2 != null ? new ").append(packageName).append(".StatementJavassistProxy($$) : null;");
             }
             if ("getProxyPreparedStatement".equals(method.getName()))
             {
-                call.append("return $2 != null ? new com.zaxxer.hikari.proxy.PreparedStatementJavassistProxy($$) : null;");
+                call.append("return $2 != null ? new ").append(packageName).append(".PreparedStatementJavassistProxy($$) : null;");
             }
             if ("getProxyResultSet".equals(method.getName()))
             {
-                call.append("return $2 != null ? new com.zaxxer.hikari.proxy.ResultSetJavassistProxy($$) : null;");
+                call.append("return $2 != null ? new ").append(packageName).append(".ResultSetJavassistProxy($$) : null;");
             }
             if ("getProxyCallableStatement".equals(method.getName()))
             {
-                call.append("return $2 != null ? new com.zaxxer.hikari.proxy.CallableStatementJavassistProxy($$) : null;");
+                call.append("return $2 != null ? new ").append(packageName).append(".CallableStatementJavassistProxy($$) : null;");
             }
             call.append('}');
             method.setBody(call.toString());
