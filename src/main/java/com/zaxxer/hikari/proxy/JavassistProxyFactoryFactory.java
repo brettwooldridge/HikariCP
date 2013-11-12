@@ -45,15 +45,22 @@ public final class JavassistProxyFactoryFactory
 
     static
     {
-        JavassistProxyFactoryFactory proxyFactoryFactory = new JavassistProxyFactoryFactory();
-
+    	ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         try
         {
-            proxyFactory = proxyFactoryFactory.generateProxyFactory();
+        	Thread.currentThread().setContextClassLoader(JavassistProxyFactoryFactory.class.getClassLoader());
+        	
+        	JavassistProxyFactoryFactory proxyFactoryFactory = new JavassistProxyFactoryFactory();
+
+        	proxyFactory = proxyFactoryFactory.generateProxyFactory();
         }
         catch (Exception e)
         {
-            throw new RuntimeException(e);
+        	throw new RuntimeException(e);
+        }
+        finally
+        {
+        	Thread.currentThread().setContextClassLoader(contextClassLoader);
         }
     }
 
@@ -184,7 +191,7 @@ public final class JavassistProxyFactoryFactory
                 targetCt.addMethod(method);
             }
         }
-        targetCt.debugWriteFile("/tmp");
+
         return targetCt.toClass(classPool.getClassLoader(), null);
     }
 }
