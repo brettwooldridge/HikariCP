@@ -32,18 +32,23 @@ import com.zaxxer.hikari.javassist.HikariInject;
 import com.zaxxer.hikari.javassist.HikariOverride;
 
 /**
- * This is the proxy class for java.sql.Connection.  It is used in
- * two ways:
+ * This is the proxy class for java.sql.Connection.  It is used in two ways:
  * 
  *  1) If instrumentation is not used, Javassist will generate a new class
  *     that extends this class and delegates all method calls to the 'delegate'
  *     member (which points to the real Connection).
  *
  *  2) If instrumentation IS used, Javassist will be used to inject all of
- *     the non-final methods of this class into the actual Connection implementation
- *     provided by the JDBC driver.  All of the fields, <i>except</i> for PROXY_FACTORY
- *     and 'delegate' are also injected.  In order to avoid name conflicts the
- *     fields of this class have slightly unconventional names.
+ *     the &amp;HikariInject and &amp;HikariOverride annotated fields and methods
+ *     of this class into the  actual Connection implementation provided by the
+ *     JDBC driver.  In order to avoid name conflicts some of the fields and
+ *     methods are prefixed with _ or __.
+ *     
+ *     Methods prefixed with __, like __createStatement() are especially
+ *     important because when we inject out own createStatement() into the
+ *     target implementation, the original method is renamed to __createStatement()
+ *     so that the call operates the same whether delegation or instrumentation
+ *     is used.
  *
  * @author Brett Wooldridge
  */
@@ -77,6 +82,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
         SQL_ERRORS.add("57P02");  // CRASH SHUTDOWN
         SQL_ERRORS.add("01002");  // SQL92 disconnect error
 
+        // This is important when injecting in instrumentation mode.  Do not change
+        // this name without also fixing the HikariClassTransformer.
         __static();
     }
 
@@ -84,6 +91,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
     {
         this.delegate = connection;
 
+        // This is important when injecting in instrumentation mode.  Do not change
+        // this name without also fixing the HikariClassTransformer.
         __init();
     }
 
@@ -185,11 +194,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
         }
 
         return statement;
-    }
-
-    public final Connection getDelegate()
-    {
-        return delegate;
     }
 
     // **********************************************************************

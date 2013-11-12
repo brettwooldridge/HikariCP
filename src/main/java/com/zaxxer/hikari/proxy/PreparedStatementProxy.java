@@ -23,6 +23,23 @@ import java.sql.SQLException;
 import com.zaxxer.hikari.javassist.HikariOverride;
 
 /**
+ * This is the proxy class for java.sql.PreparedStatement.  It is used in two ways:
+ * 
+ *  1) If instrumentation is not used, Javassist will generate a new class
+ *     that extends this class and delegates all method calls to the 'delegate'
+ *     member (which points to the real Connection).
+ *
+ *  2) If instrumentation IS used, Javassist will be used to inject all of
+ *     the &amp;HikariInject and &amp;HikariOverride annotated fields and methods
+ *     of this class into the actual PreparedStatement implementation provided by the
+ *     JDBC driver.  In order to avoid name conflicts some of the fields and
+ *     methods are prefixed with _ or __.
+ *     
+ *     Methods prefixed with __, like __executeQuery() are especially
+ *     important because when we inject out own executeQuery() into the
+ *     target implementation, the original method is renamed to __executeQuery()
+ *     so that the call operates the same whether delegation or instrumentation
+ *     is used.
  *
  * @author Brett Wooldridge
  */
@@ -42,13 +59,7 @@ public abstract class PreparedStatementProxy extends StatementProxy implements I
     {
     	try
     	{
-	        ResultSet rs = __executeQuery();
-    		if (rs != null)
-    		{
-    		    ((IHikariResultSetProxy) rs)._setProxyStatement(this);
-    		}
-
-	        return rs;
+            return _trackResultSet(__executeQuery());
     	}
     	catch (SQLException e)
     	{
@@ -66,10 +77,6 @@ public abstract class PreparedStatementProxy extends StatementProxy implements I
     public ResultSet __executeQuery() throws SQLException
     {
         ResultSet resultSet = ((PreparedStatement) delegate).executeQuery();
-        if (resultSet != null)
-        {
-            resultSet = PROXY_FACTORY.getProxyResultSet(this, resultSet);
-        }
-        return resultSet;
+        return wrapResultSet(resultSet);
     }
 }
