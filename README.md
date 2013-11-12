@@ -190,7 +190,7 @@ development and pre-Production.
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>1.1.4</version>
+        <version>1.1.5</version>
         <scope>compile</scope>
     </dependency>
 ----------------------------------------------------
