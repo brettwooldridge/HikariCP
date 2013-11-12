@@ -22,7 +22,7 @@ in and let your code run like its pants are on fire.
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>1.1.4</version>
+        <version>1.1.5</version>
         <scope>compile</scope>
     </dependency>
 
