@@ -31,7 +31,7 @@ Or look at this:
     </dependency>
 
 HikariCP comes with two jars: ``HikariCP-1.x.x.jar`` and ``HikariCP-agent-1.x.x.jar``.  The "core" jar contains
-everything you need to run.  If you wish to use *instrumentation* mode to go a little faster, you'll also need
+everything you need to run.  If you wish to use *instrumentation mode* to go a little faster, you'll also need
 the agent jar.  See below for details.
 
 ----------------------------------------------------
