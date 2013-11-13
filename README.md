@@ -20,18 +20,33 @@ See benchmarks [here](https://github.com/brettwooldridge/HikariCP/wiki/Benchmark
 Or look at this:
 ![](http://github.com/brettwooldridge/HikariCP/wiki/50Connection_MixedBench.png)
 
-------------------------------
+----------------------------------------------------
+### Maven Repository ###
+
+    <dependency>
+        <groupId>com.zaxxer</groupId>
+        <artifactId>HikariCP-parent</artifactId>
+        <version>1.1.7</version>
+        <scope>compile</scope>
+    </dependency>
+
+HikariCP comes with two jars: ``HikariCP-1.x.x.jar`` and ``HikariCP-agent-1.x.x.jar``.  The "core" jar contains
+everything you need to run.  If you wish to use *instrumentation* mode to go a little faster, you'll also need
+the agent jar.  See below for details.
+
+----------------------------------------------------
 #### Driver Support ####
 HikariCP has two modes of operation: **Delegation** and **Instrumentation**.  *Instrumentation* is approximately 20-40% more
 performant, but both are exceedingly fast.
 
 ##### Delegation #####
-Delegation mode is supported for *all* JDBC drivers.
+Delegation mode is supported for *all* JDBC drivers.  This is included in the core HikariCP jar.
 
 ##### Instrumentation #####
-Instrumentation mode is supported for specific JDBC drivers.  If your favorite database is not supported, drop us a note
-in the [Google group](https://groups.google.com/d/forum/hikari-cp) and we'll try to add support for it.  Below is a table of drivers that are supported and their
-status:
+Instrumentation mode is supported for specific JDBC drivers.  For instrumentation, you will need the "agent" jar
+in addition to the core jar.  If your favorite database is not supported, drop us a note in the
+[Google group](https://groups.google.com/d/forum/hikari-cp) and we'll try to add support for it.  Below is a table
+of drivers that are supported and their status:
 
 | Driver            | Version<sup>1</sup>      |  Status   |  DataSource<sup>2</sup>  | 
 | ----------------- | --------------:| --------- | ------------ |
@@ -183,16 +198,6 @@ wrap HikariCP arould *jdbcdslog*.  It also provides some nice additional stuff l
 logging slow queries only, and PreparedStatement bound parameter logging.   Great stuff during
 development and pre-Production.
 
-----------------------------------------------------
-
-### Maven Repository ###
-
-    <dependency>
-        <groupId>com.zaxxer</groupId>
-        <artifactId>HikariCP-parent</artifactId>
-        <version>1.1.7</version>
-        <scope>compile</scope>
-    </dependency>
 ----------------------------------------------------
 
 ### Initialization ###
