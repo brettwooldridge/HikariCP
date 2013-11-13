@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
-   <!-- For release: mvn release:perform -Darguments=-Dgpg.passphrase=PASSPHRASE -->
-
    <groupId>com.zaxxer</groupId>
-   <artifactId>HikariCP</artifactId>
+   <artifactId>HikariCP-parent</artifactId>
    <version>1.1.7-SNAPSHOT</version>
-   <packaging>bundle</packaging>
+   <packaging>pom</packaging>
 
-   <name>HikariCP</name>
+   <name>HikariCP-parent</name>
    <description>Ultimate JDBC Connection Pool</description>
    <url>https://github.com/brettwooldridge/HikariCP</url>
 
@@ -49,176 +48,58 @@
       <version>7</version>
    </parent>
 
-   <dependencies>
-      <dependency>
-         <groupId>junit</groupId>
-         <artifactId>junit</artifactId>
-         <version>4.8.1</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.slf4j</groupId>
-         <artifactId>slf4j-api</artifactId>
-         <version>1.7.5</version>
-         <scope>provided</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.mockito</groupId>
-         <artifactId>mockito-all</artifactId>
-         <version>1.9.5</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.slf4j</groupId>
-         <artifactId>slf4j-simple</artifactId>
-         <version>1.7.5</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>com.jolbox</groupId>
-         <artifactId>bonecp</artifactId>
-         <version>0.8.0-rc3</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>com.googlecode</groupId>
-         <artifactId>reflectasm</artifactId>
-         <version>1.01</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.apache.felix</groupId>
-         <artifactId>maven-bundle-plugin</artifactId>
-         <version>2.3.7</version>
-         <type>maven-plugin</type>
-         <scope>provided</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.hsqldb</groupId>
-         <artifactId>hsqldb</artifactId>
-         <version>2.3.0</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>com.sun</groupId>
-         <artifactId>tools</artifactId>
-         <version>1.6.0</version>
-         <scope>system</scope>
-         <systemPath>${java.home}/../lib/tools.jar</systemPath>
-      </dependency>
-      <dependency>
-         <groupId>org.javassist</groupId>
-         <artifactId>javassist</artifactId>
-         <version>3.18.1-GA</version>
-      </dependency>
-      <dependency>
-         <groupId>net.snaq</groupId>
-         <artifactId>dbpool</artifactId>
-         <version>5.1</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>c3p0</groupId>
-         <artifactId>c3p0</artifactId>
-         <version>0.9.1.2</version>
-         <scope>test</scope>
-      </dependency>
-   </dependencies>
+   <modules>
+      <module>core</module>
+      <module>agent</module>
+   </modules>
+
+   <dependencyManagement>
+      <dependencies>
+         <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>${project.version}</version>
+            <classifier>test-sources</classifier>
+         </dependency>
+         <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>${project.version}</version>
+            <classifier>sources</classifier>
+         </dependency>
+         <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>${project.version}</version>
+            <classifier>javadoc</classifier>
+         </dependency>
+         <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <type>test-jar</type>
+            <version>${project.version}</version>
+         </dependency>
+      </dependencies>
+   </dependencyManagement>
 
    <build>
-      <sourceDirectory>src/main/java</sourceDirectory>
-      <testSourceDirectory>src/test/java</testSourceDirectory>
-      <plugins>
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.1</version>
-            <configuration>
-               <source>1.7</source>
-               <target>1.7</target>
-            </configuration>
-         </plugin>
-         <plugin>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>maven-bundle-plugin</artifactId>
-            <version>2.3.7</version>
-            <extensions>true</extensions>
-            <configuration>
-               <instructions>
-                  <Bundle-Name>HikariCP</Bundle-Name>
-                  <Export-Package>com.zaxxer.hikari</Export-Package>
-                  <Import-Package>com.sun.tools.attach,javassist.*,javax.management,javax.sql,javax.sql.rowset,,javax.sql.rowset.serial,,javax.sql.rowset.spi,org.slf4j</Import-Package>
-                  <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
-                  <Agent-Class>com.zaxxer.hikari.javassist.HikariInstrumentationAgent</Agent-Class>
-               </instructions>
-            </configuration>
-         </plugin>
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-source-plugin</artifactId>
-            <version>2.2.1</version>
-            <configuration>
-               <!-- outputDirectory>/absolute/path/to/the/output/directory</outputDirectory> 
-                  <finalName>filename-of-generated-jar-file</finalName -->
-               <attach>true</attach>
-            </configuration>
-            <executions>
-               <execution>
-                  <id>attach-sources</id>
-                  <goals>
-                     <goal>jar</goal>
-                  </goals>
-               </execution>
-            </executions>
-         </plugin>
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <version>2.9.1</version>
-            <configuration>
-               <show>public</show>
-               <excludePackageNames>com.zaxxer.hikari.*</excludePackageNames>
-               <attach>true</attach>
-               <maxmemory>1024m</maxmemory>
-            </configuration>
-            <executions>
-               <execution>
-                  <goals>
-                     <goal>jar</goal>
-                  </goals>
-               </execution>
-            </executions>
-         </plugin>
-      </plugins>
+      <pluginManagement>
+         <plugins>
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-release-plugin</artifactId>
+               <version>2.2.2</version>
+               <configuration>
+                  <autoVersionSubmodules>true</autoVersionSubmodules>
+                  <tagNameFormat>com.zaxxer.hikari-@{project.version}</tagNameFormat>
+               </configuration>
+            </plugin>
+         </plugins>
+      </pluginManagement>
    </build>
-
-   <profiles>
-      <profile>
-         <id>release-sign-artifacts</id>
-         <activation>
-            <property>
-               <name>performRelease</name>
-               <value>true</value>
-            </property>
-         </activation>
-         <build>
-            <plugins>
-               <plugin>
-                  <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-gpg-plugin</artifactId>
-                  <version>1.4</version>
-                  <executions>
-                     <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                           <goal>sign</goal>
-                        </goals>
-                     </execution>
-                  </executions>
-               </plugin>
-            </plugins>
-         </build>
-      </profile>
-   </profiles>
 </project>

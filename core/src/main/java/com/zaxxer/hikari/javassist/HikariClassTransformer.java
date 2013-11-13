@@ -42,6 +42,15 @@ import javassist.bytecode.annotation.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.zaxxer.hikari.proxy.CallableStatementProxy;
+import com.zaxxer.hikari.proxy.ConnectionProxy;
+import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
+import com.zaxxer.hikari.proxy.IHikariResultSetProxy;
+import com.zaxxer.hikari.proxy.IHikariStatementProxy;
+import com.zaxxer.hikari.proxy.PreparedStatementProxy;
+import com.zaxxer.hikari.proxy.ResultSetProxy;
+import com.zaxxer.hikari.proxy.StatementProxy;
+
 /**
  *
  * @author Brett Wooldridge
@@ -104,12 +113,13 @@ public class HikariClassTransformer implements ClassFileTransformer
         {
             classPool = new ClassPool();
             classPool.appendClassPath(new LoaderClassPath(loader));
+            classPool.appendClassPath(new LoaderClassPath(this.getClass().getClassLoader()));
         }
 
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         try
         {
-            Thread.currentThread().setContextClassLoader(loader);
+            Thread.currentThread().setContextClassLoader(classPool.getClassLoader());
 
             ClassFile classFile = new ClassFile(new DataInputStream(new ByteArrayInputStream(classfileBuffer)));
 
@@ -122,21 +132,21 @@ public class HikariClassTransformer implements ClassFileTransformer
             case CONNECTION_SUBCLASS:
                 return transformConnectionSubclass(classFile);
             case STATEMENT:
-                return transformBaseClass(classFile, "com.zaxxer.hikari.proxy.StatementProxy", "com.zaxxer.hikari.proxy.IHikariStatementProxy");
+                return transformBaseClass(classFile, StatementProxy.class, IHikariStatementProxy.class);
             case STATEMENT_SUBCLASS:
-                return transformClass(classFile, "com.zaxxer.hikari.proxy.StatementProxy");
+                return transformClass(classFile, StatementProxy.class);
             case PREPARED_STATEMENT:
-                return transformBaseClass(classFile, "com.zaxxer.hikari.proxy.PreparedStatementProxy", "com.zaxxer.hikari.proxy.IHikariStatementProxy");
+                return transformBaseClass(classFile, PreparedStatementProxy.class, IHikariStatementProxy.class);
             case PREPARED_STATEMENT_SUBCLASS:
-                return transformClass(classFile, "com.zaxxer.hikari.proxy.PreparedStatementProxy");
+                return transformClass(classFile, PreparedStatementProxy.class);
             case CALLABLE_STATEMENT:
-                return transformBaseClass(classFile, "com.zaxxer.hikari.proxy.CallableStatementProxy", "com.zaxxer.hikari.proxy.IHikariStatementProxy");
+                return transformBaseClass(classFile, CallableStatementProxy.class, IHikariStatementProxy.class);
             case CALLABLE_STATEMENT_SUBCLASS:
-                return transformClass(classFile, "com.zaxxer.hikari.proxy.CallableStatementProxy");
+                return transformClass(classFile, CallableStatementProxy.class);
             case RESULTSET:
-                return transformBaseClass(classFile, "com.zaxxer.hikari.proxy.ResultSetProxy", "com.zaxxer.hikari.proxy.IHikariResultSetProxy");
+                return transformBaseClass(classFile, ResultSetProxy.class, IHikariResultSetProxy.class);
             case RESULTSET_SUBCLASS:
-                return transformClass(classFile, "com.zaxxer.hikari.proxy.ResultSetProxy");
+                return transformClass(classFile, ResultSetProxy.class);
             default:
                 // None of the interfaces we care about were found, so just return the class file buffer
                 return classfileBuffer;
@@ -168,11 +178,11 @@ public class HikariClassTransformer implements ClassFileTransformer
         String className = classFile.getName();
         CtClass target = classPool.getCtClass(className);
 
-        CtClass intf = classPool.get("com.zaxxer.hikari.proxy.IHikariConnectionProxy");
+        CtClass intf = classPool.get(IHikariConnectionProxy.class.getName());
         target.addInterface(intf);
         LOGGER.debug("Added interface {} to {}", intf.getName(), className);
 
-        CtClass proxy = classPool.get("com.zaxxer.hikari.proxy.ConnectionProxy");
+        CtClass proxy = classPool.get(ConnectionProxy.class.getName());
 
         copyFields(proxy, target);
         copyMethods(proxy, target, classFile);
@@ -194,7 +204,7 @@ public class HikariClassTransformer implements ClassFileTransformer
     {
         String className = classFile.getName();
         CtClass target = classPool.getCtClass(className);
-        CtClass proxy = classPool.get("com.zaxxer.hikari.proxy.ConnectionProxy");
+        CtClass proxy = classPool.get(ConnectionProxy.class.getName());
 
         overrideMethods(proxy, target, classFile);
         injectTryCatch(target);
@@ -211,33 +221,33 @@ public class HikariClassTransformer implements ClassFileTransformer
     /**
      * @param classFile
      */
-    private byte[] transformBaseClass(ClassFile classFile, String proxyClassName, String intfName) throws Exception
+    private byte[] transformBaseClass(ClassFile classFile, Class<?> proxyClass, Class<?> interfase) throws Exception
     {
         String className = classFile.getName();
         CtClass target = classPool.getCtClass(className);
 
-        CtClass intf = classPool.get(intfName);
+        CtClass intf = classPool.get(interfase.getName());
         target.addInterface(intf);
         LOGGER.debug("Added interface {} to {}", intf.getName(), className);
 
-        CtClass proxy = classPool.get(proxyClassName);
+        CtClass proxy = classPool.get(proxyClass.getName());
 
         copyFields(proxy, target);
         copyMethods(proxy, target, classFile);
         mergeClassInitializers(proxy, target, classFile);
 
-        return transformClass(classFile, proxyClassName);
+        return transformClass(classFile, proxyClass);
     }
 
     /**
      * @param classFile
      */
-    private byte[] transformClass(ClassFile classFile, String proxyClassName) throws Exception
+    private byte[] transformClass(ClassFile classFile, Class<?> proxyClass) throws Exception
     {
         String className = classFile.getName();
         CtClass target = classPool.getCtClass(className);
 
-        CtClass proxy = classPool.get(proxyClassName);
+        CtClass proxy = classPool.get(proxyClass.getName());
 
         overrideMethods(proxy, target, classFile);
         injectTryCatch(target);
@@ -277,7 +287,7 @@ public class HikariClassTransformer implements ClassFileTransformer
 
             CtMethod copy = CtNewMethod.copy(method, targetClass, null);
             AnnotationsAttribute attr = new AnnotationsAttribute(constPool, AnnotationsAttribute.visibleTag);
-            Annotation annotation = new Annotation("com.zaxxer.hikari.javassist.HikariInject", constPool);
+            Annotation annotation = new Annotation(HikariInject.class.getName(), constPool);
             attr.setAnnotation(annotation);
             copy.getMethodInfo().addAttribute(attr);
             targetClass.addMethod(copy);
@@ -289,7 +299,7 @@ public class HikariClassTransformer implements ClassFileTransformer
     {
         ConstPool constPool = targetClassFile.getConstPool();
         AnnotationsAttribute attr = new AnnotationsAttribute(constPool, AnnotationsAttribute.visibleTag);
-        Annotation annotation = new Annotation("com.zaxxer.hikari.javassist.HikariOverride", constPool);
+        Annotation annotation = new Annotation(HikariOverride.class.getName(), constPool);
         attr.setAnnotation(annotation);
 
         for (CtMethod method : srcClass.getMethods())
@@ -299,13 +309,18 @@ public class HikariClassTransformer implements ClassFileTransformer
                 continue;
             }
 
+            if ((targetClass.getModifiers() & Modifier.ABSTRACT) == Modifier.ABSTRACT)
+            {
+            	continue;
+            }
+
             try
             {
                 CtMethod destMethod = targetClass.getDeclaredMethod(method.getName(), method.getParameterTypes());
                 LOGGER.debug("Rename method {}{} to __{}", destMethod.getName(), destMethod.getSignature(), destMethod.getName());
                 destMethod.setName("__" + destMethod.getName());
                 destMethod.getMethodInfo().addAttribute(attr);
-                
+
                 CtMethod copy = CtNewMethod.copy(method, targetClass, null);
                 copy.getMethodInfo().addAttribute(attr);
                 targetClass.addMethod(copy);
@@ -313,7 +328,7 @@ public class HikariClassTransformer implements ClassFileTransformer
             }
             catch (NotFoundException nfe)
             {
-                continue;
+            	// fall thru
             }
         }
     }

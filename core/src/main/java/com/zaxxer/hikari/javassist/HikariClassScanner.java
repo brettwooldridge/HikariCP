@@ -28,8 +28,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.zaxxer.hikari.util.ClassLoaderUtils;
-
 /**
  *
  * @author Brett Wooldridge
@@ -107,6 +105,7 @@ public class HikariClassScanner
         }
         catch (Exception e)
         {
+        	LOGGER.warn("Unable to instrument classes", e);
             return false;
         }
     }
@@ -211,7 +210,7 @@ public class HikariClassScanner
         transformer.setScanClass(classes, classType);
         for (String clazz : classes)
         {
-            ClassLoaderUtils.loadClass(clazz);
+            this.getClass().getClassLoader().loadClass(clazz);
         }
     }
 }

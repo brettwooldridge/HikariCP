@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.javassist.AgentRegistrationElf;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.JavassistProxyFactoryFactory;
-import com.zaxxer.hikari.util.ClassLoaderUtils;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 /**
@@ -78,6 +77,8 @@ public final class HikariPool implements HikariPoolMBean
         this.jdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
         this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
 
+        // Class<?> pbs = PropertyBeanSetter.class;
+
         String dsClassName = configuration.getDataSourceClassName();
         try
         {
@@ -88,7 +89,7 @@ public final class HikariPool implements HikariPoolMBean
                 LOGGER.info("Using Javassist delegate-based proxies.");
             }
             
-            Class<?> clazz = ClassLoaderUtils.loadClass(dsClassName);
+            Class<?> clazz = this.getClass().getClassLoader().loadClass(dsClassName);
             this.dataSource = (DataSource) clazz.newInstance();
             PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
         }

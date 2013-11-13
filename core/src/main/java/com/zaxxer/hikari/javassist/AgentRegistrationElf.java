@@ -17,6 +17,8 @@
 package com.zaxxer.hikari.javassist;
 
 import java.io.IOException;
+import java.lang.instrument.ClassFileTransformer;
+import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.util.Properties;
@@ -39,7 +41,7 @@ public class AgentRegistrationElf
 
     public static boolean loadTransformerAgent(String dsClassName, String shadedCodexMapping)
     {
-        String agentJarPath = getSelfJarPath();
+        String agentJarPath = getAgentJarPath();
         if (agentJarPath == null)
         {
             LOGGER.warn("Cannot find the HikariCP jar file through introspection.");
@@ -66,7 +68,7 @@ public class AgentRegistrationElf
         }
         finally
         {
-            if (HikariInstrumentationAgent.unregisterInstrumenation())
+            if (unregisterInstrumenation())
             {
                 LOGGER.info("Unloaded instrumentation agent.");
             }
@@ -78,7 +80,7 @@ public class AgentRegistrationElf
      *
      * @return the path to the jar file that contains this class
      */
-    private static String getSelfJarPath()
+    private static String getAgentJarPath()
     {
         URL resource = AgentRegistrationElf.class.getResource("/com/zaxxer/hikari/javassist/HikariInstrumentationAgent.class");
         if (resource == null)
@@ -95,7 +97,7 @@ public class AgentRegistrationElf
         }
         else
         {
-            return System.getProperty("com.zaxxer.hikari.selfJar");
+            return System.getProperty("com.zaxxer.hikari.agentJar");
         }
 
         return jarPath;
@@ -118,6 +120,25 @@ public class AgentRegistrationElf
         VirtualMachine vm = VirtualMachine.attach(getPid());
         vm.loadAgent(jarPath);
         vm.detach();
+    }
+
+    private static boolean unregisterInstrumenation()
+    {
+        boolean unregistered = false;
+
+        Properties systemProperties = System.getProperties();
+        Instrumentation instrumentation = (Instrumentation) systemProperties.get("com.zaxxer.hikari.instrumentation");
+        if (instrumentation != null)
+        {
+            ClassFileTransformer transformer = (ClassFileTransformer) systemProperties.get("com.zaxxer.hikari.transformer");
+            instrumentation.removeTransformer(transformer);
+            unregistered = true;
+        }
+
+        systemProperties.remove("com.zaxxer.hikari.instrumentation");
+        systemProperties.remove("com.zaxxer.hikari.transformer");
+
+        return unregistered;
     }
 
     /**

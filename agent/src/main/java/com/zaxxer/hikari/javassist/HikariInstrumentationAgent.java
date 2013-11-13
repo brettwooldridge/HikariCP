@@ -21,6 +21,7 @@ import java.lang.instrument.Instrumentation;
 import java.util.Properties;
 
 /**
+ * This class provides the "agentmain" method of the instrumentation agent.
  *
  * @author Brett Wooldridge
  */
@@ -31,7 +32,7 @@ public class HikariInstrumentationAgent
      * class transformer.
      *
      * @param agentArgs arguments to pass to the agent
-     * @param inst the virtual machine Instrumentation instance used to register our transformer 
+     * @param instrumentation the virtual machine Instrumentation instance used to register our transformer 
      */
     public static void agentmain(String agentArgs, Instrumentation instrumentation)
     {
@@ -40,24 +41,5 @@ public class HikariInstrumentationAgent
 
         ClassFileTransformer transformer = (ClassFileTransformer) systemProperties.get("com.zaxxer.hikari.transformer");
         instrumentation.addTransformer(transformer, false);
-    }
-
-    static boolean unregisterInstrumenation()
-    {
-        boolean unregistered = false;
-
-        Properties systemProperties = System.getProperties();
-        Instrumentation instrumentation = (Instrumentation) systemProperties.get("com.zaxxer.hikari.instrumentation");
-        if (instrumentation != null)
-        {
-            ClassFileTransformer transformer = (ClassFileTransformer) systemProperties.get("com.zaxxer.hikari.transformer");
-            instrumentation.removeTransformer(transformer);
-            unregistered = true;
-        }
-
-        systemProperties.remove("com.zaxxer.hikari.instrumentation");
-        systemProperties.remove("com.zaxxer.hikari.transformer");
-
-        return unregistered;
     }
 }
