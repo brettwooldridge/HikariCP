@@ -95,7 +95,7 @@
                <version>2.2.2</version>
                <configuration>
                   <autoVersionSubmodules>true</autoVersionSubmodules>
-                  <tagNameFormat>com.zaxxer.hikari-@{project.version}</tagNameFormat>
+                  <tagNameFormat>HikariCP-@{project.version}</tagNameFormat>
                </configuration>
             </plugin>
          </plugins>
