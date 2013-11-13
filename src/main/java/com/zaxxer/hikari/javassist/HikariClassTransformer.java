@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
  */
 public class HikariClassTransformer implements ClassFileTransformer
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(HikariClassTransformer.class);
+    private final Logger LOGGER;
 
     public static final int UNDEFINED = 0;
     public static final int CONNECTION = 1;
@@ -71,11 +71,13 @@ public class HikariClassTransformer implements ClassFileTransformer
 
     /**
      * Private constructor.
+     * @param shadedCodexMapping 
      * 
      * @param sniffPackage the package name used to filter only classes we are interested in
      */
     public HikariClassTransformer()
     {
+        LOGGER = LoggerFactory.getLogger(HikariClassTransformer.class);
     }
 
     public void setScanClass(HashSet<String> scanClasses, int classType)
@@ -104,8 +106,11 @@ public class HikariClassTransformer implements ClassFileTransformer
             classPool.appendClassPath(new LoaderClassPath(loader));
         }
 
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         try
         {
+            Thread.currentThread().setContextClassLoader(loader);
+
             ClassFile classFile = new ClassFile(new DataInputStream(new ByteArrayInputStream(classfileBuffer)));
 
             LOGGER.info("Instrumenting class {}", className);
@@ -145,8 +150,8 @@ public class HikariClassTransformer implements ClassFileTransformer
         }
         finally
         {
+            Thread.currentThread().setContextClassLoader(contextClassLoader);
             LOGGER.debug("--------------------------------------------------------------------------");
-            //classType = UNDEFINED;
         }
     }
 

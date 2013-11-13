@@ -37,7 +37,7 @@ public class AgentRegistrationElf
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariClassScanner.class);
 
-    public static boolean loadTransformerAgent(String dsClassName)
+    public static boolean loadTransformerAgent(String dsClassName, String shadedCodexMapping)
     {
         String agentJarPath = getSelfJarPath();
         if (agentJarPath == null)
@@ -48,7 +48,6 @@ public class AgentRegistrationElf
 
         try
         {
-
             Properties systemProperties = System.getProperties();
 
             HikariClassTransformer transformer = new HikariClassTransformer();
@@ -57,7 +56,7 @@ public class AgentRegistrationElf
             registerInstrumentation(agentJarPath);
             LOGGER.info("Successfully loaded instrumentation agent.  Scanning classes...");
 
-            HikariClassScanner scanner = new HikariClassScanner(transformer);
+            HikariClassScanner scanner = new HikariClassScanner(transformer, shadedCodexMapping);
             return scanner.scanClasses(dsClassName);
         }
         catch (Exception e)
@@ -107,6 +106,7 @@ public class AgentRegistrationElf
      * dynamically.
      *
      * @param jarPath the path to our own jar file
+     * @param shadedCodexMapping 
      * @param dsClassName 
      * @throws AttachNotSupportedException thrown if the JVM does not support attachment
      * @throws IOException thrown if the instrumentation JAR cannot be read

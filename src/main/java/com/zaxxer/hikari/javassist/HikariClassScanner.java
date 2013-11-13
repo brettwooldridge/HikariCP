@@ -20,8 +20,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Properties;
+import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,14 +40,16 @@ public class HikariClassScanner
 
     private HikariClassTransformer transformer;
     
-    private Properties codex;
+    private Map<String, Set<String>> codex;
 
-    public HikariClassScanner(HikariClassTransformer transformer)
+    private String shadedCodexMapping;
+
+    public HikariClassScanner(HikariClassTransformer transformer, String shadedCodexMapping)
     {
         this.transformer = transformer;
+        this.shadedCodexMapping = shadedCodexMapping;
     }
 
-    @SuppressWarnings("unchecked")
     public boolean scanClasses(String dsClassName)
     {
         try
@@ -59,21 +63,19 @@ public class HikariClassScanner
                 return false;
             }
 
-            HashSet<String> hash = (HashSet<String>) codex.get(dsClassName);
-            if (hash == null)
+            String keyPrefix = getKeyPrefix(dsClassName);
+            if (keyPrefix == null)
             {
                 LOGGER.warn("DataSource {} not found in the instrumentation codex.  Please report at http://github.com/brettwooldridge/HikariCP.", dsClassName);
                 LOGGER.info("Using delegation instead of instrumentation");
                 return false;
             }
 
-            String keyPrefix = hash.iterator().next();
-
             HashSet<String> classes = (HashSet<String>) codex.get(keyPrefix + ".baseConnection");
             loadClasses(classes, HikariClassTransformer.CONNECTION);
 
             classes = (HashSet<String>) codex.get(keyPrefix + ".subConnection");
-            loadClasses(            classes, HikariClassTransformer.CONNECTION_SUBCLASS);
+            loadClasses(classes, HikariClassTransformer.CONNECTION_SUBCLASS);
 
             classes = (HashSet<String>) codex.get(keyPrefix + ".baseStatement");
             loadClasses(classes, HikariClassTransformer.STATEMENT);
@@ -109,13 +111,37 @@ public class HikariClassScanner
         }
     }
 
+    private String getKeyPrefix(String dsClassName)
+    {
+        if (shadedCodexMapping == null)
+        {
+            HashSet<String> hash = (HashSet<String>) codex.get(dsClassName);
+
+            return (hash == null ? null : hash.iterator().next());
+        }
+
+        String[] split = shadedCodexMapping.split(":");
+        String origPackage = split[0];
+        String shadePackage = split[1];
+
+        for (String key : codex.keySet())
+        {
+            if (key.replace(origPackage, shadePackage).equals(dsClassName))
+            {
+                HashSet<String> hash = (HashSet<String>) codex.get(key);
+                return hash.iterator().next();
+            }
+        }
+
+        return null;
+    }
+
     /**
      * @throws IOException 
      */
-    @SuppressWarnings("unchecked")
     private boolean loadCodex() throws IOException
     {
-        codex = new Properties();
+        codex = new HashMap<String, Set<String>>();
 
         InputStream inputStream = this.getClass().getResourceAsStream("/META-INF/codex.properties");
         if (inputStream == null)
@@ -165,6 +191,21 @@ public class HikariClassScanner
         if (classes == null)
         {
             return;
+        }
+
+        if (shadedCodexMapping != null)
+        {
+            String[] split = shadedCodexMapping.split(":");
+            String origPackage = split[0];
+            String shadePackage = split[1];
+
+            HashSet<String> shadedClasses = new HashSet<>();
+            for (String clazz : classes)
+            {
+                shadedClasses.add(clazz.replace(origPackage, shadePackage));
+            }
+
+            classes = shadedClasses;
         }
 
         transformer.setScanClass(classes, classType);

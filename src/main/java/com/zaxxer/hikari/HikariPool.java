@@ -78,21 +78,23 @@ public final class HikariPool implements HikariPoolMBean
         this.jdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
         this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
 
+        String dsClassName = configuration.getDataSourceClassName();
         try
         {
-            delegationProxies = !configuration.isUseInstrumentation() || !AgentRegistrationElf.loadTransformerAgent(configuration.getDataSourceClassName());
+            String shadedCodexMapping = configuration.getShadedCodexMapping();
+            delegationProxies = !configuration.isUseInstrumentation() || !AgentRegistrationElf.loadTransformerAgent(dsClassName, shadedCodexMapping);
             if (delegationProxies)
             {
                 LOGGER.info("Using Javassist delegate-based proxies.");
             }
             
-            Class<?> clazz = ClassLoaderUtils.loadClass(configuration.getDataSourceClassName());
+            Class<?> clazz = ClassLoaderUtils.loadClass(dsClassName);
             this.dataSource = (DataSource) clazz.newInstance();
             PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
         }
         catch (Exception e)
         {
-            throw new RuntimeException("Could not create datasource class: " + configuration.getDataSourceClassName(), e);
+            throw new RuntimeException("Could not create datasource class: " + dsClassName, e);
         }
 
         registerMBean();

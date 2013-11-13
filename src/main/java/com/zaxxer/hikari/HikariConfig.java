@@ -46,12 +46,11 @@ public final class HikariConfig implements HikariConfigMBean
     private String poolName;
     private String connectionTestQuery;
     private String dataSourceClassName;
+    private String shadedCodexMapping;
     private boolean isJdbc4connectionTest;
     private boolean isAutoCommit;
-
-    private Properties driverProperties;
-
     private boolean isUseInstrumentation;
+    private Properties driverProperties;
 
     /**
      * Default constructor
@@ -312,6 +311,31 @@ public final class HikariConfig implements HikariConfigMBean
     public void setPoolName(String poolName)
     {
         this.poolName = poolName;
+    }
+
+    public String getShadedCodexMapping()
+    {
+        return shadedCodexMapping;
+    }
+
+    /**
+     * Set a package mapping for "shaded" drivers so that we can find the DataSource
+     * in the instrumentation codex even though the package/class name is different.
+     * The mapping should be of the form:<p>
+     *    &lt;original package>:&lt;shaded package>
+     * <p>
+     * Where the original package name is a widely scoped as possible while still being
+     * unique to the driver.  Typically, this is the first two segments of a package
+     * name.  For example, take the DataSource <code>org.mariadb.jdbc.MySQLDataSource</code>,
+     * that has been shaded to <code>com.other.maria.jdbc.MySQLDataSource</code>.  In this case,
+     * the following mapping could be used:<p>
+     *    org.mariadb:com.other.maria
+     * <br>
+     * @param mapping a mapping of the form: &lt;original package>:&lt;shaded package>
+     */
+    public void setShadedCodexMapping(String mapping)
+    {
+        this.shadedCodexMapping = mapping;
     }
 
     public void validate()
