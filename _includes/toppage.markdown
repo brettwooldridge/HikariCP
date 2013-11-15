@@ -19,14 +19,27 @@ minded, read [here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Ra
 in and let your code run like its pants are on fire.
 
 ### Maven Respository ###
+HikariCP comes with two jars: ``HikariCP-1.x.x.jar`` and ``HikariCP-agent-1.x.x.jar``.  The "core" jar contains
+everything you need to run.  If you wish to use *instrumentation mode* to go a little faster, you'll also need
+the agent jar.  See below for details.
+
+##### Required #####
+
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>1.1.6</version>
+        <version>1.1.7</version>
         <scope>compile</scope>
     </dependency>
 
-If you don't use programmatic initialization, you can change the *scope* to 'runtime'.
+##### Optional (Instrumentation) #####
+
+    <dependency>
+        <groupId>com.zaxxer</groupId>
+        <artifactId>HikariCP-agent</artifactId>
+        <version>1.1.7</version>
+        <scope>compile</scope>
+    </dependency>
 
 ### Initialization ###
     HikariConfig config = new HikariConfig();
