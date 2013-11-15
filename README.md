@@ -23,16 +23,27 @@ Or look at this:
 ----------------------------------------------------
 ### Maven Repository ###
 
+HikariCP comes with two jars: ``HikariCP-1.x.x.jar`` and ``HikariCP-agent-1.x.x.jar``.  The "core" jar contains
+everything you need to run.  If you wish to use *instrumentation mode* to go a little faster, you'll also need
+the agent jar.  See below for details.
+
+##### Required #####
+
     <dependency>
         <groupId>com.zaxxer</groupId>
-        <artifactId>HikariCP-parent</artifactId>
+        <artifactId>HikariCP</artifactId>
         <version>1.1.7</version>
         <scope>compile</scope>
     </dependency>
 
-HikariCP comes with two jars: ``HikariCP-1.x.x.jar`` and ``HikariCP-agent-1.x.x.jar``.  The "core" jar contains
-everything you need to run.  If you wish to use *instrumentation mode* to go a little faster, you'll also need
-the agent jar.  See below for details.
+##### Optional (Instrumentation) #####
+
+    <dependency>
+        <groupId>com.zaxxer</groupId>
+        <artifactId>HikariCP-agent</artifactId>
+        <version>1.1.7</version>
+        <scope>compile</scope>
+    </dependency>
 
 ----------------------------------------------------
 #### Driver Support ####
