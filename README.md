@@ -36,7 +36,7 @@ the agent jar.  See below for details.
         <scope>compile</scope>
     </dependency>
 
-##### Optional (Instrumentation) #####
+##### Optional (Instrumentation<sup>1<sup>) #####
 
     <dependency>
         <groupId>com.zaxxer</groupId>
@@ -45,7 +45,7 @@ the agent jar.  See below for details.
         <scope>compile</scope>
     </dependency>
 
-<sub>*Instrumentation* mode is still considered experimental, if you use it and encounter issues, please report
+<sub><sup>1</sup>*Instrumentation* mode is still considered experimental, if you use it and encounter issues, please report
 them here and disable it by removing the agent jar or setting the ``useInstrumentation`` property to ``false``.</sub>
 ----------------------------------------------------
 #### Driver Support ####
