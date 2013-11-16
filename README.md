@@ -45,8 +45,9 @@ the agent jar.  See below for details.
         <scope>compile</scope>
     </dependency>
 
-<sub><sup>1</sup>*Instrumentation* mode is still considered experimental, if you use it and encounter issues, please report
-them here and disable it by removing the agent jar or setting the ``useInstrumentation`` property to ``false``.</sub>
+<sub><sup>1</sup>*Instrumentation* mode is still considered experimental, if you use it and encounter issues, please report</sub>
+<sub>them here and disable it by removing the agent jar or setting the ``useInstrumentation`` property to ``false``.</sub>
+
 ----------------------------------------------------
 #### Driver Support ####
 HikariCP has two modes of operation: **Delegation** and **Instrumentation**.  *Instrumentation* is approximately 20-40% more
