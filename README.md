@@ -46,7 +46,7 @@ the agent jar.  See below for details.
     </dependency>
 
 <sub><sup>1</sup>*Instrumentation* mode is still considered experimental, if you use it and encounter issues, please report</sub>
-<sub>them here and disable it by removing the agent jar or setting the ``useInstrumentation`` property to ``false``.</sub>
+<sub>&nbsp;them here and disable it by removing the agent jar or setting the ``useInstrumentation`` property to ``false``.</sub>
 
 ----------------------------------------------------
 #### Driver Support ####
