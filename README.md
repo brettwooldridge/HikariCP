@@ -36,7 +36,7 @@ the agent jar.  See below for details.
         <scope>compile</scope>
     </dependency>
 
-##### Optional (Instrumentation<sup>1<sup>) #####
+##### Optional (Instrumentation<sup>1</sup>) #####
 
     <dependency>
         <groupId>com.zaxxer</groupId>
