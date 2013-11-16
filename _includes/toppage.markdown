@@ -32,7 +32,7 @@ the agent jar.  See below for details.
         <scope>compile</scope>
     </dependency>
 
-##### Optional (Instrumentation) #####
+##### Optional (Instrumentation<sup>1</sup>) #####
 
     <dependency>
         <groupId>com.zaxxer</groupId>
@@ -40,6 +40,9 @@ the agent jar.  See below for details.
         <version>1.1.7</version>
         <scope>compile</scope>
     </dependency>
+
+<sub><sup>1</sup>*Instrumentation* mode is still considered experimental, if you use it and encounter issues, please report</sub>
+<sub>&nbsp;them here and disable it by removing the agent jar or setting the ``useInstrumentation`` property to ``false``.</sub>
 
 ### Initialization ###
     HikariConfig config = new HikariConfig();
