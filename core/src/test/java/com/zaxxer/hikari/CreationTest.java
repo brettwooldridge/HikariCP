@@ -92,11 +92,12 @@ public class CreationTest
         config.setMinimumPoolSize(1);
         config.setMaximumPoolSize(1);
         config.setAcquireIncrement(1);
-        config.setMaxLifetime(500);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
         HikariDataSource ds = new HikariDataSource(config);
+
+        config.setMaxLifetime(500);
 
         Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
         Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
@@ -132,7 +133,6 @@ public class CreationTest
         config.setMinimumPoolSize(1);
         config.setMaximumPoolSize(1);
         config.setAcquireIncrement(1);
-        config.setMaxLifetime(500);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
