@@ -27,6 +27,11 @@ import org.slf4j.LoggerFactory;
 
 public final class HikariConfig implements HikariConfigMBean
 {
+	private static final long CONNECTION_TIMEOUT = 5000L;
+	private static final long ACQUIRE_RETRY_DELAY = 750L;
+	private static final long IDLE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
+	private static final long MAX_LIFETIME = TimeUnit.MINUTES.toMillis(30);
+
     private static int poolNumber;
 
     // Properties changeable at runtime through the MBean
@@ -61,15 +66,15 @@ public final class HikariConfig implements HikariConfigMBean
 
         acquireIncrement = 5;
         acquireRetries = 3;
-        acquireRetryDelay = 750;
-        connectionTimeout = 5000;
-        idleTimeout = TimeUnit.MINUTES.toMillis(10);
+        acquireRetryDelay = ACQUIRE_RETRY_DELAY;
+        connectionTimeout = CONNECTION_TIMEOUT;
+        idleTimeout = IDLE_TIMEOUT;
         isAutoCommit = true;
         isJdbc4connectionTest = true;
         isUseInstrumentation = true;
         minPoolSize = 10;
         maxPoolSize = 60;
-        maxLifetime = TimeUnit.MINUTES.toMillis(30);
+        maxLifetime = MAX_LIFETIME;
         poolName = "HikariPool-" + poolNumber++;
     }
 
@@ -342,10 +347,48 @@ public final class HikariConfig implements HikariConfigMBean
     {
         Logger logger = LoggerFactory.getLogger(getClass());
 
+        if (acquireRetryDelay < 0)
+        {
+            logger.error("acquireRetryDelay cannot be negative.");
+            throw new IllegalStateException("acquireRetryDelay cannot be negative.");
+        }
+        else if (acquireRetryDelay < 100)
+        {
+            logger.warn("acquireRetryDelay is less than 100ms, did you specify the wrong time unit?  Using default instead.");
+            acquireRetryDelay = ACQUIRE_RETRY_DELAY;
+        }
+
+        if (connectionTimeout == Integer.MAX_VALUE)
+        {
+            logger.warn("No connection wait timeout is set, this might cause an infinite wait.");
+        }
+        else if (connectionTimeout < 100)
+        {
+            logger.warn("connectionTimeout is less than 100ms, did you specify the wrong time unit?  Using default instead.");
+        	connectionTimeout = CONNECTION_TIMEOUT;
+        }
+
+        if (idleTimeout < 0)
+        {
+            logger.error("idleTimeout cannot be negative.");
+            throw new IllegalStateException("idleTimeout cannot be negative.");
+        }
+        else if (idleTimeout < 30000)
+        {
+            logger.warn("idleTimeout is less than 30000ms, did you specify the wrong time unit?  Using default instead.");
+            idleTimeout = IDLE_TIMEOUT;
+        }
+
         if (!isJdbc4connectionTest && connectionTestQuery == null)
         {
             logger.error("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified.");
             throw new IllegalStateException("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified.");
+        }
+
+        if (leakDetectionThreshold != 0 && leakDetectionThreshold < 10000)
+        {
+            logger.warn("leakDetectionThreshold is less than 10000ms, did you specify the wrong time unit?  Disabling leak detection.");
+            leakDetectionThreshold = 0;
         }
 
         if (minPoolSize < 0)
@@ -354,33 +397,21 @@ public final class HikariConfig implements HikariConfigMBean
             throw new IllegalStateException("minPoolSize cannot be negative.");
         }
 
-        if (maxLifetime < 0)
-        {
-            logger.error("maxLifetime cannot be negative.");
-            throw new IllegalStateException("maxLifetime cannot be negative.");
-        }
-
-        if (idleTimeout < 0)
-        {
-            logger.error("idleTimeout cannot be negative.");
-            throw new IllegalStateException("idleTimeout cannot be negative.");
-        }
-
-        if (acquireRetryDelay < 0)
-        {
-            logger.error("acquireRetryDelay cannot be negative.");
-            throw new IllegalStateException("acquireRetryDelay cannot be negative.");
-        }
-
         if (maxPoolSize < minPoolSize)
         {
             logger.warn("maxPoolSize is less than minPoolSize, forcing them equal.");
             maxPoolSize = minPoolSize;
         }
 
-        if (connectionTimeout == Integer.MAX_VALUE)
+        if (maxLifetime < 0)
         {
-            logger.warn("No connection wait timeout is set, this might cause an infinite wait.");
+            logger.error("maxLifetime cannot be negative.");
+            throw new IllegalStateException("maxLifetime cannot be negative.");
+        }
+        else if (maxLifetime < 120000)
+        {
+            logger.warn("maxLifetime is less than 120000ms, did you specify the wrong time unit?  Using default instead.");
+            maxLifetime = MAX_LIFETIME;
         }
     }
 }
