@@ -28,8 +28,8 @@ public class ExceptionTest
         Connection connection = ds.getConnection();
         Assert.assertNotNull(connection);
 
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
+        Assert.assertSame("Totals connections not as expected", 2, ds.pool.getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
 
         PreparedStatement statement = connection.prepareStatement("SELECT some, thing FROM somewhere WHERE something=?");
         Assert.assertNotNull(statement);
@@ -49,7 +49,7 @@ public class ExceptionTest
 
         connection.close();
 
-        Assert.assertSame("Totals connections not as expected", 0, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
+        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
     }
 }

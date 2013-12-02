@@ -125,10 +125,7 @@ public final class HikariPool implements HikariPoolMBean
             final long start = System.currentTimeMillis();
             do
             {
-                if (idleConnectionCount.get() == 0)
-                {
-                    addConnections();
-                }
+                addConnections(AddConnectionStrategy.ONLY_IF_EMPTY);
     
                 IHikariConnectionProxy connectionProxy = idleConnections.poll(timeout, TimeUnit.MILLISECONDS);
                 if (connectionProxy == null)
@@ -173,6 +170,10 @@ public final class HikariPool implements HikariPoolMBean
         catch (InterruptedException e)
         {
             return null;
+        }
+        finally
+        {
+            addConnections(AddConnectionStrategy.ONLY_IF_EMPTY);
         }
     }
 
@@ -251,24 +252,40 @@ public final class HikariPool implements HikariPoolMBean
      */
     private void fillPool()
     {
-        int maxIters = (configuration.getMinimumPoolSize() / configuration.getAcquireIncrement()) + 1;
+    	// maxIters avoids an infinite loop filling the pool if no connections can be acquired
+        int maxIters = configuration.getMinimumPoolSize() * configuration.getAcquireRetries();
         while (totalConnections.get() < configuration.getMinimumPoolSize() && maxIters-- > 0)
         {
-            addConnections();
+            addConnection();
         }
     }
 
     /**
      * Add connections to the pool, not exceeding the maximum allowed.
      */
-    private synchronized void addConnections()
+    private synchronized void addConnections(AddConnectionStrategy strategy)
     {
-        final int max = configuration.getMaximumPoolSize();
-        final int increment = configuration.getAcquireIncrement();
-        for (int i = 0; totalConnections.get() < max && i < increment; i++)
-        {
-            addConnection();
-        }
+    	final int max = configuration.getMaximumPoolSize();
+    	final int increment = configuration.getAcquireIncrement();
+    	switch (strategy)
+    	{
+    	case ONLY_IF_EMPTY:
+        	if (idleConnectionCount.get() == 0)
+        	{
+        		for (int i = 0; idleConnectionCount.get() < increment && i < increment && totalConnections.get() < max; i++)
+        		{
+        			addConnection();
+        		}        	
+        	}
+    		break;
+    	case MAINTAIN_MINIMUM:
+    		final int min = configuration.getMinimumPoolSize();
+        	for (int i = 0; totalConnections.get() < min && i < increment && totalConnections.get() < max; i++)
+        	{
+        		addConnection();
+        	}        	
+    		break;
+    	}
     }
 
     /**
@@ -451,7 +468,13 @@ public final class HikariPool implements HikariPoolMBean
                 }
             }
 
-            addConnections();
+            addConnections(AddConnectionStrategy.MAINTAIN_MINIMUM);
         }
+    }
+
+    private static enum AddConnectionStrategy
+    {
+    	ONLY_IF_EMPTY,
+    	MAINTAIN_MINIMUM
     }
 }
