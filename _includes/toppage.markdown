@@ -28,7 +28,7 @@ the agent jar.  See below for details.
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>1.1.7</version>
+        <version>1.1.8</version>
         <scope>compile</scope>
     </dependency>
 
@@ -37,7 +37,7 @@ the agent jar.  See below for details.
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP-agent</artifactId>
-        <version>1.1.7</version>
+        <version>1.1.8</version>
         <scope>compile</scope>
     </dependency>
 
@@ -59,6 +59,17 @@ or property file based:
 
     HikariConfig config = new HikariConfig("some/path/hikari.properties");
     DataSource ds = new HikariDataSource(config);
+
+Example property file:
+
+    acquireIncrement=3
+    acquireRetryDelay=1000
+    connectionTestQuery=SELECT 1
+    dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
+    dataSource.username=test
+    dataSource.password=test
+    dataSource.databaseName=mydb
+    dataSource.serverName=localhost
 
 You can find information about the [configuration properties here](https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby).
 
