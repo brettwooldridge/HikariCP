@@ -6,7 +6,7 @@
 
    <groupId>com.zaxxer</groupId>
    <artifactId>HikariCP-agent</artifactId>
-   <version>1.1.8</version>
+   <version>1.1.8-SNAPSHOT</version>
    <packaging>bundle</packaging>
 
    <name>HikariCP-agent</name>
