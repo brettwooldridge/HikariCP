@@ -24,6 +24,8 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.zaxxer.hikari.HikariConfig;
+
 /**
  *
  * @author Brett Wooldridge
@@ -42,27 +44,54 @@ public final class PropertyBeanSetter
         for (Object propKey : properties.keySet())
         {
             String propName = propKey.toString();
-            String capitalized = "set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
-            try
-            {
-                PropertyDescriptor propertyDescriptor = new PropertyDescriptor(propName, target.getClass(), null, capitalized);
-                Method writeMethod = propertyDescriptor.getWriteMethod();
-                if (writeMethod == null)
-                {
-                    LOGGER.error("Property setter {}() is does not exist on target class {}", capitalized, target.getClass());
-                    continue;
-                }
+            String propValue = properties.get(propKey).toString();
 
-                writeMethod.invoke(target, properties.get(propKey));
-            }
-            catch (IntrospectionException e)
+            if (target instanceof HikariConfig && propName.startsWith("dataSource."))
             {
-                LOGGER.error("Property {} is does not exist on target class {}", propName, target.getClass());
+                HikariConfig config = (HikariConfig) target;
+                config.addDataSourceProperty(propName.substring("dataSource.".length()), propValue);
             }
-            catch (Exception e)
+            else
             {
-                LOGGER.error("Exception setting property {} on target class {}", propName, target.getClass(), e);
+                setProperty(target, propName, propValue);
             }
+        }
+    }
+
+    private static void setProperty(Object target, String propName, String propValue)
+    {
+        String capitalized = "set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+        try
+        {
+            PropertyDescriptor propertyDescriptor = new PropertyDescriptor(propName, target.getClass(), null, capitalized);
+            Method writeMethod = propertyDescriptor.getWriteMethod();
+            Class<?> paramClass = writeMethod.getParameterTypes()[0];
+            if (paramClass == int.class)
+            {
+                writeMethod.invoke(target, Integer.parseInt(propValue));
+            }
+            else if (paramClass == long.class)
+            {
+                writeMethod.invoke(target, Long.parseLong(propValue));
+            }
+            else if (paramClass == boolean.class)
+            {
+                writeMethod.invoke(target, Boolean.parseBoolean(propValue));
+            }
+            else if (paramClass == String.class)
+            {
+                writeMethod.invoke(target, propValue);
+            }
+        }
+        catch (IntrospectionException e)
+        {
+            LOGGER.error("Property {} is does not exist on target class {}", propName, target.getClass());
+            throw new RuntimeException(e);
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("Exception setting property {} on target class {}", propName, target.getClass(), e);
+            throw new RuntimeException(e);
         }
     }
 }

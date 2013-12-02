@@ -25,6 +25,8 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.zaxxer.hikari.util.PropertyBeanSetter;
+
 public final class HikariConfig implements HikariConfigMBean
 {
 	private static final long CONNECTION_TIMEOUT = 5000L;
@@ -98,6 +100,7 @@ public final class HikariConfig implements HikariConfigMBean
             FileInputStream fis = new FileInputStream(propFile);
             Properties props = new Properties();
             props.load(fis);
+            PropertyBeanSetter.setTargetFromProperties(this, props);
         }
         catch (IOException io)
         {
@@ -105,7 +108,7 @@ public final class HikariConfig implements HikariConfigMBean
         }
     }
 
-    public void addDataSourceProperty(String propertyName, String value)
+    public void addDataSourceProperty(String propertyName, Object value)
     {
         driverProperties.put(propertyName, value);
     }
