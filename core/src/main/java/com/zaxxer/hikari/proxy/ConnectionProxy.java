@@ -41,11 +41,11 @@ import com.zaxxer.hikari.javassist.HikariOverride;
  *  2) If instrumentation IS used, Javassist will be used to inject all of
  *     the &amp;HikariInject and &amp;HikariOverride annotated fields and methods
  *     of this class into the  actual Connection implementation provided by the
- *     JDBC driver.  In order to avoid name conflicts some of the fields and
- *     methods are prefixed with _ or __.
+ *     JDBC driver.  In order to avoid name conflicts when injecting code into
+ *     a driver class some of the fields and methods are prefixed with _ or __.
  *     
  *     Methods prefixed with __, like __createStatement() are especially
- *     important because when we inject out own createStatement() into the
+ *     important because when we inject our own createStatement() into the
  *     target implementation, the original method is renamed to __createStatement()
  *     so that the call operates the same whether delegation or instrumentation
  *     is used.
