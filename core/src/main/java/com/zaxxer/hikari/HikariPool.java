@@ -130,8 +130,7 @@ public final class HikariPool implements HikariPoolMBean
                 IHikariConnectionProxy connectionProxy = idleConnections.poll(timeout, TimeUnit.MILLISECONDS);
                 if (connectionProxy == null)
                 {
-                    LOGGER.error("Timeout of {}ms encountered waiting for connection", configuration.getConnectionTimeout());
-                    throw new SQLException("Timeout of encountered waiting for connection");
+                	break;
                 }
 
                 idleConnectionCount.decrementAndGet();
@@ -161,11 +160,15 @@ public final class HikariPool implements HikariPoolMBean
                     connectionProxy._captureStack(leakDetectionThreshold, houseKeepingTimer);
                 }
 
+                connection.setAutoCommit(configuration.isAutoCommit());
+
                 return connection;
 
             } while (timeout > 0);
 
-            throw new SQLException("Timeout of encountered waiting for connection");            
+        	String msg = String.format("Timeout of %dms encountered waiting for connection.", configuration.getConnectionTimeout());
+            LOGGER.error(msg);
+            throw new SQLException(msg);
         }
         catch (InterruptedException e)
         {
@@ -188,6 +191,7 @@ public final class HikariPool implements HikariPoolMBean
         if (!connectionProxy._isBrokenConnection())
         {
             connectionProxy._markLastAccess();
+
             idleConnectionCount.incrementAndGet();
             idleConnections.put(connectionProxy);
         }
@@ -316,7 +320,6 @@ public final class HikariPool implements HikariPoolMBean
                 boolean alive = isConnectionAlive((Connection) proxyConnection, configuration.getConnectionTimeout());
                 if (alive)
                 {
-                    connection.setAutoCommit(configuration.isAutoCommit());
                     idleConnectionCount.incrementAndGet();
                     totalConnections.incrementAndGet();
                     idleConnections.add(proxyConnection);
