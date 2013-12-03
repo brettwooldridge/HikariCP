@@ -265,13 +265,13 @@ public final class HikariPool implements HikariPoolMBean
      */
     private synchronized void addConnections(AddConnectionStrategy strategy)
     {
-    	final int max = configuration.getMaximumPoolSize();
-    	final int increment = configuration.getAcquireIncrement();
     	switch (strategy)
     	{
     	case ONLY_IF_EMPTY:
         	if (idleConnectionCount.get() == 0)
         	{
+            	final int max = configuration.getMaximumPoolSize();
+            	final int increment = configuration.getAcquireIncrement();
         		for (int i = 0; idleConnectionCount.get() < increment && i < increment && totalConnections.get() < max; i++)
         		{
         			addConnection();
@@ -280,6 +280,8 @@ public final class HikariPool implements HikariPoolMBean
     		break;
     	case MAINTAIN_MINIMUM:
     		final int min = configuration.getMinimumPoolSize();
+        	final int max = configuration.getMaximumPoolSize();
+        	final int increment = configuration.getAcquireIncrement();
         	for (int i = 0; totalConnections.get() < min && i < increment && totalConnections.get() < max; i++)
         	{
         		addConnection();
