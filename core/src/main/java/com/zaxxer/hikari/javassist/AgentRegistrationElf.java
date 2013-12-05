@@ -44,7 +44,7 @@ public class AgentRegistrationElf
         String agentJarPath = getAgentJarPath();
         if (agentJarPath == null)
         {
-            LOGGER.warn("Cannot find the HikariCP-agent jar file through introspection.");
+            LOGGER.info("Cannot find the HikariCP-agent jar file through introspection.");
             return false;
         }
 

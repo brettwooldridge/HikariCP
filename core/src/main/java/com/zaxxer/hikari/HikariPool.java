@@ -130,8 +130,7 @@ public final class HikariPool implements HikariPoolMBean
                 IHikariConnectionProxy connectionProxy = idleConnections.poll(timeout, TimeUnit.MILLISECONDS);
                 if (connectionProxy == null)
                 {
-                    LOGGER.error("Timeout of {}ms encountered waiting for connection", configuration.getConnectionTimeout());
-                    throw new SQLException("Timeout of encountered waiting for connection");
+                	break;
                 }
 
                 idleConnectionCount.decrementAndGet();
@@ -161,11 +160,15 @@ public final class HikariPool implements HikariPoolMBean
                     connectionProxy._captureStack(leakDetectionThreshold, houseKeepingTimer);
                 }
 
+                connection.setAutoCommit(configuration.isAutoCommit());
+
                 return connection;
 
             } while (timeout > 0);
 
-            throw new SQLException("Timeout of encountered waiting for connection");            
+        	String msg = String.format("Timeout of %dms encountered waiting for connection.", configuration.getConnectionTimeout());
+            LOGGER.error(msg);
+            throw new SQLException(msg);
         }
         catch (InterruptedException e)
         {
@@ -188,6 +191,7 @@ public final class HikariPool implements HikariPoolMBean
         if (!connectionProxy._isBrokenConnection())
         {
             connectionProxy._markLastAccess();
+
             idleConnectionCount.incrementAndGet();
             idleConnections.put(connectionProxy);
         }
@@ -265,13 +269,13 @@ public final class HikariPool implements HikariPoolMBean
      */
     private synchronized void addConnections(AddConnectionStrategy strategy)
     {
-    	final int max = configuration.getMaximumPoolSize();
-    	final int increment = configuration.getAcquireIncrement();
     	switch (strategy)
     	{
     	case ONLY_IF_EMPTY:
         	if (idleConnectionCount.get() == 0)
         	{
+            	final int max = configuration.getMaximumPoolSize();
+            	final int increment = configuration.getAcquireIncrement();
         		for (int i = 0; idleConnectionCount.get() < increment && i < increment && totalConnections.get() < max; i++)
         		{
         			addConnection();
@@ -280,6 +284,8 @@ public final class HikariPool implements HikariPoolMBean
     		break;
     	case MAINTAIN_MINIMUM:
     		final int min = configuration.getMinimumPoolSize();
+        	final int max = configuration.getMaximumPoolSize();
+        	final int increment = configuration.getAcquireIncrement();
         	for (int i = 0; totalConnections.get() < min && i < increment && totalConnections.get() < max; i++)
         	{
         		addConnection();
@@ -312,18 +318,30 @@ public final class HikariPool implements HikariPoolMBean
                 proxyConnection._setParentPool(this);
 
                 boolean alive = isConnectionAlive((Connection) proxyConnection, configuration.getConnectionTimeout());
-                if (alive)
+                if (!alive)
                 {
-                    connection.setAutoCommit(configuration.isAutoCommit());
-                    idleConnectionCount.incrementAndGet();
-                    totalConnections.incrementAndGet();
-                    idleConnections.add(proxyConnection);
-                    break;
+                    // This will be caught below
+                    throw new RuntimeException("Connection not alive, retry.");
                 }
-                else
+
+                String initSql = configuration.getConnectionInitSql();
+                if (initSql != null && initSql.length() > 0)
                 {
-                    Thread.sleep(configuration.getAcquireRetryDelay());
+                    Statement statement = connection.createStatement();
+                    try
+                    {
+                        statement.executeQuery(initSql);
+                    }
+                    finally
+                    {
+                        statement.close();
+                    }
                 }
+
+                idleConnectionCount.incrementAndGet();
+                totalConnections.incrementAndGet();
+                idleConnections.add(proxyConnection);
+                break;
             }
             catch (Exception e)
             {

@@ -27,13 +27,13 @@ import com.zaxxer.hikari.javassist.HikariInject;
  * 
  *  1) If instrumentation is not used, Javassist will generate a new class
  *     that extends this class and delegates all method calls to the 'delegate'
- *     member (which points to the real Connection).
+ *     member (which points to the real ResultSet).
  *
  *  2) If instrumentation IS used, Javassist will be used to inject all of
  *     the &amp;HikariInject and &amp;HikariOverride annotated fields and methods
  *     of this class into the actual ResultSet implementation provided by the
- *     JDBC driver.  In order to avoid name conflicts some of the fields and
- *     methods are prefixed with _ or __.
+ *     JDBC driver.  In order to avoid name conflicts when injecting code into
+ *     a driver class some of the fields and methods are prefixed with _ or __.
  *
  * @author Brett Wooldridge
  */
