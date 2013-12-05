@@ -32,7 +32,7 @@ the agent jar.  See below for details.
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>1.1.8</version>
+        <version>1.1.9</version>
         <scope>compile</scope>
     </dependency>
 
@@ -41,7 +41,7 @@ the agent jar.  See below for details.
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP-agent</artifactId>
-        <version>1.1.8</version>
+        <version>1.1.9</version>
         <scope>compile</scope>
     </dependency>
 
@@ -102,6 +102,11 @@ property. *Default: 3*
 This property controls the number of milliseconds to delay between attempts to acquire a
 connection to the database.  If ``acquireRetries`` is 0, this property has no effect.
 *Default: 750*
+
+``connectionInitSql``<br/>
+This property sets a SQL statement that will be executed after every new connection creation
+before adding it to the pool. If this SQL is not valid or throws an exception, it will be
+treated as a connection failure and the standard retry logic will be followed.  *Default: none*
 
 ``connectionTestQuery``<br/>
 This is for "legacy" databases that do not support the JDBC4 Connection.isValid() API.  This
@@ -183,6 +188,9 @@ method, like so:
     config.addDataSourceProperty("url", "jdbc:hsqldb:mem:test");
     config.addDataSourceProperty("user", "SA");
     config.addDataSourceProperty("password", "");
+
+See the [Initialization](#initialization) section below for further examples.
+
 
 ##### ***Missing Knobs*** #####
 
