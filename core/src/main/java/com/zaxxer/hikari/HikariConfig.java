@@ -54,17 +54,18 @@ public final class HikariConfig implements HikariConfigMBean
     private String connectionTestQuery;
     private String dataSourceClassName;
     private String shadedCodexMapping;
+    private String connectionInitSql;
     private boolean isJdbc4connectionTest;
     private boolean isAutoCommit;
     private boolean isUseInstrumentation;
-    private Properties driverProperties;
+    private Properties dataSourceProperties;
 
     /**
      * Default constructor
      */
     public HikariConfig()
     {
-        driverProperties = new Properties();
+        dataSourceProperties = new Properties();
 
         acquireIncrement = 5;
         acquireRetries = 3;
@@ -106,16 +107,6 @@ public final class HikariConfig implements HikariConfigMBean
         {
             throw new RuntimeException("Error loading properties file", io);
         }
-    }
-
-    public void addDataSourceProperty(String propertyName, Object value)
-    {
-        driverProperties.put(propertyName, value);
-    }
-
-    public Properties getDataSourceProperties()
-    {
-        return driverProperties;
     }
 
     /** {@inheritDoc} */
@@ -176,6 +167,16 @@ public final class HikariConfig implements HikariConfigMBean
         this.connectionTestQuery = connectionTestQuery;
     }
 
+    public String getConnectionInitSql()
+    {
+        return connectionInitSql;
+    }
+
+    public void setConnectionInitSql(String connectionInitSql)
+    {
+        this.connectionInitSql = connectionInitSql;
+    }
+
     /** {@inheritDoc} */
     public long getConnectionTimeout()
     {
@@ -204,6 +205,21 @@ public final class HikariConfig implements HikariConfigMBean
     public void setDataSourceClassName(String className)
     {
         this.dataSourceClassName = className;
+    }
+
+    public void addDataSourceProperty(String propertyName, Object value)
+    {
+        dataSourceProperties.put(propertyName, value);
+    }
+
+    public Properties getDataSourceProperties()
+    {
+        return dataSourceProperties;
+    }
+
+    public void setDataSourceProperties(Properties dsProperties)
+    {
+        dataSourceProperties.putAll(dsProperties);
     }
 
     /** {@inheritDoc} */
