@@ -318,17 +318,30 @@ public final class HikariPool implements HikariPoolMBean
                 proxyConnection._setParentPool(this);
 
                 boolean alive = isConnectionAlive((Connection) proxyConnection, configuration.getConnectionTimeout());
-                if (alive)
+                if (!alive)
                 {
-                    idleConnectionCount.incrementAndGet();
-                    totalConnections.incrementAndGet();
-                    idleConnections.add(proxyConnection);
-                    break;
+                    // This will be caught below
+                    throw new RuntimeException("Connection not alive, retry.");
                 }
-                else
+
+                String initSql = configuration.getConnectionInitSql();
+                if (initSql != null && initSql.length() > 0)
                 {
-                    Thread.sleep(configuration.getAcquireRetryDelay());
+                    Statement statement = connection.createStatement();
+                    try
+                    {
+                        statement.executeQuery(initSql);
+                    }
+                    finally
+                    {
+                        statement.close();
+                    }
                 }
+
+                idleConnectionCount.incrementAndGet();
+                totalConnections.incrementAndGet();
+                idleConnections.add(proxyConnection);
+                break;
             }
             catch (Exception e)
             {
