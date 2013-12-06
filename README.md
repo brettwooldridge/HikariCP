@@ -90,7 +90,7 @@ the DataSource and DataSource properties).
 
 ``acquireIncrement``<br/>
 This property controls the maximum number of connections that are acquired at one time, with
-the exception of pool initialization. *Default: 5*
+the exception of pool initialization. *Default: 1*
 
 ``acquireRetries``<br/>
 This is a per-connection attempt retry count used during new connection creation (acquisition).
