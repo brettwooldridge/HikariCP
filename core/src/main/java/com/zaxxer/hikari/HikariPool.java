@@ -297,7 +297,8 @@ public final class HikariPool implements HikariPoolMBean
                     public void run()
                     {
                         final int max = configuration.getMaximumPoolSize();
-                        while (idleConnections.hasWaitingConsumer() && totalConnections.get() < max && idleConnections.getWaitingConsumerCount() > idleConnectionCount.get())
+                        final int increment = configuration.getAcquireIncrement();
+                        while ((idleConnectionCount.get() < increment || idleConnections.hasWaitingConsumer()) && totalConnections.get() < max) 
                         {
                             addConnection();
                         }
