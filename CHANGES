@@ -1,0 +1,21 @@
+HikariCP Changes
+
+Changes between 1.1.9 and 1.2.1
+
+ *) Clear SQL warnings before returning a connection to the user.
+
+ *) Added asynchronous connection backfill strategy that triggers
+    when the pool becomes empty as a result of dispatching a
+    connection.
+
+ *) Changed default acquireIncrement to 1, set minimum timeout of
+    100ms for acquiring a connection.
+
+Changes between 1.1.8 and 1.1.9
+
+ *) Added connectionInitSql property to allow setting connection
+    properties when a new connection is created.
+
+ *) Added setDataSourceProperties() setter to HikariConfig to
+    allow easier configuration though Spring.
+
