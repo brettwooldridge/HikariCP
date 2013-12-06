@@ -67,7 +67,7 @@ public final class HikariConfig implements HikariConfigMBean
     {
         dataSourceProperties = new Properties();
 
-        acquireIncrement = 5;
+        acquireIncrement = 1;
         acquireRetries = 3;
         acquireRetryDelay = ACQUIRE_RETRY_DELAY;
         connectionTimeout = CONNECTION_TIMEOUT;
@@ -186,9 +186,9 @@ public final class HikariConfig implements HikariConfigMBean
     /** {@inheritDoc} */
     public void setConnectionTimeout(long connectionTimeoutMs)
     {
-        if (connectionTimeoutMs < 0)
+        if (connectionTimeoutMs < 100)
         {
-            throw new IllegalArgumentException("connectionTimeout cannot be negative");
+            throw new IllegalArgumentException("connectionTimeout cannot be less than 100ms");
         }
         if (connectionTimeoutMs == 0)
         {
