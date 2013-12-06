@@ -16,7 +16,6 @@
 
 package com.zaxxer.hikari;
 
-import java.lang.management.ManagementFactory;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -24,10 +23,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
 import javax.sql.DataSource;
 
 import org.slf4j.Logger;
@@ -53,6 +51,7 @@ public final class HikariPool implements HikariPoolMBean
 
     private final AtomicInteger totalConnections;
     private final AtomicInteger idleConnectionCount;
+    private final AtomicBoolean backgroundFillQueued;
     private final DataSource dataSource;
     private final long leakDetectionThreshold;
     private final boolean jdbc4ConnectionTest;
@@ -72,12 +71,11 @@ public final class HikariPool implements HikariPoolMBean
         this.configuration = configuration;
         this.totalConnections = new AtomicInteger();
         this.idleConnectionCount = new AtomicInteger();
+        this.backgroundFillQueued = new AtomicBoolean();
         this.idleConnections = new LinkedTransferQueue<IHikariConnectionProxy>();
 
         this.jdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
         this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
-
-        // Class<?> pbs = PropertyBeanSetter.class;
 
         String dsClassName = configuration.getDataSourceClassName();
         try
@@ -98,7 +96,7 @@ public final class HikariPool implements HikariPoolMBean
             throw new RuntimeException("Could not create datasource class: " + dsClassName, e);
         }
 
-        registerMBean();
+        HikariMBeanElf.registerMBeans(configuration, this);
 
         houseKeepingTimer = new Timer("Hikari Housekeeping Timer", true);
 
@@ -161,6 +159,7 @@ public final class HikariPool implements HikariPoolMBean
                 }
 
                 connection.setAutoCommit(configuration.isAutoCommit());
+                connection.clearWarnings();
 
                 return connection;
 
@@ -176,7 +175,7 @@ public final class HikariPool implements HikariPoolMBean
         }
         finally
         {
-            addConnections(AddConnectionStrategy.ONLY_IF_EMPTY);
+            addConnections(AddConnectionStrategy.BACKGROUND_FILL);
         }
     }
 
@@ -291,6 +290,22 @@ public final class HikariPool implements HikariPoolMBean
         		addConnection();
         	}        	
     		break;
+    	case BACKGROUND_FILL:
+    	    if (idleConnectionCount.get() == 0 && backgroundFillQueued.compareAndSet(false, true))
+    	    {
+    	        houseKeepingTimer.schedule(new TimerTask() {
+                    public void run()
+                    {
+                        final int max = configuration.getMaximumPoolSize();
+                        while (idleConnections.hasWaitingConsumer() && totalConnections.get() < max && idleConnections.getWaitingConsumerCount() > idleConnectionCount.get())
+                        {
+                            addConnection();
+                        }
+                        backgroundFillQueued.set(false);
+                    }
+    	        }, configuration.getConnectionTimeout() - 50/*ms*/);
+    	    }
+    	    break;
     	}
     }
 
@@ -372,7 +387,6 @@ public final class HikariPool implements HikariPoolMBean
      */
     private boolean isConnectionAlive(final Connection connection, long timeoutMs)
     {
-        // java.sql.Connection.isValid timeout is seconds, and can't be zero for timeout to work
         if (timeoutMs < 1000)
         {
             timeoutMs = 1000;
@@ -382,7 +396,7 @@ public final class HikariPool implements HikariPoolMBean
         {
             if (jdbc4ConnectionTest)
             {
-                return connection.isValid((int) timeoutMs / 1000);
+                return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
             }
 
             Statement statement = connection.createStatement();
@@ -419,33 +433,6 @@ public final class HikariPool implements HikariPoolMBean
         catch (SQLException e)
         {
             return;
-        }
-    }
-
-    /**
-     * Register the pool and pool configuration objects with the MBean server.
-     */
-    private void registerMBean()
-    {
-        try
-        {
-            MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-            
-            ObjectName poolConfigName = new ObjectName("com.zaxxer.hikari:type=PoolConfig (" + configuration.getPoolName() + ")");
-            ObjectName poolName = new ObjectName("com.zaxxer.hikari:type=Pool (" + configuration.getPoolName() + ")");
-            if (!mBeanServer.isRegistered(poolConfigName))
-            {
-                mBeanServer.registerMBean(configuration, poolConfigName);
-                mBeanServer.registerMBean(this, poolName);
-            }
-            else
-            {
-                LOGGER.error("You cannot use the same HikariConfig for separate pool instances.");
-            }
-        }
-        catch (Exception e)
-        {
-            LOGGER.warn("Unable to register management beans.", e);
         }
     }
 
@@ -493,6 +480,7 @@ public final class HikariPool implements HikariPoolMBean
     private static enum AddConnectionStrategy
     {
     	ONLY_IF_EMPTY,
+    	BACKGROUND_FILL,
     	MAINTAIN_MINIMUM
     }
 }
