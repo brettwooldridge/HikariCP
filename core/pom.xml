@@ -123,6 +123,18 @@
          <version>0.9.1.2</version>
          <scope>test</scope>
       </dependency>
+      <dependency>
+         <groupId>org.apache.tomcat</groupId>
+         <artifactId>tomcat-jdbc</artifactId>
+         <version>7.0.47</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>tomcat</groupId>
+         <artifactId>tomcat-juli</artifactId>
+         <version>5.5.23</version>
+         <scope>test</scope>
+      </dependency>
    </dependencies>
 
    <build>
