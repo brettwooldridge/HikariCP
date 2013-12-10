@@ -32,7 +32,7 @@ the agent jar.  See below for details.
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>1.1.9</version>
+        <version>1.2.1</version>
         <scope>compile</scope>
     </dependency>
 
@@ -41,7 +41,7 @@ the agent jar.  See below for details.
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP-agent</artifactId>
-        <version>1.1.9</version>
+        <version>1.2.1</version>
         <scope>compile</scope>
     </dependency>
 
@@ -216,7 +216,7 @@ Like Statement caching, most major database vendors support statement logging th
 properties of their own driver.  This includes Oracle, MySQL, Derby, MSSQL, and others.  We
 consider this a "development-time" feature.  For those few databases that do not support it,
 [jdbcdslog-exp](https://code.google.com/p/jdbcdslog-exp/) is a good option.  It is easy to
-wrap HikariCP arould *jdbcdslog*.  It also provides some nice additional stuff like timing,
+wrap HikariCP around *jdbcdslog*.  It also provides some nice additional stuff like timing,
 logging slow queries only, and PreparedStatement bound parameter logging.   Great stuff during
 development and pre-Production.
 
@@ -260,7 +260,6 @@ management console such as JConsole:
  * ``acquireRetryDelay``
  * ``connectionTimeout``
  * ``idleTimeout``
- * ``leakDetectionThreshold``
  * ``maxLifetime``
  * ``minimumPoolSize``
  * ``maximumPoolSize``
