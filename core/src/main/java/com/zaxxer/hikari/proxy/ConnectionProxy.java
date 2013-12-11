@@ -58,12 +58,12 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
 
     @HikariInject protected static final Set<String> SQL_ERRORS;
 
-    @HikariInject protected volatile boolean _isClosed;
+    @HikariInject protected ThreadLocal<Boolean> _isClosed;
 
     @HikariInject protected ArrayList<Statement> _openStatements;
     @HikariInject protected HikariPool _parentPool;
-    
-    @HikariInject protected volatile boolean _forceClose;
+
+    @HikariInject protected boolean _forceClose;
     @HikariInject protected long _creationTime;
     @HikariInject protected long _lastAccess;
 
@@ -71,7 +71,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
     @HikariInject protected TimerTask _leakTask;
 
     protected final Connection delegate;
-    
+
     // static initializer
     static
     {
@@ -102,7 +102,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
         // If the connection is not closed.  If it is closed, it means this is being
         // called back as a result of the close() method below in which case we
         // will clear the openStatements collection en mass.
-        if (!_isClosed)
+        if (!_isClosed.get())
         {
             _openStatements.remove(statement);
         }
@@ -135,7 +135,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
     @HikariInject 
     public void _unclose()
     {
-        _isClosed = false;
+        _isClosed.set(false);
     }
 
     @HikariInject 
@@ -172,12 +172,18 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
             _openStatements = new ArrayList<Statement>(64);
             _creationTime = _lastAccess = System.currentTimeMillis();
         }
+
+        if (_isClosed == null)
+        {
+            _isClosed = new ThreadLocal<>();
+            _isClosed.set(false);
+        }
     }
 
     @HikariInject
     protected void _checkClosed() throws SQLException
     {
-        if (_isClosed)
+        if (_isClosed.get())
         {
             throw new SQLException("Connection is closed");
         }
@@ -203,9 +209,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
     @HikariOverride
     public void close() throws SQLException
     {
-        if (!_isClosed)
+        if (!_isClosed.get())
         {
-            _isClosed = true;
+            _isClosed.set(true);
             if (_leakTask != null)
             {
                 _leakTask.cancel();
@@ -236,7 +242,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
     @HikariOverride
     public boolean isClosed() throws SQLException
     {
-        return _isClosed;
+        return _isClosed.get();
     }
 
     @HikariOverride
@@ -434,7 +440,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
     @HikariOverride
     public boolean isValid(int timeout) throws SQLException
     {
-        if (_isClosed)
+        if (_isClosed.get())
         {
             return false;
         }
