@@ -55,6 +55,8 @@ public class AgentRegistrationElf
             HikariClassTransformer transformer = new HikariClassTransformer();
             systemProperties.put("com.zaxxer.hikari.transformer", transformer);
 
+            LOGGER.info("Using HikariCP agent jar found at: {}", agentJarPath);
+
             registerInstrumentation(agentJarPath);
             LOGGER.info("Successfully loaded instrumentation agent.  Scanning classes...");
 
