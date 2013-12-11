@@ -187,11 +187,6 @@ public class HikariClassTransformer implements ClassFileTransformer
         copyFields(proxy, target);
         copyMethods(proxy, target, classFile);
 
-        for (CtConstructor constructor : target.getDeclaredConstructors())
-        {
-            constructor.insertBeforeBody("__init();");
-        }
-        
         mergeClassInitializers(proxy, target, classFile);
 
         return transformConnectionSubclass(classFile);
@@ -215,6 +210,10 @@ public class HikariClassTransformer implements ClassFileTransformer
             constructor.insertBeforeBody("__init();");
         }
 
+        if (LOGGER.isDebugEnabled())
+        {
+            target.debugWriteFile("/tmp");
+        }
         return target.toBytecode();
     }
 
@@ -252,6 +251,10 @@ public class HikariClassTransformer implements ClassFileTransformer
         overrideMethods(proxy, target, classFile);
         injectTryCatch(target);
 
+        if (LOGGER.isDebugEnabled())
+        {
+            target.debugWriteFile("/tmp");
+        }
         return target.toBytecode();
     }
 
@@ -397,7 +400,7 @@ public class HikariClassTransformer implements ClassFileTransformer
         for (CtMethod method : targetClass.getDeclaredMethods())
         {
             if ((method.getModifiers() & Modifier.PUBLIC) != Modifier.PUBLIC ||  // only public methods
-                (method.getModifiers() & Modifier.STATIC) == Modifier.STATIC ||
+                (method.getModifiers() & Modifier.STATIC) == Modifier.STATIC ||  // not static methods
                 method.getAnnotation(HikariInject.class) != null ||
                 method.getAnnotation(HikariOverride.class) != null)  // ignore methods we've injected, they already try..catch
             {
@@ -413,7 +416,7 @@ public class HikariClassTransformer implements ClassFileTransformer
             {
                 if ("java.sql.SQLException".equals(exception.getName()))         // only add check to methods throwing SQLException
                 {
-                    method.insertBefore("if (_isClosed) { throw new java.sql.SQLException(\"Connection is closed\"); }");
+                    method.insertBefore("_checkClosed();");
                     break;
                 }
             }
