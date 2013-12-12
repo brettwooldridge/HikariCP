@@ -6,11 +6,12 @@ nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctn
 production-quality connection pool.  Coming in at roughly 50Kb, the library is extremely light.
 
 Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations
-were performed in ***8ms*** on a commodity PC.<sup>2</sup>  The next fastest connection pool (BoneCP) was ***5298ms***.
+were performed in ***8ms*** on a commodity PC.<sup>2</sup>&nbsp;&nbsp;The next fastest connection pool ([Tomcat](http://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html)) was ***1874ms***.
 
 | Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
 | -------- | ---------:| ---------:| ---------:|
-| BoneCP   | 5298      | 3249      | 6929      |
+| BoneCP   | 4635      | 3060      | 6747      |
+| Tomcat   | 1874      | 1719      | 1882      |
 | HikariCP | 8         | 7         | 13        |
 
 <sub><sup>1</sup>We contend HikariCP is near the theoretical maximum on current JVM technology.</sub><br/>
