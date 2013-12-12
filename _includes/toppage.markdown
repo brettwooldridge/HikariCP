@@ -5,7 +5,7 @@ production-quality connection pool.
 
 Using a stub-JDBC (nop) implementation to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations
 were performed in *8ms* on a commodity PC.  The test below is a run with a "constrained" pool of 50 connections,
-with comparison to BoneCP.
+with comparison to [Tomcat](http://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html) and [BoneCP](http://jolbox.com).
 
 <a href="http://github.com/brettwooldridge/HikariCP/wiki/50Connection_MixedBench.png"><img src="http://github.com/brettwooldridge/HikariCP/wiki/50Connection_MixedBench.png" width="680"/></a>
 The same test was run for an "unconstrained" pool, meaning that connections in the pool outnumber the number of
