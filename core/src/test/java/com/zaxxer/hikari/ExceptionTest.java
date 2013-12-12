@@ -52,4 +52,41 @@ public class ExceptionTest
         Assert.assertSame("Totals connections not as expected", 0, ds.pool.getTotalConnections());
         Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
     }
+
+    @Test
+    public void testUseAfterClose() throws SQLException
+    {
+        HikariConfig config = new HikariConfig();
+        config.setMinimumPoolSize(1);
+        config.setMaximumPoolSize(2);
+        config.setAcquireIncrement(1);
+        config.setConnectionTestQuery("VALUES 1");
+        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+        HikariDataSource ds = new HikariDataSource(config);
+
+        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
+
+        Connection connection = ds.getConnection();
+        Assert.assertNotNull(connection);
+
+        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
+
+        connection.close();
+
+        try
+        {
+            connection.prepareStatement("SELECT some, thing FROM somewhere WHERE something=?");
+            Assert.fail();
+        }
+        catch (SQLException e)
+        {
+            Assert.assertSame("Connection is closed", e.getMessage());
+        }
+
+        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
+    }
 }
