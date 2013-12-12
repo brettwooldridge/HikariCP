@@ -304,7 +304,7 @@ public final class HikariPool implements HikariPoolMBean
                         }
                         backgroundFillQueued.set(false);
                     }
-    	        }, configuration.getConnectionTimeout() - 50/*ms*/);
+    	        }, 50/*ms*/);
     	    }
     	    break;
     	}
