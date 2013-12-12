@@ -110,11 +110,11 @@ public final class JavassistProxyFactoryFactory
             }
             if ("getProxyStatement".equals(method.getName()))
             {
-                call.append("return $2 != null ? new ").append(packageName).append(".StatementJavassistProxy($$) : null;");
+                call.append("return new ").append(packageName).append(".StatementJavassistProxy($$);");
             }
             if ("getProxyPreparedStatement".equals(method.getName()))
             {
-                call.append("return $2 != null ? new ").append(packageName).append(".PreparedStatementJavassistProxy($$) : null;");
+                call.append("return new ").append(packageName).append(".PreparedStatementJavassistProxy($$);");
             }
             if ("getProxyResultSet".equals(method.getName()))
             {
@@ -122,7 +122,7 @@ public final class JavassistProxyFactoryFactory
             }
             if ("getProxyCallableStatement".equals(method.getName()))
             {
-                call.append("return $2 != null ? new ").append(packageName).append(".CallableStatementJavassistProxy($$) : null;");
+                call.append("return new ").append(packageName).append(".CallableStatementJavassistProxy($$);");
             }
             call.append('}');
             method.setBody(call.toString());
