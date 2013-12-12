@@ -72,6 +72,8 @@ of drivers that are supported and their status:
 | Oracle            | 12.1.0.1       | Untested  | oracle.jdbc.pool.OracleDataSource             |
 | PostgreSQL        | 9.2-1003.jdbc4 | Tested    | org.postgresql.ds.PGSimpleDataSource          |
 
+*NOTE: If instrumentation is used, the agent JAR cannot be "shaded" by the maven-shade-plugin or it will not function correctly.*
+
 <sub><sup>1</sup>Older/newer driver versions for a given database will *probably* work, because class names are rarely
 changed.  But if it does not work, you will known quickly because HikariCP will likely fail to start.  In this case, you
 can simply force *delegation mode* (see properties below).</sub><br/>
