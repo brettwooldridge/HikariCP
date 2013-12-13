@@ -253,7 +253,7 @@ public class HikariClassTransformer implements ClassFileTransformer
 
         if (LOGGER.isDebugEnabled())
         {
-            target.debugWriteFile("/tmp");
+            target.debugWriteFile(System.getProperty("java.io.tmpdir"));
         }
         return target.toBytecode();
     }
