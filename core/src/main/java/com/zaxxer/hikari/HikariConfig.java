@@ -82,6 +82,18 @@ public final class HikariConfig implements HikariConfigMBean
     }
 
     /**
+     * Construct a HikariConfig from the specified properties object.
+     *
+     * @param properties the name of the property file
+     */
+    public HikariConfig(Properties properties)
+    {
+        this();
+	PropertyBeanSetter.setTargetFromProperties(this, properties);
+    }
+
+
+    /**
      * Construct a HikariConfig from the specified property file name.
      *
      * @param propertyFileName the name of the property file
@@ -96,9 +108,8 @@ public final class HikariConfig implements HikariConfigMBean
             throw new IllegalArgumentException("Property file " + propertyFileName + " was not found.");
         }
 
-        try
+        try ( FileInputStream fis = new FileInputStream(propFile) )
         {
-            FileInputStream fis = new FileInputStream(propFile);
             Properties props = new Properties();
             props.load(fis);
             PropertyBeanSetter.setTargetFromProperties(this, props);
