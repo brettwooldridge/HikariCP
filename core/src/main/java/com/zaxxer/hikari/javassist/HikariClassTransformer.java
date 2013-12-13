@@ -397,7 +397,7 @@ public class HikariClassTransformer implements ClassFileTransformer
         }
     }
 
-    private void specialConnectionInjectCloseCheck(CtClass targetClass) throws Exception
+    private static void specialConnectionInjectCloseCheck(CtClass targetClass) throws Exception
     {
         for (CtMethod method : targetClass.getDeclaredMethods())
         {
