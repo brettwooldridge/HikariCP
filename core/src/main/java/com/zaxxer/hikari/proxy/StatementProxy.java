@@ -81,9 +81,9 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
     }
 
     @HikariInject
-    public SQLException _checkException(SQLException e)
+    public final void _checkException(SQLException e)
     {
-        return _connection._checkException(e);
+        _connection._checkException(e);
     }
 
     @HikariInject
@@ -122,7 +122,8 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
         }
         catch (SQLException e)
         {
-            throw _checkException(e);
+            _connection._checkException(e);
+            throw e;
         }
     }
 
@@ -135,7 +136,8 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
         }
         catch (SQLException e)
         {
-            throw _checkException(e);
+            _connection._checkException(e);
+            throw e;
         }
     }
 
@@ -148,7 +150,8 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
         }
         catch (SQLException e)
         {
-            throw _checkException(e);
+            _connection._checkException(e);
+            throw e;
         }
     }
 
@@ -161,7 +164,8 @@ public abstract class StatementProxy implements IHikariStatementProxy, Statement
         }
         catch (SQLException e)
         {
-            throw _checkException(e);
+            _connection._checkException(e);
+            throw e;
         }
     }
 

@@ -34,7 +34,7 @@ public interface IHikariConnectionProxy
 
     void _unregisterStatement(Object statement);
 
-    SQLException _checkException(SQLException sqle);
+    void _checkException(SQLException sqle);
 
     boolean _isBrokenConnection();
 

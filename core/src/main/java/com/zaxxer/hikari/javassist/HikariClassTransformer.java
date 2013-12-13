@@ -388,7 +388,7 @@ public class HikariClassTransformer implements ClassFileTransformer
                 if ("java.sql.SQLException".equals(exception.getName()))         // only add try..catch to methods throwing SQLException
                 {
                     LOGGER.debug("Injecting try..catch into {}{}", method.getName(), method.getSignature());
-                    method.addCatch("throw _checkException($e);", exception);
+                    method.addCatch("_checkException($e); throw $e;", exception);
                     break;
                 }
             }
