@@ -253,7 +253,7 @@ public class HikariClassTransformer implements ClassFileTransformer
 
         if (LOGGER.isDebugEnabled())
         {
-            target.debugWriteFile("/tmp");
+            target.debugWriteFile(System.getProperty("java.io.tmpdir"));
         }
         return target.toBytecode();
     }
@@ -345,13 +345,15 @@ public class HikariClassTransformer implements ClassFileTransformer
         }
 
         CtConstructor destInitializer = targetClass.getClassInitializer();
-        if (destInitializer == null && srcInitializer != null)
-        {
-            CtConstructor copy = CtNewConstructor.copy(srcInitializer, targetClass, null);
-            targetClass.addConstructor(copy);
-            CtMethod __static = CtNewMethod.make(Modifier.STATIC, CtClass.voidType, "__static", null, null, "{}", targetClass);
-            targetClass.addMethod(__static);
-            LOGGER.debug("Copied static initializer of {} to {}", srcClass.getSimpleName(), targetClass.getSimpleName());
+        if (destInitializer == null) { 
+            if (srcInitializer != null)
+            {
+                CtConstructor copy = CtNewConstructor.copy(srcInitializer, targetClass, null);
+                targetClass.addConstructor(copy);
+                CtMethod __static = CtNewMethod.make(Modifier.STATIC, CtClass.voidType, "__static", null, null, "{}", targetClass);
+                targetClass.addMethod(__static);
+                LOGGER.debug("Copied static initializer of {} to {}", srcClass.getSimpleName(), targetClass.getSimpleName());
+            }
         }
         else
         {
@@ -395,7 +397,7 @@ public class HikariClassTransformer implements ClassFileTransformer
         }
     }
 
-    private void specialConnectionInjectCloseCheck(CtClass targetClass) throws Exception
+    private static void specialConnectionInjectCloseCheck(CtClass targetClass) throws Exception
     {
         for (CtMethod method : targetClass.getDeclaredMethods())
         {
