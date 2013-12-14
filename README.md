@@ -12,7 +12,7 @@ were performed in ***8ms*** on a commodity PC.<sup>2</sup>&nbsp;&nbsp;The next f
 | -------- | ---------:| ---------:| ---------:|
 | BoneCP   | 4635      | 3060      | 6747      |
 | Tomcat   | 1874      | 1719      | 1882      |
-| HikariCP | 8         | 7         | 13        |
+| HikariCP | 9         | 7         | 13        |
 
 <sub><sup>1</sup>We contend HikariCP is near the theoretical maximum on current JVM technology.</sub><br/>
 <sub><sup>2</sup>400 threads, 50 connection pool. Measurements in *nanoseconds* and converted to *milliseconds*.
