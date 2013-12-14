@@ -6,11 +6,12 @@ nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctn
 production-quality connection pool.  Coming in at roughly 50Kb, the library is extremely light.
 
 Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations
-were performed in ***8ms*** on a commodity PC.<sup>2</sup>  The next fastest connection pool (BoneCP) was ***5298ms***.
+were performed in ***8ms*** on a commodity PC.<sup>2</sup>&nbsp;&nbsp;The next fastest connection pool ([Tomcat](http://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html)) was ***1874ms***.
 
 | Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
 | -------- | ---------:| ---------:| ---------:|
-| BoneCP   | 5298      | 3249      | 6929      |
+| BoneCP   | 4635      | 3060      | 6747      |
+| Tomcat   | 1874      | 1719      | 1882      |
 | HikariCP | 8         | 7         | 13        |
 
 <sub><sup>1</sup>We contend HikariCP is near the theoretical maximum on current JVM technology.</sub><br/>
@@ -71,6 +72,8 @@ of drivers that are supported and their status:
 | MySQL Connector/J | 5.1.56         | Tested    | com.mysql.jdbc.jdbc2.optional.MysqlDataSource |
 | Oracle            | 12.1.0.1       | Untested  | oracle.jdbc.pool.OracleDataSource             |
 | PostgreSQL        | 9.2-1003.jdbc4 | Tested    | org.postgresql.ds.PGSimpleDataSource          |
+
+*NOTE: If instrumentation is used, the agent JAR cannot be "shaded" by the maven-shade-plugin or it will not function correctly.*
 
 <sub><sup>1</sup>Older/newer driver versions for a given database will *probably* work, because class names are rarely
 changed.  But if it does not work, you will known quickly because HikariCP will likely fail to start.  In this case, you
@@ -226,7 +229,7 @@ development and pre-Production.
 
     HikariConfig config = new HikariConfig();
     config.setMaximumPoolSize(100);
-    config.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource);
+    config.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
     config.addDataSourceProperty("url", "jdbc:mysql://localhost/database");
     config.addDataSourceProperty("user", "bart");
     config.addDataSourceProperty("password", "51mp50n");
