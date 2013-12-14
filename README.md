@@ -6,7 +6,7 @@ nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctn
 production-quality connection pool.  Coming in at roughly 50Kb, the library is extremely light.
 
 Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations
-were performed in ***8ms*** on a commodity PC.<sup>2</sup>&nbsp;&nbsp;The next fastest connection pool ([Tomcat](http://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html)) was ***1874ms***.
+were performed in ***10ms*** on a commodity PC.<sup>2</sup>&nbsp;&nbsp;The next fastest connection pool ([Tomcat](http://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html)) was ***1874ms***.
 
 | Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
 | -------- | ---------:| ---------:| ---------:|
@@ -17,6 +17,7 @@ were performed in ***8ms*** on a commodity PC.<sup>2</sup>&nbsp;&nbsp;The next f
 <sub><sup>1</sup>We contend HikariCP is near the theoretical maximum on current JVM technology.</sub><br/>
 <sub><sup>2</sup>400 threads, 50 connection pool. Measurements in *nanoseconds* and converted to *milliseconds*.
 See benchmarks [here](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks).  See how we do it [here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).</sub><br/>
+<sub><sup>3</sup>Benchmark numbers updated periodically to reflect latest developments.</sub><br/>
 
 Or look at this:
 ![](http://github.com/brettwooldridge/HikariCP/wiki/50Connection_MixedBench.png)
