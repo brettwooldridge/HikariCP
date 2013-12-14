@@ -272,7 +272,7 @@ management console such as JConsole:
 Google discussion group [HikariCP here](https://groups.google.com/d/forum/hikari-cp)
 
 #### Requirements ####
- * Oracle Java 7 and above<sup>1</sup>
+ * Oracle Java 7 and above<sup>1</sup>.  If you need legacy Java support, I recommend the Tomcat pool.
  * Javassist 3.18.1+ library
  * slf4j library
 
