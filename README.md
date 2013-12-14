@@ -52,7 +52,7 @@ the agent jar.  See below for details.
 
 ----------------------------------------------------
 #### Driver Support ####
-HikariCP has two modes of operation: **Delegation** and **Instrumentation**.  *Instrumentation* is approximately 20-40% more
+HikariCP has two modes of operation: **Delegation** and **Instrumentation**.  *Instrumentation* is approximately 30% more
 performant, but both are exceedingly fast.
 
 ##### Delegation #####
