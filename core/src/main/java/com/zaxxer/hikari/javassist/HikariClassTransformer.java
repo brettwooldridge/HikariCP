@@ -419,6 +419,7 @@ public class HikariClassTransformer implements ClassFileTransformer
             {
                 if ("java.sql.SQLException".equals(exception.getName()))         // only add check to methods throwing SQLException
                 {
+                    LOGGER.debug("Injecting _checkClosed() call into {}{}", method.getName(), method.getSignature());
                     method.insertBefore("_checkClosed();");
                     break;
                 }
