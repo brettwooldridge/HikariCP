@@ -197,15 +197,18 @@ public final class HikariConfig implements HikariConfigMBean
     /** {@inheritDoc} */
     public void setConnectionTimeout(long connectionTimeoutMs)
     {
-        if (connectionTimeoutMs < 100)
-        {
-            throw new IllegalArgumentException("connectionTimeout cannot be less than 100ms");
-        }
         if (connectionTimeoutMs == 0)
         {
             this.connectionTimeout = Integer.MAX_VALUE;
         }
-        this.connectionTimeout = connectionTimeoutMs;
+        else if (connectionTimeoutMs < 100)
+        {
+            throw new IllegalArgumentException("connectionTimeout cannot be less than 100ms");
+        }
+        else
+        {
+            this.connectionTimeout = connectionTimeoutMs;
+        }
     }
 
     public String getDataSourceClassName()
