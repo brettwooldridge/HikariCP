@@ -52,7 +52,7 @@ import com.zaxxer.hikari.javassist.HikariOverride;
  *
  * @author Brett Wooldridge
  */
-public abstract class ConnectionProxy implements IHikariConnectionProxy, Connection
+public abstract class ConnectionProxy implements IHikariConnectionProxy
 {
     private static ProxyFactory PROXY_FACTORY;
 

@@ -55,6 +55,7 @@ public final class HikariPool implements HikariPoolMBean
     private final DataSource dataSource;
     private final long leakDetectionThreshold;
     private final boolean jdbc4ConnectionTest;
+    private final boolean isAutoCommit;
     private final boolean delegationProxies;
 
     private final Timer houseKeepingTimer;
@@ -76,6 +77,7 @@ public final class HikariPool implements HikariPoolMBean
 
         this.jdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
         this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
+        this.isAutoCommit = configuration.isAutoCommit();
 
         String dsClassName = configuration.getDataSourceClassName();
         try
@@ -158,7 +160,7 @@ public final class HikariPool implements HikariPoolMBean
                     connectionProxy._captureStack(leakDetectionThreshold, houseKeepingTimer);
                 }
 
-                connection.setAutoCommit(configuration.isAutoCommit());
+                connection.setAutoCommit(isAutoCommit);
                 connection.clearWarnings();
 
                 return connection;
@@ -187,6 +189,8 @@ public final class HikariPool implements HikariPoolMBean
      */
     public void releaseConnection(IHikariConnectionProxy connectionProxy)
     {
+        rollbackConnection(connectionProxy);
+
         if (!connectionProxy._isBrokenConnection())
         {
             connectionProxy._markLastAccess();
@@ -430,6 +434,26 @@ public final class HikariPool implements HikariPoolMBean
         {
             totalConnections.decrementAndGet();
             connectionProxy.__close();
+        }
+        catch (SQLException e)
+        {
+            return;
+        }
+    }
+
+    /**
+     * Permanently close a connection.
+     *
+     * @param connectionProxy the connection to actually close
+     */
+    private void rollbackConnection(IHikariConnectionProxy connectionProxy)
+    {
+        try
+        {
+            if (!connectionProxy.getAutoCommit())
+            {
+                connectionProxy.rollback();
+            }
         }
         catch (SQLException e)
         {

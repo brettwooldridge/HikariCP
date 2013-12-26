@@ -26,7 +26,7 @@ import com.zaxxer.hikari.HikariPool;
  *
  * @author Brett Wooldridge
  */
-public interface IHikariConnectionProxy
+public interface IHikariConnectionProxy extends Connection
 {
     void _unclose();
 
