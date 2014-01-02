@@ -46,13 +46,14 @@ public final class HikariPool implements HikariPoolMBean
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
 
+    final DataSource dataSource;
+
     private final HikariConfig configuration;
     private final LinkedTransferQueue<IHikariConnectionProxy> idleConnections;
 
     private final AtomicInteger totalConnections;
     private final AtomicInteger idleConnectionCount;
     private final AtomicBoolean backgroundFillQueued;
-    private final DataSource dataSource;
     private final long leakDetectionThreshold;
     private final boolean jdbc4ConnectionTest;
     private final boolean isAutoCommit;

@@ -32,6 +32,7 @@ public class StubDataSource implements DataSource
 {
     private String user;
     private String password;
+    private PrintWriter logWriter;
 
     public String getUser()
     {
@@ -56,12 +57,13 @@ public class StubDataSource implements DataSource
     /** {@inheritDoc} */
     public PrintWriter getLogWriter() throws SQLException
     {
-        return null;
+        return logWriter;
     }
 
     /** {@inheritDoc} */
     public void setLogWriter(PrintWriter out) throws SQLException
     {
+        this.logWriter = out;
     }
 
     /** {@inheritDoc} */

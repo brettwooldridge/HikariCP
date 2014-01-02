@@ -67,12 +67,16 @@ public class HikariDataSource implements DataSource
     /** {@inheritDoc} */
     public PrintWriter getLogWriter() throws SQLException
     {
-        return null;
+        return (pool.dataSource != null ? pool.dataSource.getLogWriter() : null);
     }
 
     /** {@inheritDoc} */
     public void setLogWriter(PrintWriter out) throws SQLException
     {
+        if (pool.dataSource != null)
+        {
+            pool.dataSource.setLogWriter(out);
+        }
     }
 
     /** {@inheritDoc} */
