@@ -208,6 +208,11 @@ public final class HikariPool implements HikariPoolMBean
         }
     }
 
+    void shutdown()
+    {
+        // TODO: implement complete shutdown of the pool
+    }
+
     // ***********************************************************************
     //                        HikariPoolMBean methods
     // ***********************************************************************
