@@ -58,6 +58,7 @@ public final class HikariPool implements HikariPoolMBean
     private final boolean jdbc4ConnectionTest;
     private final boolean isAutoCommit;
     private final boolean delegationProxies;
+    private int transactionIsolation;
 
     private final Timer houseKeepingTimer;
 
@@ -79,6 +80,7 @@ public final class HikariPool implements HikariPoolMBean
         this.jdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
         this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
         this.isAutoCommit = configuration.isAutoCommit();
+        this.transactionIsolation = configuration.getTransactionIsolation();
 
         String dsClassName = configuration.getDataSourceClassName();
         try
@@ -162,6 +164,7 @@ public final class HikariPool implements HikariPoolMBean
                 }
 
                 connection.setAutoCommit(isAutoCommit);
+                connection.setTransactionIsolation(transactionIsolation);
                 connection.clearWarnings();
 
                 return connection;
@@ -343,6 +346,11 @@ public final class HikariPool implements HikariPoolMBean
                 {
                     // This will be caught below
                     throw new RuntimeException("Connection not alive, retry.");
+                }
+
+                if (transactionIsolation < 0)
+                {
+                    transactionIsolation = connection.getTransactionIsolation();
                 }
 
                 String initSql = configuration.getConnectionInitSql();
