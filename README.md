@@ -34,7 +34,7 @@ the agent jar.  See below for details.
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>1.2.1</version>
+        <version>1.2.2</version>
         <scope>compile</scope>
     </dependency>
 
@@ -43,7 +43,7 @@ the agent jar.  See below for details.
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP-agent</artifactId>
-        <version>1.2.1</version>
+        <version>1.2.2</version>
         <scope>compile</scope>
     </dependency>
 
@@ -106,6 +106,10 @@ property. *Default: 3*
 This property controls the number of milliseconds to delay between attempts to acquire a
 connection to the database.  If ``acquireRetries`` is 0, this property has no effect.
 *Default: 750*
+
+``autoCommit``<br/>
+This property controls the default auto-commit behavior of connections returned from the pool.
+It is a boolean value.  *Default: true*
 
 ``connectionInitSql``<br/>
 This property sets a SQL statement that will be executed after every new connection creation
@@ -177,6 +181,15 @@ value for this is best determined by your execution environment.  *Default: 10*
 ``poolName``<br/>
 This property represents a user-defined name for the connection pool and appears mainly
 in a JMX management console to identify pools and pool configurations.  *Default: auto-generated*
+
+``transactionIsolation``<br/>
+This property controls the default transation isolation level of connections returned from
+the pool.  If this property is not specified, the default transaction isolation level defined
+by the JDBC driver is used.  Typically, the JDBC driver default transaction isolation level
+should be used.  Only use this property if you have specific isolation requirements that are
+common for all queries, otherwise simply set the isolation level manually when creating or
+preparing statements.  The value of this property is the constant name from the ``Connection``
+class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, etc.  *Default: none*
 
 ``useInstrumentation``<br/>
 This property controls whether HikariCP will attempt to use bytecode instrumentation to boost
