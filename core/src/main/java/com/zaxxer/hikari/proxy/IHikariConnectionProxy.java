@@ -26,7 +26,7 @@ import com.zaxxer.hikari.HikariPool;
  *
  * @author Brett Wooldridge
  */
-public interface IHikariConnectionProxy
+public interface IHikariConnectionProxy extends Connection
 {
     void _unclose();
 
@@ -34,7 +34,7 @@ public interface IHikariConnectionProxy
 
     void _unregisterStatement(Object statement);
 
-    SQLException _checkException(SQLException sqle);
+    void _checkException(SQLException sqle);
 
     boolean _isBrokenConnection();
 

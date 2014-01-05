@@ -72,9 +72,9 @@ public final class JavassistProxyFactoryFactory
 
         try
         {
-            String methodBody = "{ _checkClosed(); try { return ((cast) delegate).method($$); } catch (SQLException e) { throw _checkException(e); } }";
+            String methodBody = "{ _checkClosed(); try { return ((cast) delegate).method($$); } catch (SQLException e) { _checkException(e); throw e;} }";
             generateProxyClass(Connection.class, ConnectionProxy.class, methodBody);
-            methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { throw _checkException(e); } }";
+            methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { _checkException(e); throw e;} }";
             generateProxyClass(Statement.class, StatementProxy.class, methodBody);
             generateProxyClass(CallableStatement.class, CallableStatementProxy.class, methodBody);
             generateProxyClass(PreparedStatement.class, PreparedStatementProxy.class, methodBody);
@@ -110,11 +110,11 @@ public final class JavassistProxyFactoryFactory
             }
             if ("getProxyStatement".equals(method.getName()))
             {
-                call.append("return $2 != null ? new ").append(packageName).append(".StatementJavassistProxy($$) : null;");
+                call.append("return new ").append(packageName).append(".StatementJavassistProxy($$);");
             }
             if ("getProxyPreparedStatement".equals(method.getName()))
             {
-                call.append("return $2 != null ? new ").append(packageName).append(".PreparedStatementJavassistProxy($$) : null;");
+                call.append("return new ").append(packageName).append(".PreparedStatementJavassistProxy($$);");
             }
             if ("getProxyResultSet".equals(method.getName()))
             {
@@ -122,7 +122,7 @@ public final class JavassistProxyFactoryFactory
             }
             if ("getProxyCallableStatement".equals(method.getName()))
             {
-                call.append("return $2 != null ? new ").append(packageName).append(".CallableStatementJavassistProxy($$) : null;");
+                call.append("return new ").append(packageName).append(".CallableStatementJavassistProxy($$);");
             }
             call.append('}');
             method.setBody(call.toString());

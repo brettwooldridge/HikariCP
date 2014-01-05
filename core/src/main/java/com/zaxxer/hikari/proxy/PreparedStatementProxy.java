@@ -63,7 +63,8 @@ public abstract class PreparedStatementProxy extends StatementProxy implements I
     	}
     	catch (SQLException e)
     	{
-    		throw _checkException(e);
+            _connection._checkException(e);
+            throw e;
     	}
     }
 

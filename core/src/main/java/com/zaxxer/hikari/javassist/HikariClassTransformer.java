@@ -187,11 +187,6 @@ public class HikariClassTransformer implements ClassFileTransformer
         copyFields(proxy, target);
         copyMethods(proxy, target, classFile);
 
-        for (CtConstructor constructor : target.getDeclaredConstructors())
-        {
-            constructor.insertBeforeBody("__init();");
-        }
-        
         mergeClassInitializers(proxy, target, classFile);
 
         return transformConnectionSubclass(classFile);
@@ -215,6 +210,10 @@ public class HikariClassTransformer implements ClassFileTransformer
             constructor.insertBeforeBody("__init();");
         }
 
+        if (LOGGER.isDebugEnabled())
+        {
+            target.debugWriteFile(System.getProperty("java.io.tmpdir"));
+        }
         return target.toBytecode();
     }
 
@@ -252,6 +251,10 @@ public class HikariClassTransformer implements ClassFileTransformer
         overrideMethods(proxy, target, classFile);
         injectTryCatch(target);
 
+        if (LOGGER.isDebugEnabled())
+        {
+            target.debugWriteFile(System.getProperty("java.io.tmpdir"));
+        }
         return target.toBytecode();
     }
 
@@ -342,13 +345,16 @@ public class HikariClassTransformer implements ClassFileTransformer
         }
 
         CtConstructor destInitializer = targetClass.getClassInitializer();
-        if (destInitializer == null && srcInitializer != null)
+        if (destInitializer == null)
         {
-            CtConstructor copy = CtNewConstructor.copy(srcInitializer, targetClass, null);
-            targetClass.addConstructor(copy);
-            CtMethod __static = CtNewMethod.make(Modifier.STATIC, CtClass.voidType, "__static", null, null, "{}", targetClass);
-            targetClass.addMethod(__static);
-            LOGGER.debug("Copied static initializer of {} to {}", srcClass.getSimpleName(), targetClass.getSimpleName());
+            if (srcInitializer != null)
+            {
+                CtConstructor copy = CtNewConstructor.copy(srcInitializer, targetClass, null);
+                targetClass.addConstructor(copy);
+                CtMethod __static = CtNewMethod.make(Modifier.STATIC, CtClass.voidType, "__static", null, null, "{}", targetClass);
+                targetClass.addMethod(__static);
+                LOGGER.debug("Copied static initializer of {} to {}", srcClass.getSimpleName(), targetClass.getSimpleName());
+            }
         }
         else
         {
@@ -385,7 +391,7 @@ public class HikariClassTransformer implements ClassFileTransformer
                 if ("java.sql.SQLException".equals(exception.getName()))         // only add try..catch to methods throwing SQLException
                 {
                     LOGGER.debug("Injecting try..catch into {}{}", method.getName(), method.getSignature());
-                    method.addCatch("throw _checkException($e);", exception);
+                    method.addCatch("_checkException($e); throw $e;", exception);
                     break;
                 }
             }
@@ -397,7 +403,7 @@ public class HikariClassTransformer implements ClassFileTransformer
         for (CtMethod method : targetClass.getDeclaredMethods())
         {
             if ((method.getModifiers() & Modifier.PUBLIC) != Modifier.PUBLIC ||  // only public methods
-                (method.getModifiers() & Modifier.STATIC) == Modifier.STATIC ||
+                (method.getModifiers() & Modifier.STATIC) == Modifier.STATIC ||  // not static methods
                 method.getAnnotation(HikariInject.class) != null ||
                 method.getAnnotation(HikariOverride.class) != null)  // ignore methods we've injected, they already try..catch
             {
@@ -413,7 +419,8 @@ public class HikariClassTransformer implements ClassFileTransformer
             {
                 if ("java.sql.SQLException".equals(exception.getName()))         // only add check to methods throwing SQLException
                 {
-                    method.insertBefore("if (_isClosed) { throw new java.sql.SQLException(\"Connection is closed\"); }");
+                    LOGGER.debug("Injecting _checkClosed() call into {}{}", method.getName(), method.getSignature());
+                    method.insertBefore("_checkClosed();");
                     break;
                 }
             }

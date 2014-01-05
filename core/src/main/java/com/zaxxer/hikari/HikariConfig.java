@@ -19,6 +19,8 @@ package com.zaxxer.hikari;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.sql.Connection;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -50,6 +52,7 @@ public final class HikariConfig implements HikariConfigMBean
 
     // Properties NOT changeable at runtime
     //
+    private int transactionIsolation;
     private String poolName;
     private String connectionTestQuery;
     private String dataSourceClassName;
@@ -79,6 +82,7 @@ public final class HikariConfig implements HikariConfigMBean
         maxPoolSize = 60;
         maxLifetime = MAX_LIFETIME;
         poolName = "HikariPool-" + poolNumber++;
+        transactionIsolation = -1;
     }
 
     /**
@@ -89,7 +93,7 @@ public final class HikariConfig implements HikariConfigMBean
     public HikariConfig(Properties properties)
     {
         this();
-	PropertyBeanSetter.setTargetFromProperties(this, properties);
+        PropertyBeanSetter.setTargetFromProperties(this, properties);
     }
 
 
@@ -197,15 +201,18 @@ public final class HikariConfig implements HikariConfigMBean
     /** {@inheritDoc} */
     public void setConnectionTimeout(long connectionTimeoutMs)
     {
-        if (connectionTimeoutMs < 100)
-        {
-            throw new IllegalArgumentException("connectionTimeout cannot be less than 100ms");
-        }
         if (connectionTimeoutMs == 0)
         {
             this.connectionTimeout = Integer.MAX_VALUE;
         }
-        this.connectionTimeout = connectionTimeoutMs;
+        else if (connectionTimeoutMs < 100)
+        {
+            throw new IllegalArgumentException("connectionTimeout cannot be less than 100ms");
+        }
+        else
+        {
+            this.connectionTimeout = connectionTimeoutMs;
+        }
     }
 
     public String getDataSourceClassName()
@@ -371,6 +378,32 @@ public final class HikariConfig implements HikariConfigMBean
     public void setShadedCodexMapping(String mapping)
     {
         this.shadedCodexMapping = mapping;
+    }
+
+    public int getTransactionIsolation()
+    {
+        return transactionIsolation;
+    }
+
+    /**
+     * Set the default transaction isolation level.  The specified value is the
+     * constant name from the <code>Connection</code> class, eg. 
+     * <code>TRANSACTION_REPEATABLE_READ</code>.
+     *
+     * @param isolationLevel the name of the isolation level
+     */
+    public void setTransactionIsolation(String isolationLevel)
+    {
+        try
+        {
+            Field field = Connection.class.getField(isolationLevel);
+            int level = field.getInt(null);
+            this.transactionIsolation = level;
+        }
+        catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e)
+        {
+            throw new IllegalArgumentException("Invalid transaction isolation value: " + isolationLevel);
+        }
     }
 
     public void validate()

@@ -44,7 +44,7 @@ public final class PropertyBeanSetter
         for (Object propKey : properties.keySet())
         {
             String propName = propKey.toString();
-            String propValue = properties.get(propKey).toString();
+            Object propValue = properties.get(propKey);
 
             if (target instanceof HikariConfig && propName.startsWith("dataSource."))
             {
@@ -58,7 +58,7 @@ public final class PropertyBeanSetter
         }
     }
 
-    private static void setProperty(Object target, String propName, String propValue)
+    private static void setProperty(Object target, String propName, Object propValue)
     {
         String capitalized = "set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
         try
@@ -68,17 +68,21 @@ public final class PropertyBeanSetter
             Class<?> paramClass = writeMethod.getParameterTypes()[0];
             if (paramClass == int.class)
             {
-                writeMethod.invoke(target, Integer.parseInt(propValue));
+                writeMethod.invoke(target, Integer.parseInt(propValue.toString()));
             }
             else if (paramClass == long.class)
             {
-                writeMethod.invoke(target, Long.parseLong(propValue));
+                writeMethod.invoke(target, Long.parseLong(propValue.toString()));
             }
             else if (paramClass == boolean.class)
             {
-                writeMethod.invoke(target, Boolean.parseBoolean(propValue));
+                writeMethod.invoke(target, Boolean.parseBoolean(propValue.toString()));
             }
             else if (paramClass == String.class)
+            {
+                writeMethod.invoke(target, propValue.toString());
+            }
+            else
             {
                 writeMethod.invoke(target, propValue);
             }

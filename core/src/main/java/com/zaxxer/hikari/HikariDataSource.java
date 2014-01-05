@@ -36,6 +36,7 @@ public class HikariDataSource implements DataSource
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariDataSource.class);
 
     private int loginTimeout;
+    private volatile boolean isShutdown;
 
     // Package scope for testing
     HikariPool pool;
@@ -53,7 +54,12 @@ public class HikariDataSource implements DataSource
     /** {@inheritDoc} */
     public Connection getConnection() throws SQLException
     {
-        return pool.getConnection();
+        if (!isShutdown)
+        {
+            return pool.getConnection();
+        }
+
+        throw new IllegalStateException("The datasource has been shutdown.");
     }
 
     /** {@inheritDoc} */
@@ -61,18 +67,22 @@ public class HikariDataSource implements DataSource
     {
         LOGGER.warn("getConnection() with username and password is not supported");
 
-        return pool.getConnection();
+        return getConnection();
     }
 
     /** {@inheritDoc} */
     public PrintWriter getLogWriter() throws SQLException
     {
-        return null;
+        return (pool.dataSource != null ? pool.dataSource.getLogWriter() : null);
     }
 
     /** {@inheritDoc} */
     public void setLogWriter(PrintWriter out) throws SQLException
     {
+        if (pool.dataSource != null)
+        {
+            pool.dataSource.setLogWriter(out);
+        }
     }
 
     /** {@inheritDoc} */
@@ -104,5 +114,16 @@ public class HikariDataSource implements DataSource
     public boolean isWrapperFor(Class<?> iface) throws SQLException
     {
         return (this.getClass().isAssignableFrom(iface));
+    }
+
+    public void shutdown()
+    {
+        boolean shutdown = isShutdown;
+        isShutdown = true;
+        if (!shutdown)
+        {
+            pool.shutdown();
+            pool = null;
+        }
     }
 }

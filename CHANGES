@@ -1,5 +1,23 @@
 HikariCP Changes
 
+Changes between 1.2.1 and 1.2.2
+
+ *) Perform a rollback() on connections returned to the pool with
+    auto commit disabled.
+
+ *) Add a constructor for HikariConfig that accepts a Properties
+    object.
+
+ *) Speed improvements for delegate mode.
+
+ *) Fix a bug where connection timeouts could not be disabled.
+
+ *) Permit setting the DataSource logWriter either on the HikariDataSource
+    or via addDataSourceProperty() on the HikariConfig.
+
+ *) Add transactionIsolation property to allow setting the default
+    transaction isolation level for connections.
+
 Changes between 1.1.9 and 1.2.1
 
  *) Clear SQL warnings before returning a connection to the user.

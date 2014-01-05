@@ -1,6 +1,8 @@
 package com.zaxxer.hikari;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.PrintWriter;
 
 import javax.sql.DataSource;
 
@@ -34,5 +36,20 @@ public class TestPropertySetter
         Class<?> clazz = this.getClass().getClassLoader().loadClass(config.getDataSourceClassName());
         DataSource dataSource = (DataSource) clazz.newInstance();
         PropertyBeanSetter.setTargetFromProperties(dataSource, config.getDataSourceProperties());
+    }
+
+    @Test
+    public void testObjectProperty() throws Exception
+    {
+        HikariConfig config = new HikariConfig();
+        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+        PrintWriter writer = new PrintWriter(new ByteArrayOutputStream());
+        config.addDataSourceProperty("logWriter", writer);
+
+        Class<?> clazz = this.getClass().getClassLoader().loadClass(config.getDataSourceClassName());
+        DataSource dataSource = (DataSource) clazz.newInstance();
+        PropertyBeanSetter.setTargetFromProperties(dataSource, config.getDataSourceProperties());
+
+        Assert.assertSame(PrintWriter.class, dataSource.getLogWriter().getClass());
     }
 }

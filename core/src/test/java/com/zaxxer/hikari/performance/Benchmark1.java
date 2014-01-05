@@ -10,6 +10,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 
+import org.apache.tomcat.jdbc.pool.PoolProperties;
+
 import snaq.db.DBPoolDataSource;
 
 import com.jolbox.bonecp.BoneCPConfig;
@@ -38,7 +40,7 @@ public class Benchmark1
         if (args.length < 3)
         {
             System.err.println("Usage: <poolname> <threads> <poolsize>");
-            System.err.println("  <poolname>  'hikari' or 'bone'");
+            System.err.println("  <poolname>  'hikari', 'bone', 'dbpool', 'c3p0', 'tomcat'");
             System.exit(0);
         }
 
@@ -66,6 +68,11 @@ public class Benchmark1
             benchmarks.ds = benchmarks.setupC3P0();
             System.out.printf("Benchmarking C3P0 - %d threads, %d connections", THREADS, POOL_MAX);
         }
+        else if (args[0].equals("tomcat"))
+        {
+            benchmarks.ds = benchmarks.setupTomcat();
+            System.out.printf("Benchmarking Tomcat-JDBC - %d threads, %d connections", THREADS, POOL_MAX);
+        }
         else
         {
             System.err.println("Start with one of: hikari, bone");
@@ -74,6 +81,7 @@ public class Benchmark1
 
         System.out.println("\nMixedBench");
         System.out.println(" Warming up JIT");
+        benchmarks.startMixedBench(100, 10000);
         benchmarks.startMixedBench(100, 10000);
         System.out.println(" MixedBench Final Timing Runs");
         benchmarks.startMixedBench(THREADS, 1000);
@@ -236,6 +244,27 @@ public class Benchmark1
         {
             throw new RuntimeException(e);
         }
+    }
+
+    private DataSource setupTomcat()
+    {
+    	PoolProperties p = new PoolProperties();
+    	p.setUrl("jdbc:stub");
+        p.setDriverClassName("com.zaxxer.hikari.performance.StubDriver");
+        p.setUsername("sa");
+        p.setPassword("");
+        p.setInitialSize(POOL_MAX / 2);
+        p.setMinIdle(0);
+        p.setMaxIdle(POOL_MAX);
+        p.setMaxActive(POOL_MAX);
+        p.setMaxWait(8000);
+        p.setMinEvictableIdleTimeMillis((int) TimeUnit.MINUTES.toMillis(30)); 
+        p.setTestOnBorrow(true);
+        p.setValidationQuery("VALUES 1");
+
+        DataSource dataSource = new org.apache.tomcat.jdbc.pool.DataSource(p);
+
+        return dataSource;
     }
 
     private class MixedRunner implements Measurable

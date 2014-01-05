@@ -193,4 +193,14 @@ public class CreationTest
         Assert.assertSame("Totals connections not as expected", 2, ds.pool.getTotalConnections());
         Assert.assertSame("Idle connections not as expected", 2, ds.pool.getIdleConnections());
     }
+
+    @Test
+    public void testIsolation() throws Exception
+    {
+        HikariConfig config = new HikariConfig();
+        config.setTransactionIsolation("TRANSACTION_REPEATABLE_READ");
+        int transactionIsolation = config.getTransactionIsolation();
+
+        Assert.assertSame(Connection.TRANSACTION_REPEATABLE_READ, transactionIsolation);
+    }
 }

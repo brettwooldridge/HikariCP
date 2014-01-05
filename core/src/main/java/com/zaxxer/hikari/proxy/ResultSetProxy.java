@@ -50,9 +50,9 @@ public abstract class ResultSetProxy implements IHikariResultSetProxy, ResultSet
     }
 
     @HikariInject
-    public SQLException _checkException(SQLException e)
+    public final void _checkException(SQLException e)
     {
-        return _statement._checkException(e);
+        _statement._checkException(e);
     }
 
     @HikariInject

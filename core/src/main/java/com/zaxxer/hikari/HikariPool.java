@@ -46,16 +46,19 @@ public final class HikariPool implements HikariPoolMBean
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
 
+    final DataSource dataSource;
+
     private final HikariConfig configuration;
     private final LinkedTransferQueue<IHikariConnectionProxy> idleConnections;
 
     private final AtomicInteger totalConnections;
     private final AtomicInteger idleConnectionCount;
     private final AtomicBoolean backgroundFillQueued;
-    private final DataSource dataSource;
     private final long leakDetectionThreshold;
     private final boolean jdbc4ConnectionTest;
+    private final boolean isAutoCommit;
     private final boolean delegationProxies;
+    private int transactionIsolation;
 
     private final Timer houseKeepingTimer;
 
@@ -76,6 +79,8 @@ public final class HikariPool implements HikariPoolMBean
 
         this.jdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
         this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
+        this.isAutoCommit = configuration.isAutoCommit();
+        this.transactionIsolation = configuration.getTransactionIsolation();
 
         String dsClassName = configuration.getDataSourceClassName();
         try
@@ -158,7 +163,8 @@ public final class HikariPool implements HikariPoolMBean
                     connectionProxy._captureStack(leakDetectionThreshold, houseKeepingTimer);
                 }
 
-                connection.setAutoCommit(configuration.isAutoCommit());
+                connection.setAutoCommit(isAutoCommit);
+                connection.setTransactionIsolation(transactionIsolation);
                 connection.clearWarnings();
 
                 return connection;
@@ -187,6 +193,8 @@ public final class HikariPool implements HikariPoolMBean
      */
     public void releaseConnection(IHikariConnectionProxy connectionProxy)
     {
+        rollbackConnection(connectionProxy);
+
         if (!connectionProxy._isBrokenConnection())
         {
             connectionProxy._markLastAccess();
@@ -198,6 +206,11 @@ public final class HikariPool implements HikariPoolMBean
         {
             closeConnection(connectionProxy);
         }
+    }
+
+    void shutdown()
+    {
+        // TODO: implement complete shutdown of the pool
     }
 
     // ***********************************************************************
@@ -304,7 +317,7 @@ public final class HikariPool implements HikariPoolMBean
                         }
                         backgroundFillQueued.set(false);
                     }
-    	        }, configuration.getConnectionTimeout() - 50/*ms*/);
+    	        }, 50/*ms*/);
     	    }
     	    break;
     	}
@@ -338,6 +351,11 @@ public final class HikariPool implements HikariPoolMBean
                 {
                     // This will be caught below
                     throw new RuntimeException("Connection not alive, retry.");
+                }
+
+                if (transactionIsolation < 0)
+                {
+                    transactionIsolation = connection.getTransactionIsolation();
                 }
 
                 String initSql = configuration.getConnectionInitSql();
@@ -430,6 +448,26 @@ public final class HikariPool implements HikariPoolMBean
         {
             totalConnections.decrementAndGet();
             connectionProxy.__close();
+        }
+        catch (SQLException e)
+        {
+            return;
+        }
+    }
+
+    /**
+     * Permanently close a connection.
+     *
+     * @param connectionProxy the connection to actually close
+     */
+    private void rollbackConnection(IHikariConnectionProxy connectionProxy)
+    {
+        try
+        {
+            if (!connectionProxy.getAutoCommit())
+            {
+                connectionProxy.rollback();
+            }
         }
         catch (SQLException e)
         {
