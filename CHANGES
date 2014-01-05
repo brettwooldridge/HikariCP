@@ -12,8 +12,11 @@ Changes between 1.2.1 and 1.2.2
 
  *) Fix a bug where connection timeouts could not be disabled.
 
- *) Allow setting the DataSource logWriter either on the HikariDataSource
+ *) Permit setting the DataSource logWriter either on the HikariDataSource
     or via addDataSourceProperty() on the HikariConfig.
+
+ *) Add transactionIsolation property to allow setting the default
+    transaction isolation level for connections.
 
 Changes between 1.1.9 and 1.2.1
 
