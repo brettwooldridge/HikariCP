@@ -162,6 +162,7 @@
                   <Export-Package>com.zaxxer.hikari</Export-Package>
                   <Import-Package>com.sun.tools.attach,javassist.*,javax.management,javax.sql,javax.sql.rowset,,javax.sql.rowset.serial,,javax.sql.rowset.spi,org.slf4j</Import-Package>
                   <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
+                  <DynamicImport-Package>*</DynamicImport-Package>
                </instructions>
             </configuration>
          </plugin>

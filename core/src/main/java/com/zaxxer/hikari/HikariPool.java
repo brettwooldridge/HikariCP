@@ -193,8 +193,6 @@ public final class HikariPool implements HikariPoolMBean
      */
     public void releaseConnection(IHikariConnectionProxy connectionProxy)
     {
-        rollbackConnection(connectionProxy);
-
         if (!connectionProxy._isBrokenConnection())
         {
             connectionProxy._markLastAccess();
@@ -448,26 +446,6 @@ public final class HikariPool implements HikariPoolMBean
         {
             totalConnections.decrementAndGet();
             connectionProxy.__close();
-        }
-        catch (SQLException e)
-        {
-            return;
-        }
-    }
-
-    /**
-     * Permanently close a connection.
-     *
-     * @param connectionProxy the connection to actually close
-     */
-    private void rollbackConnection(IHikariConnectionProxy connectionProxy)
-    {
-        try
-        {
-            if (!connectionProxy.getAutoCommit())
-            {
-                connectionProxy.rollback();
-            }
         }
         catch (SQLException e)
         {

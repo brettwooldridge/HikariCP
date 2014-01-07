@@ -1,9 +1,9 @@
 package com.zaxxer.hikari.proxy;
 
-import java.sql.CallableStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 
-public interface IHikariStatementProxy extends CallableStatement
+public interface IHikariStatementProxy extends Statement
 {
     void close() throws SQLException;
 
