@@ -34,7 +34,7 @@ the agent jar.  See below for details.
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>1.2.2</version>
+        <version>1.2.3</version>
         <scope>compile</scope>
     </dependency>
 
@@ -43,7 +43,7 @@ the agent jar.  See below for details.
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP-agent</artifactId>
-        <version>1.2.2</version>
+        <version>1.2.3</version>
         <scope>compile</scope>
     </dependency>
 
