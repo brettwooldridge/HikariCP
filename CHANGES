@@ -1,5 +1,14 @@
 HikariCP Changes
 
+Changes between 1.2.2 and 1.2.3
+
+ *) Fix internal (but suppressed) exception during rollback of connections
+    returned to the pool with auto-commit turned off.
+
+ *) Fix a reflection issue that causes Hibernate failures due to the
+    CallableStatement interface being incorrectly injected into statement
+    proxies that are PreparedStatement or Statement instances.
+
 Changes between 1.2.1 and 1.2.2
 
  *) Perform a rollback() on connections returned to the pool with
