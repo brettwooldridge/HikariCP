@@ -32,12 +32,12 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 /**
+ * Connection provider for Hibernate 4.3.
  *
- * @author Brett Wooldridge
+ * @author Brett Wooldridge, Luca Burgazzoli
  */
 public class HikariConnectionProvider implements ConnectionProvider, Configurable, Stoppable
 {
-
     private static final long serialVersionUID = -9131625057941275711L;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariConnectionProvider.class);
