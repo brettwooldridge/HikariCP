@@ -15,10 +15,6 @@
  */
 package com.zaxxer.hikari.osgi;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -46,9 +42,6 @@ public class OSGiBundleTest
     @Configuration
     public Option[] config()
     {
-        Logger root = (Logger)LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-        root.setLevel(Level.DEBUG);
-
         return options(
             systemProperty("org.osgi.framework.storage.clean").value("true"),
             systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("WARN"),
@@ -71,6 +64,7 @@ public class OSGiBundleTest
     @Test
     public void checkBundle()
     {
+
         Boolean bundleFound = false;
         Boolean bundleActive = false;
 
