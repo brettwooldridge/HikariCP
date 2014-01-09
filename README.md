@@ -266,6 +266,19 @@ Example property file:
     dataSource.databaseName=mydb
     dataSource.serverName=localhost
 
+or ``java.util.Properties`` based:
+
+    Properties props = new Properties();
+    props.setProperty("maxPoolSize", 100);
+    props.setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource");
+    props.setProperty("dataSource.username", "test");
+    props.setProperty("dataSource.password", "test");
+    props.setProperty("dataSource.databaseName", "mydb");
+    props.setProperty("dataSource.logWriter", new PrintWriter(System.out));
+    
+    HikariConfig config = new HikariConfig(props);
+    HikariDataSource ds = new HikariDataSource(config);
+
 ----------------------------------------------------
 
 #### JMX Management ####
