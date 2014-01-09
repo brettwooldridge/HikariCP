@@ -43,16 +43,16 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     protected final Connection delegate;
 
     private final ArrayList<Statement> openStatements;
-    private final HikariPool _parentPool;
+    private final HikariPool parentPool;
 
     private final ThreadLocal<Boolean> isClosed;
     
-    private final long _creationTime;
-    private boolean _forceClose;
-    private long _lastAccess;
+    private final long creationTime;
+    private boolean forceClose;
+    private long lastAccess;
 
-    private StackTraceElement[] _stackTrace;
-    private TimerTask _leakTask;
+    private StackTraceElement[] stackTrace;
+    private TimerTask leakTask;
 
     // static initializer
     static
@@ -69,11 +69,11 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
     protected ConnectionProxy(HikariPool pool, Connection connection)
     {
-        this._parentPool = pool;
+        this.parentPool = pool;
         this.delegate = connection;
 
+        creationTime = lastAccess = System.currentTimeMillis();
         openStatements = new ArrayList<Statement>(64);
-        _creationTime = _lastAccess = System.currentTimeMillis();
         isClosed = new ThreadLocal<Boolean>() {
             protected Boolean initialValue()
             {
@@ -95,17 +95,17 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     
     public final long getCreationTime()
     {
-        return _creationTime;
+        return creationTime;
     }
 
     public final long getLastAccess()
     {
-        return _lastAccess;
+        return lastAccess;
     }
 
     public final void markLastAccess()
     {
-        this._lastAccess = System.currentTimeMillis();
+        this.lastAccess = System.currentTimeMillis();
     }
 
     public final void unclose()
@@ -121,16 +121,16 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     public final void captureStack(long leakDetectionThreshold, Timer scheduler)
     {
         StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-        _stackTrace = new StackTraceElement[trace.length - 4];
-        System.arraycopy(trace, 4, _stackTrace, 0, _stackTrace.length);
+        stackTrace = new StackTraceElement[trace.length - 4];
+        System.arraycopy(trace, 4, stackTrace, 0, stackTrace.length);
 
-        _leakTask = new LeakTask(_stackTrace, leakDetectionThreshold);
-        scheduler.schedule(_leakTask, leakDetectionThreshold);
+        leakTask = new LeakTask(stackTrace, leakDetectionThreshold);
+        scheduler.schedule(leakTask, leakDetectionThreshold);
     }
 
     public final boolean isBrokenConnection()
     {
-        return _forceClose;
+        return forceClose;
     }
 
     public final void checkException(SQLException sqle)
@@ -138,7 +138,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         String sqlState = sqle.getSQLState();
         if (sqlState != null)
         {
-            _forceClose |= sqlState.startsWith("08") | SQL_ERRORS.contains(sqlState);
+            forceClose |= sqlState.startsWith("08") | SQL_ERRORS.contains(sqlState);
         }
     }
 
@@ -166,10 +166,10 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     {
         if (!isClosed())
         {
-            if (_leakTask != null)
+            if (leakTask != null)
             {
-                _leakTask.cancel();
-                _leakTask = null;
+                leakTask.cancel();
+                leakTask = null;
             }
 
             try
@@ -202,7 +202,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             {
                 isClosed.set(true);
                 openStatements.clear();
-                _parentPool.releaseConnection(this);
+                parentPool.releaseConnection(this);
             }
         }
     }
