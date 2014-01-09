@@ -31,8 +31,8 @@ import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 public final class HikariConfig implements HikariConfigMBean
 {
+    private static final long ACQUIRE_RETRY_DELAY = 750L;
 	private static final long CONNECTION_TIMEOUT = 5000L;
-	private static final long ACQUIRE_RETRY_DELAY = 750L;
 	private static final long IDLE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
 	private static final long MAX_LIFETIME = TimeUnit.MINUTES.toMillis(30);
 
@@ -41,9 +41,9 @@ public final class HikariConfig implements HikariConfigMBean
     // Properties changeable at runtime through the MBean
     //
     private volatile int acquireIncrement;
-    private volatile  int acquireRetries;
-    private volatile  long acquireRetryDelay;
-    private volatile  long connectionTimeout;
+    private volatile int acquireRetries;
+    private volatile long acquireRetryDelay;
+    private volatile long connectionTimeout;
     private volatile long idleTimeout;
     private volatile long leakDetectionThreshold;
     private volatile long maxLifetime;
@@ -56,11 +56,9 @@ public final class HikariConfig implements HikariConfigMBean
     private String poolName;
     private String connectionTestQuery;
     private String dataSourceClassName;
-    private String shadedCodexMapping;
     private String connectionInitSql;
     private boolean isJdbc4connectionTest;
     private boolean isAutoCommit;
-    private boolean isUseInstrumentation;
     private Properties dataSourceProperties;
 
     /**
@@ -77,7 +75,6 @@ public final class HikariConfig implements HikariConfigMBean
         idleTimeout = IDLE_TIMEOUT;
         isAutoCommit = true;
         isJdbc4connectionTest = true;
-        isUseInstrumentation = true;
         minPoolSize = 10;
         maxPoolSize = 60;
         maxLifetime = MAX_LIFETIME;
@@ -284,14 +281,9 @@ public final class HikariConfig implements HikariConfigMBean
         this.leakDetectionThreshold = leakDetectionThresholdMs; 
     }
 
-    public boolean isUseInstrumentation()
-    {
-        return isUseInstrumentation;
-    }
-
     public void setUseInstrumentation(boolean useInstrumentation)
     {
-        this.isUseInstrumentation = useInstrumentation;
+        // no longer used as of HikariCP 1.2.5
     }
 
     /** {@inheritDoc} */
@@ -353,31 +345,6 @@ public final class HikariConfig implements HikariConfigMBean
     public void setPoolName(String poolName)
     {
         this.poolName = poolName;
-    }
-
-    public String getShadedCodexMapping()
-    {
-        return shadedCodexMapping;
-    }
-
-    /**
-     * Set a package mapping for "shaded" drivers so that we can find the DataSource
-     * in the instrumentation codex even though the package/class name is different.
-     * The mapping should be of the form:<p>
-     *    &lt;original package>:&lt;shaded package>
-     * <p>
-     * Where the original package name is a widely scoped as possible while still being
-     * unique to the driver.  Typically, this is the first two segments of a package
-     * name.  For example, take the DataSource <code>org.mariadb.jdbc.MySQLDataSource</code>,
-     * that has been shaded to <code>com.other.maria.jdbc.MySQLDataSource</code>.  In this case,
-     * the following mapping could be used:<p>
-     *    org.mariadb:com.other.maria
-     * <br>
-     * @param mapping a mapping of the form: &lt;original package>:&lt;shaded package>
-     */
-    public void setShadedCodexMapping(String mapping)
-    {
-        this.shadedCodexMapping = mapping;
     }
 
     public int getTransactionIsolation()
