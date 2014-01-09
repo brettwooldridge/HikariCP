@@ -172,8 +172,14 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         {
             _openStatements = new ArrayList<IHikariStatementProxy>(64);
             _creationTime = _lastAccess = System.currentTimeMillis();
-            _isClosed = new ThreadLocal<>();
-            _isClosed.set(false);
+            _isClosed = new ThreadLocal<Boolean>() {
+                /** {@inheritDoc} */
+                @Override
+                protected Boolean initialValue()
+                {
+                    return Boolean.FALSE;
+                }
+            };
         }
     }
 
