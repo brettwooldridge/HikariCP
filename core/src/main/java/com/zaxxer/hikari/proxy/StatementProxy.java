@@ -32,10 +32,10 @@ public abstract class StatementProxy implements Statement
 
     protected final IHikariConnectionProxy connection;
 
-    protected boolean isClosed;
-
     protected final Statement delegate;
 
+    private boolean isClosed;
+    
     static
     {
         PROXY_FACTORY = JavassistProxyFactoryFactory.getProxyFactory();
