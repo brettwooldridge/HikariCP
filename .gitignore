@@ -5,3 +5,21 @@
 target/
 dependency-reduced-pom.xml
 
+.DS_Store
+
+**/*.iml
+
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+*.iws
+*.ipr
+
+.tm_*
+.classpath
+.project
+.settings/
+.idea/
+.gradle/
