@@ -49,7 +49,7 @@
 
    <modules>
       <module>core</module>
-      <module>agent</module>
+      
    </modules>
 
    <dependencyManagement>

@@ -20,34 +20,28 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Timer;
 
-import com.zaxxer.hikari.HikariPool;
-
 /**
  *
  * @author Brett Wooldridge
  */
 public interface IHikariConnectionProxy extends Connection
 {
-    void _unclose();
+    void unclose();
 
-    void __close() throws SQLException;
+    void realClose() throws SQLException;
 
-    void _unregisterStatement(Object statement);
+    void unregisterStatement(Object statement);
 
-    void _checkException(SQLException sqle);
+    void checkException(SQLException sqle);
 
-    boolean _isBrokenConnection();
+    boolean isBrokenConnection();
 
-    long _getCreationTime();
+    long getCreationTime();
 
-    long _getLastAccess();
+    long getLastAccess();
 
-    void _markLastAccess();
-
-    void _setParentPool(HikariPool parentPool);
-
-    Connection getDelegate();
+    void markLastAccess();
 
     /* Leak Detection API */
-    void _captureStack(long leakThreshold, Timer houseKeepingTimer);
+    void captureStack(long leakThreshold, Timer houseKeepingTimer);
 }

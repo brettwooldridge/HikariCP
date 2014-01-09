@@ -20,30 +20,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import com.zaxxer.hikari.javassist.HikariOverride;
-
 /**
- * This is the proxy class for java.sql.PreparedStatement.  It is used in two ways:
- * 
- *  1) If instrumentation is not used, Javassist will generate a new class
- *     that extends this class and delegates all method calls to the 'delegate'
- *     member (which points to the real PreparedStatement).
- *
- *  2) If instrumentation IS used, Javassist will be used to inject all of
- *     the &amp;HikariInject and &amp;HikariOverride annotated fields and methods
- *     of this class into the actual PreparedStatement implementation provided by the
- *     JDBC driver.  In order to avoid name conflicts when injecting code into
- *     a driver class some of the fields and methods are prefixed with _ or __.
- *     
- *     Methods prefixed with __, like __executeQuery() are especially
- *     important because when we inject our own executeQuery() into the
- *     target implementation, the original method is renamed to __executeQuery()
- *     so that the call operates the same whether delegation or instrumentation
- *     is used.
+ * This is the proxy class for java.sql.PreparedStatement.
  *
  * @author Brett Wooldridge
  */
-public abstract class PreparedStatementProxy extends StatementProxy implements IHikariStatementProxy, PreparedStatement
+public abstract class PreparedStatementProxy extends StatementProxy implements PreparedStatement
 {
     protected PreparedStatementProxy(ConnectionProxy connection, PreparedStatement statement)
     {
@@ -54,30 +36,17 @@ public abstract class PreparedStatementProxy extends StatementProxy implements I
     //              Overridden java.sql.PreparedStatement Methods
     // **********************************************************************
     
-    @HikariOverride
+    /** {@inheritDoc} */
     public ResultSet executeQuery() throws SQLException
     {
     	try
     	{
-            return _trackResultSet(__executeQuery());
+            return wrapResultSet(((PreparedStatement) delegate).executeQuery());
     	}
     	catch (SQLException e)
     	{
-            _connection._checkException(e);
+            connection.checkException(e);
             throw e;
     	}
-    }
-
-    // ***********************************************************************
-    // These methods contain code we do not want injected into the actual
-    // java.sql.Connection implementation class.  These methods are only
-    // used when instrumentation is not available and "conventional" Javassist
-    // delegating proxies are used.
-    // ***********************************************************************
-
-    public ResultSet __executeQuery() throws SQLException
-    {
-        ResultSet resultSet = ((PreparedStatement) delegate).executeQuery();
-        return wrapResultSet(resultSet);
     }
 }

@@ -31,7 +31,6 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.zaxxer.hikari.javassist.AgentRegistrationElf;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.JavassistProxyFactoryFactory;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
@@ -57,7 +56,6 @@ public final class HikariPool implements HikariPoolMBean
     private final long leakDetectionThreshold;
     private final boolean jdbc4ConnectionTest;
     private final boolean isAutoCommit;
-    private final boolean delegationProxies;
     private int transactionIsolation;
 
     private final Timer houseKeepingTimer;
@@ -85,13 +83,6 @@ public final class HikariPool implements HikariPoolMBean
         String dsClassName = configuration.getDataSourceClassName();
         try
         {
-            String shadedCodexMapping = configuration.getShadedCodexMapping();
-            delegationProxies = !configuration.isUseInstrumentation() || !AgentRegistrationElf.loadTransformerAgent(dsClassName, shadedCodexMapping);
-            if (delegationProxies)
-            {
-                LOGGER.info("Using Javassist delegate-based proxies.");
-            }
-            
             Class<?> clazz = this.getClass().getClassLoader().loadClass(dsClassName);
             this.dataSource = (DataSource) clazz.newInstance();
             PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
@@ -139,7 +130,7 @@ public final class HikariPool implements HikariPoolMBean
                 idleConnectionCount.decrementAndGet();
 
                 final long maxLifetime = configuration.getMaxLifetime();
-                if (maxLifetime > 0 && start - connectionProxy._getCreationTime() > maxLifetime)
+                if (maxLifetime > 0 && start - connectionProxy.getCreationTime() > maxLifetime)
                 {
                     // Throw away the connection that has passed its lifetime, try again
                     closeConnection(connectionProxy);
@@ -147,7 +138,7 @@ public final class HikariPool implements HikariPoolMBean
                     continue;
                 }
 
-                connectionProxy._unclose();
+                connectionProxy.unclose();
 
                 Connection connection = (Connection) connectionProxy; 
                 if (!isConnectionAlive(connection, timeout))
@@ -160,7 +151,7 @@ public final class HikariPool implements HikariPoolMBean
     
                 if (leakDetectionThreshold > 0)
                 {
-                    connectionProxy._captureStack(leakDetectionThreshold, houseKeepingTimer);
+                    connectionProxy.captureStack(leakDetectionThreshold, houseKeepingTimer);
                 }
 
                 connection.setAutoCommit(isAutoCommit);
@@ -193,9 +184,9 @@ public final class HikariPool implements HikariPoolMBean
      */
     public void releaseConnection(IHikariConnectionProxy connectionProxy)
     {
-        if (!connectionProxy._isBrokenConnection())
+        if (!connectionProxy.isBrokenConnection())
         {
-            connectionProxy._markLastAccess();
+            connectionProxy.markLastAccess();
 
             idleConnectionCount.incrementAndGet();
             idleConnections.put(connectionProxy);
@@ -332,17 +323,7 @@ public final class HikariPool implements HikariPoolMBean
             try
             {
                 Connection connection = dataSource.getConnection();
-                IHikariConnectionProxy proxyConnection;
-                if (delegationProxies)
-                {
-                    proxyConnection = (IHikariConnectionProxy) JavassistProxyFactoryFactory.getProxyFactory().getProxyConnection(connection);
-                }
-                else
-                {
-                    proxyConnection = (IHikariConnectionProxy) connection;
-                }
-
-                proxyConnection._setParentPool(this);
+                IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) JavassistProxyFactoryFactory.getProxyFactory().getProxyConnection(this, connection);
 
                 boolean alive = isConnectionAlive((Connection) proxyConnection, configuration.getConnectionTimeout());
                 if (!alive)
@@ -445,7 +426,7 @@ public final class HikariPool implements HikariPoolMBean
         try
         {
             totalConnections.decrementAndGet();
-            connectionProxy.__close();
+            connectionProxy.realClose();
         }
         catch (SQLException e)
         {
@@ -477,9 +458,9 @@ public final class HikariPool implements HikariPoolMBean
 
                 idleConnectionCount.decrementAndGet();
 
-                if ((idleTimeout > 0 && now > connectionProxy._getLastAccess() + idleTimeout)
+                if ((idleTimeout > 0 && now > connectionProxy.getLastAccess() + idleTimeout)
                     ||
-                    (maxLifetime > 0 && now > connectionProxy._getCreationTime() + maxLifetime))
+                    (maxLifetime > 0 && now > connectionProxy.getCreationTime() + maxLifetime))
                 {
                     closeConnection(connectionProxy);
                 }

@@ -20,47 +20,28 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import com.zaxxer.hikari.javassist.HikariInject;
-
 /**
- * This is the proxy class for java.sql.ResultSet.  It is used in two ways:
- * 
- *  1) If instrumentation is not used, Javassist will generate a new class
- *     that extends this class and delegates all method calls to the 'delegate'
- *     member (which points to the real ResultSet).
- *
- *  2) If instrumentation IS used, Javassist will be used to inject all of
- *     the &amp;HikariInject and &amp;HikariOverride annotated fields and methods
- *     of this class into the actual ResultSet implementation provided by the
- *     JDBC driver.  In order to avoid name conflicts when injecting code into
- *     a driver class some of the fields and methods are prefixed with _ or __.
+ * This is the proxy class for java.sql.ResultSet.
  *
  * @author Brett Wooldridge
  */
-public abstract class ResultSetProxy implements IHikariResultSetProxy, ResultSet
+public abstract class ResultSetProxy implements ResultSet
 {
-    @HikariInject protected IHikariStatementProxy _statement;
+    private final StatementProxy statement;
 
     protected final ResultSet delegate;
 
-    protected ResultSetProxy(IHikariStatementProxy statement, ResultSet resultSet)
+    protected ResultSetProxy(StatementProxy statement, ResultSet resultSet)
     {
-        this._statement = statement;
+        this.statement = statement;
         this.delegate = resultSet;
     }
 
-    @HikariInject
-    public final void _checkException(SQLException e)
+    public final void checkException(SQLException e)
     {
-        _statement._checkException(e);
+        statement.checkException(e);
     }
 
-    @HikariInject
-    public void _setProxyStatement(IHikariStatementProxy statement)
-    {
-        this._statement = statement;
-    }
-    
     // **********************************************************************
     //                 Overridden java.sql.ResultSet Methods
     //                      other methods are injected
@@ -68,6 +49,6 @@ public abstract class ResultSetProxy implements IHikariResultSetProxy, ResultSet
 
     public Statement getStatement() throws SQLException
     {
-        return (Statement) _statement;
+        return (Statement) statement;
     }
 }

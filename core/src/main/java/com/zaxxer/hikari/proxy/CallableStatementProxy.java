@@ -19,27 +19,11 @@ package com.zaxxer.hikari.proxy;
 import java.sql.CallableStatement;
 
 /**
- * This is the proxy class for java.sql.CallableStatement.  It is used in two ways:
- * 
- *  1) If instrumentation is not used, Javassist will generate a new class
- *     that extends this class and delegates all method calls to the 'delegate'
- *     member (which points to the real CallableStatement).
- *
- *  2) If instrumentation IS used, Javassist will be used to inject all of
- *     the &amp;HikariInject and &amp;HikariOverride annotated fields and methods
- *     of this class into the actual CallableStatement implementation provided by the
- *     JDBC driver.  In order to avoid name conflicts when injecting code into
- *     a driver class some of the fields and methods are prefixed with _ or __.
- *     
- *     Methods prefixed with __, like __executeQuery() are especially
- *     important because when we inject our own executeQuery() into the
- *     target implementation, the original method is renamed to __executeQuery()
- *     so that the call operates the same whether delegation or instrumentation
- *     is used.
+ * This is the proxy class for java.sql.CallableStatement.
  *
  * @author Brett Wooldridge
  */
-public abstract class CallableStatementProxy extends PreparedStatementProxy implements IHikariStatementProxy, CallableStatement
+public abstract class CallableStatementProxy extends PreparedStatementProxy implements CallableStatement
 {
     protected CallableStatementProxy(ConnectionProxy connection, CallableStatement statement)
     {
@@ -49,13 +33,5 @@ public abstract class CallableStatementProxy extends PreparedStatementProxy impl
     // **********************************************************************
     //               Overridden java.sql.CallableStatement Methods
     // **********************************************************************
-
-
-    // ***********************************************************************
-    // These methods contain code we do not want injected into the actual
-    // java.sql.Connection implementation class.  These methods are only
-    // used when instrumentation is not available and "conventional" Javassist
-    // delegating proxies are used.
-    // ***********************************************************************
 
 }

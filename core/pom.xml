@@ -167,7 +167,20 @@
                <instructions>
                   <Bundle-Name>HikariCP</Bundle-Name>
                   <Export-Package>com.zaxxer.hikari</Export-Package>
-                  <Import-Package>com.sun.tools.attach,javassist.*,javax.management,javax.sql,javax.sql.rowset,,javax.sql.rowset.serial,,javax.sql.rowset.spi,org.slf4j</Import-Package>
+                  <Import-Package>
+                     com.sun.tools.attach,javassist.*,
+                     javax.management,
+                     javax.sql,
+                     javax.sql.rowset,
+                     javax.sql.rowset.serial,
+                     javax.sql.rowset.spi,
+                     org.slf4j,
+                     org.hibernate;resolution:=optional,
+                     org.hibernate.cfg;resolution:=optional,
+                     org.hibernate.engine.jdbc.connections.spi;resolution:=optional,
+                     org.hibernate.service;resolution:=optional,
+                     org.hibernate.service.spi;resolution:=optional
+                  </Import-Package>
                   <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
                   <DynamicImport-Package>*</DynamicImport-Package>
                </instructions>
