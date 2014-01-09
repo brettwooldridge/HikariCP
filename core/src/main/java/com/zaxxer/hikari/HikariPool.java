@@ -89,7 +89,7 @@ public final class HikariPool implements HikariPoolMBean
         }
         catch (Exception e)
         {
-            throw new RuntimeException("Could not create datasource class: " + dsClassName, e);
+            throw new RuntimeException("Could not create datasource instance: " + dsClassName, e);
         }
 
         HikariMBeanElf.registerMBeans(configuration, this);
@@ -268,7 +268,7 @@ public final class HikariPool implements HikariPoolMBean
     /**
      * Add connections to the pool, not exceeding the maximum allowed.
      */
-    private synchronized void addConnections(AddConnectionStrategy strategy)
+    private void addConnections(AddConnectionStrategy strategy)
     {
     	switch (strategy)
     	{
@@ -328,7 +328,7 @@ public final class HikariPool implements HikariPoolMBean
                 boolean alive = isConnectionAlive((Connection) proxyConnection, configuration.getConnectionTimeout());
                 if (!alive)
                 {
-                    // This will be caught below
+                    // This will be caught below...
                     throw new RuntimeException("Connection not alive, retry.");
                 }
 
