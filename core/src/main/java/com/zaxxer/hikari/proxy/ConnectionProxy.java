@@ -40,18 +40,19 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
     private static final Set<String> SQL_ERRORS;
 
-    protected final ArrayList<Statement> openStatements;
-    protected final HikariPool _parentPool;
     protected final Connection delegate;
 
-    protected final ThreadLocal<Boolean> isClosed;
-    
-    protected boolean _forceClose;
-    protected long _creationTime;
-    protected long _lastAccess;
+    private final ArrayList<Statement> openStatements;
+    private final HikariPool _parentPool;
 
-    protected StackTraceElement[] _stackTrace;
-    protected TimerTask _leakTask;
+    private final ThreadLocal<Boolean> isClosed;
+    
+    private final long _creationTime;
+    private boolean _forceClose;
+    private long _lastAccess;
+
+    private StackTraceElement[] _stackTrace;
+    private TimerTask _leakTask;
 
     // static initializer
     static
@@ -74,8 +75,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         openStatements = new ArrayList<Statement>(64);
         _creationTime = _lastAccess = System.currentTimeMillis();
         isClosed = new ThreadLocal<Boolean>() {
-            /** {@inheritDoc} */
-            @Override
             protected Boolean initialValue()
             {
                 return Boolean.FALSE;
@@ -151,7 +150,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         }
     }
 
-    protected final <T extends Statement> T trackStatement(T statement)
+    private final <T extends Statement> T trackStatement(T statement)
     {
         openStatements.add(statement);
 
