@@ -72,8 +72,11 @@ public final class JavassistProxyFactoryFactory
 
         try
         {
+            // Connection is special, it has a checkClosed() call at the beginning
             String methodBody = "{ checkClosed(); try { return ((cast) delegate).method($$); } catch (SQLException e) { checkException(e); throw e;} }";
             generateProxyClass(Connection.class, ConnectionProxy.class, methodBody);
+
+            // The result of the proxy classes simply delegate
             methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { checkException(e); throw e;} }";
             generateProxyClass(Statement.class, StatementProxy.class, methodBody);
             generateProxyClass(CallableStatement.class, CallableStatementProxy.class, methodBody);
@@ -177,8 +180,11 @@ public final class JavassistProxyFactoryFactory
                     continue;
                 }
 
-                CtMethod method = CtNewMethod.copy(intfMethod, targetCt, null);
+                // Track what methods we've added
                 methods.add(intfMethod.getName() + intfMethod.getSignature());
+
+                // Clone the method we want to inject into
+                CtMethod method = CtNewMethod.copy(intfMethod, targetCt, null);
 
                 // Generate a method that simply invokes the same method on the delegate
                 String modifiedBody = methodBody.replace("method", method.getName());
