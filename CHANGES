@@ -1,5 +1,11 @@
 HikariCP Changes
 
+Changes between 1.2.3 and 1.2.4
+
+ *) Fix another Hibernate-related issue whereby an NPE is encountered when
+    a thread that was not the thread that obtained a Connection tries to
+    interact with that Connection.
+
 Changes between 1.2.2 and 1.2.3
 
  *) Fix internal (but suppressed) exception during rollback of connections
