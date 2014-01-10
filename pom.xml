@@ -49,7 +49,6 @@
 
    <modules>
       <module>core</module>
-      <module>core-osgi</module>
    </modules>
 
    <dependencyManagement>
