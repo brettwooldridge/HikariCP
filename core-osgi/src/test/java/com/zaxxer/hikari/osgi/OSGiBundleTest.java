@@ -45,10 +45,12 @@ public class OSGiBundleTest
         return options(
             systemProperty("org.osgi.framework.storage.clean").value("true"),
             systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("WARN"),
+            mavenBundle("org.slf4j","slf4j-api","1.7.5"),
+            mavenBundle("org.slf4j","slf4j-simple","1.7.5").noStart(),
             mavenBundle("org.javassist", "javassist", "3.18.1-GA"),
-            new File("HikariCP/core/target/classes").exists()
-                ? bundle("reference:file:HikariCP/core/target/classes")
-                : bundle("reference:file:target/classes"),
+            new File("core/target/classes").exists()
+                ?  bundle("reference:file:core/target/classes")
+                :  bundle("reference:file:../core/target/classes"),
             junitBundles(),
             systemPackage("com.sun.tools.attach"),
             cleanCaches()
@@ -64,7 +66,6 @@ public class OSGiBundleTest
     @Test
     public void checkBundle()
     {
-
         Boolean bundleFound = false;
         Boolean bundleActive = false;
 
