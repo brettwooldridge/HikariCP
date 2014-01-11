@@ -397,14 +397,9 @@ public final class HikariPool implements HikariPoolMBean
                 return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
             }
 
-            Statement statement = connection.createStatement();
-            try
+            try (Statement statement = connection.createStatement())
             {
                 statement.executeQuery(configuration.getConnectionTestQuery());
-            }
-            finally
-            {
-                statement.close();
             }
 
             return true;
@@ -413,6 +408,20 @@ public final class HikariPool implements HikariPoolMBean
         {
             LOGGER.error("Exception during keep alive check.  Connection must be dead.");
             return false;
+        }
+        finally
+        {
+            if (!isAutoCommit)
+            {
+                try
+                {
+                    connection.commit();
+                }
+                catch (SQLException e)
+                {
+                    return false;
+                }
+            }
         }
     }
 
