@@ -154,7 +154,6 @@ public final class HikariPool implements HikariPoolMBean
                     connectionProxy.captureStack(leakDetectionThreshold, houseKeepingTimer);
                 }
 
-                connection.setAutoCommit(isAutoCommit);
                 connection.setTransactionIsolation(transactionIsolation);
                 connection.clearWarnings();
 
@@ -340,14 +339,10 @@ public final class HikariPool implements HikariPoolMBean
                 String initSql = configuration.getConnectionInitSql();
                 if (initSql != null && initSql.length() > 0)
                 {
-                    Statement statement = connection.createStatement();
-                    try
+                    connection.setAutoCommit(true);
+                    try (Statement statement = connection.createStatement())
                     {
                         statement.executeQuery(initSql);
-                    }
-                    finally
-                    {
-                        statement.close();
                     }
                 }
 
@@ -392,6 +387,9 @@ public final class HikariPool implements HikariPoolMBean
 
         try
         {
+            connection.setAutoCommit(true);
+            connection.setTransactionIsolation(transactionIsolation);
+
             if (jdbc4ConnectionTest)
             {
                 return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
@@ -400,6 +398,10 @@ public final class HikariPool implements HikariPoolMBean
             try (Statement statement = connection.createStatement())
             {
                 statement.executeQuery(configuration.getConnectionTestQuery());
+            }
+            finally
+            {
+                
             }
 
             return true;
@@ -415,7 +417,7 @@ public final class HikariPool implements HikariPoolMBean
             {
                 try
                 {
-                    connection.commit();
+                    connection.setAutoCommit(false);
                 }
                 catch (SQLException e)
                 {
