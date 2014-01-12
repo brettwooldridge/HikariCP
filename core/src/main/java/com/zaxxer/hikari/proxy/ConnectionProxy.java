@@ -188,16 +188,16 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
                     }
                 }
 
-                if (!getAutoCommit())
-                {
-                    rollback();
-                }
+//                if (!getAutoCommit())
+//                {
+//                    rollback();
+//                }
             }
-            catch (SQLException e)
-            {
-                checkException(e);
-                throw e;
-            }
+//            catch (SQLException e)
+//            {
+//                checkException(e);
+//                throw e;
+//            }
             finally
             {
                 isClosed.set(true);
