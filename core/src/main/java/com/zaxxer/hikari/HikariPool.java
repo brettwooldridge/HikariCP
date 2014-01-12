@@ -189,6 +189,7 @@ public final class HikariPool implements HikariPoolMBean
     {
         if (!connectionProxy.isBrokenConnection())
         {
+            logPoolState("Release connection ");
             connectionProxy.markLastAccess();
 
             idleConnectionCount.incrementAndGet();
@@ -401,7 +402,7 @@ public final class HikariPool implements HikariPoolMBean
         try
         {
             connection.setAutoCommit(true);
-            connection.setTransactionIsolation(transactionIsolation);
+            //connection.setTransactionIsolation(transactionIsolation);
 
             if (jdbc4ConnectionTest)
             {
