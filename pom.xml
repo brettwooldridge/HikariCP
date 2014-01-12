@@ -49,7 +49,6 @@
 
    <modules>
       <module>core</module>
-      
    </modules>
 
    <dependencyManagement>

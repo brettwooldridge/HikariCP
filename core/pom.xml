@@ -40,34 +40,26 @@
       </developer>
    </developers>
 
-   <properties>
+    <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-   </properties>
+      <felix.bundle.plugin.version>2.4.0</felix.bundle.plugin.version>
+      <felix.version>4.2.1</felix.version>
+      <pax.exam.version>3.4.0</pax.exam.version>
+      <pax.url.version>1.6.0</pax.url.version>
+    </properties>
 
    <parent>
-      <groupId>org.sonatype.oss</groupId>
-      <artifactId>oss-parent</artifactId>
-      <version>7</version>
+      <groupId>com.zaxxer</groupId>
+      <artifactId>HikariCP-parent</artifactId>
+      <version>1.2.5-SNAPSHOT</version>
    </parent>
 
    <dependencies>
       <dependency>
-         <groupId>junit</groupId>
-         <artifactId>junit</artifactId>
-         <version>4.8.1</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
          <groupId>org.slf4j</groupId>
          <artifactId>slf4j-api</artifactId>
          <version>1.7.5</version>
-         <scope>provided</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.mockito</groupId>
-         <artifactId>mockito-all</artifactId>
-         <version>1.9.5</version>
-         <scope>test</scope>
+         <scope>compile</scope>
       </dependency>
       <dependency>
          <groupId>org.slf4j</groupId>
@@ -76,9 +68,15 @@
          <scope>test</scope>
       </dependency>
       <dependency>
+         <groupId>org.mockito</groupId>
+         <artifactId>mockito-all</artifactId>
+         <version>1.9.5</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
          <groupId>com.jolbox</groupId>
          <artifactId>bonecp</artifactId>
-         <version>0.8.0-rc3</version>
+         <version>0.8.0.RELEASE</version>
          <scope>test</scope>
       </dependency>
       <dependency>
@@ -86,13 +84,6 @@
          <artifactId>reflectasm</artifactId>
          <version>1.01</version>
          <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.apache.felix</groupId>
-         <artifactId>maven-bundle-plugin</artifactId>
-         <version>2.3.7</version>
-         <type>maven-plugin</type>
-         <scope>provided</scope>
       </dependency>
       <dependency>
          <groupId>org.hsqldb</groupId>
@@ -136,12 +127,51 @@
          <version>5.5.23</version>
          <scope>test</scope>
       </dependency>
-         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>4.3.0.Final</version>
-            <scope>compile</scope>
-         </dependency>
+      <dependency>
+         <groupId>org.hibernate</groupId>
+         <artifactId>hibernate-core</artifactId>
+         <version>4.3.0.Final</version>
+         <scope>compile</scope>
+      </dependency>
+
+      <!-- OSGi test -->
+      <dependency>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>org.apache.felix.framework</artifactId>
+        <version>${felix.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.ops4j.pax.exam</groupId>
+        <artifactId>pax-exam-container-native</artifactId>
+        <version>${pax.exam.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.ops4j.pax.exam</groupId>
+        <artifactId>pax-exam-junit4</artifactId>
+        <version>${pax.exam.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.ops4j.pax.exam</groupId>
+        <artifactId>pax-exam-link-mvn</artifactId>
+        <version>${pax.exam.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.ops4j.pax.url</groupId>
+        <artifactId>pax-url-aether</artifactId>
+        <version>${pax.url.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.ops4j.pax.url</groupId>
+        <artifactId>pax-url-reference</artifactId>
+        <version>${pax.url.version}</version>
+        <scope>test</scope>
+      </dependency>
+
    </dependencies>
 
    <build>
@@ -152,6 +182,7 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
             <version>3.1</version>
+            <extensions>true</extensions>
             <configuration>
                <source>1.7</source>
                <target>1.7</target>
@@ -161,7 +192,7 @@
          <plugin>
             <groupId>org.apache.felix</groupId>
             <artifactId>maven-bundle-plugin</artifactId>
-            <version>2.3.7</version>
+            <version>${felix.bundle.plugin.version}</version>
             <extensions>true</extensions>
             <configuration>
                <instructions>
@@ -185,13 +216,24 @@
                   <DynamicImport-Package>*</DynamicImport-Package>
                </instructions>
             </configuration>
+            <executions>
+                 <!--
+                 This execution makes sure that the manifest is available
+                 when the tests are executed
+                 -->
+                 <execution>
+                     <goals>
+                         <goal>manifest</goal>
+                     </goals>
+                 </execution>
+             </executions>
          </plugin>
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
             <version>2.2.1</version>
             <configuration>
-               <!-- outputDirectory>/absolute/path/to/the/output/directory</outputDirectory> 
+               <!-- outputDirectory>/absolute/path/to/the/output/directory</outputDirectory>
                   <finalName>filename-of-generated-jar-file</finalName -->
                <attach>true</attach>
             </configuration>
@@ -253,5 +295,29 @@
             </plugins>
          </build>
       </profile>
+
+       <profile>
+            <id>felix</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <property>
+                    <name>pax.exam.framework</name>
+                    <value>felix</value>
+                </property>
+            </activation>
+            <properties>
+                <pax.exam.framework>felix</pax.exam.framework>
+                <pax.exam.logging>none</pax.exam.logging>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>org.apache.felix.framework</artifactId>
+                    <version>${felix.version}</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+
    </profiles>
 </project>
