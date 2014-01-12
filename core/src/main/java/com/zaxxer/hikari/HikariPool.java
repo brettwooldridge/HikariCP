@@ -462,7 +462,7 @@ public final class HikariPool implements HikariPoolMBean
     {
         int total = totalConnections.get();
         int idle = idleConnectionCount.get();
-        LOGGER.debug("{}Pool stats (total={}, inUse={}, avail={}", (prefix != null ? prefix : ""), total, total - idle, idle);
+        LOGGER.debug("{}Pool stats (total={}, inUse={}, avail={})", (prefix != null ? prefix[0] : ""), total, total - idle, idle);
     }
 
     /**
