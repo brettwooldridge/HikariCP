@@ -267,7 +267,7 @@ public final class HikariPool implements HikariPoolMBean
             addConnection();
         }
 
-        logPoolState();
+        logPoolState("Initial fill ");
     }
 
     /**
