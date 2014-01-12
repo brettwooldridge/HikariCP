@@ -404,14 +404,24 @@ public final class HikariPool implements HikariPoolMBean
             connection.setAutoCommit(isAutoCommit);
             connection.setTransactionIsolation(transactionIsolation);
 
-            if (jdbc4ConnectionTest)
+            try
             {
-                return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
+                if (jdbc4ConnectionTest)
+                {
+                    return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
+                }
+    
+                try (Statement statement = connection.createStatement())
+                {
+                    statement.executeQuery(configuration.getConnectionTestQuery());
+                }
             }
-
-            try (Statement statement = connection.createStatement())
+            finally
             {
-                statement.executeQuery(configuration.getConnectionTestQuery());
+                if (!isAutoCommit)
+                {
+                    connection.commit();
+                }
             }
 
             return true;
