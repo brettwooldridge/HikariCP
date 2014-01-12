@@ -45,7 +45,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     private final ArrayList<Statement> openStatements;
     private final HikariPool parentPool;
 
-    private final ThreadLocal<Boolean> isClosed;
+    private volatile boolean isClosed;
     
     private final long creationTime;
     private boolean forceClose;
@@ -74,12 +74,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
         creationTime = lastAccess = System.currentTimeMillis();
         openStatements = new ArrayList<Statement>(64);
-        isClosed = new ThreadLocal<Boolean>() {
-            protected Boolean initialValue()
-            {
-                return Boolean.FALSE;
-            }
-        };
     }
     
     public final void unregisterStatement(Object statement)
@@ -87,7 +81,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         // If the connection is not closed.  If it is closed, it means this is being
         // called back as a result of the close() method below in which case we
         // will clear the openStatements collection en mass.
-        if (!isClosed.get())
+        if (!isClosed)
         {
             openStatements.remove(statement);
         }
@@ -110,7 +104,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
     public final void unclose()
     {
-        isClosed.set(false);
+        isClosed = false;
     }
 
     public final void realClose() throws SQLException
@@ -144,7 +138,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
     protected final void checkClosed() throws SQLException
     {
-        if (isClosed.get())
+        if (isClosed)
         {
             throw new SQLException("Connection is closed");
         }
@@ -188,19 +182,19 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
                     }
                 }
 
-//                if (!getAutoCommit())
-//                {
-//                    rollback();
-//                }
+                if (!getAutoCommit())
+                {
+                    rollback();
+                }
             }
-//            catch (SQLException e)
-//            {
-//                checkException(e);
-//                throw e;
-//            }
+            catch (SQLException e)
+            {
+                checkException(e);
+                throw e;
+            }
             finally
             {
-                isClosed.set(true);
+                isClosed = true;
                 openStatements.clear();
                 parentPool.releaseConnection(this);
             }
@@ -210,7 +204,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     /** {@inheritDoc} */
     public boolean isClosed() throws SQLException
     {
-        return isClosed.get();
+        return isClosed;
     }
 
     /** {@inheritDoc} */
@@ -396,7 +390,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     /** {@inheritDoc} */
     public boolean isValid(int timeout) throws SQLException
     {
-        if (isClosed.get())
+        if (isClosed)
         {
             return false;
         }
