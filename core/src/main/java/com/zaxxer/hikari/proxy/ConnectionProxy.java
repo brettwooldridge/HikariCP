@@ -158,7 +158,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     /** {@inheritDoc} */
     public void close() throws SQLException
     {
-        if (!isClosed())
+        if (!isClosed)
         {
             if (leakTask != null)
             {

@@ -401,8 +401,8 @@ public final class HikariPool implements HikariPoolMBean
 
         try
         {
-            connection.setAutoCommit(true);
-            //connection.setTransactionIsolation(transactionIsolation);
+            connection.setAutoCommit(isAutoCommit);
+            connection.setTransactionIsolation(transactionIsolation);
 
             if (jdbc4ConnectionTest)
             {
@@ -413,10 +413,6 @@ public final class HikariPool implements HikariPoolMBean
             {
                 statement.executeQuery(configuration.getConnectionTestQuery());
             }
-            finally
-            {
-                
-            }
 
             return true;
         }
@@ -424,20 +420,6 @@ public final class HikariPool implements HikariPoolMBean
         {
             LOGGER.error("Exception during keep alive check.  Connection must be dead.", e);
             return false;
-        }
-        finally
-        {
-            if (!isAutoCommit)
-            {
-                try
-                {
-                    connection.setAutoCommit(false);
-                }
-                catch (SQLException e)
-                {
-                    return false;
-                }
-            }
         }
     }
 
