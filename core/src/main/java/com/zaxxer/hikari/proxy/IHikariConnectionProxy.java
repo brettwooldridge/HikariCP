@@ -40,8 +40,6 @@ public interface IHikariConnectionProxy extends Connection
 
     long getLastAccess();
 
-    void markLastAccess();
-
     /* Leak Detection API */
     void captureStack(long leakThreshold, Timer houseKeepingTimer);
 }

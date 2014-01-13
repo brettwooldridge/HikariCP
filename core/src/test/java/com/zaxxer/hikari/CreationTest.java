@@ -95,7 +95,11 @@ public class CreationTest
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
+        System.setProperty("com.zaxxer.hikari.housekeeping.period", "350");
+
         HikariDataSource ds = new HikariDataSource(config);
+
+        System.clearProperty("com.zaxxer.hikari.housekeeping.period");
 
         config.setMaxLifetime(500);
 
@@ -115,7 +119,7 @@ public class CreationTest
         Assert.assertSame("Expected the same connection", connection, connection2);
         connection2.close();
         
-        Thread.sleep(501);
+        Thread.sleep(800);
 
         connection2 = ds.getConnection();
         Assert.assertNotSame("Expected a different connection", connection, connection2);

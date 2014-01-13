@@ -101,7 +101,8 @@ public final class HikariPool implements HikariPoolMBean
         long idleTimeout = configuration.getIdleTimeout();
         if (idleTimeout > 0 || configuration.getMaxLifetime() > 0)
         {
-            houseKeepingTimer.scheduleAtFixedRate(new HouseKeeper(), TimeUnit.SECONDS.toMillis(30), TimeUnit.SECONDS.toMillis(30));
+            long delayPeriod = Long.getLong("com.zaxxer.hikari.housekeeping.period", TimeUnit.SECONDS.toMillis(30));
+            houseKeepingTimer.scheduleAtFixedRate(new HouseKeeper(), delayPeriod * 2, delayPeriod);
         }
 
         fillPool();            
@@ -126,24 +127,15 @@ public final class HikariPool implements HikariPoolMBean
                 IHikariConnectionProxy connectionProxy = idleConnections.poll(timeout, TimeUnit.MILLISECONDS);
                 if (connectionProxy == null)
                 {
+                    // We timed out... break and throw exception
                 	break;
                 }
 
                 idleConnectionCount.decrementAndGet();
 
-                final long maxLifetime = configuration.getMaxLifetime();
-                if (maxLifetime > 0 && start - connectionProxy.getCreationTime() > maxLifetime)
-                {
-                    // Throw away the connection that has passed its lifetime, try again
-                    closeConnection(connectionProxy);
-                    timeout -= (System.currentTimeMillis() - start);
-                    continue;
-                }
-
                 connectionProxy.unclose();
 
-                Connection connection = (Connection) connectionProxy; 
-                if (!isConnectionAlive(connection, timeout))
+                if (!isConnectionAlive(connectionProxy, timeout))
                 {
                     // Throw away the dead connection, try again
                     closeConnection(connectionProxy);
@@ -156,9 +148,9 @@ public final class HikariPool implements HikariPoolMBean
                     connectionProxy.captureStack(leakDetectionThreshold, houseKeepingTimer);
                 }
 
-                connection.clearWarnings();
+                connectionProxy.clearWarnings();
 
-                return connection;
+                return connectionProxy;
 
             } while (timeout > 0);
 
@@ -189,8 +181,6 @@ public final class HikariPool implements HikariPoolMBean
     {
         if (!connectionProxy.isBrokenConnection())
         {
-            connectionProxy.markLastAccess();
-
             idleConnectionCount.incrementAndGet();
             idleConnections.put(connectionProxy);
         }
@@ -335,7 +325,7 @@ public final class HikariPool implements HikariPoolMBean
                     transactionIsolation = connection.getTransactionIsolation();
                 }
                 
-                boolean alive = isConnectionAlive((Connection) proxyConnection, configuration.getConnectionTimeout());
+                boolean alive = isConnectionAlive(proxyConnection, configuration.getConnectionTimeout());
                 if (!alive)
                 {
                     // This will be caught below...

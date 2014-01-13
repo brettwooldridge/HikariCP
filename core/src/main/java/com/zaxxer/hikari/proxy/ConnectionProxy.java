@@ -45,13 +45,13 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     private final ArrayList<Statement> openStatements;
     private final HikariPool parentPool;
 
-    private volatile boolean isClosed;
+    private boolean isClosed;
+    private boolean forceClose;
     
     private final long creationTime;
-    private boolean forceClose;
-    private long lastAccess;
+    private volatile long lastAccess;
 
-    private StackTraceElement[] stackTrace;
+    private StackTraceElement[] leakTrace;
     private TimerTask leakTask;
 
     // static initializer
@@ -73,7 +73,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         this.delegate = connection;
 
         creationTime = lastAccess = System.currentTimeMillis();
-        openStatements = new ArrayList<Statement>(64);
+        openStatements = new ArrayList<Statement>();
     }
     
     public final void unregisterStatement(Object statement)
@@ -97,11 +97,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         return lastAccess;
     }
 
-    public final void markLastAccess()
-    {
-        this.lastAccess = System.currentTimeMillis();
-    }
-
     public final void unclose()
     {
         isClosed = false;
@@ -115,10 +110,10 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     public final void captureStack(long leakDetectionThreshold, Timer scheduler)
     {
         StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-        stackTrace = new StackTraceElement[trace.length - 4];
-        System.arraycopy(trace, 4, stackTrace, 0, stackTrace.length);
+        leakTrace = new StackTraceElement[trace.length - 4];
+        System.arraycopy(trace, 4, leakTrace, 0, leakTrace.length);
 
-        leakTask = new LeakTask(stackTrace, leakDetectionThreshold);
+        leakTask = new LeakTask(leakTrace, leakDetectionThreshold);
         scheduler.schedule(leakTask, leakDetectionThreshold);
     }
 
@@ -196,6 +191,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             {
                 isClosed = true;
                 openStatements.clear();
+                lastAccess = System.currentTimeMillis();
                 parentPool.releaseConnection(this);
             }
         }
