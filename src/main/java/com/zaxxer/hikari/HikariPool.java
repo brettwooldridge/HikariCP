@@ -104,15 +104,15 @@ public final class HikariPool implements HikariPoolMBean
         HikariMBeanElf.registerMBeans(configuration, this);
 
         houseKeepingTimer = new Timer("Hikari Housekeeping Timer", true);
+        
+        fillPool();            
 
         long idleTimeout = configuration.getIdleTimeout();
         if (idleTimeout > 0 || configuration.getMaxLifetime() > 0)
         {
             long delayPeriod = Long.getLong("com.zaxxer.hikari.housekeeping.period", TimeUnit.SECONDS.toMillis(30));
-            houseKeepingTimer.scheduleAtFixedRate(new HouseKeeper(), delayPeriod * 2, delayPeriod);
+            houseKeepingTimer.scheduleAtFixedRate(new HouseKeeper(), delayPeriod, delayPeriod);
         }
-
-        fillPool();            
     }
 
     /**

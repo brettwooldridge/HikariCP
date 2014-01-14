@@ -109,8 +109,8 @@ public class CreationTest
         Connection connection = ds.getConnection();
         Assert.assertNotNull(connection);
 
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
+        Assert.assertSame("Second totals connections not as expected", 1, ds.pool.getTotalConnections());
+        Assert.assertSame("Second idle connections not as expected", 0, ds.pool.getIdleConnections());
         connection.close();
 
         Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
@@ -126,8 +126,8 @@ public class CreationTest
 
         connection2.close();
 
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
+        Assert.assertSame("Post totals connections not as expected", 1, ds.pool.getTotalConnections());
+        Assert.assertSame("Post idle connections not as expected", 1, ds.pool.getIdleConnections());
     }
 
     @Test
