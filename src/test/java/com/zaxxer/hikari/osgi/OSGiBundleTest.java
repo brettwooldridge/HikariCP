@@ -48,9 +48,9 @@ public class OSGiBundleTest
             mavenBundle("org.slf4j","slf4j-api","1.7.5"),
             mavenBundle("org.slf4j","slf4j-simple","1.7.5").noStart(),
             mavenBundle("org.javassist", "javassist", "3.18.1-GA"),
-            new File("core/target/classes").exists()
-                ?  bundle("reference:file:core/target/classes")
-                :  bundle("reference:file:../core/target/classes"),
+            new File("target/classes").exists()
+                ?  bundle("reference:file:target/classes")
+                :  bundle("reference:file:../target/classes"),
             junitBundles(),
             systemPackage("com.sun.tools.attach"),
             cleanCaches()
