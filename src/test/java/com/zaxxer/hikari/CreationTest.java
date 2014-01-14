@@ -95,21 +95,21 @@ public class CreationTest
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-        System.setProperty("com.zaxxer.hikari.housekeeping.period", "250");
+        System.setProperty("com.zaxxer.hikari.housekeeping.period", "100");
 
         HikariDataSource ds = new HikariDataSource(config);
 
         System.clearProperty("com.zaxxer.hikari.housekeeping.period");
 
-        config.setMaxLifetime(500);
+        config.setMaxLifetime(700);
 
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
+        Assert.assertSame("Total connections not as expected", 1, ds.pool.getTotalConnections());
         Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
 
         Connection connection = ds.getConnection();
         Assert.assertNotNull(connection);
 
-        Assert.assertSame("Second totals connections not as expected", 1, ds.pool.getTotalConnections());
+        Assert.assertSame("Second total connections not as expected", 1, ds.pool.getTotalConnections());
         Assert.assertSame("Second idle connections not as expected", 0, ds.pool.getIdleConnections());
         connection.close();
 
@@ -119,14 +119,14 @@ public class CreationTest
         Assert.assertSame("Expected the same connection", connection, connection2);
         connection2.close();
         
-        Thread.sleep(1001);
+        Thread.sleep(2000);
 
         connection2 = ds.getConnection();
         Assert.assertNotSame("Expected a different connection", connection, connection2);
 
         connection2.close();
 
-        Assert.assertSame("Post totals connections not as expected", 1, ds.pool.getTotalConnections());
+        Assert.assertSame("Post total connections not as expected", 1, ds.pool.getTotalConnections());
         Assert.assertSame("Post idle connections not as expected", 1, ds.pool.getIdleConnections());
     }
 
