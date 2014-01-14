@@ -24,6 +24,8 @@ import java.sql.Connection;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
+import javax.sql.DataSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +62,7 @@ public final class HikariConfig implements HikariConfigMBean
     private boolean isJdbc4connectionTest;
     private boolean isAutoCommit;
     private Properties dataSourceProperties;
+    private DataSource dataSource;
 
     /**
      * Default constructor
@@ -210,6 +213,16 @@ public final class HikariConfig implements HikariConfigMBean
         {
             this.connectionTimeout = connectionTimeoutMs;
         }
+    }
+
+    public DataSource getDataSource()
+    {
+        return dataSource;
+    }
+
+    public void setDataSource(DataSource dataSource)
+    {
+        this.dataSource = dataSource;
     }
 
     public String getDataSourceClassName()
@@ -396,6 +409,12 @@ public final class HikariConfig implements HikariConfigMBean
         {
             logger.warn("connectionTimeout is less than 100ms, did you specify the wrong time unit?  Using default instead.");
         	connectionTimeout = CONNECTION_TIMEOUT;
+        }
+
+        if (dataSource == null && dataSourceClassName == null)
+        {
+            logger.error("one of either dataSource or dataSourceClassName must be specified");
+            throw new IllegalStateException("one of either dataSource or dataSourceClassName must be specified");
         }
 
         if (idleTimeout < 0)

@@ -82,16 +82,23 @@ public final class HikariPool implements HikariPoolMBean
         this.transactionIsolation = configuration.getTransactionIsolation();
         this.debug = LOGGER.isDebugEnabled();
 
-        String dsClassName = configuration.getDataSourceClassName();
-        try
+        if (configuration.getDataSource() == null)
         {
-            Class<?> clazz = this.getClass().getClassLoader().loadClass(dsClassName);
-            this.dataSource = (DataSource) clazz.newInstance();
-            PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
+            String dsClassName = configuration.getDataSourceClassName();
+            try
+            {
+                Class<?> clazz = this.getClass().getClassLoader().loadClass(dsClassName);
+                this.dataSource = (DataSource) clazz.newInstance();
+                PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeException("Could not create datasource instance: " + dsClassName, e);
+            }
         }
-        catch (Exception e)
+        else
         {
-            throw new RuntimeException("Could not create datasource instance: " + dsClassName, e);
+            this.dataSource = configuration.getDataSource();
         }
 
         HikariMBeanElf.registerMBeans(configuration, this);
