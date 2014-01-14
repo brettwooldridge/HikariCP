@@ -1,5 +1,26 @@
 HikariCP Changes
 
+Changes between 1.2.4 and 1.2.5
+
+ *) Instrumentation mode (agent) removed due to narrowing gap between
+    delegation mode and instrumentation (and to simplify the code base).
+
+ *) Added setDataSource() to HikariConfig to allow a DataSource instance
+    to be explicitly wrapped by the pool.  Only available when creating
+    HikariConfig programmatically or constructing HikariConfig from a
+    java.util.Properties instance.
+
+ *) Fixed Hibernate threading issue (see in use usage patterns) introduced
+    in 1.2.2.
+
+ *) Fixed issue observed with PostgreSQL whereby the query that tests the
+    connection for "aliveness" also starts a transaction (when auto-commit
+    is false), thereby causing a later failure when we tried to set the
+    transaction isolation level.
+
+ *) Fixed issue where idleTimeout could not be set to 0, thereby disabling
+    it. Incorrect value validation caused 0 to be rejected as a valid value. 
+
 Changes between 1.2.3 and 1.2.4
 
  *) Fix another Hibernate-related issue whereby an NPE is encountered when
