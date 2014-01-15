@@ -17,7 +17,7 @@ Changes between 1.2.4 and 1.2.5
     HikariConfig programmatically or constructing HikariConfig from a
     java.util.Properties instance.
 
- *) Fixed Hibernate threading issue (see in use usage patterns) introduced
+ *) Fixed Hibernate threading issue (certain usage patterns) introduced
     in 1.2.2.
 
  *) Fixed issue observed with PostgreSQL whereby the query that tests the
