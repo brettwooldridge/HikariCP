@@ -1,5 +1,12 @@
 HikariCP Changes
 
+Changes between 1.2.5 and 1.2.6
+
+ *) Fixed regression that caused IndexOutOfBounds when multiple unclosed
+    Statements existed at the time of Connection.close().
+
+ *) Fixed incorrect pom.xml dependency on Hibernate.
+ 
 Changes between 1.2.4 and 1.2.5
 
  *) Instrumentation mode (agent) removed due to narrowing gap between
