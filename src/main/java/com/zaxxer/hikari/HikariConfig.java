@@ -416,6 +416,10 @@ public final class HikariConfig implements HikariConfigMBean
             logger.error("one of either dataSource or dataSourceClassName must be specified");
             throw new IllegalStateException("one of either dataSource or dataSourceClassName must be specified");
         }
+        else if (dataSource != null && dataSourceClassName != null)
+        {
+            logger.warn("both dataSource and dataSourceClassName are specified, ignoring dataSourceClassName");
+        }
 
         if (idleTimeout < 0)
         {
