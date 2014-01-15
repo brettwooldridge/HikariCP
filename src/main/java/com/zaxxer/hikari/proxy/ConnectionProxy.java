@@ -71,6 +71,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
         creationTime = lastAccess = System.currentTimeMillis();
         openStatements = new FastStatementList();
+        isTransactionIsolationDirty = true;
     }
     
     public final void unregisterStatement(Object statement)
