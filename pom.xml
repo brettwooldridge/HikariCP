@@ -130,7 +130,7 @@
          <groupId>org.hibernate</groupId>
          <artifactId>hibernate-core</artifactId>
          <version>4.3.0.Final</version>
-         <scope>compile</scope>
+         <scope>provided</scope>
       </dependency>
 
       <!-- OSGi test -->
