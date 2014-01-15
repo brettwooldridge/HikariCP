@@ -25,62 +25,12 @@ Or look at this:
 ----------------------------------------------------
 ### Maven Repository ###
 
-HikariCP comes with two jars: ``HikariCP-1.x.x.jar`` and ``HikariCP-agent-1.x.x.jar``.  The "core" jar contains
-everything you need to run.  If you wish to use *instrumentation mode* to go a little faster, you'll also need
-the agent jar.  See below for details.
-
-##### Required #####
-
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>1.2.4</version>
+        <version>1.2.6</version>
         <scope>compile</scope>
     </dependency>
-
-##### Optional (Instrumentation<sup>1</sup>) #####
-
-    <dependency>
-        <groupId>com.zaxxer</groupId>
-        <artifactId>HikariCP-agent</artifactId>
-        <version>1.2.4</version>
-        <scope>compile</scope>
-    </dependency>
-
-<sub><sup>1</sup>*Instrumentation* mode is still considered experimental, if you use it and encounter issues, please report</sub>
-<sub>&nbsp;them here and disable it by removing the agent jar or setting the ``useInstrumentation`` property to ``false``.</sub>
-
-----------------------------------------------------
-#### Driver Support ####
-HikariCP has two modes of operation: **Delegation** and **Instrumentation**.  *Instrumentation* is approximately 30% more
-performant, but both are exceedingly fast.
-
-##### Delegation #####
-Delegation mode is supported for *all* JDBC drivers.  This is included in the core HikariCP jar.
-
-##### Instrumentation #####
-Instrumentation mode is supported for specific JDBC drivers.  For instrumentation, you will need the "agent" jar
-in addition to the core jar.  If your favorite database is not supported, drop us a note in the
-[Google group](https://groups.google.com/d/forum/hikari-cp) and we'll try to add support for it.  Below is a table
-of drivers that are supported and their status:
-
-| Driver            | Version<sup>1</sup>      |  Status   |  DataSource<sup>2</sup>  | 
-| ----------------- | --------------:| --------- | ------------ |
-| Derby             | 10.10.1.1      | Tested    | org.apache.derby.jdbc.ClientDataSource40      |
-| jTDS              | 1.3.1          | Untested  | net.sourceforge.jtds.jdbcx.JtdsDataSource     |
-| HSQLDB            | 2.3.1          | Tested    | org.hsqldb.jdbc.JDBCDataSource                |
-| MariaDB           | 1.1.5          | Tested    | org.mariadb.jdbc.MySQLDataSource              |
-| MySQL Connector/J | 5.1.56         | Tested    | com.mysql.jdbc.jdbc2.optional.MysqlDataSource |
-| Oracle            | 12.1.0.1       | Untested  | oracle.jdbc.pool.OracleDataSource             |
-| PostgreSQL        | 9.2-1003.jdbc4 | Tested    | org.postgresql.ds.PGSimpleDataSource          |
-
-*NOTE: If instrumentation is used, the agent JAR cannot be "shaded" by the maven-shade-plugin or it will not function correctly.*
-
-<sub><sup>1</sup>Older/newer driver versions for a given database will *probably* work, because class names are rarely
-changed.  But if it does not work, you will known quickly because HikariCP will likely fail to start.  In this case, you
-can simply force *delegation mode* (see properties below).</sub><br/>
-<sub><sup>2</sup>The *DataSource* is specified because it is by the specified DataSource name that HikariCP looks up the instrumentation
-information in the internal codex.</sub>
 
 ------------------------------
 
@@ -129,10 +79,18 @@ This property controls the maximum number of milliseconds that a client (that's 
 for a connection from the pool.  If this time is exceeded without a connection becoming
 available, an SQLException will be thrown.  *Default: 5000*
 
+``dataSource``<br/>
+This property is only available via programmatic configuration.  This property allows you
+to directly set the instance of the ``DataSource`` to be wrapped by the pool, rather than
+having HikariCP construct it via reflection.  When this property is specified, the
+``dataSourceClassName`` property and all DataSource-specific properties will be ignored.
+*Default: none*
+
 ``dataSourceClassName``<br/>
 This is the name of the ``DataSource`` class provided by the JDBC driver.  Consult the
 documentation for your specific JDBC driver to get this class name.  Note XA data sources
-are not supported.  XA requires a real transaction manager like [bitronix](https://github.com/bitronix/btm).  *Default: none*
+are not supported.  XA requires a real transaction manager like [bitronix](https://github.com/bitronix/btm).
+*Default: none*
 
 ``idleTimeout``<br/>
 This property controls the maximum amount of time (in milliseconds) that a connection is
@@ -190,13 +148,6 @@ should be used.  Only use this property if you have specific isolation requireme
 common for all queries, otherwise simply set the isolation level manually when creating or
 preparing statements.  The value of this property is the constant name from the ``Connection``
 class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, etc.  *Default: none*
-
-``useInstrumentation``<br/>
-This property controls whether HikariCP will attempt to use bytecode instrumentation to boost
-performance.  Instrumentation is enabled by default, but whether it is used or not is based on
-whether the DataSource that is specified is recognized as supported.  Otherwise, delegation 
-mode will be used.  If you experience a failure due to instrumentation, you can manually disable
-instrumentation with this property.  *Default: true*
 
 ##### DataSource Properties #####
 DataSource properies can be set on the ``HikariConfig`` object through the use of the ``addDataSourcePropery``
