@@ -6,9 +6,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.junit.Assert;
+import org.junit.Test;
 
 public class StatementTest
 {
+    @Test
     public void testStatementClose() throws SQLException
     {
         HikariConfig config = new HikariConfig();
@@ -32,12 +34,33 @@ public class StatementTest
         Statement statement = connection.createStatement();
         Assert.assertNotNull(statement);
 
-        ResultSet resultSet = statement.executeQuery("SELECT * from foo");
-        Assert.assertNotNull(resultSet);
-
         connection.close();
 
         Assert.assertTrue(statement.isClosed());
-        Assert.assertTrue(resultSet.isClosed());
+    }
+
+    @Test
+    public void testDoubleStatementClose() throws SQLException
+    {
+        HikariConfig config = new HikariConfig();
+        config.setMinimumPoolSize(1);
+        config.setMaximumPoolSize(2);
+        config.setAcquireIncrement(1);
+        config.setConnectionTestQuery("VALUES 1");
+        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+        HikariDataSource ds = new HikariDataSource(config);
+        Connection connection = ds.getConnection();
+        Assert.assertNotNull(connection);
+
+        Statement statement1 = connection.createStatement();
+        Assert.assertNotNull(statement1);
+        Statement statement2 = connection.createStatement();
+        Assert.assertNotNull(statement2);
+
+        connection.close();
+
+        Assert.assertTrue(statement1.isClosed());
+        Assert.assertTrue(statement2.isClosed());
     }
 }

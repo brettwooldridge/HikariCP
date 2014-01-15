@@ -155,6 +155,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     {
         if (!isClosed)
         {
+            isClosed = true;
+
             if (leakTask != null)
             {
                 leakTask.cancel();
@@ -177,9 +179,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
                     }
                 }
 
-                if (!getAutoCommit())
+                if (!delegate.getAutoCommit())
                 {
-                    rollback();
+                    delegate.rollback();
                 }
             }
             catch (SQLException e)
@@ -189,7 +191,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             }
             finally
             {
-                isClosed = true;
                 openStatements.clear();
                 lastAccess = System.currentTimeMillis();
                 parentPool.releaseConnection(this);
