@@ -21,13 +21,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import com.zaxxer.hikari.HikariPool;
+import com.zaxxer.hikari.util.FastList;
 
 /**
  * This is the proxy class for java.sql.Connection.
@@ -42,7 +42,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
     protected final Connection delegate;
 
-    private final ArrayList<Statement> openStatements;
+    private final FastList<Statement> openStatements;
     private final HikariPool parentPool;
 
     private boolean isClosed;
@@ -73,7 +73,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         this.delegate = connection;
 
         creationTime = lastAccess = System.currentTimeMillis();
-        openStatements = new ArrayList<Statement>();
+        openStatements = new FastList<Statement>();
     }
     
     public final void unregisterStatement(Object statement)
