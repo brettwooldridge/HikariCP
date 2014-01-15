@@ -429,7 +429,7 @@ public final class HikariPool implements HikariPoolMBean
         }
         catch (SQLException e)
         {
-            LOGGER.error("Exception during keep alive check.  Connection must be dead.", e);
+            LOGGER.warn("Exception during keep alive check, that means the connection must be dead.", e);
             return false;
         }
     }
