@@ -152,11 +152,11 @@ class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, e
 ##### DataSource Properties #####
 DataSource properies can be set on the ``HikariConfig`` object through the use of the ``addDataSourcePropery``
 method, like so:
-
+```java
     config.addDataSourceProperty("url", "jdbc:hsqldb:mem:test");
     config.addDataSourceProperty("user", "SA");
     config.addDataSourceProperty("password", "");
-
+```
 See the [Initialization](#initialization) section below for further examples.
 
 
@@ -191,7 +191,7 @@ development and pre-Production.
 ----------------------------------------------------
 
 ### Initialization ###
-
+```java
     HikariConfig config = new HikariConfig();
     config.setMaximumPoolSize(100);
     config.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
@@ -200,14 +200,14 @@ development and pre-Production.
     config.addDataSourceProperty("password", "51mp50n");
     
     HikariDataSource ds = new HikariDataSource(config);
-
+```
 or property file based:
-
+```java
     HikariConfig config = new HikariConfig("some/path/hikari.properties");
     HikariDataSource ds = new HikariDataSource(config);
-
+```
 Example property file:
-
+```java
     acquireIncrement=3
     acquireRetryDelay=1000
     connectionTestQuery=SELECT 1
@@ -216,9 +216,9 @@ Example property file:
     dataSource.password=test
     dataSource.databaseName=mydb
     dataSource.serverName=localhost
-
+```
 or ``java.util.Properties`` based:
-
+```java
     Properties props = new Properties();
     props.setProperty("maxPoolSize", 100);
     props.setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource");
@@ -229,7 +229,7 @@ or ``java.util.Properties`` based:
     
     HikariConfig config = new HikariConfig(props);
     HikariDataSource ds = new HikariDataSource(config);
-
+```
 ----------------------------------------------------
 
 #### JMX Management ####
