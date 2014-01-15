@@ -16,24 +16,26 @@
 
 package com.zaxxer.hikari.util;
 
+import java.sql.Statement;
+
 
 /**
  * Fast list without range checking.
  *
  * @author Brett Wooldridge
  */
-public class FastList<E>
+public final class FastStatementList
 {
-    private transient Object[] elementData;
+    private Statement[] elementData;
 
     private int size;
 
     /**
      * Construct a FastList with a default size of 16.
      */
-    public FastList()
+    public FastStatementList()
     {
-        this.elementData = new Object[16];
+        this.elementData = new Statement[16];
     }
 
     /**
@@ -41,9 +43,9 @@ public class FastList<E>
      *
      * @param size the initial size of the FastList
      */
-    public FastList(int size)
+    public FastStatementList(int size)
     {
-        this.elementData = new Object[size];
+        this.elementData = new Statement[size];
     }
 
     /**
@@ -51,7 +53,7 @@ public class FastList<E>
      *
      * @param element the element to add
      */
-    public void add(E element)
+    public void add(Statement element)
     {
         if (size < elementData.length)
         {
@@ -62,7 +64,7 @@ public class FastList<E>
             // overflow-conscious code
             int oldCapacity = elementData.length;
             int newCapacity = oldCapacity + (oldCapacity >> 1);
-            Object[] newElementData = new Object[newCapacity];
+            Statement[] newElementData = new Statement[newCapacity];
             System.arraycopy(element, 0, newElementData, 0, oldCapacity);
             newElementData[size++] = element;
             elementData = newElementData;
@@ -75,15 +77,15 @@ public class FastList<E>
      * @param index the index of the element to get
      * @return the element, or ArrayIndexOutOfBounds is thrown if the index is invalid
      */
-    @SuppressWarnings("unchecked")
-    public E get(int index)
+    public Statement get(int index)
     {
-        return (E) elementData[index];
+        return elementData[index];
     }
 
     /**
      * This remove method is most efficient when the element being removed
      * is the last element.  Equality is identity based, not equals() based.
+     * Only the first matching element is removed.
      *
      * @param element the element to remove
      */

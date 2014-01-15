@@ -29,6 +29,7 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.zaxxer.hikari.proxy.JavassistProxyFactory;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 public final class HikariConfig implements HikariConfigMBean
@@ -63,6 +64,11 @@ public final class HikariConfig implements HikariConfigMBean
     private boolean isAutoCommit;
     private Properties dataSourceProperties;
     private DataSource dataSource;
+
+    static
+    {
+        JavassistProxyFactory.initialize();
+    }
 
     /**
      * Default constructor

@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
-import com.zaxxer.hikari.proxy.JavassistProxyFactoryFactory;
+import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 /**
@@ -325,7 +325,7 @@ public final class HikariPool implements HikariPoolMBean
             try
             {
                 Connection connection = dataSource.getConnection();
-                IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) JavassistProxyFactoryFactory.getProxyFactory().getProxyConnection(this, connection);
+                IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) ProxyFactory.getProxyConnection(this, connection);
 
                 if (transactionIsolation < 0)
                 {

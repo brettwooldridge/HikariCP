@@ -31,16 +31,16 @@ import javassist.CtNewMethod;
 import javassist.LoaderClassPath;
 import javassist.Modifier;
 
+import org.slf4j.LoggerFactory;
+
 import com.zaxxer.hikari.util.ClassLoaderUtils;
 
 /**
  *
  * @author Brett Wooldridge
  */
-public final class JavassistProxyFactoryFactory
+public final class JavassistProxyFactory
 {
-    private static final ProxyFactory proxyFactory;
-
     private ClassPool classPool;
 
     static
@@ -48,11 +48,10 @@ public final class JavassistProxyFactoryFactory
     	ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         try
         {
-        	Thread.currentThread().setContextClassLoader(JavassistProxyFactoryFactory.class.getClassLoader());
+        	Thread.currentThread().setContextClassLoader(JavassistProxyFactory.class.getClassLoader());
         	
-        	JavassistProxyFactoryFactory proxyFactoryFactory = new JavassistProxyFactoryFactory();
-
-        	proxyFactory = proxyFactoryFactory.generateProxyFactory();
+        	JavassistProxyFactory proxyFactoryFactory = new JavassistProxyFactory();
+        	proxyFactoryFactory.modifyProxyFactory();
         }
         catch (Exception e)
         {
@@ -64,7 +63,12 @@ public final class JavassistProxyFactoryFactory
         }
     }
 
-    private JavassistProxyFactoryFactory()
+    public static void initialize()
+    {
+        // simply invoking this method causes the initialization of this class.
+    }
+
+    private JavassistProxyFactory()
     {
         classPool = new ClassPool();
         classPool.importPackage("java.sql");
@@ -89,51 +93,43 @@ public final class JavassistProxyFactoryFactory
         }
     }
 
-    public static ProxyFactory getProxyFactory()
+    private void modifyProxyFactory() throws Exception
     {
-        return proxyFactory;
-    }
-
-    private ProxyFactory generateProxyFactory() throws Exception
-    {
-        String packageName = ProxyFactory.class.getPackage().getName();
-        CtClass targetCt = classPool.makeClass(packageName + ".JavassistProxyFactory");
-        CtClass superCt = classPool.getCtClass(ProxyFactory.class.getName());
-        targetCt.setSuperclass(superCt);
-        targetCt.setModifiers(Modifier.FINAL);
-
-        for (CtMethod intfMethod : superCt.getDeclaredMethods())
+        String packageName = JavassistProxyFactory.class.getPackage().getName();
+        CtClass proxyCt = classPool.getCtClass("com.zaxxer.hikari.proxy.ProxyFactory");
+        for (CtMethod method : proxyCt.getMethods())
         {
-            CtMethod method = CtNewMethod.copy(intfMethod, targetCt, null);
-
             StringBuilder call = new StringBuilder("{");
             if ("getProxyConnection".equals(method.getName()))
             {
                 call.append("return new ").append(packageName).append(".ConnectionJavassistProxy($$);");
             }
-            if ("getProxyStatement".equals(method.getName()))
+            else if ("getProxyStatement".equals(method.getName()))
             {
                 call.append("return new ").append(packageName).append(".StatementJavassistProxy($$);");
             }
-            if ("getProxyPreparedStatement".equals(method.getName()))
+            else if ("getProxyPreparedStatement".equals(method.getName()))
             {
                 call.append("return new ").append(packageName).append(".PreparedStatementJavassistProxy($$);");
             }
-            if ("getProxyResultSet".equals(method.getName()))
+            else if ("getProxyResultSet".equals(method.getName()))
             {
                 call.append("return $2 != null ? new ").append(packageName).append(".ResultSetJavassistProxy($$) : null;");
             }
-            if ("getProxyCallableStatement".equals(method.getName()))
+            else if ("getProxyCallableStatement".equals(method.getName()))
             {
                 call.append("return new ").append(packageName).append(".CallableStatementJavassistProxy($$);");
             }
+            else
+            {
+                continue;
+            }
+
             call.append('}');
             method.setBody(call.toString());
-            targetCt.addMethod(method);
         }
 
-        Class<?> clazz = targetCt.toClass(classPool.getClassLoader(), null);
-        return (ProxyFactory) clazz.newInstance();
+        proxyCt.toClass(classPool.getClassLoader(), null);
     }
 
     /**
@@ -196,6 +192,11 @@ public final class JavassistProxyFactoryFactory
                 method.setBody(modifiedBody);
                 targetCt.addMethod(method);
             }
+        }
+
+        if (LoggerFactory.getLogger(getClass()).isDebugEnabled())
+        {
+            targetCt.debugWriteFile(System.getProperty("java.io.tmpdir"));
         }
 
         return targetCt.toClass(classPool.getClassLoader(), null);
