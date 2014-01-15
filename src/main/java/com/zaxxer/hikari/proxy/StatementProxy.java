@@ -31,7 +31,6 @@ public abstract class StatementProxy implements Statement
     protected static final ProxyFactory PROXY_FACTORY;
 
     protected final IHikariConnectionProxy connection;
-
     protected final Statement delegate;
 
     private boolean isClosed;
@@ -56,10 +55,10 @@ public abstract class StatementProxy implements Statement
     {
         if (resultSet != null)
         {
-            resultSet = PROXY_FACTORY.getProxyResultSet(this, resultSet);
+            return PROXY_FACTORY.getProxyResultSet(this, resultSet);
         }
 
-        return resultSet;        
+        return null;        
     }
 
     // **********************************************************************
