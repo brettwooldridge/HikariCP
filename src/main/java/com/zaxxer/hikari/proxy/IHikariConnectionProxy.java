@@ -36,6 +36,10 @@ public interface IHikariConnectionProxy extends Connection
 
     boolean isBrokenConnection();
 
+    boolean isTransactionIsolationDirty();
+
+    void resetTransactionIsolationDirty();
+
     long getCreationTime();
 
     long getLastAccess();

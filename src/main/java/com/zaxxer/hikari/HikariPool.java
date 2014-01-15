@@ -388,7 +388,7 @@ public final class HikariPool implements HikariPoolMBean
      * @param timeoutMs the timeout before we consider the test a failure
      * @return true if the connection is alive, false if it is not alive or we timed out
      */
-    private boolean isConnectionAlive(final Connection connection, long timeoutMs)
+    private boolean isConnectionAlive(final IHikariConnectionProxy connection, long timeoutMs)
     {
         if (timeoutMs < 1000)
         {
@@ -398,7 +398,10 @@ public final class HikariPool implements HikariPoolMBean
         try
         {
             connection.setAutoCommit(isAutoCommit);
-            connection.setTransactionIsolation(transactionIsolation);
+            if (connection.isTransactionIsolationDirty())
+            {
+                connection.setTransactionIsolation(transactionIsolation);
+            }
 
             try
             {
@@ -418,6 +421,8 @@ public final class HikariPool implements HikariPoolMBean
                 {
                     connection.commit();
                 }
+
+                connection.resetTransactionIsolationDirty();
             }
 
             return true;

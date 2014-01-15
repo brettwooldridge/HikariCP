@@ -45,6 +45,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
     private boolean isClosed;
     private boolean forceClose;
+    private boolean isTransactionIsolationDirty;
     
     private final long creationTime;
     private volatile long lastAccess;
@@ -111,6 +112,16 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
         leakTask = new LeakTask(leakTrace, leakDetectionThreshold);
         scheduler.schedule(leakTask, leakDetectionThreshold);
+    }
+
+    public final boolean isTransactionIsolationDirty()
+    {
+        return isTransactionIsolationDirty;
+    }
+
+    public void resetTransactionIsolationDirty()
+    {
+        isTransactionIsolationDirty = false;
     }
 
     public final boolean isBrokenConnection()
@@ -391,6 +402,22 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         try
         {
             return delegate.isValid(timeout);
+        }
+        catch (SQLException e)
+        {
+            checkException(e);
+            throw e;
+        }
+    }
+
+    /** {@inheritDoc} */
+    public void setTransactionIsolation(int level) throws SQLException
+    {
+        checkClosed();
+        try
+        {
+            delegate.setTransactionIsolation(level);
+            isTransactionIsolationDirty = true;
         }
         catch (SQLException e)
         {
