@@ -6,7 +6,7 @@ nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctn
 production-quality connection pool.  Coming in at roughly 50Kb, the library is extremely light.
 
 Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations
-were performed in ***10ms*** on a commodity PC.<sup>2</sup>&nbsp;&nbsp;The next fastest connection pool ([Tomcat](http://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html)) was ***1874ms***.
+were performed in ***10ms*** on a commodity PC.<sup>2</sup>&nbsp;&nbsp;The next fastest connection pool ([Tomcat](http://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html)) was ***1874ms***.  Apache DBCP and C3P0 failed to successfully execute the benchmark.
 
 | Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
 | -------- | ---------:| ---------:| ---------:|
