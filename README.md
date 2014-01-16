@@ -192,43 +192,43 @@ development and pre-Production.
 
 ### Initialization ###
 ```java
-    HikariConfig config = new HikariConfig();
-    config.setMaximumPoolSize(100);
-    config.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
-    config.addDataSourceProperty("url", "jdbc:mysql://localhost/database");
-    config.addDataSourceProperty("user", "bart");
-    config.addDataSourceProperty("password", "51mp50n");
-    
-    HikariDataSource ds = new HikariDataSource(config);
+HikariConfig config = new HikariConfig();
+config.setMaximumPoolSize(100);
+config.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
+config.addDataSourceProperty("url", "jdbc:mysql://localhost/database");
+config.addDataSourceProperty("user", "bart");
+config.addDataSourceProperty("password", "51mp50n");
+
+HikariDataSource ds = new HikariDataSource(config);
 ```
 or property file based:
 ```java
-    HikariConfig config = new HikariConfig("some/path/hikari.properties");
-    HikariDataSource ds = new HikariDataSource(config);
+HikariConfig config = new HikariConfig("some/path/hikari.properties");
+HikariDataSource ds = new HikariDataSource(config);
 ```
 Example property file:
 ```ini
-    acquireIncrement=3
-    acquireRetryDelay=1000
-    connectionTestQuery=SELECT 1
-    dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
-    dataSource.username=test
-    dataSource.password=test
-    dataSource.databaseName=mydb
-    dataSource.serverName=localhost
+acquireIncrement=3
+acquireRetryDelay=1000
+connectionTestQuery=SELECT 1
+dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
+dataSource.username=test
+dataSource.password=test
+dataSource.databaseName=mydb
+dataSource.serverName=localhost
 ```
 or ``java.util.Properties`` based:
 ```java
-    Properties props = new Properties();
-    props.setProperty("maxPoolSize", 100);
-    props.setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource");
-    props.setProperty("dataSource.username", "test");
-    props.setProperty("dataSource.password", "test");
-    props.setProperty("dataSource.databaseName", "mydb");
-    props.setProperty("dataSource.logWriter", new PrintWriter(System.out));
-    
-    HikariConfig config = new HikariConfig(props);
-    HikariDataSource ds = new HikariDataSource(config);
+Properties props = new Properties();
+props.setProperty("maxPoolSize", 100);
+props.setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource");
+props.setProperty("dataSource.username", "test");
+props.setProperty("dataSource.password", "test");
+props.setProperty("dataSource.databaseName", "mydb");
+props.setProperty("dataSource.logWriter", new PrintWriter(System.out));
+
+HikariConfig config = new HikariConfig(props);
+HikariDataSource ds = new HikariDataSource(config);
 ```
 
 **See the [Wiki](https://github.com/brettwooldridge/HikariCP/wiki) for additional configuration examples (such as Hibernate).**
