@@ -19,41 +19,26 @@ minded, read [here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Ra
 in and let your code run like its pants are on fire.
 
 ### Maven Respository ###
-HikariCP comes with two jars: ``HikariCP-1.x.x.jar`` and ``HikariCP-agent-1.x.x.jar``.  The "core" jar contains
-everything you need to run.  If you wish to use *instrumentation mode* to go a little faster, you'll also need
-the agent jar.  See below for details.
-
-##### Required #####
-
+```xml
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>1.2.2</version>
+        <version>1.2.6</version>
         <scope>compile</scope>
     </dependency>
-
-##### Optional (Instrumentation<sup>1</sup>) #####
-
-    <dependency>
-        <groupId>com.zaxxer</groupId>
-        <artifactId>HikariCP-agent</artifactId>
-        <version>1.2.2</version>
-        <scope>compile</scope>
-    </dependency>
-
-<sub><sup>1</sup>*Instrumentation* mode is still considered experimental, if you use it and encounter issues, please report</sub>
-<sub>&nbsp;them here and disable it by removing the agent jar or setting the ``useInstrumentation`` property to ``false``.</sub>
+```
 
 ### Initialization ###
-    HikariConfig config = new HikariConfig();
-    config.setMaximumPoolSize(100);
-    config.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
-    config.addDataSourceProperty("url", "jdbc:mysql://localhost/database");
-    config.addDataSourceProperty("user", "bart");
-    config.addDataSourceProperty("password", "51mp50n");
+```java
+HikariConfig config = new HikariConfig();
+config.setMaximumPoolSize(100);
+config.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
+config.addDataSourceProperty("url", "jdbc:mysql://localhost/database");
+config.addDataSourceProperty("user", "bart");
+config.addDataSourceProperty("password", "51mp50n");
 
-    DataSource ds = new HikariDataSource(config);
-
+DataSource ds = new HikariDataSource(config);
+```
 
 or property file based:
 
@@ -61,15 +46,16 @@ or property file based:
     DataSource ds = new HikariDataSource(config);
 
 Example property file:
-
-    acquireIncrement=3
-    acquireRetryDelay=1000
-    connectionTestQuery=SELECT 1
-    dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
-    dataSource.username=test
-    dataSource.password=test
-    dataSource.databaseName=mydb
-    dataSource.serverName=localhost
+```ini
+acquireIncrement=3
+acquireRetryDelay=1000
+connectionTestQuery=SELECT 1
+dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
+dataSource.username=test
+dataSource.password=test
+dataSource.databaseName=mydb
+dataSource.serverName=localhost
+```
 
 You can find information about the [configuration properties here](https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby).
 
