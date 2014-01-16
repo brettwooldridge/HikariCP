@@ -220,7 +220,7 @@ dataSource.serverName=localhost
 or ``java.util.Properties`` based:
 ```java
 Properties props = new Properties();
-props.setProperty("maxPoolSize", 100);
+props.setProperty("maximumPoolSize", 100);
 props.setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource");
 props.setProperty("dataSource.username", "test");
 props.setProperty("dataSource.password", "test");
