@@ -24,14 +24,14 @@ Or look at this:
 
 ----------------------------------------------------
 ### Maven Repository ###
-
+```xml
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
         <version>1.2.6</version>
         <scope>compile</scope>
     </dependency>
-
+```
 ------------------------------
 
 #### Configuration (knobs, baby!) ####
@@ -207,7 +207,7 @@ or property file based:
     HikariDataSource ds = new HikariDataSource(config);
 ```
 Example property file:
-```java
+```ini
     acquireIncrement=3
     acquireRetryDelay=1000
     connectionTestQuery=SELECT 1
@@ -230,6 +230,9 @@ or ``java.util.Properties`` based:
     HikariConfig config = new HikariConfig(props);
     HikariDataSource ds = new HikariDataSource(config);
 ```
+
+**See the [Wiki](https://github.com/brettwooldridge/HikariCP/wiki) for additional configuration examples (such as Hibernate).**
+
 ----------------------------------------------------
 
 #### JMX Management ####
