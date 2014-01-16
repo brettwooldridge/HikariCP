@@ -55,11 +55,11 @@ public final class FastStatementList
      */
     public void add(Statement element)
     {
-        if (size < elementData.length)
+        try
         {
             elementData[size++] = element;
         }
-        else
+        catch (ArrayIndexOutOfBoundsException oob)
         {
             // overflow-conscious code
             int oldCapacity = elementData.length;
