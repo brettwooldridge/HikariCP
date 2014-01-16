@@ -46,6 +46,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     private boolean isClosed;
     private boolean forceClose;
     private boolean isTransactionIsolationDirty;
+    private int currentIsolationLevel;
     
     private final long creationTime;
     private volatile long lastAccess;
@@ -64,14 +65,14 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         SQL_ERRORS.add("01002");  // SQL92 disconnect error
     }
 
-    protected ConnectionProxy(HikariPool pool, Connection connection)
+    protected ConnectionProxy(HikariPool pool, Connection connection, int defaultIsolationLevel)
     {
         this.parentPool = pool;
         this.delegate = connection;
+        this.currentIsolationLevel = defaultIsolationLevel;
 
         creationTime = lastAccess = System.currentTimeMillis();
         openStatements = new FastStatementList();
-        isTransactionIsolationDirty = true;
     }
     
     public final void unregisterStatement(Object statement)
@@ -418,7 +419,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         try
         {
             delegate.setTransactionIsolation(level);
-            isTransactionIsolationDirty = true;
+            isTransactionIsolationDirty |= (currentIsolationLevel == level);
+            currentIsolationLevel = level;
         }
         catch (SQLException e)
         {

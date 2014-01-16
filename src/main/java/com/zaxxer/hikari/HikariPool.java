@@ -325,19 +325,18 @@ public final class HikariPool implements HikariPoolMBean
             try
             {
                 Connection connection = dataSource.getConnection();
-                IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) ProxyFactory.getProxyConnection(this, connection);
-
+                
+                connection.setAutoCommit(isAutoCommit);
                 if (transactionIsolation < 0)
                 {
                     transactionIsolation = connection.getTransactionIsolation();
                 }
-                
-                boolean alive = isConnectionAlive(proxyConnection, configuration.getConnectionTimeout());
-                if (!alive)
+                else
                 {
-                    // This will be caught below...
-                    throw new RuntimeException("Connection not alive, retry.");
+                    connection.setTransactionIsolation(transactionIsolation);
                 }
+
+                IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) ProxyFactory.getProxyConnection(this, connection, transactionIsolation);
 
                 String initSql = configuration.getConnectionInitSql();
                 if (initSql != null && initSql.length() > 0)

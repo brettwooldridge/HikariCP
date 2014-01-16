@@ -31,7 +31,7 @@ import com.zaxxer.hikari.HikariPool;
  */
 public final class ProxyFactory
 {
-    public static Connection getProxyConnection(HikariPool pool, Connection connection)
+    public static Connection getProxyConnection(HikariPool pool, Connection connection, int defaultIsolationLevel)
     {
         // Body is injected by JavassistProxyFactory
         return null;
