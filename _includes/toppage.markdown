@@ -19,43 +19,41 @@ minded, read [here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Ra
 in and let your code run like its pants are on fire.
 
 ### Maven Respository ###
-```xml
+
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
         <version>1.2.6</version>
         <scope>compile</scope>
     </dependency>
-```
 
 ### Initialization ###
-```java
-HikariConfig config = new HikariConfig();
-config.setMaximumPoolSize(100);
-config.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
-config.addDataSourceProperty("url", "jdbc:mysql://localhost/database");
-config.addDataSourceProperty("user", "bart");
-config.addDataSourceProperty("password", "51mp50n");
 
-DataSource ds = new HikariDataSource(config);
-```
+    HikariConfig config = new HikariConfig();
+    config.setMaximumPoolSize(100);
+    config.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
+    config.addDataSourceProperty("url", "jdbc:mysql://localhost/database");
+    config.addDataSourceProperty("user", "bart");
+    config.addDataSourceProperty("password", "51mp50n");
 
-or property file based:
+    DataSource ds = new HikariDataSource(config);
+
+or property file-based:
 
     HikariConfig config = new HikariConfig("some/path/hikari.properties");
     DataSource ds = new HikariDataSource(config);
 
 Example property file:
-```ini
-acquireIncrement=3
-acquireRetryDelay=1000
-connectionTestQuery=SELECT 1
-dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
-dataSource.username=test
-dataSource.password=test
-dataSource.databaseName=mydb
-dataSource.serverName=localhost
-```
+
+    acquireIncrement=3
+    acquireRetryDelay=1000
+    connectionTestQuery=SELECT 1
+    dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
+    dataSource.username=test
+    dataSource.password=test
+    dataSource.databaseName=mydb
+    dataSource.serverName=localhost
+
 
 You can find information about the [configuration properties here](https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby).
 
