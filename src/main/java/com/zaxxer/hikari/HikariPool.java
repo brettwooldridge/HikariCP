@@ -411,6 +411,7 @@ public final class HikariPool implements HikariPoolMBean
     
                 try (Statement statement = connection.createStatement())
                 {
+                    statement.setQueryTimeout((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
                     statement.executeQuery(configuration.getConnectionTestQuery());
                 }
             }
