@@ -77,15 +77,18 @@ public final class JavassistProxyFactory
         try
         {
             // Connection is special, it has a checkClosed() call at the beginning
-            String methodBody = "{ checkClosed(); try { return ((cast) delegate).method($$); } catch (SQLException e) { checkException(e); throw e;} }";
+            String methodBody = "{ checkClosed(); try { return delegate.method($$); } catch (SQLException e) { checkException(e); throw e;} }";
             generateProxyClass(Connection.class, ConnectionProxy.class, methodBody);
 
-            // The result of the proxy classes simply delegate
-            methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { checkException(e); throw e;} }";
+            // Cast is not needed for these
+            methodBody = "{ try { return delegate.method($$); } catch (SQLException e) { checkException(e); throw e;} }";
             generateProxyClass(Statement.class, StatementProxy.class, methodBody);
-            generateProxyClass(CallableStatement.class, CallableStatementProxy.class, methodBody);
-            generateProxyClass(PreparedStatement.class, PreparedStatementProxy.class, methodBody);
             generateProxyClass(ResultSet.class, ResultSetProxy.class, methodBody);
+            
+            // For these we have to cast the delegate
+            methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { checkException(e); throw e;} }";
+            generateProxyClass(PreparedStatement.class, PreparedStatementProxy.class, methodBody);
+            generateProxyClass(CallableStatement.class, CallableStatementProxy.class, methodBody);
         }
         catch (Exception e)
         {
