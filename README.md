@@ -249,7 +249,7 @@ management console such as JConsole:
  * ``maximumPoolSize``
 
 #### Support ####
-Google discussion group [HikariCP here](https://groups.google.com/d/forum/hikari-cp)
+Google discussion group [HikariCP here](https://groups.google.com/d/forum/hikari-cp), growing [FAQ](https://github.com/brettwooldridge/HikariCP/wiki/FAQ).
 
 #### Requirements ####
  * Java 7 and above<sup>1</sup>.  If you need legacy Java support, I recommend the Tomcat pool.
