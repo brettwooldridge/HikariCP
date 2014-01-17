@@ -94,7 +94,7 @@
          <groupId>org.javassist</groupId>
          <artifactId>javassist</artifactId>
          <version>3.18.1-GA</version>
-         <scope>provided</scope>
+         <scope>compile</scope>
       </dependency>
       <dependency>
          <groupId>net.snaq</groupId>
