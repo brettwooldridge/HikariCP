@@ -30,6 +30,7 @@ import javassist.CtMethod;
 import javassist.CtNewMethod;
 import javassist.LoaderClassPath;
 import javassist.Modifier;
+import javassist.NotFoundException;
 
 import org.slf4j.LoggerFactory;
 
@@ -186,7 +187,16 @@ public final class JavassistProxyFactory
                 CtMethod method = CtNewMethod.copy(intfMethod, targetCt, null);
 
                 // Generate a method that simply invokes the same method on the delegate
-                String modifiedBody = methodBody.replace("method", method.getName());
+                String modifiedBody;
+                if (isThrowsSqlException(intfMethod))
+                {
+                    modifiedBody = methodBody.replace("method", method.getName());
+                }
+                else
+                {
+                    modifiedBody = "return ((cast) delegate).method($$);".replace("method", method.getName()).replace("cast", primaryInterface.getName());
+                }
+
                 if (method.getReturnType() == CtClass.voidType)
                 {
                     modifiedBody = modifiedBody.replace("return", "");
@@ -203,5 +213,25 @@ public final class JavassistProxyFactory
         }
 
         return targetCt.toClass(classPool.getClassLoader(), null);
+    }
+
+    private boolean isThrowsSqlException(CtMethod method)
+    {
+        try
+        {
+            for (CtClass clazz : method.getExceptionTypes())
+            {
+                if (clazz.getSimpleName().equals("SQLException"))
+                {
+                    return true;
+                }
+            }
+        }
+        catch (NotFoundException e)
+        {
+            // fall thru
+        }
+
+        return false;
     }
 }
