@@ -429,6 +429,25 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         }
     }
 
+    /** {@inheritDoc} */
+    public boolean isWrapperFor(Class<?> iface) throws SQLException
+    {
+        return iface.isInstance(delegate);
+    }
+
+    /** {@inheritDoc} */
+    @SuppressWarnings("unchecked")
+    public <T> T unwrap(Class<T> iface) throws SQLException
+    {
+        if (iface.isInstance(delegate))
+        {
+            return (T) delegate;
+        }
+
+        throw new SQLException("Wrapped connection is not an instance of " + iface);
+    }
+
+
     // **********************************************************************
     //                          Private Methods
     // **********************************************************************
