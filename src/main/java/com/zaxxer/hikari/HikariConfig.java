@@ -56,7 +56,7 @@ public final class HikariConfig implements HikariConfigMBean
     // Properties NOT changeable at runtime
     //
     private int transactionIsolation;
-    private String connectionCustomizationClass;
+    private String connectionCustomizerClassName;
     private String connectionInitSql;
     private String connectionTestQuery;
     private String dataSourceClassName;
@@ -179,14 +179,14 @@ public final class HikariConfig implements HikariConfigMBean
         this.acquireRetryDelay = acquireRetryDelayMs;
     }
 
-    public String getConnectionCustomizationClass()
+    public String getConnectionCustomizerClassName()
     {
-        return connectionCustomizationClass;
+        return connectionCustomizerClassName;
     }
 
-    public void setConnectionCustomizationClass(String connectionCustomizationClass)
+    public void setConnectionCustomizerClassName(String connectionCustomizerClassName)
     {
-        this.connectionCustomizationClass = connectionCustomizationClass;
+        this.connectionCustomizerClassName = connectionCustomizerClassName;
     }
 
     public String getConnectionTestQuery()
@@ -418,16 +418,16 @@ public final class HikariConfig implements HikariConfigMBean
             acquireRetryDelay = ACQUIRE_RETRY_DELAY;
         }
 
-        if (connectionCustomizationClass != null)
+        if (connectionCustomizerClassName != null)
         {
             try
             {
-                getClass().getClassLoader().loadClass(connectionCustomizationClass);
+                getClass().getClassLoader().loadClass(connectionCustomizerClassName);
             }
             catch (ClassNotFoundException e)
             {
-                logger.warn("connectionCustomizationClass specified class '" + connectionCustomizationClass + "' could not be loaded", e);
-                connectionCustomizationClass = null;
+                logger.warn("connectionCustomizationClass specified class '" + connectionCustomizerClassName + "' could not be loaded", e);
+                connectionCustomizerClassName = null;
             }
         }
 

@@ -101,11 +101,11 @@ public final class HikariPool implements HikariPoolMBean
             this.dataSource = configuration.getDataSource();
         }
 
-        if (configuration.getConnectionCustomizationClass() != null)
+        if (configuration.getConnectionCustomizerClassName() != null)
         {
             try
             {
-                Class<?> clazz = this.getClass().getClassLoader().loadClass(configuration.getConnectionCustomizationClass());
+                Class<?> clazz = this.getClass().getClassLoader().loadClass(configuration.getConnectionCustomizerClassName());
                 this.connectionCustomizer = (IConnectionCustomizer) clazz.newInstance();
             }
             catch (ClassNotFoundException | InstantiationException | IllegalAccessException e)
