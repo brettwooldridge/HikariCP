@@ -361,7 +361,7 @@ public final class HikariPool implements HikariPoolMBean
                     connection.setAutoCommit(true);
                     try (Statement statement = connection.createStatement())
                     {
-                        statement.executeQuery(initSql);
+                        statement.execute(initSql);
                     }
                 }
 
