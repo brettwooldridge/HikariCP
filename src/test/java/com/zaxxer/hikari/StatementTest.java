@@ -1,7 +1,6 @@
 package com.zaxxer.hikari;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -40,7 +39,7 @@ public class StatementTest
     }
 
     @Test
-    public void testDoubleStatementClose() throws SQLException
+    public void testAutoStatementClose() throws SQLException
     {
         HikariConfig config = new HikariConfig();
         config.setMinimumPoolSize(1);
@@ -63,4 +62,47 @@ public class StatementTest
         Assert.assertTrue(statement1.isClosed());
         Assert.assertTrue(statement2.isClosed());
     }
+
+    @Test
+    public void testDoubleStatementClose() throws SQLException
+    {
+        HikariConfig config = new HikariConfig();
+        config.setMinimumPoolSize(1);
+        config.setMaximumPoolSize(2);
+        config.setAcquireIncrement(1);
+        config.setConnectionTestQuery("VALUES 1");
+        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+        HikariDataSource ds = new HikariDataSource(config);
+        Connection connection = ds.getConnection();
+
+        Statement statement1 = connection.createStatement();
+
+        statement1.close();
+        statement1.close();
+
+        connection.close();
+    }
+
+    @Test
+    public void testOutOfOrderStatementClose() throws SQLException
+    {
+        HikariConfig config = new HikariConfig();
+        config.setMinimumPoolSize(1);
+        config.setMaximumPoolSize(2);
+        config.setAcquireIncrement(1);
+        config.setConnectionTestQuery("VALUES 1");
+        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+        HikariDataSource ds = new HikariDataSource(config);
+        Connection connection = ds.getConnection();
+
+        Statement statement1 = connection.createStatement();
+        Statement statement2 = connection.createStatement();
+
+        statement1.close();
+        statement2.close();
+
+        connection.close();
+    }    
 }
