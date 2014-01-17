@@ -77,7 +77,7 @@ property or ``jdbc4ConnectionTest`` must be specified.  *Default: none*
 ``connectionTimeout``<br/>
 This property controls the maximum number of milliseconds that a client (that's you) will wait
 for a connection from the pool.  If this time is exceeded without a connection becoming
-available, an SQLException will be thrown.  *Default: 5000*
+available, a SQLException will be thrown.  *Default: 5000*
 
 ``dataSource``<br/>
 This property is only available via programmatic configuration.  This property allows you
@@ -101,7 +101,7 @@ are never removed from the pool.  *Default: 600000 (10 minutes)*
 
 ``jdbc4ConnectionTest``<br/>
 This property is a boolean value that determines whether the JDBC4 Connection.isValid() method
-is used to check that a connection is still alive.  This value is mutually exlusive with the
+is used to check that a connection is still alive.  This value is mutually exclusive with the
 ``connectionTestQuery`` property, and this method of testing connection validity should be
 preferred if supported by the JDBC driver.  *Default: true*
 
