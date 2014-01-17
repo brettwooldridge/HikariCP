@@ -17,6 +17,10 @@ Changes between 1.2.6 and 1.2.7
     become "dirty".  Avoids unnecessary round trip to the DB during the
     aliveness check.
 
+ *) Added interface IConnectionCustomizer and related HikariConfig
+    property 'connectionCustomizerClassName' to allow users to specify
+    a connection customization implementation.
+
 Changes between 1.2.5 and 1.2.6
 
  *) Fixed regression that caused IndexOutOfBounds when multiple unclosed
