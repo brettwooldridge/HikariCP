@@ -47,19 +47,19 @@ public final class HikariPool implements HikariPoolMBean
 
     final DataSource dataSource;
 
+    private final IConnectionCustomizer connectionCustomizer;
     private final HikariConfig configuration;
     private final LinkedTransferQueue<IHikariConnectionProxy> idleConnections;
+    private final Timer houseKeepingTimer;    
 
-    private final AtomicInteger totalConnections;
-    private final AtomicInteger idleConnectionCount;
-    private final AtomicBoolean backgroundFillQueued;
     private final long leakDetectionThreshold;
-    private final boolean jdbc4ConnectionTest;
+    private final AtomicBoolean backgroundFillQueued;
+    private final AtomicInteger idleConnectionCount;
+    private final AtomicInteger totalConnections;
     private final boolean isAutoCommit;
+    private final boolean jdbc4ConnectionTest;
     private int transactionIsolation;
     private boolean debug;
-
-    private final Timer houseKeepingTimer;
 
     /**
      * Construct a HikariPool with the specified configuration.
@@ -99,6 +99,23 @@ public final class HikariPool implements HikariPoolMBean
         else
         {
             this.dataSource = configuration.getDataSource();
+        }
+
+        if (configuration.getConnectionCustomizationClass() != null)
+        {
+            try
+            {
+                Class<?> clazz = this.getClass().getClassLoader().loadClass(configuration.getConnectionCustomizationClass());
+                this.connectionCustomizer = (IConnectionCustomizer) clazz.newInstance();
+            }
+            catch (ClassNotFoundException | InstantiationException | IllegalAccessException e)
+            {
+                throw new RuntimeException("Could not load connection customization class", e);
+            }
+        }
+        else
+        {
+            this.connectionCustomizer = null;
         }
 
         HikariMBeanElf.registerMBeans(configuration, this);
@@ -326,14 +343,14 @@ public final class HikariPool implements HikariPoolMBean
             {
                 Connection connection = dataSource.getConnection();
                 
-                connection.setAutoCommit(isAutoCommit);
                 if (transactionIsolation < 0)
                 {
                     transactionIsolation = connection.getTransactionIsolation();
                 }
-                else
+
+                if (connectionCustomizer != null)
                 {
-                    connection.setTransactionIsolation(transactionIsolation);
+                    connectionCustomizer.customize(connection);
                 }
 
                 IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) ProxyFactory.getProxyConnection(this, connection, transactionIsolation);

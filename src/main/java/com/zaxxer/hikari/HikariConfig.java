@@ -50,20 +50,21 @@ public final class HikariConfig implements HikariConfigMBean
     private volatile long idleTimeout;
     private volatile long leakDetectionThreshold;
     private volatile long maxLifetime;
-    private volatile int minPoolSize;
     private volatile int maxPoolSize;
+    private volatile int minPoolSize;
 
     // Properties NOT changeable at runtime
     //
     private int transactionIsolation;
-    private String poolName;
+    private String connectionCustomizationClass;
+    private String connectionInitSql;
     private String connectionTestQuery;
     private String dataSourceClassName;
-    private String connectionInitSql;
-    private boolean isJdbc4connectionTest;
+    private String poolName;
     private boolean isAutoCommit;
-    private Properties dataSourceProperties;
+    private boolean isJdbc4connectionTest;
     private DataSource dataSource;
+    private Properties dataSourceProperties;
 
     static
     {
@@ -176,6 +177,16 @@ public final class HikariConfig implements HikariConfigMBean
             throw new IllegalArgumentException("acquireRetryDelay cannot be negative");
         }
         this.acquireRetryDelay = acquireRetryDelayMs;
+    }
+
+    public String getConnectionCustomizationClass()
+    {
+        return connectionCustomizationClass;
+    }
+
+    public void setConnectionCustomizationClass(String connectionCustomizationClass)
+    {
+        this.connectionCustomizationClass = connectionCustomizationClass;
     }
 
     public String getConnectionTestQuery()
@@ -405,6 +416,19 @@ public final class HikariConfig implements HikariConfigMBean
         {
             logger.warn("acquireRetryDelay is less than 100ms, did you specify the wrong time unit?  Using default instead.");
             acquireRetryDelay = ACQUIRE_RETRY_DELAY;
+        }
+
+        if (connectionCustomizationClass != null)
+        {
+            try
+            {
+                getClass().getClassLoader().loadClass(connectionCustomizationClass);
+            }
+            catch (ClassNotFoundException e)
+            {
+                logger.warn("connectionCustomizationClass specified class '" + connectionCustomizationClass + "' could not be loaded", e);
+                connectionCustomizationClass = null;
+            }
         }
 
         if (connectionTimeout == Integer.MAX_VALUE)
