@@ -42,11 +42,11 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
     private final FastStatementList openStatements;
     private final HikariPool parentPool;
+    private final int defaultIsolationLevel;
 
     private boolean isClosed;
     private boolean forceClose;
     private boolean isTransactionIsolationDirty;
-    private int currentIsolationLevel;
     
     private final long creationTime;
     private volatile long lastAccess;
@@ -69,7 +69,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     {
         this.parentPool = pool;
         this.delegate = connection;
-        this.currentIsolationLevel = defaultIsolationLevel;
+        this.defaultIsolationLevel = defaultIsolationLevel;
 
         creationTime = lastAccess = System.currentTimeMillis();
         openStatements = new FastStatementList();
@@ -419,8 +419,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         try
         {
             delegate.setTransactionIsolation(level);
-            isTransactionIsolationDirty |= (currentIsolationLevel == level);
-            currentIsolationLevel = level;
+            isTransactionIsolationDirty = (level != defaultIsolationLevel);
         }
         catch (SQLException e)
         {
