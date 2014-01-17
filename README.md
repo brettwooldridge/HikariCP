@@ -1,4 +1,4 @@
-![](https://raw.github.com/wiki/brettwooldridge/HikariCP/Hikari.png)&nbsp;HikariCP <sup><sup>It's Faster.</sup></sup>&nbsp;[![Build Status](https://travis-ci.org/brettwooldridge/HikariCP.png?branch=master)](https://travis-ci.org/brettwooldridge/HikariCP)<span style="width:50px;">&nbsp;</span>[![](https://raw.github.com/wiki/brettwooldridge/HikariCP/twitter.png)](https://raw.github.com/wiki/brettwooldridge/HikariCP/Hikari.png)
+![](https://raw.github.com/wiki/brettwooldridge/HikariCP/Hikari.png)&nbsp;HikariCP <sup><sup>It's Faster.</sup></sup>&nbsp;[![Build Status](https://travis-ci.org/brettwooldridge/HikariCP.png?branch=master)](https://travis-ci.org/brettwooldridge/HikariCP)<span style="width:50px;">&nbsp;</span>[![](https://raw.github.com/wiki/brettwooldridge/HikariCP/twitter.png)](https://twitter.com/share?text=Interesting%20JDBC%20Connection%20Pool&url=https%3A%2F%2Fgithub.com%2Fbrettwooldridge%2FHikariCP)
 ==========
 
 There is nothing [faster](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks).<sup>1</sup>  There is 
