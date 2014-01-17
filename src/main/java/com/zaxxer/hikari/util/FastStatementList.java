@@ -91,7 +91,7 @@ public final class FastStatementList
      */
     public void remove(Object element)
     {
-        for (int index = size - 1; index >= 0; index++)
+        for (int index = size - 1; index >= 0; index--)
         {
             if (element == elementData[index])
             {
