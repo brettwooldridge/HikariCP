@@ -406,11 +406,6 @@ public final class HikariPool implements HikariPoolMBean
      */
     private boolean isConnectionAlive(final IHikariConnectionProxy connection, long timeoutMs)
     {
-        if (timeoutMs < 1000)
-        {
-            timeoutMs = 1000;
-        }
-
         try
         {
             connection.setAutoCommit(isAutoCommit);
@@ -419,8 +414,19 @@ public final class HikariPool implements HikariPoolMBean
                 connection.setTransactionIsolation(transactionIsolation);
             }
 
+            // If the connection was used less than a second ago, short-circuit the alive test
+            if (System.currentTimeMillis() - connection.getLastAccess() < 1000)
+            {
+                return true;
+            }
+            
             try
             {
+                if (timeoutMs < 1000)
+                {
+                    timeoutMs = 1000;
+                }
+
                 if (jdbc4ConnectionTest)
                 {
                     return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
