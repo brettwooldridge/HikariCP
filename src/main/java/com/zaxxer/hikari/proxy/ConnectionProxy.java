@@ -21,13 +21,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import com.zaxxer.hikari.HikariPool;
+import com.zaxxer.hikari.util.FastStatementList;
 
 /**
  * This is the proxy class for java.sql.Connection.
@@ -36,17 +36,17 @@ import com.zaxxer.hikari.HikariPool;
  */
 public abstract class ConnectionProxy implements IHikariConnectionProxy
 {
-    private static final ProxyFactory PROXY_FACTORY;
-
     private static final Set<String> SQL_ERRORS;
 
     protected final Connection delegate;
 
-    private final ArrayList<Statement> openStatements;
+    private final FastStatementList openStatements;
     private final HikariPool parentPool;
+    private final int defaultIsolationLevel;
 
     private boolean isClosed;
     private boolean forceClose;
+    private boolean isTransactionIsolationDirty;
     
     private final long creationTime;
     private volatile long lastAccess;
@@ -63,17 +63,16 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         SQL_ERRORS.add("57P03");  // CANNOT CONNECT NOW
         SQL_ERRORS.add("57P02");  // CRASH SHUTDOWN
         SQL_ERRORS.add("01002");  // SQL92 disconnect error
-
-        PROXY_FACTORY = JavassistProxyFactoryFactory.getProxyFactory();
     }
 
-    protected ConnectionProxy(HikariPool pool, Connection connection)
+    protected ConnectionProxy(HikariPool pool, Connection connection, int defaultIsolationLevel)
     {
         this.parentPool = pool;
         this.delegate = connection;
+        this.defaultIsolationLevel = defaultIsolationLevel;
 
         creationTime = lastAccess = System.currentTimeMillis();
-        openStatements = new ArrayList<Statement>();
+        openStatements = new FastStatementList();
     }
     
     public final void unregisterStatement(Object statement)
@@ -115,6 +114,16 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
         leakTask = new LeakTask(leakTrace, leakDetectionThreshold);
         scheduler.schedule(leakTask, leakDetectionThreshold);
+    }
+
+    public final boolean isTransactionIsolationDirty()
+    {
+        return isTransactionIsolationDirty;
+    }
+
+    public void resetTransactionIsolationDirty()
+    {
+        isTransactionIsolationDirty = false;
     }
 
     public final boolean isBrokenConnection()
@@ -403,67 +412,102 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         }
     }
 
+    /** {@inheritDoc} */
+    public void setTransactionIsolation(int level) throws SQLException
+    {
+        checkClosed();
+        try
+        {
+            delegate.setTransactionIsolation(level);
+            isTransactionIsolationDirty = (level != defaultIsolationLevel);
+        }
+        catch (SQLException e)
+        {
+            checkException(e);
+            throw e;
+        }
+    }
+
+    /** {@inheritDoc} */
+    public boolean isWrapperFor(Class<?> iface) throws SQLException
+    {
+        return iface.isInstance(delegate);
+    }
+
+    /** {@inheritDoc} */
+    @SuppressWarnings("unchecked")
+    public <T> T unwrap(Class<T> iface) throws SQLException
+    {
+        if (iface.isInstance(delegate))
+        {
+            return (T) delegate;
+        }
+
+        throw new SQLException("Wrapped connection is not an instance of " + iface);
+    }
+
+
     // **********************************************************************
     //                          Private Methods
     // **********************************************************************
 
     private final Statement __createStatement() throws SQLException
     {
-        return PROXY_FACTORY.getProxyStatement(this, delegate.createStatement());
+        return ProxyFactory.getProxyStatement(this, delegate.createStatement());
     }
 
     private final Statement __createStatement(int resultSetType, int resultSetConcurrency) throws SQLException
     {
-        return PROXY_FACTORY.getProxyStatement(this, delegate.createStatement(resultSetType, resultSetConcurrency));
+        return ProxyFactory.getProxyStatement(this, delegate.createStatement(resultSetType, resultSetConcurrency));
     }
 
     private final Statement __createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
     {
-        return PROXY_FACTORY.getProxyStatement(this, delegate.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability));
+        return ProxyFactory.getProxyStatement(this, delegate.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability));
     }
 
     private final CallableStatement __prepareCall(String sql) throws SQLException
     {
-        return PROXY_FACTORY.getProxyCallableStatement(this, delegate.prepareCall(sql));
+        return ProxyFactory.getProxyCallableStatement(this, delegate.prepareCall(sql));
     }
 
     private final CallableStatement __prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException
     {
-        return PROXY_FACTORY.getProxyCallableStatement(this, delegate.prepareCall(sql, resultSetType, resultSetConcurrency));
+        return ProxyFactory.getProxyCallableStatement(this, delegate.prepareCall(sql, resultSetType, resultSetConcurrency));
     }
 
     private final CallableStatement __prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
     {
-        return PROXY_FACTORY.getProxyCallableStatement(this, delegate.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability));
+        return ProxyFactory.getProxyCallableStatement(this, delegate.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability));
     }
 
     private final PreparedStatement __prepareStatement(String sql) throws SQLException
     {
-        return PROXY_FACTORY.getProxyPreparedStatement(this, delegate.prepareStatement(sql));
+        return ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql));
     }
 
     private final PreparedStatement __prepareStatement(String sql, int autoGeneratedKeys) throws SQLException
     {
-        return PROXY_FACTORY.getProxyPreparedStatement(this, delegate.prepareStatement(sql, autoGeneratedKeys));
+        return ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql, autoGeneratedKeys));
     }
 
     private final PreparedStatement __prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException
     {
-        return PROXY_FACTORY.getProxyPreparedStatement(this, delegate.prepareStatement(sql, resultSetType, resultSetConcurrency));
+        return ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql, resultSetType, resultSetConcurrency));
     }
 
     private final PreparedStatement __prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
     {
-        return PROXY_FACTORY.getProxyPreparedStatement(this, delegate.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability));
+        return ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability));
     }
 
     private final PreparedStatement __prepareStatement(String sql, int[] columnIndexes) throws SQLException
     {
-        return PROXY_FACTORY.getProxyPreparedStatement(this, delegate.prepareStatement(sql, columnIndexes));
+        return ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql, columnIndexes));
     }
 
     private final PreparedStatement __prepareStatement(String sql, String[] columnNames) throws SQLException
     {
-        return PROXY_FACTORY.getProxyPreparedStatement(this, delegate.prepareStatement(sql, columnNames));
+        return ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql, columnNames));
     }
 }

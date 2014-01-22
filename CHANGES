@@ -1,5 +1,26 @@
 HikariCP Changes
 
+Changes between 1.2.6 and 1.2.7
+
+ *) Finally achieved performance parity between the generated delegates
+    and the former method of instrumenting driver classes directly.
+
+ *) Improved generated delegate code. Removed unnecessary casts, moved
+    to a static proxy factory rather than a singleton (performance win).
+
+ *) Improved performance of FastStatementList (primary source of speed-up
+    to reach parity with former instrumentation code).
+
+ *) Removed aliveness check on connection creation.
+
+ *) Track connection isolation level and only reset if the state has
+    become "dirty".  Avoids unnecessary round trip to the DB during the
+    aliveness check.
+
+ *) Added interface IConnectionCustomizer and related HikariConfig
+    property 'connectionCustomizerClassName' to allow users to specify
+    a connection customization implementation.
+
 Changes between 1.2.5 and 1.2.6
 
  *) Fixed regression that caused IndexOutOfBounds when multiple unclosed
@@ -17,7 +38,7 @@ Changes between 1.2.4 and 1.2.5
     HikariConfig programmatically or constructing HikariConfig from a
     java.util.Properties instance.
 
- *) Fixed Hibernate threading issue (see in use usage patterns) introduced
+ *) Fixed Hibernate threading issue (certain usage patterns) introduced
     in 1.2.2.
 
  *) Fixed issue observed with PostgreSQL whereby the query that tests the

@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
-import com.zaxxer.hikari.proxy.JavassistProxyFactoryFactory;
+import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 /**
@@ -47,19 +47,19 @@ public final class HikariPool implements HikariPoolMBean
 
     final DataSource dataSource;
 
+    private final IConnectionCustomizer connectionCustomizer;
     private final HikariConfig configuration;
     private final LinkedTransferQueue<IHikariConnectionProxy> idleConnections;
+    private final Timer houseKeepingTimer;    
 
-    private final AtomicInteger totalConnections;
-    private final AtomicInteger idleConnectionCount;
-    private final AtomicBoolean backgroundFillQueued;
     private final long leakDetectionThreshold;
-    private final boolean jdbc4ConnectionTest;
+    private final AtomicBoolean backgroundFillQueued;
+    private final AtomicInteger idleConnectionCount;
+    private final AtomicInteger totalConnections;
     private final boolean isAutoCommit;
+    private final boolean jdbc4ConnectionTest;
     private int transactionIsolation;
     private boolean debug;
-
-    private final Timer houseKeepingTimer;
 
     /**
      * Construct a HikariPool with the specified configuration.
@@ -99,6 +99,23 @@ public final class HikariPool implements HikariPoolMBean
         else
         {
             this.dataSource = configuration.getDataSource();
+        }
+
+        if (configuration.getConnectionCustomizerClassName() != null)
+        {
+            try
+            {
+                Class<?> clazz = this.getClass().getClassLoader().loadClass(configuration.getConnectionCustomizerClassName());
+                this.connectionCustomizer = (IConnectionCustomizer) clazz.newInstance();
+            }
+            catch (ClassNotFoundException | InstantiationException | IllegalAccessException e)
+            {
+                throw new RuntimeException("Could not load connection customization class", e);
+            }
+        }
+        else
+        {
+            this.connectionCustomizer = null;
         }
 
         HikariMBeanElf.registerMBeans(configuration, this);
@@ -325,19 +342,18 @@ public final class HikariPool implements HikariPoolMBean
             try
             {
                 Connection connection = dataSource.getConnection();
-                IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) JavassistProxyFactoryFactory.getProxyFactory().getProxyConnection(this, connection);
-
+                
                 if (transactionIsolation < 0)
                 {
                     transactionIsolation = connection.getTransactionIsolation();
                 }
-                
-                boolean alive = isConnectionAlive(proxyConnection, configuration.getConnectionTimeout());
-                if (!alive)
+
+                if (connectionCustomizer != null)
                 {
-                    // This will be caught below...
-                    throw new RuntimeException("Connection not alive, retry.");
+                    connectionCustomizer.customize(connection);
                 }
+
+                IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) ProxyFactory.getProxyConnection(this, connection, transactionIsolation);
 
                 String initSql = configuration.getConnectionInitSql();
                 if (initSql != null && initSql.length() > 0)
@@ -345,7 +361,7 @@ public final class HikariPool implements HikariPoolMBean
                     connection.setAutoCommit(true);
                     try (Statement statement = connection.createStatement())
                     {
-                        statement.executeQuery(initSql);
+                        statement.execute(initSql);
                     }
                 }
 
@@ -388,20 +404,29 @@ public final class HikariPool implements HikariPoolMBean
      * @param timeoutMs the timeout before we consider the test a failure
      * @return true if the connection is alive, false if it is not alive or we timed out
      */
-    private boolean isConnectionAlive(final Connection connection, long timeoutMs)
+    private boolean isConnectionAlive(final IHikariConnectionProxy connection, long timeoutMs)
     {
-        if (timeoutMs < 1000)
-        {
-            timeoutMs = 1000;
-        }
-
         try
         {
             connection.setAutoCommit(isAutoCommit);
-            connection.setTransactionIsolation(transactionIsolation);
+            if (connection.isTransactionIsolationDirty())
+            {
+                connection.setTransactionIsolation(transactionIsolation);
+            }
 
+            // If the connection was used less than a second ago, short-circuit the alive test
+            if (System.currentTimeMillis() - connection.getLastAccess() < 1000)
+            {
+                return true;
+            }
+            
             try
             {
+                if (timeoutMs < 1000)
+                {
+                    timeoutMs = 1000;
+                }
+
                 if (jdbc4ConnectionTest)
                 {
                     return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
@@ -409,6 +434,7 @@ public final class HikariPool implements HikariPoolMBean
     
                 try (Statement statement = connection.createStatement())
                 {
+                    statement.setQueryTimeout((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
                     statement.executeQuery(configuration.getConnectionTestQuery());
                 }
             }
@@ -418,13 +444,15 @@ public final class HikariPool implements HikariPoolMBean
                 {
                     connection.commit();
                 }
+
+                connection.resetTransactionIsolationDirty();
             }
 
             return true;
         }
         catch (SQLException e)
         {
-            LOGGER.error("Exception during keep alive check.  Connection must be dead.", e);
+            LOGGER.warn("Exception during keep alive check, that means the connection must be dead.", e);
             return false;
         }
     }

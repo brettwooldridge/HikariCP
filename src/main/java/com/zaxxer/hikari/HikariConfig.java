@@ -29,6 +29,7 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.zaxxer.hikari.proxy.JavassistProxyFactory;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 public final class HikariConfig implements HikariConfigMBean
@@ -49,20 +50,26 @@ public final class HikariConfig implements HikariConfigMBean
     private volatile long idleTimeout;
     private volatile long leakDetectionThreshold;
     private volatile long maxLifetime;
-    private volatile int minPoolSize;
     private volatile int maxPoolSize;
+    private volatile int minPoolSize;
 
     // Properties NOT changeable at runtime
     //
     private int transactionIsolation;
-    private String poolName;
+    private String connectionCustomizerClassName;
+    private String connectionInitSql;
     private String connectionTestQuery;
     private String dataSourceClassName;
-    private String connectionInitSql;
-    private boolean isJdbc4connectionTest;
+    private String poolName;
     private boolean isAutoCommit;
-    private Properties dataSourceProperties;
+    private boolean isJdbc4connectionTest;
     private DataSource dataSource;
+    private Properties dataSourceProperties;
+
+    static
+    {
+        JavassistProxyFactory.initialize();
+    }
 
     /**
      * Default constructor
@@ -170,6 +177,16 @@ public final class HikariConfig implements HikariConfigMBean
             throw new IllegalArgumentException("acquireRetryDelay cannot be negative");
         }
         this.acquireRetryDelay = acquireRetryDelayMs;
+    }
+
+    public String getConnectionCustomizerClassName()
+    {
+        return connectionCustomizerClassName;
+    }
+
+    public void setConnectionCustomizerClassName(String connectionCustomizerClassName)
+    {
+        this.connectionCustomizerClassName = connectionCustomizerClassName;
     }
 
     public String getConnectionTestQuery()
@@ -399,6 +416,19 @@ public final class HikariConfig implements HikariConfigMBean
         {
             logger.warn("acquireRetryDelay is less than 100ms, did you specify the wrong time unit?  Using default instead.");
             acquireRetryDelay = ACQUIRE_RETRY_DELAY;
+        }
+
+        if (connectionCustomizerClassName != null)
+        {
+            try
+            {
+                getClass().getClassLoader().loadClass(connectionCustomizerClassName);
+            }
+            catch (ClassNotFoundException e)
+            {
+                logger.warn("connectionCustomizationClass specified class '" + connectionCustomizerClassName + "' could not be loaded", e);
+                connectionCustomizerClassName = null;
+            }
         }
 
         if (connectionTimeout == Integer.MAX_VALUE)

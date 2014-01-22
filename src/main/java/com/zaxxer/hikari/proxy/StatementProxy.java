@@ -28,19 +28,11 @@ import java.sql.Statement;
  */
 public abstract class StatementProxy implements Statement
 {
-    protected static final ProxyFactory PROXY_FACTORY;
-
     protected final IHikariConnectionProxy connection;
-
     protected final Statement delegate;
 
     private boolean isClosed;
     
-    static
-    {
-        PROXY_FACTORY = JavassistProxyFactoryFactory.getProxyFactory();
-    }
-
     protected StatementProxy(IHikariConnectionProxy connection, Statement statement)
     {
         this.connection = connection;
@@ -56,10 +48,10 @@ public abstract class StatementProxy implements Statement
     {
         if (resultSet != null)
         {
-            resultSet = PROXY_FACTORY.getProxyResultSet(this, resultSet);
+            return ProxyFactory.getProxyResultSet(this, resultSet);
         }
 
-        return resultSet;        
+        return null;        
     }
 
     // **********************************************************************

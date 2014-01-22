@@ -11,7 +11,7 @@ CLASSPATH=$CLASSPATH:~/.m2/repository/org/apache/tomcat/tomcat-jdbc/7.0.47/tomca
 CLASSPATH=$CLASSPATH:~/.m2/repository/org/apache/tomcat/tomcat-juli/7.0.47/tomcat-juli-7.0.47.jar
 
 CLASSPATH=$CLASSPATH:$JAVA_HOME/lib/tools.jar
-CLASSPATH=$CLASSPATH:./target/HikariCP-1.2.6-SNAPSHOT.jar
+CLASSPATH=$CLASSPATH:./target/HikariCP-1.2.7-SNAPSHOT.jar
 CLASSPATH=$CLASSPATH:./target/test-classes
 
 java -classpath $CLASSPATH \
