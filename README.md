@@ -231,7 +231,7 @@ HikariConfig config = new HikariConfig(props);
 HikariDataSource ds = new HikariDataSource(config);
 ```
 
-**See the [Wiki](https://github.com/brettwooldridge/HikariCP/wiki) for additional configuration examples (such as Hibernate).**
+**See the [Wiki](https://github.com/brettwooldridge/HikariCP/wiki) for additional configuration examples (such as MySQL, Hibernate, etc.).**
 
 ----------------------------------------------------
 
