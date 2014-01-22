@@ -30,7 +30,7 @@ public interface IHikariConnectionProxy extends Connection
 
     void realClose() throws SQLException;
 
-    void unregisterStatement(Object statement);
+    void untrackStatement(Object statement);
 
     void checkException(SQLException sqle);
 
