@@ -16,7 +16,9 @@
 
 package com.zaxxer.hikari.util;
 
+import java.lang.reflect.Array;
 import java.sql.Statement;
+import java.util.Arrays;
 
 
 /**
@@ -63,11 +65,11 @@ public final class FastStatementList
         {
             // overflow-conscious code
             int oldCapacity = elementData.length;
-            int newCapacity = oldCapacity + (oldCapacity >> 1);
+            int newCapacity = oldCapacity << 2;
             Statement[] newElementData = new Statement[newCapacity];
-            System.arraycopy(element, 0, newElementData, 0, oldCapacity);
+            System.arraycopy(elementData, 0, newElementData, 0, oldCapacity);
             newElementData[size++] = element;
-            elementData = newElementData;
+            elementData = (Statement[]) newElementData;
         }
     }
 
