@@ -230,8 +230,14 @@ props.setProperty("dataSource.logWriter", new PrintWriter(System.out));
 HikariConfig config = new HikariConfig(props);
 HikariDataSource ds = new HikariDataSource(config);
 ```
+----------------------------------------------------
 
-**See the [Wiki](https://github.com/brettwooldridge/HikariCP/wiki) for additional configuration examples (such as MySQL, Hibernate, etc.).**
+#### Wiki ####
+Don't forget the [Wiki](https://github.com/brettwooldridge/HikariCP/wiki) for additional information such as:
+ * [FAQ](https://github.com/brettwooldridge/HikariCP/wiki/FAQ)
+ * [Hibernate 4.x Configuration](https://github.com/brettwooldridge/HikariCP/wiki/Hibernate4)
+ * [MySQL Configuration Tips](https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration)
+ * etc.
 
 ----------------------------------------------------
 
@@ -257,9 +263,6 @@ Google discussion group [HikariCP here](https://groups.google.com/d/forum/hikari
  * Java 7 and above<sup>1</sup>.  If you need legacy Java support, I recommend the Tomcat pool.
  * Javassist 3.18.1+ library
  * slf4j library
-
-<sup>1</sup>It might work with other JVM, but defintely won't work with Java 6 and below because of the use of
-classes that are only available in Java 7.
 
 #### Contributions ####
 Please perform changes and submit pull requests from the ``dev`` branch instead of ``master``.  Please set your editor to use spaces instead of tabs, and adhere to the apparent style of the code you are editing.  The ``dev`` branch is always more "current" than the ``master`` if you are looking to live life on the edge.
