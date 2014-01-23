@@ -28,7 +28,7 @@ Or look at this:
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>1.2.7</version>
+        <version>1.2.8</version>
         <scope>compile</scope>
     </dependency>
 ```
