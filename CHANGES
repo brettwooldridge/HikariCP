@@ -1,5 +1,10 @@
 HikariCP Changes
 
+Changes between 1.2.7 and 1.2.8
+
+ *) Fixed a critical bug introduced in 1.2.7 occurring when the number of
+    concurrently open statements exceeds sixteen.
+
 Changes between 1.2.6 and 1.2.7
 
  *) Finally achieved performance parity between the generated delegates
