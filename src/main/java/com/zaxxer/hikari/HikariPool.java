@@ -59,6 +59,7 @@ public final class HikariPool implements HikariPoolMBean
     private final boolean isAutoCommit;
     private final boolean jdbc4ConnectionTest;
     private int transactionIsolation;
+    private volatile boolean shutdown;
     private boolean debug;
 
     /**
@@ -140,6 +141,11 @@ public final class HikariPool implements HikariPoolMBean
      */
     Connection getConnection() throws SQLException
     {
+        if (shutdown)
+        {
+            throw new SQLException("Pool has been shutdown");
+        }
+
         try
         {
             long timeout = configuration.getConnectionTimeout();
@@ -203,7 +209,7 @@ public final class HikariPool implements HikariPoolMBean
      */
     public void releaseConnection(IHikariConnectionProxy connectionProxy)
     {
-        if (!connectionProxy.isBrokenConnection())
+        if (!connectionProxy.isBrokenConnection() && !shutdown)
         {
             idleConnectionCount.incrementAndGet();
             idleConnections.put(connectionProxy);
@@ -216,7 +222,18 @@ public final class HikariPool implements HikariPoolMBean
 
     void shutdown()
     {
-        // TODO: implement complete shutdown of the pool
+        shutdown = true;
+        houseKeepingTimer.cancel();
+
+        while (true)
+        {
+            IHikariConnectionProxy connection = idleConnections.poll();
+            if (connection == null)
+            {
+                break;
+            }
+            closeConnection(connection);
+        }
     }
 
     // ***********************************************************************
@@ -325,7 +342,7 @@ public final class HikariPool implements HikariPoolMBean
                         }
                         backgroundFillQueued.set(false);
                     }
-    	        }, 90/*ms*/);
+    	        }, 100/*ms*/);
     	    }
     	    break;
     	}
@@ -365,9 +382,12 @@ public final class HikariPool implements HikariPoolMBean
                     }
                 }
 
-                idleConnectionCount.incrementAndGet();
-                totalConnections.incrementAndGet();
-                idleConnections.add(proxyConnection);
+                if (!shutdown)
+                {
+                    idleConnectionCount.incrementAndGet();
+                    totalConnections.incrementAndGet();
+                    idleConnections.add(proxyConnection);
+                }
                 break;
             }
             catch (Exception e)
