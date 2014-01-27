@@ -234,6 +234,8 @@ public final class HikariPool implements HikariPoolMBean
             }
             closeConnection(connection);
         }
+        
+        HikariMBeanElf.unregisterMBeans(configuration, this);
     }
 
     // ***********************************************************************
