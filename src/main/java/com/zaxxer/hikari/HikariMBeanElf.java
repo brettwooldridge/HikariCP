@@ -67,4 +67,34 @@ public final class HikariMBeanElf
             LOGGER.warn("Unable to register management beans.", e);
         }
     }
+    
+    /**
+     * Unregister MBeans for HikariConfig and HikariPool.
+     *
+     * @param configuration a HikariConfig instance
+     * @param pool a HikariPool instance
+     */
+    public static void unregisterMBeans(HikariConfig configuration, HikariPool pool)
+    {
+        try
+        {
+            MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+            
+            ObjectName poolConfigName = new ObjectName("com.zaxxer.hikari:type=PoolConfig (" + configuration.getPoolName() + ")");
+            ObjectName poolName = new ObjectName("com.zaxxer.hikari:type=Pool (" + configuration.getPoolName() + ")");
+            if (mBeanServer.isRegistered(poolConfigName))
+            {
+                mBeanServer.unregisterMBean(poolConfigName);
+                mBeanServer.unregisterMBean(poolName);
+            }
+            else
+            {
+                LOGGER.error("No registered MBean for {0}.", configuration.getPoolName());
+            }
+        }
+        catch (Exception e)
+        {
+            LOGGER.warn("Unable to unregister management beans.", e);
+        }
+    }
 }
