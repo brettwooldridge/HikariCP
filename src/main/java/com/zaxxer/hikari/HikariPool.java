@@ -396,11 +396,11 @@ public final class HikariPool implements HikariPoolMBean
                 {
                     if (debug)
                     {
-                        LOGGER.error("Maximum connection creation retries exceeded", e);
+                        LOGGER.error("Maximum connection creation retries exceeded: {}", e.getMessage(), e);
                     }
                     else
                     {
-                        LOGGER.error("Maximum connection creation retries exceeded");
+                        LOGGER.error("Maximum connection creation retries exceeded: {}", e.getMessage());
                     }
                     break;
                 }
