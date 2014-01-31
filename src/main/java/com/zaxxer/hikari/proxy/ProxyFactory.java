@@ -19,7 +19,6 @@ package com.zaxxer.hikari.proxy;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.Statement;
 
 import com.zaxxer.hikari.HikariPool;
@@ -50,12 +49,6 @@ public final class ProxyFactory
     }
 
     static PreparedStatement getProxyPreparedStatement(ConnectionProxy connection, PreparedStatement statement)
-    {
-        // Body is injected by JavassistProxyFactory
-        return null;
-    }
-
-    static ResultSet getProxyResultSet(StatementProxy statement, ResultSet resultSet)
     {
         // Body is injected by JavassistProxyFactory
         return null;

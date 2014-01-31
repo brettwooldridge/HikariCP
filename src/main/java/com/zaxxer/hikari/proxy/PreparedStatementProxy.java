@@ -41,7 +41,7 @@ public abstract class PreparedStatementProxy extends StatementProxy implements P
     {
     	try
     	{
-            return wrapResultSet(((PreparedStatement) delegate).executeQuery());
+            return ((PreparedStatement) delegate).executeQuery();
     	}
     	catch (SQLException e)
     	{
