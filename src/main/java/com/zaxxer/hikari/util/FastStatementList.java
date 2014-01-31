@@ -16,9 +16,7 @@
 
 package com.zaxxer.hikari.util;
 
-import java.lang.reflect.Array;
 import java.sql.Statement;
-import java.util.Arrays;
 
 
 /**
