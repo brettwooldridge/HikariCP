@@ -19,7 +19,6 @@ package com.zaxxer.hikari.proxy;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
@@ -84,7 +83,6 @@ public final class JavassistProxyFactory
             // Cast is not needed for these
             methodBody = "{ try { return delegate.method($$); } catch (SQLException e) { checkException(e); throw e;} }";
             generateProxyClass(Statement.class, StatementProxy.class, methodBody);
-            generateProxyClass(ResultSet.class, ResultSetProxy.class, methodBody);
             
             // For these we have to cast the delegate
             methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { checkException(e); throw e;} }";
@@ -115,10 +113,6 @@ public final class JavassistProxyFactory
             else if ("getProxyPreparedStatement".equals(method.getName()))
             {
                 call.append("return new ").append(packageName).append(".PreparedStatementJavassistProxy($$);");
-            }
-            else if ("getProxyResultSet".equals(method.getName()))
-            {
-                call.append("return $2 != null ? new ").append(packageName).append(".ResultSetJavassistProxy($$) : null;");
             }
             else if ("getProxyCallableStatement".equals(method.getName()))
             {

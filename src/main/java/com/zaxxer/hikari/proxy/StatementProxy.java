@@ -44,15 +44,6 @@ public abstract class StatementProxy implements Statement
         connection.checkException(e);
     }
 
-    protected final ResultSet wrapResultSet(ResultSet resultSet)
-    {
-        if (resultSet != null)
-        {
-            return ProxyFactory.getProxyResultSet(this, resultSet);
-        }
-
-        return null;        
-    }
 
     // **********************************************************************
     //                 Overridden java.sql.Statement Methods
@@ -85,7 +76,7 @@ public abstract class StatementProxy implements Statement
     {
         try
         {
-            return wrapResultSet(delegate.executeQuery(sql));
+            return delegate.executeQuery(sql);
         }
         catch (SQLException e)
         {
@@ -99,7 +90,7 @@ public abstract class StatementProxy implements Statement
     {
         try
         {
-            return wrapResultSet(delegate.getResultSet());
+            return delegate.getResultSet();
         }
         catch (SQLException e)
         {
@@ -113,7 +104,7 @@ public abstract class StatementProxy implements Statement
     {
         try
         {
-            return wrapResultSet(delegate.getGeneratedKeys());
+            return delegate.getGeneratedKeys();
         }
         catch (SQLException e)
         {
@@ -125,6 +116,18 @@ public abstract class StatementProxy implements Statement
     /** {@inheritDoc} */
     public Connection getConnection() throws SQLException
     {
-        return (Connection) connection;
+        return connection;
+    }
+
+	@Override
+	@SuppressWarnings("unchecked")
+    public <T> T unwrap(Class<T> iface) throws SQLException
+    {
+        if (iface.isInstance(delegate))
+        {
+            return (T) delegate;
+        }
+
+        throw new SQLException("Wrapped connection is not an instance of " + iface);
     }
 }
