@@ -212,7 +212,7 @@ acquireIncrement=3
 acquireRetryDelay=1000
 connectionTestQuery=SELECT 1
 dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
-dataSource.username=test
+dataSource.user=test
 dataSource.password=test
 dataSource.databaseName=mydb
 dataSource.serverName=localhost
@@ -222,7 +222,7 @@ or ``java.util.Properties`` based:
 Properties props = new Properties();
 props.setProperty("maximumPoolSize", 100);
 props.setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource");
-props.setProperty("dataSource.username", "test");
+props.setProperty("dataSource.user", "test");
 props.setProperty("dataSource.password", "test");
 props.setProperty("dataSource.databaseName", "mydb");
 props.setProperty("dataSource.logWriter", new PrintWriter(System.out));
