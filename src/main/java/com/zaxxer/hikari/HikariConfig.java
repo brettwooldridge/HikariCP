@@ -62,7 +62,9 @@ public final class HikariConfig implements HikariConfigMBean
     private String dataSourceClassName;
     private String poolName;
     private boolean isAutoCommit;
+    private boolean isInitializationFailFast;
     private boolean isJdbc4connectionTest;
+    private boolean isRegisterMbeans;
     private DataSource dataSource;
     private Properties dataSourceProperties;
 
@@ -289,6 +291,16 @@ public final class HikariConfig implements HikariConfigMBean
         this.isAutoCommit = isAutoCommit;
     }
 
+    public boolean isInitializationFailFast()
+    {
+        return isInitializationFailFast;
+    }
+
+    public void setInitializationFailFast(boolean failFast)
+    {
+        isInitializationFailFast = failFast;
+    }
+
     public boolean isJdbc4ConnectionTest()
     {
         return isJdbc4connectionTest;
@@ -297,6 +309,16 @@ public final class HikariConfig implements HikariConfigMBean
     public void setJdbc4ConnectionTest(boolean useIsValid)
     {
         this.isJdbc4connectionTest = useIsValid;
+    }
+
+    public boolean isRegisterMbeans()
+    {
+        return isRegisterMbeans;
+    }
+
+    public void setRegisterMbeans(boolean register)
+    {
+        this.isRegisterMbeans = register;
     }
 
     /** {@inheritDoc} */
