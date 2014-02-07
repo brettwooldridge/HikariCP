@@ -177,7 +177,7 @@ public class CreationTest
 
         try
         {
-            resultSet.getFloat(1);
+            statement.getMaxFieldSize();
             Assert.fail();
         }
         catch (Exception e)

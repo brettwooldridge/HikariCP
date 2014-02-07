@@ -65,7 +65,7 @@ public class StubPreparedStatement extends StubStatement implements PreparedStat
     /** {@inheritDoc} */
     public int getMaxFieldSize() throws SQLException
     {
-        return 0;
+        throw new SQLException("No reason", "08999");
     }
 
     /** {@inheritDoc} */

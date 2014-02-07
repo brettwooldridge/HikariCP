@@ -39,7 +39,7 @@ public class ExceptionTest
 
         try
         {
-            resultSet.getFloat(1);
+            statement.getMaxFieldSize();
             Assert.fail();
         }
         catch (Exception e)
