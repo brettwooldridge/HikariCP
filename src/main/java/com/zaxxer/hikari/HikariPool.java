@@ -79,7 +79,7 @@ public final class HikariPool implements HikariPoolMBean
         this.idleConnectionCount = new AtomicInteger();
         this.awaitingConnection = new AtomicInteger();
         this.backgroundFillQueued = new AtomicBoolean();
-        this.idleConnections = new LinkedBlockingQueue<IHikariConnectionProxy>(configuration.getMaximumPoolSize());
+        this.idleConnections = new LinkedBlockingQueue<IHikariConnectionProxy>();
 
         this.jdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
         this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
