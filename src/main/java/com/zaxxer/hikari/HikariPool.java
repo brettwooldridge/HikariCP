@@ -237,6 +237,7 @@ public final class HikariPool implements HikariPoolMBean
         }
         else
         {
+            LOGGER.debug("Connection returned to pool is broken, or the pool is shutting down.  Closing connection.");
             closeConnection(connectionProxy);
         }
     }
