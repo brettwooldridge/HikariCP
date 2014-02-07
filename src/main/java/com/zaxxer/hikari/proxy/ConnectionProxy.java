@@ -175,7 +175,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             try
             {
                 // Faster than an iterator most times
-                for (int i = 0; i < openStatements.size(); i++)
+                final int size = openStatements.size();
+                for (int i = 0; i < size; i++)
                 {
                     try
                     {
