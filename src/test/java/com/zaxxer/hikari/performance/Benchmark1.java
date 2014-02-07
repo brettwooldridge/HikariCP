@@ -32,6 +32,7 @@ public class Benchmark1
 {
     private static int THREADS = Integer.getInteger("threads", 100);
     private static int POOL_MAX = Integer.getInteger("poolMax", 100);
+    private static String DATABASE;
 
     private DataSource ds;
 
@@ -46,43 +47,44 @@ public class Benchmark1
 
         THREADS = Integer.parseInt(args[1]);
         POOL_MAX = Integer.parseInt(args[2]);
+        DATABASE= args[0];
         
         Benchmark1 benchmarks = new Benchmark1();
-        if (args[0].equals("hikari"))
+        if (DATABASE.equals("hikari"))
         {
             benchmarks.ds = benchmarks.setupHikari();
             System.out.printf("Benchmarking HikariCP - %d threads, %d connections", THREADS, POOL_MAX);
         }
-        else if (args[0].equals("bone"))
+        else if (DATABASE.equals("bone"))
         {
             benchmarks.ds = benchmarks.setupBone();
             System.out.printf("Benchmarking BoneCP - %d threads, %d connections", THREADS, POOL_MAX);
         }
-        else if (args[0].equals("dbpool"))
+        else if (DATABASE.equals("dbpool"))
         {
             benchmarks.ds = benchmarks.setupDbPool();
             System.out.printf("Benchmarking DbPool - %d threads, %d connections", THREADS, POOL_MAX);
         }
-        else if (args[0].equals("c3p0"))
+        else if (DATABASE.equals("c3p0"))
         {
             benchmarks.ds = benchmarks.setupC3P0();
             System.out.printf("Benchmarking C3P0 - %d threads, %d connections", THREADS, POOL_MAX);
         }
-        else if (args[0].equals("tomcat"))
+        else if (DATABASE.equals("tomcat"))
         {
             benchmarks.ds = benchmarks.setupTomcat();
             System.out.printf("Benchmarking Tomcat-JDBC - %d threads, %d connections", THREADS, POOL_MAX);
         }
         else
         {
-            System.err.println("Start with one of: hikari, bone");
+            System.err.println("Start with one of: hikari, bone, dbpool, c3p0, tomcat");
             System.exit(0);
         }
 
         System.out.println("\nMixedBench");
         System.out.println(" Warming up JIT");
-        benchmarks.startMixedBench(100, 10000);
-        benchmarks.startMixedBench(100, 10000);
+        benchmarks.startMixedBench(10, 6000);
+        benchmarks.startMixedBench(10, 6000);
         System.out.println(" MixedBench Final Timing Runs");
         benchmarks.startMixedBench(THREADS, 1000);
         benchmarks.startMixedBench(THREADS, 1000);
@@ -147,6 +149,7 @@ public class Benchmark1
         int i = 0;
         long[] track = new long[runners.length];
         long max = 0, avg = 0, med = 0;
+        long counter = 0;
         long absoluteStart = Long.MAX_VALUE, absoluteFinish = Long.MIN_VALUE;
         for (Measurable runner : runners)
         {
@@ -156,11 +159,12 @@ public class Benchmark1
             track[i++] = elapsed;
             max = Math.max(max, elapsed);
             avg = (avg + elapsed) / 2;
+            counter += runner.getCounter();
         }
 
         Arrays.sort(track);
         med = track[runners.length / 2];
-        System.out.printf("  max=%d%4$s, avg=%d%4$s, med=%d%4$s\n", max, avg, med, timeUnit);
+        System.out.printf(" %s max=%d%5$s, avg=%d%5$s, med=%d%5$s\n", (Boolean.getBoolean("showCounter") ? "Counter=" + counter : ""), max, avg, med, timeUnit);
 
         return absoluteFinish - absoluteStart;
     }
@@ -231,6 +235,7 @@ public class Benchmark1
             ComboPooledDataSource cpds = new ComboPooledDataSource();
             cpds.setDriverClass( "com.zaxxer.hikari.performance.StubDriver" );            
             cpds.setJdbcUrl( "jdbc:stub" );
+            cpds.setInitialPoolSize(POOL_MAX / 2);
             cpds.setMinPoolSize(POOL_MAX / 2);
             cpds.setMaxPoolSize(POOL_MAX);
             cpds.setCheckoutTimeout(8000);
@@ -254,13 +259,14 @@ public class Benchmark1
         p.setUsername("sa");
         p.setPassword("");
         p.setInitialSize(POOL_MAX / 2);
-        p.setMinIdle(0);
+        p.setMinIdle(POOL_MAX / 2);
         p.setMaxIdle(POOL_MAX);
         p.setMaxActive(POOL_MAX);
         p.setMaxWait(8000);
         p.setMinEvictableIdleTimeMillis((int) TimeUnit.MINUTES.toMillis(30)); 
         p.setTestOnBorrow(true);
         p.setValidationQuery("VALUES 1");
+        p.setJdbcInterceptors("StatementFinalizer");
 
         DataSource dataSource = new org.apache.tomcat.jdbc.pool.DataSource(p);
 
@@ -271,9 +277,9 @@ public class Benchmark1
     {
         private CyclicBarrier barrier;
         private CountDownLatch latch;
-        private long start;
-        private long finish;
-        private int counter;
+        private volatile long start;
+        private volatile long finish;
+        private volatile int counter;
         private final int iter;
 
         public MixedRunner(CyclicBarrier barrier, CountDownLatch latch, int iter)
@@ -289,12 +295,13 @@ public class Benchmark1
             {
                 barrier.await();
 
+                int localCounter = 0;
                 start = System.nanoTime();
                 for (int i = 0; i < iter; i++)
                 {
-                    Connection connection = ds.getConnection();
                     for (int j = 0; j < 100; j++)
                     {
+                        Connection connection = ds.getConnection();
                         PreparedStatement statement = connection.prepareStatement("INSERT INTO test (column) VALUES (?)");
                         for (int k = 0; k < 100; k++)
                         {
@@ -304,20 +311,22 @@ public class Benchmark1
                             statement.addBatch();
                         }
                         statement.executeBatch();
-                        statement.close();
+
+                        localCounter += statement.unwrap(StubPreparedStatement.class).getCount();
 
                         statement = connection.prepareStatement("SELECT * FROM test WHERE foo=?");
                         ResultSet resultSet = statement.executeQuery();
                         for (int k = 0; k < 100; k++)
                         {
                             resultSet.next();
-                            counter += resultSet.getInt(1); // ensures the JIT doesn't optimize this loop away
+                            localCounter += resultSet.getInt(1); // ensures the JIT doesn't optimize this loop away
                         }
-                        resultSet.close();
-                        statement.close();
+
+                        connection.close();
                     }
-                    connection.close();
                 }
+
+                counter = localCounter;
             }
             catch (Exception e)
             {
