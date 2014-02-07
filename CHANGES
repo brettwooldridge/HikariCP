@@ -1,5 +1,24 @@
 HikariCP Changes
 
+Changes between 1.2.8 and 1.2.9
+
+ *) Added a fail-fast option for pool initialization.  If enabled, a
+    RuntimeException will be thrown if there are errors during pool
+    initialization.
+
+ *) Made the registration of the HikariCP MBeans optional.  They now
+    default to not being registered.  Registering them causes a minor
+    performance hit due to additional pool data collection in
+    HikariDataSource.getConnection().
+
+ *) Added the SQLException message to the log entry when an exception
+    occurs during physical connection acquisition.
+
+ *) Implemented an orderly shutdown of the pool via the shutdown() method
+    on HikariDataSource.
+
+ *) Listened to "Adele - Live At The Royal Albert Hall" on endless loop.
+
 Changes between 1.2.7 and 1.2.8
 
  *) Fixed a critical bug introduced in 1.2.7 occurring when the number of
