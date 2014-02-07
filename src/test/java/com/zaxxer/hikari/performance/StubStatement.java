@@ -28,12 +28,19 @@ import java.sql.Statement;
  */
 public class StubStatement implements Statement
 {
+    protected volatile int count;
     private boolean closed;
 
     /** {@inheritDoc} */
+    @SuppressWarnings("unchecked")
     public <T> T unwrap(Class<T> iface) throws SQLException
     {
-        return null;
+        if (iface.isInstance(this))
+        {
+            return (T) this;
+        }
+
+        throw new SQLException("Wrapped connection is not an instance of " + iface);
     }
 
     /** {@inheritDoc} */
@@ -281,4 +288,8 @@ public class StubStatement implements Statement
         return false;
     }
 
+    public int getCount()
+    {
+        return count;
+    }
 }

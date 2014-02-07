@@ -274,18 +274,6 @@ public class StubPreparedStatement extends StubStatement implements PreparedStat
     }
 
     /** {@inheritDoc} */
-    public <T> T unwrap(Class<T> iface) throws SQLException
-    {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    public boolean isWrapperFor(Class<?> iface) throws SQLException
-    {
-        return false;
-    }
-
-    /** {@inheritDoc} */
     public ResultSet executeQuery() throws SQLException
     {
         return new StubResultSet();
@@ -320,6 +308,7 @@ public class StubPreparedStatement extends StubStatement implements PreparedStat
     /** {@inheritDoc} */
     public void setInt(int parameterIndex, int x) throws SQLException
     {
+        count += parameterIndex;
     }
 
     /** {@inheritDoc} */
