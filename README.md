@@ -31,7 +31,7 @@ See benchmarks [here](https://github.com/brettwooldridge/HikariCP/wiki/Benchmark
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>1.2.8</version>
+        <version>1.2.9</version>
         <scope>compile</scope>
     </dependency>
 ```
