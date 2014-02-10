@@ -26,6 +26,9 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.zaxxer.hikari.HikariPool;
 import com.zaxxer.hikari.util.FastStatementList;
 
@@ -36,6 +39,8 @@ import com.zaxxer.hikari.util.FastStatementList;
  */
 public abstract class ConnectionProxy implements IHikariConnectionProxy
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionProxy.class);
+
     private static final Set<String> SQL_ERRORS;
 
     protected final Connection delegate;
@@ -61,7 +66,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         SQL_ERRORS.add("57P01");  // ADMIN SHUTDOWN
         SQL_ERRORS.add("57P02");  // CRASH SHUTDOWN
         SQL_ERRORS.add("57P03");  // CANNOT CONNECT NOW
-        SQL_ERRORS.add("57P02");  // CRASH SHUTDOWN
         SQL_ERRORS.add("01002");  // SQL92 disconnect error
     }
 
@@ -137,6 +141,10 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         if (sqlState != null)
         {
             forceClose |= sqlState.startsWith("08") | SQL_ERRORS.contains(sqlState);
+            if (forceClose)
+            {
+                LOGGER.warn("Connection {} marked as broken because of SQLSTATE({})", delegate.toString(), sqlState);
+            }
         }
     }
 
