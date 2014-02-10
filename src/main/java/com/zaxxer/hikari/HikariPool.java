@@ -244,6 +244,8 @@ public final class HikariPool implements HikariPoolMBean
 
     void shutdown()
     {
+        LOGGER.info("HikariCP pool " + configuration.getPoolName() + " is being shutdown.");
+
         shutdown = true;
         houseKeepingTimer.cancel();
 
