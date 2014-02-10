@@ -1,26 +1,29 @@
 ![](https://raw.github.com/wiki/brettwooldridge/HikariCP/Hikari.png)&nbsp;HikariCP <sup><sup>It's Faster.</sup></sup>&nbsp;[![Build Status](https://travis-ci.org/brettwooldridge/HikariCP.png?branch=master)](https://travis-ci.org/brettwooldridge/HikariCP)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space200x1.gif'><sup><sup>[![](https://raw.github.com/wiki/brettwooldridge/HikariCP/twitter.png)](https://twitter.com/share?text=Interesting%20JDBC%20Connection%20Pool&hashtags=HikariCP&url=https%3A%2F%2Fgithub.com%2Fbrettwooldridge%2FHikariCP)&nbsp;[![](https://raw.github.com/wiki/brettwooldridge/HikariCP/facebook.png)](http://www.facebook.com/plugins/like.php?href=https%3A%2F%2Fgithub.com%2Fbrettwooldridge%2FHikariCP&width&layout=standard&action=recommend&show_faces=true&share=false&height=80)</sup></sup>
 ==========
 
-There is nothing [faster](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks).<sup>1</sup>  There is 
+There is nothing [faster](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks).  There is 
 nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctness).  HikariCP is a "zero-overhead"
 production-quality connection pool.  Coming in at roughly 50Kb, the library is extremely light.
 
-Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP, 60+ Million JDBC operations
-were performed in ***10ms*** on a commodity PC.<sup>2</sup>&nbsp;&nbsp;The next fastest connection pool ([Tomcat](http://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html)) was ***1874ms***.  Apache DBCP and C3P0 failed to successfully execute the benchmark.
+Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP comparative benchmarks were performed 
+on a commodity PC.<sup>2</sup>&nbsp;&nbsp;The next fastest connection pool was [BoneCP](http://jolbox.com).
+
+Sample from benchmark, 50 connection pool, 200 threads:
 
 | Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
 | -------- | ---------:| ---------:| ---------:|
-| BoneCP   | 4635      | 3060      | 6747      |
-| Tomcat   | 1874      | 1719      | 1882      |
-| HikariCP | 10        | 9         | 13        |
-
-<sub><sup>1</sup>We contend HikariCP is near the theoretical maximum on current JVM technology.</sub><br/>
-<sub><sup>2</sup>400 threads, 50 connection pool. Measurements in *nanoseconds* and converted to *milliseconds*.
-See benchmarks [here](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks).  See how we do it [here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).</sub><br/>
-<sub><sup>3</sup>Benchmark numbers updated periodically to reflect latest developments.</sub><br/>
+| HikariCP | 15829     | 15898     | 15992     |
+| BoneCP   | 20370     | 20424     | 20630     |
+| Tomcat   | 55763     | 55750     | 55818     |
+| C3P0     | 1874414   | 1869412   | 1881736   |
 
 Or look at this:
 ![](http://github.com/brettwooldridge/HikariCP/wiki/50Connection_MixedBench.png)
+
+<sub><sup>1</sup>50 connection pool. Measurements in *nanoseconds* and converted to *milliseconds*.
+See benchmarks [here](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks).  See how we do it [here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).</sub><br/>
+<sub><sup>2</sup>Tomcat and C3P0 omitted from chart for scale.</sub><br/>
+<sub><sup>3</sup>Benchmark numbers updated periodically to reflect latest developments.</sub><br/>
 
 ----------------------------------------------------
 ### Maven Repository ###
