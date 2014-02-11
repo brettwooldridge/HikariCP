@@ -101,20 +101,21 @@ public final class JavassistProxyFactory
         CtClass proxyCt = classPool.getCtClass("com.zaxxer.hikari.proxy.ProxyFactory");
         for (CtMethod method : proxyCt.getMethods())
         {
+            String methodName = method.getName();
             StringBuilder call = new StringBuilder("{");
-            if ("getProxyConnection".equals(method.getName()))
+            if ("getProxyConnection".equals(methodName))
             {
                 call.append("return new ").append(packageName).append(".ConnectionJavassistProxy($$);");
             }
-            else if ("getProxyStatement".equals(method.getName()))
+            else if ("getProxyStatement".equals(methodName))
             {
                 call.append("return new ").append(packageName).append(".StatementJavassistProxy($$);");
             }
-            else if ("getProxyPreparedStatement".equals(method.getName()))
+            else if ("getProxyPreparedStatement".equals(methodName))
             {
                 call.append("return new ").append(packageName).append(".PreparedStatementJavassistProxy($$);");
             }
-            else if ("getProxyCallableStatement".equals(method.getName()))
+            else if ("getProxyCallableStatement".equals(methodName))
             {
                 call.append("return new ").append(packageName).append(".CallableStatementJavassistProxy($$);");
             }
