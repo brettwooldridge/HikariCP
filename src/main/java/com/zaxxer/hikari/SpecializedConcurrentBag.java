@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2013 Brett Wooldridge
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.zaxxer.hikari;
 
 import java.util.ArrayList;
@@ -8,6 +23,19 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicStampedReference;
 import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
 
+/**
+ * This is a specialized concurrent bag that achieves superior performance
+ * to LinkedBlockingQueue and LinkedTransferQueue for the purposes of a
+ * connection pool.  It uses ThreadLocal storage when possible to avoid
+ * locks, but resorts to scanning a common collection if there are no
+ * available connections in the ThreadLocal list.  It is a "lock-less"
+ * implementation using a specialized AbstractQueuedLongSynchronizer to
+ * manage cross-thread signaling.
+ *
+ * @author Brett Wooldridge
+ *
+ * @param <T> the templated type to store in the bag
+ */
 public class SpecializedConcurrentBag<T>
 {
     static final int NOT_IN_USE = 0;
