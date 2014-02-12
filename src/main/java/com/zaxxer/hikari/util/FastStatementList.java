@@ -62,7 +62,7 @@ public final class FastStatementList
         catch (ArrayIndexOutOfBoundsException oob)
         {
             // overflow-conscious code
-        	size--;
+            size--;
             int oldCapacity = elementData.length;
             int newCapacity = oldCapacity << 2;
             Statement[] newElementData = new Statement[newCapacity];
