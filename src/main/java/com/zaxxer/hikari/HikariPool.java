@@ -19,9 +19,9 @@ package com.zaxxer.hikari;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -49,7 +49,7 @@ public final class HikariPool implements HikariPoolMBean
 
     private final IConnectionCustomizer connectionCustomizer;
     private final HikariConfig configuration;
-    private final LinkedBlockingQueue<IHikariConnectionProxy> idleConnections;
+    private final SpecializedConcurrentBag<IHikariConnectionProxy> idleConnections;
 
     private final Timer houseKeepingTimer;    
 
@@ -79,7 +79,7 @@ public final class HikariPool implements HikariPoolMBean
         this.idleConnectionCount = new AtomicInteger();
         this.awaitingConnection = new AtomicInteger();
         this.backgroundFillQueued = new AtomicBoolean();
-        this.idleConnections = new LinkedBlockingQueue<IHikariConnectionProxy>();
+        this.idleConnections = new SpecializedConcurrentBag<IHikariConnectionProxy>();
 
         this.jdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
         this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
@@ -249,16 +249,8 @@ public final class HikariPool implements HikariPoolMBean
         shutdown = true;
         houseKeepingTimer.cancel();
 
-        while (true)
-        {
-            IHikariConnectionProxy connection = idleConnections.poll();
-            if (connection == null)
-            {
-                break;
-            }
-            closeConnection(connection);
-        }
-        
+        closeIdleConnections();
+
         HikariMBeanElf.unregisterMBeans(configuration, this);
     }
 
@@ -293,13 +285,13 @@ public final class HikariPool implements HikariPoolMBean
     /** {@inheritDoc} */
     public void closeIdleConnections()
     {
-        final int idleCount = idleConnectionCount.get();
-        for (int i = 0; i < idleCount; i++)
+        List<IHikariConnectionProxy> list = idleConnections.values(SpecializedConcurrentBag.NOT_IN_USE);
+        for (IHikariConnectionProxy connectionProxy : list)
         {
-            IHikariConnectionProxy connectionProxy = idleConnections.poll();
+            connectionProxy = idleConnections.checkout(connectionProxy);
             if (connectionProxy == null)
             {
-                break;
+                continue;
             }
 
             idleConnectionCount.decrementAndGet();
@@ -417,7 +409,7 @@ public final class HikariPool implements HikariPoolMBean
                 {
                     idleConnectionCount.incrementAndGet();
                     totalConnections.incrementAndGet();
-                    idleConnections.add(proxyConnection);
+                    idleConnections.offer(proxyConnection);
                 }
                 break;
             }
@@ -524,6 +516,10 @@ public final class HikariPool implements HikariPoolMBean
         {
             return;
         }
+        finally
+        {
+            idleConnections.remove(connectionProxy);
+        }
     }
 
     private void logPoolState(String... prefix)
@@ -549,14 +545,13 @@ public final class HikariPool implements HikariPoolMBean
             final long now = System.currentTimeMillis();
             final long idleTimeout = configuration.getIdleTimeout();
             final long maxLifetime = configuration.getMaxLifetime();
-            final int idleCount = idleConnectionCount.get();
 
-            for (int i = 0; i < idleCount; i++)
+            for (IHikariConnectionProxy connectionProxy : idleConnections.values(SpecializedConcurrentBag.NOT_IN_USE))
             {
-                IHikariConnectionProxy connectionProxy = idleConnections.poll();
+                connectionProxy = idleConnections.checkout(connectionProxy);
                 if (connectionProxy == null)
                 {
-                    break;
+                    continue;
                 }
 
                 idleConnectionCount.decrementAndGet();
@@ -570,7 +565,7 @@ public final class HikariPool implements HikariPoolMBean
                 else
                 {
                     idleConnectionCount.incrementAndGet();
-                    idleConnections.add(connectionProxy);
+                    idleConnections.checkin(connectionProxy);
                 }
             }
 
