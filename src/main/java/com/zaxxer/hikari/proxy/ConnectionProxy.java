@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +49,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     private final FastStatementList openStatements;
     private final HikariPool parentPool;
     private final int defaultIsolationLevel;
+    private final AtomicInteger state;
 
     private boolean isClosed;
     private boolean forceClose;
@@ -76,12 +78,13 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         this.parentPool = pool;
         this.delegate = connection;
         this.defaultIsolationLevel = defaultIsolationLevel;
+        this.state = new AtomicInteger();
 
-        creationTime = lastAccess = System.currentTimeMillis();
-        openStatements = new FastStatementList();
-        hashCode = System.identityHashCode(this);
+        this.creationTime = lastAccess = System.currentTimeMillis();
+        this.openStatements = new FastStatementList();
+        this.hashCode = System.identityHashCode(this);
     }
-    
+
     public final void untrackStatement(Object statement)
     {
         // If the connection is not closed.  If it is closed, it means this is being
@@ -176,6 +179,31 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         openStatements.add(statement);
 
         return statement;
+    }
+
+    // **********************************************************************
+    //                       IBagManagable Methods
+    // **********************************************************************
+
+    /** {@inheritDoc} */
+    @Override
+    public int getState()
+    {
+        return state.get();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setState(int newState)
+    {
+        state.set(newState);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean compareAndSetState(int expectedState, int newState)
+    {
+        return state.compareAndSet(expectedState, newState);
     }
 
     // **********************************************************************

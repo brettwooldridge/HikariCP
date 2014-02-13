@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
+import com.zaxxer.hikari.util.SpecializedConcurrentBag;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -285,7 +286,7 @@ public final class HikariPool implements HikariPoolMBean
     /** {@inheritDoc} */
     public void closeIdleConnections()
     {
-        List<IHikariConnectionProxy> list = idleConnections.values(SpecializedConcurrentBag.NOT_IN_USE);
+        List<IHikariConnectionProxy> list = idleConnections.values(IHikariConnectionProxy.NOT_IN_USE);
         for (IHikariConnectionProxy connectionProxy : list)
         {
             connectionProxy = idleConnections.checkout(connectionProxy);
@@ -409,7 +410,7 @@ public final class HikariPool implements HikariPoolMBean
                 {
                     idleConnectionCount.incrementAndGet();
                     totalConnections.incrementAndGet();
-                    idleConnections.offer(proxyConnection);
+                    idleConnections.add(proxyConnection);
                 }
                 break;
             }
@@ -546,7 +547,7 @@ public final class HikariPool implements HikariPoolMBean
             final long idleTimeout = configuration.getIdleTimeout();
             final long maxLifetime = configuration.getMaxLifetime();
 
-            for (IHikariConnectionProxy connectionProxy : idleConnections.values(SpecializedConcurrentBag.NOT_IN_USE))
+            for (IHikariConnectionProxy connectionProxy : idleConnections.values(IHikariConnectionProxy.NOT_IN_USE))
             {
                 connectionProxy = idleConnections.checkout(connectionProxy);
                 if (connectionProxy == null)

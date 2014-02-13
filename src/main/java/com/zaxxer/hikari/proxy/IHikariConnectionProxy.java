@@ -20,11 +20,13 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Timer;
 
+import com.zaxxer.hikari.util.IBagManagable;
+
 /**
  *
  * @author Brett Wooldridge
  */
-public interface IHikariConnectionProxy extends Connection
+public interface IHikariConnectionProxy extends Connection, IBagManagable
 {
     void unclose();
 
