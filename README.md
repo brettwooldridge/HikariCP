@@ -25,6 +25,15 @@ See benchmarks [here](https://github.com/brettwooldridge/HikariCP/wiki/Benchmark
 <sub><sup>2</sup>Tomcat and C3P0 omitted from chart for scale.</sub><br/>
 <sub><sup>3</sup>Benchmark numbers updated periodically to reflect latest developments.</sub><br/>
 
+Want to run the [benchmark](https://github.com/brettwooldridge/HikariCP/blob/dev/src/test/java/com/zaxxer/hikari/performance/Benchmark1.java) on your own machine?  It's simple:
+```
+git clone https://github.com/brettwooldridge/HikariCP.git
+cd HikariCP
+git checkout dev
+./benchmark.sh <poolname> <threads> <poolsize>
+```
+Run without any parameters to get a usage (for example, *poolname* values like *hikari*, *bone*, etc.).
+
 ----------------------------------------------------
 ### Maven Repository ###
 ```xml
