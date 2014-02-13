@@ -41,21 +41,25 @@ import static com.zaxxer.hikari.util.IBagManagable.REMOVED;
  */
 public class SpecializedConcurrentBag<T extends IBagManagable>
 {
+    private ThreadLocal<LinkedList<T>> threadList;
     private CopyOnWriteArraySet<T> sharedList;
     private Synchronizer synchronizer;
 
-    private ThreadLocal<LinkedList<T>> threadList = new ThreadLocal<LinkedList<T>>()
-    {
-        protected LinkedList<T> initialValue()
-        {
-            return new LinkedList<>();
-        }
-    };
-
+    /**
+     * Constructor.
+     *
+     * @param initialCapacity initial bag capacity
+     */
     public SpecializedConcurrentBag(int initialCapacity)
     {
         this.sharedList = new CopyOnWriteArraySet<>();
         this.synchronizer = new Synchronizer();
+        this.threadList = new ThreadLocal<LinkedList<T>>() {
+            protected LinkedList<T> initialValue()
+            {
+                return new LinkedList<>();
+            }
+        };
     }
 
     public T poll(long timeout, TimeUnit timeUnit) throws InterruptedException
@@ -71,7 +75,7 @@ public class SpecializedConcurrentBag<T extends IBagManagable>
             }
         }
 
-        // Otherwise, scan the shared list
+        // Otherwise, scan the shared list ... for maximum of timeout
         timeout = timeUnit.toNanos(timeout);
         do {
             final long startScan = System.nanoTime();
@@ -149,7 +153,10 @@ public class SpecializedConcurrentBag<T extends IBagManagable>
         synchronizer.releaseShared(1);
     }
 
-    private class Synchronizer extends AbstractQueuedLongSynchronizer
+    /**
+     * Our private synchronizer that handles notify/wait type semantics.
+     */
+    private static class Synchronizer extends AbstractQueuedLongSynchronizer
     {
         private static final long serialVersionUID = 104753538004341218L;
 
