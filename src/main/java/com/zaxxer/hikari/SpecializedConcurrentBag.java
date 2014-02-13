@@ -53,19 +53,19 @@ public class SpecializedConcurrentBag<T>
         }
     };
 
-    public SpecializedConcurrentBag()
+    public SpecializedConcurrentBag(int initialCapacity)
     {
-        map = new ConcurrentHashMap<>();
-        synchronizer = new Synchronizer();
+        this.map = new ConcurrentHashMap<>(initialCapacity);
+        this.synchronizer = new Synchronizer();
     }
 
     public T poll(long timeout, TimeUnit timeUnit) throws InterruptedException
     {
         // Try the thread-local list first
-        LinkedList<AtomicStampedReference<T>> list = threadList.get();
+        final LinkedList<AtomicStampedReference<T>> list = threadList.get();
         while (!list.isEmpty())
         {
-            AtomicStampedReference<T> stampedReference = list.removeLast();
+            final AtomicStampedReference<T> stampedReference = list.removeFirst();
             final T reference = stampedReference.getReference();
             if (stampedReference.compareAndSet(reference, reference, NOT_IN_USE, IN_USE))
             {
@@ -163,11 +163,11 @@ public class SpecializedConcurrentBag<T>
         }
     }
 
-    private static class Synchronizer extends AbstractQueuedLongSynchronizer
+    private class Synchronizer extends AbstractQueuedLongSynchronizer
     {
         private static final long serialVersionUID = 104753538004341218L;
 
-        private static ThreadLocal<Long> startTimeStamp = new ThreadLocal<Long>() {
+        private ThreadLocal<Long> startTimeStamp = new ThreadLocal<Long>() {
             protected Long initialValue()
             {
                 return System.nanoTime();
