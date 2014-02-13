@@ -23,7 +23,7 @@ MixedBench performance<sup>2</sup>:
 <sub><sup>1</sup>50 connection pool. Measurements in *nanoseconds* and converted to *milliseconds*.
 See benchmarks [here](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks).  See how we do it [here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).</sub><br/>
 <sub><sup>2</sup>Tomcat and C3P0 omitted from chart for scale.</sub><br/>
-<sub><sup>3</sup>Benchmark numbers updated periodically to reflect latest developments.</sub><br/>
+<sub><sup>3</sup>Benchmark numbers updated periodically to reflect latest developments.  Current test HikariCP 1.3.0-SNAPSHOT.</sub><br/>
 
 Want to run the [benchmark](https://github.com/brettwooldridge/HikariCP/blob/dev/src/test/java/com/zaxxer/hikari/performance/Benchmark1.java) on your own machine?  It's simple:
 ```
