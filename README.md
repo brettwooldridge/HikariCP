@@ -5,8 +5,8 @@ There is nothing [faster](https://github.com/brettwooldridge/HikariCP/wiki/Bench
 nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctness).  HikariCP is a "zero-overhead"
 production-quality connection pool.  Coming in at roughly 50Kb, the library is extremely light.
 
-Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP comparative benchmarks were performed 
-on a commodity PC.<sup>2</sup>&nbsp;&nbsp;The next fastest connection pool was [BoneCP](http://jolbox.com).
+Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP, comparative benchmarks were
+performed on a commodity PC.<sup>1</sup>&nbsp;&nbsp;The next fastest connection pool was [BoneCP](http://jolbox.com).
 
 Sample from benchmark, 50 connection pool, 200 threads:
 
@@ -17,7 +17,7 @@ Sample from benchmark, 50 connection pool, 200 threads:
 | Tomcat   | 55763     | 55750     | 55818     |
 | C3P0     | 1874414   | 1869412   | 1881736   |
 
-Or look at this:
+MixedBench performance<sup>2</sup>:
 ![](http://github.com/brettwooldridge/HikariCP/wiki/50Connection_MixedBench.png)
 
 <sub><sup>1</sup>50 connection pool. Measurements in *nanoseconds* and converted to *milliseconds*.
@@ -274,7 +274,7 @@ Google discussion group [HikariCP here](https://groups.google.com/d/forum/hikari
 [![](https://raw.github.com/wiki/brettwooldridge/HikariCP/twitter.png)](https://twitter.com/share?text=Interesting%20JDBC%20Connection%20Pool&hashtags=HikariCP&url=https%3A%2F%2Fgithub.com%2Fbrettwooldridge%2FHikariCP)&nbsp;[![](https://raw.github.com/wiki/brettwooldridge/HikariCP/facebook.png)](http://www.facebook.com/plugins/like.php?href=https%3A%2F%2Fgithub.com%2Fbrettwooldridge%2FHikariCP&width&layout=standard&action=recommend&show_faces=true&share=false&height=80)
 
 #### Requirements ####
- * Java 7 and above<sup>1</sup>.  If you need legacy Java support, I recommend the BoneCP pool.
+ * Java 7 and above.  If you need legacy Java 5/6 support, I recommend the BoneCP pool.
  * Javassist 3.18.1+ library
  * slf4j library
 
