@@ -103,6 +103,7 @@ public class SpecializedConcurrentBag<T extends IBagManagable>
 
     public boolean offer(T value)
     {
+        final long offerTime = System.nanoTime();
         if (value.compareAndSetState(IN_USE, NOT_IN_USE))
         {
             threadList.get().addLast(value);
@@ -112,7 +113,7 @@ public class SpecializedConcurrentBag<T extends IBagManagable>
             return false;
         }
 
-        synchronizer.releaseShared(1);
+        synchronizer.releaseShared(offerTime);
 
         return true;
     }
@@ -149,8 +150,9 @@ public class SpecializedConcurrentBag<T extends IBagManagable>
 
     public void checkin(T value)
     {
+        final long checkInTime = System.nanoTime();
         value.compareAndSetState(IN_USE, NOT_IN_USE);
-        synchronizer.releaseShared(1);
+        synchronizer.releaseShared(checkInTime);
     }
 
     /**
@@ -174,9 +176,9 @@ public class SpecializedConcurrentBag<T extends IBagManagable>
 
         /** {@inheritDoc} */
         @Override
-        protected boolean tryReleaseShared(long ignore)
+        protected boolean tryReleaseShared(long updateTime)
         {
-            setState(System.nanoTime());
+            setState(updateTime);
             
             return true;
         }
