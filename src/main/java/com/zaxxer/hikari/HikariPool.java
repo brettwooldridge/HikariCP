@@ -202,6 +202,7 @@ public final class HikariPool implements HikariPoolMBean
 
         	String msg = String.format("Timeout of %dms encountered waiting for connection.", configuration.getConnectionTimeout());
             LOGGER.error(msg);
+            logPoolState("Timeout failure ");
 
             throw new SQLException(msg);
         }
