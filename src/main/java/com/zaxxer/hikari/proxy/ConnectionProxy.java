@@ -59,6 +59,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     private StackTraceElement[] leakTrace;
     private TimerTask leakTask;
 
+    private final int hashCode;
+
     // static initializer
     static
     {
@@ -77,6 +79,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
         creationTime = lastAccess = System.currentTimeMillis();
         openStatements = new FastStatementList();
+        hashCode = System.identityHashCode(this);
     }
     
     public final void untrackStatement(Object statement)
@@ -146,6 +149,18 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
                 LOGGER.warn("Connection {} marked as broken because of SQLSTATE({}), ErrorCode({}): {}", delegate.toString(), sqlState, sqle.getErrorCode(), sqle.getNextException());
             }
         }
+    }
+
+    @Override
+    public boolean equals(Object other)
+    {
+        return this == other;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return hashCode;
     }
 
     protected final void checkClosed() throws SQLException
