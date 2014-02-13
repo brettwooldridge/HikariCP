@@ -12,8 +12,8 @@ Sample from benchmark, 50 connection pool, 200 threads:
 
 | Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
 | -------- | ---------:| ---------:| ---------:|
-| HikariCP | 15829     | 15898     | 15992     |
-| BoneCP   | 20370     | 20424     | 20630     |
+| HikariCP | 7865      | 6182      | 9237      |
+| BoneCP   | 17125     | 16956     | 17302     |
 | Tomcat   | 55763     | 55750     | 55818     |
 | C3P0     | 1874414   | 1869412   | 1881736   |
 
@@ -102,6 +102,12 @@ to a maximum variation of +30 seconds, and average variation of +15 seconds.  A 
 will never be retired as idle *before* this timeout.  A value of 0 means that idle connections
 are never removed from the pool.  *Default: 600000 (10 minutes)*
 
+``inializationFailFast``<br/>
+This property controls whether the pool will "fail fast" if the pool cannot be seeded with
+initial connections successfully.  If connections cannot be created at pool startup time,
+a ``RuntimeException`` will be thrown from the ``HikariDataSource`` constructor.  This
+property has no effect if ``minimumPoolSize`` is 0.  *Default: false*
+
 ``jdbc4ConnectionTest``<br/>
 This property is a boolean value that determines whether the JDBC4 Connection.isValid() method
 is used to check that a connection is still alive.  This value is mutually exclusive with the
@@ -142,6 +148,11 @@ value for this is best determined by your execution environment.  *Default: 10*
 ``poolName``<br/>
 This property represents a user-defined name for the connection pool and appears mainly
 in a JMX management console to identify pools and pool configurations.  *Default: auto-generated*
+
+``registerMbeans``<br/>
+This property controls whether or not JMX Management Beans ("MBeans") are registered or not.
+When JMX beans are registered, there is a slight overhead (albeit extremely small) imposed
+due to additional statistics collection in the pool.
 
 ``transactionIsolation``<br/>
 This property controls the default transation isolation level of connections returned from
