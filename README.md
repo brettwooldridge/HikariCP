@@ -111,7 +111,7 @@ to a maximum variation of +30 seconds, and average variation of +15 seconds.  A 
 will never be retired as idle *before* this timeout.  A value of 0 means that idle connections
 are never removed from the pool.  *Default: 600000 (10 minutes)*
 
-``inializationFailFast``<br/>
+``initializationFailFast``<br/>
 This property controls whether the pool will "fail fast" if the pool cannot be seeded with
 initial connections successfully.  If connections cannot be created at pool startup time,
 a ``RuntimeException`` will be thrown from the ``HikariDataSource`` constructor.  This
