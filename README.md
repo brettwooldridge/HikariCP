@@ -30,6 +30,7 @@ Want to run the [benchmark](https://github.com/brettwooldridge/HikariCP/blob/dev
 git clone https://github.com/brettwooldridge/HikariCP.git
 cd HikariCP
 git checkout dev
+mvn package
 ./benchmark.sh <poolname> <threads> <poolsize>
 ```
 Run without any parameters to get a usage (for example, *poolname* values like *hikari*, *bone*, etc.).
