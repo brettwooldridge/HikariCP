@@ -31,9 +31,10 @@ import static com.zaxxer.hikari.util.IBagManagable.REMOVED;
  * to LinkedBlockingQueue and LinkedTransferQueue for the purposes of a
  * connection pool.  It uses ThreadLocal storage when possible to avoid
  * locks, but resorts to scanning a common collection if there are no
- * available connections in the ThreadLocal list.  It is a "lock-less"
- * implementation using a specialized AbstractQueuedLongSynchronizer to
- * manage cross-thread signaling.
+ * available connections in the ThreadLocal list.  Idle connections in
+ * ThreadLocal lists can be "stolen" when the poll()ing thread has none
+ * of its own.  It is a "lock-less" implementation using a specialized
+ * AbstractQueuedLongSynchronizer to manage cross-thread signaling.
  *
  * @author Brett Wooldridge
  *
