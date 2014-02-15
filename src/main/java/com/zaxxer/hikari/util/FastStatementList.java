@@ -35,7 +35,7 @@ public final class FastStatementList
      */
     public FastStatementList()
     {
-        this.elementData = new Statement[16];
+        this.elementData = new Statement[32];
     }
 
     /**
@@ -64,7 +64,7 @@ public final class FastStatementList
             // overflow-conscious code
             size--;
             int oldCapacity = elementData.length;
-            int newCapacity = oldCapacity << 2;
+            int newCapacity = oldCapacity << 1;
             Statement[] newElementData = new Statement[newCapacity];
             System.arraycopy(elementData, 0, newElementData, 0, oldCapacity);
             newElementData[size++] = element;
