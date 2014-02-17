@@ -165,7 +165,7 @@ When JMX beans are registered, there is a slight overhead (albeit extremely smal
 due to additional statistics collection in the pool.
 
 ``transactionIsolation``<br/>
-This property controls the default transation isolation level of connections returned from
+This property controls the default transaction isolation level of connections returned from
 the pool.  If this property is not specified, the default transaction isolation level defined
 by the JDBC driver is used.  Typically, the JDBC driver default transaction isolation level
 should be used.  Only use this property if you have specific isolation requirements that are
