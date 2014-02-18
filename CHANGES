@@ -1,5 +1,16 @@
 HikariCP Changes
 
+Changes between 1.2.9 and 1.3.0
+
+ *) Pool is now backed by a custom lock-less ConcurrentBag that
+    provides superior performance to LinkedBlockingQueue and
+    LinkedTransferQueue for usage patterns of connection pools.
+
+ *) Fixed bugs reported against the 1.2.9 release.
+
+ *) Added more detailed logging for broken connections and failures
+    during new connection creation.
+
 Changes between 1.2.8 and 1.2.9
 
  *) Added a fail-fast option for pool initialization.  If enabled, a
