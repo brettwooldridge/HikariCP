@@ -194,13 +194,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
     /** {@inheritDoc} */
     @Override
-    public void setState(int newState)
-    {
-        state.set(newState);
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public boolean compareAndSetState(int expectedState, int newState)
     {
         return state.compareAndSet(expectedState, newState);

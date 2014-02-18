@@ -20,7 +20,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Timer;
 
-import com.zaxxer.hikari.util.IBagManagable;
+import com.zaxxer.hikari.util.ConcurrentBag.IBagManagable;
 
 /**
  *
