@@ -18,7 +18,7 @@ CLASSPATH=$CLASSPATH:~/.m2/repository/commons-logging/commons-logging/1.1.3/comm
 CLASSPATH=$CLASSPATH:~/.m2/repository/commons-logging/commons-logging-api/1.1/commons-logging-api-1.1.jar
 
 CLASSPATH=$CLASSPATH:$JAVA_HOME/lib/tools.jar
-CLASSPATH=$CLASSPATH:./target/HikariCP-1.2.9-SNAPSHOT.jar
+CLASSPATH=$CLASSPATH:./target/HikariCP-1.3.0-SNAPSHOT.jar
 CLASSPATH=$CLASSPATH:./target/test-classes
 
 java -classpath $CLASSPATH \

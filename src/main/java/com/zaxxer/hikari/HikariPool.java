@@ -19,9 +19,9 @@ package com.zaxxer.hikari;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
+import com.zaxxer.hikari.util.ConcurrentBag;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -49,7 +50,7 @@ public final class HikariPool implements HikariPoolMBean
 
     private final IConnectionCustomizer connectionCustomizer;
     private final HikariConfig configuration;
-    private final LinkedBlockingQueue<IHikariConnectionProxy> idleConnections;
+    private final ConcurrentBag<IHikariConnectionProxy> idleConnectionBag;
 
     private final Timer houseKeepingTimer;    
 
@@ -79,7 +80,7 @@ public final class HikariPool implements HikariPoolMBean
         this.idleConnectionCount = new AtomicInteger();
         this.awaitingConnection = new AtomicInteger();
         this.backgroundFillQueued = new AtomicBoolean();
-        this.idleConnections = new LinkedBlockingQueue<IHikariConnectionProxy>();
+        this.idleConnectionBag = new ConcurrentBag<IHikariConnectionProxy>();
 
         this.jdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
         this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
@@ -167,7 +168,7 @@ public final class HikariPool implements HikariPoolMBean
             {
                 addConnections(AddConnectionStrategy.ONLY_IF_EMPTY);
     
-                IHikariConnectionProxy connectionProxy = idleConnections.poll(timeout, TimeUnit.MILLISECONDS);
+                IHikariConnectionProxy connectionProxy = idleConnectionBag.borrow(timeout, TimeUnit.MILLISECONDS);
                 if (connectionProxy == null)
                 {
                     // We timed out... break and throw exception
@@ -201,6 +202,7 @@ public final class HikariPool implements HikariPoolMBean
 
         	String msg = String.format("Timeout of %dms encountered waiting for connection.", configuration.getConnectionTimeout());
             LOGGER.error(msg);
+            logPoolState("Timeout failure ");
 
             throw new SQLException(msg);
         }
@@ -230,10 +232,7 @@ public final class HikariPool implements HikariPoolMBean
         if (!connectionProxy.isBrokenConnection() && !shutdown)
         {
             idleConnectionCount.incrementAndGet();
-            if (!idleConnections.offer(connectionProxy))
-            {
-                closeConnection(connectionProxy);
-            }
+            idleConnectionBag.requite(connectionProxy);
         }
         else
         {
@@ -244,19 +243,13 @@ public final class HikariPool implements HikariPoolMBean
 
     void shutdown()
     {
+        LOGGER.info("HikariCP pool " + configuration.getPoolName() + " is being shutdown.");
+
         shutdown = true;
         houseKeepingTimer.cancel();
 
-        while (true)
-        {
-            IHikariConnectionProxy connection = idleConnections.poll();
-            if (connection == null)
-            {
-                break;
-            }
-            closeConnection(connection);
-        }
-        
+        closeIdleConnections();
+
         HikariMBeanElf.unregisterMBeans(configuration, this);
     }
 
@@ -291,13 +284,12 @@ public final class HikariPool implements HikariPoolMBean
     /** {@inheritDoc} */
     public void closeIdleConnections()
     {
-        final int idleCount = idleConnectionCount.get();
-        for (int i = 0; i < idleCount; i++)
+        List<IHikariConnectionProxy> list = idleConnectionBag.values(ConcurrentBag.STATE_NOT_IN_USE);
+        for (IHikariConnectionProxy connectionProxy : list)
         {
-            IHikariConnectionProxy connectionProxy = idleConnections.poll();
-            if (connectionProxy == null)
+            if (!idleConnectionBag.reserve(connectionProxy))
             {
-                break;
+                continue;
             }
 
             idleConnectionCount.decrementAndGet();
@@ -415,7 +407,7 @@ public final class HikariPool implements HikariPoolMBean
                 {
                     idleConnectionCount.incrementAndGet();
                     totalConnections.incrementAndGet();
-                    idleConnections.add(proxyConnection);
+                    idleConnectionBag.add(proxyConnection);
                 }
                 break;
             }
@@ -522,6 +514,10 @@ public final class HikariPool implements HikariPoolMBean
         {
             return;
         }
+        finally
+        {
+            idleConnectionBag.remove(connectionProxy);
+        }
     }
 
     private void logPoolState(String... prefix)
@@ -547,14 +543,12 @@ public final class HikariPool implements HikariPoolMBean
             final long now = System.currentTimeMillis();
             final long idleTimeout = configuration.getIdleTimeout();
             final long maxLifetime = configuration.getMaxLifetime();
-            final int idleCount = idleConnectionCount.get();
 
-            for (int i = 0; i < idleCount; i++)
+            for (IHikariConnectionProxy connectionProxy : idleConnectionBag.values(ConcurrentBag.STATE_NOT_IN_USE))
             {
-                IHikariConnectionProxy connectionProxy = idleConnections.poll();
-                if (connectionProxy == null)
+                if (!idleConnectionBag.reserve(connectionProxy))
                 {
-                    break;
+                    continue;
                 }
 
                 idleConnectionCount.decrementAndGet();
@@ -568,7 +562,7 @@ public final class HikariPool implements HikariPoolMBean
                 else
                 {
                     idleConnectionCount.incrementAndGet();
-                    idleConnections.add(connectionProxy);
+                    idleConnectionBag.unreserve(connectionProxy);
                 }
             }
 

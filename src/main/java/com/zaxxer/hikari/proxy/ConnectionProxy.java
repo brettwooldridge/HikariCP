@@ -25,6 +25,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.HikariPool;
 import com.zaxxer.hikari.util.FastStatementList;
@@ -36,6 +40,8 @@ import com.zaxxer.hikari.util.FastStatementList;
  */
 public abstract class ConnectionProxy implements IHikariConnectionProxy
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionProxy.class);
+
     private static final Set<String> SQL_ERRORS;
 
     protected final Connection delegate;
@@ -43,6 +49,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     private final FastStatementList openStatements;
     private final HikariPool parentPool;
     private final int defaultIsolationLevel;
+    private final AtomicInteger state;
 
     private boolean isClosed;
     private boolean forceClose;
@@ -54,6 +61,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     private StackTraceElement[] leakTrace;
     private TimerTask leakTask;
 
+    private final int hashCode;
+
     // static initializer
     static
     {
@@ -61,7 +70,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         SQL_ERRORS.add("57P01");  // ADMIN SHUTDOWN
         SQL_ERRORS.add("57P02");  // CRASH SHUTDOWN
         SQL_ERRORS.add("57P03");  // CANNOT CONNECT NOW
-        SQL_ERRORS.add("57P02");  // CRASH SHUTDOWN
         SQL_ERRORS.add("01002");  // SQL92 disconnect error
     }
 
@@ -70,11 +78,13 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         this.parentPool = pool;
         this.delegate = connection;
         this.defaultIsolationLevel = defaultIsolationLevel;
+        this.state = new AtomicInteger();
 
-        creationTime = lastAccess = System.currentTimeMillis();
-        openStatements = new FastStatementList();
+        this.creationTime = lastAccess = System.currentTimeMillis();
+        this.openStatements = new FastStatementList();
+        this.hashCode = System.identityHashCode(this);
     }
-    
+
     public final void untrackStatement(Object statement)
     {
         // If the connection is not closed.  If it is closed, it means this is being
@@ -137,7 +147,23 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         if (sqlState != null)
         {
             forceClose |= sqlState.startsWith("08") | SQL_ERRORS.contains(sqlState);
+            if (forceClose)
+            {
+                LOGGER.warn("Connection {} marked as broken because of SQLSTATE({}), ErrorCode({}): {}", delegate.toString(), sqlState, sqle.getErrorCode(), sqle.getNextException());
+            }
         }
+    }
+
+    @Override
+    public boolean equals(Object other)
+    {
+        return this == other;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return hashCode;
     }
 
     protected final void checkClosed() throws SQLException
@@ -153,6 +179,24 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         openStatements.add(statement);
 
         return statement;
+    }
+
+    // **********************************************************************
+    //                       IBagManagable Methods
+    // **********************************************************************
+
+    /** {@inheritDoc} */
+    @Override
+    public int getState()
+    {
+        return state.get();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean compareAndSetState(int expectedState, int newState)
+    {
+        return state.compareAndSet(expectedState, newState);
     }
 
     // **********************************************************************
