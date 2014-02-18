@@ -57,7 +57,8 @@ public final class FastStatementList
     {
         try
         {
-            elementData[size++] = element;
+            elementData[size] = element;
+            size++;
         }
         catch (ArrayIndexOutOfBoundsException oob)
         {
@@ -66,7 +67,7 @@ public final class FastStatementList
             int newCapacity = oldCapacity << 1;
             Statement[] newElementData = new Statement[newCapacity];
             System.arraycopy(elementData, 0, newElementData, 0, oldCapacity);
-            newElementData[size] = element;
+            newElementData[size++] = element;
             elementData = (Statement[]) newElementData;
         }
     }

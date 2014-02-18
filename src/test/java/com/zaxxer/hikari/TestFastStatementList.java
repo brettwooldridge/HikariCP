@@ -19,7 +19,7 @@ public class TestFastStatementList
 
         for (int i = 0; i < 100; i++)
         {
-            Assert.assertNotNull(list.get(i));
+            Assert.assertNotNull("Element " + i, list.get(i));
         }
     }
 }
