@@ -254,6 +254,11 @@ props.setProperty("dataSource.logWriter", new PrintWriter(System.out));
 HikariConfig config = new HikariConfig(props);
 HikariDataSource ds = new HikariDataSource(config);
 ```
+
+#### Play Framework Plugin
+
+Github user [autma](https://github.com/autma) has created a [plugin](https://github.com/autma/play-hikaricp-plugin) for the Play framework.  Thanks!
+
 ----------------------------------------------------
 
 #### Wiki ####
