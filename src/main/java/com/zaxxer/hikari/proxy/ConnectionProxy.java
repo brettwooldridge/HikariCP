@@ -71,6 +71,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         SQL_ERRORS.add("57P02");  // CRASH SHUTDOWN
         SQL_ERRORS.add("57P03");  // CANNOT CONNECT NOW
         SQL_ERRORS.add("01002");  // SQL92 disconnect error
+        SQL_ERRORS.add("JZ0C0");  // Sybase disconnect error
+        SQL_ERRORS.add("JZ0C1");  // Sybase disconnect error
     }
 
     protected ConnectionProxy(HikariPool pool, Connection connection, int defaultIsolationLevel)
@@ -150,6 +152,10 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             if (forceClose)
             {
                 LOGGER.warn("Connection {} marked as broken because of SQLSTATE({}), ErrorCode({}): {}", delegate.toString(), sqlState, sqle.getErrorCode(), sqle.getNextException());
+            }
+            else if (sqle.getNextException() instanceof SQLException)
+            {
+                checkException(sqle.getNextException());
             }
         }
     }
