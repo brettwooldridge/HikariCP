@@ -162,7 +162,7 @@ in a JMX management console to identify pools and pool configurations.  *Default
 ``registerMbeans``<br/>
 This property controls whether or not JMX Management Beans ("MBeans") are registered or not.
 When JMX beans are registered, there is a slight overhead (albeit extremely small) imposed
-due to additional statistics collection in the pool.
+due to additional statistics collection in the pool.  *Default: false*
 
 ``transactionIsolation``<br/>
 This property controls the default transaction isolation level of connections returned from
