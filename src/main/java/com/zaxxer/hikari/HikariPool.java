@@ -250,7 +250,10 @@ public final class HikariPool implements HikariPoolMBean
 
         closeIdleConnections();
 
-        HikariMBeanElf.unregisterMBeans(configuration, this);
+        if (isRegisteredMbeans)
+        {
+            HikariMBeanElf.unregisterMBeans(configuration, this);
+        }
     }
 
     // ***********************************************************************
