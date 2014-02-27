@@ -142,6 +142,10 @@ public class StubPreparedStatement extends StubStatement implements PreparedStat
     /** {@inheritDoc} */
     public boolean getMoreResults() throws SQLException
     {
+        if (isClosed())
+        {
+            throw new SQLException("Connection is closed");
+        }
         return false;
     }
 
