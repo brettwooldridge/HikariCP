@@ -241,6 +241,12 @@ public final class HikariPool implements HikariPoolMBean
         }
     }
 
+    @Override
+    public String toString()
+    {
+        return configuration.getPoolName();
+    }
+
     void shutdown()
     {
         LOGGER.info("HikariCP pool " + configuration.getPoolName() + " is being shutdown.");

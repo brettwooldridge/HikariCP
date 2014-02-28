@@ -116,6 +116,17 @@ public class HikariDataSource implements DataSource
         return (this.getClass().isAssignableFrom(iface));
     }
 
+    /**
+     * <code>close()</code> and <code>shutdown()</code> are synonymous.
+     */
+    public void close()
+    {
+        shutdown();
+    }
+
+    /**
+     * Shutdown the DataSource and its associated pool.
+     */
     public void shutdown()
     {
         boolean shutdown = isShutdown;
@@ -125,5 +136,12 @@ public class HikariDataSource implements DataSource
             pool.shutdown();
             pool = null;
         }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString()
+    {
+        return String.format("HikariDataSource (%s)", pool);
     }
 }
