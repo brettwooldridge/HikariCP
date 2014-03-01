@@ -40,7 +40,7 @@ public interface IHikariConnectionProxy extends Connection, IBagManagable
 
     boolean isTransactionIsolationDirty();
 
-    void resetTransactionIsolationDirty();
+    boolean isAutoCommitDirty();
 
     long getCreationTime();
 
@@ -48,4 +48,6 @@ public interface IHikariConnectionProxy extends Connection, IBagManagable
 
     /* Leak Detection API */
     void captureStack(long leakThreshold, Timer houseKeepingTimer);
+
+    void _clearWarnings() throws SQLException;
 }

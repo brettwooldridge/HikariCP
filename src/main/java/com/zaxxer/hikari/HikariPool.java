@@ -166,7 +166,10 @@ public final class HikariPool implements HikariPoolMBean
             final long start = System.currentTimeMillis();
             do
             {
-                addConnections(AddConnectionStrategy.ONLY_IF_EMPTY);
+            	if (idleConnectionCount.get() == 0)
+            	{
+            		addConnections(AddConnectionStrategy.ONLY_IF_EMPTY);
+            	}
     
                 IHikariConnectionProxy connectionProxy = idleConnectionBag.borrow(timeout, TimeUnit.MILLISECONDS);
                 if (connectionProxy == null)
@@ -192,7 +195,7 @@ public final class HikariPool implements HikariPoolMBean
                     connectionProxy.captureStack(leakDetectionThreshold, houseKeepingTimer);
                 }
 
-                connectionProxy.clearWarnings();
+                connectionProxy._clearWarnings();
 
                 return connectionProxy;
 
@@ -217,7 +220,10 @@ public final class HikariPool implements HikariPoolMBean
                 awaitingConnection.decrementAndGet();
             }
 
-            addConnections(AddConnectionStrategy.BACKGROUND_FILL);
+    	    if (idleConnectionCount.get() == 0 && backgroundFillQueued.compareAndSet(false, true))
+    	    {
+    	    	addConnections(AddConnectionStrategy.BACKGROUND_FILL);
+    	    }
         }
     }
 
@@ -339,15 +345,14 @@ public final class HikariPool implements HikariPoolMBean
     	switch (strategy)
     	{
     	case ONLY_IF_EMPTY:
-        	if (idleConnectionCount.get() == 0)
-        	{
-            	final int max = configuration.getMaximumPoolSize();
-            	final int increment = configuration.getAcquireIncrement();
-        		for (int i = 0; idleConnectionCount.get() < increment && i < increment && totalConnections.get() < max; i++)
-        		{
-        			addConnection();
-        		}        	
-        	}
+	    	{
+	        	final int max = configuration.getMaximumPoolSize();
+	        	final int increment = configuration.getAcquireIncrement();
+	    		for (int i = 0; idleConnectionCount.get() < increment && i < increment && totalConnections.get() < max; i++)
+	    		{
+	    			addConnection();
+	    		}
+	    	}
     		break;
     	case MAINTAIN_MINIMUM:
     		final int min = configuration.getMinimumPoolSize();
@@ -359,21 +364,18 @@ public final class HikariPool implements HikariPoolMBean
         	}        	
     		break;
     	case BACKGROUND_FILL:
-    	    if (idleConnectionCount.get() == 0 && backgroundFillQueued.compareAndSet(false, true))
-    	    {
-    	        houseKeepingTimer.schedule(new TimerTask() {
-                    public void run()
+	        houseKeepingTimer.schedule(new TimerTask() {
+                public void run()
+                {
+                    final int max = configuration.getMaximumPoolSize();
+                    final int increment = configuration.getAcquireIncrement();
+                    while ((idleConnectionCount.get() < increment || awaitingConnection.get() > 0) && totalConnections.get() < max) 
                     {
-                        final int max = configuration.getMaximumPoolSize();
-                        final int increment = configuration.getAcquireIncrement();
-                        while ((idleConnectionCount.get() < increment || awaitingConnection.get() > 0) && totalConnections.get() < max) 
-                        {
-                            addConnection();
-                        }
-                        backgroundFillQueued.set(false);
+                        addConnection();
                     }
-    	        }, 100/*ms*/);
-    	    }
+                    backgroundFillQueued.set(false);
+                }
+	        }, 100/*ms*/);
     	    break;
     	}
     }
@@ -400,7 +402,7 @@ public final class HikariPool implements HikariPoolMBean
                     connectionCustomizer.customize(connection);
                 }
 
-                IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) ProxyFactory.getProxyConnection(this, connection, transactionIsolation);
+                IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) ProxyFactory.getProxyConnection(this, connection, transactionIsolation, isAutoCommit);
 
                 String initSql = configuration.getConnectionInitSql();
                 if (initSql != null && initSql.length() > 0)
@@ -458,7 +460,11 @@ public final class HikariPool implements HikariPoolMBean
     {
         try
         {
-            connection.setAutoCommit(isAutoCommit);
+        	if (connection.isAutoCommitDirty())
+        	{
+        		connection.setAutoCommit(isAutoCommit);
+        	}
+
             if (connection.isTransactionIsolationDirty())
             {
                 connection.setTransactionIsolation(transactionIsolation);
@@ -494,8 +500,6 @@ public final class HikariPool implements HikariPoolMBean
                 {
                     connection.commit();
                 }
-
-                connection.resetTransactionIsolationDirty();
             }
 
             return true;

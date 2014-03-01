@@ -49,11 +49,13 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     private final FastStatementList openStatements;
     private final HikariPool parentPool;
     private final int defaultIsolationLevel;
+    private final boolean defaultAutoCommit;
     private final AtomicInteger state;
 
     private boolean isClosed;
     private boolean forceClose;
     private boolean isTransactionIsolationDirty;
+    private boolean isAutoCommitDirty;
     
     private final long creationTime;
     private volatile long lastAccess;
@@ -62,6 +64,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     private TimerTask leakTask;
 
     private final int hashCode;
+
 
     // static initializer
     static
@@ -75,11 +78,12 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         SQL_ERRORS.add("JZ0C1");  // Sybase disconnect error
     }
 
-    protected ConnectionProxy(HikariPool pool, Connection connection, int defaultIsolationLevel)
+    protected ConnectionProxy(HikariPool pool, Connection connection, int defaultIsolationLevel, boolean defaultAutoCommit)
     {
         this.parentPool = pool;
         this.delegate = connection;
         this.defaultIsolationLevel = defaultIsolationLevel;
+        this.defaultAutoCommit = defaultAutoCommit;
         this.state = new AtomicInteger();
 
         this.creationTime = lastAccess = System.currentTimeMillis();
@@ -133,11 +137,11 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         return isTransactionIsolationDirty;
     }
 
-    public void resetTransactionIsolationDirty()
+    public final boolean isAutoCommitDirty()
     {
-        isTransactionIsolationDirty = false;
+    	return isAutoCommitDirty;
     }
-
+    
     public final boolean isBrokenConnection()
     {
         return forceClose;
@@ -185,6 +189,11 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         openStatements.add(statement);
 
         return statement;
+    }
+
+    public void _clearWarnings() throws SQLException
+    {
+    	delegate.clearWarnings();
     }
 
     // **********************************************************************
@@ -488,6 +497,14 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             checkException(e);
             throw e;
         }
+    }
+
+    /** {@inheritDoc} */
+    public void setAutoCommit(boolean autoCommit) throws SQLException
+    {
+        checkClosed();
+        isAutoCommitDirty = (autoCommit != defaultAutoCommit);
+        delegate.setAutoCommit(autoCommit);
     }
 
     /** {@inheritDoc} */
