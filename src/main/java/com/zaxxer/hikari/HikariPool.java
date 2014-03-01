@@ -402,7 +402,7 @@ public final class HikariPool implements HikariPoolMBean
                     connectionCustomizer.customize(connection);
                 }
 
-                IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) ProxyFactory.getProxyConnection(this, connection, transactionIsolation, isAutoCommit);
+                IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) ProxyFactory.getProxyConnection(this, connection, transactionIsolation);
 
                 String initSql = configuration.getConnectionInitSql();
                 if (initSql != null && initSql.length() > 0)
@@ -460,11 +460,7 @@ public final class HikariPool implements HikariPoolMBean
     {
         try
         {
-        	if (connection.isAutoCommitDirty())
-        	{
-        		connection.setAutoCommit(isAutoCommit);
-        	}
-
+            connection.setAutoCommit(isAutoCommit);
             if (connection.isTransactionIsolationDirty())
             {
                 connection.setTransactionIsolation(transactionIsolation);
