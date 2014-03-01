@@ -170,7 +170,7 @@ public final class HikariPool implements HikariPoolMBean
             	{
             		addConnections(AddConnectionStrategy.ONLY_IF_EMPTY);
             	}
-    
+
                 IHikariConnectionProxy connectionProxy = idleConnectionBag.borrow(timeout, TimeUnit.MILLISECONDS);
                 if (connectionProxy == null)
                 {
