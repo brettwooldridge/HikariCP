@@ -44,45 +44,39 @@ public class CreationTest
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-//        config.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
-//        config.addDataSourceProperty("username", "brettw");
-//        config.addDataSourceProperty("password", "");
-//        config.addDataSourceProperty("databaseName", "netld");
-//        config.addDataSourceProperty("serverName", "localhost");
-
-//        config.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
-//        config.addDataSourceProperty("user", "root");
-//        config.addDataSourceProperty("password", "");
-//        config.addDataSourceProperty("databaseName", "netld");
-//        config.addDataSourceProperty("serverName", "localhost");
-
         HikariDataSource ds = new HikariDataSource(config);
-
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
-
-        Connection connection = ds.getConnection();
-        Assert.assertNotNull(connection);
-
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
-
-        PreparedStatement statement = connection.prepareStatement("SELECT * FROM device WHERE device_id=?");
-        Assert.assertNotNull(statement);
-
-        statement.setInt(1, 0);
-
-        ResultSet resultSet = statement.executeQuery();
-        Assert.assertNotNull(resultSet);
-
-        Assert.assertFalse(resultSet.next());
-
-        resultSet.close();
-        statement.close();
-        connection.close();
-
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
+        try
+        {
+            Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
+            Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
+    
+            Connection connection = ds.getConnection();
+            Assert.assertNotNull(connection);
+    
+            Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
+            Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
+    
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM device WHERE device_id=?");
+            Assert.assertNotNull(statement);
+    
+            statement.setInt(1, 0);
+    
+            ResultSet resultSet = statement.executeQuery();
+            Assert.assertNotNull(resultSet);
+    
+            Assert.assertFalse(resultSet.next());
+    
+            resultSet.close();
+            statement.close();
+            connection.close();
+    
+            Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
+            Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
+        }
+        finally
+        {
+            ds.shutdown();
+        }
     }
 
     @Test
@@ -99,35 +93,42 @@ public class CreationTest
 
         HikariDataSource ds = new HikariDataSource(config);
 
-        System.clearProperty("com.zaxxer.hikari.housekeeping.period");
-
-        config.setMaxLifetime(700);
-
-        Assert.assertSame("Total connections not as expected", 1, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
-
-        Connection connection = ds.getConnection();
-        Assert.assertNotNull(connection);
-
-        Assert.assertSame("Second total connections not as expected", 1, ds.pool.getTotalConnections());
-        Assert.assertSame("Second idle connections not as expected", 0, ds.pool.getIdleConnections());
-        connection.close();
-
-        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
-
-        Connection connection2 = ds.getConnection();
-        Assert.assertSame("Expected the same connection", connection, connection2);
-        connection2.close();
-        
-        Thread.sleep(2000);
-
-        connection2 = ds.getConnection();
-        Assert.assertNotSame("Expected a different connection", connection, connection2);
-
-        connection2.close();
-
-        Assert.assertSame("Post total connections not as expected", 1, ds.pool.getTotalConnections());
-        Assert.assertSame("Post idle connections not as expected", 1, ds.pool.getIdleConnections());
+        try
+        {
+            System.clearProperty("com.zaxxer.hikari.housekeeping.period");
+    
+            config.setMaxLifetime(700);
+    
+            Assert.assertSame("Total connections not as expected", 1, ds.pool.getTotalConnections());
+            Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
+    
+            Connection connection = ds.getConnection();
+            Assert.assertNotNull(connection);
+    
+            Assert.assertSame("Second total connections not as expected", 1, ds.pool.getTotalConnections());
+            Assert.assertSame("Second idle connections not as expected", 0, ds.pool.getIdleConnections());
+            connection.close();
+    
+            Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
+    
+            Connection connection2 = ds.getConnection();
+            Assert.assertSame("Expected the same connection", connection, connection2);
+            connection2.close();
+            
+            Thread.sleep(2000);
+    
+            connection2 = ds.getConnection();
+            Assert.assertNotSame("Expected a different connection", connection, connection2);
+    
+            connection2.close();
+    
+            Assert.assertSame("Post total connections not as expected", 1, ds.pool.getTotalConnections());
+            Assert.assertSame("Post idle connections not as expected", 1, ds.pool.getIdleConnections());
+        }
+        finally
+        {
+            ds.shutdown();
+        }
     }
 
     @Test
@@ -141,9 +142,16 @@ public class CreationTest
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
         HikariDataSource ds = new HikariDataSource(config);
-        Connection connection = ds.getConnection();
-        connection.close();
-        connection.close();
+        try
+        {
+            Connection connection = ds.getConnection();
+            connection.close();
+            connection.close();
+        }
+        finally
+        {
+            ds.shutdown();
+        }
     }
 
     @Test
@@ -158,44 +166,55 @@ public class CreationTest
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
         HikariDataSource ds = new HikariDataSource(config);
-
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
-
-        // This will take the pool down to zero, which will cause a backfill to be scheduled
-        Connection connection = ds.getConnection();
-        Assert.assertNotNull(connection);
-
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
-
-        PreparedStatement statement = connection.prepareStatement("SELECT some, thing FROM somewhere WHERE something=?");
-        Assert.assertNotNull(statement);
-
-        ResultSet resultSet = statement.executeQuery();
-        Assert.assertNotNull(resultSet);
-
         try
         {
-            statement.getMaxFieldSize();
-            Assert.fail();
+            Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
+            Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
+    
+            // This will take the pool down to zero
+            Connection connection = ds.getConnection();
+            Assert.assertNotNull(connection);
+    
+            Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
+            Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
+    
+            PreparedStatement statement = connection.prepareStatement("SELECT some, thing FROM somewhere WHERE something=?");
+            Assert.assertNotNull(statement);
+    
+            ResultSet resultSet = statement.executeQuery();
+            Assert.assertNotNull(resultSet);
+    
+            try
+            {
+                statement.getMaxFieldSize();
+                Assert.fail();
+            }
+            catch (Exception e)
+            {
+                Assert.assertSame(SQLException.class, e.getClass());
+            }
+    
+            // The connection will be ejected from the pool here
+            connection.close();
+    
+            Assert.assertSame("Totals connections not as expected", 0, ds.pool.getTotalConnections());
+            Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
+
+            // This will create a new connection, and cause a backfill
+            connection = ds.getConnection();
+
+            // Wait for scheduled backfill to execute
+            Thread.sleep(600);
+
+            connection.close();
+
+            Assert.assertSame("Totals connections not as expected", 2, ds.pool.getTotalConnections());
+            Assert.assertSame("Idle connections not as expected", 2, ds.pool.getIdleConnections());
         }
-        catch (Exception e)
+        finally
         {
-            Assert.assertSame(SQLException.class, e.getClass());
+            ds.shutdown();
         }
-
-        // The connection will be ejected from the pool here
-        connection.close();
-
-        Assert.assertSame("Totals connections not as expected", 0, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
-
-        // Wait for scheduled backfill to execute
-        Thread.sleep(600);
-
-        Assert.assertSame("Totals connections not as expected", 2, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 2, ds.pool.getIdleConnections());
     }
 
     @Test
