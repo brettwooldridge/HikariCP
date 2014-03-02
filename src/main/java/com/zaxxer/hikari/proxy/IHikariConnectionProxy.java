@@ -38,10 +38,6 @@ public interface IHikariConnectionProxy extends Connection, IBagManagable
 
     boolean isBrokenConnection();
 
-    boolean isTransactionIsolationDirty();
-
-    boolean isAutoCommitDirty();
-
     long getCreationTime();
 
     long getLastAccess();
