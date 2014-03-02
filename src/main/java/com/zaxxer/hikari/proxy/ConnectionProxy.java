@@ -187,11 +187,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         return statement;
     }
 
-    public void _clearWarnings() throws SQLException
-    {
-    	delegate.clearWarnings();
-    }
-
     // **********************************************************************
     //                       IBagManagable Methods
     // **********************************************************************
@@ -220,7 +215,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         if (!isClosed)
         {
             isClosed = true;
-
+            
             if (leakTask != null)
             {
                 leakTask.cancel();
@@ -242,11 +237,20 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
                         checkException(e);
                     }
                 }
+                openStatements.clear();
 
                 if (!delegate.getAutoCommit())
                 {
                     delegate.rollback();
                 }
+
+                if (isTransactionIsolationDirty)
+                {
+                    delegate.setTransactionIsolation(defaultIsolationLevel);
+                    isTransactionIsolationDirty = false;
+                }
+                
+                delegate.clearWarnings();
             }
             catch (SQLException e)
             {
@@ -255,7 +259,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             }
             finally
             {
-                openStatements.clear();
                 lastAccess = System.currentTimeMillis();
                 parentPool.releaseConnection(this);
             }
@@ -482,7 +485,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     /** {@inheritDoc} */
     public void setTransactionIsolation(int level) throws SQLException
     {
-        checkClosed();
         try
         {
             delegate.setTransactionIsolation(level);

@@ -195,8 +195,6 @@ public final class HikariPool implements HikariPoolMBean
                     connectionProxy.captureStack(leakDetectionThreshold, houseKeepingTimer);
                 }
 
-                connectionProxy._clearWarnings();
-
                 return connectionProxy;
 
             } while (timeout > 0);
@@ -461,10 +459,6 @@ public final class HikariPool implements HikariPoolMBean
         try
         {
             connection.setAutoCommit(isAutoCommit);
-            if (connection.isTransactionIsolationDirty())
-            {
-                connection.setTransactionIsolation(transactionIsolation);
-            }
 
             // If the connection was used less than a second ago, short-circuit the alive test
             if (System.currentTimeMillis() - connection.getLastAccess() < 1000)

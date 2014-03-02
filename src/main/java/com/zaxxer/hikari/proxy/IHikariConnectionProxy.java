@@ -48,6 +48,4 @@ public interface IHikariConnectionProxy extends Connection, IBagManagable
 
     /* Leak Detection API */
     void captureStack(long leakThreshold, Timer houseKeepingTimer);
-
-    void _clearWarnings() throws SQLException;
 }
