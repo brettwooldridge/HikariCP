@@ -74,12 +74,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     {
         this.sharedList = new CopyOnWriteArraySet<>();
         this.synchronizer = new Synchronizer();
-        this.threadList = new ThreadLocal<LinkedList<T>>() {
-            protected LinkedList<T> initialValue()
-            {
-                return new LinkedList<>();
-            }
-        };
+        this.threadList = new ThreadLocal<LinkedList<T>>();
     }
 
     /**
@@ -94,7 +89,13 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     public T borrow(long timeout, TimeUnit timeUnit) throws InterruptedException
     {
         // Try the thread-local list first
-        final LinkedList<T> list = threadList.get();
+        LinkedList<T> list = threadList.get();
+        if (list == null)
+        {
+            list = new LinkedList<>();
+            threadList.set(list);
+        }
+
         while (!list.isEmpty())
         {
             final T reference = list.removeFirst();
