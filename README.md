@@ -15,9 +15,11 @@ performed on a commodity PC.
 
 One *Connection Cycle* is defined as single ``DataSource.getConnection()``/``Connection.close()``.  One *Statement Cycle* is defined as single ``Connection.prepareStatement()``/``Statement.close()``.
 
-Benchmarks written using the excellent [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team.  You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark).
+Benchmarks written using the excellent [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team.  You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
 
-[What's wrong with other pools?](https://github.com/brettwooldridge/HikariCP/wiki/Pool-Analysis)
+#### What's wrong with other pools?
+
+If performance isn't enough to sway you, maybe stability, reliability, and correctness are.  Read our [pool analysis](https://github.com/brettwooldridge/HikariCP/wiki/Pool-Analysis) here if you care too know.
 
 ----------------------------------------------------
 ### Maven Repository ###
