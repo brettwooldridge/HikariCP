@@ -6,34 +6,11 @@ nothing more [correct](https://github.com/brettwooldridge/HikariCP/wiki/Correctn
 production-quality connection pool.  Coming in at roughly 50Kb, the library is extremely light.
 
 Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP, comparative benchmarks were
-performed on a commodity PC.<sup>1</sup>&nbsp;&nbsp;The next fastest connection pool was [BoneCP](http://jolbox.com).
+performed on a commodity PC.
 
-Sample from benchmark, 50 connection pool, 200 threads:
+![](http://github.com/brettwooldridge/HikariCP/wiki/ConnectionCycle.png)![](http://github.com/brettwooldridge/HikariCP/wiki/StatementCycle.png)
 
-| Pool     |  Med (ms) |  Avg (ms) |  Max (ms) |
-| -------- | ---------:| ---------:| ---------:|
-| HikariCP | 7865      | 6182      | 9237      |
-| BoneCP   | 17125     | 16956     | 17302     |
-| Tomcat   | 55763     | 55750     | 55818     |
-| C3P0     | 1874414   | 1869412   | 1881736   |
-
-MixedBench performance<sup>2</sup>:
-![](http://github.com/brettwooldridge/HikariCP/wiki/50Connection_MixedBench.png)
-
-<sub><sup>1</sup>50 connection pool. Measurements in *nanoseconds* and converted to *milliseconds*.
-See benchmarks [here](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks).  See how we do it [here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).</sub><br/>
-<sub><sup>2</sup>Tomcat and C3P0 omitted from chart for scale.</sub><br/>
-<sub><sup>3</sup>Benchmark numbers updated periodically to reflect latest developments.  Current test HikariCP 1.3.0-SNAPSHOT.</sub><br/>
-
-Want to run the [benchmark](https://github.com/brettwooldridge/HikariCP/blob/dev/src/test/java/com/zaxxer/hikari/performance/Benchmark1.java) on your own machine?  It's simple:
-```
-git clone https://github.com/brettwooldridge/HikariCP.git
-cd HikariCP
-git checkout dev
-mvn package
-./benchmark.sh <poolname> <threads> <poolsize>
-```
-Run without any parameters to get a usage (for example, *poolname* values like *hikari*, *bone*, etc.).
+Benchmarks written using the excellent [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team.  You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark).
 
 ----------------------------------------------------
 ### Maven Repository ###
