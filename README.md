@@ -3,8 +3,7 @@
 
 There is nothing faster.  There is nothing more correct.  HikariCP is a "zero-overhead" production-quality connection pool.  Coming in at roughly 50Kb, the library is extremely light.
 
-Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP, comparative benchmarks were
-performed on a commodity PC.
+Using the excellent [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team, extremely accurate microbenchmarks were created to isolate and measure the overhead of HikariCP and other popular pools.  You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
 
 <p align="center">
   <img align="center" src="http://github.com/brettwooldridge/HikariCP/wiki/ConnectionCycle.png">
@@ -14,8 +13,6 @@ performed on a commodity PC.
 </p>
 
 One *Connection Cycle* is defined as single ``DataSource.getConnection()``/``Connection.close()``.  One *Statement Cycle* is defined as single ``Connection.prepareStatement()``/``Statement.close()``.
-
-Benchmarks written using the excellent [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team.  You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
 
 #### What's wrong with other pools?
 
