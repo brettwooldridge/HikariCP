@@ -11,8 +11,9 @@ performed on a commodity PC.
 <p align="center">
   <img align="center" src="http://github.com/brettwooldridge/HikariCP/wiki/ConnectionCycle.png">
 </p>
-
-![](http://github.com/brettwooldridge/HikariCP/wiki/StatementCycle.png)
+<p align="center">
+  <img align="center" src="http://github.com/brettwooldridge/HikariCP/wiki/StatementCycle.png">
+</p>
 
 Benchmarks written using the excellent [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team.  You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark).
 
