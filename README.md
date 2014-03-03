@@ -15,6 +15,8 @@ performed on a commodity PC.
   <img align="center" src="http://github.com/brettwooldridge/HikariCP/wiki/StatementCycle.png">
 </p>
 
+One *Connection Cycle* is defined as single ``DataSource.getConnection()``/``Connection.close()``.  One *Statement Cycle* is defined as single ``Connection.prepareStatement()``/``Statement.close()``.
+
 Benchmarks written using the excellent [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team.  You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark).
 
 ----------------------------------------------------
