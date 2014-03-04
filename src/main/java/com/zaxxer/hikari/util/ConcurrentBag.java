@@ -233,12 +233,6 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
         @Override
         protected long tryAcquireShared(long startScanTime)
         {
-            // fairness
-            if (hasQueuedPredecessors())
-            {
-                return -1;
-            }
-
             return getState() > startScanTime ? 1 : -1;
         }
 
