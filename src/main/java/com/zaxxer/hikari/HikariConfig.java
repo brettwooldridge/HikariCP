@@ -60,6 +60,7 @@ public final class HikariConfig implements HikariConfigMBean
     private String connectionInitSql;
     private String connectionTestQuery;
     private String dataSourceClassName;
+    private String catalog;
     private String poolName;
     private boolean isAutoCommit;
     private boolean isInitializationFailFast;
@@ -181,6 +182,16 @@ public final class HikariConfig implements HikariConfigMBean
             throw new IllegalArgumentException("acquireRetryDelay cannot be negative");
         }
         this.acquireRetryDelay = acquireRetryDelayMs;
+    }
+
+    public String getCatalog()
+    {
+        return catalog;
+    }
+
+    public void setCatalog(String catalog)
+    {
+        this.catalog = catalog;
     }
 
     public String getConnectionCustomizerClassName()

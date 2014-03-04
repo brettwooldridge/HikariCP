@@ -61,6 +61,7 @@ public final class HikariPool implements HikariPoolMBean
     private final boolean isAutoCommit;
     private final boolean jdbc4ConnectionTest;
     private final boolean isRegisteredMbeans;
+    private final String catalog; 
     private int transactionIsolation;
     private volatile boolean shutdown;
     private boolean debug;
@@ -85,6 +86,7 @@ public final class HikariPool implements HikariPoolMBean
         this.isAutoCommit = configuration.isAutoCommit();
         this.isRegisteredMbeans = configuration.isRegisterMbeans();
         this.transactionIsolation = configuration.getTransactionIsolation();
+        this.catalog = configuration.getCatalog();
         this.debug = LOGGER.isDebugEnabled();
 
         if (configuration.getDataSource() == null)
@@ -392,7 +394,7 @@ public final class HikariPool implements HikariPoolMBean
                     connectionCustomizer.customize(connection);
                 }
 
-                IHikariConnectionProxy proxyConnection = (IHikariConnectionProxy) ProxyFactory.getProxyConnection(this, connection, transactionIsolation, isAutoCommit);
+                IHikariConnectionProxy proxyConnection = ProxyFactory.getProxyConnection(this, connection, transactionIsolation, isAutoCommit, catalog);
 
                 String initSql = configuration.getConnectionInitSql();
                 if (initSql != null && initSql.length() > 0)
