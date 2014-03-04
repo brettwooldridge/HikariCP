@@ -16,7 +16,7 @@ One *Connection Cycle* is defined as single ``DataSource.getConnection()``/``Con
 
 #### What's wrong with other pools?
 
-If performance isn't enough to sway you, maybe stability, reliability, and correctness are.  Read our [pool analysis](https://github.com/brettwooldridge/HikariCP/wiki/Pool-Analysis) here if you care too know.
+Not all pools are created equal.  Read our [pool analysis](https://github.com/brettwooldridge/HikariCP/wiki/Pool-Analysis) here if you care to know the good, bad, and ugly.
 
 ----------------------------------------------------
 ### Maven Repository ###
