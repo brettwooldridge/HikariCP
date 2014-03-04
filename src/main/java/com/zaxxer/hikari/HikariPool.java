@@ -113,7 +113,7 @@ public final class HikariPool implements HikariPoolMBean
                 Class<?> clazz = this.getClass().getClassLoader().loadClass(configuration.getConnectionCustomizerClassName());
                 this.connectionCustomizer = (IConnectionCustomizer) clazz.newInstance();
             }
-            catch (ClassNotFoundException | InstantiationException | IllegalAccessException e)
+            catch (Exception e)
             {
                 throw new RuntimeException("Could not load connection customization class", e);
             }
@@ -398,9 +398,14 @@ public final class HikariPool implements HikariPoolMBean
                 if (initSql != null && initSql.length() > 0)
                 {
                     connection.setAutoCommit(true);
-                    try (Statement statement = connection.createStatement())
+                    Statement statement = connection.createStatement();
+                    try
                     {
                         statement.execute(initSql);
+                    }
+                    finally
+                    {
+                    	statement.close();
                     }
                 }
 
@@ -462,10 +467,15 @@ public final class HikariPool implements HikariPoolMBean
                     return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
                 }
     
-                try (Statement statement = connection.createStatement())
+                Statement statement = connection.createStatement();
+                try
                 {
                     statement.setQueryTimeout((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
                     statement.executeQuery(configuration.getConnectionTestQuery());
+                }
+                finally
+                {
+                	statement.close();
                 }
             }
             finally

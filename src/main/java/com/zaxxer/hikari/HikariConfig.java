@@ -121,11 +121,13 @@ public final class HikariConfig implements HikariConfigMBean
             throw new IllegalArgumentException("Property file " + propertyFileName + " was not found.");
         }
 
-        try ( FileInputStream fis = new FileInputStream(propFile) )
+        try
         {
+        	FileInputStream fis = new FileInputStream(propFile);
             Properties props = new Properties();
             props.load(fis);
             PropertyBeanSetter.setTargetFromProperties(this, props);
+            fis.close();
         }
         catch (IOException io)
         {
@@ -419,7 +421,7 @@ public final class HikariConfig implements HikariConfigMBean
             int level = field.getInt(null);
             this.transactionIsolation = level;
         }
-        catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e)
+        catch (Exception e)
         {
             throw new IllegalArgumentException("Invalid transaction isolation value: " + isolationLevel);
         }

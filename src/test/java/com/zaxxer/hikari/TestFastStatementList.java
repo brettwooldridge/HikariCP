@@ -14,7 +14,7 @@ public class TestFastStatementList
     @Test
     public void testOverflow()
     {
-        ArrayList<Statement> verifyList = new ArrayList<>();
+        ArrayList<Statement> verifyList = new ArrayList<Statement>();
 
         FastStatementList list = new FastStatementList();
         for (int i = 0; i < 100; i++)
