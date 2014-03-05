@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.sql.Connection;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -509,12 +510,6 @@ public class HikariConfig implements HikariConfigMBean
             leakDetectionThreshold = 0;
         }
 
-        if (minPoolSize < 0)
-        {
-            logger.error("minPoolSize cannot be negative.");
-            throw new IllegalStateException("minPoolSize cannot be negative.");
-        }
-
         if (maxPoolSize < minPoolSize)
         {
             logger.warn("maxPoolSize is less than minPoolSize, forcing them equal.");
@@ -531,5 +526,21 @@ public class HikariConfig implements HikariConfigMBean
             logger.warn("maxLifetime is less than 120000ms, did you specify the wrong time unit?  Using default instead.");
             maxLifetime = MAX_LIFETIME;
         }
+    }
+
+    void copyState(HikariConfig other)
+    {
+    	for (Field field : HikariConfig.class.getDeclaredFields())
+    	{
+    		if (!Modifier.isFinal(field.getModifiers()))
+    		{
+	    		field.setAccessible(true);
+	    		try {
+					field.set(other, field.get(this));
+				} catch (Exception e) {
+					throw new RuntimeException("Exception copying HikariConfig state: " + e.getMessage(), e);
+				}
+    		}
+    	}
     }
 }

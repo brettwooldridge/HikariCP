@@ -97,7 +97,7 @@ public class CreationTest
         {
             System.clearProperty("com.zaxxer.hikari.housekeeping.period");
     
-            config.setMaxLifetime(700);
+            ds.setMaxLifetime(700);
     
             Assert.assertSame("Total connections not as expected", 1, ds.pool.getTotalConnections());
             Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
