@@ -66,6 +66,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     private ThreadLocal<LinkedList<T>> threadList;
     private CopyOnWriteArraySet<T> sharedList;
     private Synchronizer synchronizer;
+    private Class<?> typeClass;
 
     /**
      * Constructor.
@@ -99,7 +100,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
         while (!list.isEmpty())
         {
             final T reference = list.removeFirst();
-            if (reference.compareAndSetState(STATE_NOT_IN_USE, STATE_IN_USE))
+            if (reference.compareAndSetState(STATE_NOT_IN_USE, STATE_IN_USE) && reference.getClass() == typeClass)
             {
                 return reference;
             }
@@ -160,6 +161,11 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
      */
     public void add(T value)
     {
+    	if (typeClass == null)
+    	{
+    		typeClass = value.getClass();
+    	}
+
         sharedList.add(value);
         synchronizer.releaseShared(1);
     }
