@@ -24,9 +24,10 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 import javax.inject.Inject;
+
 import java.io.File;
 
-import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.*;
 

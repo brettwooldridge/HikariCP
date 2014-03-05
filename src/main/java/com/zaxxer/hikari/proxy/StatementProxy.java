@@ -50,7 +50,7 @@ public abstract class StatementProxy implements Statement
     // **********************************************************************
 
     /** {@inheritDoc} */
-    public void close() throws SQLException
+    public final void close() throws SQLException
     {
         if (isClosed)
         {
@@ -72,7 +72,7 @@ public abstract class StatementProxy implements Statement
     }
 
     /** {@inheritDoc} */
-    public ResultSet executeQuery(String sql) throws SQLException
+    public final ResultSet executeQuery(String sql) throws SQLException
     {
         try
         {
@@ -86,7 +86,7 @@ public abstract class StatementProxy implements Statement
     }
 
     /** {@inheritDoc} */
-    public ResultSet getResultSet() throws SQLException
+    public final ResultSet getResultSet() throws SQLException
     {
         try
         {
@@ -100,7 +100,7 @@ public abstract class StatementProxy implements Statement
     }
 
     /** {@inheritDoc} */
-    public ResultSet getGeneratedKeys() throws SQLException
+    public final ResultSet getGeneratedKeys() throws SQLException
     {
         try
         {
@@ -114,14 +114,14 @@ public abstract class StatementProxy implements Statement
     }
 
     /** {@inheritDoc} */
-    public Connection getConnection() throws SQLException
+    public final Connection getConnection() throws SQLException
     {
         return connection;
     }
 
 	@Override
 	@SuppressWarnings("unchecked")
-    public <T> T unwrap(Class<T> iface) throws SQLException
+    public final <T> T unwrap(Class<T> iface) throws SQLException
     {
         if (iface.isInstance(delegate))
         {

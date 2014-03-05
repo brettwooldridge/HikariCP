@@ -72,14 +72,9 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
      */
     public ConcurrentBag()
     {
-        this.sharedList = new CopyOnWriteArraySet<>();
+        this.sharedList = new CopyOnWriteArraySet<T>();
         this.synchronizer = new Synchronizer();
-        this.threadList = new ThreadLocal<LinkedList<T>>() {
-            protected LinkedList<T> initialValue()
-            {
-                return new LinkedList<>();
-            }
-        };
+        this.threadList = new ThreadLocal<LinkedList<T>>();
     }
 
     /**
@@ -94,7 +89,13 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     public T borrow(long timeout, TimeUnit timeUnit) throws InterruptedException
     {
         // Try the thread-local list first
-        final LinkedList<T> list = threadList.get();
+        LinkedList<T> list = threadList.get();
+        if (list == null)
+        {
+            list = new LinkedList<T>();
+            threadList.set(list);
+        }
+
         while (!list.isEmpty())
         {
             final T reference = list.removeFirst();
@@ -192,7 +193,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
      */
     public List<T> values(int state)
     {
-        ArrayList<T> list = new ArrayList<>(sharedList.size());
+        ArrayList<T> list = new ArrayList<T>(sharedList.size());
         if (state == STATE_IN_USE || state == STATE_NOT_IN_USE)
         {
 	        for (T reference : sharedList)
@@ -232,12 +233,6 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
         @Override
         protected long tryAcquireShared(long startScanTime)
         {
-            // fairness
-            if (hasQueuedPredecessors())
-            {
-                return -1;
-            }
-
             return getState() > startScanTime ? 1 : -1;
         }
 

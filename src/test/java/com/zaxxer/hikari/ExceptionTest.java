@@ -5,13 +5,17 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ExceptionTest
 {
-    @Test
-    public void testException1() throws SQLException
+    private HikariDataSource ds;
+
+    @Before
+    public void setup()
     {
         HikariConfig config = new HikariConfig();
         config.setMinimumPoolSize(1);
@@ -20,8 +24,18 @@ public class ExceptionTest
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-        HikariDataSource ds = new HikariDataSource(config);
+        ds = new HikariDataSource(config);
+    }
 
+    @After
+    public void teardown()
+    {
+        ds.shutdown();
+    }
+
+    @Test
+    public void testException1() throws SQLException
+    {
         Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
         Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
 
@@ -51,6 +65,26 @@ public class ExceptionTest
 
         Assert.assertSame("Totals connections not as expected", 0, ds.pool.getTotalConnections());
         Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
+    }
+
+    @Test
+    public void testUseAfterStatementClose() throws SQLException
+    {
+        Connection connection = ds.getConnection();
+        Assert.assertNotNull(connection);
+
+        try
+        {
+            PreparedStatement statement = connection.prepareStatement("SELECT some, thing FROM somewhere WHERE something=?");
+            statement.close();
+            statement.getMoreResults();
+            
+            Assert.fail();
+        }
+        catch (SQLException e)
+        {
+            Assert.assertSame("Connection is closed", e.getMessage());
+        }
     }
 
     @Test
@@ -89,4 +123,5 @@ public class ExceptionTest
         Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
         Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
     }
+
 }

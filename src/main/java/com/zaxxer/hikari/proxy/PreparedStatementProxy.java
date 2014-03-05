@@ -37,7 +37,7 @@ public abstract class PreparedStatementProxy extends StatementProxy implements P
     // **********************************************************************
     
     /** {@inheritDoc} */
-    public ResultSet executeQuery() throws SQLException
+    public final ResultSet executeQuery() throws SQLException
     {
     	try
     	{

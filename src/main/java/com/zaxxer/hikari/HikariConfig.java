@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.sql.Connection;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +33,7 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.proxy.JavassistProxyFactory;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
-public final class HikariConfig implements HikariConfigMBean
+public class HikariConfig implements HikariConfigMBean
 {
     private static final long ACQUIRE_RETRY_DELAY = 750L;
 	private static final long CONNECTION_TIMEOUT = 5000L;
@@ -60,6 +61,7 @@ public final class HikariConfig implements HikariConfigMBean
     private String connectionInitSql;
     private String connectionTestQuery;
     private String dataSourceClassName;
+    private String catalog;
     private String poolName;
     private boolean isAutoCommit;
     private boolean isInitializationFailFast;
@@ -121,11 +123,13 @@ public final class HikariConfig implements HikariConfigMBean
             throw new IllegalArgumentException("Property file " + propertyFileName + " was not found.");
         }
 
-        try ( FileInputStream fis = new FileInputStream(propFile) )
+        try
         {
+        	FileInputStream fis = new FileInputStream(propFile);
             Properties props = new Properties();
             props.load(fis);
             PropertyBeanSetter.setTargetFromProperties(this, props);
+            fis.close();
         }
         catch (IOException io)
         {
@@ -179,6 +183,16 @@ public final class HikariConfig implements HikariConfigMBean
             throw new IllegalArgumentException("acquireRetryDelay cannot be negative");
         }
         this.acquireRetryDelay = acquireRetryDelayMs;
+    }
+
+    public String getCatalog()
+    {
+        return catalog;
+    }
+
+    public void setCatalog(String catalog)
+    {
+        this.catalog = catalog;
     }
 
     public String getConnectionCustomizerClassName()
@@ -419,7 +433,7 @@ public final class HikariConfig implements HikariConfigMBean
             int level = field.getInt(null);
             this.transactionIsolation = level;
         }
-        catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e)
+        catch (Exception e)
         {
             throw new IllegalArgumentException("Invalid transaction isolation value: " + isolationLevel);
         }
@@ -496,12 +510,6 @@ public final class HikariConfig implements HikariConfigMBean
             leakDetectionThreshold = 0;
         }
 
-        if (minPoolSize < 0)
-        {
-            logger.error("minPoolSize cannot be negative.");
-            throw new IllegalStateException("minPoolSize cannot be negative.");
-        }
-
         if (maxPoolSize < minPoolSize)
         {
             logger.warn("maxPoolSize is less than minPoolSize, forcing them equal.");
@@ -518,5 +526,21 @@ public final class HikariConfig implements HikariConfigMBean
             logger.warn("maxLifetime is less than 120000ms, did you specify the wrong time unit?  Using default instead.");
             maxLifetime = MAX_LIFETIME;
         }
+    }
+
+    void copyState(HikariConfig other)
+    {
+    	for (Field field : HikariConfig.class.getDeclaredFields())
+    	{
+    		if (!Modifier.isFinal(field.getModifiers()))
+    		{
+	    		field.setAccessible(true);
+	    		try {
+					field.set(other, field.get(this));
+				} catch (Exception e) {
+					throw new RuntimeException("Exception copying HikariConfig state: " + e.getMessage(), e);
+				}
+    		}
+    	}
     }
 }

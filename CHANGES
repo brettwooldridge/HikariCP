@@ -1,5 +1,25 @@
 HikariCP Changes
 
+Changes between 1.3.0 and 1.3.1
+
+ *) Java 6 compatibility.
+ 
+ *) HikariDataSource now extends HikariConfig, so pool properties can be
+    set directly on a HikariDataSource without need to create a  HikariConfig.
+    The cost of doing so is a small runtime cost due to the fact that an
+    "is initialized" check must be performed on every invocation of
+    getConnection() due to lazy initialization of the pool.
+
+ *) Added Sybase-specific disconnect error codes to SQLException snooping.
+
+ *) Added HikariConfig.setCatalog() method to set DataSource catalog.
+
+ *) Add DataSource.close() method that is synonymous  with shutdown().
+
+ *) More performance improvements (never ending).
+
+ *) Moved benchmarks to https://github.com/brettwooldridge/HikariCP-benchmark
+
 Changes between 1.2.9 and 1.3.0
 
  *) Pool is now backed by a custom lock-less ConcurrentBag that
