@@ -31,15 +31,25 @@ import org.slf4j.LoggerFactory;
  *
  * @author Brett Wooldridge
  */
-public class HikariDataSource implements DataSource
+public class HikariDataSource extends HikariConfig implements DataSource
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariDataSource.class);
 
-    private int loginTimeout;
     private volatile boolean isShutdown;
+    private int loginTimeout;
 
-    // Package scope for testing
-    HikariPool pool;
+    HikariPool fastPathPool;
+    volatile HikariPool pool;
+
+    /**
+     * Default constructor.  Setters be used to configure the pool.  Using
+     * this constructor vs. {@link #HikariDataSource(HikariConfig)} will
+     * result in {@link #getConnection()} performance that is slightly lower
+     * due to lazy initialization checks.
+     */
+    public HikariDataSource()
+    {
+    }
 
     /**
      * Construct a HikariDataSource with the specified configuration.
@@ -48,24 +58,42 @@ public class HikariDataSource implements DataSource
      */
     public HikariDataSource(HikariConfig configuration)
     {
-        pool = new HikariPool(configuration);
+    	pool = fastPathPool = new HikariPool(configuration);
     }
 
     /** {@inheritDoc} */
     public Connection getConnection() throws SQLException
     {
-        if (!isShutdown)
+        if (isShutdown)
         {
-            return pool.getConnection();
+        	throw new IllegalStateException("The datasource has been shutdown.");
         }
 
-        throw new IllegalStateException("The datasource has been shutdown.");
+        if (fastPathPool != null)
+        {
+        	return fastPathPool.getConnection();
+        }
+
+        HikariPool result = pool;
+    	if (result == null)
+    	{
+    		synchronized (this)
+    		{
+    			result = pool;
+    			if (result == null)
+    			{
+    				pool = result = new HikariPool(this);
+    			}
+    		}
+    	}
+
+        return result.getConnection();
     }
 
     /** {@inheritDoc} */
     public Connection getConnection(String username, String password) throws SQLException
     {
-        LOGGER.warn("getConnection() with username and password is not supported");
+        LOGGER.warn("getConnection() with username and password is not supported, calling getConnection() instead");
 
         return getConnection();
     }

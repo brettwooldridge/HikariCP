@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.proxy.JavassistProxyFactory;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
-public final class HikariConfig implements HikariConfigMBean
+public class HikariConfig implements HikariConfigMBean
 {
     private static final long ACQUIRE_RETRY_DELAY = 750L;
 	private static final long CONNECTION_TIMEOUT = 5000L;
