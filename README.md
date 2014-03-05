@@ -24,7 +24,7 @@ Not all pools are created equal.  Read our [pool analysis](https://github.com/br
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>1.3.0</version>
+        <version>1.3.2</version>
         <scope>compile</scope>
     </dependency>
 ```
