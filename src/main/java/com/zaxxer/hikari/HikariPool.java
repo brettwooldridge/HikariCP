@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Brett Wooldridge
+ * Copyright (C) 2013,2014 Brett Wooldridge
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -413,6 +413,7 @@ public final class HikariPool implements HikariPoolMBean
 
                 if (!shutdown)
                 {
+                	proxyConnection.resetConnectionState();
                     idleConnectionCount.incrementAndGet();
                     totalConnections.incrementAndGet();
                     idleConnectionBag.add(proxyConnection);

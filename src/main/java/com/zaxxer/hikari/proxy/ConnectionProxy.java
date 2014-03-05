@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Brett Wooldridge
+ * Copyright (C) 2013,2014 Brett Wooldridge
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,6 +91,10 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         this.creationTime = lastAccess = System.currentTimeMillis();
         this.openStatements = new FastStatementList();
         this.hashCode = System.identityHashCode(this);
+
+        isCatalogDirty = true;
+        isAutoCommitDirty = true;
+        isTransactionIsolationDirty = true;
     }
 
     public final void untrackStatement(Object statement)
@@ -183,7 +187,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         return statement;
     }
 
-    private void resetConnectionState() throws SQLException
+    public final void resetConnectionState() throws SQLException
     {
         if (!delegate.getAutoCommit())
         {

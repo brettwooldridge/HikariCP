@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Brett Wooldridge
+ * Copyright (C) 2013, 2014 Brett Wooldridge
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import java.util.Timer;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagManagable;
 
 /**
- *
  * @author Brett Wooldridge
  */
 public interface IHikariConnectionProxy extends Connection, IBagManagable
@@ -41,6 +40,8 @@ public interface IHikariConnectionProxy extends Connection, IBagManagable
     long getCreationTime();
 
     long getLastAccess();
+
+    void resetConnectionState() throws SQLException;
 
     /* Leak Detection API */
     void captureStack(long leakThreshold, Timer houseKeepingTimer);
