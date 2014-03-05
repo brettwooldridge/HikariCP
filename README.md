@@ -3,7 +3,7 @@
 
 There is nothing faster.  There is nothing more correct.  HikariCP is a "zero-overhead" production-quality connection pool.  Coming in at roughly 50Kb, the library is extremely light.
 
-Using the excellent [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team, extremely accurate microbenchmarks were created to isolate and measure the overhead of HikariCP and other popular pools.  You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
+Using the excellent [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team, extremely accurate microbenchmarks were created to isolate and measure the overhead of HikariCP and other popular pools.  You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.  Read about [how we do it here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).
 
 <p align="center">
   <img align="center" src="http://github.com/brettwooldridge/HikariCP/wiki/ConnectionCycle.png">
