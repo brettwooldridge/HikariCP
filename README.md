@@ -271,7 +271,7 @@ Google discussion group [HikariCP here](https://groups.google.com/d/forum/hikari
 [![](https://raw.github.com/wiki/brettwooldridge/HikariCP/twitter.png)](https://twitter.com/share?text=Interesting%20JDBC%20Connection%20Pool&hashtags=HikariCP&url=https%3A%2F%2Fgithub.com%2Fbrettwooldridge%2FHikariCP)&nbsp;[![](https://raw.github.com/wiki/brettwooldridge/HikariCP/facebook.png)](http://www.facebook.com/plugins/like.php?href=https%3A%2F%2Fgithub.com%2Fbrettwooldridge%2FHikariCP&width&layout=standard&action=recommend&show_faces=true&share=false&height=80)
 
 #### Requirements ####
- * Java 7 and above.  If you need legacy Java 5/6 support, I recommend the BoneCP pool (if configured properly).
+ * Java 6 and above
  * Javassist 3.18.1+ library
  * slf4j library
 
