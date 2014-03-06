@@ -152,17 +152,6 @@ common for all queries, otherwise simply set the isolation level manually when c
 preparing statements.  The value of this property is the constant name from the ``Connection``
 class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, etc.  *Default: none*
 
-##### DataSource Properties #####
-DataSource properies can be set on the ``HikariConfig`` object through the use of the ``addDataSourcePropery``
-method, like so:
-```java
-    config.addDataSourceProperty("url", "jdbc:hsqldb:mem:test");
-    config.addDataSourceProperty("user", "SA");
-    config.addDataSourceProperty("password", "");
-```
-See the [Initialization](#initialization) section below for further examples.
-
-
 ##### ***Missing Knobs*** #####
 
 HikariCP has plenty of "knobs" to turn as you can see above, but comparatively less than some other pools.
@@ -193,7 +182,17 @@ development and pre-Production.
 
 ----------------------------------------------------
 
-### Initialization ###
+### Initialization
+
+##### DataSource Properties
+DataSource properies can be set on the ``HikariConfig`` object through the use of the ``addDataSourcePropery``
+method, like so:
+```java
+    config.addDataSourceProperty("url", "jdbc:hsqldb:mem:test");
+    config.addDataSourceProperty("user", "SA");
+    config.addDataSourceProperty("password", "");
+```
+You can use the HikariConfig class like so:
 ```java
 HikariConfig config = new HikariConfig();
 config.setMaximumPoolSize(100);
@@ -233,6 +232,16 @@ props.setProperty("dataSource.logWriter", new PrintWriter(System.out));
 HikariConfig config = new HikariConfig(props);
 HikariDataSource ds = new HikariDataSource(config);
 ```
+Finally, you can skip the HikariConfig class altogether and configure the ``HikariDataSource`` directly:
+```java
+HikariDataSource ds = new HikariDataSource();
+ds.setMaximumPoolSize(100);
+ds.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
+ds.addDataSourceProperty("url", "jdbc:mysql://localhost/database");
+ds.addDataSourceProperty("user", "bart");
+ds.addDataSourceProperty("password", "51mp50n");
+```
+The advantage of configuring via ``HikariConfig`` over ``HikariDataSource`` is that when using the ``HikariConfig`` we know at ``HikariDataSource(HikariConfig)`` construction-time what the configuration is, so the pool can be initialized at that point.  However, when using ``HikariDataSource`` alone, we don't know that you are *done* configuring the DataSource until ``getConnection()`` is called.  In that case, ``getConnection()`` must perform an additional check to see if the pool as been initialized yet or not.  The cost (albeit small) of this check is incurred on every invocation of ``getConnection()`` in that case.  In summary, intialization by ``HikariConfig`` is every so slightly more performant than initialization directly on the ``HikariDataSource``.
 
 #### Play Framework Plugin
 
