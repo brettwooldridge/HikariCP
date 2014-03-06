@@ -42,6 +42,9 @@ import java.util.concurrent.Executor;
 public class StubConnection extends StubBaseConnection implements Connection
 {
     private static long foo;
+    private boolean autoCommit;
+    private int isolation;
+    private String catalog;
 
     static
     {
@@ -75,13 +78,13 @@ public class StubConnection extends StubBaseConnection implements Connection
     /** {@inheritDoc} */
     public void setAutoCommit(boolean autoCommit) throws SQLException
     {
-
+        this.autoCommit = autoCommit;
     }
 
     /** {@inheritDoc} */
     public boolean getAutoCommit() throws SQLException
     {
-        return false;
+        return autoCommit;
     }
 
     /** {@inheritDoc} */
@@ -128,23 +131,25 @@ public class StubConnection extends StubBaseConnection implements Connection
     /** {@inheritDoc} */
     public void setCatalog(String catalog) throws SQLException
     {
+        this.catalog = catalog;
     }
 
     /** {@inheritDoc} */
     public String getCatalog() throws SQLException
     {
-        return null;
+        return catalog;
     }
 
     /** {@inheritDoc} */
     public void setTransactionIsolation(int level) throws SQLException
     {
+        this.isolation = level;
     }
 
     /** {@inheritDoc} */
     public int getTransactionIsolation() throws SQLException
     {
-        return 0;
+        return isolation;
     }
 
     /** {@inheritDoc} */
