@@ -184,14 +184,6 @@ development and pre-Production.
 
 ### Initialization
 
-##### DataSource Properties
-DataSource properies can be set on the ``HikariConfig`` object through the use of the ``addDataSourcePropery``
-method, like so:
-```java
-    config.addDataSourceProperty("url", "jdbc:hsqldb:mem:test");
-    config.addDataSourceProperty("user", "SA");
-    config.addDataSourceProperty("password", "");
-```
 You can use the HikariConfig class like so:
 ```java
 HikariConfig config = new HikariConfig();
@@ -232,6 +224,8 @@ props.setProperty("dataSource.logWriter", new PrintWriter(System.out));
 HikariConfig config = new HikariConfig(props);
 HikariDataSource ds = new HikariDataSource(config);
 ```
+
+#### HikariConfig vs. HikariDataSource
 Finally, you can skip the HikariConfig class altogether and configure the ``HikariDataSource`` directly:
 ```java
 HikariDataSource ds = new HikariDataSource();
@@ -243,13 +237,13 @@ ds.addDataSourceProperty("password", "51mp50n");
 ```
 The advantage of configuring via ``HikariConfig`` over ``HikariDataSource`` is that when using the ``HikariConfig`` we know at ``HikariDataSource(HikariConfig)`` construction-time what the configuration is, so the pool can be initialized at that point.  However, when using ``HikariDataSource`` alone, we don't know that you are *done* configuring the DataSource until ``getConnection()`` is called.  In that case, ``getConnection()`` must perform an additional check to see if the pool as been initialized yet or not.  The cost (albeit small) of this check is incurred on every invocation of ``getConnection()`` in that case.  In summary, intialization by ``HikariConfig`` is every so slightly more performant than initialization directly on the ``HikariDataSource``.
 
-#### Play Framework Plugin
+### Play Framework Plugin
 
 Github user [autma](https://github.com/autma) has created a [plugin](https://github.com/autma/play-hikaricp-plugin) for the Play framework.  Thanks!
 
 ----------------------------------------------------
 
-#### Wiki ####
+### Wiki
 Don't forget the [Wiki](https://github.com/brettwooldridge/HikariCP/wiki) for additional information such as:
  * [FAQ](https://github.com/brettwooldridge/HikariCP/wiki/FAQ)
  * [Hibernate 4.x Configuration](https://github.com/brettwooldridge/HikariCP/wiki/Hibernate4)
@@ -258,7 +252,7 @@ Don't forget the [Wiki](https://github.com/brettwooldridge/HikariCP/wiki) for ad
 
 ----------------------------------------------------
 
-#### JMX Management ####
+### JMX Management
 The following properties are also configurable in real-time as the pool is running via a JMX
 management console such as JConsole:
 
@@ -271,17 +265,17 @@ management console such as JConsole:
  * ``minimumPoolSize``
  * ``maximumPoolSize``
 
-#### Support ####
+### Support
 Google discussion group [HikariCP here](https://groups.google.com/d/forum/hikari-cp), growing [FAQ](https://github.com/brettwooldridge/HikariCP/wiki/FAQ).
 
 [![](https://raw.github.com/wiki/brettwooldridge/HikariCP/twitter.png)](https://twitter.com/share?text=Interesting%20JDBC%20Connection%20Pool&hashtags=HikariCP&url=https%3A%2F%2Fgithub.com%2Fbrettwooldridge%2FHikariCP)&nbsp;[![](https://raw.github.com/wiki/brettwooldridge/HikariCP/facebook.png)](http://www.facebook.com/plugins/like.php?href=https%3A%2F%2Fgithub.com%2Fbrettwooldridge%2FHikariCP&width&layout=standard&action=recommend&show_faces=true&share=false&height=80)
 
-#### Requirements ####
+### Requirements
  * Java 6 and above
  * Javassist 3.18.1+ library
  * slf4j library
 
-#### Contributions ####
+### Contributions
 Please perform changes and submit pull requests from the ``dev`` branch instead of ``master``.  Please set your editor to use spaces instead of tabs, and adhere to the apparent style of the code you are editing.  The ``dev`` branch is always more "current" than the ``master`` if you are looking to live life on the edge.
 
 [![githalytics.com alpha](https://cruel-carlota.pagodabox.com/63472d76ad0d494e3c4d8fc4a13ea4ce "githalytics.com")](http://githalytics.com/brettwooldridge/HikariCP)
