@@ -64,9 +64,15 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
 	    boolean compareAndSetState(int expectedState, int newState);
 	}
 
+	public interface IBagStateListener
+	{
+	    void bagIsEmpty();
+	}
+
     private ThreadLocal<LinkedList<WeakReference<T>>> threadList;
     private CopyOnWriteArraySet<T> sharedList;
     private Synchronizer synchronizer;
+    private IBagStateListener listener;
 
     /**
      * Constructor.
@@ -119,6 +125,11 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
                 }
             }
 
+            if (listener != null)
+            {
+                listener.bagIsEmpty();
+            }
+
             synchronizer.tryAcquireSharedNanos(startScan, timeout);
 
             timeout -= (System.nanoTime() - startScan);
@@ -162,8 +173,9 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
      */
     public void add(T value)
     {
+        final long addTime = System.nanoTime();
         sharedList.add(value);
-        synchronizer.releaseShared(1);
+        synchronizer.releaseShared(addTime);
     }
 
     /**
@@ -223,6 +235,16 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
         }
 
         synchronizer.releaseShared(checkInTime);
+    }
+
+    public void addBagStateListener(IBagStateListener listener)
+    {
+        this.listener = listener;
+    }
+
+    public int getPendingQueue()
+    {
+        return synchronizer.getQueueLength();
     }
 
     /**
