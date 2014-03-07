@@ -1,5 +1,14 @@
 HikariCP Changes
 
+Changes between 1.3.2 and 1.3.3
+
+ *) Removed shared state contention that was causing excessive CPU cache-line
+    flushing.  Nearly 4x improvement in Connection acquisition/release
+    performance.
+
+ *) Fixed issue with Tomcat carping about ThreadLocal variables held after
+    web application restart.
+
 Changes between 1.3.0 and 1.3.2
 
  *) Java 6 compatibility.
