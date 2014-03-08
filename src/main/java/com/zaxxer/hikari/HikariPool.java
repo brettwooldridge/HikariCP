@@ -385,9 +385,15 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
                 if (!shutdown)
                 {
-                	proxyConnection.resetConnectionState();
-                    totalConnections.incrementAndGet();
-                    idleConnectionBag.add(proxyConnection);
+                    if (totalConnections.getAndIncrement() < configuration.getMaximumPoolSize())
+                    {
+                    	proxyConnection.resetConnectionState();
+                        idleConnectionBag.add(proxyConnection);
+                    }
+                    else
+                    {
+                        proxyConnection.realClose();
+                    }
                 }
                 break;
             }
