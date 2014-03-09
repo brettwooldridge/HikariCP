@@ -179,10 +179,10 @@ cache at the pool level.
 
 **Log Statement Text / Slow Query Logging**<br/>
 Like Statement caching, most major database vendors support statement logging through
-properties of their own driver.  This includes Oracle, MySQL, Derby, MSSQL, and others.  We
-consider this a "development-time" feature.  For those few databases that do not support it,
-[jdbcdslog-exp](https://code.google.com/p/jdbcdslog-exp/) is a good option.  Great stuff during
-development and pre-Production.
+properties of their own driver.  This includes Oracle, MySQL, Derby, MSSQL, and others.  Some
+even support slow query logging. We consider this a "development-time" feature.  For those few
+databases that do not support it, [jdbcdslog-exp](https://code.google.com/p/jdbcdslog-exp/) is
+a good option.  Great stuff during development and pre-Production.
 
 ----------------------------------------------------
 
