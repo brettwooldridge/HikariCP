@@ -3,20 +3,7 @@
 
 There is nothing faster.  There is nothing more correct.  HikariCP is a "zero-overhead" production-quality connection pool.  Coming in at roughly 50Kb, the library is extremely light.  Read about [how we do it here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).
 
-Using the excellent [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team, extremely accurate microbenchmarks were created to isolate and measure the overhead of HikariCP and other popular pools.  You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
-
-<p align="center">
-  <img align="center" src="http://github.com/brettwooldridge/HikariCP/wiki/Benchmarks.png">
-</p>
-
-One *Connection Cycle* is defined as single ``DataSource.getConnection()``/``Connection.close()``.  One *Statement Cycle* is defined as single ``Connection.prepareStatement()``/``Statement.close()``.
-
-#### What's wrong with other pools?
-
-Not all pools are created equal.  Read our [pool analysis](https://github.com/brettwooldridge/HikariCP/wiki/Pool-Analysis) here if you care to know the good, bad, and ugly.
-
-----------------------------------------------------
-### Maven Repository ###
+***Maven Repository***<br/>
 ```xml
     <dependency>
         <groupId>com.zaxxer</groupId>
@@ -25,9 +12,30 @@ Not all pools are created equal.  Read our [pool analysis](https://github.com/br
         <scope>compile</scope>
     </dependency>
 ```
+----------------------------------------------------
+***JMH Benchmarks***<br/>
+
+Using the excellent [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team, extremely accurate microbenchmarks were created to isolate and measure the overhead of HikariCP and other popular pools.  You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
+
+<p align="center">
+  <img align="center" src="http://github.com/brettwooldridge/HikariCP/wiki/Benchmarks.png">
+</p>
+
+ * One *Connection Cycle* is defined as single ``DataSource.getConnection()``/``Connection.close()``.
+   * In *Unconstrained* benchmark connections > threads.
+   * In *Constrained* benchmark threads > connections (2:1).
+ * One *Statement Cycle* is defined as single ``Connection.prepareStatement()``, ``Statement.execute()``, ``Statement.close()``.
+
+<sup>1</sup> BoneCP fails to complete *Statement Cycle* benchmark unless the "CACHED" pool strategy is used.<br/>
+<sup>2</sup> Tomcat fails to complete *Statement Cycle* benchmark when "StatementFinalizer" feature is enabled.<br/>
+
+#### What's wrong with other pools?
+
+Not all pools are created equal.  Read our [pool analysis](https://github.com/brettwooldridge/HikariCP/wiki/Pool-Analysis) here if you care to know the good, bad, and ugly.
+
 ------------------------------
 
-#### Configuration (knobs, baby!) ####
+#### Configuration (knobs, baby!)
 The following are the various properties that can be configured in the pool, their behavior,
 and their defaults.  **HikariCP uses milliseconds for *all* time values, be careful.**
 
@@ -152,8 +160,7 @@ common for all queries, otherwise simply set the isolation level manually when c
 preparing statements.  The value of this property is the constant name from the ``Connection``
 class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, etc.  *Default: none*
 
-##### ***Missing Knobs*** #####
-
+##### ***Missing Knobs***
 HikariCP has plenty of "knobs" to turn as you can see above, but comparatively less than some other pools.
 This is a design philosophy.  The HikariCP design asthetic is Minimalism.
 
