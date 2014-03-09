@@ -302,7 +302,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     {
     	// maxIters avoids an infinite loop filling the pool if no connections can be acquired
         int maxIters = configuration.getMinimumPoolSize() * configuration.getAcquireRetries();
-        while (totalConnections.get() < configuration.getMinimumPoolSize() && maxIters-- > 0)
+        while (maxIters-- > 0 && totalConnections.getAndIncrement() < configuration.getMinimumPoolSize())
         {
             int beforeCount = totalConnections.get();
             addConnection();
@@ -311,6 +311,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 throw new RuntimeException("Fail-fast during pool initialization");
             }
         }
+        totalConnections.decrementAndGet();
 
         logPoolState("Initial fill ");
     }
@@ -320,13 +321,14 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      */
     private void addConnections(AddConnectionStrategy strategy)
     {
-    	switch (strategy)
+        final int max = configuration.getMaximumPoolSize();
+        final int increment = configuration.getAcquireIncrement();
+
+        switch (strategy)
     	{
     	case ONLY_IF_EMPTY:
 	    	{
-	        	final int max = configuration.getMaximumPoolSize();
-	        	final int increment = configuration.getAcquireIncrement();
-	    		for (int i = 0; i < increment && totalConnections.get() < max; i++)
+	    		for (int i = 0; i < increment && totalConnections.getAndIncrement() < max; i++)
 	    		{
 	    			addConnection();
 	    		}
@@ -334,13 +336,17 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     		break;
     	case MAINTAIN_MINIMUM:
     		final int min = configuration.getMinimumPoolSize();
-        	final int max = configuration.getMaximumPoolSize();
-        	final int increment = configuration.getAcquireIncrement();
-        	for (int i = 0; totalConnections.get() < min && i < increment && totalConnections.get() < max; i++)
+        	for (int i = 0; totalConnections.get() < min && i < increment && totalConnections.getAndIncrement() < max; i++)
         	{
         		addConnection();
         	}        	
     		break;
+    	}
+
+        // Speculative incrementation of totalConnections will overshoot by 1 on the last iteration above
+    	if (totalConnections.get() > max)
+    	{
+    	    totalConnections.decrementAndGet();
     	}
     }
 
@@ -349,6 +355,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      */
     private void addConnection()
     {
+        if (shutdown)
+        {
+            return;
+        }
+
         int retries = 0;
         while (true)
         {
@@ -383,18 +394,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                     }
                 }
 
-                if (!shutdown)
-                {
-                    if (totalConnections.getAndIncrement() < configuration.getMaximumPoolSize())
-                    {
-                    	proxyConnection.resetConnectionState();
-                        idleConnectionBag.add(proxyConnection);
-                    }
-                    else
-                    {
-                        proxyConnection.realClose();
-                    }
-                }
+            	proxyConnection.resetConnectionState();
+                idleConnectionBag.add(proxyConnection);
                 break;
             }
             catch (Exception e)
@@ -409,6 +410,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                     {
                         LOGGER.error("Maximum connection creation retries exceeded: {}", e.getMessage());
                     }
+                    totalConnections.decrementAndGet();
                     break;
                 }
 
@@ -418,6 +420,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 }
                 catch (InterruptedException e1)
                 {
+                    totalConnections.decrementAndGet();
                     break;
                 }
             }
