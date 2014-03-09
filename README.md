@@ -62,6 +62,11 @@ connection to the database.  If ``acquireRetries`` is 0, this property has no ef
 This property controls the default auto-commit behavior of connections returned from the pool.
 It is a boolean value.  *Default: true*
 
+``catalog``<br/>
+This property sets the default *catalog* for databases that support the concept of catalogs.
+If this property is not specified, the default catalog defined by the JDBC driver is used.
+*Default: none*
+
 ``connectionInitSql``<br/>
 This property sets a SQL statement that will be executed after every new connection creation
 before adding it to the pool. If this SQL is not valid or throws an exception, it will be
