@@ -302,7 +302,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     {
     	// maxIters avoids an infinite loop filling the pool if no connections can be acquired
         int maxIters = configuration.getMinimumPoolSize() * configuration.getAcquireRetries();
-        while (maxIters-- > 0 && totalConnections.getAndIncrement() < configuration.getMinimumPoolSize())
+        while (maxIters-- > 0 && totalConnections.get() < configuration.getMinimumPoolSize())
         {
             int beforeCount = totalConnections.get();
             addConnection();
@@ -311,7 +311,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 throw new RuntimeException("Fail-fast during pool initialization");
             }
         }
-        totalConnections.decrementAndGet();
 
         logPoolState("Initial fill ");
     }
@@ -321,32 +320,23 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      */
     private void addConnections(AddConnectionStrategy strategy)
     {
-        final int max = configuration.getMaximumPoolSize();
-        final int increment = configuration.getAcquireIncrement();
+        final int maxIterations = configuration.getAcquireIncrement();
 
         switch (strategy)
     	{
     	case ONLY_IF_EMPTY:
-	    	{
-	    		for (int i = 0; i < increment && totalConnections.getAndIncrement() < max; i++)
-	    		{
-	    			addConnection();
-	    		}
-	    	}
+    		for (int i = 0; i < maxIterations; i++)
+    		{
+    			addConnection();
+    		}
     		break;
     	case MAINTAIN_MINIMUM:
     		final int min = configuration.getMinimumPoolSize();
-        	for (int i = 0; totalConnections.get() < min && i < increment && totalConnections.getAndIncrement() < max; i++)
+        	for (int i = 0; i < maxIterations && totalConnections.get() < min; i++)
         	{
         		addConnection();
         	}        	
     		break;
-    	}
-
-        // Speculative incrementation of totalConnections will overshoot by 1 on the last iteration above
-    	if (totalConnections.get() > max)
-    	{
-    	    totalConnections.decrementAndGet();
     	}
     }
 
@@ -355,16 +345,18 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      */
     private void addConnection()
     {
-        if (shutdown)
-        {
-            return;
-        }
-
         int retries = 0;
-        while (true)
+        while (!shutdown)
         {
             try
             {
+                // Speculative increment of totalConnections with expectation of success
+                if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize())
+                {
+                    totalConnections.decrementAndGet();
+                    break;
+                }
+
                 Connection connection = dataSource.getConnection();
                 
                 if (transactionIsolation < 0)
@@ -505,7 +497,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         int total = totalConnections.get();
         int idle = getIdleConnections();
         LOGGER.debug("{}Pool stats (total={}, inUse={}, avail={}, waiting={})",
-                     (prefix.length > 0 ? prefix[0] : ""), total, total - idle, idle, (isRegisteredMbeans ? getThreadsAwaitingConnection() : "n/a"));
+                     (prefix.length > 0 ? prefix[0] : ""), total, total - idle, idle, getThreadsAwaitingConnection());
     }
 
     /**
