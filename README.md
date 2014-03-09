@@ -167,15 +167,9 @@ class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, e
 
 ##### ***Missing Knobs***
 HikariCP has plenty of "knobs" to turn as you can see above, but comparatively less than some other pools.
-This is a design philosophy.  The HikariCP design asthetic is Minimalism.
-
-We're not going to (overly) question the design decisions of other pools, but we will say
-that some other pools seem to implement a lot of "gimmicks" that proportedly improve
-performance.  HikariCP achieves high-performance even in pools beyond realistic deployment
-sizes.
-
-In keeping with the *simple is better* or *less is more* design philosophy, some knobs and 
-features are intentionally left out.  Here are two, and the rationale.
+This is a design philosophy.  The HikariCP design asthetic is Minimalism.  In keeping with the
+*simple is better* or *less is more* design philosophy, some knobs and  features are intentionally left out.
+Here are two, and the rationale.
 
 **Statement Cache**<br/>
 Most major database JDBC drivers already have a Statement cache that can be configured (Oracle, 
@@ -187,9 +181,7 @@ cache at the pool level.
 Like Statement caching, most major database vendors support statement logging through
 properties of their own driver.  This includes Oracle, MySQL, Derby, MSSQL, and others.  We
 consider this a "development-time" feature.  For those few databases that do not support it,
-[jdbcdslog-exp](https://code.google.com/p/jdbcdslog-exp/) is a good option.  It is easy to
-wrap HikariCP around *jdbcdslog*.  It also provides some nice additional stuff like timing,
-logging slow queries only, and PreparedStatement bound parameter logging.   Great stuff during
+[jdbcdslog-exp](https://code.google.com/p/jdbcdslog-exp/) is a good option.  Great stuff during
 development and pre-Production.
 
 ----------------------------------------------------
