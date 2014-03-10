@@ -77,14 +77,15 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         this.totalConnections = new AtomicInteger();
         this.idleConnectionBag = new ConcurrentBag<IHikariConnectionProxy>();
         this.idleConnectionBag.addBagStateListener(this);
+        this.debug = LOGGER.isDebugEnabled();
 
-        this.jdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
-        this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
+        this.catalog = configuration.getCatalog();
+        this.connectionCustomizer = configuration.getConnectionCustomizer();
         this.isAutoCommit = configuration.isAutoCommit();
         this.isRegisteredMbeans = configuration.isRegisterMbeans();
+        this.jdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
+        this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
         this.transactionIsolation = configuration.getTransactionIsolation();
-        this.catalog = configuration.getCatalog();
-        this.debug = LOGGER.isDebugEnabled();
 
         if (configuration.getDataSource() == null)
         {
@@ -103,23 +104,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         else
         {
             this.dataSource = configuration.getDataSource();
-        }
-
-        if (configuration.getConnectionCustomizerClassName() != null)
-        {
-            try
-            {
-                Class<?> clazz = this.getClass().getClassLoader().loadClass(configuration.getConnectionCustomizerClassName());
-                this.connectionCustomizer = (IConnectionCustomizer) clazz.newInstance();
-            }
-            catch (Exception e)
-            {
-                throw new RuntimeException("Could not load connection customization class", e);
-            }
-        }
-        else
-        {
-            this.connectionCustomizer = null;
         }
 
         if (isRegisteredMbeans)

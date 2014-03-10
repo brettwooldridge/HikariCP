@@ -69,6 +69,7 @@ public class HikariConfig implements HikariConfigMBean
     private boolean isRegisterMbeans;
     private DataSource dataSource;
     private Properties dataSourceProperties;
+    private IConnectionCustomizer connectionCustomizer;
 
     static
     {
@@ -454,13 +455,14 @@ public class HikariConfig implements HikariConfigMBean
             acquireRetryDelay = ACQUIRE_RETRY_DELAY;
         }
 
-        if (connectionCustomizerClassName != null)
+        if (connectionCustomizerClassName != null && connectionCustomizer == null)
         {
             try
             {
-                getClass().getClassLoader().loadClass(connectionCustomizerClassName);
+                Class<?> customizerClass = getClass().getClassLoader().loadClass(connectionCustomizerClassName);
+                connectionCustomizer = (IConnectionCustomizer) customizerClass.newInstance();
             }
-            catch (ClassNotFoundException e)
+            catch (Exception e)
             {
                 logger.warn("connectionCustomizationClass specified class '" + connectionCustomizerClassName + "' could not be loaded", e);
                 connectionCustomizerClassName = null;
@@ -526,6 +528,11 @@ public class HikariConfig implements HikariConfigMBean
             logger.warn("maxLifetime is less than 120000ms, did you specify the wrong time unit?  Using default instead.");
             maxLifetime = MAX_LIFETIME;
         }
+    }
+
+    IConnectionCustomizer getConnectionCustomizer()
+    {
+        return connectionCustomizer;
     }
 
     void copyState(HikariConfig other)

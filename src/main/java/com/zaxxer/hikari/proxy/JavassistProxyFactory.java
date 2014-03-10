@@ -163,20 +163,22 @@ public final class JavassistProxyFactory
             targetCt.addInterface(intfCt);
             for (CtMethod intfMethod : intfCt.getDeclaredMethods())
             {
-                if (superSigs.contains(intfMethod.getName() + intfMethod.getSignature()))
+                final String signature = intfMethod.getName() + intfMethod.getSignature();
+
+                // don't generate delegates for methods we override
+                if (superSigs.contains(signature))
                 {
-                    // don't generate delegates for methods we override
                     continue;
                 }
 
                 // Ignore already added methods that come from other interfaces
-                if (methods.contains(intfMethod.getName() + intfMethod.getSignature()))
+                if (methods.contains(signature))
                 {
                     continue;
                 }
 
                 // Track what methods we've added
-                methods.add(intfMethod.getName() + intfMethod.getSignature());
+                methods.add(signature);
 
                 // Clone the method we want to inject into
                 CtMethod method = CtNewMethod.copy(intfMethod, targetCt, null);
