@@ -56,7 +56,7 @@ public class HikariConfig implements HikariConfigMBean
 
     // Properties NOT changeable at runtime
     //
-    private int transactionIsolation;
+    private String transactionIsolationName;
     private String connectionCustomizerClassName;
     private String connectionInitSql;
     private String connectionTestQuery;
@@ -70,6 +70,7 @@ public class HikariConfig implements HikariConfigMBean
     private DataSource dataSource;
     private Properties dataSourceProperties;
     private IConnectionCustomizer connectionCustomizer;
+    private int transactionIsolation;
 
     static
     {
@@ -428,16 +429,7 @@ public class HikariConfig implements HikariConfigMBean
      */
     public void setTransactionIsolation(String isolationLevel)
     {
-        try
-        {
-            Field field = Connection.class.getField(isolationLevel);
-            int level = field.getInt(null);
-            this.transactionIsolation = level;
-        }
-        catch (Exception e)
-        {
-            throw new IllegalArgumentException("Invalid transaction isolation value: " + isolationLevel);
-        }
+        this.transactionIsolationName = isolationLevel;
     }
 
     public void validate()
@@ -527,6 +519,20 @@ public class HikariConfig implements HikariConfigMBean
         {
             logger.warn("maxLifetime is less than 120000ms, did you specify the wrong time unit?  Using default instead.");
             maxLifetime = MAX_LIFETIME;
+        }
+
+        if (transactionIsolationName != null)
+        {
+            try
+            {
+                Field field = Connection.class.getField(transactionIsolationName);
+                int level = field.getInt(null);
+                this.transactionIsolation = level;
+            }
+            catch (Exception e)
+            {
+                throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
+            }
         }
     }
 
