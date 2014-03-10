@@ -166,7 +166,7 @@ common for all queries, otherwise simply set the isolation level manually when c
 preparing statements.  The value of this property is the constant name from the ``Connection``
 class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, etc.  *Default: none*
 
-##### ***Missing Knobs***
+***Missing Knobs***<br/>
 HikariCP has plenty of "knobs" to turn as you can see above, but comparatively less than some other pools.
 This is a design philosophy.  The HikariCP design asthetic is Minimalism.  In keeping with the
 *simple is better* or *less is more* design philosophy, some knobs and  features are intentionally left out.
@@ -248,6 +248,11 @@ Github user [autma](https://github.com/autma) has created a [plugin](https://git
 
 ----------------------------------------------------
 
+### Support
+Google discussion group [HikariCP here](https://groups.google.com/d/forum/hikari-cp), growing [FAQ](https://github.com/brettwooldridge/HikariCP/wiki/FAQ).
+
+[![](https://raw.github.com/wiki/brettwooldridge/HikariCP/twitter.png)](https://twitter.com/share?text=Interesting%20JDBC%20Connection%20Pool&hashtags=HikariCP&url=https%3A%2F%2Fgithub.com%2Fbrettwooldridge%2FHikariCP)&nbsp;[![](https://raw.github.com/wiki/brettwooldridge/HikariCP/facebook.png)](http://www.facebook.com/plugins/like.php?href=https%3A%2F%2Fgithub.com%2Fbrettwooldridge%2FHikariCP&width&layout=standard&action=recommend&show_faces=true&share=false&height=80)
+
 ### Wiki
 Don't forget the [Wiki](https://github.com/brettwooldridge/HikariCP/wiki) for additional information such as:
  * [FAQ](https://github.com/brettwooldridge/HikariCP/wiki/FAQ)
@@ -269,11 +274,6 @@ management console such as JConsole:
  * ``maxLifetime``
  * ``minimumPoolSize``
  * ``maximumPoolSize``
-
-### Support
-Google discussion group [HikariCP here](https://groups.google.com/d/forum/hikari-cp), growing [FAQ](https://github.com/brettwooldridge/HikariCP/wiki/FAQ).
-
-[![](https://raw.github.com/wiki/brettwooldridge/HikariCP/twitter.png)](https://twitter.com/share?text=Interesting%20JDBC%20Connection%20Pool&hashtags=HikariCP&url=https%3A%2F%2Fgithub.com%2Fbrettwooldridge%2FHikariCP)&nbsp;[![](https://raw.github.com/wiki/brettwooldridge/HikariCP/facebook.png)](http://www.facebook.com/plugins/like.php?href=https%3A%2F%2Fgithub.com%2Fbrettwooldridge%2FHikariCP&width&layout=standard&action=recommend&show_faces=true&share=false&height=80)
 
 ### Requirements
  * Java 6 and above
