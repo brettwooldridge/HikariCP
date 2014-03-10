@@ -321,19 +321,19 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      */
     private void addConnections(AddConnectionStrategy strategy)
     {
-        final int maxIterations = configuration.getAcquireIncrement();
+        int maxIterations = configuration.getAcquireIncrement();
 
         switch (strategy)
     	{
     	case ONLY_IF_EMPTY:
-    		for (int i = 0; i < maxIterations; i++)
+    		while (maxIterations-- > 0)
     		{
     			addConnection();
     		}
     		break;
     	case MAINTAIN_MINIMUM:
     		final int min = configuration.getMinimumPoolSize();
-        	for (int i = 0; i < maxIterations && totalConnections.get() < min; i++)
+        	while (maxIterations-- > 0 && totalConnections.get() < min)
         	{
         		addConnection();
         	}        	
