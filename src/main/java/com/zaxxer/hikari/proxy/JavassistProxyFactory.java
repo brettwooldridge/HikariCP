@@ -102,30 +102,22 @@ public final class JavassistProxyFactory
         for (CtMethod method : proxyCt.getMethods())
         {
             String methodName = method.getName();
-            StringBuilder call = new StringBuilder("{");
             if ("getProxyConnection".equals(methodName))
             {
-                call.append("return new ").append(packageName).append(".ConnectionJavassistProxy($$);");
+                method.setBody("{return new " + packageName + ".ConnectionJavassistProxy($$);}");
             }
             else if ("getProxyStatement".equals(methodName))
             {
-                call.append("return new ").append(packageName).append(".StatementJavassistProxy($$);");
+                method.setBody("{return new " + packageName + ".StatementJavassistProxy($$);}");
             }
             else if ("getProxyPreparedStatement".equals(methodName))
             {
-                call.append("return new ").append(packageName).append(".PreparedStatementJavassistProxy($$);");
+                method.setBody("{return new " + packageName + ".PreparedStatementJavassistProxy($$);}");
             }
             else if ("getProxyCallableStatement".equals(methodName))
             {
-                call.append("return new ").append(packageName).append(".CallableStatementJavassistProxy($$);");
+                method.setBody("{return new " + packageName + ".CallableStatementJavassistProxy($$);}");
             }
-            else
-            {
-                continue;
-            }
-
-            call.append('}');
-            method.setBody(call.toString());
         }
 
         proxyCt.toClass(classPool.getClassLoader(), null);
