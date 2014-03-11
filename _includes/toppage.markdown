@@ -6,7 +6,7 @@ production-quality connection pool.
 Using a stub-JDBC implementation to isolate and measure the overhead of HikariCP, comparative benchmarks were
 performed on a commodity PC.  The next fastest connection pool was BoneCP.
 
-<a href="http://github.com/brettwooldridge/HikariCP/wiki/50Connection_MixedBench.png"><img src="http://github.com/brettwooldridge/HikariCP/wiki/50Connection_MixedBench.png" width="680"/></a>
+<a href="http://github.com/brettwooldridge/HikariCP/wiki/Benchmarks.png"><img src="http://github.com/brettwooldridge/HikariCP/wiki/Benchmarks.png" width="680"/></a>
 
 And how does it achieve such incredible performance?  If you're really technically
 minded, read [here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).  Otherwise, just drop it
