@@ -262,19 +262,6 @@ Don't forget the [Wiki](https://github.com/brettwooldridge/HikariCP/wiki) for ad
 
 ----------------------------------------------------
 
-### JMX Management
-The following properties are also configurable in real-time as the pool is running via a JMX
-management console such as JConsole:
-
- * ``acquireIncrement``
- * ``acquireRetries``
- * ``acquireRetryDelay``
- * ``connectionTimeout``
- * ``idleTimeout``
- * ``maxLifetime``
- * ``minimumPoolSize``
- * ``maximumPoolSize``
-
 ### Requirements
  * Java 6 and above
  * Javassist 3.18.1+ library
