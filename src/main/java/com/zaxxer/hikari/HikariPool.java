@@ -57,8 +57,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     private final long leakDetectionThreshold;
     private final AtomicInteger totalConnections;
     private final boolean isAutoCommit;
-    private final boolean jdbc4ConnectionTest;
+    private final boolean isReadOnly;
     private final boolean isRegisteredMbeans;
+    private final boolean jdbc4ConnectionTest;
     private final String catalog; 
     private int transactionIsolation;
     private volatile boolean shutdown;
@@ -82,6 +83,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         this.catalog = configuration.getCatalog();
         this.connectionCustomizer = configuration.getConnectionCustomizer();
         this.isAutoCommit = configuration.isAutoCommit();
+        this.isReadOnly = configuration.isReadOnly();
         this.isRegisteredMbeans = configuration.isRegisterMbeans();
         this.jdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
         this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
@@ -354,7 +356,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                     connectionCustomizer.customize(connection);
                 }
 
-                IHikariConnectionProxy proxyConnection = ProxyFactory.getProxyConnection(this, connection, transactionIsolation, isAutoCommit, catalog);
+                IHikariConnectionProxy proxyConnection = ProxyFactory.getProxyConnection(this, connection, transactionIsolation, isAutoCommit, isReadOnly, catalog);
 
                 String initSql = configuration.getConnectionInitSql();
                 if (initSql != null && initSql.length() > 0)
@@ -442,7 +444,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             {
                 if (!isAutoCommit)
                 {
-                    connection.commit();
+                    connection.rollback();
                 }
             }
 

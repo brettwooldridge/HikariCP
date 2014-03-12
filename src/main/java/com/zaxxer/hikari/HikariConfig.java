@@ -64,6 +64,7 @@ public class HikariConfig implements HikariConfigMBean
     private String catalog;
     private String poolName;
     private boolean isAutoCommit;
+    private boolean isReadOnly;
     private boolean isInitializationFailFast;
     private boolean isJdbc4connectionTest;
     private boolean isRegisterMbeans;
@@ -325,6 +326,16 @@ public class HikariConfig implements HikariConfigMBean
     public void setJdbc4ConnectionTest(boolean useIsValid)
     {
         this.isJdbc4connectionTest = useIsValid;
+    }
+
+    public boolean isReadOnly()
+    {
+        return isReadOnly;
+    }
+
+    public void setReadOnly(boolean readOnly)
+    {
+        this.isReadOnly = readOnly;
     }
 
     public boolean isRegisterMbeans()
