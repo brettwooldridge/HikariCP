@@ -95,7 +95,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         this.hashCode = System.identityHashCode(this);
 
         isCatalogDirty = true;
-        isReadOnlyDirty = true;
+        isReadOnlyDirty = defaultReadOnly;
         isAutoCommitDirty = true;
         isTransactionIsolationDirty = true;
     }
