@@ -22,8 +22,8 @@ Using the excellent [JMH microbenchmark framework](http://openjdk.java.net/proje
 </p>
 
  * One *Connection Cycle* is defined as single ``DataSource.getConnection()``/``Connection.close()``.
-   * In *Unconstrained* benchmark connections > threads.
-   * In *Constrained* benchmark threads > connections (2:1).
+   * In *Unconstrained* benchmark, connections > threads.
+   * In *Constrained* benchmark, threads > connections (2:1).
  * One *Statement Cycle* is defined as single ``Connection.prepareStatement()``, ``Statement.execute()``, ``Statement.close()``.
 
 <sup>1</sup> BoneCP fails to complete *Statement Cycle* benchmark unless the "CACHED" pool strategy is used.<br/>
