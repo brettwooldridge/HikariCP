@@ -28,7 +28,7 @@ Using the excellent [JMH microbenchmark framework](http://openjdk.java.net/proje
 
 <sup>1</sup> BoneCP fails to complete *Statement Cycle* benchmark unless the "CACHED" pool strategy is used.<br/>
 <sup>2</sup> Tomcat fails to complete *Statement Cycle* benchmark when "StatementFinalizer" feature is enabled.<br/>
-<sup>3</sup> Benchmark results run against 1.3.3-SNAPSHOT.<br/>
+<sup>3</sup> Benchmark results run against 1.3.3<br/>
 
 #### What's wrong with other pools?
 
