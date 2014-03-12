@@ -199,7 +199,7 @@
             <version>2.9.1</version>
             <configuration>
                <show>public</show>
-               <excludePackageNames>com.zaxxer.hikari.*</excludePackageNames>
+               <!-- excludePackageNames>com.zaxxer.hikari.*</excludePackageNames -->
                <attach>true</attach>
                <maxmemory>1024m</maxmemory>
             </configuration>
