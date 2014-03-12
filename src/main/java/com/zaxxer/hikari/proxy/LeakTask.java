@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Brett Wooldridge
  */
-public class LeakTask extends TimerTask
+class LeakTask extends TimerTask
 {
     private final long leakTime;
     private StackTraceElement[] stackTrace;

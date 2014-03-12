@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Brett Wooldridge
+ * Copyright (C) 2013, 2014 Brett Wooldridge
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,10 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.util.ClassLoaderUtils;
 
 /**
+ * This class generates the proxy objects for {@link Connection}, {@link Statement},
+ * {@link PreparedStatement}, and {@link CallableStatement}.  Additionally it injects
+ * method bodies into the {@link ProxyFactory} class methods that can instantiate
+ * instances of the generated proxies.
  *
  * @author Brett Wooldridge
  */
@@ -63,9 +67,13 @@ public final class JavassistProxyFactory
         }
     }
 
+    /**
+     * Simply invoking this method causes the initialization of this class.  All work
+     * by this class is performed in static initialization.
+     */
     public static void initialize()
     {
-        // simply invoking this method causes the initialization of this class.
+        // no-op
     }
 
     private JavassistProxyFactory()

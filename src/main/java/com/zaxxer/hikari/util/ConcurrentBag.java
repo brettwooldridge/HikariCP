@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Brett Wooldridge
+ * Copyright (C) 2013, 2014 Brett Wooldridge
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,12 +28,12 @@ import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
  * to LinkedBlockingQueue and LinkedTransferQueue for the purposes of a
  * connection pool.  It uses ThreadLocal storage when possible to avoid
  * locks, but resorts to scanning a common collection if there are no
- * available connections in the ThreadLocal list.  Idle connections in
- * ThreadLocal lists can be "stolen" when the poll()ing thread has none
+ * available items in the ThreadLocal list.  Not-in-use items in the
+ * ThreadLocal lists can be "stolen" when the borrowing thread has none
  * of its own.  It is a "lock-less" implementation using a specialized
  * AbstractQueuedLongSynchronizer to manage cross-thread signaling.
  *
- * Note that objects that are "borrowed" from the bag are not actually
+ * Note that items that are "borrowed" from the bag are not actually
  * removed from any collection, so garbage collection will not occur
  * even if the reference is abandoned.  Thus care must be taken to
  * "requite" borrowed objects otherwise a memory leak will result.  Only
@@ -64,6 +64,12 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
 	    boolean compareAndSetState(int expectedState, int newState);
 	}
 
+	/**
+	 * This interface is implemented by a listener to the bag.  The listener
+	 * will be informed of when the bag has become empty.  The usual course
+	 * of action by the listener in this case is to attempt to add an item
+	 * to the bag.
+	 */
 	public interface IBagStateListener
 	{
 	    void bagIsEmpty();
@@ -180,7 +186,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
 
     /**
      * Remove a value from the bag.  This method should only be called
-     * with objects obtained by borrow() or reserve().
+     * with objects obtained by {@link #borrow(long, TimeUnit)} or {@link #reserve(IBagManagable)}.
      * @param value the value to remove
      * @throws IllegalStateException if an attempt is made to remove an object
      *         from the bag that was not borrowed or reserved first
@@ -200,7 +206,8 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     /**
      * This method provides a "snaphot" in time of the IBagManagable
      * items in the bag in the specified state.  It does not "lock"
-     * or reserve items in any way.
+     * or reserve items in any way.  Call {@link #reserve(IBagManagable)}
+     * on items in list before performing any action on them.
      *
      * @param state one of STATE_NOT_IN_USE or STATE_IN_USE
      * @return a possibly empty list of objects having the state specified
@@ -221,11 +228,29 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
         return list;
     }
 
+    /**
+     * The method is used to make an item in the bag "unavailable" for
+     * borrowing.  It is primarily used when wanting to operate on items
+     * returned by the {@link #values(int)} method.  Items that are
+     * reserved can be removed from the bag via {@link #remove(IBagManagable)}
+     * without the need to unreserve them.  Items that are not removed
+     * from the bag can be make available for borrowing again by calling
+     * the {@link #unreserve(IBagManagable) method.
+     *
+     * @param value the item to reserve
+     * @return true if the item was able to be reserved, false otherwise
+     */
     public boolean reserve(T value)
     {
         return value.compareAndSetState(STATE_NOT_IN_USE, STATE_RESERVED);
     }
 
+    /**
+     * This method is used to make an item reserved via {@link #reserve(IBagManagable)}
+     * available again for borrowing.
+     *
+     * @param value the item to unreserve
+     */
     public void unreserve(T value)
     {
         final long checkInTime = System.nanoTime();
@@ -237,11 +262,23 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
         synchronizer.releaseShared(checkInTime);
     }
 
+    /**
+     * Add a listener to the bag.  There can only be one.  If this method is
+     * called a second time, the original listener will be evicted.
+     *
+     * @param listener a listener to the bag
+     */
     public void addBagStateListener(IBagStateListener listener)
     {
         this.listener = listener;
     }
 
+    /**
+     * Get the number of threads pending (waiting) for an item from the
+     * bag to become available.
+     *
+     * @return the number of threads waiting for items from the bag
+     */
     public int getPendingQueue()
     {
         return synchronizer.getQueueLength();

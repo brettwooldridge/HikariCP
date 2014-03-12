@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Brett Wooldridge
+ * Copyright (C) 2013, 2014 Brett Wooldridge
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ public final class FastStatementList
     private int size;
 
     /**
-     * Construct a FastList with a default size of 16.
+     * Construct a FastList with a default size of 32.
      */
     public FastStatementList()
     {
