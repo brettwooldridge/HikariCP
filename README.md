@@ -45,17 +45,17 @@ Rather than coming out of the box with almost nothing configured, HikariCP comes
 defaults that let a great many deployments run without any additional tweaking (except for
 the DataSource and DataSource properties).
 
-``acquireIncrement``<br/>
+``acquireIncrement``&nbsp;&nbsp;&#x23;&#x20E3;<br/>
 This property controls the maximum number of connections that are acquired at one time, with
 the exception of pool initialization. *Default: 1*
 
-``acquireRetries``<br/>
+``acquireRetries``&nbsp;&nbsp;&#x23;&#x20E3;<br/>
 This is a per-connection attempt retry count used during new connection creation (acquisition).
 If a connection creation attempt fails there will be a wait of ``acquireRetryDelay``
 milliseconds followed by another attempt, up to the number of retries configured by this
 property. *Default: 3*
 
-``acquireRetryDelay``<br/>
+``acquireRetryDelay``&nbsp;&#128336;<br/>
 This property controls the number of milliseconds to delay between attempts to acquire a
 connection to the database.  If ``acquireRetries`` is 0, this property has no effect.
 *Default: 750*
@@ -82,7 +82,7 @@ should be a query that takes very little processing by the database (eg. "VALUES
 the ``jdbc4ConnectionTest`` property for a more efficent alive test.**  One of either this
 property or ``jdbc4ConnectionTest`` must be specified.  *Default: none*
 
-``connectionTimeout``<br/>
+``connectionTimeout``&nbsp;&#128336;<br/>
 This property controls the maximum number of milliseconds that a client (that's you) will wait
 for a connection from the pool.  If this time is exceeded without a connection becoming
 available, a SQLException will be thrown.  *Default: 5000*
@@ -100,7 +100,7 @@ documentation for your specific JDBC driver to get this class name.  Note XA dat
 are not supported.  XA requires a real transaction manager like [bitronix](https://github.com/bitronix/btm).
 *Default: none*
 
-``idleTimeout``<br/>
+``idleTimeout``&nbsp;&#128336;<br/>
 This property controls the maximum amount of time (in milliseconds) that a connection is
 allowed to sit idle in the pool.  Whether a connection is retired as idle or not is subject
 to a maximum variation of +30 seconds, and average variation of +15 seconds.  A connection
@@ -119,7 +119,7 @@ is used to check that a connection is still alive.  This value is mutually exclu
 ``connectionTestQuery`` property, and this method of testing connection validity should be
 preferred if supported by the JDBC driver.  *Default: true*
 
-``leakDetectionThreshold``<br/>
+``leakDetectionThreshold``&nbsp;&#128336;<br/>
 This property controls the amount of time that a connection can be out of the pool before a
 message is logged indicating a possible connection leak.  A value of 0 means leak detection
 is disabled.  While the default is 0, and other connection pool implementations state that
@@ -128,7 +128,7 @@ of HikariCP the imposed overhead is only 5μs (*microseconds*) split between get
 and close().  Maybe other pools are doing it wrong, but feel free to use leak detection under
 HikariCP in production environments if you wish.  *Default: 0*
 
-``maxLifetime``<br/>
+``maxLifetime``&nbsp;&#128336;<br/>
 This property controls the maximum lifetime of a connection in the pool.  When a connection
 reaches this timeout, even if recently used, it will be retired from the pool.  An in-use
 connection will never be retired, only when it is idle will it be removed.  We strongly
@@ -136,7 +136,7 @@ recommend setting this value, and using something reasonable like 30 minutes or 
 value of 0 indicates no maximum lifetime (infinite lifetime), subject of course to the
 ``idleTimeout`` setting.  *Default: 1800000 (30 minutes)*
 
-``maximumPoolSize``<br/>
+``maximumPoolSize``&nbsp;&nbsp;&#x23;&#x20E3;<br/>
 This property controls the maximum size that the pool is allowed to reach, including both
 idle and in-use connections.  Basically this value will determine the maximum number of
 actual connections to the database backend.  A reasonable value for this is best determined
@@ -144,7 +144,7 @@ by your execution environment.  When the pool reaches this size, and no idle con
 available, calls to getConnection() will block for up to ``connectionTimeout`` milliseconds
 before timing out.  *Default: 60*
 
-``minimumPoolSize``<br/>
+``minimumPoolSize``&nbsp;&nbsp;&#x23;&#x20E3;<br/>
 This property controls the minimum number of connections that HikariCP tries to maintain in
 the pool, including both idle and in-use connections.  If the connections dip below this
 value, HikariCP will make a best effort to restore them quickly and efficiently.  A reasonable
