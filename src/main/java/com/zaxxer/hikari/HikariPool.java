@@ -57,6 +57,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     private final long leakDetectionThreshold;
     private final AtomicInteger totalConnections;
     private final boolean isAutoCommit;
+    private final boolean isIsolateInternalQueries;
     private final boolean isReadOnly;
     private final boolean isRegisteredMbeans;
     private final boolean jdbc4ConnectionTest;
@@ -83,6 +84,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         this.catalog = configuration.getCatalog();
         this.connectionCustomizer = configuration.getConnectionCustomizer();
         this.isAutoCommit = configuration.isAutoCommit();
+        this.isIsolateInternalQueries = configuration.isIsolateInternalQueries();
         this.isReadOnly = configuration.isReadOnly();
         this.isRegisteredMbeans = configuration.isRegisterMbeans();
         this.jdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
@@ -442,7 +444,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             }
             finally
             {
-                if (!isAutoCommit)
+                if (isIsolateInternalQueries && !isAutoCommit)
                 {
                     connection.rollback();
                 }

@@ -68,6 +68,7 @@ public class HikariConfig implements HikariConfigMBean
     private boolean isInitializationFailFast;
     private boolean isJdbc4connectionTest;
     private boolean isRegisterMbeans;
+    private boolean isIsolateInternalQueries;
     private DataSource dataSource;
     private Properties dataSourceProperties;
     private IConnectionCustomizer connectionCustomizer;
@@ -188,41 +189,89 @@ public class HikariConfig implements HikariConfigMBean
         this.acquireRetryDelay = acquireRetryDelayMs;
     }
 
+    /**
+     * Get the default catalog name to be set on connections.
+     *
+     * @return the default catalog name
+     */
     public String getCatalog()
     {
         return catalog;
     }
 
+    /**
+     * Set the default catalog name to be set on connections.
+     *
+     * @param catalog the catalog name, or null
+     */
     public void setCatalog(String catalog)
     {
         this.catalog = catalog;
     }
 
+    /**
+     * Get the name of the connection customizer class to instantiate and execute
+     * on all new connections.
+     *
+     * @return the name of the customizer class, or null
+     */
     public String getConnectionCustomizerClassName()
     {
         return connectionCustomizerClassName;
     }
 
+    /**
+     * Set the name of the connection customizer class to instantiate and execute
+     * on all new connections.
+     *
+     * @param connectionCustomizerClassName the name of the customizer class
+     */
     public void setConnectionCustomizerClassName(String connectionCustomizerClassName)
     {
         this.connectionCustomizerClassName = connectionCustomizerClassName;
     }
 
+    /**
+     * Get the SQL query to be executed to test the validity of connections.
+     * 
+     * @return the SQL query string, or null 
+     */
     public String getConnectionTestQuery()
     {
         return connectionTestQuery;
     }
 
+    /**
+     * Set the SQL query to be executed to test the validity of connections. Using
+     * the JDBC4 {@link Connection.isValid()} method to test connection validity can
+     * be more efficient on some databases and is recommended.  See 
+     * {@link HikariConfig#setJdbc4ConnectionTest(boolean)}.
+     *
+     * @param connectionTestQuery a SQL query string
+     */
     public void setConnectionTestQuery(String connectionTestQuery)
     {
         this.connectionTestQuery = connectionTestQuery;
     }
 
+    /**
+     * Get the SQL string that will be executed on all new connections when they are
+     * created, before they are added to the pool.
+     *
+     * @return the SQL to execute on new connections, or null
+     */
     public String getConnectionInitSql()
     {
         return connectionInitSql;
     }
 
+    /**
+     * Set the SQL string that will be executed on all new connections when they are
+     * created, before they are added to the pool.  If this query fails, it will be
+     * treated as a failed connection attempt.
+     *
+     * @param connectionInitSql the SQL to execute on new connections
+     */
     public void setConnectionInitSql(String connectionInitSql)
     {
         this.connectionInitSql = connectionInitSql;
@@ -251,11 +300,23 @@ public class HikariConfig implements HikariConfigMBean
         }
     }
 
+    /**
+     * Get the {@link DataSource} that has been explicitly specified to be wrapped by the
+     * pool.
+     *
+     * @return the {@link DataSource} instance, or null
+     */
     public DataSource getDataSource()
     {
         return dataSource;
     }
 
+    /**
+     * Set a {@link DataSource} for the pool to explicitly wrap.  This setter is not
+     * available through property file based initialization.
+     *
+     * @param dataSource a specific {@link DataSource} to be wrapped by the pool
+     */
     public void setDataSource(DataSource dataSource)
     {
         this.dataSource = dataSource;
@@ -298,24 +359,56 @@ public class HikariConfig implements HikariConfigMBean
         this.idleTimeout = idleTimeoutMs;
     }
 
+    /**
+     * Get the default auto-commit behavior of connections in the pool.
+     *
+     * @return the default auto-commit behavior of connections
+     */
     public boolean isAutoCommit()
     {
         return isAutoCommit;
     }
 
+    /**
+     * Set the default auto-commit behavior of connections in the pool.
+     *
+     * @param isAutoCommit the desired auto-commit default for connections
+     */
     public void setAutoCommit(boolean isAutoCommit)
     {
         this.isAutoCommit = isAutoCommit;
     }
 
+    /**
+     * Get whether or not the construction of the pool should throw an exception
+     * if the minimum number of connections cannot be created.
+     *
+     * @return whether or not initialization should fail on error immediately
+     */
     public boolean isInitializationFailFast()
     {
         return isInitializationFailFast;
     }
 
+    /**
+     * Set whether or not the construction of the pool should throw an exception
+     * if the minimum number of connections cannot be created.
+     *
+     * @param failFast true if the pool should fail if the minimum connections cannot be created
+     */
     public void setInitializationFailFast(boolean failFast)
     {
         isInitializationFailFast = failFast;
+    }
+
+    public boolean isIsolateInternalQueries()
+    {
+        return isIsolateInternalQueries;
+    }
+
+    public void setIsolateInternalQueries(boolean isolate)
+    {
+        this.isIsolateInternalQueries = isolate;
     }
 
     public boolean isJdbc4ConnectionTest()
