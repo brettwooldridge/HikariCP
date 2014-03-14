@@ -43,11 +43,11 @@ Not all pools are created equal.  Read our [pool analysis](https://github.com/br
 
 #### Configuration (knobs, baby!)
 The following are the various properties that can be configured in the pool, their behavior,
-and their defaults.  **HikariCP uses milliseconds for *all* time values, be careful.**
+and their defaults.  Rather than coming out of the box with almost nothing configured, HikariCP
+comes with *sane* defaults that let a great many deployments run without any additional tweaking
+(except for the DataSource and DataSource properties).
 
-Rather than coming out of the box with almost nothing configured, HikariCP comes with *sane*
-defaults that let a great many deployments run without any additional tweaking (except for
-the DataSource and DataSource properties).
+<sup>:warning:</sup>&nbsp;*HikariCP uses milliseconds for *all* time values, be careful.*
 
 :hash:``acquireIncrement``<br/>
 This property controls the maximum number of connections that are acquired at one time, with
