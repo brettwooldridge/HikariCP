@@ -50,6 +50,7 @@ public abstract class StatementProxy implements Statement
     // **********************************************************************
 
     /** {@inheritDoc} */
+    @Override
     public final void close() throws SQLException
     {
         if (isClosed)
@@ -72,6 +73,7 @@ public abstract class StatementProxy implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public final ResultSet executeQuery(String sql) throws SQLException
     {
         try
@@ -86,6 +88,7 @@ public abstract class StatementProxy implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public final ResultSet getResultSet() throws SQLException
     {
         try
@@ -100,6 +103,7 @@ public abstract class StatementProxy implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public final ResultSet getGeneratedKeys() throws SQLException
     {
         try
@@ -114,6 +118,7 @@ public abstract class StatementProxy implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public final Connection getConnection() throws SQLException
     {
         return connection;

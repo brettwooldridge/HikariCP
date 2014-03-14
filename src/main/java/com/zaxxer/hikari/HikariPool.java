@@ -238,30 +238,35 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     // ***********************************************************************
     
     /** {@inheritDoc} */
+    @Override
     public int getActiveConnections()
     {
         return Math.min(configuration.getMaximumPoolSize(), totalConnections.get() - getIdleConnections());
     }
     
     /** {@inheritDoc} */
+    @Override
     public int getIdleConnections()
     {
         return idleConnectionBag.values(ConcurrentBag.STATE_NOT_IN_USE).size();
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getTotalConnections()
     {
         return totalConnections.get();
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getThreadsAwaitingConnection()
     {
         return idleConnectionBag.getPendingQueue();
     }
 
     /** {@inheritDoc} */
+    @Override
     public void closeIdleConnections()
     {
         List<IHikariConnectionProxy> list = idleConnectionBag.values(ConcurrentBag.STATE_NOT_IN_USE);
@@ -490,6 +495,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      */
     private class HouseKeeper extends TimerTask
     {
+        @Override
         public void run()
         {
             debug = LOGGER.isDebugEnabled();
