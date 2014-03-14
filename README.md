@@ -47,7 +47,7 @@ and their defaults.  Rather than coming out of the box with almost nothing confi
 comes with *sane* defaults that let a great many deployments run without any additional tweaking
 (except for the DataSource and DataSource properties).
 
-<sup>:warning:</sup>&nbsp;*HikariCP uses milliseconds for *all* time values, be careful.*
+<sup>:paperclip:</sup>&nbsp;*HikariCP uses milliseconds for all time values.*
 
 :hash:``acquireIncrement``<br/>
 This property controls the maximum number of connections that are acquired at one time, with
