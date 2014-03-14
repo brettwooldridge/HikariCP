@@ -14,13 +14,17 @@ There is nothing faster.  There is nothing more correct.  HikariCP is a "zero-ov
     </dependency>
 ```
 ----------------------------------------------------
+***Thank you!***<br/>
+We just wanted to say "Thank you!" for all of your support, as you can see you have all helped HikariCP off to a great start over the past few months. The momentum is here. The most valuable thing you can do to help HikariCP is to <sub><sub> [![](https://raw.github.com/wiki/brettwooldridge/HikariCP/twitter.png)](https://twitter.com/share?text=Interesting%20JDBC%20Connection%20Pool&hashtags=HikariCP&url=https%3A%2F%2Fgithub.com%2Fbrettwooldridge%2FHikariCP)</sub></sub> about it.
+
+![](https://github.com/brettwooldridge/HikariCP/wiki/Downloads.png)
+
+----------------------------------------------------
 ***JMH Benchmarks***<br/>
 
 Using the excellent [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team, extremely accurate microbenchmarks were created to isolate and measure the overhead of HikariCP and other popular pools.  You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
 
-<p align="center">
-  <img align="center" src="http://github.com/brettwooldridge/HikariCP/wiki/Benchmarks.png">
-</p>
+![](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks.png)
 
  * One *Connection Cycle* is defined as single ``DataSource.getConnection()``/``Connection.close()``.
    * In *Unconstrained* benchmark, connections > threads.
