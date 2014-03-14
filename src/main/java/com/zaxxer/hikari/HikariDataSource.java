@@ -65,6 +65,7 @@ public class HikariDataSource extends HikariConfig implements DataSource
     }
 
     /** {@inheritDoc} */
+    @Override
     public Connection getConnection() throws SQLException
     {
         if (isShutdown)
@@ -94,6 +95,7 @@ public class HikariDataSource extends HikariConfig implements DataSource
     }
 
     /** {@inheritDoc} */
+    @Override
     public Connection getConnection(String username, String password) throws SQLException
     {
         LOGGER.warn("getConnection() with username and password is not supported, calling getConnection() instead");
@@ -102,12 +104,14 @@ public class HikariDataSource extends HikariConfig implements DataSource
     }
 
     /** {@inheritDoc} */
+    @Override
     public PrintWriter getLogWriter() throws SQLException
     {
         return (pool.dataSource != null ? pool.dataSource.getLogWriter() : null);
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setLogWriter(PrintWriter out) throws SQLException
     {
         if (pool.dataSource != null)
@@ -117,24 +121,28 @@ public class HikariDataSource extends HikariConfig implements DataSource
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setLoginTimeout(int seconds) throws SQLException
     {
         this.loginTimeout = seconds;
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getLoginTimeout() throws SQLException
     {
         return loginTimeout;
     }
 
     /** {@inheritDoc} */
+    @Override
     public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException
     {
         throw new SQLFeatureNotSupportedException();
     }
 
     /** {@inheritDoc} */
+    @Override
     public <T> T unwrap(Class<T> iface) throws SQLException
     {
         // TODO Auto-generated method stub
@@ -142,6 +150,7 @@ public class HikariDataSource extends HikariConfig implements DataSource
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException
     {
         return (this.getClass().isAssignableFrom(iface));
