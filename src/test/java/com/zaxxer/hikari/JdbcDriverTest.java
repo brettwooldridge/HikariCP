@@ -15,6 +15,7 @@
  */
 package com.zaxxer.hikari;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.junit.Test;
@@ -35,6 +36,8 @@ public class JdbcDriverTest
         config.addDataSourceProperty("password", "simpson");
 
         HikariDataSource ds = new HikariDataSource(config);
+        Connection connection = ds.getConnection();
+        connection.close();
         ds.shutdown();
     }
 }
