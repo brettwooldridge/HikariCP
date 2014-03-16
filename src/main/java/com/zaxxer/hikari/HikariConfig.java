@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.proxy.JavassistProxyFactory;
+import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 public class HikariConfig implements HikariConfigMBean
@@ -56,13 +57,14 @@ public class HikariConfig implements HikariConfigMBean
 
     // Properties NOT changeable at runtime
     //
-    private String transactionIsolationName;
+    private String catalog;
     private String connectionCustomizerClassName;
     private String connectionInitSql;
     private String connectionTestQuery;
     private String dataSourceClassName;
-    private String catalog;
+    private String jdbcUrl;
     private String poolName;
+    private String transactionIsolationName;
     private boolean isAutoCommit;
     private boolean isReadOnly;
     private boolean isInitializationFailFast;
@@ -347,6 +349,19 @@ public class HikariConfig implements HikariConfigMBean
         dataSourceProperties.putAll(dsProperties);
     }
 
+    public void setDriverClassName(String driverClassName)
+    {
+        try
+        {
+            Class<?> driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
+            driverClass.newInstance();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException("driverClassName specified class '" + driverClassName + "' could not be loaded", e);
+        }
+    }
+
     /** {@inheritDoc} */
     public long getIdleTimeout()
     {
@@ -357,6 +372,16 @@ public class HikariConfig implements HikariConfigMBean
     public void setIdleTimeout(long idleTimeoutMs)
     {
         this.idleTimeout = idleTimeoutMs;
+    }
+
+    public String getJdbcUrl()
+    {
+        return jdbcUrl;
+    }
+
+    public void setJdbcUrl(String jdbcUrl)
+    {
+        this.jdbcUrl = jdbcUrl;
     }
 
     /**
@@ -575,7 +600,12 @@ public class HikariConfig implements HikariConfigMBean
         	connectionTimeout = CONNECTION_TIMEOUT;
         }
 
-        if (dataSource == null && dataSourceClassName == null)
+        if (jdbcUrl != null)
+        {
+            logger.info("Really, a JDBC URL?  It's time to party like it's 1999!");
+            dataSource = new DriverDataSource(jdbcUrl, dataSourceProperties);
+        }
+        else if (dataSource == null && dataSourceClassName == null)
         {
             logger.error("one of either dataSource or dataSourceClassName must be specified");
             throw new IllegalStateException("one of either dataSource or dataSourceClassName must be specified");

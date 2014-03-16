@@ -26,6 +26,8 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.zaxxer.hikari.util.DriverDataSource;
+
 /**
  * The HikariCP pooled DataSource.
  *
@@ -165,8 +167,14 @@ public class HikariDataSource extends HikariConfig implements DataSource
         if (!shutdown)
         {
             pool.shutdown();
-            pool = null;
         }
+
+        if (pool.dataSource instanceof DriverDataSource)
+        {
+            ((DriverDataSource) pool.dataSource).shutdown();
+        }
+
+        pool = null;
     }
 
     /** {@inheritDoc} */
