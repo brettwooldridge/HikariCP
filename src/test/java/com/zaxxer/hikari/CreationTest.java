@@ -160,7 +160,6 @@ public class CreationTest
         HikariConfig config = new HikariConfig();
         config.setMinimumPoolSize(1);
         config.setMaximumPoolSize(4);
-        config.setAcquireIncrement(2);
         config.setConnectionTimeout(500);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
@@ -208,8 +207,8 @@ public class CreationTest
 
             connection.close();
 
-            Assert.assertSame("Totals connections not as expected", 2, ds.pool.getTotalConnections());
-            Assert.assertSame("Idle connections not as expected", 2, ds.pool.getIdleConnections());
+            Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
+            Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
         }
         finally
         {

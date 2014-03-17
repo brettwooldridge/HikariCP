@@ -35,7 +35,8 @@ import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 public class HikariConfig implements HikariConfigMBean
 {
-    private static final long ACQUIRE_RETRY_DELAY = 750L;
+    private static final Logger LOGGER = LoggerFactory.getLogger(HikariConfig.class);
+
 	private static final long CONNECTION_TIMEOUT = 5000L;
 	private static final long IDLE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
 	private static final long MAX_LIFETIME = TimeUnit.MINUTES.toMillis(30);
@@ -44,9 +45,7 @@ public class HikariConfig implements HikariConfigMBean
 
     // Properties changeable at runtime through the MBean
     //
-    private volatile int acquireIncrement;
     private volatile int acquireRetries;
-    private volatile long acquireRetryDelay;
     private volatile long connectionTimeout;
     private volatile long idleTimeout;
     private volatile long leakDetectionThreshold;
@@ -84,9 +83,7 @@ public class HikariConfig implements HikariConfigMBean
     {
         dataSourceProperties = new Properties();
 
-        acquireIncrement = 1;
         acquireRetries = 3;
-        acquireRetryDelay = ACQUIRE_RETRY_DELAY;
         connectionTimeout = CONNECTION_TIMEOUT;
         idleTimeout = IDLE_TIMEOUT;
         isAutoCommit = true;
@@ -139,20 +136,14 @@ public class HikariConfig implements HikariConfigMBean
         }
     }
 
-    /** {@inheritDoc} */
     public int getAcquireIncrement()
     {
-        return acquireIncrement;
+        return 0;
     }
 
-    /** {@inheritDoc} */
     public void setAcquireIncrement(int acquireIncrement)
     {
-        if (acquireIncrement < 1)
-        {
-            throw new IllegalArgumentException("acquireRetries cannot be less than 1");
-        }
-        this.acquireIncrement = acquireIncrement;
+        LOGGER.warn("The acquireIncrement property has been retired, remove it from your pool configuration to avoid this warning.");
     }
 
     /** {@inheritDoc} */
@@ -171,20 +162,14 @@ public class HikariConfig implements HikariConfigMBean
         this.acquireRetries = acquireRetries;
     }
 
-    /** {@inheritDoc} */
     public long getAcquireRetryDelay()
     {
-        return acquireRetryDelay;
+        return 0;
     }
 
-    /** {@inheritDoc} */
     public void setAcquireRetryDelay(long acquireRetryDelayMs)
     {
-        if (acquireRetryDelayMs < 0)
-        {
-            throw new IllegalArgumentException("acquireRetryDelay cannot be negative");
-        }
-        this.acquireRetryDelay = acquireRetryDelayMs;
+        LOGGER.warn("The acquireRetryDelay property has been retired, remove it from your pool configuration to avoid this warning.");
     }
 
     public String getCatalog()
@@ -435,17 +420,6 @@ public class HikariConfig implements HikariConfigMBean
     public void validate()
     {
         Logger logger = LoggerFactory.getLogger(getClass());
-
-        if (acquireRetryDelay < 0)
-        {
-            logger.error("acquireRetryDelay cannot be negative.");
-            throw new IllegalStateException("acquireRetryDelay cannot be negative.");
-        }
-        else if (acquireRetryDelay < 100)
-        {
-            logger.warn("acquireRetryDelay is less than 100ms, did you specify the wrong time unit?  Using default instead.");
-            acquireRetryDelay = ACQUIRE_RETRY_DELAY;
-        }
 
         if (connectionCustomizerClassName != null && connectionCustomizer == null)
         {
