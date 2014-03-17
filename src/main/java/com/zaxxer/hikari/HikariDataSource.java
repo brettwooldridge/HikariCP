@@ -70,11 +70,6 @@ public class HikariDataSource extends HikariConfig implements DataSource
     @Override
     public Connection getConnection() throws SQLException
     {
-        if (isShutdown)
-        {
-        	throw new IllegalStateException("The datasource has been shutdown.");
-        }
-
         if (fastPathPool != null)
         {
         	return fastPathPool.getConnection();
@@ -180,9 +175,9 @@ public class HikariDataSource extends HikariConfig implements DataSource
             {
                 ((DriverDataSource) pool.dataSource).shutdown();
             }
+            
+            pool = null;
         }
-
-        pool = null;
     }
 
     /** {@inheritDoc} */
