@@ -337,17 +337,19 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     private void addConnection()
     {
         final int acquisitionTimeout = (int) configuration.getConnectionTimeout();
-        int retries = configuration.getAcquireRetries();
+        final int acquireRetries = configuration.getAcquireRetries();
         int loginTimeout = 2000;
-        if (retries == 0)
+        if (acquireRetries == 0)
         {
             loginTimeout = (acquisitionTimeout == 0 ? Integer.MAX_VALUE : acquisitionTimeout);
         }
         else if (acquisitionTimeout > 0)
         {
-            loginTimeout = (acquisitionTimeout / (retries + 1));
+            loginTimeout = (acquisitionTimeout / (acquireRetries + 1));
         }
 
+        long start = 0;
+        int retries = 0;
         while (!shutdown)
         {
             try
@@ -359,6 +361,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                     break;
                 }
 
+                start = System.currentTimeMillis();
                 dataSource.setLoginTimeout(loginTimeout);
                 Connection connection = dataSource.getConnection();
 
@@ -378,7 +381,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             }
             catch (Exception e)
             {
-                if (retries++ > configuration.getAcquireRetries())
+                if (retries++ > acquireRetries)
                 {
                     if (debug)
                     {
@@ -394,7 +397,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
                 try
                 {
-                    Thread.sleep(configuration.getAcquireRetryDelay());
+                    long sleep = loginTimeout - (System.currentTimeMillis() - start);
+                    if (sleep > 0)
+                    {
+                        Thread.sleep(sleep);
+                    }
                 }
                 catch (InterruptedException e1)
                 {
