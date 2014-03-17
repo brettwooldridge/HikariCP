@@ -175,7 +175,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             logPoolState();
 
         	String msg = String.format("Timeout of %dms encountered waiting for connection.", configuration.getConnectionTimeout());
-            LOGGER.error(msg);
+            LOGGER.warn(msg);
             logPoolState("Timeout failure ");
 
             throw new SQLException(msg);
@@ -213,11 +213,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
     void shutdown()
     {
-        LOGGER.info("HikariCP pool " + configuration.getPoolName() + " is being shutdown.");
-        logPoolState("State at shutdown ");
-
         shutdown = true;
         houseKeepingTimer.cancel();
+
+        LOGGER.info("HikariCP pool {} is being shutdown.", configuration.getPoolName());
+        logPoolState("State at shutdown ");
 
         closeIdleConnections();
 
@@ -347,34 +347,17 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 }
 
                 Connection connection = dataSource.getConnection();
-                
-                if (transactionIsolation < 0)
-                {
-                    transactionIsolation = connection.getTransactionIsolation();
-                }
 
+                transactionIsolation =  (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation); 
+                
                 if (connectionCustomizer != null)
                 {
                     connectionCustomizer.customize(connection);
                 }
 
+                executeInitSql(connection);
+
                 IHikariConnectionProxy proxyConnection = ProxyFactory.getProxyConnection(this, connection, transactionIsolation, isAutoCommit, isReadOnly, catalog);
-
-                String initSql = configuration.getConnectionInitSql();
-                if (initSql != null && initSql.length() > 0)
-                {
-                    connection.setAutoCommit(true);
-                    Statement statement = connection.createStatement();
-                    try
-                    {
-                        statement.execute(initSql);
-                    }
-                    finally
-                    {
-                    	statement.close();
-                    }
-                }
-
             	proxyConnection.resetConnectionState();
                 idleConnectionBag.add(proxyConnection);
                 break;
@@ -419,18 +402,17 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     {
         try
         {
-            try
+            if (timeoutMs < 1000)
             {
-                if (timeoutMs < 1000)
-                {
-                    timeoutMs = 1000;
-                }
+                timeoutMs = 1000;
+            }
 
-                if (jdbc4ConnectionTest)
-                {
-                    return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
-                }
-    
+            if (jdbc4ConnectionTest)
+            {
+                connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
+            }
+            else
+            {
                 Statement statement = connection.createStatement();
                 try
                 {
@@ -442,12 +424,10 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 	statement.close();
                 }
             }
-            finally
+
+            if (isIsolateInternalQueries && !isAutoCommit)
             {
-                if (isIsolateInternalQueries && !isAutoCommit)
-                {
-                    connection.rollback();
-                }
+                connection.rollback();
             }
 
             return true;
@@ -478,6 +458,29 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         finally
         {
             idleConnectionBag.remove(connectionProxy);
+        }
+    }
+
+    /**
+     * Execute the user-specified init SQL.
+     *
+     * @param connection the connection to initialize
+     * @throws SQLException throws if the init SQL execution fails
+     */
+    private void executeInitSql(Connection connection) throws SQLException
+    {
+        if (configuration.getConnectionInitSql() != null)
+        {
+            connection.setAutoCommit(true);
+            Statement statement = connection.createStatement();
+            try
+            {
+                statement.execute(configuration.getConnectionInitSql());
+            }
+            finally
+            {
+                statement.close();
+            }
         }
     }
 
