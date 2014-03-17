@@ -199,7 +199,9 @@ You can use the HikariConfig class like so:
 HikariConfig config = new HikariConfig();
 config.setMaximumPoolSize(100);
 config.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
-config.addDataSourceProperty("url", "jdbc:mysql://localhost/database");
+config.addDataSourceProperty("serverName", "localhost");
+config.addDataSourceProperty("port", "3306");
+config.addDataSourceProperty("databaseName", "mydb");
 config.addDataSourceProperty("user", "bart");
 config.addDataSourceProperty("password", "51mp50n");
 
@@ -241,7 +243,8 @@ Finally, you can skip the HikariConfig class altogether and configure the ``Hika
 HikariDataSource ds = new HikariDataSource();
 ds.setMaximumPoolSize(100);
 ds.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
-ds.addDataSourceProperty("url", "jdbc:mysql://localhost/database");
+ds.addDataSourceProperty("serverName", "localhost");
+ds.addDataSourceProperty("databaseName", "mydb");
 ds.addDataSourceProperty("user", "bart");
 ds.addDataSourceProperty("password", "51mp50n");
 ```
