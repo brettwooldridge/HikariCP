@@ -37,6 +37,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public <T> T unwrap(Class<T> iface) throws SQLException
     {
         checkClosed();
@@ -44,6 +45,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException
     {
         checkClosed();
@@ -51,6 +53,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public ResultSet executeQuery(String sql) throws SQLException
     {
         checkClosed();
@@ -59,6 +62,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public int executeUpdate(String sql) throws SQLException
     {
         checkClosed();
@@ -66,12 +70,14 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public void close() throws SQLException
     {
         closed = true;
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getMaxFieldSize() throws SQLException
     {
         checkClosed();
@@ -79,12 +85,14 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setMaxFieldSize(int max) throws SQLException
     {
         checkClosed();
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getMaxRows() throws SQLException
     {
         checkClosed();
@@ -92,18 +100,21 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setMaxRows(int max) throws SQLException
     {
         checkClosed();
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setEscapeProcessing(boolean enable) throws SQLException
     {
         checkClosed();
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getQueryTimeout() throws SQLException
     {
         checkClosed();
@@ -111,18 +122,21 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setQueryTimeout(int seconds) throws SQLException
     {
         checkClosed();
     }
 
     /** {@inheritDoc} */
+    @Override
     public void cancel() throws SQLException
     {
         checkClosed();
     }
 
     /** {@inheritDoc} */
+    @Override
     public SQLWarning getWarnings() throws SQLException
     {
         checkClosed();
@@ -130,18 +144,21 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public void clearWarnings() throws SQLException
     {
         checkClosed();
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setCursorName(String name) throws SQLException
     {
         checkClosed();
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean execute(String sql) throws SQLException
     {
         checkClosed();
@@ -149,6 +166,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public ResultSet getResultSet() throws SQLException
     {
         checkClosed();
@@ -156,6 +174,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getUpdateCount() throws SQLException
     {
         checkClosed();
@@ -163,6 +182,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean getMoreResults() throws SQLException
     {
         checkClosed();
@@ -170,12 +190,14 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setFetchDirection(int direction) throws SQLException
     {
         checkClosed();
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getFetchDirection() throws SQLException
     {
         checkClosed();
@@ -183,12 +205,14 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setFetchSize(int rows) throws SQLException
     {
         checkClosed();
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getFetchSize() throws SQLException
     {
         checkClosed();
@@ -196,6 +220,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getResultSetConcurrency() throws SQLException
     {
         checkClosed();
@@ -203,6 +228,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getResultSetType() throws SQLException
     {
         checkClosed();
@@ -210,18 +236,21 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public void addBatch(String sql) throws SQLException
     {
         checkClosed();
     }
 
     /** {@inheritDoc} */
+    @Override
     public void clearBatch() throws SQLException
     {
         checkClosed();
     }
 
     /** {@inheritDoc} */
+    @Override
     public int[] executeBatch() throws SQLException
     {
         checkClosed();
@@ -229,6 +258,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public Connection getConnection() throws SQLException
     {
         checkClosed();
@@ -236,6 +266,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean getMoreResults(int current) throws SQLException
     {
         checkClosed();
@@ -243,6 +274,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public ResultSet getGeneratedKeys() throws SQLException
     {
         checkClosed();
@@ -250,6 +282,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public int executeUpdate(String sql, int autoGeneratedKeys) throws SQLException
     {
         checkClosed();
@@ -257,6 +290,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public int executeUpdate(String sql, int[] columnIndexes) throws SQLException
     {
         checkClosed();
@@ -264,6 +298,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public int executeUpdate(String sql, String[] columnNames) throws SQLException
     {
         checkClosed();
@@ -271,6 +306,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean execute(String sql, int autoGeneratedKeys) throws SQLException
     {
         checkClosed();
@@ -278,6 +314,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean execute(String sql, int[] columnIndexes) throws SQLException
     {
         checkClosed();
@@ -285,6 +322,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean execute(String sql, String[] columnNames) throws SQLException
     {
         checkClosed();
@@ -292,6 +330,7 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getResultSetHoldability() throws SQLException
     {
         checkClosed();
@@ -299,18 +338,21 @@ public class StubStatement implements Statement
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean isClosed() throws SQLException
     {
         return closed;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setPoolable(boolean poolable) throws SQLException
     {
         checkClosed();
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean isPoolable() throws SQLException
     {
         checkClosed();

@@ -265,12 +265,14 @@ public class HikariConfig implements HikariConfigMBean
     }
 
     /** {@inheritDoc} */
+    @Override
     public long getConnectionTimeout()
     {
         return connectionTimeout;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setConnectionTimeout(long connectionTimeoutMs)
     {
         if (connectionTimeoutMs == 0)
@@ -348,12 +350,14 @@ public class HikariConfig implements HikariConfigMBean
     }
 
     /** {@inheritDoc} */
+    @Override
     public long getIdleTimeout()
     {
         return idleTimeout;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setIdleTimeout(long idleTimeoutMs)
     {
         this.idleTimeout = idleTimeoutMs;
@@ -452,12 +456,14 @@ public class HikariConfig implements HikariConfigMBean
     }
 
     /** {@inheritDoc} */
+    @Override
     public long getLeakDetectionThreshold()
     {
         return leakDetectionThreshold;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setLeakDetectionThreshold(long leakDetectionThresholdMs)
     {
         this.leakDetectionThreshold = leakDetectionThresholdMs; 
@@ -469,24 +475,28 @@ public class HikariConfig implements HikariConfigMBean
     }
 
     /** {@inheritDoc} */
+    @Override
     public long getMaxLifetime()
     {
         return maxLifetime;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setMaxLifetime(long maxLifetimeMs)
     {
         this.maxLifetime = maxLifetimeMs;
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getMinimumPoolSize()
     {
         return minPoolSize;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setMinimumPoolSize(int minPoolSize)
     {
         if (minPoolSize < 0)
@@ -497,12 +507,14 @@ public class HikariConfig implements HikariConfigMBean
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getMaximumPoolSize()
     {
         return maxPoolSize;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setMaximumPoolSize(int maxPoolSize)
     {
         if (maxPoolSize < 0)
@@ -513,6 +525,7 @@ public class HikariConfig implements HikariConfigMBean
     }
 
     /** {@inheritDoc} */
+    @Override
     public String getPoolName()
     {
         return poolName;

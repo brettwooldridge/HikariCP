@@ -511,6 +511,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      */
     private class HouseKeeper extends TimerTask
     {
+        @Override
         public void run()
         {
             debug = LOGGER.isDebugEnabled();

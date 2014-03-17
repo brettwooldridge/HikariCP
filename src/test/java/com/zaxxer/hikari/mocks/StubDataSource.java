@@ -55,23 +55,27 @@ public class StubDataSource implements DataSource
     }
 
     /** {@inheritDoc} */
+    @Override
     public PrintWriter getLogWriter() throws SQLException
     {
         return logWriter;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setLogWriter(PrintWriter out) throws SQLException
     {
         this.logWriter = out;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setLoginTimeout(int seconds) throws SQLException
     {
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getLoginTimeout() throws SQLException
     {
         return 0;
@@ -84,24 +88,28 @@ public class StubDataSource implements DataSource
     }
 
     /** {@inheritDoc} */
+    @Override
     public <T> T unwrap(Class<T> iface) throws SQLException
     {
         return null;
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException
     {
         return false;
     }
 
     /** {@inheritDoc} */
+    @Override
     public Connection getConnection() throws SQLException
     {
         return new StubConnection();
     }
 
     /** {@inheritDoc} */
+    @Override
     public Connection getConnection(String username, String password) throws SQLException
     {
         return new StubConnection();

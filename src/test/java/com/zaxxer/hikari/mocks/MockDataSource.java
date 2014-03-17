@@ -44,29 +44,35 @@ import org.mockito.stubbing.Answer;
  */
 public class MockDataSource implements DataSource
 {
+    @Override
     public Connection getConnection() throws SQLException
     {
         return createMockConnection();
     }
 
+    @Override
     public Connection getConnection(String username, String password) throws SQLException
     {
         return getConnection();
     }
 
+    @Override
     public PrintWriter getLogWriter() throws SQLException
     {
         return null;
     }
 
+    @Override
     public void setLogWriter(PrintWriter out) throws SQLException
     {
     }
 
+    @Override
     public void setLoginTimeout(int seconds) throws SQLException
     {
     }
 
+    @Override
     public int getLoginTimeout() throws SQLException
     {
         return 0;
@@ -77,11 +83,13 @@ public class MockDataSource implements DataSource
         return null;
     }
 
+    @Override
     public <T> T unwrap(Class<T> iface) throws SQLException
     {
         return null;
     }
 
+    @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException
     {
         return false;
@@ -110,6 +118,7 @@ public class MockDataSource implements DataSource
         when(mockConnection.prepareStatement(anyString(), anyInt(), anyInt())).thenReturn(mockPreparedStatement);
         when(mockConnection.prepareStatement(anyString(), anyInt(), anyInt(), anyInt())).thenReturn(mockPreparedStatement);
         doAnswer(new Answer<Void>() {
+            @Override
             public Void answer(InvocationOnMock invocation) throws Throwable
             {
                 return null;
