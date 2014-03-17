@@ -172,14 +172,14 @@ public class HikariDataSource extends HikariConfig implements DataSource
     {
         boolean shutdown = isShutdown;
         isShutdown = true;
-        if (!shutdown)
+        if (!shutdown && pool != null)
         {
             pool.shutdown();
-        }
-
-        if (pool.dataSource instanceof DriverDataSource)
-        {
-            ((DriverDataSource) pool.dataSource).shutdown();
+            
+            if (pool.dataSource instanceof DriverDataSource)
+            {
+                ((DriverDataSource) pool.dataSource).shutdown();
+            }
         }
 
         pool = null;
