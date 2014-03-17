@@ -281,19 +281,20 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             try
             {
                 final int size = openStatements.size();
-                for (int i = 0; i < size; i++)
-                {
-                    try
-                    {
-                        openStatements.get(i).close();
-                    }
-                    catch (SQLException e)
-                    {
-                        checkException(e);
-                    }
-                }
                 if (size > 0)
                 {
+                    for (int i = 0; i < size; i++)
+                    {
+                        try
+                        {
+                            openStatements.get(i).close();
+                        }
+                        catch (SQLException e)
+                        {
+                            checkException(e);
+                        }
+                    }
+
                     openStatements.clear();
                 }
 
