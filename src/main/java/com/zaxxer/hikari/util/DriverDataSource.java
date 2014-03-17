@@ -84,6 +84,7 @@ public final class DriverDataSource implements DataSource
         return loginTimeout;
     }
 
+    @Override
     public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException
     {
         throw new SQLFeatureNotSupportedException();
