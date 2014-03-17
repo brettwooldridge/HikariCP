@@ -24,22 +24,6 @@ package com.zaxxer.hikari;
 public interface HikariConfigMBean
 {
     /**
-     * This property controls the maximum number of connections that are acquired at one time,
-     * with the exception of pool initialization.
-     *
-     * @return the acquire increment
-     */
-    int getAcquireIncrement();
-
-    /**
-     * This property controls the maximum number of connections that are acquired at one time,
-     * with the exception of pool initialization.
-     *
-     * @param acquireIncrement the acquire increment
-     */
-    void setAcquireIncrement(int acquireIncrement);
-
-    /**
      * This is a per-connection attempt retry count used during new connection creation (acquisition).
      * If a connection creation attempt fails there will be a wait of {@link #getAcquireRetryDelay} milliseconds
      * followed by another attempt, up to the number of retries configured by this property.
@@ -56,14 +40,6 @@ public interface HikariConfigMBean
      * @param acquireRetries the acquire retry count
      */
     void setAcquireRetries(int acquireRetries);
-
-    /**
-     * This property controls the number of milliseconds to delay between attempts to acquire a connection
-     * to the database. If acquireRetries is 0, this property has no effect.
-     *
-     * @return the acquire retry delay in milliseconds
-     */
-    long getAcquireRetryDelay();
 
     /**
      * This property controls the number of milliseconds to delay between attempts to acquire a connection
