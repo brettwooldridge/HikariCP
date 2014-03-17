@@ -1,5 +1,19 @@
 HikariCP Changes
 
+Changes between 1.3.3 and 1.3.4
+
+ *) Added new property isolateInternalQueries used to control whether
+    internal pool queries such as connection alive tests are isolated
+    in their own transaction.
+
+ *) Added properties for DriverManager (driverClassName) and JDBC URL-based
+    (jdbcUrl) configuration.  1999 called and wants its JDBC driver back.
+
+ *) Added new property readOnly to control the default read-only status
+    of connections in the pool.
+
+ *) Various bug fixes and performance enhancements.
+
 Changes between 1.3.2 and 1.3.3
 
  *) Removed shared state contention that was causing excessive CPU cache-line
