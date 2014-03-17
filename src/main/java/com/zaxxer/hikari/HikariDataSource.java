@@ -75,6 +75,13 @@ public class HikariDataSource extends HikariConfig implements DataSource
         	return fastPathPool.getConnection();
         }
 
+        // We don't have to check this before fastPathPool because it will be handled
+        // in fastPathPool.getConnection(), but in the lazy init. case we must
+        if (isShutdown)
+        {
+            throw new SQLException("Pool has been shutdown");
+        }
+        
         HikariPool result = pool;
     	if (result == null)
     	{
