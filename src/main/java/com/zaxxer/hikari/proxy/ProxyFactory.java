@@ -33,7 +33,7 @@ public final class ProxyFactory
 {
     private ProxyFactory()
     {
-        // unconstrucable
+        // unconstructable
     }
 
     /**
