@@ -338,7 +338,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     {
         final int acquireTimeout = (int) configuration.getConnectionTimeout();
         final int acquireRetries = configuration.getAcquireRetries();
-        final int loginTimeout = Math.max((acquireRetries > 0 && acquireTimeout > 0) ? (acquireTimeout / (acquireRetries + 1)) : acquireTimeout, 50);
+        final int loginTimeout = (acquireRetries > 0 && acquireTimeout > 0) ? Math.max((acquireTimeout / (acquireRetries + 1)), 50) : acquireTimeout;
 
         for (int retries = 0; retries <= acquireRetries && !shutdown; retries++)
         {
