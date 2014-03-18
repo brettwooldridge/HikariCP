@@ -15,7 +15,7 @@ There is nothing faster.  There is nothing more correct.  HikariCP is a "zero-ov
 ```
 ----------------------------------------------------
 ***Thank you!***<br/>
-We just wanted to say "Thank you!" for all of your support. As you can see, you have all helped HikariCP off to a great start over the past few months. The momentum is here. The most valuable thing you can do to help HikariCP is to <sub><sub> [![](https://raw.github.com/wiki/brettwooldridge/HikariCP/twitter.png)](https://twitter.com/share?text=Interesting%20JDBC%20Connection%20Pool&hashtags=HikariCP&url=https%3A%2F%2Fgithub.com%2Fbrettwooldridge%2FHikariCP)</sub></sub> about it.
+We just wanted to say "Thank you!" for all of your support. As you can see, you have all helped HikariCP off to a great start over the past few months. The momentum is here.
 
 ![](https://github.com/brettwooldridge/HikariCP/wiki/Downloads.png)
 
