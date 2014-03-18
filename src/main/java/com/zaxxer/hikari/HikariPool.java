@@ -336,32 +336,22 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      */
     private void addConnection()
     {
-        final int acquisitionTimeout = (int) configuration.getConnectionTimeout();
+        final int acquireTimeout = (int) configuration.getConnectionTimeout();
         final int acquireRetries = configuration.getAcquireRetries();
-        int loginTimeout = 2000;
-        if (acquireRetries == 0)
-        {
-            loginTimeout = (acquisitionTimeout == 0 ? Integer.MAX_VALUE : acquisitionTimeout);
-        }
-        else if (acquisitionTimeout > 0)
-        {
-            loginTimeout = (acquisitionTimeout / (acquireRetries + 1));
-        }
+        final int loginTimeout = Math.max((acquireRetries > 0 && acquireTimeout > 0) ? (acquireTimeout / (acquireRetries + 1)) : acquireTimeout, 50);
 
-        long start = 0;
-        int retries = 0;
-        while (!shutdown)
+        for (int retries = 0; retries <= acquireRetries && !shutdown; retries++)
         {
+            long startMs = System.currentTimeMillis();
             try
             {
-                // Speculative increment of totalConnections with expectation of success
+                // Speculative increment of totalConnections with expectation of success (first time through)
                 if (retries == 0 && totalConnections.incrementAndGet() > configuration.getMaximumPoolSize())
                 {
                     totalConnections.decrementAndGet();
                     break;
                 }
 
-                start = System.currentTimeMillis();
                 dataSource.setLoginTimeout(loginTimeout);
                 Connection connection = dataSource.getConnection();
 
@@ -377,39 +367,22 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 IHikariConnectionProxy proxyConnection = ProxyFactory.getProxyConnection(this, connection, transactionIsolation, isAutoCommit, isReadOnly, catalog);
             	proxyConnection.resetConnectionState();
                 idleConnectionBag.add(proxyConnection);
-                break;
+                return;
             }
             catch (Exception e)
             {
-                if (retries++ > acquireRetries)
-                {
-                    if (debug)
-                    {
-                        LOGGER.error("Maximum connection creation retries exceeded: {}", e.getMessage(), e);
-                    }
-                    else
-                    {
-                        LOGGER.error("Maximum connection creation retries exceeded: {}", e.getMessage());
-                    }
-                    totalConnections.decrementAndGet();
-                    break;
-                }
+                LOGGER.warn("Maximum connection creation retries exceeded: {}", e.getMessage(), (debug ? e : null));
 
-                try
+                long delay = loginTimeout - (System.currentTimeMillis() - startMs);
+                if (retries < acquireRetries && !sleepQuietly(delay))
                 {
-                    long sleep = loginTimeout - (System.currentTimeMillis() - start);
-                    if (sleep > 0)
-                    {
-                        Thread.sleep(sleep);
-                    }
-                }
-                catch (InterruptedException e1)
-                {
-                    totalConnections.decrementAndGet();
                     break;
                 }
             }
         }
+
+        // We failed, so undo speculative increment of totalConnections
+        totalConnections.decrementAndGet();
     }
 
     /**
@@ -502,6 +475,22 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             {
                 statement.close();
             }
+        }
+    }
+
+    private boolean sleepQuietly(long delay)
+    {
+        try
+        {
+            if (delay > 0)
+            {
+                Thread.sleep(delay);
+            }
+            return true;
+        }
+        catch (InterruptedException e1)
+        {
+            return false;
         }
     }
 
