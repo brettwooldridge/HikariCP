@@ -473,9 +473,10 @@ public class HikariConfig implements HikariConfigMBean
         this.leakDetectionThreshold = leakDetectionThresholdMs; 
     }
 
+    @Deprecated
     public void setUseInstrumentation(boolean useInstrumentation)
     {
-        // no longer used as of HikariCP 1.2.5
+        LOGGER.warn("The useInstrumentation property has been retired, remove it from your pool configuration to avoid this warning.");
     }
 
     /** {@inheritDoc} */
