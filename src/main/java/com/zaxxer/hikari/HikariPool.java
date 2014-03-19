@@ -52,18 +52,19 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     private final HikariConfig configuration;
     private final ConcurrentBag<IHikariConnectionProxy> idleConnectionBag;
 
-    private final Timer houseKeepingTimer;
-
-    private final long leakDetectionThreshold;
-    private final AtomicInteger totalConnections;
     private final boolean isAutoCommit;
     private final boolean isIsolateInternalQueries;
     private final boolean isReadOnly;
     private final boolean isRegisteredMbeans;
     private final boolean jdbc4ConnectionTest;
+    private final long leakDetectionThreshold;
+    private final AtomicInteger totalConnections;
+    private final Timer houseKeepingTimer;
     private final String catalog; 
-    private int transactionIsolation;
+
     private volatile boolean shutdown;
+    private volatile long lastConnectionFailureTime;
+    private int transactionIsolation;
     private boolean debug;
 
     /**
@@ -349,7 +350,12 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             // We failed, so undo speculative increment of totalConnections
             totalConnections.decrementAndGet();
 
-            LOGGER.warn("Maximum connection creation retries exceeded: {}", e.getMessage(), (debug ? e : null));
+            long now = System.currentTimeMillis();
+            if (now - lastConnectionFailureTime > 1000 || debug)
+            {
+                LOGGER.warn("Connection attempt to database failed (not every attempt is logged): {}", e.getMessage(), (debug ? e : null));
+            }
+            lastConnectionFailureTime = now;
         }
     }
 
