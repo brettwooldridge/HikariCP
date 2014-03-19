@@ -146,10 +146,15 @@ public class HikariDataSource extends HikariConfig implements DataSource
 
     /** {@inheritDoc} */
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T unwrap(Class<T> iface) throws SQLException
     {
-        // TODO Auto-generated method stub
-        return null;
+        if (pool != null && iface.isInstance(pool.dataSource))
+        {
+            return (T) pool.dataSource;
+        }
+
+        throw new SQLException("Wrapped connection is not an instance of " + iface);
     }
 
     /** {@inheritDoc} */
