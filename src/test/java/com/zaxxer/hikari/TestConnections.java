@@ -40,6 +40,7 @@ public class TestConnections
         HikariConfig config = new HikariConfig();
         config.setMinimumPoolSize(1);
         config.setMaximumPoolSize(1);
+        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -84,6 +85,7 @@ public class TestConnections
         HikariConfig config = new HikariConfig();
         config.setMinimumPoolSize(1);
         config.setMaximumPoolSize(1);
+        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -135,6 +137,7 @@ public class TestConnections
         HikariConfig config = new HikariConfig();
         config.setMinimumPoolSize(1);
         config.setMaximumPoolSize(1);
+        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -158,6 +161,7 @@ public class TestConnections
         config.setMinimumPoolSize(1);
         config.setMaximumPoolSize(4);
         config.setConnectionTimeout(500);
+        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 

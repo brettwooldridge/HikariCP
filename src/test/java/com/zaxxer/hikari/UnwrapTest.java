@@ -36,6 +36,7 @@ public class UnwrapTest
         HikariConfig config = new HikariConfig();
         config.setMinimumPoolSize(1);
         config.setMaximumPoolSize(1);
+        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 

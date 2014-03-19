@@ -20,6 +20,7 @@ public class ExceptionTest
         HikariConfig config = new HikariConfig();
         config.setMinimumPoolSize(1);
         config.setMaximumPoolSize(2);
+        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -92,6 +93,7 @@ public class ExceptionTest
         HikariConfig config = new HikariConfig();
         config.setMinimumPoolSize(1);
         config.setMaximumPoolSize(2);
+        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
