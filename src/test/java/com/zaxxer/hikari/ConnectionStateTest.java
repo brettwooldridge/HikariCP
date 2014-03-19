@@ -15,7 +15,6 @@ public class ConnectionStateTest
         ds.setAutoCommit(true);
         ds.setMinimumPoolSize(1);
         ds.setMaximumPoolSize(1);
-        ds.setAcquireIncrement(1);
         ds.setConnectionTestQuery("VALUES 1");
         ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -43,7 +42,6 @@ public class ConnectionStateTest
         ds.setTransactionIsolation("TRANSACTION_READ_COMMITTED");
         ds.setMinimumPoolSize(1);
         ds.setMaximumPoolSize(1);
-        ds.setAcquireIncrement(1);
         ds.setConnectionTestQuery("VALUES 1");
         ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -71,7 +69,6 @@ public class ConnectionStateTest
         ds.setCatalog("test");
         ds.setMinimumPoolSize(1);
         ds.setMaximumPoolSize(1);
-        ds.setAcquireIncrement(1);
         ds.setConnectionTestQuery("VALUES 1");
         ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 

@@ -33,6 +33,7 @@ public class StubDataSource implements DataSource
     private String user;
     private String password;
     private PrintWriter logWriter;
+    private SQLException throwException;
 
     public String getUser()
     {
@@ -105,6 +106,11 @@ public class StubDataSource implements DataSource
     @Override
     public Connection getConnection() throws SQLException
     {
+        if (throwException != null)
+        {
+            throw throwException;
+        }
+
         return new StubConnection();
     }
 
@@ -113,5 +119,10 @@ public class StubDataSource implements DataSource
     public Connection getConnection(String username, String password) throws SQLException
     {
         return new StubConnection();
+    }
+
+    public void setThrowException(SQLException e)
+    {
+        this.throwException = e;
     }
 }
