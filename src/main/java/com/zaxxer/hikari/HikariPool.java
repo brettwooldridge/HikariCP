@@ -319,6 +319,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      */
     private void addConnection(final long loginTimeout)
     {
+        Connection connection = null;
         try
         {
             // Speculative increment of totalConnections with expectation of success (first time through)
@@ -329,7 +330,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             }
 
             dataSource.setLoginTimeout((int) loginTimeout);
-            Connection connection = dataSource.getConnection();
+            connection = dataSource.getConnection();
 
             transactionIsolation =  (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation); 
             
@@ -349,6 +350,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         {
             // We failed, so undo speculative increment of totalConnections
             totalConnections.decrementAndGet();
+            
+            if (connection != null)
+            {
+                quietlyCloseConnection(connection);
+            }
 
             long now = System.currentTimeMillis();
             if (now - lastConnectionFailureTime > 1000 || debug)
@@ -426,6 +432,18 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         finally
         {
             idleConnectionBag.remove(connectionProxy);
+        }
+    }
+
+    private void quietlyCloseConnection(Connection connection)
+    {
+        try
+        {
+            connection.close();
+        }
+        catch (SQLException e)
+        {
+            return;
         }
     }
 
