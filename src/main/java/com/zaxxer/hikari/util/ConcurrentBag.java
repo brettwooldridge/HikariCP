@@ -120,7 +120,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
         }
 
         // Otherwise, scan the shared list ... for maximum of timeoutMillis
-        final long retryTimeoutMs = (retries > 0 && timeoutMillis > 0) ? Math.max((timeoutMillis / (retries + 1)), 50) : timeoutMillis;
+        final long retryTimeoutMs = (retries > 0 && timeoutMillis > 0) ? Math.max((timeoutMillis / (retries + 1)), 100) : timeoutMillis;
         long totalTimeoutNs = TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
         boolean tryAddItem = true;
         while (totalTimeoutNs > 0)

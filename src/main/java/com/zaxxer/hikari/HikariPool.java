@@ -92,24 +92,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
         this.transactionIsolation = configuration.getTransactionIsolation();
 
-        if (configuration.getDataSource() == null)
-        {
-            String dsClassName = configuration.getDataSourceClassName();
-            try
-            {
-                Class<?> clazz = this.getClass().getClassLoader().loadClass(dsClassName);
-                this.dataSource = (DataSource) clazz.newInstance();
-                PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
-            }
-            catch (Exception e)
-            {
-                throw new RuntimeException("Could not create datasource instance: " + dsClassName, e);
-            }
-        }
-        else
-        {
-            this.dataSource = configuration.getDataSource();
-        }
+        this.dataSource = initializeDataSource();
 
         if (isRegisteredMbeans)
         {
@@ -120,8 +103,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
         fillPool();
 
-        long idleTimeout = configuration.getIdleTimeout();
-        if (idleTimeout > 0 || configuration.getMaxLifetime() > 0)
+        if (configuration.getIdleTimeout() > 0 || configuration.getMaxLifetime() > 0)
         {
             long delayPeriod = Long.getLong("com.zaxxer.hikari.housekeeping.period", TimeUnit.SECONDS.toMillis(30));
             houseKeepingTimer.scheduleAtFixedRate(new HouseKeeper(), delayPeriod, delayPeriod);
@@ -295,26 +277,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     // ***********************************************************************
 
     /**
-     * Fill the pool up to the minimum size.
-     */
-    private void fillPool()
-    {
-        // maxIters avoids an infinite loop filling the pool if no connections can be acquired
-        int maxIters = configuration.getMinimumPoolSize() * configuration.getAcquireRetries();
-        while (maxIters-- > 0 && totalConnections.get() < configuration.getMinimumPoolSize())
-        {
-            int beforeCount = totalConnections.get();
-            addConnection(configuration.getConnectionTimeout());
-            if (configuration.isInitializationFailFast() && beforeCount == totalConnections.get())
-            {
-                throw new RuntimeException("Fail-fast during pool initialization");
-            }
-        }
-
-        logPoolState("Initial fill ");
-    }
-
-    /**
      * Create and add a single connection to the pool.
      */
     private void addConnection(final long loginTimeout)
@@ -414,6 +376,40 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     }
 
     /**
+     * Fill the pool up to the minimum size.
+     */
+    private void fillPool()
+    {
+        TimerTask filler = new TimerTask() {
+            public void run()
+            {
+                // maxIters avoids an infinite loop filling the pool if no connections can be acquired
+                int maxIters = configuration.getMinimumPoolSize() * configuration.getAcquireRetries();
+                while (maxIters-- > 0 && totalConnections.get() < configuration.getMinimumPoolSize())
+                {
+                    int beforeCount = totalConnections.get();
+                    addConnection(configuration.getConnectionTimeout());
+                    if (configuration.isInitializationFailFast() && beforeCount == totalConnections.get())
+                    {
+                        throw new RuntimeException("Fail-fast during pool initialization");
+                    }
+                }
+                
+                logPoolState("Initial fill ");
+            }
+        };
+
+        if (configuration.isInitializationFailFast())
+        {
+            filler.run();
+        }
+        else
+        {
+            houseKeepingTimer.schedule(filler, 0);
+        }
+    }
+
+    /**
      * Permanently close a connection.
      *
      * @param connectionProxy the connection to actually close
@@ -468,6 +464,27 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 statement.close();
             }
         }
+    }
+
+    private DataSource initializeDataSource()
+    {
+        if (configuration.getDataSource() == null)
+        {
+            String dsClassName = configuration.getDataSourceClassName();
+            try
+            {
+                Class<?> clazz = this.getClass().getClassLoader().loadClass(dsClassName);
+                DataSource dataSource = (DataSource) clazz.newInstance();
+                PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
+                return dataSource;
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeException("Could not create datasource instance: " + dsClassName, e);
+            }
+        }
+
+        return configuration.getDataSource();
     }
 
     private void logPoolState(String... prefix)
