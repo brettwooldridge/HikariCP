@@ -140,11 +140,13 @@ public class HikariConfig implements HikariConfigMBean
         }
     }
 
+    @Deprecated
     public int getAcquireIncrement()
     {
         return 0;
     }
 
+    @Deprecated
     public void setAcquireIncrement(int acquireIncrement)
     {
         LOGGER.warn("The acquireIncrement property has been retired, remove it from your pool configuration to avoid this warning.");
@@ -166,11 +168,13 @@ public class HikariConfig implements HikariConfigMBean
         this.acquireRetries = acquireRetries;
     }
 
+    @Deprecated
     public long getAcquireRetryDelay()
     {
         return 0;
     }
 
+    @Deprecated
     public void setAcquireRetryDelay(long acquireRetryDelayMs)
     {
         LOGGER.warn("The acquireRetryDelay property has been retired, remove it from your pool configuration to avoid this warning.");

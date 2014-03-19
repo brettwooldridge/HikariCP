@@ -32,7 +32,7 @@ import org.junit.Test;
  *
  * @author Brett Wooldridge
  */
-public class CreationTest
+public class TestConnections
 {
     @Test
     public void testCreate() throws SQLException

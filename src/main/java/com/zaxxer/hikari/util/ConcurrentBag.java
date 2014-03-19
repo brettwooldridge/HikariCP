@@ -72,7 +72,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
 	 */
 	public interface IBagStateListener
 	{
-	    void bagIsEmpty();
+	    void addBagItem(long timeout);
 	}
 
     private ThreadLocal<LinkedList<WeakReference<T>>> threadList;
@@ -99,7 +99,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
      * @return a borrowed instance from the bag or null if a timeout occurs
      * @throws InterruptedException if interrupted while waiting
      */
-    public T borrow(long timeout, TimeUnit timeUnit) throws InterruptedException
+    public T borrow(int retries, long timeoutMillis) throws InterruptedException
     {
         // Try the thread-local list first
         LinkedList<WeakReference<T>> list = threadList.get();
@@ -120,9 +120,12 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
         }
 
         // Otherwise, scan the shared list ... for maximum of timeout
-        timeout = timeUnit.toNanos(timeout);
-        do {
-            final long startScan = System.nanoTime();
+        final long retryTimeout = (retries > 0 && timeoutMillis > 0) ? Math.max((timeoutMillis / (retries + 1)), 50) : timeoutMillis;
+        long totalTimeoutNs = TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
+        boolean tryAddItem = true;
+        while (totalTimeoutNs > 0)
+        {
+            final long startAttempt = System.nanoTime();
             for (T reference : sharedList)
             {
                 if (reference.compareAndSetState(STATE_NOT_IN_USE, STATE_IN_USE))
@@ -131,15 +134,34 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
                 }
             }
 
-            if (listener != null)
+            if (listener != null && tryAddItem)
             {
-                listener.bagIsEmpty();
+                listener.addBagItem(retryTimeout);
             }
 
-            synchronizer.tryAcquireSharedNanos(startScan, timeout);
+            totalTimeoutNs -= (System.nanoTime() - startAttempt);
+            final long startTryAcquire = System.nanoTime();
+            try
+            {
+                long timeoutNs = TimeUnit.MILLISECONDS.toNanos(retryTimeout) - (System.nanoTime() - startAttempt);
+                if (synchronizer.tryAcquireSharedNanos(startAttempt, timeoutNs))
+                {
+                    tryAddItem = false;
+                    continue;
+                }
+            }
+            finally
+            {
+                totalTimeoutNs -= (System.nanoTime() - startTryAcquire);
+            }
 
-            timeout -= (System.nanoTime() - startScan);
-        } while (timeout > 0);
+            if (retries-- == 0)
+            {
+                break;
+            }
+
+            tryAddItem = true;
+        }
 
         return null;
     }
@@ -163,7 +185,14 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
         if (value.compareAndSetState(STATE_IN_USE, STATE_NOT_IN_USE))
         {
         	final long returnTime = System.nanoTime();
-            threadList.get().addLast(new WeakReference<T>(value));
+        	LinkedList<WeakReference<T>> list = threadList.get();
+            if (list == null)
+            {
+                list = new LinkedList<WeakReference<T>>();
+                threadList.set(list);
+            }
+
+            list.addLast(new WeakReference<T>(value));
             synchronizer.releaseShared(returnTime);
         }
         else

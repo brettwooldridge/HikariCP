@@ -143,10 +143,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         try
         {
             long timeout = configuration.getConnectionTimeout();
+            final int retries = configuration.getAcquireRetries();
             final long start = System.currentTimeMillis();
             do
             {
-                IHikariConnectionProxy connectionProxy = idleConnectionBag.borrow(timeout, TimeUnit.MILLISECONDS);
+                IHikariConnectionProxy connectionProxy = idleConnectionBag.borrow(retries, timeout);
                 if (connectionProxy == null)
                 {
                     // We timed out... break and throw exception
@@ -234,9 +235,10 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
     /** {@inheritDoc} */
     @Override
-    public void bagIsEmpty()
+    public void addBagItem(long timeout)
     {
-        addConnections(AddConnectionStrategy.ONLY_IF_EMPTY);
+        // addConnections(AddConnectionStrategy.ONLY_IF_EMPTY);
+        addConnection(timeout);
     }
 
     // ***********************************************************************
@@ -301,7 +303,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         while (maxIters-- > 0 && totalConnections.get() < configuration.getMinimumPoolSize())
         {
             int beforeCount = totalConnections.get();
-            addConnection();
+            addConnection(configuration.getConnectionTimeout());
             if (configuration.isInitializationFailFast() && beforeCount == totalConnections.get())
             {
                 throw new RuntimeException("Fail-fast during pool initialization");
@@ -312,77 +314,43 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     }
 
     /**
-     * Add connections to the pool, not exceeding the maximum allowed.
-     */
-    private void addConnections(AddConnectionStrategy strategy)
-    {
-        switch (strategy)
-        {
-        case ONLY_IF_EMPTY:
-            addConnection();
-            break;
-        case MAINTAIN_MINIMUM:
-            final int min = configuration.getMinimumPoolSize();
-            for (int maxIterations = 0; maxIterations < min && totalConnections.get() < min; maxIterations++)
-            {
-                addConnection();
-            }
-            break;
-        }
-    }
-
-    /**
      * Create and add a single connection to the pool.
      */
-    private void addConnection()
+    private void addConnection(final long loginTimeout)
     {
-        final int acquireTimeout = (int) configuration.getConnectionTimeout();
-        final int acquireRetries = configuration.getAcquireRetries();
-        final int loginTimeout = (acquireRetries > 0 && acquireTimeout > 0) ? Math.max((acquireTimeout / (acquireRetries + 1)), 50) : acquireTimeout;
-
-        for (int retries = 0; retries <= acquireRetries && !shutdown; retries++)
+        try
         {
-            long startMs = System.currentTimeMillis();
-            try
+            // Speculative increment of totalConnections with expectation of success (first time through)
+            if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize())
             {
-                // Speculative increment of totalConnections with expectation of success (first time through)
-                if (retries == 0 && totalConnections.incrementAndGet() > configuration.getMaximumPoolSize())
-                {
-                    totalConnections.decrementAndGet();
-                    break;
-                }
-
-                dataSource.setLoginTimeout(loginTimeout);
-                Connection connection = dataSource.getConnection();
-
-                transactionIsolation =  (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation); 
-                
-                if (connectionCustomizer != null)
-                {
-                    connectionCustomizer.customize(connection);
-                }
-
-                executeInitSql(connection);
-
-                IHikariConnectionProxy proxyConnection = ProxyFactory.getProxyConnection(this, connection, transactionIsolation, isAutoCommit, isReadOnly, catalog);
-            	proxyConnection.resetConnectionState();
-                idleConnectionBag.add(proxyConnection);
+                totalConnections.decrementAndGet();
                 return;
             }
-            catch (Exception e)
+
+            dataSource.setLoginTimeout((int) loginTimeout);
+            Connection connection = dataSource.getConnection();
+
+            transactionIsolation =  (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation); 
+            
+            if (connectionCustomizer != null)
             {
-                LOGGER.warn("Maximum connection creation retries exceeded: {}", e.getMessage(), (debug ? e : null));
-
-                long delay = loginTimeout - (System.currentTimeMillis() - startMs);
-                if (retries < acquireRetries && !sleepQuietly(delay))
-                {
-                    break;
-                }
+                connectionCustomizer.customize(connection);
             }
-        }
 
-        // We failed, so undo speculative increment of totalConnections
-        totalConnections.decrementAndGet();
+            executeInitSql(connection);
+
+            IHikariConnectionProxy proxyConnection = ProxyFactory.getProxyConnection(this, connection, transactionIsolation, isAutoCommit, isReadOnly, catalog);
+        	proxyConnection.resetConnectionState();
+            idleConnectionBag.add(proxyConnection);
+            return;
+        }
+        catch (Exception e)
+        {
+            // We failed, so undo speculative increment of totalConnections
+            totalConnections.decrementAndGet();
+
+            LOGGER.warn("Maximum connection creation retries exceeded: {}", e.getMessage(), (debug ? e : null));
+        }
     }
 
     /**
@@ -478,22 +446,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         }
     }
 
-    private boolean sleepQuietly(long delay)
-    {
-        try
-        {
-            if (delay > 0)
-            {
-                Thread.sleep(delay);
-            }
-            return true;
-        }
-        catch (InterruptedException e1)
-        {
-            return false;
-        }
-    }
-
     private void logPoolState(String... prefix)
     {
         int total = totalConnections.get();
@@ -537,15 +489,14 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 }
             }
 
-            addConnections(AddConnectionStrategy.MAINTAIN_MINIMUM);
+            // TRY to maintain minimum connections (best effort, no retries) 
+            final int min = configuration.getMinimumPoolSize();
+            for (int maxIterations = 0; maxIterations < min && totalConnections.get() < min; maxIterations++)
+            {
+                addConnection(configuration.getConnectionTimeout());
+            }
 
             logPoolState("After pool cleanup ");
         }
-    }
-
-    private static enum AddConnectionStrategy
-    {
-        ONLY_IF_EMPTY,
-        MAINTAIN_MINIMUM
     }
 }
