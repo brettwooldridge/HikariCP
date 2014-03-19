@@ -60,9 +60,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     private final long leakDetectionThreshold;
     private final AtomicInteger totalConnections;
     private final Timer houseKeepingTimer;
-    private final String catalog; 
+    private final String catalog;
 
-    private volatile boolean shutdown;
+    private volatile boolean isShutdown;
     private volatile long lastConnectionFailureTime;
     private int transactionIsolation;
     private boolean debug;
@@ -118,11 +118,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      */
     Connection getConnection() throws SQLException
     {
-        if (shutdown)
-        {
-            throw new SQLException("Pool has been shutdown");
-        }
-
         try
         {
             long timeout = configuration.getConnectionTimeout();
@@ -159,7 +154,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
             logPoolState();
 
-        	String msg = String.format("Timeout of %dms encountered waiting for connection.", configuration.getConnectionTimeout());
+            String msg = String.format("Timeout of %dms encountered waiting for connection.", configuration.getConnectionTimeout());
             LOGGER.warn(msg);
             logPoolState("Timeout failure ");
 
@@ -179,7 +174,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      */
     public void releaseConnection(IHikariConnectionProxy connectionProxy)
     {
-        if (!connectionProxy.isBrokenConnection() && !shutdown)
+        if (!connectionProxy.isBrokenConnection() && !isShutdown)
         {
             idleConnectionBag.requite(connectionProxy);
         }
@@ -198,7 +193,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
     void shutdown()
     {
-        shutdown = true;
+        isShutdown = true;
         houseKeepingTimer.cancel();
 
         LOGGER.info("HikariCP pool {} is being shutdown.", configuration.getPoolName());
@@ -220,7 +215,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     @Override
     public void addBagItem(long timeout)
     {
-        // addConnections(AddConnectionStrategy.ONLY_IF_EMPTY);
         addConnection(timeout);
     }
 
@@ -263,12 +257,10 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         List<IHikariConnectionProxy> list = idleConnectionBag.values(ConcurrentBag.STATE_NOT_IN_USE);
         for (IHikariConnectionProxy connectionProxy : list)
         {
-            if (!idleConnectionBag.reserve(connectionProxy))
+            if (idleConnectionBag.reserve(connectionProxy))
             {
-                continue;
+                closeConnection(connectionProxy);
             }
-
-            closeConnection(connectionProxy);
         }
     }
 
@@ -294,8 +286,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             dataSource.setLoginTimeout((int) loginTimeout);
             connection = dataSource.getConnection();
 
-            transactionIsolation =  (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation); 
-            
+            transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
+
             if (connectionCustomizer != null)
             {
                 connectionCustomizer.customize(connection);
@@ -304,7 +296,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             executeInitSql(connection);
 
             IHikariConnectionProxy proxyConnection = ProxyFactory.getProxyConnection(this, connection, transactionIsolation, isAutoCommit, isReadOnly, catalog);
-        	proxyConnection.resetConnectionState();
+            proxyConnection.resetConnectionState();
             idleConnectionBag.add(proxyConnection);
             return;
         }
@@ -312,7 +304,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         {
             // We failed, so undo speculative increment of totalConnections
             totalConnections.decrementAndGet();
-            
+
             if (connection != null)
             {
                 quietlyCloseConnection(connection);
@@ -338,10 +330,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     {
         try
         {
-            if (timeoutMs < 1000)
-            {
-                timeoutMs = 1000;
-            }
+            timeoutMs = Math.max(1000, timeoutMs);
 
             if (jdbc4ConnectionTest)
             {
@@ -380,7 +369,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      */
     private void fillPool()
     {
-        TimerTask filler = new TimerTask() {
+        TimerTask filler = new TimerTask()
+        {
             public void run()
             {
                 // maxIters avoids an infinite loop filling the pool if no connections can be acquired
@@ -394,7 +384,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                         throw new RuntimeException("Fail-fast during pool initialization");
                     }
                 }
-                
+
                 logPoolState("Initial fill ");
             }
         };
@@ -520,14 +510,14 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 }
 
                 if ((idleTimeout > 0 && now > connectionProxy.getLastAccess() + idleTimeout)
-                        || (maxLifetime > 0 && now > connectionProxy.getCreationTime() + maxLifetime))
+                    ||
+                    (maxLifetime > 0 && now > connectionProxy.getCreationTime() + maxLifetime))
                 {
                     closeConnection(connectionProxy);
+                    continue;
                 }
-                else
-                {
-                    idleConnectionBag.unreserve(connectionProxy);
-                }
+
+                idleConnectionBag.unreserve(connectionProxy);
             }
 
             // TRY to maintain minimum connections (best effort, no retries) 
