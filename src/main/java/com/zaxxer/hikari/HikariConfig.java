@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.proxy.JavassistProxyFactory;
-import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 public class HikariConfig implements HikariConfigMBean
@@ -62,8 +61,10 @@ public class HikariConfig implements HikariConfigMBean
     private String connectionTestQuery;
     private String dataSourceClassName;
     private String jdbcUrl;
+    private String password;
     private String poolName;
     private String transactionIsolationName;
+    private String username;
     private boolean isAutoCommit;
     private boolean isReadOnly;
     private boolean isInitializationFailFast;
@@ -529,6 +530,24 @@ public class HikariConfig implements HikariConfigMBean
         this.maxPoolSize = maxPoolSize;
     }
 
+    /**
+     * Get the default password to use for DataSource.getConnection(username, password) calls.
+     * @return the password
+     */
+    public String getPassword()
+    {
+        return password;
+    }
+
+    /**
+     * Set the default password to use for DataSource.getConnection(username, password) calls.
+     * @param password the password
+     */
+    public void setPassword(String password)
+    {
+        this.password = password;
+    }
+
     /** {@inheritDoc} */
     @Override
     public String getPoolName()
@@ -564,9 +583,31 @@ public class HikariConfig implements HikariConfigMBean
         this.transactionIsolationName = isolationLevel;
     }
 
+    /**
+     * Get the default username used for DataSource.getConnection(username, password) calls.
+     *
+     * @return the username
+     */
+    public String getUsername()
+    {
+        return username;
+    }
+
+    /**
+     * Set the default username used for DataSource.getConnection(username, password) calls.
+     *
+     * @param username the username
+     */
+    public void setUsername(String username)
+    {
+        this.username = username;
+    }
+
     public void validate()
     {
         Logger logger = LoggerFactory.getLogger(getClass());
+
+        validateNumerics();
 
         if (connectionCustomizerClassName != null && connectionCustomizer == null)
         {
@@ -582,6 +623,45 @@ public class HikariConfig implements HikariConfigMBean
             }
         }
 
+        if (jdbcUrl != null)
+        {
+            logger.info("Really, a JDBC URL?  It's time to party like it's 1999!");
+        }
+        else if (dataSource == null && dataSourceClassName == null)
+        {
+            logger.error("one of either dataSource, dataSourceClassName, or jdbcUrl and driverClassName must be specified");
+            throw new IllegalArgumentException("one of either dataSource or dataSourceClassName must be specified");
+        }
+        else if (dataSource != null && dataSourceClassName != null)
+        {
+            logger.warn("both dataSource and dataSourceClassName are specified, ignoring dataSourceClassName");
+        }
+
+        if (!isJdbc4connectionTest && connectionTestQuery == null)
+        {
+            logger.error("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified.");
+            throw new IllegalStateException("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified.");
+        }
+
+        if (transactionIsolationName != null)
+        {
+            try
+            {
+                Field field = Connection.class.getField(transactionIsolationName);
+                int level = field.getInt(null);
+                this.transactionIsolation = level;
+            }
+            catch (Exception e)
+            {
+                throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
+            }
+        }
+    }
+
+    private void validateNumerics()
+    {
+        Logger logger = LoggerFactory.getLogger(getClass());
+
         if (connectionTimeout == Integer.MAX_VALUE)
         {
             logger.warn("No connection wait timeout is set, this might cause an infinite wait.");
@@ -589,39 +669,18 @@ public class HikariConfig implements HikariConfigMBean
         else if (connectionTimeout < TimeUnit.MILLISECONDS.toMillis(100))
         {
             logger.warn("connectionTimeout is less than 100ms, did you specify the wrong time unit?  Using default instead.");
-        	connectionTimeout = CONNECTION_TIMEOUT;
-        }
-
-        if (jdbcUrl != null)
-        {
-            logger.info("Really, a JDBC URL?  It's time to party like it's 1999!");
-            dataSource = new DriverDataSource(jdbcUrl, dataSourceProperties);
-        }
-        else if (dataSource == null && dataSourceClassName == null)
-        {
-            logger.error("one of either dataSource or dataSourceClassName must be specified");
-            throw new IllegalStateException("one of either dataSource or dataSourceClassName must be specified");
-        }
-        else if (dataSource != null && dataSourceClassName != null)
-        {
-            logger.warn("both dataSource and dataSourceClassName are specified, ignoring dataSourceClassName");
+            connectionTimeout = CONNECTION_TIMEOUT;
         }
 
         if (idleTimeout < 0)
         {
             logger.error("idleTimeout cannot be negative.");
-            throw new IllegalStateException("idleTimeout cannot be negative.");
+            throw new IllegalArgumentException("idleTimeout cannot be negative.");
         }
         else if (idleTimeout < TimeUnit.SECONDS.toMillis(30) && idleTimeout != 0)
         {
             logger.warn("idleTimeout is less than 30000ms, did you specify the wrong time unit?  Using default instead.");
             idleTimeout = IDLE_TIMEOUT;
-        }
-
-        if (!isJdbc4connectionTest && connectionTestQuery == null)
-        {
-            logger.error("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified.");
-            throw new IllegalStateException("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified.");
         }
 
         if (leakDetectionThreshold != 0 && leakDetectionThreshold < TimeUnit.SECONDS.toMillis(10))
@@ -639,7 +698,7 @@ public class HikariConfig implements HikariConfigMBean
         if (maxLifetime < 0)
         {
             logger.error("maxLifetime cannot be negative.");
-            throw new IllegalStateException("maxLifetime cannot be negative.");
+            throw new IllegalArgumentException("maxLifetime cannot be negative.");
         }
         else if (maxLifetime < TimeUnit.SECONDS.toMillis(120) && maxLifetime != 0)
         {
@@ -656,20 +715,6 @@ public class HikariConfig implements HikariConfigMBean
                             "in connectionTimeout({}ms) would result in sub-second values.  Using {}ms for connectionTimeout instead.",
                             acquireRetries, connectionTimeout, TimeUnit.SECONDS.toMillis(acquireRetries + 1));
                 connectionTimeout = TimeUnit.SECONDS.toMillis(acquireRetries + 1);
-            }
-        }
-
-        if (transactionIsolationName != null)
-        {
-            try
-            {
-                Field field = Connection.class.getField(transactionIsolationName);
-                int level = field.getInt(null);
-                this.transactionIsolation = level;
-            }
-            catch (Exception e)
-            {
-                throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
             }
         }
     }
