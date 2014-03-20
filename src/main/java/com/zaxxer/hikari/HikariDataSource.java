@@ -246,7 +246,7 @@ public class HikariDataSource extends HikariConfig implements DataSource
         @Override
         public int hashCode()
         {
-            return password.hashCode();
+            return (password == null ? 0 : password.hashCode());
         }
 
         @Override
