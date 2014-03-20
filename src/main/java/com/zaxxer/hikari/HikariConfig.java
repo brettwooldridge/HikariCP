@@ -586,7 +586,7 @@ public class HikariConfig implements HikariConfigMBean
         {
             logger.warn("No connection wait timeout is set, this might cause an infinite wait.");
         }
-        else if (connectionTimeout < 100)
+        else if (connectionTimeout < TimeUnit.MILLISECONDS.toMillis(100))
         {
             logger.warn("connectionTimeout is less than 100ms, did you specify the wrong time unit?  Using default instead.");
         	connectionTimeout = CONNECTION_TIMEOUT;
@@ -612,7 +612,7 @@ public class HikariConfig implements HikariConfigMBean
             logger.error("idleTimeout cannot be negative.");
             throw new IllegalStateException("idleTimeout cannot be negative.");
         }
-        else if (idleTimeout < 30000 && idleTimeout != 0)
+        else if (idleTimeout < TimeUnit.SECONDS.toMillis(30) && idleTimeout != 0)
         {
             logger.warn("idleTimeout is less than 30000ms, did you specify the wrong time unit?  Using default instead.");
             idleTimeout = IDLE_TIMEOUT;
@@ -624,7 +624,7 @@ public class HikariConfig implements HikariConfigMBean
             throw new IllegalStateException("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified.");
         }
 
-        if (leakDetectionThreshold != 0 && leakDetectionThreshold < 10000)
+        if (leakDetectionThreshold != 0 && leakDetectionThreshold < TimeUnit.SECONDS.toMillis(10))
         {
             logger.warn("leakDetectionThreshold is less than 10000ms, did you specify the wrong time unit?  Disabling leak detection.");
             leakDetectionThreshold = 0;
@@ -641,10 +641,22 @@ public class HikariConfig implements HikariConfigMBean
             logger.error("maxLifetime cannot be negative.");
             throw new IllegalStateException("maxLifetime cannot be negative.");
         }
-        else if (maxLifetime < 120000 && maxLifetime != 0)
+        else if (maxLifetime < TimeUnit.SECONDS.toMillis(120) && maxLifetime != 0)
         {
             logger.warn("maxLifetime is less than 120000ms, did you specify the wrong time unit?  Using default instead.");
             maxLifetime = MAX_LIFETIME;
+        }
+
+        if (acquireRetries > 0 && connectionTimeout > 0)
+        {
+            long retryTimeoutMs = (connectionTimeout / (acquireRetries + 1));
+            if (retryTimeoutMs < TimeUnit.SECONDS.toMillis(1))
+            {
+                logger.warn("JDBC setLoginTimeout() has a minimum resolution of 1 second, but requested acquireRetries({})" + 
+                            "in connectionTimeout({}ms) would result in sub-second values.  Using {}ms for connectionTimeout instead.",
+                            acquireRetries, connectionTimeout, TimeUnit.SECONDS.toMillis(acquireRetries));
+                connectionTimeout = TimeUnit.SECONDS.toMillis(acquireRetries);
+            }
         }
 
         if (transactionIsolationName != null)

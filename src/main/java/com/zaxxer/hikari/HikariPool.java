@@ -209,7 +209,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     @Override
     public void addBagItem(long timeout)
     {
-        addConnection(timeout);
+        addConnection(TimeUnit.MILLISECONDS.toSeconds(timeout));
     }
 
     // ***********************************************************************
