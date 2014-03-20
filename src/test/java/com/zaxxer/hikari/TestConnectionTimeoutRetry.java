@@ -61,7 +61,7 @@ public class TestConnectionTimeoutRetry
         final StubDataSource stubDataSource = ds.unwrap(StubDataSource.class);
         stubDataSource.setThrowException(new SQLException("Connection refused"));
 
-        final long timePerTry = config.getConnectionTimeout() / (config.getAcquireRetries() + 1);
+        final long timePerTry = Math.max(config.getConnectionTimeout() / (config.getAcquireRetries() + 1), 1000);
         
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         scheduler.schedule(new Runnable() {
@@ -78,7 +78,8 @@ public class TestConnectionTimeoutRetry
             connection.close();
 
             long elapsed = System.currentTimeMillis() - start;
-            Assert.assertTrue("Waited too long to get a connection.", (elapsed >= timePerTry * 3) && (elapsed < config.getConnectionTimeout()));
+            Assert.assertTrue("Connection returned too quickly, something is wrong.", elapsed >= timePerTry * 3);
+            Assert.assertTrue("Waited too long to get a connection.", elapsed < config.getConnectionTimeout());
         }
         catch (SQLException e)
         {
