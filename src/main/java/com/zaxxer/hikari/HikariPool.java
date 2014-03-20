@@ -34,6 +34,7 @@ import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
+import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 /**
@@ -71,7 +72,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
     HikariPool(HikariConfig configuration)
     {
-        this(configuration, null, null);
+        this(configuration, configuration.getUsername(), configuration.getPassword());
     }
 
     /**
@@ -456,9 +457,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
     private DataSource initializeDataSource()
     {
-        if (configuration.getDataSource() == null)
+        String dsClassName = configuration.getDataSourceClassName();
+        if (configuration.getDataSource() == null && dsClassName != null)
         {
-            String dsClassName = configuration.getDataSourceClassName();
             try
             {
                 Class<?> clazz = this.getClass().getClassLoader().loadClass(dsClassName);
@@ -470,6 +471,10 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             {
                 throw new RuntimeException("Could not create datasource instance: " + dsClassName, e);
             }
+        }
+        else if (configuration.getJdbcUrl() != null)
+        {
+            return new DriverDataSource(configuration.getJdbcUrl(), configuration.getDataSourceProperties(), username, password);
         }
 
         return configuration.getDataSource();
