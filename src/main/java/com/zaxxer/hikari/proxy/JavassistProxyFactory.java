@@ -56,6 +56,7 @@ public final class JavassistProxyFactory
         }
         catch (Exception e)
         {
+            LoggerFactory.getLogger(JavassistProxyFactory.class).error("Fatal exception during proxy generation", e);
         	throw new RuntimeException(e);
         }
     }
