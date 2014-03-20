@@ -20,7 +20,7 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
 import javax.sql.DataSource;
 
@@ -33,11 +33,11 @@ import com.zaxxer.hikari.util.DriverDataSource;
  */
 public class HikariDataSource extends HikariConfig implements DataSource
 {
+    private final HashMap<MultiPoolKey, HikariPool> multiPool;
     private volatile boolean isShutdown;
     private int loginTimeout;
 
     /* Package scopped for testing */
-    ConcurrentHashMap<String, HikariPool> multiPool;
     final HikariPool fastPathPool;
     volatile HikariPool pool;
 
@@ -51,7 +51,7 @@ public class HikariDataSource extends HikariConfig implements DataSource
     {
     	super();
     	fastPathPool = null;
-    	multiPool = new ConcurrentHashMap<String, HikariPool>();
+    	multiPool = new HashMap<MultiPoolKey, HikariPool>();
     }
 
     /**
@@ -63,8 +63,9 @@ public class HikariDataSource extends HikariConfig implements DataSource
     {
         configuration.validate();
     	configuration.copyState(this);
-        multiPool = new ConcurrentHashMap<String, HikariPool>();
+        multiPool = new HashMap<MultiPoolKey, HikariPool>();
     	pool = fastPathPool = new HikariPool(this);
+    	multiPool.put(new MultiPoolKey(getUsername(), getPassword()), pool);
     }
 
     /** {@inheritDoc} */
@@ -81,6 +82,7 @@ public class HikariDataSource extends HikariConfig implements DataSource
         	return fastPathPool.getConnection();
         }
 
+        // See http://en.wikipedia.org/wiki/Double-checked_locking#Usage_in_Java
         HikariPool result = pool;
     	if (result == null)
     	{
@@ -91,6 +93,7 @@ public class HikariDataSource extends HikariConfig implements DataSource
     			{
     			    validate();
     				pool = result = new HikariPool(this);
+    		        multiPool.put(new MultiPoolKey(getUsername(), getPassword()), pool);
     			}
     		}
     	}
@@ -107,14 +110,16 @@ public class HikariDataSource extends HikariConfig implements DataSource
             throw new SQLException("Pool has been shutdown");
         }
 
+        final MultiPoolKey key = new MultiPoolKey(username, password);
+
         HikariPool hikariPool;
         synchronized (multiPool)
         {
-            hikariPool = multiPool.get(username + password);
+            hikariPool = multiPool.get(key);
             if (hikariPool == null)
             {
                 hikariPool = new HikariPool(this, username, password);
-                multiPool.put(username + password, hikariPool);
+                multiPool.put(key, hikariPool);
             }
         }
 
@@ -225,5 +230,47 @@ public class HikariDataSource extends HikariConfig implements DataSource
     public String toString()
     {
         return String.format("HikariDataSource (%s)", pool);
+    }
+
+    private static class MultiPoolKey
+    {
+        private String username;
+        private String password;
+
+        MultiPoolKey(String username, String password)
+        {
+            this.username = username;
+            this.password = password;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return password.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            MultiPoolKey otherKey = ((MultiPoolKey) obj);
+            if (username != null && !username.equals(otherKey.username))
+            {
+                return false;
+            }
+            else if (username != otherKey.username)
+            {
+                return false;
+            }
+            else if (password != null && !password.equals(otherKey.password))
+            {
+                return false;
+            }
+            else if (password != otherKey.password)
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
 }
