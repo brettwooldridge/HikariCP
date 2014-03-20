@@ -20,11 +20,9 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.sql.DataSource;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.util.DriverDataSource;
 
@@ -35,12 +33,12 @@ import com.zaxxer.hikari.util.DriverDataSource;
  */
 public class HikariDataSource extends HikariConfig implements DataSource
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(HikariDataSource.class);
-
     private volatile boolean isShutdown;
     private int loginTimeout;
 
-    HikariPool fastPathPool;
+    /* Package scopped for testing */
+    ConcurrentHashMap<String, HikariPool> multiPool;
+    final HikariPool fastPathPool;
     volatile HikariPool pool;
 
     /**
@@ -52,6 +50,8 @@ public class HikariDataSource extends HikariConfig implements DataSource
     public HikariDataSource()
     {
     	super();
+    	fastPathPool = null;
+    	multiPool = new ConcurrentHashMap<String, HikariPool>();
     }
 
     /**
@@ -63,6 +63,7 @@ public class HikariDataSource extends HikariConfig implements DataSource
     {
         configuration.validate();
     	configuration.copyState(this);
+        multiPool = new ConcurrentHashMap<String, HikariPool>();
     	pool = fastPathPool = new HikariPool(this);
     }
 
@@ -101,9 +102,23 @@ public class HikariDataSource extends HikariConfig implements DataSource
     @Override
     public Connection getConnection(String username, String password) throws SQLException
     {
-        LOGGER.warn("getConnection() with username and password is not supported, calling getConnection() instead");
+        if (isShutdown)
+        {
+            throw new SQLException("Pool has been shutdown");
+        }
 
-        return getConnection();
+        HikariPool hikariPool;
+        synchronized (multiPool)
+        {
+            hikariPool = multiPool.get(username + password);
+            if (hikariPool == null)
+            {
+                hikariPool = new HikariPool(this, username, password);
+                multiPool.put(username + password, hikariPool);
+            }
+        }
+
+        return hikariPool.getConnection();
     }
 
     /** {@inheritDoc} */
@@ -176,18 +191,32 @@ public class HikariDataSource extends HikariConfig implements DataSource
      */
     public void shutdown()
     {
-        boolean shutdown = isShutdown;
+        if (isShutdown)
+        {
+            return;
+        }
+
         isShutdown = true;
-        if (!shutdown && pool != null)
+        
+        if (pool != null)
         {
             pool.shutdown();
-            
             if (pool.dataSource instanceof DriverDataSource)
             {
                 ((DriverDataSource) pool.dataSource).shutdown();
             }
-            
-            pool = null;
+        }
+
+        if (!multiPool.isEmpty())
+        {
+            for (HikariPool hikariPool : multiPool.values())
+            {
+                hikariPool.shutdown();
+                if (hikariPool.dataSource instanceof DriverDataSource)
+                {
+                    ((DriverDataSource) hikariPool.dataSource).shutdown();
+                }
+            }
         }
     }
 

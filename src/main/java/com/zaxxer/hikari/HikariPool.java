@@ -61,20 +61,29 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     private final AtomicInteger totalConnections;
     private final Timer houseKeepingTimer;
     private final String catalog;
+    private final String username;
+    private final String password;
 
     private volatile boolean isShutdown;
     private volatile long lastConnectionFailureTime;
     private int transactionIsolation;
     private boolean isDebug;
 
+    HikariPool(HikariConfig configuration)
+    {
+        this(configuration, null, null);
+    }
+
     /**
      * Construct a HikariPool with the specified configuration.
      *
      * @param configuration a HikariConfig instance
      */
-    HikariPool(HikariConfig configuration)
+    HikariPool(HikariConfig configuration, String username, String password)
     {
         this.configuration = configuration;
+        this.username = username;
+        this.password = password;
         this.totalConnections = new AtomicInteger();
         this.idleConnectionBag = new ConcurrentBag<IHikariConnectionProxy>();
         this.idleConnectionBag.addBagStateListener(this);
@@ -276,7 +285,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             }
 
             dataSource.setLoginTimeout((int) loginTimeout);
-            connection = dataSource.getConnection();
+            connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);  
 
             transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
 
