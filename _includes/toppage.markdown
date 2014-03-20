@@ -12,7 +12,7 @@ And how does it achieve such incredible performance?  If you're really technical
 minded, read [here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).  Otherwise, just drop it
 in and let your code run like its pants are on fire.
 
-### Maven Respository ###
+### Maven Repository ###
 
     <dependency>
         <groupId>com.zaxxer</groupId>
