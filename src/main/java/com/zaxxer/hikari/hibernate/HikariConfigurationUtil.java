@@ -47,6 +47,8 @@ public class HikariConfigurationUtil
         copyProperty(AvailableSettings.AUTOCOMMIT, props, "autoCommit", hikariProps);
         copyProperty(AvailableSettings.DRIVER, props, "driverClassName", hikariProps);
         copyProperty(AvailableSettings.URL, props, "jdbcUrl", hikariProps);
+        copyProperty(AvailableSettings.USER, props, "username", hikariProps);
+        copyProperty(AvailableSettings.PASS, props, "password", hikariProps);
 
         for (Object keyo : props.keySet())
         {
