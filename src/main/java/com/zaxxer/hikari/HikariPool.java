@@ -74,8 +74,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      */
     HikariPool(HikariConfig configuration)
     {
-        configuration.validate();
-
         this.configuration = configuration;
         this.totalConnections = new AtomicInteger();
         this.idleConnectionBag = new ConcurrentBag<IHikariConnectionProxy>();

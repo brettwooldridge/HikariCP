@@ -61,7 +61,7 @@ public class HikariDataSource extends HikariConfig implements DataSource
      */
     public HikariDataSource(HikariConfig configuration)
     {
-    	super();
+        configuration.validate();
     	configuration.copyState(this);
     	pool = fastPathPool = new HikariPool(this);
     }
@@ -88,6 +88,7 @@ public class HikariDataSource extends HikariConfig implements DataSource
     			result = pool;
     			if (result == null)
     			{
+    			    validate();
     				pool = result = new HikariPool(this);
     			}
     		}
