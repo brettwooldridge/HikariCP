@@ -148,7 +148,7 @@
                   <Bundle-Name>HikariCP</Bundle-Name>
                   <Export-Package>com.zaxxer.hikari</Export-Package>
                   <Import-Package>
-                     com.sun.tools.attach,javassist.*,
+                     javassist.*,
                      javax.management,
                      javax.sql,
                      javax.sql.rowset,
