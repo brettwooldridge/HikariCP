@@ -652,10 +652,10 @@ public class HikariConfig implements HikariConfigMBean
             long retryTimeoutMs = (connectionTimeout / (acquireRetries + 1));
             if (retryTimeoutMs < TimeUnit.SECONDS.toMillis(1))
             {
-                logger.warn("JDBC setLoginTimeout() has a minimum resolution of 1 second, but requested acquireRetries({})" + 
+                logger.warn("JDBC setLoginTimeout() has a minimum resolution of 1 second, but requested acquireRetries({}) " + 
                             "in connectionTimeout({}ms) would result in sub-second values.  Using {}ms for connectionTimeout instead.",
-                            acquireRetries, connectionTimeout, TimeUnit.SECONDS.toMillis(acquireRetries));
-                connectionTimeout = TimeUnit.SECONDS.toMillis(acquireRetries);
+                            acquireRetries, connectionTimeout, TimeUnit.SECONDS.toMillis(acquireRetries + 1));
+                connectionTimeout = TimeUnit.SECONDS.toMillis(acquireRetries + 1);
             }
         }
 
