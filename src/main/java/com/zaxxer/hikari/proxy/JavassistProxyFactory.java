@@ -49,21 +49,14 @@ public final class JavassistProxyFactory
 
     static
     {
-    	ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         try
         {
-        	Thread.currentThread().setContextClassLoader(JavassistProxyFactory.class.getClassLoader());
-        	
         	JavassistProxyFactory proxyFactoryFactory = new JavassistProxyFactory();
         	proxyFactoryFactory.modifyProxyFactory();
         }
         catch (Exception e)
         {
         	throw new RuntimeException(e);
-        }
-        finally
-        {
-        	Thread.currentThread().setContextClassLoader(contextClassLoader);
         }
     }
 
