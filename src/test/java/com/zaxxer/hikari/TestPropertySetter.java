@@ -50,4 +50,17 @@ public class TestPropertySetter
 
         Assert.assertSame(PrintWriter.class, dataSource.getLogWriter().getClass());
     }
+
+    @Test
+    public void testPropertyUpperCase() throws Exception
+    {
+        File file = new File("src/test/resources/propfile3.properties");
+        HikariConfig config = new HikariConfig(file.getPath());
+        config.validate();
+
+        Class<?> clazz = this.getClass().getClassLoader().loadClass(config.getDataSourceClassName());
+        DataSource dataSource = (DataSource) clazz.newInstance();
+        PropertyBeanSetter.setTargetFromProperties(dataSource, config.getDataSourceProperties());
+    }
+
 }

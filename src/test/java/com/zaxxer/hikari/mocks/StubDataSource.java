@@ -55,6 +55,11 @@ public class StubDataSource implements DataSource
         this.password = password;
     }
 
+    public void setURL(String url)
+    {
+        // we don't care
+    }
+
     /** {@inheritDoc} */
     @Override
     public PrintWriter getLogWriter() throws SQLException
