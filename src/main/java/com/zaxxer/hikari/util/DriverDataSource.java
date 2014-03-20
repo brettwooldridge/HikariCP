@@ -29,17 +29,25 @@ public final class DriverDataSource implements DataSource
 {
     private final Driver driver;
     private final String jdbcUrl;
-    private final Properties properties;
+    private final Properties driverProperties;
 
     private PrintWriter logWriter;
     private int loginTimeout;
 
-    public DriverDataSource(String jdbcUrl, Properties properties)
+    public DriverDataSource(String jdbcUrl, Properties properties, String username, String password)
     {
         try
         {
             this.jdbcUrl = jdbcUrl;
-            this.properties = properties;
+            this.driverProperties = new Properties(properties);
+            if (username != null)
+            {
+                driverProperties.put("user", driverProperties.getProperty("user", username));
+            }
+            if (password != null)
+            {
+                driverProperties.put("password", driverProperties.getProperty("password", password));
+            }
             this.driver = DriverManager.getDriver(jdbcUrl);
         }
         catch (SQLException e)
@@ -51,13 +59,13 @@ public final class DriverDataSource implements DataSource
     @Override
     public Connection getConnection() throws SQLException
     {
-        return driver.connect(jdbcUrl, properties);
+        return driver.connect(jdbcUrl, driverProperties);
     }
 
     @Override
     public Connection getConnection(String username, String password) throws SQLException
     {
-        throw new SQLFeatureNotSupportedException("getConnection() with username and password is not supported");
+        return getConnection();
     }
 
     @Override
