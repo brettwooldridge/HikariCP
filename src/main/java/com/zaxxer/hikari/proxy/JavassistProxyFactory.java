@@ -73,7 +73,7 @@ public final class JavassistProxyFactory
     {
         classPool = new ClassPool();
         classPool.importPackage("java.sql");
-        classPool.appendClassPath(new LoaderClassPath(this.getClass().getClassLoader()));
+        classPool.appendClassPath(new LoaderClassPath(ClassLoaderUtils.getClassLoader()));
 
         try
         {
