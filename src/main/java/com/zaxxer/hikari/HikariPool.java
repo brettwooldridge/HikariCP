@@ -22,8 +22,6 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,6 +36,7 @@ import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.DriverDataSource;
+import com.zaxxer.hikari.util.PoolUtilities;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 /**
@@ -114,7 +113,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
         houseKeepingTimer = new Timer("Hikari Housekeeping Timer", true);
 
-        addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize());
+        addConnectionExecutor = PoolUtilities.createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler");
 
         fillPool();
         
@@ -237,7 +236,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                     }
                     else if (!addConnection())
                     {
-                        quietlySleep(sleepBackoff);
+                        PoolUtilities.quietlySleep(sleepBackoff);
                         sleepBackoff = (int) Math.min(1000f, ((float) sleepBackoff) * 1.5);
                         continue;
                     }
@@ -327,7 +326,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 connectionCustomizer.customize(connection);
             }
 
-            executeInitSql(connection);
+            PoolUtilities.executeSqlAutoCommit(connection, configuration.getConnectionInitSql());
 
             IHikariConnectionProxy proxyConnection = ProxyFactory.getProxyConnection(this, connection, transactionIsolation, isAutoCommit, isReadOnly, catalog);
             proxyConnection.resetConnectionState();
@@ -341,7 +340,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
             if (connection != null)
             {
-                quietlyCloseConnection(connection);
+                PoolUtilities.quietlyCloseConnection(connection);
             }
 
             long now = System.currentTimeMillis();
@@ -442,41 +441,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         }
     }
 
-    private void quietlyCloseConnection(Connection connection)
-    {
-        try
-        {
-            connection.close();
-        }
-        catch (SQLException e)
-        {
-            return;
-        }
-    }
-
-    /**
-     * Execute the user-specified init SQL.
-     *
-     * @param connection the connection to initialize
-     * @throws SQLException throws if the init SQL execution fails
-     */
-    private void executeInitSql(Connection connection) throws SQLException
-    {
-        if (configuration.getConnectionInitSql() != null)
-        {
-            connection.setAutoCommit(true);
-            Statement statement = connection.createStatement();
-            try
-            {
-                statement.execute(configuration.getConnectionInitSql());
-            }
-            finally
-            {
-                statement.close();
-            }
-        }
-    }
-
     private DataSource initializeDataSource()
     {
         String dsClassName = configuration.getDataSourceClassName();
@@ -500,36 +464,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         }
 
         return configuration.getDataSource();
-    }
-
-    private ThreadPoolExecutor createThreadPoolExecutor(int queueSize)
-    {
-        ThreadFactory threadFactory = new ThreadFactory() {
-            public Thread newThread(Runnable r)
-            {
-                Thread t = new Thread(r, "HikariCP connection filler");
-                t.setDaemon(true);
-                return t;
-            }
-        };
-
-        int processors = Runtime.getRuntime().availableProcessors();
-        LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>(queueSize);
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(processors, processors, 10, TimeUnit.SECONDS, queue, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
-        executor.allowCoreThreadTimeOut(true);
-        return executor;
-    }
-
-    private void quietlySleep(int millis)
-    {
-        try
-        {
-            Thread.sleep(millis);
-        }
-        catch (InterruptedException e)
-        {
-            throw new RuntimeException(e);
-        }
     }
 
     private void logPoolState(String... prefix)
