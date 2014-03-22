@@ -9,10 +9,33 @@ Changes between 1.3.3 and 1.3.4
  *) Added properties for DriverManager (driverClassName) and JDBC URL-based
     (jdbcUrl) configuration.  1999 called and wants its JDBC driver back.
 
+ *) Added new username and password properties to allow default authentication
+    for connections.
+
+ *) Added support for the getConnection(username, password) method signature
+    to HikariDataSource.
+
  *) Added new property readOnly to control the default read-only status
     of connections in the pool.
 
- *) Various bug fixes and performance enhancements.
+ *) Deprecated acquireIncrement property.
+
+ *) Deprecated acquireRetries property.
+
+ *) Deprecated acquireRetryDelay property.
+
+ *) Deprecated minimumPoolSize property.
+
+ *) Deprecated minimumPoolSize property.
+
+ *) Added new property minimumIdle used to control the minimum number of
+    idle connections the pool should try to maintain on a running basis.
+
+ *) Added evictConnection(Connection) method to HikariDataSource to allow
+    special cases where users wish to forcibly eject a connection from
+    the pool.  To use used cautiously, read the JavaDoc before using.
+
+ *) Various bug fixes and minor enhancements.
 
 Changes between 1.3.2 and 1.3.3
 
