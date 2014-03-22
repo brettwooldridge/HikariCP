@@ -38,7 +38,8 @@ public class TestConnectionTimeoutRetry
         catch (SQLException e)
         {
             long elapsed = System.currentTimeMillis() - start;
-            Assert.assertTrue("Didn't wait long enough for timeout", (elapsed > config.getConnectionTimeout()));
+            long timeout = config.getConnectionTimeout();
+            Assert.assertTrue("Didn't wait long enough for timeout", (elapsed >= timeout));
         }
         finally
         {
