@@ -17,7 +17,6 @@ package com.zaxxer.hikari.util;
 
 import java.io.PrintWriter;
 import java.sql.Connection;
-import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -27,12 +26,10 @@ import javax.sql.DataSource;
 
 public final class DriverDataSource implements DataSource
 {
-    private final Driver driver;
     private final String jdbcUrl;
     private final Properties driverProperties;
 
     private PrintWriter logWriter;
-    private int loginTimeout;
 
     public DriverDataSource(String jdbcUrl, Properties properties, String username, String password)
     {
@@ -48,7 +45,11 @@ public final class DriverDataSource implements DataSource
             {
                 driverProperties.put("password", driverProperties.getProperty("password", password));
             }
-            this.driver = DriverManager.getDriver(jdbcUrl);
+
+            if (DriverManager.getDriver(jdbcUrl) == null)
+            {
+                throw new IllegalArgumentException("DriverManager was unable to load driver for URL " + jdbcUrl);
+            }
         }
         catch (SQLException e)
         {
@@ -59,7 +60,7 @@ public final class DriverDataSource implements DataSource
     @Override
     public Connection getConnection() throws SQLException
     {
-        return driver.connect(jdbcUrl, driverProperties);
+        return DriverManager.getConnection(jdbcUrl, driverProperties);
     }
 
     @Override
@@ -83,13 +84,13 @@ public final class DriverDataSource implements DataSource
     @Override
     public void setLoginTimeout(int seconds) throws SQLException
     {
-        loginTimeout = seconds;
+        DriverManager.setLoginTimeout(seconds);
     }
 
     @Override
     public int getLoginTimeout() throws SQLException
     {
-        return loginTimeout;
+        return DriverManager.getLoginTimeout();
     }
 
     public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException
@@ -111,16 +112,5 @@ public final class DriverDataSource implements DataSource
 
     public void shutdown()
     {
-        if (driver.getClass().getClassLoader() == this.getClass().getClassLoader())
-        {
-            try
-            {
-                DriverManager.deregisterDriver(driver);
-            }
-            catch (SQLException e)
-            {
-                // eat it
-            }
-        }
     }
 }
