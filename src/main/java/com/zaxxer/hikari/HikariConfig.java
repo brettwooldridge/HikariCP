@@ -59,6 +59,7 @@ public class HikariConfig implements HikariConfigMBean
     private String connectionInitSql;
     private String connectionTestQuery;
     private String dataSourceClassName;
+    private String driverClassName;
     private String jdbcUrl;
     private String password;
     private String poolName;
@@ -324,6 +325,7 @@ public class HikariConfig implements HikariConfigMBean
         {
             Class<?> driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
             driverClass.newInstance();
+            this.driverClassName = driverClassName;
         }
         catch (Exception e)
         {
@@ -606,9 +608,15 @@ public class HikariConfig implements HikariConfigMBean
             }
         }
 
-        if (jdbcUrl != null)
+        if (driverClassName != null && jdbcUrl == null)
         {
-            logger.info("Really, a JDBC URL?  It's time to party like it's 1999!");
+            logger.error("when specifying driverClassName, jdbcUrl must also be specified");
+            throw new IllegalStateException("when specifying driverClassName, jdbcUrl must also be specified");
+        }
+        else if (jdbcUrl != null && driverClassName == null)
+        {
+            logger.error("when specifying jdbcUrl, driverClassName must also be specified");
+            throw new IllegalStateException("when specifying jdbcUrl, driverClassName must also be specified");
         }
         else if (dataSource == null && dataSourceClassName == null)
         {
@@ -622,8 +630,8 @@ public class HikariConfig implements HikariConfigMBean
 
         if (!isJdbc4connectionTest && connectionTestQuery == null)
         {
-            logger.error("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified.");
-            throw new IllegalStateException("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified.");
+            logger.error("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified");
+            throw new IllegalStateException("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified");
         }
 
         if (transactionIsolationName != null)
@@ -647,28 +655,28 @@ public class HikariConfig implements HikariConfigMBean
 
         if (connectionTimeout == Integer.MAX_VALUE)
         {
-            logger.warn("No connection wait timeout is set, this might cause an infinite wait.");
+            logger.warn("No connection wait timeout is set, this might cause an infinite wait");
         }
         else if (connectionTimeout < TimeUnit.MILLISECONDS.toMillis(100))
         {
-            logger.warn("connectionTimeout is less than 100ms, did you specify the wrong time unit?  Using default instead.");
+            logger.warn("connectionTimeout is less than 100ms, did you specify the wrong time unit?  Using default instead");
             connectionTimeout = CONNECTION_TIMEOUT;
         }
 
         if (idleTimeout < 0)
         {
             logger.error("idleTimeout cannot be negative.");
-            throw new IllegalArgumentException("idleTimeout cannot be negative.");
+            throw new IllegalArgumentException("idleTimeout cannot be negative");
         }
         else if (idleTimeout < TimeUnit.SECONDS.toMillis(30) && idleTimeout != 0)
         {
-            logger.warn("idleTimeout is less than 30000ms, did you specify the wrong time unit?  Using default instead.");
+            logger.warn("idleTimeout is less than 30000ms, did you specify the wrong time unit?  Using default instead");
             idleTimeout = IDLE_TIMEOUT;
         }
 
         if (leakDetectionThreshold != 0 && leakDetectionThreshold < TimeUnit.SECONDS.toMillis(10))
         {
-            logger.warn("leakDetectionThreshold is less than 10000ms, did you specify the wrong time unit?  Disabling leak detection.");
+            logger.warn("leakDetectionThreshold is less than 10000ms, did you specify the wrong time unit?  Disabling leak detection");
             leakDetectionThreshold = 0;
         }
 
