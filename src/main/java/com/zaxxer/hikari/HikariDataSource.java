@@ -24,6 +24,7 @@ import java.util.HashMap;
 
 import javax.sql.DataSource;
 
+import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.util.DriverDataSource;
 
 /**
@@ -181,6 +182,21 @@ public class HikariDataSource extends HikariConfig implements DataSource
     public boolean isWrapperFor(Class<?> iface) throws SQLException
     {
         return (this.getClass().isAssignableFrom(iface));
+    }
+
+    /**
+     * Evict a connection from the pool.  Use caution using this method, if you
+     * evict the same connection more than one time, the internal pool accounting
+     * will become invalid and the pool may stop functioning.
+     *
+     * @param connection the connection to evict from the pool
+     */
+    public void evictConnection(Connection connection)
+    {
+        if (!isShutdown && pool != null && connection instanceof IHikariConnectionProxy)
+        {
+            pool.closeConnection((IHikariConnectionProxy) connection);
+        }
     }
 
     /**
