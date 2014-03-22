@@ -12,7 +12,7 @@ public class RampUpDown
     public void rampUpDownTest() throws SQLException, InterruptedException
     {
         HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(5);
+        config.setMinimumIdle(5);
         config.setMaximumPoolSize(60);
         config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");

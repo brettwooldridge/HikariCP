@@ -13,7 +13,7 @@ public class ConnectionStateTest
     {
         HikariDataSource ds = new HikariDataSource();
         ds.setAutoCommit(true);
-        ds.setMinimumPoolSize(1);
+        ds.setMinimumIdle(1);
         ds.setMaximumPoolSize(1);
         ds.setConnectionTestQuery("VALUES 1");
         ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
@@ -40,7 +40,7 @@ public class ConnectionStateTest
     {
         HikariDataSource ds = new HikariDataSource();
         ds.setTransactionIsolation("TRANSACTION_READ_COMMITTED");
-        ds.setMinimumPoolSize(1);
+        ds.setMinimumIdle(1);
         ds.setMaximumPoolSize(1);
         ds.setConnectionTestQuery("VALUES 1");
         ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
@@ -67,7 +67,7 @@ public class ConnectionStateTest
     {
         HikariDataSource ds = new HikariDataSource();
         ds.setCatalog("test");
-        ds.setMinimumPoolSize(1);
+        ds.setMinimumIdle(1);
         ds.setMaximumPoolSize(1);
         ds.setConnectionTestQuery("VALUES 1");
         ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");

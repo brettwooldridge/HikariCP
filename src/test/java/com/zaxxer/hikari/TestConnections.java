@@ -38,7 +38,7 @@ public class TestConnections
     public void testCreate() throws SQLException
     {
         HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(1);
+        config.setMinimumIdle(1);
         config.setMaximumPoolSize(1);
         config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
@@ -83,7 +83,7 @@ public class TestConnections
     public void testMaxLifetime() throws Exception
     {
         HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(1);
+        config.setMinimumIdle(1);
         config.setMaximumPoolSize(1);
         config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
@@ -113,10 +113,12 @@ public class TestConnections
     
             Connection connection2 = ds.getConnection();
             Assert.assertSame("Expected the same connection", connection, connection2);
+            Assert.assertSame("Second total connections not as expected", 1, ds.pool.getTotalConnections());
+            Assert.assertSame("Second idle connections not as expected", 0, ds.pool.getIdleConnections());
             connection2.close();
-            
+
             Thread.sleep(2000);
-    
+
             connection2 = ds.getConnection();
             Assert.assertNotSame("Expected a different connection", connection, connection2);
     
@@ -135,7 +137,7 @@ public class TestConnections
     public void testDoubleClose() throws Exception
     {
         HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(1);
+        config.setMinimumIdle(1);
         config.setMaximumPoolSize(1);
         config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
@@ -158,7 +160,7 @@ public class TestConnections
     public void testBackfill() throws Exception
     {
         HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(1);
+        config.setMinimumIdle(1);
         config.setMaximumPoolSize(4);
         config.setConnectionTimeout(500);
         config.setInitializationFailFast(true);
@@ -200,12 +202,8 @@ public class TestConnections
             Assert.assertSame("Totals connections not as expected", 0, ds.pool.getTotalConnections());
             Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
 
-            // This will create a new connection, and cause a backfill
+            // This will cause a backfill
             connection = ds.getConnection();
-
-            // Wait for scheduled backfill to execute
-            Thread.sleep(600);
-
             connection.close();
 
             Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());

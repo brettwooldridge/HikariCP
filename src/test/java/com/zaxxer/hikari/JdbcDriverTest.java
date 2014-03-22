@@ -26,7 +26,7 @@ public class JdbcDriverTest
     public void driverTest1() throws SQLException
     {
         HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(1);
+        config.setMinimumIdle(1);
         config.setMaximumPoolSize(1);
         config.setConnectionTestQuery("VALUES 1");
         config.setDriverClassName("com.zaxxer.hikari.mocks.StubDriver");

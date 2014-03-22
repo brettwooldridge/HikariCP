@@ -34,7 +34,7 @@ public class UnwrapTest
     public void testUnwrapConnection() throws SQLException
     {
         HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(1);
+        config.setMinimumIdle(1);
         config.setMaximumPoolSize(1);
         config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");

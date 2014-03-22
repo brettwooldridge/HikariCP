@@ -20,7 +20,7 @@ public class TestPropertySetter
         HikariConfig config = new HikariConfig(file.getPath());
         config.validate();
 
-        Assert.assertEquals(5, config.getAcquireRetries());
+        Assert.assertEquals(5, config.getMinimumIdle());
         Assert.assertEquals("SELECT 1", config.getConnectionTestQuery());
     }
 
