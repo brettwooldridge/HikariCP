@@ -92,7 +92,7 @@ public class HikariConfig implements HikariConfigMBean
         idleTimeout = IDLE_TIMEOUT;
         isAutoCommit = true;
         isJdbc4connectionTest = true;
-        minIdle = 0;
+        minIdle = -1;
         maxPoolSize = 32;
         maxLifetime = MAX_LIFETIME;
         poolName = "HikariPool-" + poolNumber++;
@@ -665,6 +665,11 @@ public class HikariConfig implements HikariConfigMBean
         {
             logger.warn("connectionTimeout is less than 250ms, did you specify the wrong time unit?  Using default instead");
             connectionTimeout = CONNECTION_TIMEOUT;
+        }
+
+        if (minIdle < 0)
+        {
+            minIdle = maxPoolSize;
         }
 
         if (idleTimeout < 0)
