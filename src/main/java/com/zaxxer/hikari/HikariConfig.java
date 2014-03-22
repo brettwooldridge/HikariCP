@@ -661,9 +661,9 @@ public class HikariConfig implements HikariConfigMBean
         {
             logger.warn("No connection wait timeout is set, this might cause an infinite wait");
         }
-        else if (connectionTimeout < TimeUnit.MILLISECONDS.toMillis(100))
+        else if (connectionTimeout < TimeUnit.MILLISECONDS.toMillis(250))
         {
-            logger.warn("connectionTimeout is less than 100ms, did you specify the wrong time unit?  Using default instead");
+            logger.warn("connectionTimeout is less than 250ms, did you specify the wrong time unit?  Using default instead");
             connectionTimeout = CONNECTION_TIMEOUT;
         }
 
