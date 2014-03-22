@@ -618,6 +618,10 @@ public class HikariConfig implements HikariConfigMBean
             logger.error("when specifying jdbcUrl, driverClassName must also be specified");
             throw new IllegalStateException("when specifying jdbcUrl, driverClassName must also be specified");
         }
+        else if (driverClassName != null && jdbcUrl != null)
+        {
+            // OK
+        }
         else if (dataSource == null && dataSourceClassName == null)
         {
             logger.error("one of either dataSource, dataSourceClassName, or jdbcUrl and driverClassName must be specified");
