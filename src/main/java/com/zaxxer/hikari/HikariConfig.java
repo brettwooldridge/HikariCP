@@ -45,13 +45,12 @@ public class HikariConfig implements HikariConfigMBean
 
     // Properties changeable at runtime through the MBean
     //
-    private volatile int acquireRetries;
     private volatile long connectionTimeout;
     private volatile long idleTimeout;
     private volatile long leakDetectionThreshold;
     private volatile long maxLifetime;
     private volatile int maxPoolSize;
-    private volatile int minPoolSize;
+    private volatile int minIdle;
 
     // Properties NOT changeable at runtime
     //
@@ -88,13 +87,12 @@ public class HikariConfig implements HikariConfigMBean
     {
         dataSourceProperties = new Properties();
 
-        acquireRetries = 3;
         connectionTimeout = CONNECTION_TIMEOUT;
         idleTimeout = IDLE_TIMEOUT;
         isAutoCommit = true;
         isJdbc4connectionTest = true;
-        minPoolSize = 10;
-        maxPoolSize = 60;
+        minIdle = 0;
+        maxPoolSize = 32;
         maxLifetime = MAX_LIFETIME;
         poolName = "HikariPool-" + poolNumber++;
         transactionIsolation = -1;
@@ -142,37 +140,16 @@ public class HikariConfig implements HikariConfigMBean
     }
 
     @Deprecated
-    public int getAcquireIncrement()
-    {
-        return 0;
-    }
-
-    @Deprecated
     public void setAcquireIncrement(int acquireIncrement)
     {
         LOGGER.warn("The acquireIncrement property has been retired, remove it from your pool configuration to avoid this warning.");
     }
 
     /** {@inheritDoc} */
-    public int getAcquireRetries()
-    {
-        return acquireRetries;
-    }
-
-    /** {@inheritDoc} */
+    @Deprecated
     public void setAcquireRetries(int acquireRetries)
     {
-        if (acquireRetries < 0)
-        {
-            throw new IllegalArgumentException("acquireRetries cannot be negative");
-        }
-        this.acquireRetries = acquireRetries;
-    }
-
-    @Deprecated
-    public long getAcquireRetryDelay()
-    {
-        return 0;
+        LOGGER.warn("The acquireRetries property has been retired, remove it from your pool configuration to avoid this warning.");
     }
 
     @Deprecated
@@ -494,22 +471,10 @@ public class HikariConfig implements HikariConfigMBean
         this.maxLifetime = maxLifetimeMs;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public int getMinimumPoolSize()
-    {
-        return minPoolSize;
-    }
-
-    /** {@inheritDoc} */
-    @Override
+    @Deprecated
     public void setMinimumPoolSize(int minPoolSize)
     {
-        if (minPoolSize < 0)
-        {
-            throw new IllegalArgumentException("minPoolSize cannot be negative");
-        }
-        this.minPoolSize = minPoolSize;
+        LOGGER.warn("The minimumPoolSize property has been retired, remove it from your pool configuration to avoid this warning.");
     }
 
     /** {@inheritDoc} */
@@ -528,6 +493,24 @@ public class HikariConfig implements HikariConfigMBean
             throw new IllegalArgumentException("maxPoolSize cannot be negative");
         }
         this.maxPoolSize = maxPoolSize;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int getMinimumIdle()
+    {
+        return minIdle;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setMinimumIdle(int minIdle)
+    {
+        if (minIdle < 0 || minIdle > maxPoolSize)
+        {
+            throw new IllegalArgumentException("maxPoolSize cannot be negative or greater than maximumPoolSize");
+        }
+        this.minIdle = minIdle;
     }
 
     /**
@@ -689,12 +672,6 @@ public class HikariConfig implements HikariConfigMBean
             leakDetectionThreshold = 0;
         }
 
-        if (maxPoolSize < minPoolSize)
-        {
-            logger.warn("maxPoolSize is less than minPoolSize, forcing them equal.");
-            maxPoolSize = minPoolSize;
-        }
-
         if (maxLifetime < 0)
         {
             logger.error("maxLifetime cannot be negative.");
@@ -704,18 +681,6 @@ public class HikariConfig implements HikariConfigMBean
         {
             logger.warn("maxLifetime is less than 120000ms, did you specify the wrong time unit?  Using default instead.");
             maxLifetime = MAX_LIFETIME;
-        }
-
-        if (acquireRetries > 0 && connectionTimeout > 0)
-        {
-            long retryTimeoutMs = (connectionTimeout / (acquireRetries + 1));
-            if (retryTimeoutMs < TimeUnit.SECONDS.toMillis(1))
-            {
-                logger.warn("JDBC setLoginTimeout() has a minimum resolution of 1 second, but requested acquireRetries({}) " + 
-                            "in connectionTimeout({}ms) would result in sub-second values.  Using {}ms for connectionTimeout instead.",
-                            acquireRetries, connectionTimeout, TimeUnit.SECONDS.toMillis(acquireRetries + 1));
-                connectionTimeout = TimeUnit.SECONDS.toMillis(acquireRetries + 1);
-            }
         }
     }
 

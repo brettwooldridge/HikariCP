@@ -24,32 +24,6 @@ package com.zaxxer.hikari;
 public interface HikariConfigMBean
 {
     /**
-     * This is a per-connection attempt retry count used during new connection creation (acquisition).
-     * If a connection creation attempt fails there will be a wait of {@link #getAcquireRetryDelay} milliseconds
-     * followed by another attempt, up to the number of retries configured by this property.
-     * 
-     * @return the acquire retry count
-     */
-    int getAcquireRetries();
-
-    /**
-     * This is a per-connection attempt retry count used during new connection creation (acquisition).
-     * If a connection creation attempt fails there will be a wait of {@link #setAcquireRetryDelay} milliseconds
-     * followed by another attempt, up to the number of retries configured by this property.
-     *
-     * @param acquireRetries the acquire retry count
-     */
-    void setAcquireRetries(int acquireRetries);
-
-    /**
-     * This property controls the number of milliseconds to delay between attempts to acquire a connection
-     * to the database. If acquireRetries is 0, this property has no effect.
-     * 
-     * @param acquireRetryDelayMs the acquire retry delay in milliseconds
-     */
-    void setAcquireRetryDelay(long acquireRetryDelayMs);
-
-    /**
      * This is for "legacy" databases that do not support the JDBC4 {@code Connection.isValid()} API. This is the 
      * query that will be executed just before a connection is given to you from the pool to validate that
      * the connection to the database is still alive. It is database dependent and should be a query that
@@ -135,7 +109,7 @@ public interface HikariConfigMBean
      *
      * @return the minimum number of connections in the pool
      */
-    int getMinimumPoolSize();
+    int getMinimumIdle();
 
     /**
      * The property controls the minimum number of connections that HikariCP tries to maintain in the pool,
@@ -144,7 +118,7 @@ public interface HikariConfigMBean
      *
      * @param minPoolSize the minimum number of connections in the pool
      */
-    void setMinimumPoolSize(int minPoolSize);
+    void setMinimumIdle(int minIdle);
 
     /**
      * The property controls the minimum number of connections that HikariCP tries to maintain in the pool,
