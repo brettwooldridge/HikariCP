@@ -466,7 +466,11 @@ public class HikariConfig implements HikariConfigMBean
             idleTimeout = IDLE_TIMEOUT;
         }
 
-        if (!isJdbc4connectionTest && connectionTestQuery == null)
+        if (connectionTestQuery != null)
+        {
+            isJdbc4connectionTest = false;
+        }
+        else if (!isJdbc4connectionTest)
         {
             logger.error("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified.");
             throw new IllegalStateException("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified.");
