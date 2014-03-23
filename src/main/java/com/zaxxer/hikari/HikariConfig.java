@@ -37,7 +37,7 @@ public class HikariConfig implements HikariConfigMBean
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariConfig.class);
 
-	private static final long CONNECTION_TIMEOUT = 5000L;
+	private static final long CONNECTION_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
 	private static final long IDLE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
 	private static final long MAX_LIFETIME = TimeUnit.MINUTES.toMillis(30);
 
@@ -93,7 +93,7 @@ public class HikariConfig implements HikariConfigMBean
         isAutoCommit = true;
         isJdbc4connectionTest = true;
         minIdle = -1;
-        maxPoolSize = 32;
+        maxPoolSize = 10;
         maxLifetime = MAX_LIFETIME;
         poolName = "HikariPool-" + poolNumber++;
         transactionIsolation = -1;
