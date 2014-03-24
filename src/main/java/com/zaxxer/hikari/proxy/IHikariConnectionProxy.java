@@ -37,7 +37,7 @@ public interface IHikariConnectionProxy extends Connection, IBagManagable
      * @param houseKeepingTimer the timer to run the leak detection task with
      */
     void captureStack(long leakThreshold, Timer houseKeepingTimer);
-    
+
     /**
      * Check if the provided SQLException contains a SQLSTATE that indicates
      * a disconnection from the server.
@@ -45,21 +45,28 @@ public interface IHikariConnectionProxy extends Connection, IBagManagable
      * @param sqle the SQLException to check
      */
     void checkException(SQLException sqle);
-    
+
     /**
      * Get the creation timestamp of the connection.
      *
      * @return the creation timestamp
      */
     long getCreationTime();
-    
+
     /**
      * Get the last access timestamp of the connection.
      *
      * @return the last access timestamp
      */
     long getLastAccess();
-    
+
+    /**
+     * Get the timestamp of when the connection was removed from the pool for use.
+     *
+     * @return the timestamp the connection started to be used in the most recent request
+     */
+    long getLastOpenTime();
+
     /**
      * Return the broken state of the connection.  If checkException() detected
      * a broken connection, this method will return true, otherwise false.
@@ -67,7 +74,7 @@ public interface IHikariConnectionProxy extends Connection, IBagManagable
      * @return the broken state of the connection
      */
     boolean isBrokenConnection();
-    
+
     /**
      * Actually close the underlying delegate Connection.
      *
@@ -81,12 +88,12 @@ public interface IHikariConnectionProxy extends Connection, IBagManagable
      * @throws SQLException thrown if there is an error resetting any of the state
      */
     void resetConnectionState() throws SQLException;
-    
+
     /**
      * Make the Connection available for use again by marking it as not closed.
      */
     void unclose();
-    
+
     /**
      * Called by Statement and its subclasses when they are closed to remove them
      * from the tracking list.

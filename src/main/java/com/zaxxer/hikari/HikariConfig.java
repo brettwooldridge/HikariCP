@@ -69,8 +69,9 @@ public class HikariConfig implements HikariConfigMBean
     private boolean isReadOnly;
     private boolean isInitializationFailFast;
     private boolean isJdbc4connectionTest;
-    private boolean isRegisterMbeans;
     private boolean isIsolateInternalQueries;
+    private boolean isRecordMetrics;
+    private boolean isRegisterMbeans;
     private DataSource dataSource;
     private Properties dataSourceProperties;
     private IConnectionCustomizer connectionCustomizer;
@@ -96,6 +97,7 @@ public class HikariConfig implements HikariConfigMBean
         maxPoolSize = 10;
         maxLifetime = MAX_LIFETIME;
         poolName = "HikariPool-" + poolNumber++;
+        isRecordMetrics = false;
         transactionIsolation = -1;
     }
 
@@ -427,6 +429,16 @@ public class HikariConfig implements HikariConfigMBean
     public void setReadOnly(boolean readOnly)
     {
         this.isReadOnly = readOnly;
+    }
+
+    public boolean isRecordMetrics()
+    {
+        return isRecordMetrics;
+    }
+
+    public void setRecordMetrics(boolean recordMetrics)
+    {
+        this.isRecordMetrics = recordMetrics;
     }
 
     public boolean isRegisterMbeans()

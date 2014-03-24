@@ -62,6 +62,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     private boolean isReadOnlyDirty;
     private boolean isTransactionIsolationDirty;
     private volatile long lastAccess;
+    private long uncloseTime;
 
     private StackTraceElement[] leakTrace;
     private TimerTask leakTask;
@@ -165,6 +166,13 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
     /** {@inheritDoc} */
     @Override
+    public long getLastOpenTime()
+    {
+        return uncloseTime;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public final boolean isBrokenConnection()
     {
         return forceClose;
@@ -218,6 +226,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     public final void unclose()
     {
         isClosed = false;
+        uncloseTime = System.currentTimeMillis();
     }
 
     /** {@inheritDoc} */

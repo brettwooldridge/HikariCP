@@ -31,6 +31,9 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.zaxxer.hikari.metrics.CodaHaleMetricsTracker;
+import com.zaxxer.hikari.metrics.MetricsTracker;
+import com.zaxxer.hikari.metrics.MetricsTracker.Context;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
@@ -55,6 +58,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     private final HikariConfig configuration;
     private final ConcurrentBag<IHikariConnectionProxy> connectionBag;
     private final ThreadPoolExecutor addConnectionExecutor;
+    private final MetricsTracker metricsTracker;
 
     private final boolean isAutoCommit;
     private final boolean isIsolateInternalQueries;
@@ -103,6 +107,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         this.isJdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
         this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
         this.transactionIsolation = configuration.getTransactionIsolation();
+        this.metricsTracker = (configuration.isRecordMetrics() ? new CodaHaleMetricsTracker(configuration.getPoolName()) : new MetricsTracker());
 
         this.dataSource = initializeDataSource();
 
@@ -132,10 +137,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      */
     Connection getConnection() throws SQLException
     {
+        final long start = System.currentTimeMillis();
+        final Context context = metricsTracker.recordConnectionRequest(start);
+        long timeout = configuration.getConnectionTimeout();
         try
         {
-            long timeout = configuration.getConnectionTimeout();
-            final long start = System.currentTimeMillis();
             do
             {
                 IHikariConnectionProxy connectionProxy = connectionBag.borrow(timeout, TimeUnit.MILLISECONDS);
@@ -161,15 +167,16 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             }
             while (timeout > 0);
 
-            String msg = String.format("Timeout of %dms encountered waiting for connection.", configuration.getConnectionTimeout());
-            LOGGER.warn(msg);
             logPoolState("Timeout failure ");
-
-            throw new SQLException(msg);
+            throw new SQLException(String.format("Timeout of %dms encountered waiting for connection.", configuration.getConnectionTimeout()));
         }
         catch (InterruptedException e)
         {
             return null;
+        }
+        finally
+        {
+            context.stop();
         }
     }
 
@@ -181,6 +188,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      */
     public void releaseConnection(IHikariConnectionProxy connectionProxy)
     {
+        metricsTracker.recordConnectionUsage(System.currentTimeMillis() - connectionProxy.getLastOpenTime());
+
         if (!connectionProxy.isBrokenConnection() && !isShutdown)
         {
             connectionBag.requite(connectionProxy);
@@ -241,7 +250,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                         continue;
                     }
                     
-                    if (minIdle == 0)
+                    if (minIdle == 0) // This break is here so we only add one connection when demanded
                     {
                         break;
                     }
@@ -314,7 +323,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize())
             {
                 totalConnections.decrementAndGet();
-                return false;
+                return true;
             }
 
             connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);  
