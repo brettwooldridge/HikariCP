@@ -83,6 +83,12 @@
          <version>4.3.0.Final</version>
          <scope>provided</scope>
       </dependency>
+      <dependency>
+         <groupId>com.codahale.metrics</groupId>
+         <artifactId>metrics-core</artifactId>
+         <version>3.0.2</version>
+         <scope>provided</scope>
+      </dependency>
 
       <!-- OSGi test -->
       <dependency>
