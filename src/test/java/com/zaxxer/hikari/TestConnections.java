@@ -24,6 +24,8 @@ import java.sql.SQLException;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.zaxxer.hikari.mocks.StubConnection;
+
 /**
  * System property testProxy can be one of:
  *    "com.zaxxer.hikari.JavaProxyFactory"
@@ -216,14 +218,50 @@ public class TestConnections
     }
 
     @Test
-    public void testIsolation() throws Exception
+    public void testMaximumPoolLimit() throws Exception
     {
         HikariConfig config = new HikariConfig();
+        config.setMinimumIdle(1);
+        config.setMaximumPoolSize(4);
+        config.setInitializationFailFast(true);
+        config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-        config.setTransactionIsolation("TRANSACTION_REPEATABLE_READ");
-        config.validate();
-        
-        int transactionIsolation = config.getTransactionIsolation();
-        Assert.assertSame(Connection.TRANSACTION_REPEATABLE_READ, transactionIsolation);
+
+        StubConnection.count.set(0);
+
+        final HikariDataSource ds = new HikariDataSource(config);
+
+        Thread[] threads = new Thread[20];
+        for (int i = 0; i < threads.length; i++)
+        {
+            threads[i] = new Thread(new Runnable() {
+                public void run()
+                {
+                    try
+                    {
+                        Connection connection = ds.getConnection();
+                        Thread.sleep(1000);
+                        connection.close();
+                    }
+                    catch (Exception e)
+                    {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+
+        for (int i = 0; i < threads.length; i++)
+        {
+            threads[i].start();
+        }
+
+        for (int i = 0; i < threads.length; i++)
+        {
+            threads[i].join();
+        }
+
+        Assert.assertEquals(4, StubConnection.count.get());
     }
 }

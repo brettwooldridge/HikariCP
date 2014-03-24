@@ -63,6 +63,18 @@ public class ConnectionStateTest
     }
 
     @Test
+    public void testIsolation() throws Exception
+    {
+        HikariConfig config = new HikariConfig();
+        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+        config.setTransactionIsolation("TRANSACTION_REPEATABLE_READ");
+        config.validate();
+        
+        int transactionIsolation = config.getTransactionIsolation();
+        Assert.assertSame(Connection.TRANSACTION_REPEATABLE_READ, transactionIsolation);
+    }
+
+    @Test
     public void testCatalog() throws SQLException
     {
         HikariDataSource ds = new HikariDataSource();

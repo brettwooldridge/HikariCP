@@ -34,6 +34,7 @@ import java.sql.Struct;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -41,6 +42,8 @@ import java.util.concurrent.Executor;
  */
 public class StubConnection extends StubBaseConnection implements Connection
 {
+    public static AtomicInteger count = new AtomicInteger();
+
     private static long foo;
     private boolean autoCommit;
     private int isolation;
@@ -49,6 +52,11 @@ public class StubConnection extends StubBaseConnection implements Connection
     static
     {
         foo = System.currentTimeMillis();
+    }
+
+    public StubConnection()
+    {
+        count.incrementAndGet();
     }
 
     /** {@inheritDoc} */
