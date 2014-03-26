@@ -181,7 +181,7 @@ public class HikariDataSource extends HikariConfig implements DataSource
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException
     {
-        return (this.getClass().isAssignableFrom(iface));
+        return (pool != null & pool.dataSource.getClass().isAssignableFrom(iface));
     }
 
     /**
