@@ -436,6 +436,11 @@ public class HikariConfig implements HikariConfigMBean
         return isRecordMetrics;
     }
 
+    /**
+     * Currently not supported.
+     * @param recordMetrics
+     */
+    @Deprecated
     public void setRecordMetrics(boolean recordMetrics)
     {
         this.isRecordMetrics = recordMetrics;
