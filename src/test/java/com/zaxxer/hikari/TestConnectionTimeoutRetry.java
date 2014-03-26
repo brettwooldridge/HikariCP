@@ -230,4 +230,41 @@ public class TestConnectionTimeoutRetry
             ds.shutdown();
         }
     }
+
+    @Test
+    public void testConnectionIdleFill() throws Exception
+    {
+        HikariConfig config = new HikariConfig();
+        config.setMinimumIdle(5);
+        config.setMaximumPoolSize(10);
+        config.setConnectionTimeout(1000);
+        config.setConnectionTestQuery("VALUES 1");
+        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+        HikariDataSource ds = new HikariDataSource(config);
+
+        Connection connection1 = ds.getConnection();
+        Connection connection2 = ds.getConnection();
+        Connection connection3 = ds.getConnection();
+        Connection connection4 = ds.getConnection();
+        Connection connection5 = ds.getConnection();
+        Connection connection6 = ds.getConnection();
+        Connection connection7 = ds.getConnection();
+
+        Thread.sleep(1000);
+
+        Assert.assertSame("Totals connections not as expected", 10, ds.pool.getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 3, ds.pool.getIdleConnections());
+
+        connection1.close();
+        connection2.close();
+        connection3.close();
+        connection4.close();
+        connection5.close();
+        connection6.close();
+        connection7.close();
+
+        Assert.assertSame("Totals connections not as expected", 10, ds.pool.getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 10, ds.pool.getIdleConnections());
+    }
 }
