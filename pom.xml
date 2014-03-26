@@ -83,6 +83,12 @@
          <version>4.3.0.Final</version>
          <scope>provided</scope>
       </dependency>
+      <dependency>
+         <groupId>com.codahale.metrics</groupId>
+         <artifactId>metrics-core</artifactId>
+         <version>3.0.2</version>
+         <scope>provided</scope>
+      </dependency>
 
       <!-- OSGi test -->
       <dependency>
@@ -148,7 +154,7 @@
                   <Bundle-Name>HikariCP</Bundle-Name>
                   <Export-Package>com.zaxxer.hikari</Export-Package>
                   <Import-Package>
-                     com.sun.tools.attach,javassist.*,
+                     javassist.*,
                      javax.management,
                      javax.sql,
                      javax.sql.rowset,
@@ -199,7 +205,7 @@
             <version>2.9.1</version>
             <configuration>
                <show>public</show>
-               <excludePackageNames>com.zaxxer.hikari.*</excludePackageNames>
+               <!-- excludePackageNames>com.zaxxer.hikari.*</excludePackageNames -->
                <attach>true</attach>
                <maxmemory>1024m</maxmemory>
             </configuration>

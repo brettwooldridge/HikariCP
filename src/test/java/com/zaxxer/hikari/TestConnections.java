@@ -24,6 +24,8 @@ import java.sql.SQLException;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.zaxxer.hikari.mocks.StubConnection;
+
 /**
  * System property testProxy can be one of:
  *    "com.zaxxer.hikari.JavaProxyFactory"
@@ -32,15 +34,15 @@ import org.junit.Test;
  *
  * @author Brett Wooldridge
  */
-public class CreationTest
+public class TestConnections
 {
     @Test
     public void testCreate() throws SQLException
     {
         HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(1);
+        config.setMinimumIdle(1);
         config.setMaximumPoolSize(1);
-        config.setAcquireIncrement(1);
+        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -83,9 +85,9 @@ public class CreationTest
     public void testMaxLifetime() throws Exception
     {
         HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(1);
+        config.setMinimumIdle(1);
         config.setMaximumPoolSize(1);
-        config.setAcquireIncrement(1);
+        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -113,10 +115,12 @@ public class CreationTest
     
             Connection connection2 = ds.getConnection();
             Assert.assertSame("Expected the same connection", connection, connection2);
+            Assert.assertSame("Second total connections not as expected", 1, ds.pool.getTotalConnections());
+            Assert.assertSame("Second idle connections not as expected", 0, ds.pool.getIdleConnections());
             connection2.close();
-            
+
             Thread.sleep(2000);
-    
+
             connection2 = ds.getConnection();
             Assert.assertNotSame("Expected a different connection", connection, connection2);
     
@@ -135,9 +139,9 @@ public class CreationTest
     public void testDoubleClose() throws Exception
     {
         HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(1);
+        config.setMinimumIdle(1);
         config.setMaximumPoolSize(1);
-        config.setAcquireIncrement(1);
+        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -158,9 +162,10 @@ public class CreationTest
     public void testBackfill() throws Exception
     {
         HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(1);
+        config.setMinimumIdle(1);
         config.setMaximumPoolSize(4);
         config.setConnectionTimeout(500);
+        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -199,12 +204,8 @@ public class CreationTest
             Assert.assertSame("Totals connections not as expected", 0, ds.pool.getTotalConnections());
             Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
 
-            // This will create a new connection, and cause a backfill
+            // This will cause a backfill
             connection = ds.getConnection();
-
-            // Wait for scheduled backfill to execute
-            Thread.sleep(600);
-
             connection.close();
 
             Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
@@ -217,14 +218,50 @@ public class CreationTest
     }
 
     @Test
-    public void testIsolation() throws Exception
+    public void testMaximumPoolLimit() throws Exception
     {
         HikariConfig config = new HikariConfig();
+        config.setMinimumIdle(1);
+        config.setMaximumPoolSize(4);
+        config.setInitializationFailFast(true);
+        config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-        config.setTransactionIsolation("TRANSACTION_REPEATABLE_READ");
-        config.validate();
-        
-        int transactionIsolation = config.getTransactionIsolation();
-        Assert.assertSame(Connection.TRANSACTION_REPEATABLE_READ, transactionIsolation);
+
+        StubConnection.count.set(0);
+
+        final HikariDataSource ds = new HikariDataSource(config);
+
+        Thread[] threads = new Thread[20];
+        for (int i = 0; i < threads.length; i++)
+        {
+            threads[i] = new Thread(new Runnable() {
+                public void run()
+                {
+                    try
+                    {
+                        Connection connection = ds.getConnection();
+                        Thread.sleep(1000);
+                        connection.close();
+                    }
+                    catch (Exception e)
+                    {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+
+        for (int i = 0; i < threads.length; i++)
+        {
+            threads[i].start();
+        }
+
+        for (int i = 0; i < threads.length; i++)
+        {
+            threads[i].join();
+        }
+
+        Assert.assertEquals(4, StubConnection.count.get());
     }
 }

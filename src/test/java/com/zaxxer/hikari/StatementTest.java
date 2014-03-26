@@ -13,9 +13,9 @@ public class StatementTest
     public void testStatementClose() throws SQLException
     {
         HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(1);
+        config.setMinimumIdle(1);
         config.setMaximumPoolSize(2);
-        config.setAcquireIncrement(1);
+        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -42,9 +42,9 @@ public class StatementTest
     public void testAutoStatementClose() throws SQLException
     {
         HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(1);
+        config.setMinimumIdle(1);
         config.setMaximumPoolSize(2);
-        config.setAcquireIncrement(1);
+        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -67,9 +67,9 @@ public class StatementTest
     public void testDoubleStatementClose() throws SQLException
     {
         HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(1);
+        config.setMinimumIdle(1);
         config.setMaximumPoolSize(2);
-        config.setAcquireIncrement(1);
+        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -88,9 +88,9 @@ public class StatementTest
     public void testOutOfOrderStatementClose() throws SQLException
     {
         HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(1);
+        config.setMinimumIdle(1);
         config.setMaximumPoolSize(2);
-        config.setAcquireIncrement(1);
+        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 

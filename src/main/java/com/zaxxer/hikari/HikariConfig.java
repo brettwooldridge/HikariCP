@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Brett Wooldridge
+ * Copyright (C) 2013, 2014 Brett Wooldridge
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ public class HikariConfig implements HikariConfigMBean
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariConfig.class);
 
-	private static final long CONNECTION_TIMEOUT = 5000L;
+	private static final long CONNECTION_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
 	private static final long IDLE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
 	private static final long MAX_LIFETIME = TimeUnit.MINUTES.toMillis(30);
 
@@ -45,26 +45,32 @@ public class HikariConfig implements HikariConfigMBean
 
     // Properties changeable at runtime through the MBean
     //
-    private volatile int acquireRetries;
     private volatile long connectionTimeout;
     private volatile long idleTimeout;
     private volatile long leakDetectionThreshold;
     private volatile long maxLifetime;
     private volatile int maxPoolSize;
-    private volatile int minPoolSize;
+    private volatile int minIdle;
 
     // Properties NOT changeable at runtime
     //
-    private String transactionIsolationName;
+    private String catalog;
     private String connectionCustomizerClassName;
     private String connectionInitSql;
     private String connectionTestQuery;
     private String dataSourceClassName;
-    private String catalog;
+    private String driverClassName;
+    private String jdbcUrl;
+    private String password;
     private String poolName;
+    private String transactionIsolationName;
+    private String username;
     private boolean isAutoCommit;
+    private boolean isReadOnly;
     private boolean isInitializationFailFast;
     private boolean isJdbc4connectionTest;
+    private boolean isIsolateInternalQueries;
+    private boolean isRecordMetrics;
     private boolean isRegisterMbeans;
     private DataSource dataSource;
     private Properties dataSourceProperties;
@@ -83,15 +89,15 @@ public class HikariConfig implements HikariConfigMBean
     {
         dataSourceProperties = new Properties();
 
-        acquireRetries = 3;
         connectionTimeout = CONNECTION_TIMEOUT;
         idleTimeout = IDLE_TIMEOUT;
         isAutoCommit = true;
         isJdbc4connectionTest = true;
-        minPoolSize = 10;
-        maxPoolSize = 60;
+        minIdle = -1;
+        maxPoolSize = 10;
         maxLifetime = MAX_LIFETIME;
         poolName = "HikariPool-" + poolNumber++;
+        isRecordMetrics = false;
         transactionIsolation = -1;
     }
 
@@ -136,89 +142,122 @@ public class HikariConfig implements HikariConfigMBean
         }
     }
 
-    public int getAcquireIncrement()
-    {
-        return 0;
-    }
-
+    @Deprecated
     public void setAcquireIncrement(int acquireIncrement)
     {
         LOGGER.warn("The acquireIncrement property has been retired, remove it from your pool configuration to avoid this warning.");
     }
 
     /** {@inheritDoc} */
-    public int getAcquireRetries()
-    {
-        return acquireRetries;
-    }
-
-    /** {@inheritDoc} */
+    @Deprecated
     public void setAcquireRetries(int acquireRetries)
     {
-        if (acquireRetries < 0)
-        {
-            throw new IllegalArgumentException("acquireRetries cannot be negative");
-        }
-        this.acquireRetries = acquireRetries;
+        LOGGER.warn("The acquireRetries property has been retired, remove it from your pool configuration to avoid this warning.");
     }
 
-    public long getAcquireRetryDelay()
-    {
-        return 0;
-    }
-
+    @Deprecated
     public void setAcquireRetryDelay(long acquireRetryDelayMs)
     {
         LOGGER.warn("The acquireRetryDelay property has been retired, remove it from your pool configuration to avoid this warning.");
     }
 
+    /**
+     * Get the default catalog name to be set on connections.
+     *
+     * @return the default catalog name
+     */
     public String getCatalog()
     {
         return catalog;
     }
 
+    /**
+     * Set the default catalog name to be set on connections.
+     *
+     * @param catalog the catalog name, or null
+     */
     public void setCatalog(String catalog)
     {
         this.catalog = catalog;
     }
 
+    /**
+     * Get the name of the connection customizer class to instantiate and execute
+     * on all new connections.
+     *
+     * @return the name of the customizer class, or null
+     */
     public String getConnectionCustomizerClassName()
     {
         return connectionCustomizerClassName;
     }
 
+    /**
+     * Set the name of the connection customizer class to instantiate and execute
+     * on all new connections.
+     *
+     * @param connectionCustomizerClassName the name of the customizer class
+     */
     public void setConnectionCustomizerClassName(String connectionCustomizerClassName)
     {
         this.connectionCustomizerClassName = connectionCustomizerClassName;
     }
 
+    /**
+     * Get the SQL query to be executed to test the validity of connections.
+     * 
+     * @return the SQL query string, or null 
+     */
     public String getConnectionTestQuery()
     {
         return connectionTestQuery;
     }
 
+    /**
+     * Set the SQL query to be executed to test the validity of connections. Using
+     * the JDBC4 {@link Connection.isValid()} method to test connection validity can
+     * be more efficient on some databases and is recommended.  See 
+     * {@link HikariConfig#setJdbc4ConnectionTest(boolean)}.
+     *
+     * @param connectionTestQuery a SQL query string
+     */
     public void setConnectionTestQuery(String connectionTestQuery)
     {
         this.connectionTestQuery = connectionTestQuery;
     }
 
+    /**
+     * Get the SQL string that will be executed on all new connections when they are
+     * created, before they are added to the pool.
+     *
+     * @return the SQL to execute on new connections, or null
+     */
     public String getConnectionInitSql()
     {
         return connectionInitSql;
     }
 
+    /**
+     * Set the SQL string that will be executed on all new connections when they are
+     * created, before they are added to the pool.  If this query fails, it will be
+     * treated as a failed connection attempt.
+     *
+     * @param connectionInitSql the SQL to execute on new connections
+     */
     public void setConnectionInitSql(String connectionInitSql)
     {
         this.connectionInitSql = connectionInitSql;
     }
 
     /** {@inheritDoc} */
+    @Override
     public long getConnectionTimeout()
     {
         return connectionTimeout;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setConnectionTimeout(long connectionTimeoutMs)
     {
         if (connectionTimeoutMs == 0)
@@ -235,11 +274,23 @@ public class HikariConfig implements HikariConfigMBean
         }
     }
 
+    /**
+     * Get the {@link DataSource} that has been explicitly specified to be wrapped by the
+     * pool.
+     *
+     * @return the {@link DataSource} instance, or null
+     */
     public DataSource getDataSource()
     {
         return dataSource;
     }
 
+    /**
+     * Set a {@link DataSource} for the pool to explicitly wrap.  This setter is not
+     * available through property file based initialization.
+     *
+     * @param dataSource a specific {@link DataSource} to be wrapped by the pool
+     */
     public void setDataSource(DataSource dataSource)
     {
         this.dataSource = dataSource;
@@ -270,36 +321,94 @@ public class HikariConfig implements HikariConfigMBean
         dataSourceProperties.putAll(dsProperties);
     }
 
+    public void setDriverClassName(String driverClassName)
+    {
+        try
+        {
+            Class<?> driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
+            driverClass.newInstance();
+            this.driverClassName = driverClassName;
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException("driverClassName specified class '" + driverClassName + "' could not be loaded", e);
+        }
+    }
+
     /** {@inheritDoc} */
+    @Override
     public long getIdleTimeout()
     {
         return idleTimeout;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setIdleTimeout(long idleTimeoutMs)
     {
         this.idleTimeout = idleTimeoutMs;
     }
 
+    public String getJdbcUrl()
+    {
+        return jdbcUrl;
+    }
+
+    public void setJdbcUrl(String jdbcUrl)
+    {
+        this.jdbcUrl = jdbcUrl;
+    }
+
+    /**
+     * Get the default auto-commit behavior of connections in the pool.
+     *
+     * @return the default auto-commit behavior of connections
+     */
     public boolean isAutoCommit()
     {
         return isAutoCommit;
     }
 
+    /**
+     * Set the default auto-commit behavior of connections in the pool.
+     *
+     * @param isAutoCommit the desired auto-commit default for connections
+     */
     public void setAutoCommit(boolean isAutoCommit)
     {
         this.isAutoCommit = isAutoCommit;
     }
 
+    /**
+     * Get whether or not the construction of the pool should throw an exception
+     * if the minimum number of connections cannot be created.
+     *
+     * @return whether or not initialization should fail on error immediately
+     */
     public boolean isInitializationFailFast()
     {
         return isInitializationFailFast;
     }
 
+    /**
+     * Set whether or not the construction of the pool should throw an exception
+     * if the minimum number of connections cannot be created.
+     *
+     * @param failFast true if the pool should fail if the minimum connections cannot be created
+     */
     public void setInitializationFailFast(boolean failFast)
     {
         isInitializationFailFast = failFast;
+    }
+
+    public boolean isIsolateInternalQueries()
+    {
+        return isIsolateInternalQueries;
+    }
+
+    public void setIsolateInternalQueries(boolean isolate)
+    {
+        this.isIsolateInternalQueries = isolate;
     }
 
     public boolean isJdbc4ConnectionTest()
@@ -310,6 +419,31 @@ public class HikariConfig implements HikariConfigMBean
     public void setJdbc4ConnectionTest(boolean useIsValid)
     {
         this.isJdbc4connectionTest = useIsValid;
+    }
+
+    public boolean isReadOnly()
+    {
+        return isReadOnly;
+    }
+
+    public void setReadOnly(boolean readOnly)
+    {
+        this.isReadOnly = readOnly;
+    }
+
+    public boolean isRecordMetrics()
+    {
+        return isRecordMetrics;
+    }
+
+    /**
+     * Currently not supported.
+     * @param recordMetrics
+     */
+    @Deprecated
+    public void setRecordMetrics(boolean recordMetrics)
+    {
+        this.isRecordMetrics = recordMetrics;
     }
 
     public boolean isRegisterMbeans()
@@ -323,57 +457,54 @@ public class HikariConfig implements HikariConfigMBean
     }
 
     /** {@inheritDoc} */
+    @Override
     public long getLeakDetectionThreshold()
     {
         return leakDetectionThreshold;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setLeakDetectionThreshold(long leakDetectionThresholdMs)
     {
         this.leakDetectionThreshold = leakDetectionThresholdMs; 
     }
 
+    @Deprecated
     public void setUseInstrumentation(boolean useInstrumentation)
     {
-        // no longer used as of HikariCP 1.2.5
+        LOGGER.warn("The useInstrumentation property has been retired, remove it from your pool configuration to avoid this warning.");
     }
 
     /** {@inheritDoc} */
+    @Override
     public long getMaxLifetime()
     {
         return maxLifetime;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setMaxLifetime(long maxLifetimeMs)
     {
         this.maxLifetime = maxLifetimeMs;
     }
 
-    /** {@inheritDoc} */
-    public int getMinimumPoolSize()
-    {
-        return minPoolSize;
-    }
-
-    /** {@inheritDoc} */
+    @Deprecated
     public void setMinimumPoolSize(int minPoolSize)
     {
-        if (minPoolSize < 0)
-        {
-            throw new IllegalArgumentException("minPoolSize cannot be negative");
-        }
-        this.minPoolSize = minPoolSize;
+        LOGGER.warn("The minimumPoolSize property has been retired, remove it from your pool configuration to avoid this warning.");
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getMaximumPoolSize()
     {
         return maxPoolSize;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setMaximumPoolSize(int maxPoolSize)
     {
         if (maxPoolSize < 0)
@@ -384,6 +515,43 @@ public class HikariConfig implements HikariConfigMBean
     }
 
     /** {@inheritDoc} */
+    @Override
+    public int getMinimumIdle()
+    {
+        return minIdle;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setMinimumIdle(int minIdle)
+    {
+        if (minIdle < 0 || minIdle > maxPoolSize)
+        {
+            throw new IllegalArgumentException("maxPoolSize cannot be negative or greater than maximumPoolSize");
+        }
+        this.minIdle = minIdle;
+    }
+
+    /**
+     * Get the default password to use for DataSource.getConnection(username, password) calls.
+     * @return the password
+     */
+    public String getPassword()
+    {
+        return password;
+    }
+
+    /**
+     * Set the default password to use for DataSource.getConnection(username, password) calls.
+     * @param password the password
+     */
+    public void setPassword(String password)
+    {
+        this.password = password;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public String getPoolName()
     {
         return poolName;
@@ -417,9 +585,31 @@ public class HikariConfig implements HikariConfigMBean
         this.transactionIsolationName = isolationLevel;
     }
 
+    /**
+     * Get the default username used for DataSource.getConnection(username, password) calls.
+     *
+     * @return the username
+     */
+    public String getUsername()
+    {
+        return username;
+    }
+
+    /**
+     * Set the default username used for DataSource.getConnection(username, password) calls.
+     *
+     * @param username the username
+     */
+    public void setUsername(String username)
+    {
+        this.username = username;
+    }
+
     public void validate()
     {
         Logger logger = LoggerFactory.getLogger(getClass());
+
+        validateNumerics();
 
         if (connectionCustomizerClassName != null && connectionCustomizer == null)
         {
@@ -435,64 +625,38 @@ public class HikariConfig implements HikariConfigMBean
             }
         }
 
-        if (connectionTimeout == Integer.MAX_VALUE)
+        if (driverClassName != null && jdbcUrl == null)
         {
-            logger.warn("No connection wait timeout is set, this might cause an infinite wait.");
+            logger.error("when specifying driverClassName, jdbcUrl must also be specified");
+            throw new IllegalStateException("when specifying driverClassName, jdbcUrl must also be specified");
         }
-        else if (connectionTimeout < 100)
+        else if (jdbcUrl != null && driverClassName == null)
         {
-            logger.warn("connectionTimeout is less than 100ms, did you specify the wrong time unit?  Using default instead.");
-        	connectionTimeout = CONNECTION_TIMEOUT;
+            logger.error("when specifying jdbcUrl, driverClassName must also be specified");
+            throw new IllegalStateException("when specifying jdbcUrl, driverClassName must also be specified");
         }
-
-        if (dataSource == null && dataSourceClassName == null)
+        else if (driverClassName != null && jdbcUrl != null)
         {
-            logger.error("one of either dataSource or dataSourceClassName must be specified");
-            throw new IllegalStateException("one of either dataSource or dataSourceClassName must be specified");
+            // OK
+        }
+        else if (dataSource == null && dataSourceClassName == null)
+        {
+            logger.error("one of either dataSource, dataSourceClassName, or jdbcUrl and driverClassName must be specified");
+            throw new IllegalArgumentException("one of either dataSource or dataSourceClassName must be specified");
         }
         else if (dataSource != null && dataSourceClassName != null)
         {
             logger.warn("both dataSource and dataSourceClassName are specified, ignoring dataSourceClassName");
         }
 
-        if (idleTimeout < 0)
+        if (connectionTestQuery != null)
         {
-            logger.error("idleTimeout cannot be negative.");
-            throw new IllegalStateException("idleTimeout cannot be negative.");
+            isJdbc4connectionTest = false;
         }
-        else if (idleTimeout < 30000 && idleTimeout != 0)
+        else if (!isJdbc4connectionTest)
         {
-            logger.warn("idleTimeout is less than 30000ms, did you specify the wrong time unit?  Using default instead.");
-            idleTimeout = IDLE_TIMEOUT;
-        }
-
-        if (!isJdbc4connectionTest && connectionTestQuery == null)
-        {
-            logger.error("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified.");
-            throw new IllegalStateException("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified.");
-        }
-
-        if (leakDetectionThreshold != 0 && leakDetectionThreshold < 10000)
-        {
-            logger.warn("leakDetectionThreshold is less than 10000ms, did you specify the wrong time unit?  Disabling leak detection.");
-            leakDetectionThreshold = 0;
-        }
-
-        if (maxPoolSize < minPoolSize)
-        {
-            logger.warn("maxPoolSize is less than minPoolSize, forcing them equal.");
-            maxPoolSize = minPoolSize;
-        }
-
-        if (maxLifetime < 0)
-        {
-            logger.error("maxLifetime cannot be negative.");
-            throw new IllegalStateException("maxLifetime cannot be negative.");
-        }
-        else if (maxLifetime < 120000 && maxLifetime != 0)
-        {
-            logger.warn("maxLifetime is less than 120000ms, did you specify the wrong time unit?  Using default instead.");
-            maxLifetime = MAX_LIFETIME;
+            logger.error("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified");
+            throw new IllegalStateException("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified");
         }
 
         if (transactionIsolationName != null)
@@ -507,6 +671,54 @@ public class HikariConfig implements HikariConfigMBean
             {
                 throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
             }
+        }
+    }
+
+    private void validateNumerics()
+    {
+        Logger logger = LoggerFactory.getLogger(getClass());
+
+        if (connectionTimeout == Integer.MAX_VALUE)
+        {
+            logger.warn("No connection wait timeout is set, this might cause an infinite wait");
+        }
+        else if (connectionTimeout < TimeUnit.MILLISECONDS.toMillis(250))
+        {
+            logger.warn("connectionTimeout is less than 250ms, did you specify the wrong time unit?  Using default instead");
+            connectionTimeout = CONNECTION_TIMEOUT;
+        }
+
+        if (minIdle < 0)
+        {
+            minIdle = maxPoolSize;
+        }
+
+        if (idleTimeout < 0)
+        {
+            logger.error("idleTimeout cannot be negative.");
+            throw new IllegalArgumentException("idleTimeout cannot be negative");
+        }
+        else if (idleTimeout < TimeUnit.SECONDS.toMillis(30) && idleTimeout != 0)
+        {
+            logger.warn("idleTimeout is less than 30000ms, did you specify the wrong time unit?  Using default instead");
+            idleTimeout = IDLE_TIMEOUT;
+        }
+
+        if (leakDetectionThreshold != 0 && leakDetectionThreshold < TimeUnit.SECONDS.toMillis(10))
+        {
+            logger.warn("leakDetectionThreshold is less than 10000ms, did you specify the wrong time unit?  Disabling leak detection");
+            leakDetectionThreshold = 0;
+        }
+
+        if (maxLifetime < 0)
+        {
+            logger.error("maxLifetime cannot be negative.");
+            throw new IllegalArgumentException("maxLifetime cannot be negative.");
+        }
+        else if (maxLifetime < TimeUnit.SECONDS.toMillis(120) && maxLifetime != 0)
+        {
+            logger.warn("maxLifetime is less than 120000ms, did you specify the wrong time unit?  Using default instead.");
+            maxLifetime = MAX_LIFETIME;
         }
     }
 

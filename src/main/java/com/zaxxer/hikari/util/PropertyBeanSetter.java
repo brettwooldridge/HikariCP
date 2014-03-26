@@ -61,9 +61,27 @@ public final class PropertyBeanSetter
     private static void setProperty(Object target, String propName, Object propValue)
     {
         String capitalized = "set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+        PropertyDescriptor propertyDescriptor;
         try
         {
-            PropertyDescriptor propertyDescriptor = new PropertyDescriptor(propName, target.getClass(), null, capitalized);
+            propertyDescriptor = new PropertyDescriptor(propName, target.getClass(), null, capitalized);
+        }
+        catch (IntrospectionException e)
+        {
+            capitalized = "set" + propName.toUpperCase();
+            try
+            {
+                propertyDescriptor = new PropertyDescriptor(propName, target.getClass(), null, capitalized);
+            }
+            catch (IntrospectionException e1)
+            {
+                LOGGER.error("Property {} is does not exist on target class {}", propName, target.getClass());
+                throw new RuntimeException(e);
+            }
+        }
+
+        try
+        {
             Method writeMethod = propertyDescriptor.getWriteMethod();
             Class<?> paramClass = writeMethod.getParameterTypes()[0];
             if (paramClass == int.class)
@@ -86,11 +104,6 @@ public final class PropertyBeanSetter
             {
                 writeMethod.invoke(target, propValue);
             }
-        }
-        catch (IntrospectionException e)
-        {
-            LOGGER.error("Property {} is does not exist on target class {}", propName, target.getClass());
-            throw new RuntimeException(e);
         }
         catch (Exception e)
         {

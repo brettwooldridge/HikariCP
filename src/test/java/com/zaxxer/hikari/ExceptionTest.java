@@ -18,9 +18,9 @@ public class ExceptionTest
     public void setup()
     {
         HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(1);
+        config.setMinimumIdle(1);
         config.setMaximumPoolSize(2);
-        config.setAcquireIncrement(1);
+        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -91,9 +91,9 @@ public class ExceptionTest
     public void testUseAfterClose() throws SQLException
     {
         HikariConfig config = new HikariConfig();
-        config.setMinimumPoolSize(1);
+        config.setMinimumIdle(1);
         config.setMaximumPoolSize(2);
-        config.setAcquireIncrement(1);
+        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 

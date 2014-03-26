@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Brett Wooldridge
+ * Copyright (C) 2014 Brett Wooldridge
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,41 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.zaxxer.hikari;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.junit.Assert;
+
 import org.junit.Test;
 
-import com.zaxxer.hikari.mocks.StubConnection;
+import com.zaxxer.hikari.util.DriverDataSource;
 
-/**
- *
- * @author Brett Wooldridge
- */
-public class UnwrapTest
+public class JdbcDriverTest
 {
     @Test
-    public void testUnwrapConnection() throws SQLException
+    public void driverTest1() throws SQLException
     {
         HikariConfig config = new HikariConfig();
         config.setMinimumIdle(1);
         config.setMaximumPoolSize(1);
-        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
-        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+        config.setDriverClassName("com.zaxxer.hikari.mocks.StubDriver");
+        config.setJdbcUrl("jdbc:stub");
+        config.addDataSourceProperty("user", "bart");
+        config.addDataSourceProperty("password", "simpson");
 
         HikariDataSource ds = new HikariDataSource(config);
 
-        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
+        Assert.assertTrue(ds.isWrapperFor(DriverDataSource.class));
+
+        DriverDataSource unwrap = ds.unwrap(DriverDataSource.class);
+        Assert.assertNotNull(unwrap);
 
         Connection connection = ds.getConnection();
-        Assert.assertNotNull(connection);
-
-        StubConnection unwrapped = connection.unwrap(StubConnection.class);
-        Assert.assertTrue("unwrapped connection is not instance of StubConnection: " + unwrapped, (unwrapped != null && unwrapped instanceof StubConnection));
+        connection.close();
+        ds.shutdown();
     }
 }

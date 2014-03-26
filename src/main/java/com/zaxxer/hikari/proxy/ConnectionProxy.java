@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013,2014 Brett Wooldridge
+ * Copyright (C) 2013, 2014 Brett Wooldridge
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,21 +51,23 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     private final HikariPool parentPool;
     private final int defaultIsolationLevel;
     private final boolean defaultAutoCommit;
+    private final boolean defaultReadOnly;
     private final String defaultCatalog;
     private final AtomicInteger state;
 
-    private boolean isClosed;
     private boolean forceClose;
-    private boolean isTransactionIsolationDirty;
     private boolean isAutoCommitDirty;
     private boolean isCatalogDirty;
+    private boolean isClosed;
+    private boolean isReadOnlyDirty;
+    private boolean isTransactionIsolationDirty;
     private volatile long lastAccess;
+    private long uncloseTime;
 
     private StackTraceElement[] leakTrace;
     private TimerTask leakTask;
 
     private final int hashCode;
-
 
     // static initializer
     static
@@ -79,12 +81,13 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         SQL_ERRORS.add("JZ0C1");  // Sybase disconnect error
     }
 
-    protected ConnectionProxy(HikariPool pool, Connection connection, int defaultIsolationLevel, boolean defaultAutoCommit, String defaultCatalog)
+    protected ConnectionProxy(HikariPool pool, Connection connection, int defaultIsolationLevel, boolean defaultAutoCommit, boolean defaultReadOnly, String defaultCatalog)
     {
         this.parentPool = pool;
         this.delegate = connection;
         this.defaultIsolationLevel = defaultIsolationLevel;
         this.defaultAutoCommit = defaultAutoCommit;
+        this.defaultReadOnly = defaultReadOnly;
         this.defaultCatalog = defaultCatalog;
         this.state = new AtomicInteger();
 
@@ -93,41 +96,31 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         this.hashCode = System.identityHashCode(this);
 
         isCatalogDirty = true;
+        isReadOnlyDirty = defaultReadOnly;
         isAutoCommitDirty = true;
         isTransactionIsolationDirty = true;
     }
 
-    public final void untrackStatement(Object statement)
+    /** {@inheritDoc} */
+    @Override
+    public final boolean equals(Object other)
     {
-        // If the connection is not closed.  If it is closed, it means this is being
-        // called back as a result of the close() method below in which case we
-        // will clear the openStatements collection en mass.
-        if (!isClosed)
-        {
-            openStatements.remove(statement);
-        }
-    }
-    
-    public final long getCreationTime()
-    {
-        return creationTime;
+        return this == other;
     }
 
-    public final long getLastAccess()
+    /** {@inheritDoc} */
+    @Override
+    public final int hashCode()
     {
-        return lastAccess;
+        return hashCode;
     }
 
-    public final void unclose()
-    {
-        isClosed = false;
-    }
+    // ***********************************************************************
+    //                      IHikariConnectionProxy methods
+    // ***********************************************************************
 
-    public final void realClose() throws SQLException
-    {
-        delegate.close();
-    }
-
+    /** {@inheritDoc} */
+    @Override
     public final void captureStack(long leakDetectionThreshold, Timer scheduler)
     {
         StackTraceElement[] trace = Thread.currentThread().getStackTrace();
@@ -138,11 +131,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         scheduler.schedule(leakTask, leakDetectionThreshold);
     }
 
-    public final boolean isBrokenConnection()
-    {
-        return forceClose;
-    }
-
+    /** {@inheritDoc} */
+    @Override
     public final void checkException(SQLException sqle)
     {
         String sqlState = sqle.getSQLState();
@@ -160,38 +150,54 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         }
     }
 
+    /** {@inheritDoc} */
     @Override
-    public final boolean equals(Object other)
+    public final long getCreationTime()
     {
-        return this == other;
+        return creationTime;
     }
 
+    /** {@inheritDoc} */
     @Override
-    public final int hashCode()
+    public final long getLastAccess()
     {
-        return hashCode;
+        return lastAccess;
     }
 
-    protected final void checkClosed() throws SQLException
+    /** {@inheritDoc} */
+    @Override
+    public long getLastOpenTime()
     {
-        if (isClosed)
-        {
-            throw new SQLException("Connection is closed");
-        }
+        return uncloseTime;
     }
 
-    private <T extends Statement> T trackStatement(T statement)
+    /** {@inheritDoc} */
+    @Override
+    public final boolean isBrokenConnection()
     {
-        openStatements.add(statement);
-
-        return statement;
+        return forceClose;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public final void realClose() throws SQLException
+    {
+        delegate.close();
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public final void resetConnectionState() throws SQLException
     {
         if (!delegate.getAutoCommit())
         {
             delegate.rollback();
+        }
+
+        if (isReadOnlyDirty)
+        {
+            delegate.setReadOnly(defaultReadOnly);
+            isReadOnlyDirty = false;
         }
 
         if (isAutoCommitDirty)
@@ -213,6 +219,46 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         }
         
         delegate.clearWarnings();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public final void unclose()
+    {
+        isClosed = false;
+        uncloseTime = System.currentTimeMillis();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public final void untrackStatement(Object statement)
+    {
+        // If the connection is not closed.  If it is closed, it means this is being
+        // called back as a result of the close() method below in which case we
+        // will clear the openStatements collection en mass.
+        if (!isClosed)
+        {
+            openStatements.remove(statement);
+        }
+    }
+    
+    // ***********************************************************************
+    //                        Internal methods
+    // ***********************************************************************
+
+    protected final void checkClosed() throws SQLException
+    {
+        if (isClosed)
+        {
+            throw new SQLException("Connection is closed");
+        }
+    }
+
+    private <T extends Statement> T trackStatement(T statement)
+    {
+        openStatements.add(statement);
+
+        return statement;
     }
 
     // **********************************************************************
@@ -238,6 +284,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     // **********************************************************************
 
     /** {@inheritDoc} */
+    @Override
     public final void close() throws SQLException
     {
         if (!isClosed)
@@ -253,19 +300,20 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             try
             {
                 final int size = openStatements.size();
-                for (int i = 0; i < size; i++)
-                {
-                    try
-                    {
-                        openStatements.get(i).close();
-                    }
-                    catch (SQLException e)
-                    {
-                        checkException(e);
-                    }
-                }
                 if (size > 0)
                 {
+                    for (int i = 0; i < size; i++)
+                    {
+                        try
+                        {
+                            openStatements.get(i).close();
+                        }
+                        catch (SQLException e)
+                        {
+                            checkException(e);
+                        }
+                    }
+
                     openStatements.clear();
                 }
 
@@ -285,12 +333,14 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     }
 
     /** {@inheritDoc} */
+    @Override
     public final boolean isClosed() throws SQLException
     {
         return isClosed;
     }
 
     /** {@inheritDoc} */
+    @Override
     public final Statement createStatement() throws SQLException
     {
         checkClosed();
@@ -307,6 +357,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     }
 
     /** {@inheritDoc} */
+    @Override
     public final Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException
     {
         checkClosed();
@@ -323,6 +374,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     }
 
     /** {@inheritDoc} */
+    @Override
     public final Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
     {
         checkClosed();
@@ -339,6 +391,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     }
 
     /** {@inheritDoc} */
+    @Override
     public final CallableStatement prepareCall(String sql) throws SQLException
     {
         checkClosed();
@@ -355,6 +408,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     }
 
     /** {@inheritDoc} */
+    @Override
     public final CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException
     {
         checkClosed();
@@ -371,6 +425,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     }
 
     /** {@inheritDoc} */
+    @Override
     public final CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
     {
         checkClosed();
@@ -387,6 +442,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     }
 
     /** {@inheritDoc} */
+    @Override
     public final PreparedStatement prepareStatement(String sql) throws SQLException
     {
         checkClosed();
@@ -403,6 +459,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     }
 
     /** {@inheritDoc} */
+    @Override
     public final PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException
     {
         checkClosed();
@@ -419,6 +476,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     }
 
     /** {@inheritDoc} */
+    @Override
     public final PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException
     {
         checkClosed();
@@ -435,6 +493,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     }
 
     /** {@inheritDoc} */
+    @Override
     public final PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
     {
         checkClosed();
@@ -451,6 +510,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     }
 
     /** {@inheritDoc} */
+    @Override
     public final PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException
     {
         checkClosed();
@@ -467,6 +527,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     }
 
     /** {@inheritDoc} */
+    @Override
     public final PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException
     {
         checkClosed();
@@ -483,6 +544,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     }
 
     /** {@inheritDoc} */
+    @Override
     public final boolean isValid(int timeout) throws SQLException
     {
         if (isClosed)
@@ -502,6 +564,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     }
 
     /** {@inheritDoc} */
+    @Override
     public final void setAutoCommit(boolean autoCommit) throws SQLException
     {
         checkClosed();
@@ -518,6 +581,24 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     }
 
     /** {@inheritDoc} */
+    @Override
+    public final void setReadOnly(boolean readOnly) throws SQLException
+    {
+        checkClosed();
+        try
+        {
+            delegate.setReadOnly(readOnly);
+            isReadOnlyDirty = (readOnly != defaultReadOnly);
+        }
+        catch (SQLException e)
+        {
+            checkException(e);
+            throw e;
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public final void setTransactionIsolation(int level) throws SQLException
     {
         checkClosed();
@@ -550,12 +631,14 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     }
 
     /** {@inheritDoc} */
+    @Override
     public final boolean isWrapperFor(Class<?> iface) throws SQLException
     {
         return iface.isInstance(delegate);
     }
 
     /** {@inheritDoc} */
+    @Override
     @SuppressWarnings("unchecked")
     public final <T> T unwrap(Class<T> iface) throws SQLException
     {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Brett Wooldridge
+ * Copyright (C) 2013, 2014 Brett Wooldridge
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,10 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.util.ClassLoaderUtils;
 
 /**
+ * This class generates the proxy objects for {@link Connection}, {@link Statement},
+ * {@link PreparedStatement}, and {@link CallableStatement}.  Additionally it injects
+ * method bodies into the {@link ProxyFactory} class methods that can instantiate
+ * instances of the generated proxies.
  *
  * @author Brett Wooldridge
  */
@@ -45,27 +49,25 @@ public final class JavassistProxyFactory
 
     static
     {
-    	ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         try
         {
-        	Thread.currentThread().setContextClassLoader(JavassistProxyFactory.class.getClassLoader());
-        	
         	JavassistProxyFactory proxyFactoryFactory = new JavassistProxyFactory();
         	proxyFactoryFactory.modifyProxyFactory();
         }
         catch (Exception e)
         {
+            LoggerFactory.getLogger(JavassistProxyFactory.class).error("Fatal exception during proxy generation", e);
         	throw new RuntimeException(e);
-        }
-        finally
-        {
-        	Thread.currentThread().setContextClassLoader(contextClassLoader);
         }
     }
 
+    /**
+     * Simply invoking this method causes the initialization of this class.  All work
+     * by this class is performed in static initialization.
+     */
     public static void initialize()
     {
-        // simply invoking this method causes the initialization of this class.
+        // no-op
     }
 
     private JavassistProxyFactory()
@@ -102,30 +104,22 @@ public final class JavassistProxyFactory
         for (CtMethod method : proxyCt.getMethods())
         {
             String methodName = method.getName();
-            StringBuilder call = new StringBuilder("{");
             if ("getProxyConnection".equals(methodName))
             {
-                call.append("return new ").append(packageName).append(".ConnectionJavassistProxy($$);");
+                method.setBody("{return new " + packageName + ".ConnectionJavassistProxy($$);}");
             }
             else if ("getProxyStatement".equals(methodName))
             {
-                call.append("return new ").append(packageName).append(".StatementJavassistProxy($$);");
+                method.setBody("{return new " + packageName + ".StatementJavassistProxy($$);}");
             }
             else if ("getProxyPreparedStatement".equals(methodName))
             {
-                call.append("return new ").append(packageName).append(".PreparedStatementJavassistProxy($$);");
+                method.setBody("{return new " + packageName + ".PreparedStatementJavassistProxy($$);}");
             }
             else if ("getProxyCallableStatement".equals(methodName))
             {
-                call.append("return new ").append(packageName).append(".CallableStatementJavassistProxy($$);");
+                method.setBody("{return new " + packageName + ".CallableStatementJavassistProxy($$);}");
             }
-            else
-            {
-                continue;
-            }
-
-            call.append('}');
-            method.setBody(call.toString());
         }
 
         proxyCt.toClass(classPool.getClassLoader(), null);

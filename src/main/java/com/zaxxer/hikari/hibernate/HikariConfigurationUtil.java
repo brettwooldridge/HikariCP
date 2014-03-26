@@ -42,20 +42,24 @@ public class HikariConfigurationUtil
     @SuppressWarnings("rawtypes")
     public static HikariConfig loadConfiguration(Map props)
     {
-        Properties hicaryProps = new Properties();
-        copyProperty(AvailableSettings.ISOLATION, props, "transactionIsolation", hicaryProps);
-        copyProperty(AvailableSettings.AUTOCOMMIT, props, "autoCommit", hicaryProps);
+        Properties hikariProps = new Properties();
+        copyProperty(AvailableSettings.ISOLATION, props, "transactionIsolation", hikariProps);
+        copyProperty(AvailableSettings.AUTOCOMMIT, props, "autoCommit", hikariProps);
+        copyProperty(AvailableSettings.DRIVER, props, "driverClassName", hikariProps);
+        copyProperty(AvailableSettings.URL, props, "jdbcUrl", hikariProps);
+        copyProperty(AvailableSettings.USER, props, "username", hikariProps);
+        copyProperty(AvailableSettings.PASS, props, "password", hikariProps);
 
         for (Object keyo : props.keySet())
         {
             String key = (String) keyo;
             if (key.startsWith(CONFIG_PREFIX))
             {
-                hicaryProps.setProperty(key.substring(CONFIG_PREFIX.length()), (String) props.get(key));
+                hikariProps.setProperty(key.substring(CONFIG_PREFIX.length()), (String) props.get(key));
             }
         }
 
-        return new HikariConfig(hicaryProps);
+        return new HikariConfig(hikariProps);
     }
 
     @SuppressWarnings("rawtypes")
