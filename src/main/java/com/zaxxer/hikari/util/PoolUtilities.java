@@ -68,7 +68,7 @@ public final class PoolUtilities
             }
         };
 
-        int processors = Runtime.getRuntime().availableProcessors();
+        int processors = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
         LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>(queueSize);
         ThreadPoolExecutor executor = new ThreadPoolExecutor(processors, processors, 10, TimeUnit.SECONDS, queue, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
         executor.allowCoreThreadTimeOut(true);
