@@ -24,7 +24,7 @@ package com.zaxxer.hikari.metrics;
  */
 public class MetricsTracker
 {
-    private static final Context NO_CONTEXT = new Context();
+    protected static final Context NO_CONTEXT = new Context();
 
     public static class Context
     {
