@@ -35,11 +35,11 @@ Using the excellent [JMH microbenchmark framework](http://openjdk.java.net/proje
 <sup>2</sup> Tomcat fails to complete *Statement Cycle* benchmark when "StatementFinalizer" feature is enabled.<br/>
 <sup>3</sup> Benchmark results run against 1.3.3<br/>
 
-#### What's wrong with other pools?
+#### What's up with other pools?
 
 Not all pools are created equal.  Read our [pool analysis](https://github.com/brettwooldridge/HikariCP/wiki/Pool-Analysis) here if you care to know the good, bad, and ugly.
 
-#### You're [probably] doing it wrong
+#### You're [probably] doing it wrong.
 AKA ["What you probably didn't know about connection pool sizing"](https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing).  Read on to find out.
 
 ------------------------------
