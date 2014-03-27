@@ -39,6 +39,9 @@ Using the excellent [JMH microbenchmark framework](http://openjdk.java.net/proje
 
 Not all pools are created equal.  Read our [pool analysis](https://github.com/brettwooldridge/HikariCP/wiki/Pool-Analysis) here if you care to know the good, bad, and ugly.
 
+#### You're [probably] doing it wrong
+AKA ["What you probably didn't know about connection pool sizing"](https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing).  Read on to find out.
+
 ------------------------------
 
 #### Configuration (knobs, baby!)
