@@ -239,8 +239,6 @@ HikariDataSource ds = new HikariDataSource(config);
 ```
 Example property file:
 ```ini
-acquireIncrement=3
-acquireRetryDelay=1000
 connectionTestQuery=SELECT 1
 dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
 dataSource.user=test
@@ -251,7 +249,6 @@ dataSource.serverName=localhost
 or ``java.util.Properties`` based:
 ```java
 Properties props = new Properties();
-props.setProperty("maximumPoolSize", 100);
 props.setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource");
 props.setProperty("dataSource.user", "test");
 props.setProperty("dataSource.password", "test");
@@ -266,14 +263,14 @@ HikariDataSource ds = new HikariDataSource(config);
 Finally, you can skip the HikariConfig class altogether and configure the ``HikariDataSource`` directly:
 ```java
 HikariDataSource ds = new HikariDataSource();
-ds.setMaximumPoolSize(100);
+ds.setMaximumPoolSize(15);
 ds.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
 ds.addDataSourceProperty("serverName", "localhost");
 ds.addDataSourceProperty("databaseName", "mydb");
 ds.addDataSourceProperty("user", "bart");
 ds.addDataSourceProperty("password", "51mp50n");
 ```
-The advantage of configuring via ``HikariConfig`` over ``HikariDataSource`` is that when using the ``HikariConfig`` we know at ``DataSource`` construction-time what the configuration is, so the pool can be initialized at that point.  However, when using ``HikariDataSource`` alone, we don't know that you are *done* configuring the DataSource until ``getConnection()`` is called.  In that case, ``getConnection()`` must perform an additional check to see if the pool as been initialized yet or not.  The cost (albeit small) of this check is incurred on every invocation of ``getConnection()`` in that case.  In summary, intialization by ``HikariConfig`` is every so slightly more performant than initialization directly on the ``HikariDataSource`` -- not just at construction time but also at runtime.
+The advantage of configuring via ``HikariConfig`` over ``HikariDataSource`` is that when using the ``HikariConfig`` we know at ``DataSource`` construction-time what the configuration is, so the pool can be initialized at that point.  However, when using ``HikariDataSource`` alone, we don't know that you are *done* configuring the DataSource until ``getConnection()`` is called.  In that case, ``getConnection()`` must perform an additional check to see if the pool has been initialized yet or not.  The cost (albeit small) of this check is incurred on every invocation of ``getConnection()`` in that case.  In summary, intialization by ``HikariConfig`` is ever so slightly more performant than initialization directly on the ``HikariDataSource`` -- not just at construction time but also at runtime.
 
 ### Play Framework Plugin
 
