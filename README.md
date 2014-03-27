@@ -126,12 +126,12 @@ preferred if supported by the JDBC driver.  *Default: true*
 :abc:``jdbcUrl``<br/>
 This property is only used when the ``driverClassName`` property is used to wrap an old-school
 JDBC driver as a ``javax.sql.DataSource``.  While JBDC URLs are popular, HikariCP does not
-recommend using them.  The *DataSource* implementation for your driver provides bean properties
-for all the driver parameters that used to be specified in the JDBC URL. Before using the ``jdbcUrl``
-and ``driverClassName`` because that's the way you've always done it, consider using the more
-modern and maintainable ``dataSourceClassName`` approach instead.  Note that if this property
-is used, you may still use *DataSource* properties to configure your driver and is in fact
-recommended.  *Default: none*
+recommend using them.  The *DataSource* implementation provided by your driver provides bean
+properties for all the driver parameters that used to be specified in the JDBC URL. Before using
+the ``jdbcUrl`` and ``driverClassName`` because that's the way you've always done it, consider
+using the more modern and maintainable ``dataSourceClassName`` approach instead.  Note that if
+this property is used, you may still use *DataSource* properties to configure your driver and
+is in fact recommended.  *Default: none*
 
 :watch:``leakDetectionThreshold``<br/>
 This property controls the amount of time that a connection can be out of the pool before a
