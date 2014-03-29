@@ -138,32 +138,34 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     Connection getConnection() throws SQLException
     {
         final long start = System.currentTimeMillis();
+        final long maxLife = configuration.getMaxLifetime();
         final Context context = metricsTracker.recordConnectionRequest(start);
         long timeout = configuration.getConnectionTimeout();
         try
         {
             do
             {
-                IHikariConnectionProxy connectionProxy = connectionBag.borrow(timeout, TimeUnit.MILLISECONDS);
-                if (connectionProxy == null)  // We timed out... break and throw exception
+                IHikariConnectionProxy connection = connectionBag.borrow(timeout, TimeUnit.MILLISECONDS);
+                if (connection == null)  // We timed out... break and throw exception
                 {
                     break;
                 }
 
-                connectionProxy.unclose();
+                connection.unclose();
 
-                if (System.currentTimeMillis() - connectionProxy.getLastAccess() > 1000 && !isConnectionAlive(connectionProxy, timeout))
+                final long now = System.currentTimeMillis();
+                if ((now - connection.getCreationTime() > maxLife) || (now - connection.getLastAccess() > 1000 && !isConnectionAlive(connection, timeout)))
                 {
-                    closeConnection(connectionProxy);  // Throw away the dead connection, try again
+                    closeConnection(connection);  // Throw away the dead connection, try again
                     timeout -= (System.currentTimeMillis() - start);
                     continue;
                 }
                 else if (leakDetectionThreshold > 0)
                 {
-                    connectionProxy.captureStack(leakDetectionThreshold, houseKeepingTimer);
+                    connection.captureStack(leakDetectionThreshold, houseKeepingTimer);
                 }
 
-                return connectionProxy;
+                return connection;
             }
             while (timeout > 0);
 
