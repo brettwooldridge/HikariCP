@@ -89,7 +89,7 @@ public final class HikariMBeanElf
             }
             else
             {
-                LOGGER.error("No registered MBean for {0}.", configuration.getPoolName());
+                LOGGER.error("No registered MBean for {}.", configuration.getPoolName());
             }
         }
         catch (Exception e)
