@@ -154,7 +154,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 connection.unclose();
 
                 final long now = System.currentTimeMillis();
-                if ((now - connection.getCreationTime() > maxLife) || (now - connection.getLastAccess() > 1000 && !isConnectionAlive(connection, timeout)))
+                if ((maxLife > 0 && now - connection.getCreationTime() > maxLife) || (now - connection.getLastAccess() > 1000 && !isConnectionAlive(connection, timeout)))
                 {
                     closeConnection(connection);  // Throw away the dead connection, try again
                     timeout -= (System.currentTimeMillis() - start);
