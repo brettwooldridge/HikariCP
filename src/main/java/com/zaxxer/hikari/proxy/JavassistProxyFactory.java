@@ -49,8 +49,11 @@ public final class JavassistProxyFactory
 
     static
     {
+    	ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         try
         {
+        	Thread.currentThread().setContextClassLoader(JavassistProxyFactory.class.getClassLoader());
+        	
         	JavassistProxyFactory proxyFactoryFactory = new JavassistProxyFactory();
         	proxyFactoryFactory.modifyProxyFactory();
         }
@@ -58,6 +61,10 @@ public final class JavassistProxyFactory
         {
             LoggerFactory.getLogger(JavassistProxyFactory.class).error("Fatal exception during proxy generation", e);
         	throw new RuntimeException(e);
+        }
+        finally
+        {
+        	Thread.currentThread().setContextClassLoader(contextClassLoader);
         }
     }
 
