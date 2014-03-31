@@ -275,6 +275,22 @@ ds.addDataSourceProperty("password", "51mp50n");
 ```
 The advantage of configuring via ``HikariConfig`` over ``HikariDataSource`` is that when using the ``HikariConfig`` we know at ``DataSource`` construction-time what the configuration is, so the pool can be initialized at that point.  However, when using ``HikariDataSource`` alone, we don't know that you are *done* configuring the DataSource until ``getConnection()`` is called.  In that case, ``getConnection()`` must perform an additional check to see if the pool has been initialized yet or not.  The cost (albeit small) of this check is incurred on every invocation of ``getConnection()`` in that case.  In summary, intialization by ``HikariConfig`` is ever so slightly more performant than initialization directly on the ``HikariDataSource`` -- not just at construction time but also at runtime.
 
+### Popular DataSource Class Names
+We recommended using ``dataSourceClassName`` instead of ``driverClassName``/``jdbcUrl``, as using the driver class requires HikariCP to wrap the driver with an internal *DataSource* class.  Here is a list of JDBC *DataSource* classes for popular databases:
+
+| Database         | Driver       | *DataSource* class |
+|:---------------- |:------------ |:-------------------|
+| Apache Derby     | Derby        | org.apache.derby.jdbc.ClientDataSource |
+| H2               | H2           | org.h2.jdbcx.JdbcDataSource |
+| HSQLDB           | HSQLDB       | org.hsqldb.jdbc.JDBCDataSource |
+| MariaDB & MySQL  | MariaDB      | org.mariadb.jdbc.MySQLDataSource |
+| MySQL            | Connector/J  | com.mysql.jdbc.jdbc2.optional.MysqlDataSource |
+| MS SQL Server    | Microsoft    | com.microsoft.sqlserver.jdbc.SQLServerDataSource |
+| Oracle           | Oracle       | oracle.jdbc.pool.OracleDataSource |
+| PostgreSQL       | pgjdbc-ng    | com.impossibl.postgres.jdbc.PGDataSource |
+| PostgreSQL       | PostgreSQL   | org.postgresql.ds.PGSimpleDataSource |
+| SyBase           | jConnect     | com.sybase.jdbcx.SybDataSource |
+
 ### Play Framework Plugin
 
 Github user [autma](https://github.com/autma) has created a [plugin](https://github.com/autma/play-hikaricp-plugin) for the Play framework.  Thanks!
