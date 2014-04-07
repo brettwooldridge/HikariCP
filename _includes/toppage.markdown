@@ -17,7 +17,7 @@ in and let your code run like its pants are on fire.
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>1.3.4</version>
+        <version>1.3.5</version>
         <scope>compile</scope>
     </dependency>
 
@@ -55,6 +55,6 @@ You can find information about the [configuration properties here](https://githu
 Google discussion group [HikariCP here](https://groups.google.com/d/forum/hikari-cp).
 
 ### Requirements ###
-* Java 7 and above
+* Java 6 and above
 * Javassist 3.18.1+ library
 * slf4j library
