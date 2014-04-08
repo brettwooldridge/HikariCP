@@ -386,7 +386,10 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 Statement statement = connection.createStatement();
                 try
                 {
-                    statement.setQueryTimeout((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
+                    if (timeoutMs < Integer.MAX_VALUE)
+                    {
+                        statement.setQueryTimeout((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
+                    }
                     statement.executeQuery(configuration.getConnectionTestQuery());
                 }
                 finally
