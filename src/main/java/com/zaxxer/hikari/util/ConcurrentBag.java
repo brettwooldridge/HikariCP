@@ -42,7 +42,6 @@ import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
  * @author Brett Wooldridge
  *
  * @param <T> the templated type to store in the bag
- * @param <IBagManagable>
  */
 public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagManagable>
 {
@@ -72,9 +71,6 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
 	 */
 	public interface IBagStateListener
 	{
-	    /**
-	     * @param timeout timeout to add item to bag in milliseconds
-	     */
 	    void addBagItem();
 	}
 
@@ -245,7 +241,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
      * reserved can be removed from the bag via {@link #remove(IBagManagable)}
      * without the need to unreserve them.  Items that are not removed
      * from the bag can be make available for borrowing again by calling
-     * the {@link #unreserve(IBagManagable) method.
+     * the {@link #unreserve(IBagManagable)} method.
      *
      * @param value the item to reserve
      * @return true if the item was able to be reserved, false otherwise

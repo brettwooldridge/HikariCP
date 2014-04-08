@@ -215,7 +215,7 @@ public class HikariConfig implements HikariConfigMBean
 
     /**
      * Set the SQL query to be executed to test the validity of connections. Using
-     * the JDBC4 {@link Connection.isValid()} method to test connection validity can
+     * the JDBC4 <code>Connection.isValid()</code> method to test connection validity can
      * be more efficient on some databases and is recommended.  See 
      * {@link HikariConfig#setJdbc4ConnectionTest(boolean)}.
      *
@@ -438,7 +438,7 @@ public class HikariConfig implements HikariConfigMBean
 
     /**
      * Currently not supported.
-     * @param recordMetrics
+     * @param recordMetrics <code>true</code> if metrics should be recorded
      */
     @Deprecated
     public void setRecordMetrics(boolean recordMetrics)
