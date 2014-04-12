@@ -192,7 +192,7 @@ public final class JavassistProxyFactory
                 }
                 else
                 {
-                    modifiedBody = "return ((cast) delegate).method($$);".replace("method", method.getName()).replace("cast", primaryInterface.getName());
+                    modifiedBody = "{ return ((cast) delegate).method($$); }".replace("method", method.getName()).replace("cast", primaryInterface.getName());
                 }
 
                 if (method.getReturnType() == CtClass.voidType)

@@ -112,18 +112,17 @@ public interface HikariConfigMBean
     int getMinimumIdle();
 
     /**
-     * The property controls the minimum number of connections that HikariCP tries to maintain in the pool,
-     * including both idle and in-use connections. If the connections dip below this value, HikariCP will
+     * The property controls the minimum number of idle connections that HikariCP tries to maintain in the pool,
+     * including both idle and in-use connections. If the idle connections dip below this value, HikariCP will
      * make a best effort to restore them quickly and efficiently.
      *
-     * @param minPoolSize the minimum number of connections in the pool
+     * @param minIdle the minimum number of idle connections in the pool to maintain
      */
     void setMinimumIdle(int minIdle);
 
     /**
-     * The property controls the minimum number of connections that HikariCP tries to maintain in the pool,
-     * including both idle and in-use connections. If the connections dip below this value, HikariCP will
-     * make a best effort to restore them quickly and efficiently.
+     * The property controls the maximum number of connections that HikariCP will keep in the pool,
+     * including both idle and in-use connections. 
      *
      * @return the maximum number of connections in the pool
      */
