@@ -198,7 +198,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         }
         else
         {
-            LOGGER.debug("Connection returned to pool is broken, or the pool is shutting down.  Closing connection.");
+            LOGGER.debug("Connection returned to pool {} is broken, or the pool is shutting down.  Closing connection.",
+                configuration.getPoolName());
             closeConnection(connectionProxy);
         }
     }
@@ -357,7 +358,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             long now = System.currentTimeMillis();
             if (now - lastConnectionFailureTime > 1000 || isDebug)
             {
-                LOGGER.warn("Connection attempt to database failed (not every attempt is logged): {}", e.getMessage(), (isDebug ? e : null));
+                LOGGER.warn("Connection attempt to database {} failed (not every attempt is logged): {}", configuration.getPoolName(), e.getMessage(), (isDebug ? e : null));
             }
             lastConnectionFailureTime = now;
             return false;
