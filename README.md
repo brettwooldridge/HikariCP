@@ -88,12 +88,12 @@ having HikariCP construct it via reflection.  When this property is specified, t
 
 :abc:``dataSourceClassName``<br/>
 This is the name of the ``DataSource`` class provided by the JDBC driver.  Consult the
-documentation for your specific JDBC driver to get this class name.  Note XA data sources
-are not supported.  XA requires a real transaction manager like [bitronix](https://github.com/bitronix/btm).
-Note that you do not need this property if you are using ``driverClassName`` to wrap an
-old-school DriverManager-based JDBC driver.  The HikariCP team considers ``dataSourceClassName``
-to be a superior method of creating connections compared to ``driverClassName``.
-*Default: none*
+documentation for your specific JDBC driver to get this class name, or see the [table](https://github.com/brettwooldridge/HikariCP#popular-datasource-class-names) below.
+Note XA data sources are not supported.  XA requires a real transaction manager like
+[bitronix](https://github.com/bitronix/btm). Note that you do not need this property if you are using
+``driverClassName`` to wrap an old-school DriverManager-based JDBC driver.  The HikariCP team
+considers ``dataSourceClassName`` to be a superior method of creating connections compared to
+``driverClassName``. *Default: none*
 
 :abc:``driverClassName``<br/>
 This property allows HikariCP to wrap an old-school JDBC driver as a ``javax.sql.DataSource``.
