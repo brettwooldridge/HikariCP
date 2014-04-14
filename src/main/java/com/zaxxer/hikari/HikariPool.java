@@ -485,7 +485,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     {
         int total = totalConnections.get();
         int idle = getIdleConnections();
-        LOGGER.debug("{}Pool stats (total={}, inUse={}, avail={}, waiting={})", (prefix.length > 0 ? prefix[0] : ""), total, total - idle, idle,
+        LOGGER.debug("{}Pool stats {} (total={}, inUse={}, avail={}, waiting={})", (prefix.length > 0 ? prefix[0] : ""), configuration.getPoolName(), total, total - idle, idle,
                      getThreadsAwaitingConnection());
     }
 
