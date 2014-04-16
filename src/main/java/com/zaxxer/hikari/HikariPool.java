@@ -249,6 +249,10 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                     {
                         PoolUtilities.quietlySleep(sleepBackoff);
                         sleepBackoff = (int) Math.min(1000f, ((float) sleepBackoff) * 1.5);
+                        if (getThreadsAwaitingConnection() == 0)
+                        {
+                            break;
+                        }
                         continue;
                     }
                     
