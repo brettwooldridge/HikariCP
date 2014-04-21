@@ -26,6 +26,7 @@ public final class PoolUtilities
      * Execute the user-specified init SQL.
      *
      * @param connection the connection to initialize
+     * @param sql the SQL to execute
      * @throws SQLException throws if the init SQL execution fails
      */
     public static void executeSqlAutoCommit(Connection connection, String sql) throws SQLException

@@ -25,6 +25,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.sql.DataSource;
 
@@ -73,7 +74,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     private final String password;
 
     private volatile boolean isShutdown;
-    private volatile long lastConnectionFailureTime;
+    private volatile AtomicReference<Throwable> lastConnectionFailure;
     private int transactionIsolation;
     private boolean isDebug;
 
@@ -97,6 +98,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         this.connectionBag = new ConcurrentBag<IHikariConnectionProxy>();
         this.connectionBag.addBagStateListener(this);
         this.isDebug = LOGGER.isDebugEnabled();
+        this.lastConnectionFailure = new AtomicReference<Throwable>();
 
         this.catalog = configuration.getCatalog();
         this.connectionCustomizer = configuration.getConnectionCustomizer();
@@ -170,7 +172,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             while (timeout > 0);
 
             logPoolState("Timeout failure ");
-            throw new SQLException(String.format("Timeout of %dms encountered waiting for connection.", configuration.getConnectionTimeout()));
+            throw new SQLException(String.format("Timeout of %dms encountered waiting for connection.", configuration.getConnectionTimeout()), lastConnectionFailure.getAndSet(null));
         }
         catch (InterruptedException e)
         {
@@ -198,7 +200,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         }
         else
         {
-            LOGGER.debug("Connection returned to pool is broken, or the pool is shutting down.  Closing connection.");
+            LOGGER.debug("Connection returned to pool {} is broken, or the pool is shutting down.  Closing connection.",
+                configuration.getPoolName());
             closeConnection(connectionProxy);
         }
     }
@@ -249,6 +252,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                     {
                         PoolUtilities.quietlySleep(sleepBackoff);
                         sleepBackoff = (int) Math.min(1000f, ((float) sleepBackoff) * 1.5);
+                        if (getThreadsAwaitingConnection() == 0)
+                        {
+                            lastConnectionFailure = null;
+                            break;
+                        }
                         continue;
                     }
                     
@@ -342,6 +350,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             IHikariConnectionProxy proxyConnection = ProxyFactory.getProxyConnection(this, connection, transactionIsolation, isAutoCommit, isReadOnly, catalog);
             proxyConnection.resetConnectionState();
             connectionBag.add(proxyConnection);
+            lastConnectionFailure.set(null);
             return true;
         }
         catch (Exception e)
@@ -354,12 +363,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 PoolUtilities.quietlyCloseConnection(connection);
             }
 
-            long now = System.currentTimeMillis();
-            if (now - lastConnectionFailureTime > 1000 || isDebug)
+            lastConnectionFailure.set(e);
+            if (isDebug)
             {
-                LOGGER.warn("Connection attempt to database failed (not every attempt is logged): {}", e.getMessage(), (isDebug ? e : null));
+                LOGGER.warn("Connection attempt to database {} failed (not every attempt is logged): {}", configuration.getPoolName(), e.getMessage(), (isDebug ? e : null));
             }
-            lastConnectionFailureTime = now;
             return false;
         }
     }
@@ -386,7 +394,10 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 Statement statement = connection.createStatement();
                 try
                 {
-                    statement.setQueryTimeout((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
+                    if (configuration.getConnectionTimeout() < Integer.MAX_VALUE)
+                    {
+                        statement.setQueryTimeout((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
+                    }
                     statement.executeQuery(configuration.getConnectionTestQuery());
                 }
                 finally
@@ -420,7 +431,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             {
                 if (!addConnection())
                 {
-                    throw new RuntimeException("Fail-fast during pool initialization");
+                    throw new RuntimeException("Fail-fast during pool initialization", lastConnectionFailure.getAndSet(null));
                 }
             }
         }
@@ -481,7 +492,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     {
         int total = totalConnections.get();
         int idle = getIdleConnections();
-        LOGGER.debug("{}Pool stats (total={}, inUse={}, avail={}, waiting={})", (prefix.length > 0 ? prefix[0] : ""), total, total - idle, idle,
+        LOGGER.debug("{}Pool stats {} (total={}, inUse={}, avail={}, waiting={})", (prefix.length > 0 ? prefix[0] : ""), configuration.getPoolName(), total, total - idle, idle,
                      getThreadsAwaitingConnection());
     }
 
