@@ -431,7 +431,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             {
                 if (!addConnection())
                 {
-                    throw new RuntimeException("Fail-fast during pool initialization");
+                    throw new RuntimeException("Fail-fast during pool initialization", lastConnectionFailure.getAndSet(null));
                 }
             }
         }
