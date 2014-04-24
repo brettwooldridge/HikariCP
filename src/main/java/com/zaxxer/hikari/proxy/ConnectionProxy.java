@@ -141,7 +141,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             forceClose |= sqlState.startsWith("08") | SQL_ERRORS.contains(sqlState);
             if (forceClose)
             {
-                LOGGER.warn("Connection {} ({}) marked as broken because of SQLSTATE({}), ErrorCode({}): {}", delegate.toString(), parentPool.toString(), sqle.getErrorCode(), sqle.getNextException());
+                LOGGER.warn(String.format("Connection %s (%s) marked as broken because of SQLSTATE(%s), ErrorCode(%d).", delegate.toString(), parentPool.toString(), sqlState, sqle.getErrorCode()), sqle);
             }
             else if (sqle.getNextException() instanceof SQLException)
             {
