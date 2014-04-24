@@ -385,9 +385,10 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         {
             timeoutMs = Math.max(1000, timeoutMs);
 
+            boolean valid;
             if (isJdbc4ConnectionTest)
             {
-                connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
+                valid = connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
             }
             else
             {
@@ -399,6 +400,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                         statement.setQueryTimeout((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
                     }
                     statement.executeQuery(configuration.getConnectionTestQuery());
+                    valid = true;
                 }
                 finally
                 {
@@ -411,7 +413,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 connection.rollback();
             }
 
-            return true;
+            return valid;
         }
         catch (SQLException e)
         {
@@ -450,7 +452,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     {
         try
         {
-            totalConnections.decrementAndGet();
+            int tc = totalConnections.decrementAndGet();
+            if (tc < 0)
+            {
+                LOGGER.warn("Internal accounting inconsistency, totalConnections=" + tc, new Exception());
+            }
             connectionProxy.realClose();
         }
         catch (SQLException e)
