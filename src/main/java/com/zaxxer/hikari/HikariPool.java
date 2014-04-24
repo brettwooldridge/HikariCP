@@ -67,6 +67,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     private final boolean isRegisteredMbeans;
     private final boolean isJdbc4ConnectionTest;
     private final long leakDetectionThreshold;
+    private final AtomicReference<Throwable> lastConnectionFailure;
     private final AtomicInteger totalConnections;
     private final Timer houseKeepingTimer;
     private final String catalog;
@@ -74,7 +75,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     private final String password;
 
     private volatile boolean isShutdown;
-    private volatile AtomicReference<Throwable> lastConnectionFailure;
     private int transactionIsolation;
     private boolean isDebug;
 
@@ -254,7 +254,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                         sleepBackoff = (int) Math.min(1000f, ((float) sleepBackoff) * 1.5);
                         if (getThreadsAwaitingConnection() == 0)
                         {
-                            lastConnectionFailure = null;
+                            lastConnectionFailure.set(null);
                             break;
                         }
                         continue;
