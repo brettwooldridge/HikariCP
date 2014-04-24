@@ -36,14 +36,14 @@ public class ExceptionTest
     @Test
     public void testException1() throws SQLException
     {
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
+        Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
 
         Connection connection = ds.getConnection();
         Assert.assertNotNull(connection);
 
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
+        Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
 
         PreparedStatement statement = connection.prepareStatement("SELECT some, thing FROM somewhere WHERE something=?");
         Assert.assertNotNull(statement);
@@ -63,8 +63,8 @@ public class ExceptionTest
 
         connection.close();
 
-        Assert.assertSame("Totals connections not as expected", 0, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
+        Assert.assertSame("Totals connections not as expected", 0, TestElf.getPool(ds).getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
     }
 
     @Test
@@ -99,14 +99,14 @@ public class ExceptionTest
 
         HikariDataSource ds = new HikariDataSource(config);
 
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
+        Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
 
         Connection connection = ds.getConnection();
         Assert.assertNotNull(connection);
 
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
+        Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
 
         connection.close();
 
@@ -120,8 +120,8 @@ public class ExceptionTest
             Assert.assertSame("Connection is closed", e.getMessage());
         }
 
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
+        Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
     }
 
 }

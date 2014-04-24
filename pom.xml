@@ -82,12 +82,14 @@
          <artifactId>hibernate-core</artifactId>
          <version>4.3.0.Final</version>
          <scope>provided</scope>
+         <optional>true</optional>
       </dependency>
       <dependency>
          <groupId>com.codahale.metrics</groupId>
          <artifactId>metrics-core</artifactId>
          <version>3.0.2</version>
          <scope>provided</scope>
+         <optional>true</optional>
       </dependency>
 
       <!-- OSGi test -->
@@ -152,7 +154,8 @@
             <configuration>
                <instructions>
                   <Bundle-Name>HikariCP</Bundle-Name>
-                  <Export-Package>com.zaxxer.hikari</Export-Package>
+                  <Export-Package>com.zaxxer.hikari,com.zaxxer.hikari.hibernate</Export-Package>
+                  <Private-Package>com.zaxxer.hikari.*</Private-Package>
                   <Import-Package>
                      javassist.*,
                      javax.management,
@@ -160,6 +163,7 @@
                      javax.sql.rowset,
                      javax.sql.rowset.serial,
                      javax.sql.rowset.spi,
+                     com.codahale.metrics;;resolution:=optional,
                      org.slf4j,
                      org.hibernate;resolution:=optional,
                      org.hibernate.cfg;resolution:=optional,

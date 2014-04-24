@@ -58,6 +58,13 @@ public final class PoolUtilities
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public static <T> T createInstance(String className, Class<T> clazz) throws Exception
+    {
+        Class<?> loaded = PoolUtilities.class.getClassLoader().loadClass(className);
+        return (T) loaded.newInstance();
+    }
+
     public static ThreadPoolExecutor createThreadPoolExecutor(final int queueSize, final String threadName)
     {
         ThreadFactory threadFactory = new ThreadFactory() {

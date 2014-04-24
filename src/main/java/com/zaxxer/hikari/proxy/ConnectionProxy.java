@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.zaxxer.hikari.HikariPool;
+import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.util.FastStatementList;
 
 /**

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari;
+package com.zaxxer.hikari.pool;
 
 import java.lang.management.ManagementFactory;
 
@@ -23,6 +23,8 @@ import javax.management.ObjectName;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.zaxxer.hikari.HikariConfig;
 
 /**
  * Helper class to register our MBeans.
