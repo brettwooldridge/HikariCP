@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari;
+package com.zaxxer.hikari.pool;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -32,6 +32,9 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariPoolMBean;
+import com.zaxxer.hikari.IConnectionCustomizer;
 import com.zaxxer.hikari.metrics.CodaHaleMetricsTracker;
 import com.zaxxer.hikari.metrics.MetricsTracker;
 import com.zaxxer.hikari.metrics.MetricsTracker.Context;
@@ -53,7 +56,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
 
-    final DataSource dataSource;
+    private final DataSource dataSource;
 
     private final IConnectionCustomizer connectionCustomizer;
     private final HikariConfig configuration;
@@ -78,7 +81,12 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     private int transactionIsolation;
     private boolean isDebug;
 
-    HikariPool(HikariConfig configuration)
+    /**
+     * Construct a HikariPool with the specified configuration.
+     *
+     * @param configuration a HikariConfig instance
+     */
+    public HikariPool(HikariConfig configuration)
     {
         this(configuration, configuration.getUsername(), configuration.getPassword());
     }
@@ -87,8 +95,10 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      * Construct a HikariPool with the specified configuration.
      *
      * @param configuration a HikariConfig instance
+     * @param username authentication username
+     * @param password authentication password
      */
-    HikariPool(HikariConfig configuration, String username, String password)
+    public HikariPool(HikariConfig configuration, String username, String password)
     {
         this.configuration = configuration;
         this.username = username;
@@ -101,7 +111,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         this.lastConnectionFailure = new AtomicReference<Throwable>();
 
         this.catalog = configuration.getCatalog();
-        this.connectionCustomizer = configuration.getConnectionCustomizer();
+        this.connectionCustomizer = initializeCustomizer();
         this.isAutoCommit = configuration.isAutoCommit();
         this.isIsolateInternalQueries = configuration.isIsolateInternalQueries();
         this.isReadOnly = configuration.isReadOnly();
@@ -137,7 +147,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      * @return a java.sql.Connection instance
      * @throws SQLException thrown if a timeout occurs trying to obtain a connection
      */
-    Connection getConnection() throws SQLException
+    public Connection getConnection() throws SQLException
     {
         final long start = System.currentTimeMillis();
         final long maxLife = configuration.getMaxLifetime();
@@ -212,7 +222,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         return configuration.getPoolName();
     }
 
-    void shutdown()
+    public void shutdown()
     {
         isShutdown = true;
         houseKeepingTimer.cancel();
@@ -226,6 +236,38 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         if (isRegisteredMbeans)
         {
             HikariMBeanElf.unregisterMBeans(configuration, this);
+        }
+    }
+
+    public DataSource getDataSource()
+    {
+        return dataSource;
+    }
+
+
+    /**
+     * Permanently close a connection.
+     *
+     * @param connectionProxy the connection to actually close
+     */
+    public void closeConnection(IHikariConnectionProxy connectionProxy)
+    {
+        try
+        {
+            int tc = totalConnections.decrementAndGet();
+            if (tc < 0)
+            {
+                LOGGER.warn("Internal accounting inconsistency, totalConnections=" + tc, new Exception());
+            }
+            connectionProxy.realClose();
+        }
+        catch (SQLException e)
+        {
+            return;
+        }
+        finally
+        {
+            connectionBag.remove(connectionProxy);
         }
     }
 
@@ -443,32 +485,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         }
     }
 
-    /**
-     * Permanently close a connection.
-     *
-     * @param connectionProxy the connection to actually close
-     */
-    void closeConnection(IHikariConnectionProxy connectionProxy)
-    {
-        try
-        {
-            int tc = totalConnections.decrementAndGet();
-            if (tc < 0)
-            {
-                LOGGER.warn("Internal accounting inconsistency, totalConnections=" + tc, new Exception());
-            }
-            connectionProxy.realClose();
-        }
-        catch (SQLException e)
-        {
-            return;
-        }
-        finally
-        {
-            connectionBag.remove(connectionProxy);
-        }
-    }
-
     private DataSource initializeDataSource()
     {
         String dsClassName = configuration.getDataSourceClassName();
@@ -476,8 +492,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         {
             try
             {
-                Class<?> clazz = this.getClass().getClassLoader().loadClass(dsClassName);
-                DataSource dataSource = (DataSource) clazz.newInstance();
+                DataSource dataSource = PoolUtilities.createInstance(dsClassName, DataSource.class);
                 PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
                 return dataSource;
             }
@@ -492,6 +507,23 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         }
 
         return configuration.getDataSource();
+    }
+
+    private IConnectionCustomizer initializeCustomizer()
+    {
+        if (configuration.getConnectionCustomizerClassName() != null)
+        {
+            try
+            {
+                return PoolUtilities.createInstance(configuration.getConnectionCustomizerClassName(), IConnectionCustomizer.class);
+            }
+            catch (Exception e)
+            {
+                LOGGER.error("Connection customizer could not be created", e);
+            }
+        }
+
+        return null;
     }
 
     private void logPoolState(String... prefix)

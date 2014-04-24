@@ -21,7 +21,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 
-import com.zaxxer.hikari.HikariPool;
+import com.zaxxer.hikari.pool.HikariPool;
 
 /**
  * A factory class that produces proxies around instances of the standard

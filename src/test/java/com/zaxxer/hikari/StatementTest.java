@@ -21,14 +21,14 @@ public class StatementTest
 
         HikariDataSource ds = new HikariDataSource(config);
 
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
+        Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
 
         Connection connection = ds.getConnection();
         Assert.assertNotNull(connection);
 
-        Assert.assertSame("Totals connections not as expected", 1, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 0, ds.pool.getIdleConnections());
+        Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
 
         Statement statement = connection.createStatement();
         Assert.assertNotNull(statement);

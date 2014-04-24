@@ -253,8 +253,8 @@ public class TestConnectionTimeoutRetry
 
         Thread.sleep(1000);
 
-        Assert.assertSame("Totals connections not as expected", 10, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 3, ds.pool.getIdleConnections());
+        Assert.assertSame("Totals connections not as expected", 10, TestElf.getPool(ds).getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 3, TestElf.getPool(ds).getIdleConnections());
 
         connection1.close();
         connection2.close();
@@ -264,7 +264,7 @@ public class TestConnectionTimeoutRetry
         connection6.close();
         connection7.close();
 
-        Assert.assertSame("Totals connections not as expected", 10, ds.pool.getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 10, ds.pool.getIdleConnections());
+        Assert.assertSame("Totals connections not as expected", 10, TestElf.getPool(ds).getTotalConnections());
+        Assert.assertSame("Idle connections not as expected", 10, TestElf.getPool(ds).getIdleConnections());
     }
 }

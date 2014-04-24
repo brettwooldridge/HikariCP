@@ -74,7 +74,6 @@ public class HikariConfig implements HikariConfigMBean
     private boolean isRegisterMbeans;
     private DataSource dataSource;
     private Properties dataSourceProperties;
-    private IConnectionCustomizer connectionCustomizer;
     private int transactionIsolation;
 
     static
@@ -611,12 +610,11 @@ public class HikariConfig implements HikariConfigMBean
 
         validateNumerics();
 
-        if (connectionCustomizerClassName != null && connectionCustomizer == null)
+        if (connectionCustomizerClassName != null)
         {
             try
             {
-                Class<?> customizerClass = getClass().getClassLoader().loadClass(connectionCustomizerClassName);
-                connectionCustomizer = (IConnectionCustomizer) customizerClass.newInstance();
+                getClass().getClassLoader().loadClass(connectionCustomizerClassName);
             }
             catch (Exception e)
             {
@@ -720,11 +718,6 @@ public class HikariConfig implements HikariConfigMBean
             logger.warn("maxLifetime is less than 120000ms, did you specify the wrong time unit?  Using default instead.");
             maxLifetime = MAX_LIFETIME;
         }
-    }
-
-    IConnectionCustomizer getConnectionCustomizer()
-    {
-        return connectionCustomizer;
     }
 
     void copyState(HikariConfig other)

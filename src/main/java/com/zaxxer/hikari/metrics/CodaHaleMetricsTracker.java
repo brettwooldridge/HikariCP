@@ -19,7 +19,7 @@ package com.zaxxer.hikari.metrics;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.zaxxer.hikari.HikariPool;
+import com.zaxxer.hikari.pool.HikariPool;
 
 public final class CodaHaleMetricsTracker extends MetricsTracker
 {

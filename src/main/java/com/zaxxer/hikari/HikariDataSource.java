@@ -24,6 +24,7 @@ import java.util.HashMap;
 
 import javax.sql.DataSource;
 
+import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.util.DriverDataSource;
 
@@ -39,8 +40,8 @@ public class HikariDataSource extends HikariConfig implements DataSource
     private int loginTimeout;
 
     /* Package scopped for testing */
-    final HikariPool fastPathPool;
-    volatile HikariPool pool;
+    private final HikariPool fastPathPool;
+    private volatile HikariPool pool;
 
     /**
      * Default constructor.  Setters be used to configure the pool.  Using
@@ -131,16 +132,16 @@ public class HikariDataSource extends HikariConfig implements DataSource
     @Override
     public PrintWriter getLogWriter() throws SQLException
     {
-        return (pool.dataSource != null ? pool.dataSource.getLogWriter() : null);
+        return (pool.getDataSource() != null ? pool.getDataSource().getLogWriter() : null);
     }
 
     /** {@inheritDoc} */
     @Override
     public void setLogWriter(PrintWriter out) throws SQLException
     {
-        if (pool.dataSource != null)
+        if (pool.getDataSource() != null)
         {
-            pool.dataSource.setLogWriter(out);
+            pool.getDataSource().setLogWriter(out);
         }
     }
 
@@ -169,9 +170,9 @@ public class HikariDataSource extends HikariConfig implements DataSource
     @SuppressWarnings("unchecked")
     public <T> T unwrap(Class<T> iface) throws SQLException
     {
-        if (pool != null && iface.isInstance(pool.dataSource))
+        if (pool != null && iface.isInstance(pool.getDataSource()))
         {
-            return (T) pool.dataSource;
+            return (T) pool.getDataSource();
         }
 
         throw new SQLException("Wrapped connection is not an instance of " + iface);
@@ -181,7 +182,7 @@ public class HikariDataSource extends HikariConfig implements DataSource
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException
     {
-        return (pool != null & pool.dataSource.getClass().isAssignableFrom(iface));
+        return (pool != null & pool.getDataSource().getClass().isAssignableFrom(iface));
     }
 
     /**
@@ -222,9 +223,9 @@ public class HikariDataSource extends HikariConfig implements DataSource
         if (pool != null)
         {
             pool.shutdown();
-            if (pool.dataSource instanceof DriverDataSource)
+            if (pool.getDataSource() instanceof DriverDataSource)
             {
-                ((DriverDataSource) pool.dataSource).shutdown();
+                ((DriverDataSource) pool.getDataSource()).shutdown();
             }
         }
 
@@ -233,9 +234,9 @@ public class HikariDataSource extends HikariConfig implements DataSource
             for (HikariPool hikariPool : multiPool.values())
             {
                 hikariPool.shutdown();
-                if (hikariPool.dataSource instanceof DriverDataSource)
+                if (hikariPool.getDataSource() instanceof DriverDataSource)
                 {
-                    ((DriverDataSource) hikariPool.dataSource).shutdown();
+                    ((DriverDataSource) hikariPool.getDataSource()).shutdown();
                 }
             }
         }

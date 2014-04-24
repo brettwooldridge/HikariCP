@@ -42,7 +42,7 @@ public class UnwrapTest
 
         HikariDataSource ds = new HikariDataSource(config);
 
-        Assert.assertSame("Idle connections not as expected", 1, ds.pool.getIdleConnections());
+        Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
 
         Connection connection = ds.getConnection();
         Assert.assertNotNull(connection);
