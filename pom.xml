@@ -159,6 +159,8 @@
                   <Import-Package>
                      javassist.*,
                      javax.management,
+                     javax.naming,
+                     javax.naming.spi,
                      javax.sql,
                      javax.sql.rowset,
                      javax.sql.rowset.serial,

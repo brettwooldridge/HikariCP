@@ -16,10 +16,14 @@
 
 package com.zaxxer.hikari.util;
 
+import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
+import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.HikariConfig;
 
 /**
+ * A class that reflectively sets bean properties on a target object.
  *
  * @author Brett Wooldridge
  */
@@ -55,6 +60,31 @@ public final class PropertyBeanSetter
             {
                 setProperty(target, propName, propValue);
             }
+        }
+    }
+
+    /**
+     * Get the bean-style property names for the specified object.
+     *
+     * @param targetClass the target object
+     * @return a set of property names
+     */
+    public static Set<String> getPropertyNames(Class<?> targetClass)
+    {
+        HashSet<String> set = new HashSet<String>();
+        try
+        {
+            BeanInfo info = Introspector.getBeanInfo(targetClass);
+            for (PropertyDescriptor descr : info.getPropertyDescriptors())
+            {
+                set.add(descr.getName());
+            }
+
+            return set;
+        }
+        catch (IntrospectionException e)
+        {
+            throw new RuntimeException(e);
         }
     }
 

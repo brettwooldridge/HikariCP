@@ -59,6 +59,7 @@ public class HikariConfig implements HikariConfigMBean
     private String connectionInitSql;
     private String connectionTestQuery;
     private String dataSourceClassName;
+    private String dataSourceJndiName;
     private String driverClassName;
     private String jdbcUrl;
     private String password;
@@ -75,6 +76,7 @@ public class HikariConfig implements HikariConfigMBean
     private DataSource dataSource;
     private Properties dataSourceProperties;
     private int transactionIsolation;
+
 
     static
     {
@@ -308,6 +310,16 @@ public class HikariConfig implements HikariConfigMBean
     public void addDataSourceProperty(String propertyName, Object value)
     {
         dataSourceProperties.put(propertyName, value);
+    }
+
+    public String getDataSourceJNDI()
+    {
+        return this.dataSourceJndiName;
+    }
+    
+    public void setDataSourceJNDI(String jndiDataSource)
+    {
+        this.dataSourceJndiName = jndiDataSource;
     }
 
     public Properties getDataSourceProperties()
