@@ -3,6 +3,7 @@ package com.zaxxer.hikari;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.Set;
 
 import javax.sql.DataSource;
 
@@ -63,4 +64,10 @@ public class TestPropertySetter
         PropertyBeanSetter.setTargetFromProperties(dataSource, config.getDataSourceProperties());
     }
 
+    @Test
+    public void testGetPropertyNames() throws Exception
+    {
+        Set<String> propertyNames = PropertyBeanSetter.getPropertyNames(HikariConfig.class);
+        Assert.assertTrue(propertyNames.contains("dataSourceClassName"));
+    }
 }
