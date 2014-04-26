@@ -224,18 +224,21 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
     public void shutdown()
     {
-        isShutdown = true;
-        houseKeepingTimer.cancel();
-        addConnectionExecutor.shutdown();
-
-        LOGGER.info("HikariCP pool {} is being shutdown.", configuration.getPoolName());
-        logPoolState("State at shutdown ");
-
-        closeIdleConnections();
-
-        if (isRegisteredMbeans)
+        if (!isShutdown)
         {
-            HikariMBeanElf.unregisterMBeans(configuration, this);
+            isShutdown = true;
+            houseKeepingTimer.cancel();
+            addConnectionExecutor.shutdown();
+    
+            LOGGER.info("HikariCP pool {} is being shutdown.", configuration.getPoolName());
+            logPoolState("State at shutdown ");
+    
+            closeIdleConnections();
+    
+            if (isRegisteredMbeans)
+            {
+                HikariMBeanElf.unregisterMBeans(configuration, this);
+            }
         }
     }
 
