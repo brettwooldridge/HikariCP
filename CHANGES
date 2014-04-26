@@ -2,6 +2,10 @@ HikariCP Changes
 
 Changes between 1.3.6 and 1.3.7
 
+ *) Added JNDI object factory (com.zaxxer.hikari.HikariJNDIFactory)
+    for Tomcat and other containers that prefer JNDI-registered DataSource
+    factories.
+
  *) Fix NPE that can occur when connections cannot be created and
     callers to getConnection() timeout.
 
