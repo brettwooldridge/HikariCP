@@ -430,7 +430,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         {
             timeoutMs = Math.max(1000, timeoutMs);
 
-            boolean valid;
+            boolean valid = true;
             if (isJdbc4ConnectionTest)
             {
                 valid = connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
@@ -445,7 +445,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                         statement.setQueryTimeout((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
                     }
                     statement.executeQuery(configuration.getConnectionTestQuery());
-                    valid = true;
                 }
                 finally
                 {
