@@ -1,5 +1,12 @@
 HikariCP Changes
 
+Changes between 1.3.6 and 1.3.7
+
+ *) Fix NPE that can occur when connections cannot be created and
+    callers to getConnection() timeout.
+
+ *) Various bug fixes and minor enhancements.
+
 Changes between 1.3.5 and 1.3.6
 
  *) Include connection failure cause in calls to getConnection() that
