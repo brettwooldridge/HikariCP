@@ -28,7 +28,6 @@ import javax.naming.Reference;
 import javax.naming.spi.ObjectFactory;
 import javax.sql.DataSource;
 
-import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 /**
@@ -54,7 +53,7 @@ public class HikariJNDIFactory implements ObjectFactory
         }
 
         Properties properties = new Properties();
-        for (String propertyName : PropertyBeanSetter.getPropertyNames(HikariPool.class))
+        for (String propertyName : PropertyBeanSetter.getPropertyNames(HikariConfig.class))
         {
             RefAddr ra = ref.get(propertyName);
             if (ra != null)
