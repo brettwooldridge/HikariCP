@@ -53,7 +53,7 @@ public final class HikariMBeanElf
             MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
             
             ObjectName poolConfigName = new ObjectName("com.zaxxer.hikari:type=PoolConfig (" + configuration.getPoolName() + ")");
-            ObjectName poolName = new ObjectName("com.zaxxer.hikari.pool:type=Pool (" + configuration.getPoolName() + ")");
+            ObjectName poolName = new ObjectName("com.zaxxer.hikari:type=Pool (" + configuration.getPoolName() + ")");
             if (!mBeanServer.isRegistered(poolConfigName))
             {
                 mBeanServer.registerMBean(configuration, poolConfigName);
