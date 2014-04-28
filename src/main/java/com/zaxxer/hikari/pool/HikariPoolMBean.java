@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari;
+package com.zaxxer.hikari.pool;
 
 /**
  * The javax.management MBean for a Hikiri pool instance.
