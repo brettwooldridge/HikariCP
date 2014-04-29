@@ -17,7 +17,7 @@ in and let your code run like its pants are on fire.
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>1.3.5</version>
+        <version>1.3.8</version>
         <scope>compile</scope>
     </dependency>
 
