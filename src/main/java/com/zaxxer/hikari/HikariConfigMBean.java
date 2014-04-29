@@ -16,6 +16,8 @@
 
 package com.zaxxer.hikari;
 
+import javax.sql.DataSource;
+
 /**
  * The javax.management MBean for a Hikiri pool configuration.
  *
@@ -24,23 +26,19 @@ package com.zaxxer.hikari;
 public interface HikariConfigMBean
 {
     /**
-     * This is for "legacy" databases that do not support the JDBC4 {@code Connection.isValid()} API. This is the 
-     * query that will be executed just before a connection is given to you from the pool to validate that
-     * the connection to the database is still alive. It is database dependent and should be a query that
-     * takes very little processing by the database (eg. "VALUES 1"). See the {code getJdbc4ConnectionTest()} property
-     * for a more efficent alive test. One of either this property or jdbc4ConnectionTest must be specified.
+     * Get the maximum number of milliseconds that a client will wait for a connection from the pool. If this 
+     * time is exceeded without a connection becoming available, a SQLException will be thrown from
+     * {@link DataSource#getConnection()}.
      *
      * @return the connection timeout in milliseconds
      */
     long getConnectionTimeout();
 
     /**
-     * This is for "legacy" databases that do not support the JDBC4 {code Connection.isValid()} API. This is the 
-     * query that will be executed just before a connection is given to you from the pool to validate that
-     * the connection to the database is still alive. It is database dependent and should be a query that
-     * takes very little processing by the database (eg. "VALUES 1"). See the {@code setJdbc4ConnectionTest()} property
-     * for a more efficent alive test. One of either this property or jdbc4ConnectionTest must be specified.
-
+     * Set the maximum number of milliseconds that a client will wait for a connection from the pool. If this
+     * time is exceeded without a connection becoming available, a SQLException will be thrown from
+     * {@link DataSource#getConnection()}.
+     *
      * @param connectionTimeoutMs the connection timeout in milliseconds
      */
     void setConnectionTimeout(long connectionTimeoutMs);
