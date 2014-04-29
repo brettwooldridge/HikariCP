@@ -42,7 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class StubConnection extends StubBaseConnection implements Connection
 {
-    public static AtomicInteger count = new AtomicInteger();
+    public static final AtomicInteger count = new AtomicInteger();
 
     private static long foo;
     private boolean autoCommit;
