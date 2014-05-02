@@ -16,8 +16,6 @@
 
 package com.zaxxer.hikari;
 
-import javax.sql.DataSource;
-
 /**
  * The javax.management MBean for a Hikiri pool configuration.
  *
@@ -28,7 +26,7 @@ public interface HikariConfigMBean
     /**
      * Get the maximum number of milliseconds that a client will wait for a connection from the pool. If this 
      * time is exceeded without a connection becoming available, a SQLException will be thrown from
-     * {@link DataSource#getConnection()}.
+     * {@link javax.sql.DataSource#getConnection()}.
      *
      * @return the connection timeout in milliseconds
      */
@@ -37,7 +35,7 @@ public interface HikariConfigMBean
     /**
      * Set the maximum number of milliseconds that a client will wait for a connection from the pool. If this
      * time is exceeded without a connection becoming available, a SQLException will be thrown from
-     * {@link DataSource#getConnection()}.
+     * {@link javax.sql.DataSource#getConnection()}.
      *
      * @param connectionTimeoutMs the connection timeout in milliseconds
      */
