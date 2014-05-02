@@ -293,7 +293,7 @@ We recommended using ``dataSourceClassName`` instead of ``driverClassName``/``jd
 
 ### Play Framework Plugin
 
-Github user [autma](https://github.com/autma) has created a [plugin](https://github.com/autma/play-hikaricp-plugin) for the Play framework.  Thanks!
+A new plugin has come up for the the Play framework; [play-hikaricp](http://edulify.github.io/play-hikaricp.edulify.com/).  If your using the excellent Play framework,  your application deserves HikariCP.  Thanks!
 
 ----------------------------------------------------
 
