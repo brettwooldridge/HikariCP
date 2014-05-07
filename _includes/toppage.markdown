@@ -21,32 +21,9 @@ in and let your code run like its pants are on fire.
         <scope>compile</scope>
     </dependency>
 
-### Initialization ###
+### Initialization and Configuration###
 
-    HikariConfig config = new HikariConfig();
-    config.setMaximumPoolSize(20);
-    config.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
-    config.addDataSourceProperty("url", "jdbc:mysql://localhost/database");
-    config.addDataSourceProperty("user", "bart");
-    config.addDataSourceProperty("password", "51mp50n");
-
-    DataSource ds = new HikariDataSource(config);
-
-or property file-based:
-
-    HikariConfig config = new HikariConfig("some/path/hikari.properties");
-    DataSource ds = new HikariDataSource(config);
-
-Example property file:
-
-    connectionTestQuery=SELECT 1
-    maximumPoolSize=20
-    dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
-    dataSource.username=test
-    dataSource.password=test
-    dataSource.databaseName=mydb
-    dataSource.serverName=localhost
-
+See the [main project page](https://github.com/brettwooldridge/HikariCP#initialization) for initialization examples.
 
 You can find information about the [configuration properties here](https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby).
 
