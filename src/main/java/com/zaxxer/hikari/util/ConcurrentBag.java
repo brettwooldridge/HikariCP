@@ -111,7 +111,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
         while (!list.isEmpty())
         {
             final WeakReference<T> reference = list.removeFirst();
-            T element = reference.get();
+            final T element = reference.get();
             if (element != null && element.compareAndSetState(STATE_NOT_IN_USE, STATE_IN_USE))
             {
                 return element;
@@ -152,7 +152,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
      * @throws NullPointerException if value is null
      * @throws IllegalStateException if the requited value was not borrowed from the bag
      */
-    public void requite(T value)
+    public void requite(final T value)
     {
     	if (value == null)
     	{
@@ -161,7 +161,6 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
 
         if (value.compareAndSetState(STATE_IN_USE, STATE_NOT_IN_USE))
         {
-        	final long returnTime = System.nanoTime();
         	LinkedList<WeakReference<T>> list = threadList.get();
             if (list == null)
             {
@@ -170,11 +169,11 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
             }
 
             list.addLast(new WeakReference<T>(value));
-            synchronizer.releaseShared(returnTime);
+            synchronizer.releaseShared(System.nanoTime());
         }
         else
         {
-            throw new IllegalStateException("Value was returned to the bag that was not borrowed");
+            throw new IllegalStateException("Value was returned to the bag that was not borrowed: ");
         }
     }
 
@@ -183,7 +182,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
      *
      * @param value an object to add to the bag
      */
-    public void add(T value)
+    public void add(final T value)
     {
         final long addTime = System.nanoTime();
         sharedList.add(value);
