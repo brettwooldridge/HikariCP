@@ -24,7 +24,7 @@ in and let your code run like its pants are on fire.
 ### Initialization ###
 
     HikariConfig config = new HikariConfig();
-    config.setMaximumPoolSize(100);
+    config.setMaximumPoolSize(20);
     config.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
     config.addDataSourceProperty("url", "jdbc:mysql://localhost/database");
     config.addDataSourceProperty("user", "bart");
@@ -39,9 +39,8 @@ or property file-based:
 
 Example property file:
 
-    acquireIncrement=3
-    acquireRetryDelay=1000
     connectionTestQuery=SELECT 1
+    maximumPoolSize=20
     dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
     dataSource.username=test
     dataSource.password=test
