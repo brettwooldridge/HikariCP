@@ -201,7 +201,10 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     {
         if (value.compareAndSetState(STATE_IN_USE, STATE_REMOVED) || value.compareAndSetState(STATE_RESERVED, STATE_REMOVED))
         {
-        	sharedList.remove(value);
+        	if (!sharedList.remove(value))
+        	{
+        	    throw new IllegalStateException("Attempt to remove an object from the bag that does not exist");
+        	}
         }
         else
         {
