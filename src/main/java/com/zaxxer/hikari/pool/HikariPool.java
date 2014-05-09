@@ -127,7 +127,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             HikariMBeanElf.registerMBeans(configuration, this);
         }
 
-        houseKeepingTimer = new Timer("Hikari Housekeeping Timer", true);
+        houseKeepingTimer = new Timer("Hikari Housekeeping Timer (pool " + configuration.getPoolName() + ")", true);
 
         addConnectionExecutor = PoolUtilities.createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler");
 
