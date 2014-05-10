@@ -66,6 +66,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     private final boolean isAutoCommit;
     private final boolean isIsolateInternalQueries;
     private final boolean isReadOnly;
+    private final boolean isRecordMetrics;
     private final boolean isRegisteredMbeans;
     private final boolean isJdbc4ConnectionTest;
     private final long leakDetectionThreshold;
@@ -118,7 +119,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         this.isJdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
         this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
         this.transactionIsolation = configuration.getTransactionIsolation();
-        this.metricsTracker = (configuration.isRecordMetrics() ? new CodaHaleMetricsTracker(configuration.getPoolName()) : new MetricsTracker());
+        this.isRecordMetrics = configuration.isRecordMetrics();
+        this.metricsTracker = (isRecordMetrics ? new CodaHaleMetricsTracker(configuration.getPoolName()) : new MetricsTracker());
 
         this.dataSource = initializeDataSource();
 
@@ -165,7 +167,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 connection.unclose();
 
                 final long now = System.currentTimeMillis();
-                if ((maxLife > 0 && now - connection.getCreationTime() > maxLife) || (now - connection.getLastAccess() > 1000 && !isConnectionAlive(connection, timeout)))
+                if ((maxLife != 0 && now - connection.getCreationTime() > maxLife) || (now - connection.getLastAccess() > 1000 && !isConnectionAlive(connection, timeout)))
                 {
                     closeConnection(connection);  // Throw away the dead connection, try again
                     timeout -= (System.currentTimeMillis() - start);
@@ -201,17 +203,19 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      */
     public void releaseConnection(IHikariConnectionProxy connectionProxy)
     {
-        metricsTracker.recordConnectionUsage(System.currentTimeMillis() - connectionProxy.getLastOpenTime());
-
-        if (!connectionProxy.isBrokenConnection() && !isShutdown)
+        if (isRecordMetrics)
         {
-            connectionBag.requite(connectionProxy);
+            metricsTracker.recordConnectionUsage(System.currentTimeMillis() - connectionProxy.getLastOpenTime());
+        }
+
+        if (connectionProxy.isBrokenConnection() || isShutdown)
+        {
+            LOGGER.debug("Connection returned to pool {} is broken, or the pool is shutting down.  Closing connection.", configuration.getPoolName());
+            closeConnection(connectionProxy);
         }
         else
         {
-            LOGGER.debug("Connection returned to pool {} is broken, or the pool is shutting down.  Closing connection.",
-                configuration.getPoolName());
-            closeConnection(connectionProxy);
+            connectionBag.requite(connectionProxy);
         }
     }
 
