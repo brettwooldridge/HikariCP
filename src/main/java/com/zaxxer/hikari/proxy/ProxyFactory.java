@@ -47,7 +47,7 @@ public final class ProxyFactory
      * @param defaultCatalog the default catalog of the underlying {@link Connection}
      * @return a proxy that wraps the specified {@link Connection}
      */
-    public static IHikariConnectionProxy getProxyConnection(HikariPool pool, Connection connection, int defaultIsolationLevel, boolean defaultAutoCommit, boolean defaultIReadOnly, String defaultCatalog)
+    public static IHikariConnectionProxy getProxyConnection(HikariPool pool, Connection connection, long maxLifeTime, int defaultIsolationLevel, boolean defaultAutoCommit, boolean defaultIReadOnly, String defaultCatalog)
     {
         // Body is injected by JavassistProxyFactory
         return null;

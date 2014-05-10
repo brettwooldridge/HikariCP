@@ -47,11 +47,11 @@ public interface IHikariConnectionProxy extends Connection, IBagManagable
     void checkException(SQLException sqle);
 
     /**
-     * Get the creation timestamp of the connection.
+     * Get the expiration timestamp of the connection.
      *
-     * @return the creation timestamp
+     * @return the expiration timestamp, or Long.MAX_VALUE if there is no maximum lifetime
      */
-    long getCreationTime();
+    long getExpirationTime();
 
     /**
      * Get the last access timestamp of the connection.
@@ -91,8 +91,9 @@ public interface IHikariConnectionProxy extends Connection, IBagManagable
 
     /**
      * Make the Connection available for use again by marking it as not closed.
+     * @param now the current time in milliseconds
      */
-    void unclose();
+    void unclose(long now);
 
     /**
      * Called by Statement and its subclasses when they are closed to remove them

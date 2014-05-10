@@ -24,12 +24,13 @@ package com.zaxxer.hikari.metrics;
  */
 public class MetricsTracker
 {
-    protected static final Context NO_CONTEXT = new Context();
+    public static final Context NO_CONTEXT = new Context();
 
     public static class Context
     {
         public void stop()
         {
+            // do nothing
         }
     }
 

@@ -46,14 +46,14 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
     protected final Connection delegate;
 
-    private final long creationTime;
     private final FastStatementList openStatements;
     private final HikariPool parentPool;
+    private final AtomicInteger state;
+    private final String defaultCatalog;
+    private final long expirationTime;
     private final int defaultIsolationLevel;
     private final boolean defaultAutoCommit;
     private final boolean defaultReadOnly;
-    private final String defaultCatalog;
-    private final AtomicInteger state;
 
     private boolean forceClose;
     private boolean isAutoCommitDirty;
@@ -81,7 +81,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         SQL_ERRORS.add("JZ0C1");  // Sybase disconnect error
     }
 
-    protected ConnectionProxy(HikariPool pool, Connection connection, int defaultIsolationLevel, boolean defaultAutoCommit, boolean defaultReadOnly, String defaultCatalog)
+    protected ConnectionProxy(HikariPool pool, Connection connection, long maxLifetime, int defaultIsolationLevel, boolean defaultAutoCommit, boolean defaultReadOnly, String defaultCatalog)
     {
         this.parentPool = pool;
         this.delegate = connection;
@@ -91,7 +91,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         this.defaultCatalog = defaultCatalog;
         this.state = new AtomicInteger();
 
-        this.creationTime = lastAccess = System.currentTimeMillis();
+        long now = System.currentTimeMillis();
+        this.expirationTime = (maxLifetime > 0 ? now + maxLifetime : Long.MAX_VALUE);
+        this.lastAccess = now;
         this.openStatements = new FastStatementList();
         this.hashCode = System.identityHashCode(this);
 
@@ -152,9 +154,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
     /** {@inheritDoc} */
     @Override
-    public final long getCreationTime()
+    public final long getExpirationTime()
     {
-        return creationTime;
+        return expirationTime;
     }
 
     /** {@inheritDoc} */
@@ -223,10 +225,10 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
     /** {@inheritDoc} */
     @Override
-    public final void unclose()
+    public final void unclose(final long now)
     {
         isClosed = false;
-        uncloseTime = System.currentTimeMillis();
+        uncloseTime = now;
     }
 
     /** {@inheritDoc} */
