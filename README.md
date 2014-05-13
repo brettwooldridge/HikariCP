@@ -33,7 +33,9 @@ Using the excellent [JMH microbenchmark framework](http://openjdk.java.net/proje
 
 ----------------------------------------------------
 ***User Testimonial***<br/>
-The guys over at [Edulify](https://edulify.com) were experiencing connection leaks and other issues using BoneCP in their Play Framework application.  They creating a [HikariCP plugin for Play Framework](http://edulify.github.io/play-hikaricp.edulify.com/) to give HikariCP a try.  In their own words, *"Here is a cool graph that shows connections opened to PostgreSQL.  As you can see, the pool is way more stable. Also it is keeping its size at the minimum since we deploy it."*
+The guys over at [Edulify](https://edulify.com) were experiencing connection leaks and other issues using BoneCP in their Play Framework application.  They creating a [HikariCP plugin for Play Framework](http://edulify.github.io/play-hikaricp.edulify.com/) to give HikariCP a try.
+
+In their own words, *"HikariCP is supposed to be the fastest connection pool in Java land. But we did not start to use it because of speed, but because of its reliability.  Here is a cool graph that shows connections opened to PostgreSQL.  As you can see, the pool is way more stable. Also it is keeping its size at the minimum since we deploy it."*
 
 ![](https://github.com/brettwooldridge/HikariCP/wiki/HikariVsBone.png)
 
