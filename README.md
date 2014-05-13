@@ -16,7 +16,6 @@ There is nothing faster.  There is nothing more correct.  HikariCP is a "zero-ov
 
 ----------------------------------------------------
 ***JMH Benchmarks***<br/>
-
 Using the excellent [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team, extremely accurate microbenchmarks were created to isolate and measure the overhead of HikariCP and other popular pools.  You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
 
 ![](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks.png)
