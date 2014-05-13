@@ -26,13 +26,15 @@ Using the excellent [JMH microbenchmark framework](http://openjdk.java.net/proje
    * In *Constrained* benchmark, threads > connections (2:1).
  * One *Statement Cycle* is defined as single ``Connection.prepareStatement()``, ``Statement.execute()``, ``Statement.close()``.
 
+<sup>
 <sup>1</sup> BoneCP fails to complete *Statement Cycle* benchmark unless the "CACHED" pool strategy is used.<br/>
 <sup>2</sup> Tomcat fails to complete *Statement Cycle* benchmark when "StatementFinalizer" feature is enabled.<br/>
-<sup>3</sup> Benchmark results run against 1.3.3<br/>
+<sup>3</sup> Benchmark results run against HikariCP 1.3.3<br/>
+</sup>
 
 ----------------------------------------------------
 ***User Testimonial***<br/>
-The guys over at [Edulify](https://edulify.com) were experiencing connection leaks and other issues using BoneCP in their Play Framework application.  They creating a [HikariCP plugin for Play Framework](http://edulify.github.io/play-hikaricp.edulify.com/) to give HikariCP a try.  In their own words, "Here is a cool graph that shows connections opened to PostgreSQL.  As you can see, the pool is way more stable. Also it is keeping its size at the minimum since we deploy it."
+The guys over at [Edulify](https://edulify.com) were experiencing connection leaks and other issues using BoneCP in their Play Framework application.  They creating a [HikariCP plugin for Play Framework](http://edulify.github.io/play-hikaricp.edulify.com/) to give HikariCP a try.  In their own words, *"Here is a cool graph that shows connections opened to PostgreSQL.  As you can see, the pool is way more stable. Also it is keeping its size at the minimum since we deploy it."*
 
 ![](https://github.com/brettwooldridge/HikariCP/wiki/HikariVsBone.png)
 
