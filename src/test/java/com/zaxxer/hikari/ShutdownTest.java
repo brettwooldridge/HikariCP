@@ -153,8 +153,6 @@ public class ShutdownTest
     @Test
     public void testShutdown4() throws SQLException
     {
-    	int threadCountStart = threadCount();
-    	
         StubConnection.slowCreate = true;
         
         HikariConfig config = new HikariConfig();
