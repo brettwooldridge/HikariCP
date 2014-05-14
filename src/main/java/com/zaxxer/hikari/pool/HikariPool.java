@@ -204,7 +204,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     {
         if (isRecordMetrics)
         {
-            metricsTracker.recordConnectionUsage(System.currentTimeMillis() - connectionProxy.getLastOpenTime());
+            metricsTracker.recordConnectionUsage(PoolUtilities.elapsedTimeMs(connectionProxy.getLastOpenTime()));
         }
 
         if (isBroken || isShutdown)
