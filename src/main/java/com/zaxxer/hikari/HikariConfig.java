@@ -146,7 +146,6 @@ public class HikariConfig implements HikariConfigMBean
         LOGGER.warn("The acquireIncrement property has been retired, remove it from your pool configuration to avoid this warning.");
     }
 
-    /** {@inheritDoc} */
     @Deprecated
     public void setAcquireRetries(int acquireRetries)
     {
