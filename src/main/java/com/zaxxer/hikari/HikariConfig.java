@@ -37,9 +37,9 @@ public class HikariConfig implements HikariConfigMBean
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariConfig.class);
 
-	private static final long CONNECTION_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
-	private static final long IDLE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
-	private static final long MAX_LIFETIME = TimeUnit.MINUTES.toMillis(30);
+    private static final long CONNECTION_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
+    private static final long IDLE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
+    private static final long MAX_LIFETIME = TimeUnit.MINUTES.toMillis(30);
 
     private static int poolNumber;
 
@@ -77,7 +77,6 @@ public class HikariConfig implements HikariConfigMBean
     private Properties dataSourceProperties;
     private int transactionIsolation;
 
-
     static
     {
         JavassistProxyFactory.initialize();
@@ -112,7 +111,6 @@ public class HikariConfig implements HikariConfigMBean
         PropertyBeanSetter.setTargetFromProperties(this, properties);
     }
 
-
     /**
      * Construct a HikariConfig from the specified property file name.
      *
@@ -130,7 +128,7 @@ public class HikariConfig implements HikariConfigMBean
 
         try
         {
-        	FileInputStream fis = new FileInputStream(propFile);
+            FileInputStream fis = new FileInputStream(propFile);
             Properties props = new Properties();
             props.load(fis);
             PropertyBeanSetter.setTargetFromProperties(this, props);
@@ -315,7 +313,7 @@ public class HikariConfig implements HikariConfigMBean
     {
         return this.dataSourceJndiName;
     }
-    
+
     public void setDataSourceJNDI(String jndiDataSource)
     {
         this.dataSourceJndiName = jndiDataSource;
@@ -477,7 +475,7 @@ public class HikariConfig implements HikariConfigMBean
     @Override
     public void setLeakDetectionThreshold(long leakDetectionThresholdMs)
     {
-        this.leakDetectionThreshold = leakDetectionThresholdMs; 
+        this.leakDetectionThreshold = leakDetectionThresholdMs;
     }
 
     @Deprecated
@@ -735,17 +733,20 @@ public class HikariConfig implements HikariConfigMBean
 
     void copyState(HikariConfig other)
     {
-    	for (Field field : HikariConfig.class.getDeclaredFields())
-    	{
-    		if (!Modifier.isFinal(field.getModifiers()))
-    		{
-	    		field.setAccessible(true);
-	    		try {
-					field.set(other, field.get(this));
-				} catch (Exception e) {
-					throw new RuntimeException("Exception copying HikariConfig state: " + e.getMessage(), e);
-				}
-    		}
-    	}
+        for (Field field : HikariConfig.class.getDeclaredFields())
+        {
+            if (!Modifier.isFinal(field.getModifiers()))
+            {
+                field.setAccessible(true);
+                try
+                {
+                    field.set(other, field.get(this));
+                }
+                catch (Exception e)
+                {
+                    throw new RuntimeException("Exception copying HikariConfig state: " + e.getMessage(), e);
+                }
+            }
+        }
     }
 }

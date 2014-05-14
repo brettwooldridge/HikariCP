@@ -196,8 +196,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     }
 
     /**
-     * Release a connection back to the pool, or permanently close it if it
-     * is broken.
+     * Release a connection back to the pool, or permanently close it if it is broken.
      *
      * @param connectionProxy the connection to release back to the pool
      */
@@ -297,22 +296,13 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             {
                 int sleepBackoff = 200;
                 final int maxPoolSize = configuration.getMaximumPoolSize();
-                while (totalConnections.get() < maxPoolSize)
+                final int minIdle = configuration.getMinimumIdle();
+                while (totalConnections.get() < maxPoolSize && (minIdle == 0 || getIdleConnections() < minIdle))
                 {
-                    final int minIdle = configuration.getMinimumIdle();
-                    if (minIdle != 0 && getIdleConnections() >= minIdle)
-                    {
-                        break;
-                    }
-                    else if (!addConnection())
+                    if (!addConnection())
                     {
                         PoolUtilities.quietlySleep(sleepBackoff);
                         sleepBackoff = (int) Math.min(1000f, ((float) sleepBackoff) * 1.5);
-                        if (getThreadsAwaitingConnection() == 0)
-                        {
-                            lastConnectionFailure.set(null);
-                            break;
-                        }
                         continue;
                     }
                     

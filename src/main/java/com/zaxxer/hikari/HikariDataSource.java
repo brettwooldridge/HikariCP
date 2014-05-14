@@ -53,9 +53,9 @@ public class HikariDataSource extends HikariConfig implements DataSource
      */
     public HikariDataSource()
     {
-    	super();
-    	fastPathPool = null;
-    	multiPool = new HashMap<MultiPoolKey, HikariPool>();
+        super();
+        fastPathPool = null;
+        multiPool = new HashMap<MultiPoolKey, HikariPool>();
     }
 
     /**
@@ -66,10 +66,10 @@ public class HikariDataSource extends HikariConfig implements DataSource
     public HikariDataSource(HikariConfig configuration)
     {
         configuration.validate();
-    	configuration.copyState(this);
+        configuration.copyState(this);
         multiPool = new HashMap<MultiPoolKey, HikariPool>();
-    	pool = fastPathPool = new HikariPool(this);
-    	multiPool.put(new MultiPoolKey(getUsername(), getPassword()), pool);
+        pool = fastPathPool = new HikariPool(this);
+        multiPool.put(new MultiPoolKey(getUsername(), getPassword()), pool);
     }
 
     /** {@inheritDoc} */
@@ -80,27 +80,27 @@ public class HikariDataSource extends HikariConfig implements DataSource
         {
             throw new SQLException("Pool has been shutdown");
         }
-        
+
         if (fastPathPool != null)
         {
-        	return fastPathPool.getConnection();
+            return fastPathPool.getConnection();
         }
 
         // See http://en.wikipedia.org/wiki/Double-checked_locking#Usage_in_Java
         HikariPool result = pool;
-    	if (result == null)
-    	{
-    		synchronized (this)
-    		{
-    			result = pool;
-    			if (result == null)
-    			{
-    			    validate();
-    				pool = result = new HikariPool(this);
-    		        multiPool.put(new MultiPoolKey(getUsername(), getPassword()), pool);
-    			}
-    		}
-    	}
+        if (result == null)
+        {
+            synchronized (this)
+            {
+                result = pool;
+                if (result == null)
+                {
+                    validate();
+                    pool = result = new HikariPool(this);
+                    multiPool.put(new MultiPoolKey(getUsername(), getPassword()), pool);
+                }
+            }
+        }
 
         return result.getConnection();
     }
@@ -232,7 +232,7 @@ public class HikariDataSource extends HikariConfig implements DataSource
             {
                 LoggerFactory.getLogger(getClass()).warn("Interrupted during shutdown", e);
             }
-            
+
             if (pool.getDataSource() instanceof DriverDataSource)
             {
                 ((DriverDataSource) pool.getDataSource()).shutdown();
