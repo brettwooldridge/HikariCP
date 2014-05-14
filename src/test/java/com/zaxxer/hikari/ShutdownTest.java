@@ -16,8 +16,6 @@
 
 package com.zaxxer.hikari;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadMXBean;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
@@ -173,18 +171,25 @@ public class ShutdownTest
         ds.shutdown();
 
         long start = System.currentTimeMillis();
-        while (PoolUtilities.elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5) && threadCount() > threadCountStart)
+        while (PoolUtilities.elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5) && threadCount() > 0)
         {
             PoolUtilities.quietlySleep(250);
         }
 
-        Assert.assertSame("Thread was leaked", threadCountStart, threadCount());
+        Assert.assertSame("Thread was leaked", 0, threadCount());
     }
 
 	private int threadCount()
 	{
-		ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
-		
-		return threadMXBean.getThreadCount();
+	    Thread[] threads = new Thread[Thread.activeCount() * 2];
+	    Thread.enumerate(threads);
+
+	    int count = 0;
+	    for (Thread thread : threads)
+	    {
+	        count += (thread != null && thread.getName().startsWith("Hikari")) ? 1 : 0;
+	    }
+
+	    return count;
 	}
 }

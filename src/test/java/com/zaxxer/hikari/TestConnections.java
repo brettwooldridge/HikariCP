@@ -282,38 +282,44 @@ public class TestConnections
         StubConnection.count.set(0);
 
         final HikariDataSource ds = new HikariDataSource(config);
-
-        Thread[] threads = new Thread[20];
-        for (int i = 0; i < threads.length; i++)
+        try
         {
-            threads[i] = new Thread(new Runnable() {
-                public void run()
-                {
-                    try
+            Thread[] threads = new Thread[20];
+            for (int i = 0; i < threads.length; i++)
+            {
+                threads[i] = new Thread(new Runnable() {
+                    public void run()
                     {
-                        Connection connection = ds.getConnection();
-                        Thread.sleep(1000);
-                        connection.close();
+                        try
+                        {
+                            Connection connection = ds.getConnection();
+                            Thread.sleep(1000);
+                            connection.close();
+                        }
+                        catch (Exception e)
+                        {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
                     }
-                    catch (Exception e)
-                    {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                }
-            });
+                });
+            }
+    
+            for (int i = 0; i < threads.length; i++)
+            {
+                threads[i].start();
+            }
+    
+            for (int i = 0; i < threads.length; i++)
+            {
+                threads[i].join();
+            }
+    
+            Assert.assertEquals(4, StubConnection.count.get());
         }
-
-        for (int i = 0; i < threads.length; i++)
+        finally
         {
-            threads[i].start();
+            ds.shutdown();
         }
-
-        for (int i = 0; i < threads.length; i++)
-        {
-            threads[i].join();
-        }
-
-        Assert.assertEquals(4, StubConnection.count.get());
     }
 }

@@ -243,28 +243,35 @@ public class TestConnectionTimeoutRetry
 
         HikariDataSource ds = new HikariDataSource(config);
 
-        Connection connection1 = ds.getConnection();
-        Connection connection2 = ds.getConnection();
-        Connection connection3 = ds.getConnection();
-        Connection connection4 = ds.getConnection();
-        Connection connection5 = ds.getConnection();
-        Connection connection6 = ds.getConnection();
-        Connection connection7 = ds.getConnection();
-
-        Thread.sleep(1000);
-
-        Assert.assertSame("Totals connections not as expected", 10, TestElf.getPool(ds).getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 3, TestElf.getPool(ds).getIdleConnections());
-
-        connection1.close();
-        connection2.close();
-        connection3.close();
-        connection4.close();
-        connection5.close();
-        connection6.close();
-        connection7.close();
-
-        Assert.assertSame("Totals connections not as expected", 10, TestElf.getPool(ds).getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 10, TestElf.getPool(ds).getIdleConnections());
+        try
+        {
+            Connection connection1 = ds.getConnection();
+            Connection connection2 = ds.getConnection();
+            Connection connection3 = ds.getConnection();
+            Connection connection4 = ds.getConnection();
+            Connection connection5 = ds.getConnection();
+            Connection connection6 = ds.getConnection();
+            Connection connection7 = ds.getConnection();
+    
+            Thread.sleep(1000);
+    
+            Assert.assertSame("Totals connections not as expected", 10, TestElf.getPool(ds).getTotalConnections());
+            Assert.assertSame("Idle connections not as expected", 3, TestElf.getPool(ds).getIdleConnections());
+    
+            connection1.close();
+            connection2.close();
+            connection3.close();
+            connection4.close();
+            connection5.close();
+            connection6.close();
+            connection7.close();
+    
+            Assert.assertSame("Totals connections not as expected", 10, TestElf.getPool(ds).getTotalConnections());
+            Assert.assertSame("Idle connections not as expected", 10, TestElf.getPool(ds).getIdleConnections());
+        }
+        finally
+        {
+            ds.shutdown();
+        }
     }
 }

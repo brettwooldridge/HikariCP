@@ -90,15 +90,6 @@ public class ExceptionTest
     @Test
     public void testUseAfterClose() throws SQLException
     {
-        HikariConfig config = new HikariConfig();
-        config.setMinimumIdle(1);
-        config.setMaximumPoolSize(2);
-        config.setInitializationFailFast(true);
-        config.setConnectionTestQuery("VALUES 1");
-        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-
-        HikariDataSource ds = new HikariDataSource(config);
-
         Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
         Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
 

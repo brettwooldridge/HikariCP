@@ -25,7 +25,6 @@ import org.junit.Test;
 import com.zaxxer.hikari.mocks.StubConnection;
 
 /**
- *
  * @author Brett Wooldridge
  */
 public class UnwrapTest
@@ -42,12 +41,19 @@ public class UnwrapTest
 
         HikariDataSource ds = new HikariDataSource(config);
 
-        Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
-
-        Connection connection = ds.getConnection();
-        Assert.assertNotNull(connection);
-
-        StubConnection unwrapped = connection.unwrap(StubConnection.class);
-        Assert.assertTrue("unwrapped connection is not instance of StubConnection: " + unwrapped, (unwrapped != null && unwrapped instanceof StubConnection));
+        try
+        {
+            Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
+    
+            Connection connection = ds.getConnection();
+            Assert.assertNotNull(connection);
+    
+            StubConnection unwrapped = connection.unwrap(StubConnection.class);
+            Assert.assertTrue("unwrapped connection is not instance of StubConnection: " + unwrapped, (unwrapped != null && unwrapped instanceof StubConnection));
+        }
+        finally
+        {
+            ds.shutdown();
+        }
     }
 }

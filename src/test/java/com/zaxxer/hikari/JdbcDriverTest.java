@@ -18,14 +18,22 @@ package com.zaxxer.hikari;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.junit.After;
 import org.junit.Assert;
-
 import org.junit.Test;
 
 import com.zaxxer.hikari.util.DriverDataSource;
 
 public class JdbcDriverTest
 {
+    private HikariDataSource ds;
+
+    @After
+    public void teardown()
+    {
+        ds.shutdown();
+    }
+
     @Test
     public void driverTest1() throws SQLException
     {
@@ -38,7 +46,7 @@ public class JdbcDriverTest
         config.addDataSourceProperty("user", "bart");
         config.addDataSourceProperty("password", "simpson");
 
-        HikariDataSource ds = new HikariDataSource(config);
+        ds = new HikariDataSource(config);
 
         Assert.assertTrue(ds.isWrapperFor(DriverDataSource.class));
 
@@ -47,6 +55,5 @@ public class JdbcDriverTest
 
         Connection connection = ds.getConnection();
         connection.close();
-        ds.shutdown();
     }
 }

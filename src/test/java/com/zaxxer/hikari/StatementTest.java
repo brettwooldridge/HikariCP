@@ -4,13 +4,17 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class StatementTest
 {
-    @Test
-    public void testStatementClose() throws SQLException
+    private HikariDataSource ds;
+
+    @Before
+    public void setup()
     {
         HikariConfig config = new HikariConfig();
         config.setMinimumIdle(1);
@@ -19,8 +23,18 @@ public class StatementTest
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-        HikariDataSource ds = new HikariDataSource(config);
+        ds = new HikariDataSource(config);
+    }
 
+    @After
+    public void teardown()
+    {
+        ds.shutdown();
+    }
+
+    @Test
+    public void testStatementClose() throws SQLException
+    {
         Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
         Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
 
@@ -41,14 +55,6 @@ public class StatementTest
     @Test
     public void testAutoStatementClose() throws SQLException
     {
-        HikariConfig config = new HikariConfig();
-        config.setMinimumIdle(1);
-        config.setMaximumPoolSize(2);
-        config.setInitializationFailFast(true);
-        config.setConnectionTestQuery("VALUES 1");
-        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-
-        HikariDataSource ds = new HikariDataSource(config);
         Connection connection = ds.getConnection();
         Assert.assertNotNull(connection);
 
@@ -66,14 +72,6 @@ public class StatementTest
     @Test
     public void testDoubleStatementClose() throws SQLException
     {
-        HikariConfig config = new HikariConfig();
-        config.setMinimumIdle(1);
-        config.setMaximumPoolSize(2);
-        config.setInitializationFailFast(true);
-        config.setConnectionTestQuery("VALUES 1");
-        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-
-        HikariDataSource ds = new HikariDataSource(config);
         Connection connection = ds.getConnection();
 
         Statement statement1 = connection.createStatement();
@@ -87,14 +85,6 @@ public class StatementTest
     @Test
     public void testOutOfOrderStatementClose() throws SQLException
     {
-        HikariConfig config = new HikariConfig();
-        config.setMinimumIdle(1);
-        config.setMaximumPoolSize(2);
-        config.setInitializationFailFast(true);
-        config.setConnectionTestQuery("VALUES 1");
-        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-
-        HikariDataSource ds = new HikariDataSource(config);
         Connection connection = ds.getConnection();
 
         Statement statement1 = connection.createStatement();
