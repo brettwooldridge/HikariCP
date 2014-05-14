@@ -16,6 +16,8 @@
 
 package com.zaxxer.hikari;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
@@ -149,4 +151,36 @@ public class ShutdownTest
         Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
         Assert.assertSame("Total connection count not as expected", 0, pool.getTotalConnections());
     }
+    
+    @Test
+    public void testShutdown4() throws SQLException
+    {
+    	int threadCountStart = threadCount();
+    	
+        StubConnection.slowCreate = true;
+        
+        HikariConfig config = new HikariConfig();
+        config.setMinimumIdle(10);
+        config.setMaximumPoolSize(10);
+        config.setInitializationFailFast(false);
+        config.setConnectionTestQuery("VALUES 1");
+        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+        HikariDataSource ds = new HikariDataSource(config);
+
+        PoolUtilities.quietlySleep(300);
+
+        ds.shutdown();
+        
+        PoolUtilities.quietlySleep(700);
+        
+    	int threadCountEnd = threadCount();
+        Assert.assertSame("Thread was leaked", threadCountStart, threadCountEnd);
+    }
+
+	private int threadCount() {
+		ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+		
+		return threadMXBean.getThreadCount();
+	}
 }
