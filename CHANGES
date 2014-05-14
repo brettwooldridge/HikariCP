@@ -5,6 +5,9 @@ Changes between 1.3.8 and 1.3.9
  *) Added pool name to housekeeping thread name to make thread dumps
     more meaningful in containers with multiple pools.
 
+ *) Improved shutdown semantics; make a concerted effort to close
+    idle connections and abort or close active connections.
+
  *) Performance enhancements.
 
 Changes between 1.3.7 and 1.3.8
