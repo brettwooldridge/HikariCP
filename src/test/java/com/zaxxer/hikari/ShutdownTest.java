@@ -181,7 +181,8 @@ public class ShutdownTest
         Assert.assertSame("Thread was leaked", threadCountStart, threadCount());
     }
 
-	private int threadCount() {
+	private int threadCount()
+	{
 		ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
 		
 		return threadMXBean.getThreadCount();
