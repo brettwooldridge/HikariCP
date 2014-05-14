@@ -154,14 +154,14 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
      */
     public void requite(final T value)
     {
-    	if (value == null)
-    	{
-    		throw new NullPointerException("Cannot return a null value to the bag");
-    	}
+        if (value == null)
+        {
+            throw new NullPointerException("Cannot return a null value to the bag");
+        }
 
         if (value.compareAndSetState(STATE_IN_USE, STATE_NOT_IN_USE))
         {
-        	LinkedList<WeakReference<T>> list = threadList.get();
+            LinkedList<WeakReference<T>> list = threadList.get();
             if (list == null)
             {
                 list = new LinkedList<WeakReference<T>>();
@@ -200,14 +200,14 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     {
         if (value.compareAndSetState(STATE_IN_USE, STATE_REMOVED) || value.compareAndSetState(STATE_RESERVED, STATE_REMOVED))
         {
-        	if (!sharedList.remove(value))
-        	{
-        	    throw new IllegalStateException("Attempt to remove an object from the bag that does not exist");
-        	}
+            if (!sharedList.remove(value))
+            {
+                throw new IllegalStateException("Attempt to remove an object from the bag that does not exist");
+            }
         }
         else
         {
-        	throw new IllegalStateException("Attempt to remove an object from the bag that was not borrowed or reserved");
+            throw new IllegalStateException("Attempt to remove an object from the bag that was not borrowed or reserved");
         }
     }
 
@@ -225,13 +225,13 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
         ArrayList<T> list = new ArrayList<T>(sharedList.size());
         if (state == STATE_IN_USE || state == STATE_NOT_IN_USE)
         {
-	        for (T reference : sharedList)
-	        {
-	            if (reference.getState() == state)
-	            {
-	                list.add(reference);
-	            }
-	        }
+            for (T reference : sharedList)
+            {
+                if (reference.getState() == state)
+                {
+                    list.add(reference);
+                }
+            }
         }
         return list;
     }
@@ -264,7 +264,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
         final long checkInTime = System.nanoTime();
         if (!value.compareAndSetState(STATE_RESERVED, STATE_NOT_IN_USE))
         {
-        	throw new IllegalStateException("Attempt to relinquish an object to the bag that was not reserved");
+            throw new IllegalStateException("Attempt to relinquish an object to the bag that was not reserved");
         }
 
         synchronizer.releaseShared(checkInTime);

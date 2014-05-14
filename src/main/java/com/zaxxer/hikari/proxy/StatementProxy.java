@@ -32,7 +32,7 @@ public abstract class StatementProxy implements Statement
     protected final Statement delegate;
 
     private boolean isClosed;
-    
+
     protected StatementProxy(IHikariConnectionProxy connection, Statement statement)
     {
         this.connection = connection;
@@ -43,7 +43,6 @@ public abstract class StatementProxy implements Statement
     {
         connection.checkException(e);
     }
-
 
     // **********************************************************************
     //                 Overridden java.sql.Statement Methods
@@ -124,8 +123,8 @@ public abstract class StatementProxy implements Statement
         return connection;
     }
 
-	@Override
-	@SuppressWarnings("unchecked")
+    @Override
+    @SuppressWarnings("unchecked")
     public final <T> T unwrap(Class<T> iface) throws SQLException
     {
         if (iface.isInstance(delegate))
