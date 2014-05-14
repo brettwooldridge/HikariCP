@@ -27,13 +27,16 @@ public final class PoolUtilities
 
     public static void quietlyCloseConnection(Connection connection)
     {
-        try
+        if (connection != null)
         {
-            connection.close();
-        }
-        catch (SQLException e)
-        {
-            return;
+            try
+            {
+                connection.close();
+            }
+            catch (SQLException e)
+            {
+                return;
+            }
         }
     }
 

@@ -79,7 +79,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
     private volatile boolean isShutdown;
     private int transactionIsolation;
-    private boolean isDebug;
 
     /**
      * Construct a HikariPool with the specified configuration.
@@ -107,7 +106,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         this.totalConnections = new AtomicInteger();
         this.connectionBag = new ConcurrentBag<IHikariConnectionProxy>();
         this.connectionBag.addBagStateListener(this);
-        this.isDebug = LOGGER.isDebugEnabled();
         this.lastConnectionFailure = new AtomicReference<Throwable>();
 
         this.catalog = configuration.getCatalog();
@@ -375,7 +373,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         Connection connection = null;
         try
         {
-            // Speculative increment of totalConnections with expectation of success (first time through)
+            // Speculative increment of totalConnections with expectation of success
             if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize() || isShutdown)
             {
                 totalConnections.decrementAndGet();
@@ -400,16 +398,10 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             // We failed, so undo speculative increment of totalConnections
             totalConnections.decrementAndGet();
 
-            if (connection != null)
-            {
-                PoolUtilities.quietlyCloseConnection(connection);
-            }
-
             lastConnectionFailure.set(e);
-            if (isDebug)
-            {
-                LOGGER.warn("Connection attempt to database {} failed: {}", configuration.getPoolName(), e.getMessage(), (isDebug ? e : null));
-            }
+            PoolUtilities.quietlyCloseConnection(connection);
+            LOGGER.debug("Connection attempt to database {} failed: {}", configuration.getPoolName(), e.getMessage(), e);
+
             return false;
         }
     }
@@ -593,7 +585,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         @Override
         public void run()
         {
-            isDebug = LOGGER.isDebugEnabled();
             houseKeepingTimer.purge();
 
             logPoolState("Before pool cleanup ");
