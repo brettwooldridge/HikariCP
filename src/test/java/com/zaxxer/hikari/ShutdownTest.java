@@ -171,11 +171,14 @@ public class ShutdownTest
         PoolUtilities.quietlySleep(300);
 
         ds.shutdown();
-        
-        PoolUtilities.quietlySleep(700);
-        
-    	int threadCountEnd = threadCount();
-        Assert.assertSame("Thread was leaked", threadCountStart, threadCountEnd);
+
+        long start = System.currentTimeMillis();
+        while (PoolUtilities.elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5) && threadCount() > threadCountStart)
+        {
+            PoolUtilities.quietlySleep(250);
+        }
+
+        Assert.assertSame("Thread was leaked", threadCountStart, threadCount());
     }
 
 	private int threadCount() {
