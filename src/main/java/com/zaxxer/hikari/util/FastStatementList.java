@@ -55,17 +55,16 @@ public final class FastStatementList
      */
     public void add(Statement element)
     {
-        try
+        if (size < elementData.length)
         {
-            elementData[size] = element;
-            size++;
+            elementData[size++] = element;
         }
-        catch (ArrayIndexOutOfBoundsException oob)
+        else
         {
             // overflow-conscious code
-            int oldCapacity = elementData.length;
-            int newCapacity = oldCapacity << 1;
-            Statement[] newElementData = new Statement[newCapacity];
+            final int oldCapacity = elementData.length;
+            final int newCapacity = oldCapacity << 1;
+            final Statement[] newElementData = new Statement[newCapacity];
             System.arraycopy(elementData, 0, newElementData, 0, oldCapacity);
             newElementData[size++] = element;
             elementData = (Statement[]) newElementData;
@@ -96,7 +95,7 @@ public final class FastStatementList
         {
             if (element == elementData[index])
             {
-                int numMoved = size - index - 1;
+                final int numMoved = size - index - 1;
                 if (numMoved > 0)
                 {
                     System.arraycopy(elementData, index + 1, elementData, index, numMoved);
