@@ -97,7 +97,6 @@ public class HikariConfig implements HikariConfigMBean
         minIdle = -1;
         maxPoolSize = 10;
         maxLifetime = MAX_LIFETIME;
-        poolName = "HikariPool-" + poolNumber++;
         isRecordMetrics = false;
         transactionIsolation = -1;
     }
@@ -682,6 +681,8 @@ public class HikariConfig implements HikariConfigMBean
                 throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
             }
         }
+
+        poolName = "HikariPool-" + poolNumber++;
     }
 
     private void validateNumerics()

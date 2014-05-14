@@ -7,9 +7,24 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
 
 public final class PoolUtilities
 {
+    public static boolean IS_JAVA7;
+
+    static
+    {
+        try
+        {
+            IS_JAVA7 = AbstractQueuedLongSynchronizer.class.getMethod("hasQueuedPredecessors", new Class<?>[0]) != null;
+        }
+        catch (Exception e)
+        {
+            IS_JAVA7 = false;
+        }
+    }
+
     public static void quietlyCloseConnection(Connection connection)
     {
         try
@@ -20,6 +35,17 @@ public final class PoolUtilities
         {
             return;
         }
+    }
+
+    /**
+     * Get the elapsed time in millisecond between the specified start time and now.
+     *
+     * @param start the start time
+     * @return the elapsed milliseconds
+     */
+    public static long elapsedTimeMs(long start)
+    {
+        return System.currentTimeMillis() - start;
     }
 
     /**
@@ -46,7 +72,7 @@ public final class PoolUtilities
         }
     }
 
-    public static void quietlySleep(int millis)
+    public static void quietlySleep(long millis)
     {
         try
         {
@@ -59,10 +85,22 @@ public final class PoolUtilities
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T createInstance(String className, Class<T> clazz) throws Exception
+    public static <T> T createInstance(String className, Class<T> clazz)
     {
-        Class<?> loaded = PoolUtilities.class.getClassLoader().loadClass(className);
-        return (T) loaded.newInstance();
+        if (className == null)
+        {
+            return null;
+        }
+
+        try
+        {
+            Class<?> loaded = PoolUtilities.class.getClassLoader().loadClass(className);
+            return (T) loaded.newInstance();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
     public static ThreadPoolExecutor createThreadPoolExecutor(final int queueSize, final String threadName)

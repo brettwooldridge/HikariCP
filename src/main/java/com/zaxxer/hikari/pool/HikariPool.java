@@ -129,12 +129,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             HikariMBeanElf.registerMBeans(configuration, this);
         }
 
-        houseKeepingTimer = new Timer("Hikari Housekeeping Timer (pool " + configuration.getPoolName() + ")", true);
-
         addConnectionExecutor = PoolUtilities.createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler");
 
         fillPool();
         
+        houseKeepingTimer = new Timer("Hikari Housekeeping Timer (pool " + configuration.getPoolName() + ")", true);
         if (configuration.getIdleTimeout() > 0 || configuration.getMaxLifetime() > 0)
         {
             long delayPeriod = Long.getLong("com.zaxxer.hikari.housekeeping.period", TimeUnit.SECONDS.toMillis(30));
@@ -170,7 +169,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 if (now > connection.getExpirationTime() || (now - connection.getLastAccess() > 1000 && !isConnectionAlive(connection, timeout)))
                 {
                     closeConnection(connection);  // Throw away the dead connection, try again
-                    timeout -= (System.currentTimeMillis() - start);
+                    timeout -= PoolUtilities.elapsedTimeMs(start);
                     continue;
                 }
                 else if (leakDetectionThreshold != 0)
@@ -183,7 +182,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             while (timeout > 0);
 
             logPoolState("Timeout failure ");
-            throw new SQLException(String.format("Timeout of %dms encountered waiting for connection.", configuration.getConnectionTimeout()), lastConnectionFailure.getAndSet(null));
+            throw new SQLException(String.format("Timeout of %dms encountered waiting for connection.", 
+                                                 configuration.getConnectionTimeout()), lastConnectionFailure.getAndSet(null));
         }
         catch (InterruptedException e)
         {
@@ -201,14 +201,14 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      *
      * @param connectionProxy the connection to release back to the pool
      */
-    public void releaseConnection(IHikariConnectionProxy connectionProxy)
+    public void releaseConnection(final IHikariConnectionProxy connectionProxy, final boolean isBroken)
     {
         if (isRecordMetrics)
         {
             metricsTracker.recordConnectionUsage(System.currentTimeMillis() - connectionProxy.getLastOpenTime());
         }
 
-        if (connectionProxy.isBrokenConnection() || isShutdown)
+        if (isBroken || isShutdown)
         {
             LOGGER.debug("Connection returned to pool {} is broken, or the pool is shutting down.  Closing connection.", configuration.getPoolName());
             closeConnection(connectionProxy);
@@ -219,25 +219,27 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         }
     }
 
-    @Override
-    public String toString()
-    {
-        return configuration.getPoolName();
-    }
-
-    public void shutdown()
+    public void shutdown() throws InterruptedException
     {
         if (!isShutdown)
         {
             isShutdown = true;
-            houseKeepingTimer.cancel();
-            addConnectionExecutor.shutdown();
-    
             LOGGER.info("HikariCP pool {} is being shutdown.", configuration.getPoolName());
             logPoolState("State at shutdown ");
-    
-            closeIdleConnections();
-    
+
+            houseKeepingTimer.cancel();
+            addConnectionExecutor.shutdownNow();
+
+            final long start = System.currentTimeMillis();
+            do
+            {
+                closeIdleConnections();
+                abortActiveConnections();
+            }
+            while ((getIdleConnections() > 0 || getActiveConnections() > 0 ) && PoolUtilities.elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5));
+
+            logPoolState("State after shutdown ");
+
             if (isRegisteredMbeans)
             {
                 HikariMBeanElf.unregisterMBeans(configuration, this);
@@ -255,14 +257,14 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      *
      * @param connectionProxy the connection to actually close
      */
-    public void closeConnection(IHikariConnectionProxy connectionProxy)
+    public void closeConnection(final IHikariConnectionProxy connectionProxy)
     {
         try
         {
             int tc = totalConnections.decrementAndGet();
             if (tc < 0)
             {
-                LOGGER.warn("Internal accounting inconsistency, totalConnections=" + tc, new Exception());
+                LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
             }
             connectionProxy.realClose();
         }
@@ -274,6 +276,12 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         {
             connectionBag.remove(connectionProxy);
         }
+    }
+
+    @Override
+    public String toString()
+    {
+        return configuration.getPoolName();
     }
 
     // ***********************************************************************
@@ -378,20 +386,15 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         try
         {
             // Speculative increment of totalConnections with expectation of success (first time through)
-            if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize())
+            if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize() || isShutdown)
             {
                 totalConnections.decrementAndGet();
                 return true;
             }
 
             connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);  
-
             transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
-
-            if (connectionCustomizer != null)
-            {
-                connectionCustomizer.customize(connection);
-            }
+            connectionCustomizer.customize(connection);
 
             PoolUtilities.executeSqlAutoCommit(connection, configuration.getConnectionInitSql());
 
@@ -415,7 +418,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             lastConnectionFailure.set(e);
             if (isDebug)
             {
-                LOGGER.warn("Connection attempt to database {} failed (not every attempt is logged): {}", configuration.getPoolName(), e.getMessage(), (isDebug ? e : null));
+                LOGGER.warn("Connection attempt to database {} failed: {}", configuration.getPoolName(), e.getMessage(), (isDebug ? e : null));
             }
             return false;
         }
@@ -490,6 +493,54 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         }
     }
 
+    /**
+     * Attempt to abort() active connections on Java7+, or close() them on Java6.
+     *
+     * @throws InterruptedException 
+     */
+    private void abortActiveConnections() throws InterruptedException
+    {
+        ThreadPoolExecutor assassinExecutor = PoolUtilities.createThreadPoolExecutor(1, "HikariCP connection assassin");
+        for (IHikariConnectionProxy connectionProxy : connectionBag.values(ConcurrentBag.STATE_IN_USE))
+        {
+            try
+            {
+                if (PoolUtilities.IS_JAVA7)
+                {
+                    connectionProxy.abort(assassinExecutor);
+                }
+                else
+                {
+                    connectionProxy.close();
+                }
+            }
+            catch (SQLException e)
+            {
+                continue;
+            }
+            finally
+            {
+                totalConnections.decrementAndGet();
+                try
+                {
+                    connectionBag.remove(connectionProxy);
+                }
+                catch (IllegalStateException ise)
+                {
+                    continue;
+                }
+            }
+        }
+
+        assassinExecutor.shutdown();
+        assassinExecutor.awaitTermination(5, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Create/initialize the underlying DataSource.
+     *
+     * @return the DataSource
+     */
     private DataSource initializeDataSource()
     {
         String dsClassName = configuration.getDataSourceClassName();
@@ -528,7 +579,12 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             }
         }
 
-        return null;
+        return new IConnectionCustomizer() {
+            @Override
+            public void customize(Connection connection) throws SQLException
+            {
+            }
+        };
     }
 
     private void logPoolState(String... prefix)

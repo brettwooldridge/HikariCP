@@ -34,7 +34,10 @@ import java.sql.Struct;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.zaxxer.hikari.util.PoolUtilities;
 
 /**
  *
@@ -43,6 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class StubConnection extends StubBaseConnection implements Connection
 {
     public static final AtomicInteger count = new AtomicInteger();
+    public static volatile boolean slowCreate;
 
     private static long foo;
     private boolean autoCommit;
@@ -57,6 +61,10 @@ public class StubConnection extends StubBaseConnection implements Connection
     public StubConnection()
     {
         count.incrementAndGet();
+        if (slowCreate)
+        {
+            PoolUtilities.quietlySleep(TimeUnit.SECONDS.toMillis(1));
+        }
     }
 
     /** {@inheritDoc} */

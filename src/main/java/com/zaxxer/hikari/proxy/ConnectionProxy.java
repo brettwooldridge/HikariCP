@@ -329,7 +329,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             finally
             {
                 lastAccess = System.currentTimeMillis();
-                parentPool.releaseConnection(this);
+                parentPool.releaseConnection(this, forceClose);
             }
         }
     }

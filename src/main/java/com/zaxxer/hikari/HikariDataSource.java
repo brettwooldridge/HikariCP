@@ -24,6 +24,8 @@ import java.util.HashMap;
 
 import javax.sql.DataSource;
 
+import org.slf4j.LoggerFactory;
+
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.util.DriverDataSource;
@@ -219,10 +221,18 @@ public class HikariDataSource extends HikariConfig implements DataSource
         }
 
         isShutdown = true;
-        
+
         if (pool != null)
         {
-            pool.shutdown();
+            try
+            {
+                pool.shutdown();
+            }
+            catch (InterruptedException e)
+            {
+                LoggerFactory.getLogger(getClass()).warn("Interrupted during shutdown", e);
+            }
+            
             if (pool.getDataSource() instanceof DriverDataSource)
             {
                 ((DriverDataSource) pool.getDataSource()).shutdown();
@@ -233,7 +243,15 @@ public class HikariDataSource extends HikariConfig implements DataSource
         {
             for (HikariPool hikariPool : multiPool.values())
             {
-                hikariPool.shutdown();
+                try
+                {
+                    hikariPool.shutdown();
+                }
+                catch (InterruptedException e)
+                {
+                    LoggerFactory.getLogger(getClass()).warn("Interrupted during shutdown", e);
+                }
+
                 if (hikariPool.getDataSource() instanceof DriverDataSource)
                 {
                     ((DriverDataSource) hikariPool.getDataSource()).shutdown();
