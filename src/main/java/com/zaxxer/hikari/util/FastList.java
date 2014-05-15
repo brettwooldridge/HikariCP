@@ -43,12 +43,12 @@ public final class FastList<T>
     /**
      * Construct a FastList with a specfied size.
      * @param clazz the Class stored in the collection
-     * @param size the initial size of the FastList
+     * @param capacity the initial size of the FastList
      */
     @SuppressWarnings("unchecked")
-    public FastList(Class<?> clazz, int size)
+    public FastList(Class<?> clazz, int capacity)
     {
-        this.elementData = (T[]) Array.newInstance(clazz, size);
+        this.elementData = (T[]) Array.newInstance(clazz, capacity);
     }
 
     /**
@@ -69,7 +69,7 @@ public final class FastList<T>
             final int oldCapacity = elementData.length;
             final int newCapacity = oldCapacity << 1;
             @SuppressWarnings("unchecked")
-            final T[] newElementData = (T[]) Array.newInstance(element.getClass(), newCapacity); //new Statement[newCapacity];
+            final T[] newElementData = (T[]) Array.newInstance(element.getClass(), newCapacity);
             System.arraycopy(elementData, 0, newElementData, 0, oldCapacity);
             newElementData[size++] = element;
             elementData = newElementData;

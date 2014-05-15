@@ -708,17 +708,13 @@ public class HikariConfig implements HikariConfigMBean
     {
         LOGGER.debug("HikariCP pool {} configuration:", poolName);
         Set<String> propertyNames = new TreeSet<String>(PropertyBeanSetter.getPropertyNames(HikariConfig.class));
-        StringBuilder sb = new StringBuilder();
         for (String prop : propertyNames)
         {
             try
             {
-                sb.append(prop).append("................................................");
-                sb.setLength(32);
                 Object value = PropertyBeanSetter.getProperty(prop, this);
-                sb.append((value != null ? value : ""));
-                LOGGER.debug(sb.toString());
-                sb.setLength(0);
+                prop = (prop + "................................................").substring(0, 32);
+                LOGGER.debug(prop + (value != null ? value : ""));
             }
             catch (Exception e)
             {
