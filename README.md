@@ -82,11 +82,6 @@ This property sets the default *catalog* for databases that support the concept 
 If this property is not specified, the default catalog defined by the JDBC driver is used.
 *Default: none*
 
-:abc:``connectionInitSql``<br/>
-This property sets a SQL statement that will be executed after every new connection creation
-before adding it to the pool. If this SQL is not valid or throws an exception, it will be
-treated as a connection failure and the standard retry logic will be followed.  *Default: none*
-
 :watch:``connectionTimeout``<br/>
 This property controls the maximum number of milliseconds that a client (that's you) will wait
 for a connection from the pool.  If this time is exceeded without a connection becoming
@@ -136,6 +131,11 @@ should be a query that takes very little processing by the database (eg. "VALUES
 the ``jdbc4ConnectionTest`` property for a more efficent alive test.**  One of either this
 property or ``jdbc4ConnectionTest`` must be specified.  *Default: none*
 
+:abc:``connectionInitSql``<br/>
+This property sets a SQL statement that will be executed after every new connection creation
+before adding it to the pool. If this SQL is not valid or throws an exception, it will be
+treated as a connection failure and the standard retry logic will be followed.  *Default: none*
+
 :abc:``dataSourceClassName``<br/>
 This is the name of the ``DataSource`` class provided by the JDBC driver.  Consult the
 documentation for your specific JDBC driver to get this class name, or see the [table](https://github.com/brettwooldridge/HikariCP#popular-datasource-class-names) below.
@@ -145,18 +145,18 @@ Note XA data sources are not supported.  XA requires a real transaction manager 
 considers ``dataSourceClassName`` to be a superior method of creating connections compared to
 ``driverClassName``. *Default: none*
 
-:abc:``driverClassName``<br/>
-This property allows HikariCP to wrap an old-school JDBC driver as a ``javax.sql.DataSource``.
-It is unnecessary when using the ``dataSourceClassName`` property, which is the preferred way
-of creating connections in HikariCP.  DataSources are provided by all but the oldest JDBC drivers.
-If ``driverClassName`` is used, then the ``jdbcUrl`` property must also be set. *Default: none*
-
 :arrow_right:``dataSource``<br/>
 This property is only available via programmatic configuration.  This property allows you
 to directly set the instance of the ``DataSource`` to be wrapped by the pool, rather than
 having HikariCP construct it via reflection.  When this property is specified, the
 ``dataSourceClassName`` property and all DataSource-specific properties will be ignored.
 *Default: none*
+
+:abc:``driverClassName``<br/>
+This property allows HikariCP to wrap an old-school JDBC driver as a ``javax.sql.DataSource``.
+It is unnecessary when using the ``dataSourceClassName`` property, which is the preferred way
+of creating connections in HikariCP.  DataSources are provided by all but the oldest JDBC drivers.
+If ``driverClassName`` is used, then the ``jdbcUrl`` property must also be set. *Default: none*
 
 :abc:``jdbcUrl``<br/>
 This property is only used when the ``driverClassName`` property is used to wrap an old-school
