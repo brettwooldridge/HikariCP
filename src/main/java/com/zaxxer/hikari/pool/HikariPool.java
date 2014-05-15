@@ -222,7 +222,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         if (!isShutdown)
         {
             isShutdown = true;
-            LOGGER.info("HikariCP pool {} is being shutdown.", configuration.getPoolName());
+            LOGGER.info("HikariCP pool {} is shutting down.", configuration.getPoolName());
             logPoolState("State at shutdown ");
 
             houseKeepingTimer.cancel();

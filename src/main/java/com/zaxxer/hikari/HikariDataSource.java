@@ -24,6 +24,7 @@ import java.util.HashMap;
 
 import javax.sql.DataSource;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.pool.HikariPool;
@@ -37,6 +38,8 @@ import com.zaxxer.hikari.util.DriverDataSource;
  */
 public class HikariDataSource extends HikariConfig implements DataSource
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HikariDataSource.class);
+
     private final HashMap<MultiPoolKey, HikariPool> multiPool;
     private volatile boolean isShutdown;
     private int loginTimeout;
@@ -68,6 +71,8 @@ public class HikariDataSource extends HikariConfig implements DataSource
         configuration.validate();
         configuration.copyState(this);
         multiPool = new HashMap<MultiPoolKey, HikariPool>();
+
+        LOGGER.info("HikariCP pool {} is starting.", configuration.getPoolName());
         pool = fastPathPool = new HikariPool(this);
         multiPool.put(new MultiPoolKey(getUsername(), getPassword()), pool);
     }
@@ -96,6 +101,7 @@ public class HikariDataSource extends HikariConfig implements DataSource
                 if (result == null)
                 {
                     validate();
+                    LOGGER.info("HikariCP pool {} is starting.", getPoolName());
                     pool = result = new HikariPool(this);
                     multiPool.put(new MultiPoolKey(getUsername(), getPassword()), pool);
                 }
