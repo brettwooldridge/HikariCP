@@ -23,6 +23,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.sql.Connection;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
@@ -138,24 +140,6 @@ public class HikariConfig implements HikariConfigMBean
         {
             throw new RuntimeException("Error loading properties file", io);
         }
-    }
-
-    @Deprecated
-    public void setAcquireIncrement(int acquireIncrement)
-    {
-        LOGGER.warn("The acquireIncrement property has been retired, remove it from your pool configuration to avoid this warning.");
-    }
-
-    @Deprecated
-    public void setAcquireRetries(int acquireRetries)
-    {
-        LOGGER.warn("The acquireRetries property has been retired, remove it from your pool configuration to avoid this warning.");
-    }
-
-    @Deprecated
-    public void setAcquireRetryDelay(long acquireRetryDelayMs)
-    {
-        LOGGER.warn("The acquireRetryDelay property has been retired, remove it from your pool configuration to avoid this warning.");
     }
 
     /**
@@ -477,12 +461,6 @@ public class HikariConfig implements HikariConfigMBean
         this.leakDetectionThreshold = leakDetectionThresholdMs;
     }
 
-    @Deprecated
-    public void setUseInstrumentation(boolean useInstrumentation)
-    {
-        LOGGER.warn("The useInstrumentation property has been retired, remove it from your pool configuration to avoid this warning.");
-    }
-
     /** {@inheritDoc} */
     @Override
     public long getMaxLifetime()
@@ -495,12 +473,6 @@ public class HikariConfig implements HikariConfigMBean
     public void setMaxLifetime(long maxLifetimeMs)
     {
         this.maxLifetime = maxLifetimeMs;
-    }
-
-    @Deprecated
-    public void setMinimumPoolSize(int minPoolSize)
-    {
-        LOGGER.warn("The minimumPoolSize property has been retired, remove it from your pool configuration to avoid this warning.");
     }
 
     /** {@inheritDoc} */
@@ -680,6 +652,8 @@ public class HikariConfig implements HikariConfigMBean
         }
 
         poolName = "HikariPool-" + poolNumber++;
+
+        logConfiguration();
     }
 
     private void validateNumerics()
@@ -727,6 +701,29 @@ public class HikariConfig implements HikariConfigMBean
         {
             logger.warn("maxLifetime is less than 120000ms, did you specify the wrong time unit?  Using default instead.");
             maxLifetime = MAX_LIFETIME;
+        }
+    }
+
+    private void logConfiguration()
+    {
+        LOGGER.debug("HikariCP pool {} configuration:", poolName);
+        Set<String> propertyNames = new TreeSet<String>(PropertyBeanSetter.getPropertyNames(HikariConfig.class));
+        StringBuilder sb = new StringBuilder();
+        for (String prop : propertyNames)
+        {
+            try
+            {
+                sb.append(prop).append("................................................");
+                sb.setLength(32);
+                Object value = PropertyBeanSetter.getProperty(prop, this);
+                sb.append((value != null ? value : ""));
+                LOGGER.debug(sb.toString());
+                sb.setLength(0);
+            }
+            catch (Exception e)
+            {
+                continue;
+            }
         }
     }
 

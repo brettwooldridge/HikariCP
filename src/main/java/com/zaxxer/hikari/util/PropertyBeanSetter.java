@@ -77,7 +77,10 @@ public final class PropertyBeanSetter
             BeanInfo info = Introspector.getBeanInfo(targetClass);
             for (PropertyDescriptor descr : info.getPropertyDescriptors())
             {
-                set.add(descr.getName());
+                if (!"class".equals(descr.getName()))
+                {
+                    set.add(descr.getName());
+                }
             }
 
             return set;
@@ -85,6 +88,29 @@ public final class PropertyBeanSetter
         catch (IntrospectionException e)
         {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static Object getProperty(String propName, Object target)
+    {
+        try
+        {
+            String capitalized = "get" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+            Method method = target.getClass().getMethod(capitalized);
+            return method.invoke(target);
+        }
+        catch (Exception e)
+        {
+            try
+            {
+                String capitalized = "is" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+                Method method = target.getClass().getMethod(capitalized);
+                return method.invoke(target);
+            }
+            catch (Exception e2)
+            {
+                return null;
+            }
         }
     }
 
