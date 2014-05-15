@@ -41,6 +41,7 @@ public final class ProxyFactory
      *
      * @param pool the {@link HikariPool} that will own this proxy
      * @param connection the {@link Connection} that will be wrapped by this proxy
+     * @param maxLifeTime the lifetime of the connection
      * @param defaultIsolationLevel the default transaction isolation level of the underlying {@link Connection}
      * @param defaultAutoCommit the default auto-commit state of the underlying {@link Connection}
      * @param defaultIReadOnly the default readOnly state of the underlying {@link Connection}

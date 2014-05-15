@@ -18,6 +18,7 @@ package com.zaxxer.hikari.proxy;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Timer;
 
 import com.zaxxer.hikari.util.ConcurrentBag.IBagManagable;
@@ -101,5 +102,5 @@ public interface IHikariConnectionProxy extends Connection, IBagManagable
      *
      * @param statement the Statement to remove from tracking
      */
-    void untrackStatement(Object statement);
+    void untrackStatement(Statement statement);
 }

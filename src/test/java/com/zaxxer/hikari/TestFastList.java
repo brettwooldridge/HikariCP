@@ -7,16 +7,16 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.zaxxer.hikari.mocks.StubStatement;
-import com.zaxxer.hikari.util.FastStatementList;
+import com.zaxxer.hikari.util.FastList;
 
-public class TestFastStatementList
+public class TestFastList
 {
     @Test
     public void testAddRemove()
     {
         ArrayList<Statement> verifyList = new ArrayList<Statement>();
 
-        FastStatementList list = new FastStatementList();
+        FastList<Statement> list = new FastList<Statement>(Statement.class);
         for (int i = 0; i < 32; i++)
         {
             StubStatement statement = new StubStatement(null);
@@ -38,7 +38,7 @@ public class TestFastStatementList
     {
         ArrayList<Statement> verifyList = new ArrayList<Statement>();
 
-        FastStatementList list = new FastStatementList();
+        FastList<Statement> list = new FastList<Statement>(Statement.class);
         for (int i = 0; i < 32; i++)
         {
             StubStatement statement = new StubStatement(null);
@@ -60,7 +60,7 @@ public class TestFastStatementList
     {
         ArrayList<Statement> verifyList = new ArrayList<Statement>();
 
-        FastStatementList list = new FastStatementList();
+        FastList<Statement> list = new FastList<Statement>(Statement.class);
         for (int i = 0; i < 100; i++)
         {
             StubStatement statement = new StubStatement(null);

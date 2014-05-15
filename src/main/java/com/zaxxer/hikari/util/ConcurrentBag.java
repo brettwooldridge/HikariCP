@@ -17,7 +17,6 @@ package com.zaxxer.hikari.util;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
@@ -74,7 +73,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
 	    void addBagItem();
 	}
 
-    private ThreadLocal<LinkedList<WeakReference<T>>> threadList;
+    private ThreadLocal<FastList<WeakReference<T>>> threadList;
     private CopyOnWriteArraySet<T> sharedList;
     private Synchronizer synchronizer;
     private IBagStateListener listener;
@@ -86,7 +85,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     {
         this.sharedList = new CopyOnWriteArraySet<T>();
         this.synchronizer = new Synchronizer();
-        this.threadList = new ThreadLocal<LinkedList<WeakReference<T>>>();
+        this.threadList = new ThreadLocal<FastList<WeakReference<T>>>();
     }
 
     /**
@@ -101,20 +100,22 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     public T borrow(long timeout, TimeUnit timeUnit) throws InterruptedException
     {
         // Try the thread-local list first
-        LinkedList<WeakReference<T>> list = threadList.get();
+        FastList<WeakReference<T>> list = threadList.get();
         if (list == null)
         {
-            list = new LinkedList<WeakReference<T>>();
+            list = new FastList<WeakReference<T>>(WeakReference.class);
             threadList.set(list);
         }
-
-        while (!list.isEmpty())
+        else
         {
-            final WeakReference<T> reference = list.removeFirst();
-            final T element = reference.get();
-            if (element != null && element.compareAndSetState(STATE_NOT_IN_USE, STATE_IN_USE))
+            for (int i = list.size() - 1; i >= 0; i--)
             {
-                return element;
+                final WeakReference<T> reference = list.removeLast();
+                final T element = reference.get();
+                if (element != null && element.compareAndSetState(STATE_NOT_IN_USE, STATE_IN_USE))
+                {
+                    return element;
+                }
             }
         }
 
@@ -161,14 +162,14 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
 
         if (value.compareAndSetState(STATE_IN_USE, STATE_NOT_IN_USE))
         {
-            LinkedList<WeakReference<T>> list = threadList.get();
+            FastList<WeakReference<T>> list = threadList.get();
             if (list == null)
             {
-                list = new LinkedList<WeakReference<T>>();
+                list = new FastList<WeakReference<T>>(WeakReference.class);
                 threadList.set(list);
             }
 
-            list.addLast(new WeakReference<T>(value));
+            list.add(new WeakReference<T>(value));
             synchronizer.releaseShared(System.nanoTime());
         }
         else

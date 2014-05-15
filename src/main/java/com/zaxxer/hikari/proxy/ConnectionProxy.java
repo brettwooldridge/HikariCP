@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.pool.HikariPool;
-import com.zaxxer.hikari.util.FastStatementList;
+import com.zaxxer.hikari.util.FastList;
 
 /**
  * This is the proxy class for java.sql.Connection.
@@ -46,7 +46,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
     protected final Connection delegate;
 
-    private final FastStatementList openStatements;
+    private final FastList<Statement> openStatements;
     private final HikariPool parentPool;
     private final AtomicInteger state;
     private final String defaultCatalog;
@@ -94,7 +94,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
         long now = System.currentTimeMillis();
         this.expirationTime = (maxLifetime > 0 ? now + maxLifetime : Long.MAX_VALUE);
         this.lastAccess = now;
-        this.openStatements = new FastStatementList();
+        this.openStatements = new FastList<Statement>(Statement.class);
         this.hashCode = System.identityHashCode(this);
 
         isCatalogDirty = true;
@@ -233,7 +233,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
     /** {@inheritDoc} */
     @Override
-    public final void untrackStatement(Object statement)
+    public final void untrackStatement(Statement statement)
     {
         // If the connection is not closed.  If it is closed, it means this is being
         // called back as a result of the close() method below in which case we

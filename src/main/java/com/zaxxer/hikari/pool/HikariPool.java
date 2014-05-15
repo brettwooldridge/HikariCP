@@ -197,6 +197,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      * Release a connection back to the pool, or permanently close it if it is broken.
      *
      * @param connectionProxy the connection to release back to the pool
+     * @param isBroken true if the connection was detected as broken
      */
     public void releaseConnection(final IHikariConnectionProxy connectionProxy, final boolean isBroken)
     {
