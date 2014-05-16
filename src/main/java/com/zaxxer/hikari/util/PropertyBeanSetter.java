@@ -22,6 +22,7 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.HashSet;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
@@ -46,10 +47,10 @@ public final class PropertyBeanSetter
             return;
         }
 
-        for (Object propKey : properties.keySet())
+        for (Entry<Object, Object> propEntry : properties.entrySet())
         {
-            String propName = propKey.toString();
-            Object propValue = properties.get(propKey);
+            String propName = propEntry.getKey().toString();
+            Object propValue = propEntry.getValue();
 
             if (target instanceof HikariConfig && propName.startsWith("dataSource."))
             {

@@ -64,7 +64,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     private volatile long lastAccess;
     private long uncloseTime;
 
-    private StackTraceElement[] leakTrace;
     private TimerTask leakTask;
 
     private final int hashCode;
@@ -126,7 +125,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     public final void captureStack(long leakDetectionThreshold, Timer scheduler)
     {
         StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-        leakTrace = new StackTraceElement[trace.length - 4];
+        StackTraceElement[] leakTrace = new StackTraceElement[trace.length - 4];
         System.arraycopy(trace, 4, leakTrace, 0, leakTrace.length);
 
         leakTask = new LeakTask(leakTrace, leakDetectionThreshold);
