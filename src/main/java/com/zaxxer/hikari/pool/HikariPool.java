@@ -45,6 +45,11 @@ import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PoolUtilities;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
+import static com.zaxxer.hikari.util.PoolUtilities.elapsedTimeMs;
+import static com.zaxxer.hikari.util.PoolUtilities.createInstance;
+import static com.zaxxer.hikari.util.PoolUtilities.createThreadPoolExecutor;
+import static com.zaxxer.hikari.util.PoolUtilities.IS_JAVA7;
+
 /**
  * This is the primary connection pool class that provides the basic
  * pooling behavior for HikariCP.
@@ -127,7 +132,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             HikariMBeanElf.registerMBeans(configuration, this);
         }
 
-        addConnectionExecutor = PoolUtilities.createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler");
+        addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler");
 
         fillPool();
         
@@ -167,7 +172,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 if (now > connection.getExpirationTime() || (now - connection.getLastAccess() > 1000 && !isConnectionAlive(connection, timeout)))
                 {
                     closeConnection(connection);  // Throw away the dead connection, try again
-                    timeout -= PoolUtilities.elapsedTimeMs(start);
+                    timeout -= elapsedTimeMs(start);
                     continue;
                 }
                 else if (leakDetectionThreshold != 0)
@@ -203,7 +208,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     {
         if (isRecordMetrics)
         {
-            metricsTracker.recordConnectionUsage(PoolUtilities.elapsedTimeMs(connectionProxy.getLastOpenTime()));
+            metricsTracker.recordConnectionUsage(elapsedTimeMs(connectionProxy.getLastOpenTime()));
         }
 
         if (isBroken || isShutdown)
@@ -234,7 +239,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 closeIdleConnections();
                 abortActiveConnections();
             }
-            while ((getIdleConnections() > 0 || getActiveConnections() > 0 ) && PoolUtilities.elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5));
+            while ((getIdleConnections() > 0 || getActiveConnections() > 0 ) && elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5));
 
             logPoolState("State after shutdown ");
 
@@ -483,12 +488,12 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      */
     private void abortActiveConnections() throws InterruptedException
     {
-        ThreadPoolExecutor assassinExecutor = PoolUtilities.createThreadPoolExecutor(1, "HikariCP connection assassin");
+        ThreadPoolExecutor assassinExecutor = createThreadPoolExecutor(1, "HikariCP connection assassin");
         for (IHikariConnectionProxy connectionProxy : connectionBag.values(ConcurrentBag.STATE_IN_USE))
         {
             try
             {
-                if (PoolUtilities.IS_JAVA7)
+                if (IS_JAVA7)
                 {
                     connectionProxy.abort(assassinExecutor);
                 }
@@ -531,7 +536,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         {
             try
             {
-                DataSource dataSource = PoolUtilities.createInstance(dsClassName, DataSource.class);
+                DataSource dataSource = createInstance(dsClassName, DataSource.class);
                 PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
                 return dataSource;
             }
@@ -554,7 +559,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         {
             try
             {
-                return PoolUtilities.createInstance(configuration.getConnectionCustomizerClassName(), IConnectionCustomizer.class);
+                return createInstance(configuration.getConnectionCustomizerClassName(), IConnectionCustomizer.class);
             }
             catch (Exception e)
             {
