@@ -562,12 +562,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             }
         }
 
-        return new IConnectionCustomizer() {
-            @Override
-            public void customize(Connection connection) throws SQLException
-            {
-            }
-        };
+        return configuration.getConnectionCustomizer();
     }
 
     private void logPoolState(String... prefix)

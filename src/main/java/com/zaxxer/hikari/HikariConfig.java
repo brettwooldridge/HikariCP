@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
@@ -77,6 +78,7 @@ public class HikariConfig implements HikariConfigMBean
     private boolean isRegisterMbeans;
     private DataSource dataSource;
     private Properties dataSourceProperties;
+    private IConnectionCustomizer customizer;
     private int transactionIsolation;
 
     static
@@ -100,6 +102,12 @@ public class HikariConfig implements HikariConfigMBean
         maxLifetime = MAX_LIFETIME;
         isRecordMetrics = false;
         transactionIsolation = -1;
+        customizer = new IConnectionCustomizer() {
+            @Override
+            public void customize(Connection connection) throws SQLException
+            {
+            }
+        };
     }
 
     /**
@@ -182,6 +190,26 @@ public class HikariConfig implements HikariConfigMBean
     public void setConnectionCustomizerClassName(String connectionCustomizerClassName)
     {
         this.connectionCustomizerClassName = connectionCustomizerClassName;
+    }
+
+    /**
+     * Get the customizer instance specified by the user.
+     *
+     * @return an instance of IConnectionCustomizer
+     */
+    public IConnectionCustomizer getConnectionCustomizer()
+    {
+        return customizer;
+    }
+
+    /**
+     * Set the connection customizer to be used by the pool.
+     *
+     * @param customizer an instance of IConnectionCustomizer
+     */
+    public void setConnectionCustomizer(IConnectionCustomizer customizer)
+    {
+        this.customizer = customizer;
     }
 
     /**
