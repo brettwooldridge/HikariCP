@@ -11,18 +11,20 @@ import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
 
 public final class PoolUtilities
 {
-    public static boolean IS_JAVA7;
+    public static final boolean IS_JAVA7;
 
     static
     {
+        boolean b = false;
         try
         {
-            IS_JAVA7 = AbstractQueuedLongSynchronizer.class.getMethod("hasQueuedPredecessors", new Class<?>[0]) != null;
+            b = AbstractQueuedLongSynchronizer.class.getMethod("hasQueuedPredecessors", new Class<?>[0]) != null;
         }
         catch (Exception e)
         {
-            IS_JAVA7 = false;
         }
+
+        IS_JAVA7 = b;
     }
 
     public static void quietlyCloseConnection(Connection connection)
@@ -119,7 +121,7 @@ public final class PoolUtilities
 
         int processors = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
         LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>(queueSize);
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(processors, processors, 10, TimeUnit.SECONDS, queue, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(processors, processors, 2, TimeUnit.SECONDS, queue, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
         executor.allowCoreThreadTimeOut(true);
         return executor;
     }

@@ -40,7 +40,9 @@ public class HikariDataSource extends HikariConfig implements DataSource
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(HikariDataSource.class);
 
+    // We use a concrete HashMap rather than Map to avoid an invokeinterface callsite
     private final HashMap<MultiPoolKey, HikariPool> multiPool;
+
     private volatile boolean isShutdown;
     private int loginTimeout;
 
@@ -228,41 +230,14 @@ public class HikariDataSource extends HikariConfig implements DataSource
 
         isShutdown = true;
 
-        if (pool != null)
+        if (fastPathPool != null)
         {
-            try
-            {
-                pool.shutdown();
-            }
-            catch (InterruptedException e)
-            {
-                LoggerFactory.getLogger(getClass()).warn("Interrupted during shutdown", e);
-            }
-
-            if (pool.getDataSource() instanceof DriverDataSource)
-            {
-                ((DriverDataSource) pool.getDataSource()).shutdown();
-            }
+            shutdownHelper(fastPathPool);
         }
 
-        if (!multiPool.isEmpty())
+        for (HikariPool hikariPool : multiPool.values())
         {
-            for (HikariPool hikariPool : multiPool.values())
-            {
-                try
-                {
-                    hikariPool.shutdown();
-                }
-                catch (InterruptedException e)
-                {
-                    LoggerFactory.getLogger(getClass()).warn("Interrupted during shutdown", e);
-                }
-
-                if (hikariPool.getDataSource() instanceof DriverDataSource)
-                {
-                    ((DriverDataSource) hikariPool.getDataSource()).shutdown();
-                }
-            }
+            shutdownHelper(hikariPool);
         }
     }
 
@@ -271,6 +246,23 @@ public class HikariDataSource extends HikariConfig implements DataSource
     public String toString()
     {
         return String.format("HikariDataSource (%s)", pool);
+    }
+
+    private void shutdownHelper(HikariPool hPool)
+    {
+        try
+        {
+            hPool.shutdown();
+        }
+        catch (InterruptedException e)
+        {
+            LoggerFactory.getLogger(getClass()).warn("Interrupted during shutdown", e);
+        }
+
+        if (hPool.getDataSource() instanceof DriverDataSource)
+        {
+            ((DriverDataSource) hPool.getDataSource()).shutdown();
+        }
     }
 
     private static class MultiPoolKey

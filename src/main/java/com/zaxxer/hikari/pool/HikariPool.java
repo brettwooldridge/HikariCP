@@ -440,29 +440,26 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             {
                 return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
             }
-            else
-            {
-                Statement statement = connection.createStatement();
-                try
-                {
-                    if (configuration.getConnectionTimeout() < Integer.MAX_VALUE)
-                    {
-                        statement.setQueryTimeout((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
-                    }
-                    statement.executeQuery(configuration.getConnectionTestQuery());
-                }
-                finally
-                {
-                    statement.close();
-                }
 
+            Statement statement = connection.createStatement();
+            try
+            {
+                if (configuration.getConnectionTimeout() < Integer.MAX_VALUE)
+                {
+                    statement.setQueryTimeout((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
+                }
+                statement.executeQuery(configuration.getConnectionTestQuery());
+            }
+            finally
+            {
+                statement.close();
                 if (isIsolateInternalQueries && !isAutoCommit)
                 {
                     connection.rollback();
                 }
-                
-                return true;
             }
+            
+            return true;
         }
         catch (SQLException e)
         {
@@ -620,10 +617,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             
             logPoolState("After cleanup ");
 
-            if (getIdleConnections() < configuration.getMinimumIdle() && totalConnections.get() < configuration.getMaximumPoolSize())
-            {
-                addBagItem();  // Try to maintain minimum connections
-            }
+            addBagItem();  // Try to maintain minimum connections
         }
     }
 }
