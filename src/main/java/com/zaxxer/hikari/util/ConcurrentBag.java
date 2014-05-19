@@ -322,18 +322,20 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     private static class Synchronizer extends AbstractQueuedLongSynchronizer
     {
         private static final long serialVersionUID = 104753538004341218L;
-        private static boolean JAVA7;
+        private static final boolean JAVA7;
 
         static
         {
+            boolean b = false;
             try
             {
-                JAVA7 = AbstractQueuedLongSynchronizer.class.getMethod("hasQueuedPredecessors", new Class<?>[0]) != null;
+                b = AbstractQueuedLongSynchronizer.class.getMethod("hasQueuedPredecessors", new Class<?>[0]) != null;
             }
             catch (Exception e)
             {
-                // nothing
             }
+
+            JAVA7 = b;
         }
 
         @Override

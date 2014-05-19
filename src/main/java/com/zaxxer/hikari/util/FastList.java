@@ -27,7 +27,6 @@ import java.lang.reflect.Array;
 public final class FastList<T>
 {
     private T[] elementData;
-
     private int size;
 
     /**
@@ -60,8 +59,7 @@ public final class FastList<T>
     {
         try
         {
-            elementData[size] = element;
-            size++;
+            elementData[size++] = element;
         }
         catch (ArrayIndexOutOfBoundsException e)
         {
@@ -71,7 +69,7 @@ public final class FastList<T>
             @SuppressWarnings("unchecked")
             final T[] newElementData = (T[]) Array.newInstance(element.getClass(), newCapacity);
             System.arraycopy(elementData, 0, newElementData, 0, oldCapacity);
-            newElementData[size++] = element;
+            newElementData[size - 1] = element;
             elementData = newElementData;
         }
     }
