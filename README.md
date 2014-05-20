@@ -116,7 +116,7 @@ detection is 10000 (10 secs). *Default: 0*
 This property controls whether the pool will "fail fast" if the pool cannot be seeded with
 initial connections successfully.  If connections cannot be created at pool startup time,
 a ``RuntimeException`` will be thrown from the ``HikariDataSource`` constructor.  This
-property has no effect if ``minimumPoolSize`` is 0.  *Default: false*
+property has no effect if ``minimumIdle`` is 0.  *Default: false*
 
 :white_check_mark:``jdbc4ConnectionTest``<br/>
 This property is a boolean value that determines whether the JDBC4 Connection.isValid() method
@@ -194,7 +194,7 @@ the underlying driver.  *Default: none*
 
 :abc:``poolName``<br/>
 This property represents a user-defined name for the connection pool and appears mainly
-in a JMX management console to identify pools and pool configurations.  *Default: auto-generated*
+in logging and JMX management consoles to identify pools and pool configurations.  *Default: auto-generated*
 
 :negative_squared_cross_mark:``registerMbeans``<br/>
 This property controls whether or not JMX Management Beans ("MBeans") are registered or not.
