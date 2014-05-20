@@ -109,7 +109,8 @@ is disabled.  While the default is 0, and other connection pool implementations 
 leak detection is "not for production" as it imposes a high overhead, at least in the case
 of HikariCP the imposed overhead is only 5μs (*microseconds*) split between getConnection()
 and close().  Maybe other pools are doing it wrong, but feel free to use leak detection under
-HikariCP in production environments if you wish.  *Default: 0*
+HikariCP in production environments if you wish. Lowest acceptable value for enabling leak 
+detection is 10000 (10 secs). *Default: 0*
 
 :negative_squared_cross_mark:``initializationFailFast``<br/>
 This property controls whether the pool will "fail fast" if the pool cannot be seeded with
