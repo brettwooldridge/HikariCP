@@ -539,16 +539,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         String dsClassName = configuration.getDataSourceClassName();
         if (configuration.getDataSource() == null && dsClassName != null)
         {
-            try
-            {
-                DataSource dataSource = createInstance(dsClassName, DataSource.class);
-                PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
-                return dataSource;
-            }
-            catch (Exception e)
-            {
-                throw new RuntimeException("Could not create datasource instance: " + dsClassName, e);
-            }
+            DataSource dataSource = createInstance(dsClassName, DataSource.class);
+            PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
+            return dataSource;
         }
         else if (configuration.getJdbcUrl() != null)
         {
@@ -562,14 +555,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     {
         if (configuration.getConnectionCustomizerClassName() != null)
         {
-            try
-            {
-                return createInstance(configuration.getConnectionCustomizerClassName(), IConnectionCustomizer.class);
-            }
-            catch (Exception e)
-            {
-                LOGGER.error("Connection customizer could not be created", e);
-            }
+            return createInstance(configuration.getConnectionCustomizerClassName(), IConnectionCustomizer.class);
         }
 
         return configuration.getConnectionCustomizer();
