@@ -435,7 +435,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     {
         try
         {
-            timeoutMs = Math.max(1000, timeoutMs);
+            final boolean timeoutEnabled = (configuration.getConnectionTimeout() != Integer.MAX_VALUE);
+            timeoutMs = timeoutEnabled ? Math.max(1000, timeoutMs) : 0;
 
             if (isJdbc4ConnectionTest)
             {
@@ -445,11 +446,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             Statement statement = connection.createStatement();
             try
             {
-                if (configuration.getConnectionTimeout() < Integer.MAX_VALUE)
-                {
-                    statement.setQueryTimeout((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
-                }
+                statement.setQueryTimeout((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
                 statement.executeQuery(configuration.getConnectionTestQuery());
+                return true;
             }
             finally
             {
@@ -459,8 +458,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                     connection.rollback();
                 }
             }
-            
-            return true;
         }
         catch (SQLException e)
         {
