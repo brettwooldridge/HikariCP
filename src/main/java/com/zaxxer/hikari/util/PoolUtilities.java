@@ -1,5 +1,6 @@
 package com.zaxxer.hikari.util;
 
+import java.lang.reflect.Constructor;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -90,7 +91,7 @@ public final class PoolUtilities
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T createInstance(String className, Class<T> clazz)
+    public static <T> T createInstance(String className, Class<T> clazz, Object...args)
     {
         if (className == null)
         {
@@ -100,6 +101,19 @@ public final class PoolUtilities
         try
         {
             Class<?> loaded = PoolUtilities.class.getClassLoader().loadClass(className);
+
+            Class<?>[] argClasses = new Class<?>[args.length];
+            for (int i = 0; i < args.length; i++)
+            {
+                argClasses[i] = args[i].getClass();
+            }
+
+            if (args.length > 0)
+            {
+                Constructor<?> constructor = loaded.getConstructor(argClasses);
+                return (T) constructor.newInstance(args);
+            }
+
             return (T) loaded.newInstance();
         }
         catch (Exception e)
