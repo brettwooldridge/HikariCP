@@ -92,13 +92,13 @@ public class TestConnections
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-        System.setProperty("com.zaxxer.hikari.housekeeping.period", "100");
+        System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "100");
 
         HikariDataSource ds = new HikariDataSource(config);
 
         try
         {
-            System.clearProperty("com.zaxxer.hikari.housekeeping.period");
+            System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
     
             ds.setMaxLifetime(700);
     

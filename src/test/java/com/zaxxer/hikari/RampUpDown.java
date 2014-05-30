@@ -18,7 +18,7 @@ public class RampUpDown
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-        System.setProperty("com.zaxxer.hikari.housekeeping.period", "250");
+        System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "250");
 
         HikariDataSource ds = new HikariDataSource(config);
         ds.setIdleTimeout(1000);

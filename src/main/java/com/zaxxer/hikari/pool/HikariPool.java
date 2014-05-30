@@ -142,8 +142,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
         fillPool();
         
+        long delayPeriod = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30L));
         houseKeepingTimer = new Timer("Hikari Housekeeping Timer (pool " + configuration.getPoolName() + ")", true);
-        long delayPeriod = Long.getLong("com.zaxxer.hikari.housekeeping.period", TimeUnit.SECONDS.toMillis(30));
         houseKeepingTimer.scheduleAtFixedRate(new HouseKeeper(), delayPeriod, delayPeriod);
     }
 
@@ -311,7 +311,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         class AddConnection implements Runnable {
             public void run()
             {
-                long sleepBackoff = 200;
+                long sleepBackoff = 200L;
                 final int maxPoolSize = configuration.getMaximumPoolSize();
                 final int minIdle = configuration.getMinimumIdle();
                 while (!isShutdown && totalConnections.get() < maxPoolSize && (minIdle == 0 || getIdleConnections() < minIdle))
@@ -577,10 +577,10 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         @Override
         public void run()
         {
-            connectionTimeout = configuration.getConnectionTimeout();
-
             logPoolState("Before cleanup ");
-            houseKeepingTimer.purge();
+
+            connectionTimeout = configuration.getConnectionTimeout();  // refresh member in case it changed
+            houseKeepingTimer.purge(); // purge cancelled timers
 
             final long now = System.currentTimeMillis();
             final long idleTimeout = configuration.getIdleTimeout();
@@ -589,7 +589,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             {
                 if (connectionBag.reserve(connectionProxy))
                 {
-                    if ((idleTimeout > 0 && now > connectionProxy.getLastAccess() + idleTimeout)
+                    if ((idleTimeout > 0L && now > connectionProxy.getLastAccess() + idleTimeout)
                         ||
                         (now > connectionProxy.getExpirationTime()))
                     {
