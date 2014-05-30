@@ -288,6 +288,7 @@ We recommended using ``dataSourceClassName`` instead of ``driverClassName``/``jd
 | Database         | Driver       | *DataSource* class |
 |:---------------- |:------------ |:-------------------|
 | Apache Derby     | Derby        | org.apache.derby.jdbc.ClientDataSource |
+| IBM DB2          | DB2          | com.ibm.db2.jcc.DB2SimpleDataSource |
 | H2               | H2           | org.h2.jdbcx.JdbcDataSource |
 | HSQLDB           | HSQLDB       | org.hsqldb.jdbc.JDBCDataSource |
 | MariaDB & MySQL  | MariaDB      | org.mariadb.jdbc.MySQLDataSource |

@@ -65,6 +65,7 @@ public class HikariConfig implements HikariConfigMBean
     private String dataSourceJndiName;
     private String driverClassName;
     private String jdbcUrl;
+    private String metricsTrackerClassName;
     private String password;
     private String poolName;
     private String transactionIsolationName;
@@ -102,6 +103,7 @@ public class HikariConfig implements HikariConfigMBean
         maxLifetime = MAX_LIFETIME;
         isRecordMetrics = false;
         transactionIsolation = -1;
+        metricsTrackerClassName = "com.zaxxer.hikari.metrics.CodaHaleMetricsTracker";
         customizer = new IConnectionCustomizer() {
             @Override
             public void customize(Connection connection) throws SQLException
@@ -519,6 +521,28 @@ public class HikariConfig implements HikariConfigMBean
             throw new IllegalArgumentException("maxPoolSize cannot be negative");
         }
         this.maxPoolSize = maxPoolSize;
+    }
+
+    /**
+     * Get the name of the class that implements the IMetricsTracker interface to
+     * be used for metrics tracking.
+     *
+     * @return the name of the class that implements the IMetricsTracker interface
+     */
+    public String getMetricsTrackerClassName()
+    {
+        return metricsTrackerClassName;
+    }
+
+    /**
+     * Set the name of the class that implements the IMetricsTracker interface to
+     * be used for metrics tracking.
+     *
+     * @param className the name of the class that implements the IMetricsTracker interface
+     */
+    public void setMetricsTrackerClassName(String className)
+    {
+        this.metricsTrackerClassName = className;
     }
 
     /** {@inheritDoc} */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013,2014 Brett Wooldridge
+ * Copyright (C) 2014 Brett Wooldridge
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,30 +16,21 @@
 
 package com.zaxxer.hikari.metrics;
 
+import com.zaxxer.hikari.util.PoolUtilities;
 
 /**
- * This class does absolutely nothing.
  *
  * @author Brett Wooldridge
  */
-public class MetricsTracker implements IMetricsTracker
+public final class MetricsFactory
 {
-    public static final MetricsContext NO_CONTEXT = new MetricsContext();
-
-    public MetricsTracker()
+    private MetricsFactory()
     {
+        // private contructor
     }
 
-    public MetricsTracker(String poolName)
+    public static final IMetricsTracker createMetricsTracker(String metricsClassName, String poolName)
     {
-    }
-
-    public MetricsContext recordConnectionRequest(long requestTime)
-    {
-        return NO_CONTEXT;
-    }
-
-    public void recordConnectionUsage(long usageMilleseconds)
-    {
+        return PoolUtilities.createInstance(metricsClassName, IMetricsTracker.class, poolName);
     }
 }

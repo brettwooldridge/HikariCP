@@ -46,7 +46,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
         connectionUsage.update(usageMilleseconds);
     }
 
-    public static final class Context extends MetricsTracker.Context
+    public static final class Context extends MetricsContext
     {
         Timer.Context innerContext;
 

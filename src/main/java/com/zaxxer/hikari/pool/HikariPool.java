@@ -16,6 +16,14 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.util.PoolUtilities.IS_JAVA7;
+import static com.zaxxer.hikari.util.PoolUtilities.createInstance;
+import static com.zaxxer.hikari.util.PoolUtilities.createThreadPoolExecutor;
+import static com.zaxxer.hikari.util.PoolUtilities.elapsedTimeMs;
+import static com.zaxxer.hikari.util.PoolUtilities.executeSqlAutoCommit;
+import static com.zaxxer.hikari.util.PoolUtilities.quietlyCloseConnection;
+import static com.zaxxer.hikari.util.PoolUtilities.quietlySleep;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -34,23 +42,16 @@ import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.IConnectionCustomizer;
-import com.zaxxer.hikari.metrics.CodaHaleMetricsTracker;
+import com.zaxxer.hikari.metrics.IMetricsTracker;
+import com.zaxxer.hikari.metrics.IMetricsTracker.MetricsContext;
+import com.zaxxer.hikari.metrics.MetricsFactory;
 import com.zaxxer.hikari.metrics.MetricsTracker;
-import com.zaxxer.hikari.metrics.MetricsTracker.Context;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
-
-import static com.zaxxer.hikari.util.PoolUtilities.elapsedTimeMs;
-import static com.zaxxer.hikari.util.PoolUtilities.createInstance;
-import static com.zaxxer.hikari.util.PoolUtilities.createThreadPoolExecutor;
-import static com.zaxxer.hikari.util.PoolUtilities.executeSqlAutoCommit;
-import static com.zaxxer.hikari.util.PoolUtilities.quietlySleep;
-import static com.zaxxer.hikari.util.PoolUtilities.quietlyCloseConnection;
-import static com.zaxxer.hikari.util.PoolUtilities.IS_JAVA7;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -68,7 +69,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     private final HikariConfig configuration;
     private final ConcurrentBag<IHikariConnectionProxy> connectionBag;
     private final ThreadPoolExecutor addConnectionExecutor;
-    private final MetricsTracker metricsTracker;
+    private final IMetricsTracker metricsTracker;
+
+    private final AtomicReference<Throwable> lastConnectionFailure;
+    private final AtomicInteger totalConnections;
+    private final Timer houseKeepingTimer;
 
     private final boolean isAutoCommit;
     private final boolean isIsolateInternalQueries;
@@ -77,9 +82,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     private final boolean isRegisteredMbeans;
     private final boolean isJdbc4ConnectionTest;
     private final long leakDetectionThreshold;
-    private final AtomicReference<Throwable> lastConnectionFailure;
-    private final AtomicInteger totalConnections;
-    private final Timer houseKeepingTimer;
     private final String catalog;
     private final String username;
     private final String password;
@@ -127,7 +129,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
         this.transactionIsolation = configuration.getTransactionIsolation();
         this.isRecordMetrics = configuration.isRecordMetrics();
-        this.metricsTracker = (isRecordMetrics ? new CodaHaleMetricsTracker(configuration.getPoolName()) : new MetricsTracker());
+        this.metricsTracker = MetricsFactory.createMetricsTracker((isRecordMetrics ? configuration.getMetricsTrackerClassName() : "com.zaxxer.hikari.metrics.MetricsTracker"), configuration.getPoolName());
 
         this.dataSource = initializeDataSource();
 
@@ -154,7 +156,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     public Connection getConnection() throws SQLException
     {
         final long start = System.currentTimeMillis();
-        final Context context = (isRecordMetrics ? metricsTracker.recordConnectionRequest(start) : MetricsTracker.NO_CONTEXT); 
+        final MetricsContext context = (isRecordMetrics ? metricsTracker.recordConnectionRequest(start) : MetricsTracker.NO_CONTEXT); 
         long timeout = connectionTimeout;
         
         try
@@ -433,7 +435,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     {
         try
         {
-            timeoutMs = Math.max(1000L, timeoutMs);
+            final boolean timeoutEnabled = (configuration.getConnectionTimeout() != Integer.MAX_VALUE);
+            timeoutMs = timeoutEnabled ? Math.max(1000L, timeoutMs) : 0;
 
             if (isJdbc4ConnectionTest)
             {
@@ -443,11 +446,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             Statement statement = connection.createStatement();
             try
             {
-                if (configuration.getConnectionTimeout() < Integer.MAX_VALUE)
-                {
-                    statement.setQueryTimeout((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
-                }
+                statement.setQueryTimeout((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
                 statement.executeQuery(configuration.getConnectionTestQuery());
+                return true;
             }
             finally
             {
@@ -457,8 +458,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                     connection.rollback();
                 }
             }
-            
-            return true;
         }
         catch (SQLException e)
         {
@@ -540,16 +539,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         String dsClassName = configuration.getDataSourceClassName();
         if (configuration.getDataSource() == null && dsClassName != null)
         {
-            try
-            {
-                DataSource dataSource = createInstance(dsClassName, DataSource.class);
-                PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
-                return dataSource;
-            }
-            catch (Exception e)
-            {
-                throw new RuntimeException("Could not create datasource instance: " + dsClassName, e);
-            }
+            DataSource dataSource = createInstance(dsClassName, DataSource.class);
+            PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
+            return dataSource;
         }
         else if (configuration.getJdbcUrl() != null)
         {
@@ -563,14 +555,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     {
         if (configuration.getConnectionCustomizerClassName() != null)
         {
-            try
-            {
-                return createInstance(configuration.getConnectionCustomizerClassName(), IConnectionCustomizer.class);
-            }
-            catch (Exception e)
-            {
-                LOGGER.error("Connection customizer could not be created", e);
-            }
+            return createInstance(configuration.getConnectionCustomizerClassName(), IConnectionCustomizer.class);
         }
 
         return configuration.getConnectionCustomizer();

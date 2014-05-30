@@ -58,7 +58,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
     private boolean forceClose;
     private boolean isAutoCommitDirty;
     private boolean isCatalogDirty;
-    private volatile boolean isClosed;
+    private boolean isClosed;
     private boolean isReadOnlyDirty;
     private boolean isTransactionIsolationDirty;
     private volatile long lastAccess;
