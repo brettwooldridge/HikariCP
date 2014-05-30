@@ -84,6 +84,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     private final String username;
     private final String password;
 
+    private volatile long connectionTimeout; 
     private volatile boolean isShutdown;
     private int transactionIsolation;
 
@@ -114,6 +115,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         this.connectionBag = new ConcurrentBag<IHikariConnectionProxy>();
         this.connectionBag.addBagStateListener(this);
         this.lastConnectionFailure = new AtomicReference<Throwable>();
+        this.connectionTimeout = configuration.getConnectionTimeout();
 
         this.catalog = configuration.getCatalog();
         this.connectionCustomizer = initializeCustomizer();
@@ -139,11 +141,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         fillPool();
         
         houseKeepingTimer = new Timer("Hikari Housekeeping Timer (pool " + configuration.getPoolName() + ")", true);
-        if (configuration.getIdleTimeout() > 0 || configuration.getMaxLifetime() > 0)
-        {
-            long delayPeriod = Long.getLong("com.zaxxer.hikari.housekeeping.period", TimeUnit.SECONDS.toMillis(30));
-            houseKeepingTimer.scheduleAtFixedRate(new HouseKeeper(), delayPeriod, delayPeriod);
-        }
+        long delayPeriod = Long.getLong("com.zaxxer.hikari.housekeeping.period", TimeUnit.SECONDS.toMillis(30));
+        houseKeepingTimer.scheduleAtFixedRate(new HouseKeeper(), delayPeriod, delayPeriod);
     }
 
     /**
@@ -156,7 +155,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     {
         final long start = System.currentTimeMillis();
         final Context context = (isRecordMetrics ? metricsTracker.recordConnectionRequest(start) : MetricsTracker.NO_CONTEXT); 
-        long timeout = configuration.getConnectionTimeout();
+        long timeout = connectionTimeout;
         
         try
         {
@@ -171,7 +170,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                 final long now = System.currentTimeMillis();
                 connection.unclose(now);
 
-                if (now > connection.getExpirationTime() || (now - connection.getLastAccess() > 1000 && !isConnectionAlive(connection, timeout)))
+                if (now > connection.getExpirationTime() || (now - connection.getLastAccess() > 1000L && !isConnectionAlive(connection, timeout)))
                 {
                     closeConnection(connection);     // Throw away the dead connection and try again
                     timeout -= elapsedTimeMs(start);
@@ -184,7 +183,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
                 return connection;
             }
-            while (timeout > 0);
+            while (timeout > 0L);
         }
         catch (InterruptedException e)
         {
@@ -318,7 +317,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                     if (!addConnection())
                     {
                         quietlySleep(sleepBackoff);
-                        sleepBackoff = (long) Math.min(1000f, ((float) sleepBackoff) * 1.5);
+                        sleepBackoff = Math.min(1000L, (long) ((double) sleepBackoff * 1.5));
                         continue;
                     }
                     
@@ -434,7 +433,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     {
         try
         {
-            timeoutMs = Math.max(1000, timeoutMs);
+            timeoutMs = Math.max(1000L, timeoutMs);
 
             if (isJdbc4ConnectionTest)
             {
@@ -593,6 +592,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
         @Override
         public void run()
         {
+            connectionTimeout = configuration.getConnectionTimeout();
+
             logPoolState("Before cleanup ");
             houseKeepingTimer.purge();
 
