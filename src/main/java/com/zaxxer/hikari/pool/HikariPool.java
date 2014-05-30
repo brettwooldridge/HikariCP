@@ -27,7 +27,6 @@ import static com.zaxxer.hikari.util.PoolUtilities.quietlySleep;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -370,8 +369,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     @Override
     public void closeIdleConnections()
     {
-        List<IHikariConnectionProxy> list = connectionBag.values(ConcurrentBag.STATE_NOT_IN_USE);
-        for (IHikariConnectionProxy connectionProxy : list)
+        for (IHikariConnectionProxy connectionProxy : connectionBag.values(ConcurrentBag.STATE_NOT_IN_USE))
         {
             if (connectionBag.reserve(connectionProxy))
             {
@@ -494,7 +492,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
      */
     private void abortActiveConnections() throws InterruptedException
     {
-        ThreadPoolExecutor assassinExecutor = createThreadPoolExecutor(1, "HikariCP connection assassin");
+        ThreadPoolExecutor assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin");
         for (IHikariConnectionProxy connectionProxy : connectionBag.values(ConcurrentBag.STATE_IN_USE))
         {
             try
