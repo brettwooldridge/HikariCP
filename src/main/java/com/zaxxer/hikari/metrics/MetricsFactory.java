@@ -24,13 +24,13 @@ import com.zaxxer.hikari.util.PoolUtilities;
  */
 public final class MetricsFactory
 {
-    private MetricsFactory()
-    {
-        // private contructor
-    }
+   private MetricsFactory()
+   {
+      // private contructor
+   }
 
-    public static final IMetricsTracker createMetricsTracker(String metricsClassName, String poolName)
-    {
-        return PoolUtilities.createInstance(metricsClassName, IMetricsTracker.class, poolName);
-    }
+   public static final IMetricsTracker createMetricsTracker(String metricsClassName, String poolName)
+   {
+      return PoolUtilities.createInstance(metricsClassName, IMetricsTracker.class, poolName);
+   }
 }

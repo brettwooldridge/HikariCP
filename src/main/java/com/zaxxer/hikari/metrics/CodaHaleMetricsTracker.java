@@ -23,44 +23,43 @@ import com.zaxxer.hikari.pool.HikariPool;
 
 public final class CodaHaleMetricsTracker extends MetricsTracker
 {
-    private MetricRegistry registry;
-    private Timer connectionObtainTimer;
-    private Histogram connectionUsage;
+   private MetricRegistry registry;
+   private Timer connectionObtainTimer;
+   private Histogram connectionUsage;
 
-    public CodaHaleMetricsTracker(String poolName)
-    {
-        registry = new MetricRegistry();
-        connectionObtainTimer = registry.timer(MetricRegistry.name(HikariPool.class, "connection", "wait"));
-        connectionUsage = registry.histogram(MetricRegistry.name(HikariPool.class, "connection", "usage"));
-    }
+   public CodaHaleMetricsTracker(String poolName)
+   {
+      registry = new MetricRegistry();
+      connectionObtainTimer = registry.timer(MetricRegistry.name(HikariPool.class, "connection", "wait"));
+      connectionUsage = registry.histogram(MetricRegistry.name(HikariPool.class, "connection", "usage"));
+   }
 
-    @Override
-    public Context recordConnectionRequest(long requestTime)
-    {
-        return new Context(connectionObtainTimer);
-    }
+   @Override
+   public Context recordConnectionRequest(long requestTime)
+   {
+      return new Context(connectionObtainTimer);
+   }
 
-    @Override
-    public void recordConnectionUsage(long usageMilleseconds)
-    {
-        connectionUsage.update(usageMilleseconds);
-    }
+   @Override
+   public void recordConnectionUsage(long usageMilleseconds)
+   {
+      connectionUsage.update(usageMilleseconds);
+   }
 
-    public static final class Context extends MetricsContext
-    {
-        Timer.Context innerContext;
+   public static final class Context extends MetricsContext
+   {
+      Timer.Context innerContext;
 
-        Context(Timer timer)
-        {
-            innerContext = timer.time();
-        }
+      Context(Timer timer)
+      {
+         innerContext = timer.time();
+      }
 
-        public void stop()
-        {
-            if (innerContext != null)
-            {
-                innerContext.stop();
-            }
-        }
-    }
+      public void stop()
+      {
+         if (innerContext != null) {
+            innerContext.stop();
+         }
+      }
+   }
 }

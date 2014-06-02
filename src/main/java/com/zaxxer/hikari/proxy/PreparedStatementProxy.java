@@ -27,27 +27,25 @@ import java.sql.SQLException;
  */
 public abstract class PreparedStatementProxy extends StatementProxy implements PreparedStatement
 {
-    protected PreparedStatementProxy(ConnectionProxy connection, PreparedStatement statement)
-    {
-        super(connection, statement);
-    }
+   protected PreparedStatementProxy(ConnectionProxy connection, PreparedStatement statement)
+   {
+      super(connection, statement);
+   }
 
-    // **********************************************************************
-    //              Overridden java.sql.PreparedStatement Methods
-    // **********************************************************************
-    
-    /** {@inheritDoc} */
-    @Override
-    public final ResultSet executeQuery() throws SQLException
-    {
-    	try
-    	{
-            return ((PreparedStatement) delegate).executeQuery();
-    	}
-    	catch (SQLException e)
-    	{
-            connection.checkException(e);
-            throw e;
-    	}
-    }
+   // **********************************************************************
+   //              Overridden java.sql.PreparedStatement Methods
+   // **********************************************************************
+
+   /** {@inheritDoc} */
+   @Override
+   public final ResultSet executeQuery() throws SQLException
+   {
+      try {
+         return ((PreparedStatement) delegate).executeQuery();
+      }
+      catch (SQLException e) {
+         connection.checkException(e);
+         throw e;
+      }
+   }
 }

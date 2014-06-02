@@ -23,13 +23,13 @@ package com.zaxxer.hikari.pool;
  */
 public interface HikariPoolMBean
 {
-    int getIdleConnections();
+   int getIdleConnections();
 
-    int getActiveConnections();
+   int getActiveConnections();
 
-    int getTotalConnections();
+   int getTotalConnections();
 
-    int getThreadsAwaitingConnection();
+   int getThreadsAwaitingConnection();
 
-    void closeIdleConnections();
+   void closeIdleConnections();
 }

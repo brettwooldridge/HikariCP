@@ -29,13 +29,13 @@ import java.sql.SQLException;
  */
 public interface IConnectionCustomizer
 {
-    /**
-     * The Connection object that is passed into this method is the "raw"
-     * Connection instance provided by the JDBC driver, not a wrapped
-     * HikariCP connection.
-     *
-     * @param connection a native JDBC driver Connection instance to customize
-     * @throws SQLException should be thrown if an error condition is encountered during customization
-     */
-    void customize(Connection connection) throws SQLException;
+   /**
+    * The Connection object that is passed into this method is the "raw"
+    * Connection instance provided by the JDBC driver, not a wrapped
+    * HikariCP connection.
+    *
+    * @param connection a native JDBC driver Connection instance to customize
+    * @throws SQLException should be thrown if an error condition is encountered during customization
+    */
+   void customize(Connection connection) throws SQLException;
 }

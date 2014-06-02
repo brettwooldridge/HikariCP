@@ -38,113 +38,108 @@ import com.zaxxer.hikari.HikariDataSource;
  */
 public class HikariConnectionProvider implements ConnectionProvider, Configurable, Stoppable
 {
-    private static final long serialVersionUID = -9131625057941275711L;
+   private static final long serialVersionUID = -9131625057941275711L;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HikariConnectionProvider.class);
+   private static final Logger LOGGER = LoggerFactory.getLogger(HikariConnectionProvider.class);
 
-    /**
-     * HikariCP configuration.
-     */
-    private HikariConfig hcfg;
+   /**
+    * HikariCP configuration.
+    */
+   private HikariConfig hcfg;
 
-    /**
-     * HikariCP data source.
-     */
-    private HikariDataSource hds;
+   /**
+    * HikariCP data source.
+    */
+   private HikariDataSource hds;
 
-    // *************************************************************************
-    //
-    // *************************************************************************
+   // *************************************************************************
+   //
+   // *************************************************************************
 
-    /**
-     * c-tor
-     */
-    public HikariConnectionProvider()
-    {
-        this.hcfg = null;
-        this.hds = null;
-    }
+   /**
+    * c-tor
+    */
+   public HikariConnectionProvider()
+   {
+      this.hcfg = null;
+      this.hds = null;
+   }
 
-    // *************************************************************************
-    // Configurable
-    // *************************************************************************
+   // *************************************************************************
+   // Configurable
+   // *************************************************************************
 
-    @SuppressWarnings("rawtypes")
-    @Override
-    public void configure(Map props) throws HibernateException
-    {
-        try
-        {
-            LOGGER.debug("Configuring HikariCP");
+   @SuppressWarnings("rawtypes")
+   @Override
+   public void configure(Map props) throws HibernateException
+   {
+      try {
+         LOGGER.debug("Configuring HikariCP");
 
-            this.hcfg = HikariConfigurationUtil.loadConfiguration(props);
-            this.hds = new HikariDataSource(this.hcfg);
+         this.hcfg = HikariConfigurationUtil.loadConfiguration(props);
+         this.hds = new HikariDataSource(this.hcfg);
 
-        }
-        catch (Exception e)
-        {
-            throw new HibernateException(e);
-        }
+      }
+      catch (Exception e) {
+         throw new HibernateException(e);
+      }
 
-        LOGGER.debug("HikariCP Configured");
-    }
+      LOGGER.debug("HikariCP Configured");
+   }
 
-    // *************************************************************************
-    // ConnectionProvider
-    // *************************************************************************
+   // *************************************************************************
+   // ConnectionProvider
+   // *************************************************************************
 
-    @Override
-    public Connection getConnection() throws SQLException
-    {
-        Connection conn = null;
-        if (this.hds != null)
-        {
-            conn = this.hds.getConnection();
-        }
+   @Override
+   public Connection getConnection() throws SQLException
+   {
+      Connection conn = null;
+      if (this.hds != null) {
+         conn = this.hds.getConnection();
+      }
 
-        return conn;
-    }
+      return conn;
+   }
 
-    @Override
-    public void closeConnection(Connection conn) throws SQLException
-    {
-        conn.close();
-    }
+   @Override
+   public void closeConnection(Connection conn) throws SQLException
+   {
+      conn.close();
+   }
 
-    @Override
-    public boolean supportsAggressiveRelease()
-    {
-        return false;
-    }
+   @Override
+   public boolean supportsAggressiveRelease()
+   {
+      return false;
+   }
 
-    @Override
-    @SuppressWarnings("rawtypes")
-    public boolean isUnwrappableAs(Class unwrapType)
-    {
-        return ConnectionProvider.class.equals(unwrapType) || HikariConnectionProvider.class.isAssignableFrom(unwrapType);
-    }
+   @Override
+   @SuppressWarnings("rawtypes")
+   public boolean isUnwrappableAs(Class unwrapType)
+   {
+      return ConnectionProvider.class.equals(unwrapType) || HikariConnectionProvider.class.isAssignableFrom(unwrapType);
+   }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T> T unwrap(Class<T> unwrapType)
-    {
-        if (isUnwrappableAs(unwrapType))
-        {
-            return (T) this;
-        }
-        else
-        {
-            throw new UnknownUnwrapTypeException(unwrapType);
-        }
-    }
+   @Override
+   @SuppressWarnings("unchecked")
+   public <T> T unwrap(Class<T> unwrapType)
+   {
+      if (isUnwrappableAs(unwrapType)) {
+         return (T) this;
+      }
+      else {
+         throw new UnknownUnwrapTypeException(unwrapType);
+      }
+   }
 
-    // *************************************************************************
-    // Stoppable
-    // *************************************************************************
+   // *************************************************************************
+   // Stoppable
+   // *************************************************************************
 
-    @Override
-    public void stop()
-    {
-        this.hds.shutdown();
-    }
+   @Override
+   public void stop()
+   {
+      this.hds.shutdown();
+   }
 }

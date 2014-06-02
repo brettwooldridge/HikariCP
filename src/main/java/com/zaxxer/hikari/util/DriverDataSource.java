@@ -26,91 +26,86 @@ import javax.sql.DataSource;
 
 public final class DriverDataSource implements DataSource
 {
-    private final String jdbcUrl;
-    private final Properties driverProperties;
+   private final String jdbcUrl;
+   private final Properties driverProperties;
 
-    private PrintWriter logWriter;
+   private PrintWriter logWriter;
 
-    public DriverDataSource(String jdbcUrl, Properties properties, String username, String password)
-    {
-        try
-        {
-            this.jdbcUrl = jdbcUrl;
-            this.driverProperties = new Properties(properties);
-            if (username != null)
-            {
-                driverProperties.put("user", driverProperties.getProperty("user", username));
-            }
-            if (password != null)
-            {
-                driverProperties.put("password", driverProperties.getProperty("password", password));
-            }
+   public DriverDataSource(String jdbcUrl, Properties properties, String username, String password)
+   {
+      try {
+         this.jdbcUrl = jdbcUrl;
+         this.driverProperties = new Properties(properties);
+         if (username != null) {
+            driverProperties.put("user", driverProperties.getProperty("user", username));
+         }
+         if (password != null) {
+            driverProperties.put("password", driverProperties.getProperty("password", password));
+         }
 
-            if (DriverManager.getDriver(jdbcUrl) == null)
-            {
-                throw new IllegalArgumentException("DriverManager was unable to load driver for URL " + jdbcUrl);
-            }
-        }
-        catch (SQLException e)
-        {
-            throw new RuntimeException("Unable to get driver for JDBC URL "+ jdbcUrl);
-        }
-    }
+         if (DriverManager.getDriver(jdbcUrl) == null) {
+            throw new IllegalArgumentException("DriverManager was unable to load driver for URL " + jdbcUrl);
+         }
+      }
+      catch (SQLException e) {
+         throw new RuntimeException("Unable to get driver for JDBC URL " + jdbcUrl);
+      }
+   }
 
-    @Override
-    public Connection getConnection() throws SQLException
-    {
-        return DriverManager.getConnection(jdbcUrl, driverProperties);
-    }
+   @Override
+   public Connection getConnection() throws SQLException
+   {
+      return DriverManager.getConnection(jdbcUrl, driverProperties);
+   }
 
-    @Override
-    public Connection getConnection(String username, String password) throws SQLException
-    {
-        return getConnection();
-    }
+   @Override
+   public Connection getConnection(String username, String password) throws SQLException
+   {
+      return getConnection();
+   }
 
-    @Override
-    public PrintWriter getLogWriter() throws SQLException
-    {
-        return logWriter;
-    }
+   @Override
+   public PrintWriter getLogWriter() throws SQLException
+   {
+      return logWriter;
+   }
 
-    @Override
-    public void setLogWriter(PrintWriter logWriter) throws SQLException
-    {
-        this.logWriter = logWriter;
-    }
+   @Override
+   public void setLogWriter(PrintWriter logWriter) throws SQLException
+   {
+      this.logWriter = logWriter;
+   }
 
-    @Override
-    public void setLoginTimeout(int seconds) throws SQLException
-    {
-        DriverManager.setLoginTimeout(seconds);
-    }
+   @Override
+   public void setLoginTimeout(int seconds) throws SQLException
+   {
+      DriverManager.setLoginTimeout(seconds);
+   }
 
-    @Override
-    public int getLoginTimeout() throws SQLException
-    {
-        return DriverManager.getLoginTimeout();
-    }
+   @Override
+   public int getLoginTimeout() throws SQLException
+   {
+      return DriverManager.getLoginTimeout();
+   }
 
-    public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException
-    {
-        throw new SQLFeatureNotSupportedException();
-    }
+   public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException
+   {
+      throw new SQLFeatureNotSupportedException();
+   }
 
-    @Override
-    public <T> T unwrap(Class<T> iface) throws SQLException
-    {
-        throw new SQLFeatureNotSupportedException();
-    }
+   @Override
+   public <T> T unwrap(Class<T> iface) throws SQLException
+   {
+      throw new SQLFeatureNotSupportedException();
+   }
 
-    @Override
-    public boolean isWrapperFor(Class<?> iface) throws SQLException
-    {
-        return false;
-    }
+   @Override
+   public boolean isWrapperFor(Class<?> iface) throws SQLException
+   {
+      return false;
+   }
 
-    public void shutdown()
-    {
-    }
+   public void shutdown()
+   {
+   }
 }

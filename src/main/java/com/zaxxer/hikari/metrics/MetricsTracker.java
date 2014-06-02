@@ -16,7 +16,6 @@
 
 package com.zaxxer.hikari.metrics;
 
-
 /**
  * This class does absolutely nothing.
  *
@@ -24,22 +23,22 @@ package com.zaxxer.hikari.metrics;
  */
 public class MetricsTracker implements IMetricsTracker
 {
-    public static final MetricsContext NO_CONTEXT = new MetricsContext();
+   public static final MetricsContext NO_CONTEXT = new MetricsContext();
 
-    public MetricsTracker()
-    {
-    }
+   public MetricsTracker()
+   {
+   }
 
-    public MetricsTracker(String poolName)
-    {
-    }
+   public MetricsTracker(String poolName)
+   {
+   }
 
-    public MetricsContext recordConnectionRequest(long requestTime)
-    {
-        return NO_CONTEXT;
-    }
+   public MetricsContext recordConnectionRequest(long requestTime)
+   {
+      return NO_CONTEXT;
+   }
 
-    public void recordConnectionUsage(long usageMilleseconds)
-    {
-    }
+   public void recordConnectionUsage(long usageMilleseconds)
+   {
+   }
 }

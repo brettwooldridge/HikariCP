@@ -28,110 +28,100 @@ import java.sql.Statement;
  */
 public abstract class StatementProxy implements Statement
 {
-    protected final IHikariConnectionProxy connection;
-    protected final Statement delegate;
+   protected final IHikariConnectionProxy connection;
+   protected final Statement delegate;
 
-    private boolean isClosed;
+   private boolean isClosed;
 
-    protected StatementProxy(IHikariConnectionProxy connection, Statement statement)
-    {
-        this.connection = connection;
-        this.delegate = statement;
-    }
+   protected StatementProxy(IHikariConnectionProxy connection, Statement statement)
+   {
+      this.connection = connection;
+      this.delegate = statement;
+   }
 
-    protected final void checkException(SQLException e)
-    {
-        connection.checkException(e);
-    }
+   protected final void checkException(SQLException e)
+   {
+      connection.checkException(e);
+   }
 
-    // **********************************************************************
-    //                 Overridden java.sql.Statement Methods
-    // **********************************************************************
+   // **********************************************************************
+   //                 Overridden java.sql.Statement Methods
+   // **********************************************************************
 
-    /** {@inheritDoc} */
-    @Override
-    public final void close() throws SQLException
-    {
-        if (isClosed)
-        {
-            return;
-        }
+   /** {@inheritDoc} */
+   @Override
+   public final void close() throws SQLException
+   {
+      if (isClosed) {
+         return;
+      }
 
-        isClosed = true;
-        connection.untrackStatement(this);
+      isClosed = true;
+      connection.untrackStatement(this);
 
-        try
-        {
-            delegate.close();
-        }
-        catch (SQLException e)
-        {
-            connection.checkException(e);
-            throw e;
-        }
-    }
+      try {
+         delegate.close();
+      }
+      catch (SQLException e) {
+         connection.checkException(e);
+         throw e;
+      }
+   }
 
-    /** {@inheritDoc} */
-    @Override
-    public final ResultSet executeQuery(String sql) throws SQLException
-    {
-        try
-        {
-            return delegate.executeQuery(sql);
-        }
-        catch (SQLException e)
-        {
-            connection.checkException(e);
-            throw e;
-        }
-    }
+   /** {@inheritDoc} */
+   @Override
+   public final ResultSet executeQuery(String sql) throws SQLException
+   {
+      try {
+         return delegate.executeQuery(sql);
+      }
+      catch (SQLException e) {
+         connection.checkException(e);
+         throw e;
+      }
+   }
 
-    /** {@inheritDoc} */
-    @Override
-    public final ResultSet getResultSet() throws SQLException
-    {
-        try
-        {
-            return delegate.getResultSet();
-        }
-        catch (SQLException e)
-        {
-            connection.checkException(e);
-            throw e;
-        }
-    }
+   /** {@inheritDoc} */
+   @Override
+   public final ResultSet getResultSet() throws SQLException
+   {
+      try {
+         return delegate.getResultSet();
+      }
+      catch (SQLException e) {
+         connection.checkException(e);
+         throw e;
+      }
+   }
 
-    /** {@inheritDoc} */
-    @Override
-    public final ResultSet getGeneratedKeys() throws SQLException
-    {
-        try
-        {
-            return delegate.getGeneratedKeys();
-        }
-        catch (SQLException e)
-        {
-            connection.checkException(e);
-            throw e;
-        }
-    }
+   /** {@inheritDoc} */
+   @Override
+   public final ResultSet getGeneratedKeys() throws SQLException
+   {
+      try {
+         return delegate.getGeneratedKeys();
+      }
+      catch (SQLException e) {
+         connection.checkException(e);
+         throw e;
+      }
+   }
 
-    /** {@inheritDoc} */
-    @Override
-    public final Connection getConnection() throws SQLException
-    {
-        return connection;
-    }
+   /** {@inheritDoc} */
+   @Override
+   public final Connection getConnection() throws SQLException
+   {
+      return connection;
+   }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public final <T> T unwrap(Class<T> iface) throws SQLException
-    {
-        if (iface.isInstance(delegate))
-        {
-            return (T) delegate;
-        }
+   @Override
+   @SuppressWarnings("unchecked")
+   public final <T> T unwrap(Class<T> iface) throws SQLException
+   {
+      if (iface.isInstance(delegate)) {
+         return (T) delegate;
+      }
 
-        throw new SQLException("Wrapped connection is not an instance of " + iface);
-    }
+      throw new SQLException("Wrapped connection is not an instance of " + iface);
+   }
 }

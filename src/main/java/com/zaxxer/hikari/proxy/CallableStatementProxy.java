@@ -25,13 +25,13 @@ import java.sql.CallableStatement;
  */
 public abstract class CallableStatementProxy extends PreparedStatementProxy implements CallableStatement
 {
-    protected CallableStatementProxy(ConnectionProxy connection, CallableStatement statement)
-    {
-        super(connection, statement);
-    }
+   protected CallableStatementProxy(ConnectionProxy connection, CallableStatement statement)
+   {
+      super(connection, statement);
+   }
 
-    // **********************************************************************
-    //               Overridden java.sql.CallableStatement Methods
-    // **********************************************************************
+   // **********************************************************************
+   //               Overridden java.sql.CallableStatement Methods
+   // **********************************************************************
 
 }
