@@ -410,7 +410,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    {
       try {
          final boolean timeoutEnabled = (configuration.getConnectionTimeout() != Integer.MAX_VALUE);
-         timeoutMs = timeoutEnabled ? Math.max(1000L, timeoutMs) : 0;
+         timeoutMs = timeoutEnabled ? Math.max(1000L, timeoutMs) : 0L;
 
          if (isJdbc4ConnectionTest) {
             return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
@@ -484,7 +484,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       }
 
       assassinExecutor.shutdown();
-      assassinExecutor.awaitTermination(5, TimeUnit.SECONDS);
+      assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
    }
 
    /**

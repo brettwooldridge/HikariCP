@@ -133,7 +133,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
 
          timeout -= (System.nanoTime() - startScan);
       }
-      while (timeout > 0);
+      while (timeout > 0L);
 
       return null;
    }
@@ -164,7 +164,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
          synchronizer.releaseShared(System.nanoTime());
       }
       else {
-         throw new IllegalStateException("Value was returned to the bag that was not borrowed: ");
+         throw new IllegalStateException("Value was returned to the bag that was not borrowed: " + value);
       }
    }
 
@@ -319,7 +319,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
       @Override
       protected long tryAcquireShared(long startScanTime)
       {
-         return getState() >= startScanTime && !java67hasQueuedPredecessors() ? 1 : -1;
+         return getState() >= startScanTime && !java67hasQueuedPredecessors() ? 1L : -1L;
       }
 
       /** {@inheritDoc} */
