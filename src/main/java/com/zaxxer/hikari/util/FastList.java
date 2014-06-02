@@ -91,9 +91,9 @@ public final class FastList<T>
     */
    public T removeLast()
    {
-      T t = elementData[--size];
+      T element = elementData[--size];
       elementData[size] = null;
-      return t;
+      return element;
    }
 
    /**
