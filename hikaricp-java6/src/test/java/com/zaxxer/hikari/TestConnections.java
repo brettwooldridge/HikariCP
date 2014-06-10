@@ -259,8 +259,8 @@ public class TestConnections
             connection = ds.getConnection();
             connection.close();
 
-            Assert.assertTrue("Totals connections not as expected", TestElf.getPool(ds).getTotalConnections() > 1);
-            Assert.assertTrue("Idle connections not as expected", TestElf.getPool(ds).getIdleConnections() > 1);
+            Assert.assertTrue("Totals connections not as expected", TestElf.getPool(ds).getTotalConnections() > 0);
+            Assert.assertTrue("Idle connections not as expected", TestElf.getPool(ds).getIdleConnections() > 0);
         }
         finally
         {
