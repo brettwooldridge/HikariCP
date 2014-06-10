@@ -23,7 +23,7 @@ package com.zaxxer.hikari.metrics;
 public interface IMetricsTracker
 {
    /**
-    * This method is called when a connection request starts.  The {@#MetricsContext.stop()}
+    * This method is called when a connection request starts.  The {@link MetricsContext#stop()}
     * method will be called at the completion of the connection request, whether or not an
     * exception occurred.
     * 
@@ -43,7 +43,7 @@ public interface IMetricsTracker
    /**
     * A base instance of a MetricsContext.  Classes extending this class should exhibit the
     * behavior of "starting" a timer upon contruction, and "stopping" the timer when the
-    * {@#stop()} method is called.
+    * {@link MetricsContext#stop()} method is called.
     *
     * @author Brett Wooldridge
     */
