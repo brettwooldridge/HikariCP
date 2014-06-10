@@ -455,17 +455,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          try {
             connectionProxy.abort(assassinExecutor);
          }
-         catch (AbstractMethodError ame)
-         {
-            try {
-               connectionProxy.close();
-            }
-            catch (Exception e) {
-               return;
-            }
-         }
-         catch (SQLException e) {
-            return;
+         catch (SQLException | AbstractMethodError e) {
+            quietlyCloseConnection(connectionProxy);
          }
          finally {
             totalConnections.decrementAndGet();
