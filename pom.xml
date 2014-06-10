@@ -2,14 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
-   <!-- For release: mvn release:perform -Darguments=-Dgpg.passphrase=PASSPHRASE -->
-
    <groupId>com.zaxxer</groupId>
-   <artifactId>HikariCP</artifactId>
-   <version>1.4.0-SNAPSHOT</version>
-   <packaging>bundle</packaging>
+   <artifactId>HikariCP-parent</artifactId>
+   <version>2.0.0-SNAPSHOT</version>
+   <packaging>pom</packaging>
 
-   <name>HikariCP</name>
+   <name>HikariCP-parent</name>
    <description>Ultimate JDBC Connection Pool</description>
    <url>https://github.com/brettwooldridge/HikariCP</url>
 
@@ -53,261 +51,59 @@
       <version>7</version>
    </parent>
 
-   <dependencies>
-      <dependency>
-         <groupId>org.slf4j</groupId>
-         <artifactId>slf4j-api</artifactId>
-         <version>1.7.5</version>
-      </dependency>
-      <dependency>
-         <groupId>org.slf4j</groupId>
-         <artifactId>slf4j-simple</artifactId>
-         <version>1.7.5</version>
-         <optional>true</optional>
-      </dependency>
-      <dependency>
-         <groupId>org.mockito</groupId>
-         <artifactId>mockito-all</artifactId>
-         <version>1.9.5</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.javassist</groupId>
-         <artifactId>javassist</artifactId>
-         <version>3.18.1-GA</version>
-         <scope>compile</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.hibernate</groupId>
-         <artifactId>hibernate-core</artifactId>
-         <version>4.3.0.Final</version>
-         <scope>provided</scope>
-         <optional>true</optional>
-      </dependency>
-      <dependency>
-         <groupId>com.codahale.metrics</groupId>
-         <artifactId>metrics-core</artifactId>
-         <version>3.0.2</version>
-         <scope>provided</scope>
-         <optional>true</optional>
-      </dependency>
+   <modules>
+      <module>hikaricp</module>
+      <module>hikaricp-java6</module>
+   </modules>
 
-      <!-- OSGi test -->
-      <dependency>
-         <groupId>org.apache.felix</groupId>
-         <artifactId>org.apache.felix.framework</artifactId>
-         <version>${felix.version}</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.ops4j.pax.exam</groupId>
-         <artifactId>pax-exam-container-native</artifactId>
-         <version>${pax.exam.version}</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.ops4j.pax.exam</groupId>
-         <artifactId>pax-exam-junit4</artifactId>
-         <version>${pax.exam.version}</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.ops4j.pax.exam</groupId>
-         <artifactId>pax-exam-link-mvn</artifactId>
-         <version>${pax.exam.version}</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.ops4j.pax.url</groupId>
-         <artifactId>pax-url-aether</artifactId>
-         <version>${pax.url.version}</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.ops4j.pax.url</groupId>
-         <artifactId>pax-url-reference</artifactId>
-         <version>${pax.url.version}</version>
-         <scope>test</scope>
-      </dependency>
-
-   </dependencies>
-
+<!-- 
+   <dependencyManagement>
+      <dependencies>
+         <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>${project.version}</version>
+            <classifier>test-sources</classifier>
+         </dependency>
+         <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>${project.version}</version>
+            <classifier>sources</classifier>
+         </dependency>
+         <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>${project.version}</version>
+            <classifier>javadoc</classifier>
+         </dependency>
+         <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <type>test-jar</type>
+            <version>${project.version}</version>
+         </dependency>
+      </dependencies>
+   </dependencyManagement>
+ -->
    <build>
-      <sourceDirectory>src/main/java</sourceDirectory>
-      <testSourceDirectory>src/test/java</testSourceDirectory>
-      <plugins>
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.1</version>
-            <extensions>true</extensions>
-            <configuration>
-               <source>1.6</source>
-               <target>1.6</target>
-            </configuration>
-         </plugin>
-         <plugin>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>maven-bundle-plugin</artifactId>
-            <version>${felix.bundle.plugin.version}</version>
-            <extensions>true</extensions>
-            <configuration>
-               <instructions>
-                  <Bundle-Name>HikariCP</Bundle-Name>
-                  <Export-Package>com.zaxxer.hikari,com.zaxxer.hikari.hibernate</Export-Package>
-                  <Private-Package>com.zaxxer.hikari.*</Private-Package>
-                  <Import-Package>
-                     javassist.*,
-                     javax.management,
-                     javax.naming,
-                     javax.naming.spi,
-                     javax.sql,
-                     javax.sql.rowset,
-                     javax.sql.rowset.serial,
-                     javax.sql.rowset.spi,
-                     com.codahale.metrics;;resolution:=optional,
-                     org.slf4j,
-                     org.hibernate;resolution:=optional,
-                     org.hibernate.cfg;resolution:=optional,
-                     org.hibernate.engine.jdbc.connections.spi;resolution:=optional,
-                     org.hibernate.service;resolution:=optional,
-                     org.hibernate.service.spi;resolution:=optional
-                  </Import-Package>
-                  <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
-                  <DynamicImport-Package>*</DynamicImport-Package>
-               </instructions>
-            </configuration>
-            <executions>
-               <!-- This execution makes sure that the manifest is available 
-                  when the tests are executed -->
-               <execution>
-                  <goals>
-                     <goal>manifest</goal>
-                  </goals>
-               </execution>
-            </executions>
-         </plugin>
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-source-plugin</artifactId>
-            <version>2.2.1</version>
-            <configuration>
-               <!-- outputDirectory>/absolute/path/to/the/output/directory</outputDirectory> 
-                  <finalName>filename-of-generated-jar-file</finalName -->
-               <attach>true</attach>
-            </configuration>
-            <executions>
-               <execution>
-                  <id>attach-sources</id>
-                  <goals>
-                     <goal>jar</goal>
-                  </goals>
-               </execution>
-            </executions>
-         </plugin>
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <version>2.9.1</version>
-            <configuration>
-               <show>public</show>
-               <!-- excludePackageNames>com.zaxxer.hikari.*</excludePackageNames -->
-               <attach>true</attach>
-               <maxmemory>1024m</maxmemory>
-            </configuration>
-            <executions>
-               <execution>
-                  <goals>
-                     <goal>jar</goal>
-                  </goals>
-               </execution>
-            </executions>
-         </plugin>
-      </plugins>
       <pluginManagement>
          <plugins>
-            <!--This plugin's configuration is used to store Eclipse m2e 
-               settings only. It has no influence on the Maven build itself. -->
             <plugin>
-               <groupId>org.eclipse.m2e</groupId>
-               <artifactId>lifecycle-mapping</artifactId>
-               <version>1.0.0</version>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-release-plugin</artifactId>
+               <version>2.2.2</version>
                <configuration>
-                  <lifecycleMappingMetadata>
-                     <pluginExecutions>
-                        <pluginExecution>
-                           <pluginExecutionFilter>
-                              <groupId>org.apache.felix</groupId>
-                              <artifactId>
-                                 maven-bundle-plugin
-                              </artifactId>
-                              <versionRange>[2.4.0,)</versionRange>
-                              <goals>
-                                 <goal>manifest</goal>
-                              </goals>
-                           </pluginExecutionFilter>
-                           <action>
-                              <ignore />
-                           </action>
-                        </pluginExecution>
-                     </pluginExecutions>
-                  </lifecycleMappingMetadata>
+                  <autoVersionSubmodules>true</autoVersionSubmodules>
+                  <tagNameFormat>HikariCP-@{project.version}</tagNameFormat>
                </configuration>
             </plugin>
          </plugins>
       </pluginManagement>
    </build>
-
-   <profiles>
-      <profile>
-         <id>release-sign-artifacts</id>
-         <activation>
-            <property>
-               <name>performRelease</name>
-               <value>true</value>
-            </property>
-         </activation>
-         <build>
-            <plugins>
-               <plugin>
-                  <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-gpg-plugin</artifactId>
-                  <version>1.4</version>
-                  <executions>
-                     <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                           <goal>sign</goal>
-                        </goals>
-                     </execution>
-                  </executions>
-               </plugin>
-            </plugins>
-         </build>
-      </profile>
-
-      <profile>
-         <id>felix</id>
-         <activation>
-            <activeByDefault>true</activeByDefault>
-            <property>
-               <name>pax.exam.framework</name>
-               <value>felix</value>
-            </property>
-         </activation>
-         <properties>
-            <pax.exam.framework>felix</pax.exam.framework>
-            <pax.exam.logging>none</pax.exam.logging>
-         </properties>
-         <dependencies>
-            <dependency>
-               <groupId>org.apache.felix</groupId>
-               <artifactId>org.apache.felix.framework</artifactId>
-               <version>${felix.version}</version>
-               <scope>test</scope>
-            </dependency>
-         </dependencies>
-      </profile>
-   </profiles>
 </project>

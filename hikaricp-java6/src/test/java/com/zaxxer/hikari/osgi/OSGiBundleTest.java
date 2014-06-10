@@ -53,7 +53,6 @@ public class OSGiBundleTest
                 ?  bundle("reference:file:target/classes")
                 :  bundle("reference:file:../target/classes"),
             junitBundles(),
-            systemPackage("com.sun.tools.attach"),
             cleanCaches()
         );
     }
@@ -75,7 +74,7 @@ public class OSGiBundleTest
         {
             if(bundle != null)
             {
-                if(bundle.getSymbolicName().equals("com.zaxxer.HikariCP"))
+                if(bundle.getSymbolicName().equals("com.zaxxer.HikariCP-java6"))
                 {
                     bundleFound = true;
                     if(bundle.getState() == Bundle.ACTIVE)
