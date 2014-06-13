@@ -546,7 +546,7 @@ public class HikariConfig implements HikariConfigMBean
    @Override
    public void setMinimumIdle(int minIdle)
    {
-      if (minIdle < 0 || minIdle > maxPoolSize) {
+      if (minIdle < 0) {
          throw new IllegalArgumentException("maxPoolSize cannot be negative or greater than maximumPoolSize");
       }
       this.minIdle = minIdle;
@@ -696,7 +696,7 @@ public class HikariConfig implements HikariConfigMBean
          connectionTimeout = CONNECTION_TIMEOUT;
       }
 
-      if (minIdle < 0) {
+      if (minIdle < 0 || minIdle > maxPoolSize) {
          minIdle = maxPoolSize;
       }
 
