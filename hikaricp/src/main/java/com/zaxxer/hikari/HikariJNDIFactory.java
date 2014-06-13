@@ -89,7 +89,7 @@ public class HikariJNDIFactory implements ObjectFactory
 
       if (jndiDS == null) {
          try {
-            context = (Context) (new InitialContext());
+            context = new InitialContext();
             jndiDS = (DataSource) context.lookup(jndiName);
          }
          catch (NamingException e) {
