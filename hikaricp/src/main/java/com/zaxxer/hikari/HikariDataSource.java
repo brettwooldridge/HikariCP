@@ -272,13 +272,13 @@ public class HikariDataSource extends HikariConfig implements DataSource
          if (username != null && !username.equals(otherKey.username)) {
             return false;
          }
-         else if (username != otherKey.username) {
+         else if (!username.equals(otherKey.username)) {
             return false;
          }
          else if (password != null && !password.equals(otherKey.password)) {
             return false;
          }
-         else if (password != otherKey.password) {
+         else if (!password.equals(otherKey.password)) {
             return false;
          }
 
