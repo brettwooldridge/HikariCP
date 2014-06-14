@@ -269,6 +269,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          connectionProxy.realClose();
       }
       catch (SQLException e) {
+         return;
       }
       finally {
          connectionBag.remove(connectionProxy);
@@ -463,6 +464,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                connectionBag.remove(connectionProxy);
             }
             catch (IllegalStateException ise) {
+               return;
             }
          }
       });
