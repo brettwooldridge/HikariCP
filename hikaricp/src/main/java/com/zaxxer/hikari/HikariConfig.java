@@ -735,6 +735,7 @@ public class HikariConfig implements HikariConfigMBean
             LOGGER.debug(prop + (value != null ? value : ""));
          }
          catch (Exception e) {
+            continue;
          }
       }
    }
