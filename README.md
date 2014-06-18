@@ -9,7 +9,7 @@ There is nothing faster.  There is nothing more correct.  HikariCP is a "zero-ov
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>1.3.8</version>
+        <version>1.4.0</version>
         <scope>compile</scope>
     </dependency>
 ```
