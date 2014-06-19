@@ -679,8 +679,9 @@ public class HikariConfig implements HikariConfigMBean
          }
       }
 
-      poolName = "HikariPool-" + poolNumber++;
-
+      if (poolName == null) {
+          poolName = "HikariPool-" + poolNumber++;
+      }
       logConfiguration();
    }
 
