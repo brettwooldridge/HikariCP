@@ -585,7 +585,9 @@ public class HikariConfig implements HikariConfigMBean
     */
    public void setPoolName(String poolName)
    {
-      this.poolName = poolName;
+      if (poolName != null) {
+         this.poolName = "HikariPool-" + poolName;
+      }
    }
 
    public int getTransactionIsolation()
@@ -679,7 +681,9 @@ public class HikariConfig implements HikariConfigMBean
          }
       }
 
-      poolName = "HikariPool-" + poolNumber++;
+      if (poolName == null) {
+         poolName = "HikariPool-" + poolNumber++;
+      }
 
       logConfiguration();
    }
