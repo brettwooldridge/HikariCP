@@ -16,6 +16,7 @@
 
 package com.zaxxer.hikari;
 
+import java.io.Closeable;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -36,7 +37,7 @@ import com.zaxxer.hikari.util.DriverDataSource;
  *
  * @author Brett Wooldridge
  */
-public class HikariDataSource extends HikariConfig implements DataSource
+public class HikariDataSource extends HikariConfig implements DataSource, Closeable
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariDataSource.class);
 
