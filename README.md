@@ -90,7 +90,8 @@ available, a SQLException will be thrown.  *Default: 30000 (30 seconds)*
 :watch:``idleTimeout``<br/>
 This property controls the maximum amount of time (in milliseconds) that a connection is
 allowed to sit idle in the pool.  Whether a connection is retired as idle or not is subject
-to a maximum variation of +30 seconds, and average variation of +15 seconds.  A connection
+to a maximum variation of +30 seconds (see ``com.zaxxer.hikari.housekeeping.periodMs`` system
+property), and average variation of +15 seconds.  A connection
 will never be retired as idle *before* this timeout.  A value of 0 means that idle connections
 are never removed from the pool.  *Default: 600000 (10 minutes)*
 
@@ -172,7 +173,8 @@ is in fact recommended.  *Default: none*
 :hash:``minimumIdle``<br/>
 This property controls the minimum number of *idle connections* that HikariCP tries to maintain
 in the pool.  If the idle connections dip below this value, HikariCP will make a best effort to
-add additional connections quickly and efficiently.  However, for maximum performance and
+add additional connections quickly and efficiently (see ``com.zaxxer.hikari.housekeeping.periodMs``
+system property).  However, for maximum performance and
 responsiveness to spike demands, we recommend *not* setting this value and instead allowing
 HikariCP to act as a *fixed size* connection pool.  *Default: same as maximumPoolSize*
 
@@ -205,6 +207,12 @@ This property determines whether HikariCP isolates internal pool queries, such a
 connection alive test, in their own transaction.  Since these are typically read-only
 queries, it is rarely necessary to encapsulate them in their own transaction.  This
 property only applies if ``autoCommit`` is disabled.  *Default: false*
+
+:watch:``com.zaxxer.hikari.housekeeping.periodMs`` (*system property*)<br/>
+This system property sets how often housekeeping is performed.  Housekeeping closes connections that
+have idled too long (``idleTimeout``) or whose maximum lifetime has been reached (``maxLifetime``).
+Housekeeping also creates new idle connections to make sure the minimum number of idle connections
+is maintained (``minimumIdle``).  *Default: 30000 (30 seconds)*
 
 ***Missing Knobs***<br/>
 HikariCP has plenty of "knobs" to turn as you can see above, but comparatively less than some other pools.
