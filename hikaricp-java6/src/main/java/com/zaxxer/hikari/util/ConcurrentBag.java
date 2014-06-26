@@ -15,6 +15,8 @@
  */
 package com.zaxxer.hikari.util;
 
+import static com.zaxxer.hikari.util.PoolUtilities.IS_JAVA7;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -303,18 +305,6 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
    private static class Synchronizer extends AbstractQueuedLongSynchronizer
    {
       private static final long serialVersionUID = 104753538004341218L;
-      private static final boolean JAVA7;
-
-      static {
-         boolean b = false;
-         try {
-            b = AbstractQueuedLongSynchronizer.class.getMethod("hasQueuedPredecessors", new Class<?>[0]) != null;
-         }
-         catch (Exception e) {
-         }
-
-         JAVA7 = b;
-      }
 
       @Override
       protected long tryAcquireShared(long startScanTime)
@@ -333,7 +323,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
 
       private boolean java67hasQueuedPredecessors()
       {
-         if (JAVA7) {
+         if (IS_JAVA7) {
             return hasQueuedPredecessors();
          }
 
