@@ -169,7 +169,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
             if (now > connection.getExpirationTime() || (now - connection.getLastAccess() > 1000L && !isConnectionAlive(connection, timeout))) {
                closeConnection(connection); // Throw away the dead connection and try again
-               timeout -= elapsedTimeMs(start);
+               timeout = connectionTimeout - elapsedTimeMs(start);
                continue;
             }
             else if (leakDetectionThreshold != 0) {
