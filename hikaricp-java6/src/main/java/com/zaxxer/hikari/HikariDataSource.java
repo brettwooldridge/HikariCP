@@ -273,13 +273,13 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
          if (username != null && !username.equals(otherKey.username)) {
             return false;
          }
-         else if (username != otherKey.username) {
+         else if (username == null && otherKey.username != null) {
             return false;
          }
          else if (password != null && !password.equals(otherKey.password)) {
             return false;
          }
-         else if (password != otherKey.password) {
+         else if (password == null && otherKey.password != null) {
             return false;
          }
 
