@@ -140,6 +140,6 @@ public class HikariConnectionProvider implements ConnectionProvider, Configurabl
    @Override
    public void stop()
    {
-      this.hds.shutdown();
+      this.hds.close();
    }
 }

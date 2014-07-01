@@ -87,7 +87,7 @@ public class ShutdownTest
 
         Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() > 0);
         
-        ds.shutdown();
+        ds.close();
 
         Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
         Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
@@ -115,7 +115,7 @@ public class ShutdownTest
 
         Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() > 0);
         
-        ds.shutdown();
+        ds.close();
 
         Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
         Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
@@ -143,7 +143,7 @@ public class ShutdownTest
 
         Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() == 5);
         
-        ds.shutdown();
+        ds.close();
 
         Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
         Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
@@ -166,7 +166,7 @@ public class ShutdownTest
 
         PoolUtilities.quietlySleep(300);
 
-        ds.shutdown();
+        ds.close();
 
         long start = System.currentTimeMillis();
         while (PoolUtilities.elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5) && threadCount() > 0)

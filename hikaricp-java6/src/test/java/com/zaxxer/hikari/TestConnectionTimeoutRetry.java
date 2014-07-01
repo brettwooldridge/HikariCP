@@ -43,7 +43,7 @@ public class TestConnectionTimeoutRetry
         }
         finally
         {
-            ds.shutdown();
+            ds.close();
         }
     }
 
@@ -88,7 +88,7 @@ public class TestConnectionTimeoutRetry
         finally
         {
             scheduler.shutdownNow();
-            ds.shutdown();
+            ds.close();
         }
     }
 
@@ -140,7 +140,7 @@ public class TestConnectionTimeoutRetry
         finally
         {
             scheduler.shutdownNow();
-            ds.shutdown();
+            ds.close();
         }
     }
 
@@ -173,7 +173,7 @@ public class TestConnectionTimeoutRetry
         }
         finally
         {
-            ds.shutdown();
+            ds.close();
         }
     }
 
@@ -227,7 +227,7 @@ public class TestConnectionTimeoutRetry
         finally
         {
             scheduler.shutdownNow();
-            ds.shutdown();
+            ds.close();
         }
     }
 
@@ -271,7 +271,7 @@ public class TestConnectionTimeoutRetry
         }
         finally
         {
-            ds.shutdown();
+            ds.close();
         }
     }
 }

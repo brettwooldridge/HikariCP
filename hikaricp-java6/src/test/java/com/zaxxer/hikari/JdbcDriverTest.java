@@ -31,7 +31,7 @@ public class JdbcDriverTest
     @After
     public void teardown()
     {
-        ds.shutdown();
+        ds.close();
     }
 
     @Test

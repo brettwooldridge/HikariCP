@@ -30,7 +30,7 @@ public class ExceptionTest
     @After
     public void teardown()
     {
-        ds.shutdown();
+        ds.close();
     }
 
     @Test

@@ -42,6 +42,6 @@ public class RampUpDown
 
         Assert.assertSame("Totals connections not as expected", 5, TestElf.getPool(ds).getTotalConnections());
 
-        ds.shutdown();
+        ds.close();
     }
 }

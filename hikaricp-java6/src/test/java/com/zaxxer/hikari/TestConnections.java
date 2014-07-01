@@ -78,7 +78,7 @@ public class TestConnections
         }
         finally
         {
-            ds.shutdown();
+            ds.close();
         }
     }
 
@@ -132,7 +132,7 @@ public class TestConnections
         }
         finally
         {
-            ds.shutdown();
+            ds.close();
         }
     }
 
@@ -182,7 +182,7 @@ public class TestConnections
         }
         finally
         {
-            ds.shutdown();
+            ds.close();
         }
     }
 
@@ -205,7 +205,7 @@ public class TestConnections
         }
         finally
         {
-            ds.shutdown();
+            ds.close();
         }
     }
 
@@ -264,7 +264,7 @@ public class TestConnections
         }
         finally
         {
-            ds.shutdown();
+            ds.close();
         }
     }
 
@@ -319,7 +319,7 @@ public class TestConnections
         }
         finally
         {
-            ds.shutdown();
+            ds.close();
         }
     }
 }

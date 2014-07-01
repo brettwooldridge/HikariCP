@@ -31,7 +31,7 @@ public class ConnectionStateTest
         }
         finally
         {
-            ds.shutdown();
+            ds.close();
         }
     }
 
@@ -58,7 +58,7 @@ public class ConnectionStateTest
         }
         finally
         {
-            ds.shutdown();
+            ds.close();
         }
     }
 
@@ -97,7 +97,7 @@ public class ConnectionStateTest
         }
         finally
         {
-            ds.shutdown();
+            ds.close();
         }
     }
 }

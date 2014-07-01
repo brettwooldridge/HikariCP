@@ -53,7 +53,7 @@ public class UnwrapTest
         }
         finally
         {
-            ds.shutdown();
+            ds.close();
         }
     }
 }
