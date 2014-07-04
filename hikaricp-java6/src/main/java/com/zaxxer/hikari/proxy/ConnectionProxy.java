@@ -102,6 +102,29 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       isTransactionIsolationDirty = true;
    }
 
+   protected ConnectionProxy(final IHikariConnectionProxy proxy)
+   {
+       final ConnectionProxy copyProxy = (ConnectionProxy) proxy;
+
+       this.parentPool = copyProxy.parentPool;
+       this.delegate = copyProxy.delegate;
+       this.defaultIsolationLevel = copyProxy.defaultIsolationLevel;
+       this.defaultAutoCommit = copyProxy.defaultAutoCommit;
+       this.defaultReadOnly = copyProxy.defaultReadOnly;
+       this.defaultCatalog = copyProxy.defaultCatalog;
+       this.state = new AtomicInteger(copyProxy.getState());
+
+       this.expirationTime = copyProxy.expirationTime;
+       this.lastAccess = this.uncloseTime = System.currentTimeMillis();
+       this.openStatements = new FastList<Statement>(Statement.class);
+       this.hashCode = System.identityHashCode(this);
+
+       this.isCatalogDirty = copyProxy.isCatalogDirty;
+       this.isReadOnlyDirty = copyProxy.isReadOnlyDirty;
+       this.isAutoCommitDirty = copyProxy.isAutoCommitDirty;
+       this.isTransactionIsolationDirty = copyProxy.isTransactionIsolationDirty;
+   }
+
    /** {@inheritDoc} */
    @Override
    public final boolean equals(Object other)

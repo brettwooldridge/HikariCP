@@ -173,7 +173,15 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                timeout = connectionTimeout - elapsedTimeMs(start);
                continue;
             }
-            else if (leakDetectionThreshold != 0) {
+
+            if (isIsolateInternalQueries) {
+                IHikariConnectionProxy newProxy = ProxyFactory.getProxyConnection(connection);
+                connectionBag.remove(connection);
+                connectionBag.add(newProxy);
+                connection = newProxy;
+            }
+
+            if (leakDetectionThreshold != 0) {
                connection.captureStack(leakDetectionThreshold, houseKeepingTimer);
             }
 

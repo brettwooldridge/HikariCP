@@ -55,6 +55,12 @@ public final class ProxyFactory
       return null;
    }
 
+   public static IHikariConnectionProxy getProxyConnection(IHikariConnectionProxy copyProxy)
+   {
+       // Body is injected by JavassistProxyFactory
+       return null;
+   }
+
    static Statement getProxyStatement(ConnectionProxy connection, Statement statement)
    {
       // Body is injected by JavassistProxyFactory
