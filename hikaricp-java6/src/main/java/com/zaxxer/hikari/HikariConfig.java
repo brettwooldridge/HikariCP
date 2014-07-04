@@ -734,7 +734,10 @@ public class HikariConfig implements HikariConfigMBean
          try {
             Object value = PropertyBeanSetter.getProperty(prop, this);
             prop = (prop + "................................................").substring(0, 32);
-            LOGGER.debug(prop + (value != null ? value : ""));
+            if (!prop.contains("password"))
+            {
+                LOGGER.debug(prop + (value != null ? value : ""));
+            }
          }
          catch (Exception e) {
             continue;
