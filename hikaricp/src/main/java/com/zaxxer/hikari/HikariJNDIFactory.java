@@ -16,8 +16,10 @@
 
 package com.zaxxer.hikari;
 
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -50,12 +52,15 @@ public class HikariJNDIFactory implements ObjectFactory
          throw new NamingException(ref.getClassName() + " is not a valid class name/type for this JNDI factory.");
       }
 
+      Set<String> hikariPropSet = PropertyBeanSetter.getPropertyNames(HikariConfig.class);
+
       Properties properties = new Properties();
-      for (String propertyName : PropertyBeanSetter.getPropertyNames(HikariConfig.class)) {
-         RefAddr ra = ref.get(propertyName);
-         if (ra != null) {
-            String propertyValue = ra.getContent().toString();
-            properties.setProperty(propertyName, propertyValue);
+      Enumeration<RefAddr> enumeration = ref.getAll();
+      while (enumeration.hasMoreElements()) {
+         RefAddr element = enumeration.nextElement();
+         String type = element.getType();
+         if (type.startsWith("dataSource.") || hikariPropSet.contains(type)) {
+            properties.setProperty(type, element.getContent().toString());
          }
       }
 
@@ -89,7 +94,7 @@ public class HikariJNDIFactory implements ObjectFactory
 
       if (jndiDS == null) {
          try {
-            context = new InitialContext();
+            context = (Context) (new InitialContext());
             jndiDS = (DataSource) context.lookup(jndiName);
          }
          catch (NamingException e) {
