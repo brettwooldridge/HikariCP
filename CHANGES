@@ -1,5 +1,27 @@
 HikariCP Changes
 
+Changes between 1.4.0 and 2.0.0
+
+ * Split project into Java 6/7 and Java 8 components.
+
+ * Fixed issue in JNDI object factory which would not allow JNDI-defined
+   DataSource properties to pass-thru to the pool.
+
+ * Fixed issue where under certain conditions getConnection() could
+   timeout prematurely.
+
+ * Fixed issue where user-defined pool name would be overridden by the
+   automatically generated name.
+
+ * Fix NPE when one of either username and password is defined, and the
+   other is null.
+
+ * HikariDataSource now implements the Closable interface.
+ 
+Changes between 1.3.9 and 1.4.0
+
+ *) Fix bug that did not allow minIdle property to be set.
+
 Changes between 1.3.8 and 1.3.9
 
  *) Added pool name to housekeeping thread name to make thread dumps
