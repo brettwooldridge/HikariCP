@@ -74,4 +74,31 @@ public class TestFastList
             Assert.assertSame(verifyList.get(i), list.get(i));
         }
     }
+
+    @Test
+    public void testPolyMorphism1()
+    {
+       class Foo implements Base2 {
+          
+       }
+
+       class Bar extends Foo {
+          
+       }
+
+       FastList<Base> list = new FastList<>(Base.class, 2);
+       list.add(new Foo());
+       list.add(new Foo());
+       list.add(new Bar());
+    }
+
+    interface Base
+    {
+       
+    }
+
+    interface Base2 extends Base
+    {
+       
+    }
 }

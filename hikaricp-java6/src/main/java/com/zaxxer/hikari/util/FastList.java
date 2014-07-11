@@ -25,6 +25,7 @@ import java.lang.reflect.Array;
  */
 public final class FastList<T>
 {
+   private final Class<?> clazz;
    private T[] elementData;
    private int size;
 
@@ -36,6 +37,7 @@ public final class FastList<T>
    public FastList(Class<?> clazz)
    {
       this.elementData = (T[]) Array.newInstance(clazz, 32);
+      this.clazz = clazz;
    }
 
    /**
@@ -47,6 +49,7 @@ public final class FastList<T>
    public FastList(Class<?> clazz, int capacity)
    {
       this.elementData = (T[]) Array.newInstance(clazz, capacity);
+      this.clazz = clazz;
    }
 
    /**
@@ -64,7 +67,7 @@ public final class FastList<T>
          final int oldCapacity = elementData.length;
          final int newCapacity = oldCapacity << 1;
          @SuppressWarnings("unchecked")
-         final T[] newElementData = (T[]) Array.newInstance(element.getClass(), newCapacity);
+         final T[] newElementData = (T[]) Array.newInstance(clazz, newCapacity);
          System.arraycopy(elementData, 0, newElementData, 0, oldCapacity);
          newElementData[size - 1] = element;
          elementData = newElementData;
