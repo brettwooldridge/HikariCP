@@ -32,4 +32,6 @@ public interface HikariPoolMBean
    int getThreadsAwaitingConnection();
 
    void closeIdleConnections();
+
+   void dumpPoolState();
 }

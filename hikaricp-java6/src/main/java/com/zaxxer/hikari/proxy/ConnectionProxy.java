@@ -139,6 +139,12 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       return hashCode;
    }
 
+   @Override
+   public String toString()
+   {
+      return String.format("%s(%s) wrapping %s", this.getClass().getSimpleName(), System.identityHashCode(this), delegate);
+   }
+
    // ***********************************************************************
    //                      IHikariConnectionProxy methods
    // ***********************************************************************

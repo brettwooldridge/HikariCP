@@ -24,6 +24,9 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * This is a specialized concurrent bag that achieves superior performance
  * to LinkedBlockingQueue and LinkedTransferQueue for the purposes of a
@@ -46,6 +49,8 @@ import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
  */
 public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagManagable>
 {
+   private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentBag.class);
+
    public static final int STATE_NOT_IN_USE = 0;
    public static final int STATE_IN_USE = 1;
    private static final int STATE_REMOVED = -1;
@@ -297,6 +302,26 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
    public int size()
    {
       return sharedList.size();
+   }
+
+   public void dumpState()
+   {
+      for (T reference : sharedList) {
+         switch (reference.getState()) {
+         case STATE_IN_USE:
+            LOGGER.info(reference.toString() + " state IN_USE");
+            break;
+         case STATE_NOT_IN_USE:
+            LOGGER.info(reference.toString() + " state NOT_IN_USE");
+            break;
+         case STATE_REMOVED:
+            LOGGER.info(reference.toString() + " state REMOVED");
+            break;
+         case STATE_RESERVED:
+            LOGGER.info(reference.toString() + " state RESERVED");
+            break;
+         }
+      }
    }
 
    /**

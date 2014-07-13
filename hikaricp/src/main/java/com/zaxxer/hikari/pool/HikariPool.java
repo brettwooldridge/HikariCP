@@ -359,6 +359,13 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       });
    }
 
+   /** {@inheritDoc} */
+   @Override
+   public void dumpPoolState()
+   {
+      connectionBag.dumpState();
+   }
+
    // ***********************************************************************
    //                           Private methods
    // ***********************************************************************
