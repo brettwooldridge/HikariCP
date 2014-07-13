@@ -16,7 +16,6 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.util.PoolUtilities.IS_JAVA7;
 import static com.zaxxer.hikari.util.PoolUtilities.createInstance;
 import static com.zaxxer.hikari.util.PoolUtilities.createThreadPoolExecutor;
 import static com.zaxxer.hikari.util.PoolUtilities.elapsedTimeMs;
@@ -477,12 +476,10 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       ThreadPoolExecutor assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin");
       for (IHikariConnectionProxy connectionProxy : connectionBag.values(ConcurrentBag.STATE_IN_USE)) {
          try {
-            if (IS_JAVA7) {
-               connectionProxy.abort(assassinExecutor);
-               continue;
-            }
-
-            connectionProxy.close();
+            connectionProxy.abort(assassinExecutor);
+         }
+         catch (AbstractMethodError e) {
+            quietlyCloseConnection(connectionProxy);
          }
          catch (SQLException e) {
             continue;
