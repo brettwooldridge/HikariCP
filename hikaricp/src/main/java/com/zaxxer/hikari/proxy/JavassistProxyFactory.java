@@ -103,18 +103,19 @@ public final class JavassistProxyFactory
       String packageName = JavassistProxyFactory.class.getPackage().getName();
       CtClass proxyCt = classPool.getCtClass("com.zaxxer.hikari.proxy.ProxyFactory");
       for (CtMethod method : proxyCt.getMethods()) {
-         String methodName = method.getName();
-         if ("getProxyConnection".equals(methodName)) {
+         switch (method.getName()) {
+         case "getProxyConnection":
             method.setBody("{return new " + packageName + ".ConnectionJavassistProxy($$);}");
-         }
-         else if ("getProxyStatement".equals(methodName)) {
+            break;
+         case "getProxyStatement":
             method.setBody("{return new " + packageName + ".StatementJavassistProxy($$);}");
-         }
-         else if ("getProxyPreparedStatement".equals(methodName)) {
+            break;
+         case "getProxyPreparedStatement":
             method.setBody("{return new " + packageName + ".PreparedStatementJavassistProxy($$);}");
-         }
-         else if ("getProxyCallableStatement".equals(methodName)) {
+            break;
+         case "getProxyCallableStatement":
             method.setBody("{return new " + packageName + ".CallableStatementJavassistProxy($$);}");
+            break;
          }
       }
 
