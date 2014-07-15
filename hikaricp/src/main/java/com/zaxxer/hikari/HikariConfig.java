@@ -687,7 +687,9 @@ public class HikariConfig implements HikariConfigMBean
          poolName = "HikariPool-" + poolNumber++;
       }
 
-      logConfiguration();
+      if (LOGGER.isDebugEnabled()) {
+         logConfiguration();
+      }
    }
 
    private void validateNumerics()
@@ -733,15 +735,17 @@ public class HikariConfig implements HikariConfigMBean
    private void logConfiguration()
    {
       LOGGER.debug("HikariCP pool {} configuration:", poolName);
-      Set<String> propertyNames = new TreeSet<String>(PropertyBeanSetter.getPropertyNames(HikariConfig.class));
+      final Set<String> propertyNames = new TreeSet<String>(PropertyBeanSetter.getPropertyNames(HikariConfig.class));
       for (String prop : propertyNames) {
          try {
             Object value = PropertyBeanSetter.getProperty(prop, this);
-            prop = (prop + "................................................").substring(0, 32);
-            if (!prop.contains("password"))
-            {
-                LOGGER.debug(prop + (value != null ? value : ""));
+            if ("dataSourceProperties".equals(prop)) {
+               Properties dsProps = PropertyBeanSetter.copyProperties(dataSourceProperties);
+               dsProps.setProperty("password", "<masked>");
+               value = dsProps;
             }
+            value = (prop.contains("password") ? "<masked>" : value);
+            LOGGER.debug((prop + "................................................").substring(0, 32) + (value != null ? value : ""));
          }
          catch (Exception e) {
             continue;

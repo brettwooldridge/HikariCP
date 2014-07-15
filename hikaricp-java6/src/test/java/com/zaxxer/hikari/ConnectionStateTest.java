@@ -17,6 +17,10 @@ public class ConnectionStateTest
         ds.setMaximumPoolSize(1);
         ds.setConnectionTestQuery("VALUES 1");
         ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+        ds.addDataSourceProperty("user", "bar");
+        ds.addDataSourceProperty("password", "secret");
+        ds.addDataSourceProperty("url", "baf");
+        ds.addDataSourceProperty("loginTimeout", "10");
 
         try
         {

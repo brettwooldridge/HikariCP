@@ -103,6 +103,15 @@ public final class PropertyBeanSetter
       }
    }
 
+   public static Properties copyProperties(Properties props)
+   {
+      Properties copy = new Properties();
+      for (Object key : props.keySet()) {
+         copy.setProperty(key.toString(), props.get(key).toString());
+      }
+      return copy;
+   }
+
    private static void setProperty(Object target, String propName, Object propValue)
    {
       String capitalized = "set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
