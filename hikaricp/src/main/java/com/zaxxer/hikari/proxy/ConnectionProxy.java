@@ -23,8 +23,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -64,7 +64,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    private volatile long lastAccess;
    private long uncloseTime;
 
-   private TimerTask leakTask;
+   private LeakTask leakTask;
 
    private final int hashCode;
 
@@ -151,14 +151,14 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    /** {@inheritDoc} */
    @Override
-   public final void captureStack(long leakDetectionThreshold, Timer scheduler)
+   public final void captureStack(long leakDetectionThreshold, ScheduledExecutorService executorService)
    {
       StackTraceElement[] trace = Thread.currentThread().getStackTrace();
       StackTraceElement[] leakTrace = new StackTraceElement[trace.length - 4];
       System.arraycopy(trace, 4, leakTrace, 0, leakTrace.length);
 
       leakTask = new LeakTask(leakTrace, leakDetectionThreshold);
-      scheduler.schedule(leakTask, leakDetectionThreshold);
+      executorService.schedule(leakTask, leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
    /** {@inheritDoc} */

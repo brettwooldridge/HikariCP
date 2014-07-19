@@ -16,14 +16,12 @@
 
 package com.zaxxer.hikari.proxy;
 
-import java.util.TimerTask;
-
 import org.slf4j.LoggerFactory;
 
 /**
  * @author Brett Wooldridge
  */
-class LeakTask extends TimerTask
+class LeakTask implements Runnable
 {
    private final long leakTime;
    private StackTraceElement[] stackTrace;
@@ -46,13 +44,8 @@ class LeakTask extends TimerTask
       }
    }
 
-   @Override
-   public boolean cancel()
+   public void cancel()
    {
-      boolean cancelled = super.cancel();
-      if (cancelled) {
-         stackTrace = null;
-      }
-      return cancelled;
+      stackTrace = null;
    }
 }

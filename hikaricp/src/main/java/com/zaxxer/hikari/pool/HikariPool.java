@@ -26,8 +26,8 @@ import static com.zaxxer.hikari.util.PoolUtilities.quietlySleep;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -48,6 +48,7 @@ import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
+import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
@@ -71,7 +72,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
    private final AtomicReference<Throwable> lastConnectionFailure;
    private final AtomicInteger totalConnections;
-   private final Timer houseKeepingTimer;
+   private final ScheduledThreadPoolExecutor houseKeepingExecutorService;
 
    private final boolean isAutoCommit;
    private final boolean isIsolateInternalQueries;
@@ -136,13 +137,14 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          HikariMBeanElf.registerMBeans(configuration, this);
       }
 
-      addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler");
+      addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler", configuration.getThreadFactory());
 
       fillPool();
 
       long delayPeriod = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30L));
-      houseKeepingTimer = new Timer("Hikari Housekeeping Timer (pool " + configuration.getPoolName() + ")", true);
-      houseKeepingTimer.scheduleAtFixedRate(new HouseKeeper(), delayPeriod, delayPeriod);
+      houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, configuration.getThreadFactory() != null ? configuration.getThreadFactory() : new DefaultThreadFactory("Hikari Housekeeping Timer (pool " + configuration.getPoolName() + ")", true));
+      houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
+      houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), delayPeriod, delayPeriod, TimeUnit.MILLISECONDS);
    }
 
    /**
@@ -181,7 +183,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             }
 
             if (leakDetectionThreshold != 0) {
-               connection.captureStack(leakDetectionThreshold, houseKeepingTimer);
+               connection.captureStack(leakDetectionThreshold, houseKeepingExecutorService);
             }
 
             return connection;
@@ -234,7 +236,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          LOGGER.info("HikariCP pool {} is shutting down.", configuration.getPoolName());
 
          logPoolState("Before shutdown ");
-         houseKeepingTimer.cancel();
+         houseKeepingExecutorService.shutdownNow();
          addConnectionExecutor.shutdownNow();
 
          final long start = System.currentTimeMillis();
@@ -465,7 +467,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    private void abortActiveConnections() throws InterruptedException
    {
-      ThreadPoolExecutor assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin");
+      ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin", configuration.getThreadFactory());
       connectionBag.values(ConcurrentBag.STATE_IN_USE).parallelStream().forEach(connectionProxy -> {
          try {
             connectionProxy.abort(assassinExecutor);
@@ -528,7 +530,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    /**
     * The house keeping task to retire idle and maxAge connections.
     */
-   private class HouseKeeper extends TimerTask
+   private class HouseKeeper implements Runnable
    {
       @Override
       public void run()
@@ -536,7 +538,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          logPoolState("Before cleanup ");
 
          connectionTimeout = configuration.getConnectionTimeout(); // refresh member in case it changed
-         houseKeepingTimer.purge(); // purge cancelled timers
 
          final long now = System.currentTimeMillis();
          final long idleTimeout = configuration.getIdleTimeout();
