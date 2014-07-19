@@ -19,7 +19,7 @@ package com.zaxxer.hikari.proxy;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Timer;
+import java.util.concurrent.ScheduledExecutorService;
 
 import com.zaxxer.hikari.util.ConcurrentBag.IBagManagable;
 
@@ -35,9 +35,9 @@ public interface IHikariConnectionProxy extends Connection, IBagManagable
     * Catpure the stack and start leak detection.
     *
     * @param leakThreshold the number of milliseconds before a leak is reported
-    * @param houseKeepingTimer the timer to run the leak detection task with
+    * @param houseKeepingExecutorService the executor service to run the leak detection task with
     */
-   void captureStack(long leakThreshold, Timer houseKeepingTimer);
+   void captureStack(long leakThreshold, ScheduledExecutorService houseKeepingExecutorService);
 
    /**
     * Check if the provided SQLException contains a SQLSTATE that indicates

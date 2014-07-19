@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
@@ -81,6 +82,7 @@ public class HikariConfig implements HikariConfigMBean
    private Properties dataSourceProperties;
    private IConnectionCustomizer customizer;
    private int transactionIsolation;
+   private ThreadFactory threadFactory;
 
    static {
       JavassistProxyFactory.initialize();
@@ -625,6 +627,26 @@ public class HikariConfig implements HikariConfigMBean
       this.username = username;
    }
 
+   /**
+    * Get the thread factory used to create threads.
+    *
+    * @return the thread factory (may be null, in which case the default thread factory is used)
+    */
+   public ThreadFactory getThreadFactory()
+   {
+      return threadFactory;
+   }
+
+   /**
+    * Set the thread factory to be used to create threads.
+    *
+    * @param threadFactory the thread factory (setting to null causes the default thread factory to be used)
+    */
+   public void setThreadFactory(ThreadFactory threadFactory)
+   {
+      this.threadFactory = threadFactory;
+   }
+
    public void validate()
    {
       Logger logger = LoggerFactory.getLogger(getClass());
@@ -684,7 +706,7 @@ public class HikariConfig implements HikariConfigMBean
       }
 
       if (poolName == null) {
-          poolName = "HikariPool-" + poolNumber++;
+         poolName = "HikariPool-" + poolNumber++;
       }
 
       if (LOGGER.isDebugEnabled()) {
