@@ -21,6 +21,9 @@ Changes between 1.4.0 and 2.0.0
    the number of unclosed statements exceeds 32.
  
  * HikariDataSource now implements the Closable interface.
+
+ * Integrated change to allow specifying a ThreadGroup for thread
+   creation is certain restricted environments.
  
 Changes between 1.3.9 and 1.4.0
 
