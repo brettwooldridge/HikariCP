@@ -88,16 +88,11 @@ public final class PoolUtilities
       }
    }
 
-   public static ThreadPoolExecutor createThreadPoolExecutor(final int queueSize, final String threadName)
+   public static ThreadPoolExecutor createThreadPoolExecutor(final int queueSize, final String threadName, ThreadFactory threadFactory)
    {
-      ThreadFactory threadFactory = new ThreadFactory() {
-         public Thread newThread(Runnable r)
-         {
-            Thread t = new Thread(r, threadName);
-            t.setDaemon(true);
-            return t;
-         }
-      };
+      if (threadFactory == null) {
+         threadFactory = new DefaultThreadFactory(threadName, true);
+      }
 
       int processors = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
       LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>(queueSize);
