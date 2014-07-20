@@ -81,6 +81,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    private final boolean isRegisteredMbeans;
    private final boolean isJdbc4ConnectionTest;
    private final long leakDetectionThreshold;
+   private final boolean closeLeakedConnections;
    private final String catalog;
    private final String username;
    private final String password;
@@ -126,6 +127,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       this.isRegisteredMbeans = configuration.isRegisterMbeans();
       this.isJdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
       this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
+      this.closeLeakedConnections = configuration.getCloseLeakedConnections();
       this.transactionIsolation = configuration.getTransactionIsolation();
       this.isRecordMetrics = configuration.isRecordMetrics();
       this.metricsTracker = MetricsFactory.createMetricsTracker((isRecordMetrics ? configuration.getMetricsTrackerClassName()
@@ -183,7 +185,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             }
 
             if (leakDetectionThreshold != 0) {
-               connection.captureStack(leakDetectionThreshold, houseKeepingExecutorService);
+               connection.captureStack(leakDetectionThreshold, houseKeepingExecutorService, closeLeakedConnections);
             }
 
             return connection;

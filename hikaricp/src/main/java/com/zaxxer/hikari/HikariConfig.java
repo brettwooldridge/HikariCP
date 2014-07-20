@@ -52,6 +52,7 @@ public class HikariConfig implements HikariConfigMBean
    private volatile long connectionTimeout;
    private volatile long idleTimeout;
    private volatile long leakDetectionThreshold;
+   private volatile boolean closeLeakedConnections;
    private volatile long maxLifetime;
    private volatile int maxPoolSize;
    private volatile int minIdle;
@@ -486,6 +487,20 @@ public class HikariConfig implements HikariConfigMBean
 
    /** {@inheritDoc} */
    @Override
+   public boolean getCloseLeakedConnections()
+   {
+      return closeLeakedConnections;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public void setCloseLeakedConnections(boolean closeLeakedConnections)
+   {
+      this.closeLeakedConnections = closeLeakedConnections;
+   }
+
+   /** {@inheritDoc} */
+   @Override
    public long getMaxLifetime()
    {
       return maxLifetime;
@@ -742,6 +757,11 @@ public class HikariConfig implements HikariConfigMBean
       if (leakDetectionThreshold != 0 && leakDetectionThreshold < TimeUnit.SECONDS.toMillis(10)) {
          logger.warn("leakDetectionThreshold is less than 10000ms, did you specify the wrong time unit?  Disabling leak detection");
          leakDetectionThreshold = 0;
+      }
+
+      if (closeLeakedConnections && leakDetectionThreshold == 0) {
+         logger.warn("closeLeakedConnections is set to 'true' while leakDetectionThreshold is disabled. Disabling autoclosing leaked connections");
+         closeLeakedConnections = false;
       }
 
       if (maxLifetime < 0) {

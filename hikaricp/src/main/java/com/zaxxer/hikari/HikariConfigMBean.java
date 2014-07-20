@@ -78,6 +78,26 @@ public interface HikariConfigMBean
    void setLeakDetectionThreshold(long leakDetectionThresholdMs);
 
    /**
+    * This property controls if unreturned connections must be closed automatically after being used longer than
+    * the time limit specified by {@link #getLeakDetectionThreshold()} method.
+    * This property is set to false by default. The <tt>true</tt> value for this property is only valid when
+    * a positive value for the connection leak detection threshold property is specified.
+    *
+    * @return <tt>true</tt> if leaked connections must be closed be the pool
+    */
+   boolean getCloseLeakedConnections();
+
+   /**
+    * This property controls if unreturned connections must be closed automatically after being used longer than
+    * the time limit specified by {@link #getLeakDetectionThreshold()} method.
+    * This property is set to false by default. The <tt>true</tt> value for this property is only valid when
+    * a positive value for the connection leak detection threshold property is specified.
+    *
+    * @param closeLeakedConnections if <tt>true</tt> then leaked connections must be closed be the pool
+    */
+   void setCloseLeakedConnections(boolean closeLeakedConnections);
+
+   /**
     * This property controls the maximum lifetime of a connection in the pool. When a connection reaches this
     * timeout, even if recently used, it will be retired from the pool. An in-use connection will never be
     * retired, only when it is idle will it be removed.

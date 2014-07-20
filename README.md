@@ -112,6 +112,12 @@ and close().  Maybe other pools are doing it wrong, but feel free to use leak de
 HikariCP in production environments if you wish. Lowest acceptable value for enabling leak 
 detection is 10000 (10 secs). *Default: 0*
 
+:negative_squared_cross_mark:``closeLeakedConnections``<br/>
+This property controls whether unreturned connections must be closed automatically after being 
+used longer than the time limit specified by *leakDetectionThreshold* property.
+The *true* value for this property is only valid when a positive value for the connection leak 
+detection threshold property is specified.  *Default: false*
+
 :negative_squared_cross_mark:``initializationFailFast``<br/>
 This property controls whether the pool will "fail fast" if the pool cannot be seeded with
 initial connections successfully.  If connections cannot be created at pool startup time,
