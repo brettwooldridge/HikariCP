@@ -16,20 +16,30 @@
 
 package com.zaxxer.hikari.proxy;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.sql.SQLException;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Brett Wooldridge
  */
 class LeakTask implements Runnable
 {
-   private final long leakTime;
-   private StackTraceElement[] stackTrace;
+   private static final int CLOSING_NOT_STARTED = 0, CLOSING_STARTED = 1, CLOSING_CANCELLED = 2;
 
-   public LeakTask(StackTraceElement[] stackTrace, long leakDetectionThreshold)
+   private final long leakTime;
+   private Optional<IHikariConnectionProxy> connectionOpt;
+   private StackTraceElement[] stackTrace;
+   private final AtomicInteger closingState = new AtomicInteger(CLOSING_NOT_STARTED);
+
+   public LeakTask(StackTraceElement[] stackTrace, long leakDetectionThreshold, Optional<IHikariConnectionProxy> connectionOpt)
    {
       this.stackTrace = stackTrace;
       this.leakTime = System.currentTimeMillis() + leakDetectionThreshold;
+      this.connectionOpt = connectionOpt;
    }
 
    /** {@inheritDoc} */
@@ -37,15 +47,35 @@ class LeakTask implements Runnable
    public void run()
    {
       if (System.currentTimeMillis() > leakTime) {
+         Logger log = LoggerFactory.getLogger(LeakTask.class);
+
          Exception e = new Exception();
          e.setStackTrace(stackTrace);
-         LoggerFactory.getLogger(LeakTask.class).warn("Connection leak detection triggered, stack trace follows", e);
+         log.warn("Connection leak detection triggered, stack trace follows", e);
          stackTrace = null;
+
+         if (connectionOpt.isPresent() && closingState.compareAndSet(CLOSING_NOT_STARTED, CLOSING_STARTED)) {
+            log.warn("Closing leaked connection");
+            try {
+               connectionOpt.get().close();
+            } catch (SQLException sqle) {
+               log.warn(sqle.getMessage(), sqle);
+            }
+         }
       }
    }
 
-   public void cancel()
+   /**
+    * Cancel leak detection task.
+    *
+    * @return false if leaked connection closing process has already started.
+    */
+   public boolean cancel()
    {
-      stackTrace = null;
+      if (closingState.compareAndSet(CLOSING_NOT_STARTED, CLOSING_CANCELLED)) {
+          stackTrace = null;
+          connectionOpt = null;
+      }
+      return closingState.get() == CLOSING_CANCELLED;
    }
 }

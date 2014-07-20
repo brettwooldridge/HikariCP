@@ -36,8 +36,9 @@ public interface IHikariConnectionProxy extends Connection, IBagManagable
     *
     * @param leakThreshold the number of milliseconds before a leak is reported
     * @param houseKeepingExecutorService the executor service to run the leak detection task with
+    * @param closeLeakedConnection if <tt>true</tt> then the connection will be closed after leak threshold is reached
     */
-   void captureStack(long leakThreshold, ScheduledExecutorService houseKeepingExecutorService);
+   void captureStack(long leakThreshold, ScheduledExecutorService houseKeepingExecutorService, boolean closeLeakedConnection);
 
    /**
     * Check if the provided SQLException contains a SQLSTATE that indicates

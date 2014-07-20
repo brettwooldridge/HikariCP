@@ -52,6 +52,7 @@ public class HikariConfig implements HikariConfigMBean
    private volatile long connectionTimeout;
    private volatile long idleTimeout;
    private volatile long leakDetectionThreshold;
+   private volatile boolean closeLeakedConnections;
    private volatile long maxLifetime;
    private volatile int maxPoolSize;
    private volatile int minIdle;
@@ -482,6 +483,20 @@ public class HikariConfig implements HikariConfigMBean
    public void setLeakDetectionThreshold(long leakDetectionThresholdMs)
    {
       this.leakDetectionThreshold = leakDetectionThresholdMs;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public boolean getCloseLeakedConnections()
+   {
+      return closeLeakedConnections;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public void setCloseLeakedConnections(boolean closeLeakedConnections)
+   {
+      this.closeLeakedConnections = closeLeakedConnections;
    }
 
    /** {@inheritDoc} */

@@ -151,13 +151,13 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    /** {@inheritDoc} */
    @Override
-   public final void captureStack(long leakDetectionThreshold, ScheduledExecutorService executorService)
+   public final void captureStack(long leakDetectionThreshold, ScheduledExecutorService executorService, boolean closeLeakedConnection)
    {
       StackTraceElement[] trace = Thread.currentThread().getStackTrace();
       StackTraceElement[] leakTrace = new StackTraceElement[trace.length - 4];
       System.arraycopy(trace, 4, leakTrace, 0, leakTrace.length);
 
-      leakTask = new LeakTask(leakTrace, leakDetectionThreshold);
+      leakTask = new LeakTask(leakTrace, leakDetectionThreshold, closeLeakedConnection ? this : null);
       executorService.schedule(leakTask, leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
@@ -312,7 +312,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          isClosed = true;
 
          if (leakTask != null) {
-            leakTask.cancel();
+            //force close if leak task cannot be cancelled i.e. leaked connection closing was started
+            forceClose |= !leakTask.cancel();
             leakTask = null;
          }
 
