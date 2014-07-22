@@ -555,7 +555,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
          logPoolState("After cleanup ");
 
-         addBagItem(); // Try to maintain minimum connections
+         if (configuration.getMinimumIdle() > 0) {
+            addBagItem(); // Try to maintain minimum connections
+         }
       }
    }
 }
