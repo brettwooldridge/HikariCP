@@ -20,6 +20,9 @@ Changes between 1.4.0 and 2.0.0
    types (Statement, PreparedStatement, etc.) open on the connection and
    the number of unclosed statements exceeds 32.
  
+ * Fixed issue where housekeeping threads would add idle connections
+   even when minimumIdle was 0.
+
  * HikariDataSource now implements the Closable interface.
 
  * Integrated change to allow specifying a ThreadGroup for thread
