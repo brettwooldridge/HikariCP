@@ -23,6 +23,9 @@ Changes between 1.4.0 and 2.0.0
  * Fixed issue where housekeeping threads would add idle connections
    even when minimumIdle was 0.
 
+ * Fixed issue where Wrapper.isWrapperFor() and Wrapper.unwrap() calls
+   did not recurse as per specification.
+
  * HikariDataSource now implements the Closable interface.
 
  * Integrated change to allow specifying a ThreadGroup for thread
