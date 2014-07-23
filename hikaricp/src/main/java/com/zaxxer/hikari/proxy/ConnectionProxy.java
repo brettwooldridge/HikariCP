@@ -21,6 +21,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Wrapper;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
@@ -615,7 +616,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    @Override
    public final boolean isWrapperFor(Class<?> iface) throws SQLException
    {
-      return iface.isInstance(delegate);
+       return iface.isInstance(delegate) || (delegate instanceof Wrapper && delegate.isWrapperFor(iface));
    }
 
    /** {@inheritDoc} */
@@ -625,6 +626,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       if (iface.isInstance(delegate)) {
          return (T) delegate;
+      }
+      else if (delegate instanceof Wrapper) {
+          return (T) delegate.unwrap(iface);
       }
 
       throw new SQLException("Wrapped connection is not an instance of " + iface);

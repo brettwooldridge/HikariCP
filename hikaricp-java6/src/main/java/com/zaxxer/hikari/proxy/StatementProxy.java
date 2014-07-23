@@ -20,6 +20,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Wrapper;
 
 /**
  * This is the proxy class for java.sql.Statement.
@@ -121,7 +122,10 @@ public abstract class StatementProxy implements Statement
       if (iface.isInstance(delegate)) {
          return (T) delegate;
       }
+      else if (delegate instanceof Wrapper) {
+          return (T) delegate.unwrap(iface);
+      }
 
-      throw new SQLException("Wrapped connection is not an instance of " + iface);
+      throw new SQLException("Wrapped statement is not an instance of " + iface);
    }
 }

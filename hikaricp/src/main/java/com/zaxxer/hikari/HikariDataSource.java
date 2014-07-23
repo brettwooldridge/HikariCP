@@ -21,6 +21,7 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.sql.Wrapper;
 import java.util.HashMap;
 
 import javax.sql.DataSource;
@@ -172,18 +173,32 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @SuppressWarnings("unchecked")
    public <T> T unwrap(Class<T> iface) throws SQLException
    {
-      if (pool != null && iface.isInstance(pool.getDataSource())) {
-         return (T) pool.getDataSource();
+      if (pool != null) {
+         if (iface.isInstance(pool.getDataSource())) {
+            return (T) pool.getDataSource();
+         }
+         else if (pool.getDataSource() instanceof Wrapper) {
+            return (T) pool.getDataSource().unwrap(iface);
+         }
       }
 
-      throw new SQLException("Wrapped connection is not an instance of " + iface);
+      throw new SQLException("Wrapped DataSource is not an instance of " + iface);
    }
 
    /** {@inheritDoc} */
    @Override
    public boolean isWrapperFor(Class<?> iface) throws SQLException
    {
-      return (pool != null && pool.getDataSource().getClass().isAssignableFrom(iface));
+      if (pool != null) {
+         if (iface.isInstance(pool.getDataSource())) {
+            return true;
+         }
+         else if (pool.getDataSource() instanceof Wrapper) {
+            return pool.getDataSource().isWrapperFor(iface);
+         }
+      }
+
+      return false;
    }
 
    /**
