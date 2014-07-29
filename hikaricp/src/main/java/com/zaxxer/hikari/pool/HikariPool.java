@@ -301,20 +301,20 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    public void addBagItem()
    {
       addConnectionExecutor.submit( () -> {
-        long sleepBackoff = 200L;
-        final int maxPoolSize = configuration.getMaximumPoolSize();
-        final int minIdle = configuration.getMinimumIdle();
-        while (!isShutdown && totalConnections.get() < maxPoolSize && (minIdle == 0 || getIdleConnections() < minIdle)) {
-           if (!addConnection()) {
-              quietlySleep(sleepBackoff);
-              sleepBackoff = Math.min(1000L, (long) ((double) sleepBackoff * 1.5));
-              continue;
-           }
+         long sleepBackoff = 200L;
+         final int maxPoolSize = configuration.getMaximumPoolSize();
+         final int minIdle = configuration.getMinimumIdle();
+         while (!isShutdown && totalConnections.get() < maxPoolSize && (minIdle == 0 || getIdleConnections() < minIdle)) {
+            if (!addConnection()) {
+               quietlySleep(sleepBackoff);
+               sleepBackoff = Math.min(1000L, (long) ((double) sleepBackoff * 1.5));
+               continue;
+            }
 
-           if (minIdle == 0) {
-              break; // This break is here so we only add one connection when there is no min. idle
-           }
-        }
+            if (minIdle == 0) {
+               break; // This break is here so we only add one connection when there is no min. idle
+            }
+         }
       });
    }
 
