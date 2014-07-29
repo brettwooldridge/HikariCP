@@ -5,7 +5,6 @@
    <!-- For release: mvn release:perform -Darguments=-Dgpg.passphrase=PASSPHRASE -->
 
    <artifactId>HikariCP</artifactId>
-   <version>2.0.0-SNAPSHOT</version>
    <packaging>bundle</packaging>
 
    <name>HikariCP</name>
@@ -38,91 +37,17 @@
       </developer>
    </developers>
 
+   <properties>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <felix.bundle.plugin.version>2.4.0</felix.bundle.plugin.version>
+      <felix.version>4.2.1</felix.version>
+   </properties>
+
    <parent>
       <groupId>com.zaxxer</groupId>
       <artifactId>HikariCP-parent</artifactId>
       <version>2.0.0-SNAPSHOT</version>
-      <relativePath>../pom.xml</relativePath>
    </parent>
-
-   <dependencies>
-      <dependency>
-         <groupId>org.slf4j</groupId>
-         <artifactId>slf4j-api</artifactId>
-         <version>1.7.5</version>
-      </dependency>
-      <dependency>
-         <groupId>org.slf4j</groupId>
-         <artifactId>slf4j-simple</artifactId>
-         <version>1.7.5</version>
-         <optional>true</optional>
-      </dependency>
-      <dependency>
-         <groupId>org.mockito</groupId>
-         <artifactId>mockito-all</artifactId>
-         <version>1.9.5</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.javassist</groupId>
-         <artifactId>javassist</artifactId>
-         <version>3.18.1-GA</version>
-         <scope>compile</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.hibernate</groupId>
-         <artifactId>hibernate-core</artifactId>
-         <version>4.3.0.Final</version>
-         <scope>provided</scope>
-         <optional>true</optional>
-      </dependency>
-      <dependency>
-         <groupId>com.codahale.metrics</groupId>
-         <artifactId>metrics-core</artifactId>
-         <version>3.0.2</version>
-         <scope>provided</scope>
-         <optional>true</optional>
-      </dependency>
-
-      <!-- OSGi test -->
-      <dependency>
-         <groupId>org.apache.felix</groupId>
-         <artifactId>org.apache.felix.framework</artifactId>
-         <version>${felix.version}</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.ops4j.pax.exam</groupId>
-         <artifactId>pax-exam-container-native</artifactId>
-         <version>${pax.exam.version}</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.ops4j.pax.exam</groupId>
-         <artifactId>pax-exam-junit4</artifactId>
-         <version>${pax.exam.version}</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.ops4j.pax.exam</groupId>
-         <artifactId>pax-exam-link-mvn</artifactId>
-         <version>${pax.exam.version}</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.ops4j.pax.url</groupId>
-         <artifactId>pax-url-aether</artifactId>
-         <version>${pax.url.version}</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.ops4j.pax.url</groupId>
-         <artifactId>pax-url-reference</artifactId>
-         <version>${pax.url.version}</version>
-         <scope>test</scope>
-      </dependency>
-
-   </dependencies>
 
    <build>
       <sourceDirectory>src/main/java</sourceDirectory>
@@ -175,42 +100,6 @@
                <execution>
                   <goals>
                      <goal>manifest</goal>
-                  </goals>
-               </execution>
-            </executions>
-         </plugin>
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-source-plugin</artifactId>
-            <version>2.2.1</version>
-            <configuration>
-               <!-- outputDirectory>/absolute/path/to/the/output/directory</outputDirectory> 
-                  <finalName>filename-of-generated-jar-file</finalName -->
-               <attach>true</attach>
-            </configuration>
-            <executions>
-               <execution>
-                  <id>attach-sources</id>
-                  <goals>
-                     <goal>jar</goal>
-                  </goals>
-               </execution>
-            </executions>
-         </plugin>
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <version>2.9.1</version>
-            <configuration>
-               <show>public</show>
-               <!-- excludePackageNames>com.zaxxer.hikari.*</excludePackageNames -->
-               <attach>true</attach>
-               <maxmemory>1024m</maxmemory>
-            </configuration>
-            <executions>
-               <execution>
-                  <goals>
-                     <goal>jar</goal>
                   </goals>
                </execution>
             </executions>
