@@ -185,7 +185,7 @@ public final class JavassistProxyFactory
          }
       }
 
-      if (LoggerFactory.getLogger(getClass()).isDebugEnabled()) {
+      if (Boolean.getBoolean("com.zaxxer.hikari.debug")) {
          targetCt.debugWriteFile(System.getProperty("java.io.tmpdir"));
       }
 
