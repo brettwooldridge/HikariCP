@@ -20,12 +20,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 /**
  * This is a specialized concurrent bag that achieves superior performance
@@ -80,9 +80,10 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
       void addBagItem();
    }
 
-   private ThreadLocal<FastList<WeakReference<T>>> threadList;
-   private CopyOnWriteArraySet<T> sharedList;
-   private Synchronizer synchronizer;
+   private final ThreadLocal<FastList<WeakReference<T>>> threadList;
+   private final CopyOnWriteArraySet<T> sharedList;
+   private final Synchronizer synchronizer;
+   private final AtomicLong sequence;
    private IBagStateListener listener;
 
    /**
@@ -92,6 +93,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
    {
       this.sharedList = new CopyOnWriteArraySet<T>();
       this.synchronizer = new Synchronizer();
+      this.sequence = new AtomicLong(1);
       this.threadList = new ThreadLocal<FastList<WeakReference<T>>>();
    }
 
@@ -104,7 +106,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     * @return a borrowed instance from the bag or null if a timeout occurs
     * @throws InterruptedException if interrupted while waiting
     */
-   public T borrow(long timeout, TimeUnit timeUnit) throws InterruptedException
+   public T borrow(long timeout, final TimeUnit timeUnit) throws InterruptedException
    {
       // Try the thread-local list first
       FastList<WeakReference<T>> list = threadList.get();
@@ -126,17 +128,21 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
       timeout = timeUnit.toNanos(timeout);
       do {
          final long startScan = System.nanoTime();
-         for (T reference : sharedList) {
-            if (reference.compareAndSetState(STATE_NOT_IN_USE, STATE_IN_USE)) {
-               return reference;
+         long startSeq;
+         do {
+            startSeq = sequence.longValue();
+            for (T reference : sharedList) {
+               if (reference.compareAndSetState(STATE_NOT_IN_USE, STATE_IN_USE)) {
+                  return reference;
+               }
             }
-         }
-
+         } while (startSeq < sequence.longValue());
+         
          if (listener != null) {
             listener.addBagItem();
          }
 
-         synchronizer.tryAcquireSharedNanos(startScan, timeout);
+         synchronizer.tryAcquireSharedNanos(startSeq, timeout);
 
          timeout -= (System.nanoTime() - startScan);
       }
@@ -168,7 +174,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
          }
 
          list.add(new WeakReference<T>(value));
-         synchronizer.releaseShared(System.nanoTime());
+         synchronizer.releaseShared(sequence.incrementAndGet());
       }
       else {
          throw new IllegalStateException("Value was returned to the bag that was not borrowed: " + value);
@@ -182,9 +188,8 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     */
    public void add(final T value)
    {
-      final long addTime = System.nanoTime();
       sharedList.add(value);
-      synchronizer.releaseShared(addTime);
+      synchronizer.releaseShared(sequence.incrementAndGet());
    }
 
    /**
@@ -194,7 +199,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     * @throws IllegalStateException if an attempt is made to remove an object
     *         from the bag that was not borrowed or reserved first
     */
-   public void remove(T value)
+   public void remove(final T value)
    {
       if (value.compareAndSetState(STATE_IN_USE, STATE_REMOVED) || value.compareAndSetState(STATE_RESERVED, STATE_REMOVED)) {
          if (!sharedList.remove(value)) {
@@ -215,7 +220,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     * @param state one of STATE_NOT_IN_USE or STATE_IN_USE
     * @return a possibly empty list of objects having the state specified
     */
-   public List<T> values(int state)
+   public List<T> values(final int state)
    {
       if (state == STATE_IN_USE || state == STATE_NOT_IN_USE) {
          return sharedList.stream()
@@ -238,7 +243,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     * @param value the item to reserve
     * @return true if the item was able to be reserved, false otherwise
     */
-   public boolean reserve(T value)
+   public boolean reserve(final T value)
    {
       return value.compareAndSetState(STATE_NOT_IN_USE, STATE_RESERVED);
    }
@@ -249,14 +254,14 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     *
     * @param value the item to unreserve
     */
-   public void unreserve(T value)
+   public void unreserve(final T value)
    {
-      final long checkInTime = System.nanoTime();
+      final long checkInSeq = sequence.incrementAndGet();
       if (!value.compareAndSetState(STATE_RESERVED, STATE_NOT_IN_USE)) {
          throw new IllegalStateException("Attempt to relinquish an object to the bag that was not reserved");
       }
 
-      synchronizer.releaseShared(checkInTime);
+      synchronizer.releaseShared(checkInSeq);
    }
 
    /**
@@ -265,7 +270,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     *
     * @param listener a listener to the bag
     */
-   public void addBagStateListener(IBagStateListener listener)
+   public void addBagStateListener(final IBagStateListener listener)
    {
       this.listener = listener;
    }
@@ -281,7 +286,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
       return synchronizer.getQueueLength();
    }
 
-   public long getCount(int state)
+   public long getCount(final int state)
    {
       return sharedList.stream().filter(reference -> reference.getState() == state).count();
    }
@@ -324,16 +329,16 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
       private static final long serialVersionUID = 104753538004341218L;
 
       @Override
-      protected long tryAcquireShared(long startScanTime)
+      protected long tryAcquireShared(long seq)
       {
-         return getState() >= startScanTime && !hasQueuedPredecessors() ? 1L : -1L;
+         return getState() > seq && !hasQueuedPredecessors() ? 1L : -1L;
       }
 
       /** {@inheritDoc} */
       @Override
-      protected boolean tryReleaseShared(long updateTime)
+      protected boolean tryReleaseShared(long updateSeq)
       {
-         setState(updateTime);
+         setState(updateSeq);
 
          return true;
       }
