@@ -141,7 +141,7 @@ public class ShutdownTest
 
         PoolUtilities.quietlySleep(300);
 
-        Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() > 0);
+        Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() == 5);
         
         ds.close();
 
