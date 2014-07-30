@@ -4,8 +4,7 @@
 
 There is nothing faster.  There is nothing more correct.  HikariCP is a "zero-overhead" production-quality connection pool.  Coming in at roughly 50Kb, the library is extremely light.  Read about [how we do it here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).
 
-***Maven Repository***<br/>
-_Java 8 artifact:_
+_Java 8 maven artifact:_
 ```xml
     <dependency>
         <groupId>com.zaxxer</groupId>
@@ -14,7 +13,7 @@ _Java 8 artifact:_
         <scope>compile</scope>
     </dependency>
 ```
-_Java 6 and Java 7 artifact:_
+_Java 6 and Java 7 maven artifact:_
 ```xml
     <dependency>
         <groupId>com.zaxxer</groupId>
