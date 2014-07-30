@@ -51,6 +51,9 @@ import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
+import static com.zaxxer.hikari.util.PoolUtilities.IS_JAVA7;
+import static com.zaxxer.hikari.util.ConcurrentBag.STATE_IN_USE;
+import static com.zaxxer.hikari.util.ConcurrentBag.STATE_NOT_IN_USE;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -143,7 +146,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
       long delayPeriod = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30L));
       houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, configuration.getThreadFactory() != null ? configuration.getThreadFactory() : new DefaultThreadFactory("Hikari Housekeeping Timer (pool " + configuration.getPoolName() + ")", true));
-      houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
+      if (IS_JAVA7) {
+         houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
+      }
       houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), delayPeriod, delayPeriod, TimeUnit.MILLISECONDS);
    }
 
@@ -339,7 +344,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    @Override
    public int getIdleConnections()
    {
-      return connectionBag.getCount(ConcurrentBag.STATE_NOT_IN_USE);
+      return connectionBag.getCount(STATE_NOT_IN_USE);
    }
 
    /** {@inheritDoc} */
@@ -360,7 +365,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    @Override
    public void closeIdleConnections()
    {
-      for (IHikariConnectionProxy connectionProxy : connectionBag.values(ConcurrentBag.STATE_NOT_IN_USE)) {
+      for (IHikariConnectionProxy connectionProxy : connectionBag.values(STATE_NOT_IN_USE)) {
          if (connectionBag.reserve(connectionProxy)) {
             closeConnection(connectionProxy);
          }
@@ -476,7 +481,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    private void abortActiveConnections() throws InterruptedException
    {
       ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin", configuration.getThreadFactory());
-      for (IHikariConnectionProxy connectionProxy : connectionBag.values(ConcurrentBag.STATE_IN_USE)) {
+      for (IHikariConnectionProxy connectionProxy : connectionBag.values(STATE_IN_USE)) {
          try {
             connectionProxy.abort(assassinExecutor);
          }
@@ -484,7 +489,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             quietlyCloseConnection(connectionProxy);
          }
          catch (SQLException e) {
-            continue;
+            quietlyCloseConnection(connectionProxy);
          }
          finally {
             totalConnections.decrementAndGet();
@@ -553,7 +558,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          final long now = System.currentTimeMillis();
          final long idleTimeout = configuration.getIdleTimeout();
 
-         for (IHikariConnectionProxy connectionProxy : connectionBag.values(ConcurrentBag.STATE_NOT_IN_USE)) {
+         for (IHikariConnectionProxy connectionProxy : connectionBag.values(STATE_NOT_IN_USE)) {
             if (connectionBag.reserve(connectionProxy)) {
                if ((idleTimeout > 0L && now > connectionProxy.getLastAccess() + idleTimeout) || (now > connectionProxy.getExpirationTime())) {
                   closeConnection(connectionProxy);
@@ -567,8 +572,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          logPoolState("After cleanup ");
 
          if (configuration.getMinimumIdle() > 0) {
-             addBagItem(); // Try to maintain minimum connections
-          }
+            addBagItem(); // Try to maintain minimum connections
+         }
       }
    }
 }

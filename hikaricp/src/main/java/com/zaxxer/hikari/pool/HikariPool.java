@@ -51,6 +51,8 @@ import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
+import static com.zaxxer.hikari.util.ConcurrentBag.STATE_IN_USE;
+import static com.zaxxer.hikari.util.ConcurrentBag.STATE_NOT_IN_USE;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -333,7 +335,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    @Override
    public int getIdleConnections()
    {
-      return (int) connectionBag.getCount(ConcurrentBag.STATE_NOT_IN_USE);
+      return (int) connectionBag.getCount(STATE_NOT_IN_USE);
    }
 
    /** {@inheritDoc} */
@@ -354,7 +356,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    @Override
    public void closeIdleConnections()
    {
-      connectionBag.values(ConcurrentBag.STATE_NOT_IN_USE).forEach(connectionProxy -> {
+      connectionBag.values(STATE_NOT_IN_USE).forEach(connectionProxy -> {
          if (connectionBag.reserve(connectionProxy)) {
             closeConnection(connectionProxy);
          }
@@ -468,7 +470,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    private void abortActiveConnections() throws InterruptedException
    {
       ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin", configuration.getThreadFactory());
-      connectionBag.values(ConcurrentBag.STATE_IN_USE).parallelStream().forEach(connectionProxy -> {
+      connectionBag.values(STATE_IN_USE).parallelStream().forEach(connectionProxy -> {
          try {
             connectionProxy.abort(assassinExecutor);
          }
@@ -542,7 +544,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          final long now = System.currentTimeMillis();
          final long idleTimeout = configuration.getIdleTimeout();
 
-         connectionBag.values(ConcurrentBag.STATE_NOT_IN_USE).forEach(connectionProxy -> {
+         connectionBag.values(STATE_NOT_IN_USE).forEach(connectionProxy -> {
             if (connectionBag.reserve(connectionProxy)) {
                if ((idleTimeout > 0L && now > connectionProxy.getLastAccess() + idleTimeout) || (now > connectionProxy.getExpirationTime())) {
                   closeConnection(connectionProxy);

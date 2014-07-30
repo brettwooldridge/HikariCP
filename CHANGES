@@ -1,6 +1,6 @@
 HikariCP Changes
 
-Changes between 1.4.0 and 2.0.0
+Changes between 1.4.0 and 2.0.1
 
  * Split project into Java 6/7 and Java 8 components.
 
