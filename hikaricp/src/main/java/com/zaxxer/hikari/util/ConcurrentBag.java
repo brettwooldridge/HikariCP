@@ -286,9 +286,9 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
       return synchronizer.getQueueLength();
    }
 
-   public long getCount(final int state)
+   public int getCount(final int state)
    {
-      return sharedList.stream().filter(reference -> reference.getState() == state).count();
+      return (int) sharedList.stream().filter(reference -> reference.getState() == state).count();
    }
 
    /**

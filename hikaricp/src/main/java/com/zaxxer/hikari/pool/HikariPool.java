@@ -335,7 +335,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    @Override
    public int getIdleConnections()
    {
-      return (int) connectionBag.getCount(STATE_NOT_IN_USE);
+      return connectionBag.getCount(STATE_NOT_IN_USE);
    }
 
    /** {@inheritDoc} */

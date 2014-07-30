@@ -4,6 +4,7 @@
 
    <!-- For release: mvn release:perform -Darguments=-Dgpg.passphrase=PASSPHRASE -->
 
+   <groupId>com.zaxxer</groupId>
    <artifactId>HikariCP</artifactId>
    <packaging>bundle</packaging>
 
