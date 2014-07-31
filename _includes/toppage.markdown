@@ -13,6 +13,7 @@ minded, read [here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Ra
 in and let your code run like its pants are on fire.
 
 _Java 8 maven artifact:_
+
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
@@ -21,6 +22,7 @@ _Java 8 maven artifact:_
     </dependency>
 
 _Java 6 and Java 7 maven artifact:_
+
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP-java6</artifactId>
