@@ -12,15 +12,22 @@ And how does it achieve such incredible performance?  If you're really technical
 minded, read [here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).  Otherwise, just drop it
 in and let your code run like its pants are on fire.
 
-### Maven Repository ###
-
+_Java 8 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>1.3.8</version>
+        <version>2.0.1</version>
         <scope>compile</scope>
     </dependency>
 
+_Java 6 and Java 7 maven artifact:_
+    <dependency>
+        <groupId>com.zaxxer</groupId>
+        <artifactId>HikariCP-java6</artifactId>
+        <version>2.0.1</version>
+        <scope>compile</scope>
+    </dependency>
+    
 ### Initialization and Configuration###
 
 See the [main project page](https://github.com/brettwooldridge/HikariCP#initialization) for initialization examples.
