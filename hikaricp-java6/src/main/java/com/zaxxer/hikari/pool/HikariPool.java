@@ -484,6 +484,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       for (IHikariConnectionProxy connectionProxy : connectionBag.values(STATE_IN_USE)) {
          try {
             connectionProxy.abort(assassinExecutor);
+            totalConnections.decrementAndGet();
          }
          catch (AbstractMethodError e) {
             quietlyCloseConnection(connectionProxy);
@@ -492,7 +493,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             quietlyCloseConnection(connectionProxy);
          }
          finally {
-            totalConnections.decrementAndGet();
             try {
                connectionBag.remove(connectionProxy);
             }
