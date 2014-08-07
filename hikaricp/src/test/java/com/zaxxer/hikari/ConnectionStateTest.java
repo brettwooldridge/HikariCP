@@ -29,7 +29,7 @@ public class ConnectionStateTest
             connection.close();
 
             Connection connection2 = ds.getConnection();
-            Assert.assertSame(connection, connection2);
+            Assert.assertSame(connection.unwrap(Connection.class), connection2.unwrap(Connection.class));
             Assert.assertTrue(connection2.getAutoCommit());
             connection2.close();
         }
@@ -56,7 +56,7 @@ public class ConnectionStateTest
             connection.close();
 
             Connection connection2 = ds.getConnection();
-            Assert.assertSame(connection, connection2);
+            Assert.assertSame(connection.unwrap(Connection.class), connection2.unwrap(Connection.class));
             Assert.assertEquals(Connection.TRANSACTION_READ_COMMITTED, connection2.getTransactionIsolation());
             connection2.close();
         }
@@ -95,7 +95,7 @@ public class ConnectionStateTest
             connection.close();
 
             Connection connection2 = ds.getConnection();
-            Assert.assertSame(connection, connection2);
+            Assert.assertSame(connection.unwrap(Connection.class), connection2.unwrap(Connection.class));
             Assert.assertEquals("test", connection2.getCatalog());
             connection2.close();
         }

@@ -16,6 +16,8 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.util.ConcurrentBag.STATE_IN_USE;
+import static com.zaxxer.hikari.util.ConcurrentBag.STATE_NOT_IN_USE;
 import static com.zaxxer.hikari.util.PoolUtilities.createInstance;
 import static com.zaxxer.hikari.util.PoolUtilities.createThreadPoolExecutor;
 import static com.zaxxer.hikari.util.PoolUtilities.elapsedTimeMs;
@@ -51,8 +53,6 @@ import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
-import static com.zaxxer.hikari.util.ConcurrentBag.STATE_IN_USE;
-import static com.zaxxer.hikari.util.ConcurrentBag.STATE_NOT_IN_USE;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -64,11 +64,16 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
 
+   public int transactionIsolation;
+   public final String catalog;
+   public final boolean isAutoCommit;
+   public final boolean isReadOnly;
+
    private final DataSource dataSource;
 
    private final IConnectionCustomizer connectionCustomizer;
    private final HikariConfig configuration;
-   private final ConcurrentBag<IHikariConnectionProxy> connectionBag;
+   private final ConcurrentBag<PoolBagEntry> connectionBag;
    private final ThreadPoolExecutor addConnectionExecutor;
    private final IMetricsTracker metricsTracker;
 
@@ -76,20 +81,16 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    private final AtomicInteger totalConnections;
    private final ScheduledThreadPoolExecutor houseKeepingExecutorService;
 
-   private final boolean isAutoCommit;
    private final boolean isIsolateInternalQueries;
-   private final boolean isReadOnly;
    private final boolean isRecordMetrics;
    private final boolean isRegisteredMbeans;
    private final boolean isJdbc4ConnectionTest;
    private final long leakDetectionThreshold;
-   private final String catalog;
    private final String username;
    private final String password;
 
    private volatile long connectionTimeout;
    private volatile boolean isShutdown;
-   private int transactionIsolation;
 
    /**
     * Construct a HikariPool with the specified configuration.
@@ -115,7 +116,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       this.password = password;
 
       this.totalConnections = new AtomicInteger();
-      this.connectionBag = new ConcurrentBag<IHikariConnectionProxy>();
+      this.connectionBag = new ConcurrentBag<PoolBagEntry>();
       this.connectionBag.addBagStateListener(this);
       this.lastConnectionFailure = new AtomicReference<Throwable>();
       this.connectionTimeout = configuration.getConnectionTimeout();
@@ -163,32 +164,29 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
       try {
          do {
-            IHikariConnectionProxy connection = connectionBag.borrow(timeout, TimeUnit.MILLISECONDS);
-            if (connection == null) {
+            final PoolBagEntry bagEntry = connectionBag.borrow(timeout, TimeUnit.MILLISECONDS);
+            if (bagEntry == null) {
                break; // We timed out... break and throw exception
             }
 
             final long now = System.currentTimeMillis();
-            connection.unclose(now);
-
-            if (now > connection.getExpirationTime() || (now - connection.getLastAccess() > 1000L && !isConnectionAlive(connection, timeout))) {
-               closeConnection(connection); // Throw away the dead connection and try again
+            if (now > bagEntry.expirationTime || (now - bagEntry.lastAccess > 1000L && !isConnectionAlive(bagEntry.connection, timeout))) {
+               closeConnection(bagEntry); // Throw away the dead connection and try again
                timeout = connectionTimeout - elapsedTimeMs(start);
                continue;
             }
 
-            if (isIsolateInternalQueries) {
-                IHikariConnectionProxy newProxy = ProxyFactory.getProxyConnection(connection);
-                connectionBag.remove(connection);
-                connectionBag.add(newProxy);
-                connection = newProxy;
-            }
+            final IHikariConnectionProxy proxyConnection = ProxyFactory.getProxyConnection(this, bagEntry);
 
             if (leakDetectionThreshold != 0) {
-               connection.captureStack(leakDetectionThreshold, houseKeepingExecutorService);
+               proxyConnection.captureStack(leakDetectionThreshold, houseKeepingExecutorService);
             }
 
-            return connection;
+            if (isRecordMetrics) {
+               bagEntry.lastOpenTime = now;
+            }
+
+            return proxyConnection;
          }
          while (timeout > 0L);
       }
@@ -210,19 +208,20 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     * @param connectionProxy the connection to release back to the pool
     * @param isBroken true if the connection was detected as broken
     */
-   public void releaseConnection(final IHikariConnectionProxy connectionProxy, final boolean isBroken)
+   public void releaseConnection(final PoolBagEntry bagEntry, final boolean isBroken)
    {
       if (isRecordMetrics) {
-         metricsTracker.recordConnectionUsage(elapsedTimeMs(connectionProxy.getLastOpenTime()));
+         metricsTracker.recordConnectionUsage(elapsedTimeMs(bagEntry.lastOpenTime));
       }
 
       if (isBroken || isShutdown) {
          LOGGER.debug("Connection returned to pool {} is broken, or the pool is shutting down.  Closing connection.", configuration.getPoolName());
-         closeConnection(connectionProxy);
+         closeConnection(bagEntry);
          return;
       }
 
-      connectionBag.requite(connectionProxy);
+      bagEntry.lastAccess = System.currentTimeMillis();
+      connectionBag.requite(bagEntry);
    }
 
    /**
@@ -256,6 +255,10 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       }
    }
 
+   public void evictConnection(IHikariConnectionProxy proxyConnection) {
+      closeConnection(proxyConnection.getPoolBagEntry());
+   }
+
    /**
     * Get the wrapped DataSource.
     *
@@ -264,28 +267,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    public DataSource getDataSource()
    {
       return dataSource;
-   }
-
-   /**
-    * Permanently close the real (underlying) connection (eat any exception).
-    *
-    * @param connectionProxy the connection to actually close
-    */
-   public void closeConnection(final IHikariConnectionProxy connectionProxy)
-   {
-      try {
-         int tc = totalConnections.decrementAndGet();
-         if (tc < 0) {
-            LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
-         }
-         connectionProxy.realClose();
-      }
-      catch (SQLException e) {
-         return;
-      }
-      finally {
-         connectionBag.remove(connectionProxy);
-      }
    }
 
    @Override
@@ -375,6 +356,28 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    // ***********************************************************************
 
    /**
+    * Permanently close the real (underlying) connection (eat any exception).
+    *
+    * @param connectionProxy the connection to actually close
+    */
+   private void closeConnection(final PoolBagEntry bagEntry)
+   {
+      try {
+         int tc = totalConnections.decrementAndGet();
+         if (tc < 0) {
+            LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
+         }
+         bagEntry.connection.close();
+      }
+      catch (SQLException e) {
+         return;
+      }
+      finally {
+         connectionBag.remove(bagEntry);
+      }
+   }
+
+   /**
     * Create and add a single connection to the pool.
     */
    private boolean addConnection()
@@ -393,10 +396,16 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
          executeSqlAutoCommit(connection, configuration.getConnectionInitSql());
 
-         IHikariConnectionProxy proxyConnection = ProxyFactory.getProxyConnection(this, connection, configuration.getMaxLifetime(), transactionIsolation,
-                                                                                  isAutoCommit, isReadOnly, catalog);
-         proxyConnection.resetConnectionState();
-         connectionBag.add(proxyConnection);
+         connection.setAutoCommit(isAutoCommit);
+         connection.setTransactionIsolation(transactionIsolation);
+         connection.setReadOnly(isReadOnly);
+         if (catalog != null) {
+            connection.setCatalog(catalog);
+         }
+
+         PoolBagEntry bagEntry = new PoolBagEntry(connection, configuration.getMaxLifetime());
+
+         connectionBag.add(bagEntry);
          lastConnectionFailure.set(null);
          return true;
       }
@@ -418,7 +427,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     * @param timeoutMs the timeout before we consider the test a failure
     * @return true if the connection is alive, false if it is not alive or we timed out
     */
-   private boolean isConnectionAlive(final IHikariConnectionProxy connection, long timeoutMs)
+   private boolean isConnectionAlive(final Connection connection, long timeoutMs)
    {
       try {
          final boolean timeoutEnabled = (configuration.getConnectionTimeout() != Integer.MAX_VALUE);
@@ -470,17 +479,17 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    private void abortActiveConnections() throws InterruptedException
    {
       ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin", configuration.getThreadFactory());
-      connectionBag.values(STATE_IN_USE).parallelStream().forEach(connectionProxy -> {
+      connectionBag.values(STATE_IN_USE).parallelStream().forEach(bagEntry -> {
          try {
-            connectionProxy.abort(assassinExecutor);
-            totalConnections.decrementAndGet();
+            bagEntry.connection.abort(assassinExecutor);
          }
          catch (SQLException | AbstractMethodError e) {
-            quietlyCloseConnection(connectionProxy);
+            quietlyCloseConnection(bagEntry.connection);
          }
          finally {
             try {
-               connectionBag.remove(connectionProxy);
+               connectionBag.remove(bagEntry);
+               totalConnections.decrementAndGet();
             }
             catch (IllegalStateException ise) {
                return;
@@ -544,14 +553,14 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          final long now = System.currentTimeMillis();
          final long idleTimeout = configuration.getIdleTimeout();
 
-         connectionBag.values(STATE_NOT_IN_USE).forEach(connectionProxy -> {
-            if (connectionBag.reserve(connectionProxy)) {
-               if ((idleTimeout > 0L && now > connectionProxy.getLastAccess() + idleTimeout) || (now > connectionProxy.getExpirationTime())) {
-                  closeConnection(connectionProxy);
+         connectionBag.values(STATE_NOT_IN_USE).forEach(bagEntry -> {
+            if (connectionBag.reserve(bagEntry)) {
+               if ((idleTimeout > 0L && now > bagEntry.lastAccess + idleTimeout) || (now > bagEntry.expirationTime)) {
+                  closeConnection(bagEntry);
                   return;
                }
 
-               connectionBag.unreserve(connectionProxy);
+               connectionBag.unreserve(bagEntry);
             }
          });
 

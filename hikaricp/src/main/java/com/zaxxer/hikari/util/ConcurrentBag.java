@@ -20,12 +20,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.zaxxer.hikari.util.ConcurrentBag.BagEntry;
 
 /**
  * This is a specialized concurrent bag that achieves superior performance
@@ -47,7 +50,7 @@ import org.slf4j.LoggerFactory;
  *
  * @param <T> the templated type to store in the bag
  */
-public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagManagable>
+public final class ConcurrentBag<T extends BagEntry>
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentBag.class);
 
@@ -56,17 +59,9 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
    private static final int STATE_REMOVED = -1;
    private static final int STATE_RESERVED = -2;
 
-   /**
-    * This interface must be implemented by classes wishing to be managed by
-    * ConcurrentBag.  All implementations must be atomic with respect to state.
-    * The suggested implementation is via AtomicInteger using the methods
-    * <code>get()</code> and <code>compareAndSet()</code>.
-    */
-   public interface IBagManagable
+   public static abstract class BagEntry
    {
-      int getState();
-
-      boolean compareAndSetState(int expectedState, int newState);
+      final AtomicInteger state = new AtomicInteger();
    }
 
    /**
@@ -75,7 +70,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     * of action by the listener in this case is to attempt to add an item
     * to the bag.
     */
-   public interface IBagStateListener
+   public static interface IBagStateListener
    {
       void addBagItem();
    }
@@ -115,10 +110,9 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
          threadList.set(list);
       }
       else {
-         for (int i = list.size() - 1; i >= 0; i--) {
-            final WeakReference<T> reference = list.removeLast();
-            final T element = reference.get();
-            if (element != null && element.compareAndSetState(STATE_NOT_IN_USE, STATE_IN_USE)) {
+         for (int i = list.size(); i > 0; i--) {
+            final T element = list.removeLast().get();
+            if (element != null && element.state.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
                return element;
             }
          }
@@ -132,7 +126,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
          do {
             startSeq = sequence.longValue();
             for (T reference : sharedList) {
-               if (reference.compareAndSetState(STATE_NOT_IN_USE, STATE_IN_USE)) {
+               if (reference.state.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
                   return reference;
                }
             }
@@ -166,14 +160,16 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
          throw new NullPointerException("Cannot return a null value to the bag");
       }
 
-      if (value.compareAndSetState(STATE_IN_USE, STATE_NOT_IN_USE)) {
-         FastList<WeakReference<T>> list = threadList.get();
+      if (value.state.compareAndSet(STATE_IN_USE, STATE_NOT_IN_USE)) {
+         final FastList<WeakReference<T>> list = threadList.get();
          if (list == null) {
-            list = new FastList<WeakReference<T>>(WeakReference.class);
-            threadList.set(list);
+            FastList<WeakReference<T>> newList = new FastList<WeakReference<T>>(WeakReference.class);
+            threadList.set(newList);
+            newList.add(new WeakReference<T>(value));
          }
-
-         list.add(new WeakReference<T>(value));
+         else {
+            list.add(new WeakReference<T>(value));
+         }
          synchronizer.releaseShared(sequence.incrementAndGet());
       }
       else {
@@ -201,7 +197,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     */
    public void remove(final T value)
    {
-      if (value.compareAndSetState(STATE_IN_USE, STATE_REMOVED) || value.compareAndSetState(STATE_RESERVED, STATE_REMOVED)) {
+      if (value.state.compareAndSet(STATE_IN_USE, STATE_REMOVED) || value.state.compareAndSet(STATE_RESERVED, STATE_REMOVED)) {
          if (!sharedList.remove(value)) {
             throw new IllegalStateException("Attempt to remove an object from the bag that does not exist");
          }
@@ -224,7 +220,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
    {
       if (state == STATE_IN_USE || state == STATE_NOT_IN_USE) {
          return sharedList.stream()
-                   .filter(reference -> reference.getState() == state)
+                   .filter(reference -> reference.state.get() == state)
                    .collect(Collectors.toList());
       }
 
@@ -245,7 +241,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
     */
    public boolean reserve(final T value)
    {
-      return value.compareAndSetState(STATE_NOT_IN_USE, STATE_RESERVED);
+      return value.state.compareAndSet(STATE_NOT_IN_USE, STATE_RESERVED);
    }
 
    /**
@@ -257,7 +253,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
    public void unreserve(final T value)
    {
       final long checkInSeq = sequence.incrementAndGet();
-      if (!value.compareAndSetState(STATE_RESERVED, STATE_NOT_IN_USE)) {
+      if (!value.state.compareAndSet(STATE_RESERVED, STATE_NOT_IN_USE)) {
          throw new IllegalStateException("Attempt to relinquish an object to the bag that was not reserved");
       }
 
@@ -288,7 +284,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
 
    public int getCount(final int state)
    {
-      return (int) sharedList.stream().filter(reference -> reference.getState() == state).count();
+      return (int) sharedList.stream().filter(reference -> reference.state.get() == state).count();
    }
 
    /**
@@ -304,7 +300,7 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
    public void dumpState()
    {
       sharedList.forEach(reference -> {
-         switch (reference.getState()) {
+         switch (reference.state.get()) {
          case STATE_IN_USE:
             LOGGER.info(reference.toString() + " state IN_USE");
             break;
