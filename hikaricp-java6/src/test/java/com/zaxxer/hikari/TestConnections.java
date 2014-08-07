@@ -115,7 +115,7 @@ public class TestConnections
             Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
     
             Connection connection2 = ds.getConnection();
-            Assert.assertSame("Expected the same connection", connection, connection2);
+            Assert.assertSame(connection.unwrap(Connection.class), connection2.unwrap(Connection.class));
             Assert.assertSame("Second total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
             Assert.assertSame("Second idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
             connection2.close();
@@ -165,7 +165,7 @@ public class TestConnections
             Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
 
             Connection connection2 = ds.getConnection();
-            Assert.assertSame("Expected the same connection", connection, connection2);
+            Assert.assertSame(connection.unwrap(Connection.class), connection2.unwrap(Connection.class));
             Assert.assertSame("Second total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
             Assert.assertSame("Second idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
             connection2.close();

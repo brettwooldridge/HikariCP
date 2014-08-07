@@ -501,7 +501,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    @Override
    public final boolean isWrapperFor(Class<?> iface) throws SQLException
    {
-       return iface.isInstance(delegate) || (delegate instanceof Wrapper && delegate.isWrapperFor(iface));
+      return iface.isInstance(delegate) || (delegate instanceof Wrapper && delegate.isWrapperFor(iface));
    }
 
    /** {@inheritDoc} */

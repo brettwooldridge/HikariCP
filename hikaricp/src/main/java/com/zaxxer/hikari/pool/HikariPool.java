@@ -337,9 +337,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    @Override
    public void closeIdleConnections()
    {
-      connectionBag.values(STATE_NOT_IN_USE).forEach(connectionProxy -> {
-         if (connectionBag.reserve(connectionProxy)) {
-            closeConnection(connectionProxy);
+      connectionBag.values(STATE_NOT_IN_USE).forEach(bagEntry -> {
+         if (connectionBag.reserve(bagEntry)) {
+            closeConnection(bagEntry);
          }
       });
    }

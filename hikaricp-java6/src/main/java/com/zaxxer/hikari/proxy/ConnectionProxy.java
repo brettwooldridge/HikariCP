@@ -26,12 +26,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.pool.HikariPool;
+import com.zaxxer.hikari.pool.PoolBagEntry;
 import com.zaxxer.hikari.util.FastList;
 
 /**
@@ -47,14 +47,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    protected final Connection delegate;
 
-   private final FastList<Statement> openStatements;
    private final HikariPool parentPool;
-   private final AtomicInteger state;
-   private final String defaultCatalog;
-   private final long expirationTime;
-   private final int defaultIsolationLevel;
-   private final boolean defaultAutoCommit;
-   private final boolean defaultReadOnly;
+   private final PoolBagEntry bagEntry;
 
    private boolean forceClose;
    private boolean isAutoCommitDirty;
@@ -62,12 +56,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    private boolean isClosed;
    private boolean isReadOnlyDirty;
    private boolean isTransactionIsolationDirty;
-   private volatile long lastAccess;
-   private long uncloseTime;
 
+   private FastList<Statement> openStatements;
    private LeakTask leakTask;
-
-   private final int hashCode;
 
    // static initializer
    static {
@@ -80,64 +71,12 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       SQL_ERRORS.add("JZ0C1"); // Sybase disconnect error
    }
 
-   protected ConnectionProxy(HikariPool pool, Connection connection, long maxLifetime, int defaultIsolationLevel, boolean defaultAutoCommit,
-         boolean defaultReadOnly, String defaultCatalog)
-   {
+   protected ConnectionProxy(final HikariPool pool, final PoolBagEntry bagEntry) {
       this.parentPool = pool;
-      this.delegate = connection;
-      this.defaultIsolationLevel = defaultIsolationLevel;
-      this.defaultAutoCommit = defaultAutoCommit;
-      this.defaultReadOnly = defaultReadOnly;
-      this.defaultCatalog = defaultCatalog;
-      this.state = new AtomicInteger();
+      this.bagEntry = bagEntry;
+      this.delegate = bagEntry.connection;
 
-      long now = System.currentTimeMillis();
-      this.expirationTime = (maxLifetime > 0 ? now + maxLifetime : Long.MAX_VALUE);
-      this.lastAccess = now;
-      this.openStatements = new FastList<Statement>(Statement.class);
-      this.hashCode = System.identityHashCode(this);
-
-      isCatalogDirty = true;
-      isReadOnlyDirty = defaultReadOnly;
-      isAutoCommitDirty = true;
-      isTransactionIsolationDirty = true;
-   }
-
-   protected ConnectionProxy(final IHikariConnectionProxy proxy)
-   {
-       final ConnectionProxy copyProxy = (ConnectionProxy) proxy;
-
-       this.parentPool = copyProxy.parentPool;
-       this.delegate = copyProxy.delegate;
-       this.defaultIsolationLevel = copyProxy.defaultIsolationLevel;
-       this.defaultAutoCommit = copyProxy.defaultAutoCommit;
-       this.defaultReadOnly = copyProxy.defaultReadOnly;
-       this.defaultCatalog = copyProxy.defaultCatalog;
-       this.state = new AtomicInteger(copyProxy.getState());
-
-       this.expirationTime = copyProxy.expirationTime;
-       this.lastAccess = this.uncloseTime = System.currentTimeMillis();
-       this.openStatements = new FastList<Statement>(Statement.class);
-       this.hashCode = System.identityHashCode(this);
-
-       this.isCatalogDirty = copyProxy.isCatalogDirty;
-       this.isReadOnlyDirty = copyProxy.isReadOnlyDirty;
-       this.isAutoCommitDirty = copyProxy.isAutoCommitDirty;
-       this.isTransactionIsolationDirty = copyProxy.isTransactionIsolationDirty;
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public final boolean equals(Object other)
-   {
-      return this == other;
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public final int hashCode()
-   {
-      return hashCode;
+      this.openStatements = new FastList<Statement>(Statement.class, 16);
    }
 
    @Override
@@ -149,6 +88,13 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    // ***********************************************************************
    //                      IHikariConnectionProxy methods
    // ***********************************************************************
+
+   /** {@inheritDoc} */
+   @Override
+   public PoolBagEntry getPoolBagEntry()
+   {
+      return bagEntry;
+   }
 
    /** {@inheritDoc} */
    @Override
@@ -181,76 +127,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    /** {@inheritDoc} */
    @Override
-   public final long getExpirationTime()
-   {
-      return expirationTime;
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public final long getLastAccess()
-   {
-      return lastAccess;
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public long getLastOpenTime()
-   {
-      return uncloseTime;
-   }
-
-   /** {@inheritDoc} */
-   @Override
    public final boolean isBrokenConnection()
    {
       return forceClose;
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public final void realClose() throws SQLException
-   {
-      delegate.close();
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public final void resetConnectionState() throws SQLException
-   {
-      if (!delegate.getAutoCommit()) {
-         delegate.rollback();
-      }
-
-      if (isReadOnlyDirty) {
-         delegate.setReadOnly(defaultReadOnly);
-         isReadOnlyDirty = false;
-      }
-
-      if (isAutoCommitDirty) {
-         delegate.setAutoCommit(defaultAutoCommit);
-         isAutoCommitDirty = false;
-      }
-
-      if (isTransactionIsolationDirty) {
-         delegate.setTransactionIsolation(defaultIsolationLevel);
-         isTransactionIsolationDirty = false;
-      }
-
-      if (isCatalogDirty && defaultCatalog != null) {
-         delegate.setCatalog(defaultCatalog);
-         isCatalogDirty = false;
-      }
-
-      delegate.clearWarnings();
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public final void unclose(final long now)
-   {
-      isClosed = false;
-      uncloseTime = now;
    }
 
    /** {@inheritDoc} */
@@ -283,22 +162,29 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       return statement;
    }
 
-   // **********************************************************************
-   //                       IBagManagable Methods
-   // **********************************************************************
-
-   /** {@inheritDoc} */
-   @Override
-   public final int getState()
+   private final void resetConnectionState() throws SQLException
    {
-      return state.get();
-   }
+      if (!delegate.getAutoCommit()) {
+         delegate.rollback();
+      }
 
-   /** {@inheritDoc} */
-   @Override
-   public final boolean compareAndSetState(int expectedState, int newState)
-   {
-      return state.compareAndSet(expectedState, newState);
+      if (isReadOnlyDirty) {
+         delegate.setReadOnly(parentPool.isReadOnly);
+      }
+
+      if (isAutoCommitDirty) {
+         delegate.setAutoCommit(parentPool.isAutoCommit);
+      }
+
+      if (isTransactionIsolationDirty) {
+         delegate.setTransactionIsolation(parentPool.transactionIsolation);
+      }
+
+      if (isCatalogDirty && parentPool.catalog != null) {
+         delegate.setCatalog(parentPool.catalog);
+      }
+
+      delegate.clearWarnings();
    }
 
    // **********************************************************************
@@ -329,7 +215,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
                   }
                }
 
-               openStatements.clear();
+               openStatements = null;
             }
 
             resetConnectionState();
@@ -339,8 +225,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             throw e;
          }
          finally {
-            lastAccess = System.currentTimeMillis();
-            parentPool.releaseConnection(this, forceClose);
+            parentPool.releaseConnection(bagEntry, forceClose);
          }
       }
    }
@@ -560,7 +445,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       checkClosed();
       try {
          delegate.setAutoCommit(autoCommit);
-         isAutoCommitDirty = (autoCommit != defaultAutoCommit);
+         isAutoCommitDirty = (autoCommit != parentPool.isAutoCommit);
       }
       catch (SQLException e) {
          checkException(e);
@@ -575,7 +460,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       checkClosed();
       try {
          delegate.setReadOnly(readOnly);
-         isReadOnlyDirty = (readOnly != defaultReadOnly);
+         isReadOnlyDirty = (readOnly != parentPool.isReadOnly);
       }
       catch (SQLException e) {
          checkException(e);
@@ -590,7 +475,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       checkClosed();
       try {
          delegate.setTransactionIsolation(level);
-         isTransactionIsolationDirty = (level != defaultIsolationLevel);
+         isTransactionIsolationDirty = (level != parentPool.transactionIsolation);
       }
       catch (SQLException e) {
          checkException(e);
@@ -604,7 +489,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       checkClosed();
       try {
          delegate.setCatalog(catalog);
-         isCatalogDirty = !catalog.equals(defaultCatalog);
+         isCatalogDirty = !catalog.equals(parentPool.catalog);
       }
       catch (SQLException e) {
          checkException(e);

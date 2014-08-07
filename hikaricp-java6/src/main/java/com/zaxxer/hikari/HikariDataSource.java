@@ -211,7 +211,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    public void evictConnection(Connection connection)
    {
       if (!isShutdown && pool != null && connection instanceof IHikariConnectionProxy) {
-         pool.closeConnection((IHikariConnectionProxy) connection);
+         pool.evictConnection((IHikariConnectionProxy) connection);
       }
    }
 

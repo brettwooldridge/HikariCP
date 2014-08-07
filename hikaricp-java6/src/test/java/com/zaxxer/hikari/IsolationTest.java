@@ -51,7 +51,6 @@ public class IsolationTest
             Connection connection2 = ds.getConnection();
             connection2.close();
 
-            Assert.assertSame(connection, connection2);
             Assert.assertSame(connection.unwrap(Connection.class), connection2.unwrap(Connection.class));
         }
         finally

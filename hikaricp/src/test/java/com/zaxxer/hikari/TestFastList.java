@@ -86,7 +86,7 @@ public class TestFastList
           
        }
 
-       FastList<Base> list = new FastList<>(Base.class, 2);
+       FastList<Base> list = new FastList<Base>(Base.class, 2);
        list.add(new Foo());
        list.add(new Foo());
        list.add(new Bar());

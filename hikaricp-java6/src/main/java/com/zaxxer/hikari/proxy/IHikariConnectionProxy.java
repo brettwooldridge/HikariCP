@@ -21,7 +21,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.ScheduledExecutorService;
 
-import com.zaxxer.hikari.util.ConcurrentBag.IBagManagable;
+import com.zaxxer.hikari.pool.PoolBagEntry;
 
 /**
  * The interface used by the Connection proxy and through which all interaction
@@ -29,8 +29,15 @@ import com.zaxxer.hikari.util.ConcurrentBag.IBagManagable;
  *
  * @author Brett Wooldridge
  */
-public interface IHikariConnectionProxy extends Connection, IBagManagable
+public interface IHikariConnectionProxy extends Connection
 {
+   /**
+    * Get the ConcurrentBag entry that is associated in the pool with the underlying connection.
+    *
+    * @return the PoolBagEntry
+    */
+   PoolBagEntry getPoolBagEntry();
+
    /**
     * Catpure the stack and start leak detection.
     *
@@ -75,26 +82,6 @@ public interface IHikariConnectionProxy extends Connection, IBagManagable
     * @return the broken state of the connection
     */
    boolean isBrokenConnection();
-
-   /**
-    * Actually close the underlying delegate Connection.
-    *
-    * @throws SQLException rethrown from the underlying delegate Connection
-    */
-   void realClose() throws SQLException;
-
-   /**
-    * Reset the delegate Connection back to pristine state.
-    *
-    * @throws SQLException thrown if there is an error resetting any of the state
-    */
-   void resetConnectionState() throws SQLException;
-
-   /**
-    * Make the Connection available for use again by marking it as not closed.
-    * @param now the current time in milliseconds
-    */
-   void unclose(long now);
 
    /**
     * Called by Statement and its subclasses when they are closed to remove them
