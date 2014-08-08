@@ -117,8 +117,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       this.password = password;
 
       this.totalConnections = new AtomicInteger();
-      this.connectionBag = new ConcurrentBag<PoolBagEntry>();
-      this.connectionBag.addBagStateListener(this);
+      this.connectionBag = new ConcurrentBag<PoolBagEntry>(this);
       this.lastConnectionFailure = new AtomicReference<Throwable>();
       this.connectionTimeout = configuration.getConnectionTimeout();
 

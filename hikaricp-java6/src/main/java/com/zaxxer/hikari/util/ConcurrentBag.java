@@ -20,7 +20,7 @@ import static com.zaxxer.hikari.util.PoolUtilities.IS_JAVA7;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -76,21 +76,41 @@ public final class ConcurrentBag<T extends BagEntry>
       void addBagItem();
    }
 
-   private final ThreadLocal<FastList<WeakReference<T>>> threadList;
-   private final CopyOnWriteArraySet<T> sharedList;
+   private static final ThreadLocal<FastList<WeakReference<BagEntry>>> threadList;
+   private final CopyOnWriteArrayList<T> sharedList;
    private final Synchronizer synchronizer;
    private final AtomicLong sequence;
-   private IBagStateListener listener;
+   private final IBagStateListener listener;
+
+   static {
+      threadList = new ThreadLocal<FastList<WeakReference<BagEntry>>>() {
+         @Override
+         protected FastList<WeakReference<BagEntry>> initialValue() {
+            return new FastList<WeakReference<BagEntry>>(WeakReference.class);
+         }
+      };
+   }
 
    /**
-    * Constructor.
+    * Default constructor.
     */
    public ConcurrentBag()
    {
-      this.sharedList = new CopyOnWriteArraySet<T>();
+      this.sharedList = new CopyOnWriteArrayList<T>();
       this.synchronizer = new Synchronizer();
       this.sequence = new AtomicLong(1);
-      this.threadList = new ThreadLocal<FastList<WeakReference<T>>>();
+      this.listener = null;
+   }
+
+   /**
+    * Construct a ConcurrentBag with the specified listener.
+    */
+   public ConcurrentBag(IBagStateListener listener)
+   {
+      this.sharedList = new CopyOnWriteArrayList<T>();
+      this.synchronizer = new Synchronizer();
+      this.sequence = new AtomicLong(1);
+      this.listener = listener;
    }
 
    /**
@@ -102,20 +122,15 @@ public final class ConcurrentBag<T extends BagEntry>
     * @return a borrowed instance from the bag or null if a timeout occurs
     * @throws InterruptedException if interrupted while waiting
     */
+   @SuppressWarnings("unchecked")
    public T borrow(long timeout, final TimeUnit timeUnit) throws InterruptedException
    {
       // Try the thread-local list first
-      FastList<WeakReference<T>> list = threadList.get();
-      if (list == null) {
-         list = new FastList<WeakReference<T>>(WeakReference.class);
-         threadList.set(list);
-      }
-      else {
-         for (int i = list.size(); i > 0; i--) {
-            final T element = list.removeLast().get();
-            if (element != null && element.state.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
-               return element;
-            }
+      final FastList<WeakReference<BagEntry>> list = threadList.get();
+      for (int i = list.size(); i > 0; i--) {
+         final BagEntry element = list.removeLast().get();
+         if (element != null && element.state.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
+            return (T) element;
          }
       }
 
@@ -126,7 +141,7 @@ public final class ConcurrentBag<T extends BagEntry>
          long startSeq;
          do {
             startSeq = sequence.longValue();
-            for (T reference : sharedList) {
+            for (final T reference : sharedList) {
                if (reference.state.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
                   return reference;
                }
@@ -157,20 +172,8 @@ public final class ConcurrentBag<T extends BagEntry>
     */
    public void requite(final T value)
    {
-      if (value == null) {
-         throw new NullPointerException("Cannot return a null value to the bag");
-      }
-
       if (value.state.compareAndSet(STATE_IN_USE, STATE_NOT_IN_USE)) {
-         final FastList<WeakReference<T>> list = threadList.get();
-         if (list == null) {
-            FastList<WeakReference<T>> newList = new FastList<WeakReference<T>>(WeakReference.class);
-            threadList.set(newList);
-            newList.add(new WeakReference<T>(value));
-         }
-         else {
-            list.add(new WeakReference<T>(value));
-         }
+         threadList.get().add(new WeakReference<BagEntry>(value));
          synchronizer.releaseShared(sequence.incrementAndGet());
       }
       else {
@@ -219,9 +222,9 @@ public final class ConcurrentBag<T extends BagEntry>
     */
    public List<T> values(final int state)
    {
-      ArrayList<T> list = new ArrayList<T>(sharedList.size());
+      final ArrayList<T> list = new ArrayList<T>(sharedList.size());
       if (state == STATE_IN_USE || state == STATE_NOT_IN_USE) {
-         for (T reference : sharedList) {
+         for (final T reference : sharedList) {
             if (reference.state.get() == state) {
                list.add(reference);
             }
@@ -261,17 +264,6 @@ public final class ConcurrentBag<T extends BagEntry>
       }
 
       synchronizer.releaseShared(checkInSeq);
-   }
-
-   /**
-    * Add a listener to the bag.  There can only be one.  If this method is
-    * called a second time, the original listener will be evicted.
-    *
-    * @param listener a listener to the bag
-    */
-   public void addBagStateListener(final IBagStateListener listener)
-   {
-      this.listener = listener;
    }
 
    /**
