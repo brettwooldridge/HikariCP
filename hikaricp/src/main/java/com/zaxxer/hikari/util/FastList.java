@@ -86,9 +86,9 @@ public final class FastList<T>
    }
 
    /**
-    * This remove method is most efficient when the element being removed
-    * is the last element.  Equality is identity based, not equals() based.
-    * Only the first matching element is removed.
+    * Remove the last element from the list.  No bound check is performed, so if this
+    * method is called on an empty list and ArrayIndexOutOfBounds exception will be
+    * thrown.
     *
     * @return the last element of the list
     */
