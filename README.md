@@ -3,7 +3,7 @@
 
 There is nothing faster.  There is nothing more correct.  HikariCP is a "zero-overhead" production ready JDBC connection pool.  Coming in at roughly 50Kb, the library is extremely light.  Read about [how we do it here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).
 
-&nbsp;&nbsp;&nbsp;<sup>**"Simplicity is a prerequisite for reliability."**<br>
+&nbsp;&nbsp;&nbsp;<sup>**"Simplicity is prerequisite for reliability."**<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- *Edsger Djikstra*</sup>
 
 ----------------------------------------------------
@@ -38,9 +38,8 @@ Using the excellent [JMH microbenchmark framework](http://openjdk.java.net/proje
  * One *Statement Cycle* is defined as single ``Connection.prepareStatement()``, ``Statement.execute()``, ``Statement.close()``.
 
 <sup>
-<sup>1</sup> BoneCP fails to complete *Statement Cycle* benchmark unless the "CACHED" pool strategy is used.<br/>
-<sup>2</sup> Tomcat fails to complete *Statement Cycle* benchmark when "StatementFinalizer" feature is enabled.<br/>
-<sup>3</sup> Benchmark results run against HikariCP 1.3.3<br/>
+<sup>1</sup> Versions: HikariCP 2.0.2, BoneCP 0.8.0, Tomcat 8.0.9, Vibur 1.2.0, C3P0 0.9.5-pre8 <br/>
+<sup>2</sup> Java options: -server -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -Xmx512m <br/>
 </sup>
 
 ----------------------------------------------------
