@@ -102,7 +102,7 @@ public final class ConcurrentBag<T extends BagEntry>
    }
 
    /**
-    * Constuct a ConcurrentBag with the specified listener.
+    * Construct a ConcurrentBag with the specified listener.
     */
    public ConcurrentBag(IBagStateListener listener)
    {
@@ -274,6 +274,12 @@ public final class ConcurrentBag<T extends BagEntry>
       return synchronizer.getQueueLength();
    }
 
+   /**
+    * Get a count of the number of items in the specified state at the time of this call.
+    *
+    * @param state the state of the items to count
+    * @return a count of how many items in the bag are in the specified state
+    */
    public int getCount(final int state)
    {
       return (int) sharedList.stream().filter(reference -> reference.state.get() == state).count();

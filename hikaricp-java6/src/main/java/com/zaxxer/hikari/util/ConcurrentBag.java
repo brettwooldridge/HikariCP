@@ -277,10 +277,16 @@ public final class ConcurrentBag<T extends BagEntry>
       return synchronizer.getQueueLength();
    }
 
+   /**
+    * Get a count of the number of items in the specified state at the time of this call.
+    *
+    * @param state the state of the items to count
+    * @return a count of how many items in the bag are in the specified state
+    */
    public int getCount(final int state)
    {
       int count = 0;
-      for (T reference : sharedList) {
+      for (final T reference : sharedList) {
          if (reference.state.get() == state) {
             count++;
          }
