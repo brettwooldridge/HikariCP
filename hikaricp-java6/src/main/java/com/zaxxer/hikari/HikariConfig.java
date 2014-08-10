@@ -19,6 +19,7 @@ package com.zaxxer.hikari;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.sql.Connection;
@@ -125,7 +126,9 @@ public class HikariConfig implements HikariConfigMBean
    }
 
    /**
-    * Construct a HikariConfig from the specified property file name.
+    * Construct a HikariConfig from the specified property file name.  <code>propertyFileName</code>
+    * will first be treated as a path in the file-system, and if that fails the 
+    * ClassLoader.getResourceAsStream(propertyFileName) will be tried.
     *
     * @param propertyFileName the name of the property file
     */
@@ -133,17 +136,18 @@ public class HikariConfig implements HikariConfigMBean
    {
       this();
 
-      File propFile = new File(propertyFileName);
-      if (!propFile.isFile()) {
-         throw new IllegalArgumentException("Property file " + propertyFileName + " was not found.");
-      }
-
+      final File propFile = new File(propertyFileName);
       try {
-         FileInputStream fis = new FileInputStream(propFile);
-         Properties props = new Properties();
-         props.load(fis);
-         PropertyBeanSetter.setTargetFromProperties(this, props);
-         fis.close();
+         final InputStream is = propFile.isFile() ? new FileInputStream(propFile) : this.getClass().getResourceAsStream(propertyFileName);
+         if (is != null) {
+            Properties props = new Properties();
+            props.load(is);
+            is.close();
+            PropertyBeanSetter.setTargetFromProperties(this, props);
+         }
+         else {
+            throw new IllegalArgumentException("Property file " + propertyFileName + " was not found.");
+         }
       }
       catch (IOException io) {
          throw new RuntimeException("Error loading properties file", io);
@@ -360,6 +364,9 @@ public class HikariConfig implements HikariConfigMBean
    @Override
    public void setIdleTimeout(long idleTimeoutMs)
    {
+      if (idleTimeout < 0) {
+         throw new IllegalArgumentException("idleTimeout cannot be negative");
+      }
       this.idleTimeout = idleTimeoutMs;
    }
 
@@ -549,7 +556,7 @@ public class HikariConfig implements HikariConfigMBean
    public void setMinimumIdle(int minIdle)
    {
       if (minIdle < 0) {
-         throw new IllegalArgumentException("maxPoolSize cannot be negative or greater than maximumPoolSize");
+         throw new IllegalArgumentException("minimumIdle cannot be negative");
       }
       this.minIdle = minIdle;
    }
@@ -721,20 +728,12 @@ public class HikariConfig implements HikariConfigMBean
       if (connectionTimeout == Integer.MAX_VALUE) {
          logger.warn("No connection wait timeout is set, this might cause an infinite wait");
       }
-      else if (connectionTimeout < TimeUnit.MILLISECONDS.toMillis(250)) {
-         logger.warn("connectionTimeout is less than 250ms, did you specify the wrong time unit?  Using default instead");
-         connectionTimeout = CONNECTION_TIMEOUT;
-      }
 
       if (minIdle < 0 || minIdle > maxPoolSize) {
          minIdle = maxPoolSize;
       }
 
-      if (idleTimeout < 0) {
-         logger.error("idleTimeout cannot be negative.");
-         throw new IllegalArgumentException("idleTimeout cannot be negative");
-      }
-      else if (idleTimeout < TimeUnit.SECONDS.toMillis(30) && idleTimeout != 0) {
+      if (idleTimeout < TimeUnit.SECONDS.toMillis(30) && idleTimeout != 0) {
          logger.warn("idleTimeout is less than 30000ms, did you specify the wrong time unit?  Using default instead");
          idleTimeout = IDLE_TIMEOUT;
       }
