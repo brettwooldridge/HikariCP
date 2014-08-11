@@ -1,5 +1,19 @@
 HikariCP Changes
 
+Changes between 2.0.0 and 2.0.2
+
+ * Significant internal refactor supporting creation of new proxy instances
+   (throwaway) around Connections for each call to getConnection().
+
+ * Allow HikariConfig(String propertyFileName) to load properties file from
+   classloader as a stream or directly from file-system.
+   
+ * Fix accounting issue with totalConnections when aborting connections
+   during shutdown, causing a warning message to be logged.
+ 
+ * Fix regression in Java 8 codeline that would prevent minimumIdle from
+   being set before maxPoolSize.
+
 Changes between 1.4.0 and 2.0.1
 
  * Split project into Java 6/7 and Java 8 components.
