@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Brett Wooldridge
+ * Copyright (C) 2014 Brett Wooldridge
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.sql.Connection;
 import com.zaxxer.hikari.util.ConcurrentBag.BagEntry;
 
 /**
+ * Entry used in the ConcurrentBag to track Connection instances.
  *
  * @author Brett Wooldridge
  */
