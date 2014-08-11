@@ -496,6 +496,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          catch (AbstractMethodError e) {
             quietlyCloseConnection(bagEntry.connection);
          }
+         catch (NoSuchMethodError e) {
+            quietlyCloseConnection(bagEntry.connection);
+         }
          catch (SQLException e) {
             quietlyCloseConnection(bagEntry.connection);
          }
