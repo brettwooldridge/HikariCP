@@ -25,7 +25,7 @@ import com.zaxxer.hikari.util.ConcurrentBag.BagEntry;
  *
  * @author Brett Wooldridge
  */
-public class PoolBagEntry extends BagEntry
+public final class PoolBagEntry extends BagEntry
 {
    public final Connection connection;
    public final long expirationTime;
