@@ -309,6 +309,7 @@ We recommended using ``dataSourceClassName`` instead of ``driverClassName``/``jd
 | PostgreSQL       | pgjdbc-ng    | com.impossibl.postgres.jdbc.PGDataSource |
 | PostgreSQL       | PostgreSQL   | org.postgresql.ds.PGSimpleDataSource |
 | SyBase           | jConnect     | com.sybase.jdbcx.SybDataSource |
+| Firebird         | Jaybird      | org.firebirdsql.pool.FBSimpleDataSource |
 
 ### Play Framework Plugin
 
