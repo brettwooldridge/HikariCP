@@ -296,6 +296,7 @@ We recommended using ``dataSourceClassName`` instead of ``driverClassName``/``jd
 | Database         | Driver       | *DataSource* class |
 |:---------------- |:------------ |:-------------------|
 | Apache Derby     | Derby        | org.apache.derby.jdbc.ClientDataSource |
+| Firebird         | Jaybird      | org.firebirdsql.pool.FBSimpleDataSource |
 | IBM DB2          | DB2          | com.ibm.db2.jcc.DB2SimpleDataSource |
 | H2               | H2           | org.h2.jdbcx.JdbcDataSource |
 | HSQLDB           | HSQLDB       | org.hsqldb.jdbc.JDBCDataSource |
@@ -306,7 +307,6 @@ We recommended using ``dataSourceClassName`` instead of ``driverClassName``/``jd
 | PostgreSQL       | pgjdbc-ng    | com.impossibl.postgres.jdbc.PGDataSource |
 | PostgreSQL       | PostgreSQL   | org.postgresql.ds.PGSimpleDataSource |
 | SyBase           | jConnect     | com.sybase.jdbcx.SybDataSource |
-| Firebird         | Jaybird      | org.firebirdsql.pool.FBSimpleDataSource |
 
 ### Play Framework Plugin
 
