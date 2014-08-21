@@ -28,7 +28,7 @@ _Java 6 and Java 7 maven artifact:_
 
 ----------------------------------------------------
 ***JMH Benchmarks***<br/>
-Using the excellent [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team, extremely accurate microbenchmarks were created to isolate and measure the overhead of HikariCP and other popular pools.  You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
+Microbenchmarks were created to isolate and measure the overhead of pool using the [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team. You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
 
 ![](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks.png)
 
@@ -62,10 +62,7 @@ AKA ["What you probably didn't know about connection pool sizing"](https://githu
 ------------------------------
 
 #### Configuration (knobs, baby!)
-The following are the various properties that can be configured in the pool, their behavior,
-and their defaults.  Rather than coming out of the box with almost nothing configured, HikariCP
-comes with *sane* defaults that let a great many deployments run without any additional tweaking
-(except for the DataSource and DataSource properties).
+HikariCP comes with *sane* defaults that perform well in most deployments without additional tweaking.
 
 <sup>:paperclip:</sup>&nbsp;*HikariCP uses milliseconds for all time values.*
 
