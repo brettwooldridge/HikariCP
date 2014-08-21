@@ -28,7 +28,7 @@ _Java 6 and Java 7 maven artifact:_
 
 ----------------------------------------------------
 ***JMH Benchmarks***<br/>
-Microbenchmarks were created to isolate and measure the overhead of pool using the [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team. You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
+Microbenchmarks were created to isolate and measure the overhead of pools using the [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team. You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
 
 ![](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks.png)
 
