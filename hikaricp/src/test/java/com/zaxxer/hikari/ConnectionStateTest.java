@@ -6,6 +6,8 @@ import java.sql.SQLException;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.zaxxer.hikari.util.PoolUtilities;
+
 public class ConnectionStateTest
 {
     @Test
@@ -74,7 +76,7 @@ public class ConnectionStateTest
         config.setTransactionIsolation("TRANSACTION_REPEATABLE_READ");
         config.validate();
         
-        int transactionIsolation = config.getTransactionIsolation();
+        int transactionIsolation = PoolUtilities.getTransactionIsolation(config.getTransactionIsolation());
         Assert.assertSame(Connection.TRANSACTION_REPEATABLE_READ, transactionIsolation);
     }
 

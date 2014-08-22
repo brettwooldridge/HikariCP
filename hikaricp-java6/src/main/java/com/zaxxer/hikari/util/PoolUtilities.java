@@ -1,6 +1,7 @@
 package com.zaxxer.hikari.util;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -104,6 +105,21 @@ public final class PoolUtilities
       catch (Exception e) {
          throw new RuntimeException(e);
       }
+   }
+
+   public static int getTransactionIsolation(String transactionIsolationName)
+   {
+      if (transactionIsolationName != null) {
+         try {
+            Field field = Connection.class.getField(transactionIsolationName);
+            return field.getInt(null);
+         }
+         catch (Exception e) {
+            throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
+         }
+      }
+
+      return -1;
    }
 
    public static ThreadPoolExecutor createThreadPoolExecutor(final int queueSize, final String threadName, ThreadFactory threadFactory)

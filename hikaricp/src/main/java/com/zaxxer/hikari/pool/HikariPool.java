@@ -52,6 +52,7 @@ import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.DriverDataSource;
+import com.zaxxer.hikari.util.PoolUtilities;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 /**
@@ -128,7 +129,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       this.isRegisteredMbeans = configuration.isRegisterMbeans();
       this.isJdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
       this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
-      this.transactionIsolation = configuration.getTransactionIsolation();
+      this.transactionIsolation = PoolUtilities.getTransactionIsolation(configuration.getTransactionIsolation());
       this.isRecordMetrics = configuration.isRecordMetrics();
       this.metricsTracker = MetricsFactory.createMetricsTracker((isRecordMetrics ? configuration.getMetricsTrackerClassName()
             : "com.zaxxer.hikari.metrics.MetricsTracker"), configuration.getPoolName());

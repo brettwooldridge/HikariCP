@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.proxy.JavassistProxyFactory;
+import com.zaxxer.hikari.util.PoolUtilities;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 public class HikariConfig implements HikariConfigMBean
@@ -82,7 +83,6 @@ public class HikariConfig implements HikariConfigMBean
    private DataSource dataSource;
    private Properties dataSourceProperties;
    private IConnectionCustomizer customizer;
-   private int transactionIsolation;
    private ThreadFactory threadFactory;
 
    static {
@@ -104,7 +104,6 @@ public class HikariConfig implements HikariConfigMBean
       maxPoolSize = 10;
       maxLifetime = MAX_LIFETIME;
       isRecordMetrics = false;
-      transactionIsolation = -1;
       metricsTrackerClassName = "com.zaxxer.hikari.metrics.CodaHaleMetricsTracker";
       customizer = new IConnectionCustomizer() {
          @Override
@@ -595,9 +594,9 @@ public class HikariConfig implements HikariConfigMBean
       this.poolName = poolName;
    }
 
-   public int getTransactionIsolation()
+   public String getTransactionIsolation()
    {
-      return transactionIsolation;
+      return transactionIsolationName;
    }
 
    /**
@@ -700,14 +699,7 @@ public class HikariConfig implements HikariConfigMBean
       }
 
       if (transactionIsolationName != null) {
-         try {
-            Field field = Connection.class.getField(transactionIsolationName);
-            int level = field.getInt(null);
-            this.transactionIsolation = level;
-         }
-         catch (Exception e) {
-            throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
-         }
+         PoolUtilities.getTransactionIsolation(transactionIsolationName);
       }
 
       if (poolName == null) {
