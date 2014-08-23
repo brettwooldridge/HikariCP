@@ -312,6 +312,10 @@ We recommended using ``dataSourceClassName`` instead of ``driverClassName``/``jd
 
 A new plugin has come up for the the Play framework; [play-hikaricp](http://edulify.github.io/play-hikaricp.edulify.com/).  If you're using the excellent Play framework,  your application deserves HikariCP.  Thanks Edulify Team!
 
+### Closure Wrapper
+
+A new Closure wrapper has been created by [tomekw](https://github.com/tomekw) and can be [found here](https://github.com/tomekw/hikari-cp).
+
 ----------------------------------------------------
 
 ### Support <sup><sup>:speech_balloon:</sup></sup>
