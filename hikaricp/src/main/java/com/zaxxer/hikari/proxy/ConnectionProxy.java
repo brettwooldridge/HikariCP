@@ -108,9 +108,10 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       executorService.schedule(leakTask, leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
-   /** {@inheritDoc} */
+   /** {@inheritDoc} 
+    * @return */
    @Override
-   public final void checkException(SQLException sqle)
+   public final SQLException checkException(SQLException sqle)
    {
       String sqlState = sqle.getSQLState();
       if (sqlState != null) {
@@ -123,6 +124,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             checkException(sqle.getNextException());
          }
       }
+      return sqle;
    }
 
    /** {@inheritDoc} */
@@ -221,8 +223,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             resetConnectionState();
          }
          catch (SQLException e) {
-            checkException(e);
-            throw e;
+            throw checkException(e);
          }
          finally {
             parentPool.releaseConnection(bagEntry, forceClose);
@@ -247,8 +248,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          return trackStatement(proxyStatement);
       }
       catch (SQLException e) {
-         checkException(e);
-         throw e;
+         throw checkException(e);
       }
    }
 
@@ -262,8 +262,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          return trackStatement(proxyStatement);
       }
       catch (SQLException e) {
-         checkException(e);
-         throw e;
+         throw checkException(e);
       }
    }
 
@@ -277,8 +276,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          return trackStatement(proxyStatement);
       }
       catch (SQLException e) {
-         checkException(e);
-         throw e;
+         throw checkException(e);
       }
    }
 
@@ -292,8 +290,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          return trackStatement(proxyCallableStatement);
       }
       catch (SQLException e) {
-         checkException(e);
-         throw e;
+         throw checkException(e);
       }
    }
 
@@ -307,8 +304,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          return trackStatement(proxyCallableStatement);
       }
       catch (SQLException e) {
-         checkException(e);
-         throw e;
+         throw checkException(e);
       }
    }
 
@@ -323,8 +319,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          return trackStatement(proxyCallableStatement);
       }
       catch (SQLException e) {
-         checkException(e);
-         throw e;
+         throw checkException(e);
       }
    }
 
@@ -338,8 +333,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          return trackStatement(proxyPreparedStatement);
       }
       catch (SQLException e) {
-         checkException(e);
-         throw e;
+         throw checkException(e);
       }
    }
 
@@ -353,8 +347,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          return trackStatement(proxyPreparedStatement);
       }
       catch (SQLException e) {
-         checkException(e);
-         throw e;
+         throw checkException(e);
       }
    }
 
@@ -369,8 +362,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          return trackStatement(proxyPreparedStatement);
       }
       catch (SQLException e) {
-         checkException(e);
-         throw e;
+         throw checkException(e);
       }
    }
 
@@ -386,8 +378,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          return trackStatement(proxyPreparedStatement);
       }
       catch (SQLException e) {
-         checkException(e);
-         throw e;
+         throw checkException(e);
       }
    }
 
@@ -401,8 +392,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          return trackStatement(proxyPreparedStatement);
       }
       catch (SQLException e) {
-         checkException(e);
-         throw e;
+         throw checkException(e);
       }
    }
 
@@ -416,8 +406,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          return trackStatement(proxyPreparedStatement);
       }
       catch (SQLException e) {
-         checkException(e);
-         throw e;
+         throw checkException(e);
       }
    }
 
@@ -433,8 +422,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          return delegate.isValid(timeout);
       }
       catch (SQLException e) {
-         checkException(e);
-         throw e;
+         throw checkException(e);
       }
    }
 
@@ -448,8 +436,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          isAutoCommitDirty = (autoCommit != parentPool.isAutoCommit);
       }
       catch (SQLException e) {
-         checkException(e);
-         throw e;
+         throw checkException(e);
       }
    }
 
@@ -463,8 +450,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          isReadOnlyDirty = (readOnly != parentPool.isReadOnly);
       }
       catch (SQLException e) {
-         checkException(e);
-         throw e;
+         throw checkException(e);
       }
    }
 
@@ -478,8 +464,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          isTransactionIsolationDirty = (level != parentPool.transactionIsolation);
       }
       catch (SQLException e) {
-         checkException(e);
-         throw e;
+         throw checkException(e);
       }
    }
 
@@ -492,8 +477,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          isCatalogDirty = !catalog.equals(parentPool.catalog);
       }
       catch (SQLException e) {
-         checkException(e);
-         throw e;
+         throw checkException(e);
       }
    }
 

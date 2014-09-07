@@ -40,11 +40,6 @@ public abstract class StatementProxy implements Statement
       this.delegate = statement;
    }
 
-   protected final void checkException(SQLException e)
-   {
-      connection.checkException(e);
-   }
-
    // **********************************************************************
    //                 Overridden java.sql.Statement Methods
    // **********************************************************************
@@ -64,8 +59,7 @@ public abstract class StatementProxy implements Statement
          delegate.close();
       }
       catch (SQLException e) {
-         connection.checkException(e);
-         throw e;
+         throw connection.checkException(e);
       }
    }
 
@@ -77,8 +71,7 @@ public abstract class StatementProxy implements Statement
          return delegate.executeQuery(sql);
       }
       catch (SQLException e) {
-         connection.checkException(e);
-         throw e;
+         throw connection.checkException(e);
       }
    }
 
@@ -90,8 +83,7 @@ public abstract class StatementProxy implements Statement
          return delegate.getResultSet();
       }
       catch (SQLException e) {
-         connection.checkException(e);
-         throw e;
+         throw connection.checkException(e);
       }
    }
 
@@ -103,8 +95,7 @@ public abstract class StatementProxy implements Statement
          return delegate.getGeneratedKeys();
       }
       catch (SQLException e) {
-         connection.checkException(e);
-         throw e;
+         throw connection.checkException(e);
       }
    }
 

@@ -51,8 +51,9 @@ public interface IHikariConnectionProxy extends Connection
     * a disconnection from the server.
     *
     * @param sqle the SQLException to check
+    * @return return the passed in exception
     */
-   void checkException(SQLException sqle);
+   SQLException checkException(SQLException sqle);
 
    /**
     * Get the expiration timestamp of the connection.
