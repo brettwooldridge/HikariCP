@@ -40,6 +40,11 @@ public abstract class StatementProxy implements Statement
       this.delegate = statement;
    }
 
+   protected final SQLException checkException(SQLException e)
+   {
+      return connection.checkException(e);
+   }
+
    // **********************************************************************
    //                 Overridden java.sql.Statement Methods
    // **********************************************************************
