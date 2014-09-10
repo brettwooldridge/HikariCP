@@ -723,7 +723,7 @@ public class HikariConfig implements HikariConfigMBean
          minIdle = maxPoolSize;
       }
 
-      if (idleTimeout < TimeUnit.SECONDS.toMillis(30) && idleTimeout != 0) {
+      if (idleTimeout != 0 && idleTimeout < TimeUnit.SECONDS.toMillis(30)) {
          logger.warn("idleTimeout is less than 30000ms, did you specify the wrong time unit?  Using default instead");
          idleTimeout = IDLE_TIMEOUT;
       }
@@ -737,7 +737,7 @@ public class HikariConfig implements HikariConfigMBean
          logger.error("maxLifetime cannot be negative.");
          throw new IllegalArgumentException("maxLifetime cannot be negative.");
       }
-      else if (maxLifetime < TimeUnit.SECONDS.toMillis(120) && maxLifetime != 0) {
+      else if (maxLifetime != 0 && maxLifetime < TimeUnit.SECONDS.toMillis(120)) {
          logger.warn("maxLifetime is less than 120000ms, did you specify the wrong time unit?  Using default instead.");
          maxLifetime = MAX_LIFETIME;
       }
