@@ -111,6 +111,11 @@ public class HikariConfig implements HikariConfigMBean
          {
          }
       };
+
+      String systemProp = System.getProperty("hikaricp.configurationFile");
+      if ( systemProp != null) {
+         loadProperties(systemProp);
+      }
    }
 
    /**
@@ -135,26 +140,7 @@ public class HikariConfig implements HikariConfigMBean
    {
       this();
 
-      final File propFile = new File(propertyFileName);
-      try {
-         final InputStream is = propFile.isFile() ? new FileInputStream(propFile) : this.getClass().getResourceAsStream(propertyFileName);
-         if (is != null) {
-            try {
-               Properties props = new Properties();
-               props.load(is);
-               PropertyBeanSetter.setTargetFromProperties(this, props);
-            }
-            finally {
-               is.close();
-            }
-         }
-         else {
-            throw new IllegalArgumentException("Property file " + propertyFileName + " was not found.");
-         }
-      }
-      catch (IOException io) {
-         throw new RuntimeException("Error loading properties file", io);
-      }
+      loadProperties(propertyFileName);
    }
 
    /**
@@ -767,6 +753,30 @@ public class HikariConfig implements HikariConfigMBean
          catch (Exception e) {
             continue;
          }
+      }
+   }
+
+   private void loadProperties(String propertyFileName)
+   {
+      final File propFile = new File(propertyFileName);
+      try {
+         final InputStream is = propFile.isFile() ? new FileInputStream(propFile) : this.getClass().getResourceAsStream(propertyFileName);
+         if (is != null) {
+            try {
+               Properties props = new Properties();
+               props.load(is);
+               PropertyBeanSetter.setTargetFromProperties(this, props);
+            }
+            finally {
+               is.close();
+            }
+         }
+         else {
+            throw new IllegalArgumentException("Property file " + propertyFileName + " was not found.");
+         }
+      }
+      catch (IOException io) {
+         throw new RuntimeException("Error loading properties file", io);
       }
    }
 
