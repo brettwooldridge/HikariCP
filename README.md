@@ -43,7 +43,12 @@ Microbenchmarks were created to isolate and measure the overhead of pools using 
 </sup>
 
 ----------------------------------------------------
-***User Testimonial***<br/>
+***User Testimonials***<br/>
+
+![](https://github.com/brettwooldridge/HikariCP/wiki/tweet1.png)
+
+![](https://github.com/brettwooldridge/HikariCP/wiki/tweet2.png)
+
 The guys over at [Edulify](https://edulify.com) were experiencing connection leaks and other issues using BoneCP in their Play Framework application.  They created a [HikariCP plugin for Play Framework](http://edulify.github.io/play-hikaricp.edulify.com/) to give HikariCP a try.
 
 In their own words, *"HikariCP is supposed to be the fastest connection pool in Java land. But we did not start to use it because of speed, but because of its reliability.  Here is a cool graph that shows connections opened to PostgreSQL.  As you can see, the pool is way more stable. Also it is keeping its size at the minimum since we deploy it."*
