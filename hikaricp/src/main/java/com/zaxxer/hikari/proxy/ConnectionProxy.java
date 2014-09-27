@@ -474,7 +474,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       checkClosed();
       try {
          delegate.setCatalog(catalog);
-         isCatalogDirty = !catalog.equals(parentPool.catalog);
+         isCatalogDirty = (catalog != null && !catalog.equals(parentPool.catalog)) || (catalog == null && parentPool.catalog != null);
       }
       catch (SQLException e) {
          throw checkException(e);
