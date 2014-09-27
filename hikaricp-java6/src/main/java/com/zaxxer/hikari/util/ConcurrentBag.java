@@ -19,6 +19,7 @@ import static com.zaxxer.hikari.util.PoolUtilities.IS_JAVA7;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -76,17 +77,17 @@ public final class ConcurrentBag<T extends BagEntry>
       void addBagItem();
    }
 
-   private static final ThreadLocal<FastList<WeakReference<BagEntry>>> threadList;
+   private static final ThreadLocal<LinkedList<WeakReference<BagEntry>>> threadList;
    private final CopyOnWriteArrayList<T> sharedList;
    private final Synchronizer synchronizer;
    private final AtomicLong sequence;
    private final IBagStateListener listener;
 
    static {
-      threadList = new ThreadLocal<FastList<WeakReference<BagEntry>>>() {
+      threadList = new ThreadLocal<LinkedList<WeakReference<BagEntry>>>() {
          @Override
-         protected FastList<WeakReference<BagEntry>> initialValue() {
-            return new FastList<WeakReference<BagEntry>>(WeakReference.class);
+         protected LinkedList<WeakReference<BagEntry>> initialValue() {
+            return new LinkedList<WeakReference<BagEntry>>();
          }
       };
    }
@@ -126,7 +127,7 @@ public final class ConcurrentBag<T extends BagEntry>
    public T borrow(long timeout, final TimeUnit timeUnit) throws InterruptedException
    {
       // Try the thread-local list first
-      final FastList<WeakReference<BagEntry>> list = threadList.get();
+      final LinkedList<WeakReference<BagEntry>> list = threadList.get();
       for (int i = list.size(); i > 0; i--) {
          final BagEntry element = list.removeLast().get();
          if (element != null && element.state.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
