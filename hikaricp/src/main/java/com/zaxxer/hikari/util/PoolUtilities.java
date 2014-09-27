@@ -110,9 +110,9 @@ public final class PoolUtilities
          threadFactory = new DefaultThreadFactory(threadName, true);
       }
 
-      int processors = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
+      int processors = Math.max(1, Runtime.getRuntime().availableProcessors() / 4);
       LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>(queueSize);
-      ThreadPoolExecutor executor = new ThreadPoolExecutor(processors, processors, 2, TimeUnit.SECONDS, queue, threadFactory,
+      ThreadPoolExecutor executor = new ThreadPoolExecutor(processors, processors, 5, TimeUnit.SECONDS, queue, threadFactory,
                                                            new ThreadPoolExecutor.DiscardPolicy());
       executor.allowCoreThreadTimeOut(true);
       return executor;
