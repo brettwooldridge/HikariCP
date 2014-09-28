@@ -108,7 +108,7 @@ public final class ConcurrentBag<T extends BagEntry>
    }
 
    /**
-    * The method will borrow an IBagManagable from the bag, blocking for the
+    * The method will borrow a BagEntry from the bag, blocking for the
     * specified timeout if none are available.
     * 
     * @param timeout how long to wait before giving up, in units of unit
@@ -215,9 +215,9 @@ public final class ConcurrentBag<T extends BagEntry>
    }
 
    /**
-    * This method provides a "snaphot" in time of the IBagManagable
+    * This method provides a "snaphot" in time of the BagEntry
     * items in the bag in the specified state.  It does not "lock"
-    * or reserve items in any way.  Call {@link #reserve(IBagManagable)}
+    * or reserve items in any way.  Call {@link #reserve(BagEntry)}
     * on items in list before performing any action on them.
     *
     * @param state one of STATE_NOT_IN_USE or STATE_IN_USE
@@ -240,10 +240,10 @@ public final class ConcurrentBag<T extends BagEntry>
     * The method is used to make an item in the bag "unavailable" for
     * borrowing.  It is primarily used when wanting to operate on items
     * returned by the {@link #values(int)} method.  Items that are
-    * reserved can be removed from the bag via {@link #remove(IBagManagable)}
+    * reserved can be removed from the bag via {@link #remove(BagEntry)}
     * without the need to unreserve them.  Items that are not removed
     * from the bag can be make available for borrowing again by calling
-    * the {@link #unreserve(IBagManagable)} method.
+    * the {@link #unreserve(BagEntry)} method.
     *
     * @param bagEntry the item to reserve
     * @return true if the item was able to be reserved, false otherwise
@@ -254,7 +254,7 @@ public final class ConcurrentBag<T extends BagEntry>
    }
 
    /**
-    * This method is used to make an item reserved via {@link #reserve(IBagManagable)}
+    * This method is used to make an item reserved via {@link #reserve(BagEntry)}
     * available again for borrowing.
     *
     * @param bagEntry the item to unreserve
