@@ -77,6 +77,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    private final HikariConfig configuration;
    private final ConcurrentBag<PoolBagEntry> connectionBag;
    private final ThreadPoolExecutor addConnectionExecutor;
+   private final ThreadPoolExecutor closeConnectionExecutor;
    private final IMetricsTracker metricsTracker;
 
    private final AtomicReference<Throwable> lastConnectionFailure;
@@ -142,6 +143,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       }
 
       addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler", configuration.getThreadFactory());
+      closeConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection closer", configuration.getThreadFactory());
 
       fillPool();
 
@@ -242,6 +244,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          logPoolState("Before shutdown ");
          houseKeepingExecutorService.shutdownNow();
          addConnectionExecutor.shutdownNow();
+         closeConnectionExecutor.shutdownNow();
 
          final long start = System.currentTimeMillis();
          do {
@@ -376,10 +379,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          if (tc < 0) {
             LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
          }
-         bagEntry.connection.close();
-      }
-      catch (SQLException e) {
-         return;
+         closeConnectionExecutor.submit(new Runnable() {
+            public void run() {
+               quietlyCloseConnection(bagEntry.connection);
+            }
+         });
       }
       finally {
          connectionBag.remove(bagEntry);
