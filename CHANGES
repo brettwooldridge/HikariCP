@@ -1,18 +1,30 @@
 HikariCP Changes
 
-Changes between 2.0.0 and 2.0.2
+Changes between 2.0.1 and 2.1.0
 
  * Significant internal refactor supporting creation of new proxy instances
-   (throwaway) around Connections for each call to getConnection().
+   (throwaway) around Connections for each call to getConnection().  This
+   can avoid issues where a thread continues to try to use a connection
+   after it is closed [returned to the pool].
 
  * Allow HikariConfig(String propertyFileName) to load properties file from
-   classloader as a stream or directly from file-system.
-   
- * Fix accounting issue with totalConnections when aborting connections
+   classloader as a stream, with fall-back to the file-system.
+
+ * Allow loading of properties file specified by -Dhikaricp.configurationFile
+   system property when using the default HikariConfig() or HikariDataSource()
+   constructors.
+
+ * Fixed accounting issue with totalConnections when aborting connections
    during shutdown, causing a warning message to be logged.
  
- * Fix regression in Java 8 codeline that would prevent minimumIdle from
+ * Fixed regression in Java 8 codeline that would prevent minimumIdle from
    being set before maxPoolSize.
+
+ * Fixed regression with Tomcat carping about ThreadLocal variables held after
+   web application restart
+
+ * Change to make HikariConfig.getTransactionIsolation()/setTransactionIsolation()
+   follow proper bean semantics.
 
 Changes between 1.4.0 and 2.0.1
 
