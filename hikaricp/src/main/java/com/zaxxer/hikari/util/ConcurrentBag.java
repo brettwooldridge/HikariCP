@@ -178,7 +178,7 @@ public final class ConcurrentBag<T extends BagEntry>
          synchronizer.releaseShared(sequence.incrementAndGet());
       }
       else {
-         throw new IllegalStateException("Value was returned to the bag that was not borrowed: " + value);
+         throw new IllegalStateException("Value was returned to the bag that was not borrowed: " + bagEntry);
       }
    }
 
