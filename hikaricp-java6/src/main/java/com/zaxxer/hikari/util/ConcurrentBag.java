@@ -77,20 +77,11 @@ public final class ConcurrentBag<T extends BagEntry>
       void addBagItem();
    }
 
-   private static final ThreadLocal<LinkedList<WeakReference<BagEntry>>> threadList;
+   private final ThreadLocal<LinkedList<WeakReference<BagEntry>>> threadList;
    private final CopyOnWriteArrayList<T> sharedList;
    private final Synchronizer synchronizer;
    private final AtomicLong sequence;
    private final IBagStateListener listener;
-
-   static {
-      threadList = new ThreadLocal<LinkedList<WeakReference<BagEntry>>>() {
-         @Override
-         protected LinkedList<WeakReference<BagEntry>> initialValue() {
-            return new LinkedList<WeakReference<BagEntry>>();
-         }
-      };
-   }
 
    /**
     * Default constructor.
@@ -101,6 +92,7 @@ public final class ConcurrentBag<T extends BagEntry>
       this.synchronizer = new Synchronizer();
       this.sequence = new AtomicLong(1);
       this.listener = null;
+      this.threadList = new ThreadLocal<LinkedList<WeakReference<BagEntry>>>();
    }
 
    /**
@@ -112,6 +104,7 @@ public final class ConcurrentBag<T extends BagEntry>
       this.synchronizer = new Synchronizer();
       this.sequence = new AtomicLong(1);
       this.listener = listener;
+      this.threadList = new ThreadLocal<LinkedList<WeakReference<BagEntry>>>();
    }
 
    /**
@@ -128,10 +121,15 @@ public final class ConcurrentBag<T extends BagEntry>
    {
       // Try the thread-local list first
       final LinkedList<WeakReference<BagEntry>> list = threadList.get();
-      for (int i = list.size(); i > 0; i--) {
-         final BagEntry element = list.removeLast().get();
-         if (element != null && element.state.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
-            return (T) element;
+      if (list == null) {
+         threadList.set(new LinkedList<WeakReference<BagEntry>>());
+      }
+      else {
+         for (int i = list.size(); i > 0; i--) {
+            final BagEntry element = list.removeLast().get();
+            if (element != null && element.state.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
+               return (T) element;
+            }
          }
       }
 
@@ -174,7 +172,10 @@ public final class ConcurrentBag<T extends BagEntry>
    public void requite(final T value)
    {
       if (value.state.compareAndSet(STATE_IN_USE, STATE_NOT_IN_USE)) {
-         threadList.get().add(new WeakReference<BagEntry>(value));
+         final LinkedList<WeakReference<BagEntry>> list = threadList.get();
+         if (list != null) {
+            list.add(new WeakReference<BagEntry>(value));
+         }
          synchronizer.releaseShared(sequence.incrementAndGet());
       }
       else {
@@ -328,7 +329,7 @@ public final class ConcurrentBag<T extends BagEntry>
    /**
     * Our private synchronizer that handles notify/wait type semantics.
     */
-   private static class Synchronizer extends AbstractQueuedLongSynchronizer
+   private static final class Synchronizer extends AbstractQueuedLongSynchronizer
    {
       private static final long serialVersionUID = 104753538004341218L;
 
