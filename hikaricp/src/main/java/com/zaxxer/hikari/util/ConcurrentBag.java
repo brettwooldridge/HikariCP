@@ -125,9 +125,9 @@ public final class ConcurrentBag<T extends BagEntry>
       }
       else {
          for (int i = list.size(); i > 0; i--) {
-            final BagEntry element = list.removeLast().get();
-            if (element != null && element.state.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
-               return (T) element;
+            final BagEntry bagEntry = list.removeLast().get();
+            if (bagEntry != null && bagEntry.state.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
+               return (T) bagEntry;
             }
          }
       }
@@ -139,9 +139,9 @@ public final class ConcurrentBag<T extends BagEntry>
          long startSeq;
          do {
             startSeq = sequence.longValue();
-            for (final T reference : sharedList) {
-               if (reference.state.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
-                  return reference;
+            for (final T bagEntry : sharedList) {
+               if (bagEntry.state.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
+                  return bagEntry;
                }
             }
          } while (startSeq < sequence.longValue());
@@ -164,16 +164,16 @@ public final class ConcurrentBag<T extends BagEntry>
     * that are borrowed from the bag but never "requited" will result
     * in a memory leak.
     *
-    * @param value the value to return to the bag
+    * @param bagEntry the value to return to the bag
     * @throws NullPointerException if value is null
     * @throws IllegalStateException if the requited value was not borrowed from the bag
     */
-   public void requite(final T value)
+   public void requite(final T bagEntry)
    {
-      if (value.state.compareAndSet(STATE_IN_USE, STATE_NOT_IN_USE)) {
+      if (bagEntry.state.compareAndSet(STATE_IN_USE, STATE_NOT_IN_USE)) {
          final LinkedList<WeakReference<BagEntry>> list = threadList.get();
          if (list != null) {
-            list.add(new WeakReference<BagEntry>(value));
+            list.add(new WeakReference<BagEntry>(bagEntry));
          }
          synchronizer.releaseShared(sequence.incrementAndGet());
       }
@@ -185,25 +185,26 @@ public final class ConcurrentBag<T extends BagEntry>
    /**
     * Add a new object to the bag for others to borrow.
     *
-    * @param value an object to add to the bag
+    * @param bagEntry an object to add to the bag
     */
-   public void add(final T value)
+   public void add(final T bagEntry)
    {
-      sharedList.add(value);
+      sharedList.add(bagEntry);
       synchronizer.releaseShared(sequence.incrementAndGet());
    }
 
    /**
     * Remove a value from the bag.  This method should only be called
-    * with objects obtained by {@link #borrow(long, TimeUnit)} or {@link #reserve(IBagManagable)}.
-    * @param value the value to remove
+    * with objects obtained by {@link #borrow(long, TimeUnit)} or {@link #reserve(BagEntry)}.
+    *
+    * @param bagEntry the value to remove
     * @throws IllegalStateException if an attempt is made to remove an object
     *         from the bag that was not borrowed or reserved first
     */
-   public void remove(final T value)
+   public void remove(final T bagEntry)
    {
-      if (value.state.compareAndSet(STATE_IN_USE, STATE_REMOVED) || value.state.compareAndSet(STATE_RESERVED, STATE_REMOVED)) {
-         if (!sharedList.remove(value)) {
+      if (bagEntry.state.compareAndSet(STATE_IN_USE, STATE_REMOVED) || bagEntry.state.compareAndSet(STATE_RESERVED, STATE_REMOVED)) {
+         if (!sharedList.remove(bagEntry)) {
             throw new IllegalStateException("Attempt to remove an object from the bag that does not exist");
          }
       }
@@ -241,24 +242,24 @@ public final class ConcurrentBag<T extends BagEntry>
     * from the bag can be make available for borrowing again by calling
     * the {@link #unreserve(IBagManagable)} method.
     *
-    * @param value the item to reserve
+    * @param bagEntry the item to reserve
     * @return true if the item was able to be reserved, false otherwise
     */
-   public boolean reserve(final T value)
+   public boolean reserve(final T bagEntry)
    {
-      return value.state.compareAndSet(STATE_NOT_IN_USE, STATE_RESERVED);
+      return bagEntry.state.compareAndSet(STATE_NOT_IN_USE, STATE_RESERVED);
    }
 
    /**
     * This method is used to make an item reserved via {@link #reserve(IBagManagable)}
     * available again for borrowing.
     *
-    * @param value the item to unreserve
+    * @param bagEntry the item to unreserve
     */
-   public void unreserve(final T value)
+   public void unreserve(final T bagEntry)
    {
       final long checkInSeq = sequence.incrementAndGet();
-      if (!value.state.compareAndSet(STATE_RESERVED, STATE_NOT_IN_USE)) {
+      if (!bagEntry.state.compareAndSet(STATE_RESERVED, STATE_NOT_IN_USE)) {
          throw new IllegalStateException("Attempt to relinquish an object to the bag that was not reserved");
       }
 
@@ -299,22 +300,22 @@ public final class ConcurrentBag<T extends BagEntry>
 
    public void dumpState()
    {
-      sharedList.forEach(reference -> {
-         switch (reference.state.get()) {
+      for (T bagEntry : sharedList) {
+         switch (bagEntry.state.get()) {
          case STATE_IN_USE:
-            LOGGER.info(reference.toString() + " state IN_USE");
+            LOGGER.info(bagEntry.toString() + " state IN_USE");
             break;
          case STATE_NOT_IN_USE:
-            LOGGER.info(reference.toString() + " state NOT_IN_USE");
+            LOGGER.info(bagEntry.toString() + " state NOT_IN_USE");
             break;
          case STATE_REMOVED:
-            LOGGER.info(reference.toString() + " state REMOVED");
+            LOGGER.info(bagEntry.toString() + " state REMOVED");
             break;
          case STATE_RESERVED:
-            LOGGER.info(reference.toString() + " state RESERVED");
+            LOGGER.info(bagEntry.toString() + " state RESERVED");
             break;
          }
-      });
+      }
    }
 
    /**
