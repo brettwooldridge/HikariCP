@@ -17,7 +17,6 @@ package com.zaxxer.hikari.util;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -76,7 +75,7 @@ public final class ConcurrentBag<T extends BagEntry>
       void addBagItem();
    }
 
-   private final ThreadLocal<LinkedList<WeakReference<BagEntry>>> threadList;
+   private final ThreadLocal<ArrayList<WeakReference<BagEntry>>> threadList;
    private final CopyOnWriteArrayList<T> sharedList;
    private final Synchronizer synchronizer;
    private final AtomicLong sequence;
@@ -91,7 +90,7 @@ public final class ConcurrentBag<T extends BagEntry>
       this.synchronizer = new Synchronizer();
       this.sequence = new AtomicLong(1);
       this.listener = null;
-      this.threadList = new ThreadLocal<LinkedList<WeakReference<BagEntry>>>();
+      this.threadList = new ThreadLocal<ArrayList<WeakReference<BagEntry>>>();
    }
 
    /**
@@ -103,7 +102,7 @@ public final class ConcurrentBag<T extends BagEntry>
       this.synchronizer = new Synchronizer();
       this.sequence = new AtomicLong(1);
       this.listener = listener;
-      this.threadList = new ThreadLocal<LinkedList<WeakReference<BagEntry>>>();
+      this.threadList = new ThreadLocal<ArrayList<WeakReference<BagEntry>>>();
    }
 
    /**
@@ -119,13 +118,13 @@ public final class ConcurrentBag<T extends BagEntry>
    public T borrow(long timeout, final TimeUnit timeUnit) throws InterruptedException
    {
       // Try the thread-local list first
-      final LinkedList<WeakReference<BagEntry>> list = threadList.get();
+      final ArrayList<WeakReference<BagEntry>> list = threadList.get();
       if (list == null) {
-         threadList.set(new LinkedList<WeakReference<BagEntry>>());
+         threadList.set(new ArrayList<WeakReference<BagEntry>>(16));
       }
       else {
-         for (int i = list.size(); i > 0; i--) {
-            final BagEntry bagEntry = list.removeLast().get();
+         for (int i = list.size() - 1; i >= 0; i--) {
+            final BagEntry bagEntry = list.remove(i).get();
             if (bagEntry != null && bagEntry.state.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
                return (T) bagEntry;
             }
@@ -171,7 +170,7 @@ public final class ConcurrentBag<T extends BagEntry>
    public void requite(final T bagEntry)
    {
       if (bagEntry.state.compareAndSet(STATE_IN_USE, STATE_NOT_IN_USE)) {
-         final LinkedList<WeakReference<BagEntry>> list = threadList.get();
+         final ArrayList<WeakReference<BagEntry>> list = threadList.get();
          if (list != null) {
             list.add(new WeakReference<BagEntry>(bagEntry));
          }
