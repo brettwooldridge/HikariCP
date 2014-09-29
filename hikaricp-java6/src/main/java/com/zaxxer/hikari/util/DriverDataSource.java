@@ -48,7 +48,7 @@ public final class DriverDataSource implements DataSource
          }
       }
       catch (SQLException e) {
-         throw new RuntimeException("Unable to get driver for JDBC URL " + jdbcUrl);
+         throw new RuntimeException("Unable to get driver for JDBC URL " + jdbcUrl, e);
       }
    }
 
