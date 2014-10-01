@@ -132,9 +132,17 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       this.isJdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
       this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
       this.transactionIsolation = PoolUtilities.getTransactionIsolation(configuration.getTransactionIsolation());
-      this.isRecordMetrics = configuration.isRecordMetrics();
-      this.metricsTracker = MetricsFactory.createMetricsTracker((isRecordMetrics ? configuration.getMetricsTrackerClassName()
-            : "com.zaxxer.hikari.metrics.MetricsTracker"), configuration.getPoolName());
+
+      IMetricsTracker metricsTracker = configuration.getMetricsTracker();
+      if (metricsTracker == null) {
+         this.isRecordMetrics = configuration.isRecordMetrics();
+         this.metricsTracker = MetricsFactory.createMetricsTracker((isRecordMetrics ? configuration.getMetricsTrackerClassName()
+               : "com.zaxxer.hikari.metrics.MetricsTracker"), configuration.getPoolName());
+      }
+      else {
+         this.metricsTracker = metricsTracker;
+         this.isRecordMetrics = true;
+      }
 
       this.dataSource = initializeDataSource();
 

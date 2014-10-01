@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.proxy.JavassistProxyFactory;
 import com.zaxxer.hikari.util.PoolUtilities;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
+import com.zaxxer.hikari.metrics.IMetricsTracker;
 
 public class HikariConfig implements HikariConfigMBean
 {
@@ -79,6 +80,7 @@ public class HikariConfig implements HikariConfigMBean
    private boolean isJdbc4connectionTest;
    private boolean isIsolateInternalQueries;
    private boolean isRecordMetrics;
+   private IMetricsTracker metricsTracker;
    private boolean isRegisterMbeans;
    private DataSource dataSource;
    private Properties dataSourceProperties;
@@ -454,6 +456,31 @@ public class HikariConfig implements HikariConfigMBean
    public void setRecordMetrics(boolean recordMetrics)
    {
       this.isRecordMetrics = recordMetrics;
+      if (!recordMetrics) {
+         this.metricsTracker = null;
+      }
+   }
+
+   /**
+   * Get the externally-created metrics tracker to use for metrics.
+   * @return the externally-created metrics tracker 
+   */
+   public IMetricsTracker getMetricsTracker()
+   {
+      return metricsTracker;
+   }
+
+   /**
+   * Set the externally-created metrics tracker to use for metrics.
+   * A non-null value overrides anything passed to setMetricsTrackerClassName.
+   * @param metricsTracker the externally-created metrics tracker 
+   */
+   public void setMetricsTracker(IMetricsTracker metricsTracker)
+   {
+      this.metricsTracker = metricsTracker;
+      if (metricsTracker != null) {
+         isRecordMetrics = true;
+      }
    }
 
    public boolean isRegisterMbeans()
