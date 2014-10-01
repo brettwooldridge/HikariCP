@@ -199,11 +199,23 @@ before timing out.  *Default: 10*
 
 :abc:``username``<br/>
 This property sets the default authentication username used when obtaining *Connections* from
-the underlying driver.  *Default: none*
+the underlying driver.  Note that for DataSources this works in a very deterministic fashion by
+calling ``DataSource.getConnection(*username*, password)`` on the underlying DataSource.  However,
+for Driver-based configurations, every driver is different.  In the case of Driver-based, HikariCP
+will use this ``username`` property to set a ``user`` property in the ``Properties`` passed to the
+driver's ``DriverManager.getConnection(jdbcUrl, props)`` call.  If this is not what you need,
+skip this method entirely and call ``addDataSourceProperty("username", ...)``, for example.
+*Default: none*
 
 :abc:``password``<br/>
 This property sets the default authentication password used when obtaining *Connections* from
-the underlying driver.  *Default: none*
+the underlying driver. Note that for DataSources this works in a very deterministic fashion by
+calling ``DataSource.getConnection(username, *password*)`` on the underlying DataSource.  However,
+for Driver-based configurations, every driver is different.  In the case of Driver-based, HikariCP
+will use this ``password`` property to set a ``password`` property in the ``Properties`` passed to the
+driver's ``DriverManager.getConnection(jdbcUrl, props)`` call.  If this is not what you need,
+skip this method entirely and call ``addDataSourceProperty("pass", ...)``, for example.
+*Default: none*
 
 :abc:``poolName``<br/>
 This property represents a user-defined name for the connection pool and appears mainly
