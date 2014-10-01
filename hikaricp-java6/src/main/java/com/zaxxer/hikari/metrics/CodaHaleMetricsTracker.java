@@ -24,31 +24,45 @@ import com.zaxxer.hikari.pool.HikariPool;
 public final class CodaHaleMetricsTracker extends MetricsTracker
 {
    private MetricRegistry registry;
-   private Timer connectionObtainTimer;
-   private Histogram connectionUsage;
+   private final Timer connectionObtainTimer;
+   private final Histogram connectionUsage;
 
-   public CodaHaleMetricsTracker(String poolName)
+   public CodaHaleMetricsTracker(final HikariPool pool)
    {
+      super(pool);
+
       registry = new MetricRegistry();
-      connectionObtainTimer = registry.timer(MetricRegistry.name(HikariPool.class, "connection", "wait"));
-      connectionUsage = registry.histogram(MetricRegistry.name(HikariPool.class, "connection", "usage"));
+      connectionObtainTimer = registry.timer(MetricRegistry.name(HikariPool.class, pool.getConfiguration().getPoolName() + "-connection", "wait"));
+      connectionUsage = registry.histogram(MetricRegistry.name(HikariPool.class, pool.getConfiguration().getPoolName() + "-connection", "usage"));
    }
 
+   /** {@inheritDoc} */
    @Override
    public Context recordConnectionRequest(long requestTime)
    {
       return new Context(connectionObtainTimer);
    }
 
+   /** {@inheritDoc} */
    @Override
    public void recordConnectionUsage(long usageMilleseconds)
    {
       connectionUsage.update(usageMilleseconds);
    }
 
+   public Timer getConnectionAcquisitionTimer()
+   {
+      return connectionObtainTimer;
+   }
+
+   public Histogram getConnectionDurationHistogram()
+   {
+      return connectionUsage;
+   }
+
    public static final class Context extends MetricsContext
    {
-      Timer.Context innerContext;
+      final Timer.Context innerContext;
 
       Context(Timer timer)
       {

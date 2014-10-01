@@ -16,8 +16,10 @@
 
 package com.zaxxer.hikari.metrics;
 
+import com.zaxxer.hikari.pool.HikariPool;
+
 /**
- * This class does absolutely nothing.
+ * This class only supports realtime, not historical metrics.
  *
  * @author Brett Wooldridge
  */
@@ -25,20 +27,51 @@ public class MetricsTracker implements IMetricsTracker
 {
    public static final MetricsContext NO_CONTEXT = new MetricsContext();
 
-   public MetricsTracker()
+   protected final HikariPool pool;
+
+   public MetricsTracker(final HikariPool pool)
    {
+      this.pool = pool;
    }
 
-   public MetricsTracker(String poolName)
-   {
-   }
-
+   /** {@inheritDoc} */
+   @Override
    public MetricsContext recordConnectionRequest(long requestTime)
    {
       return NO_CONTEXT;
    }
 
+   /** {@inheritDoc} */
+   @Override
    public void recordConnectionUsage(long usageMilleseconds)
    {
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public int getIdleConnections()
+   {
+      return pool.getIdleConnections();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public int getActiveConnections()
+   {
+      return pool.getActiveConnections();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public int getTotalConnections()
+   {
+      return pool.getTotalConnections();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public int getThreadsAwaitingConnection()
+   {
+      return pool.getThreadsAwaitingConnection();
    }
 }

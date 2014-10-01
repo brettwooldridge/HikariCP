@@ -16,6 +16,7 @@
 
 package com.zaxxer.hikari.metrics;
 
+import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.util.PoolUtilities;
 
 /**
@@ -29,8 +30,8 @@ public final class MetricsFactory
       // private contructor
    }
 
-   public static final IMetricsTracker createMetricsTracker(String metricsClassName, String poolName)
+   public static final IMetricsTracker createMetricsTracker(String metricsClassName, HikariPool pool)
    {
-      return PoolUtilities.createInstance(metricsClassName, IMetricsTracker.class, poolName);
+      return PoolUtilities.createInstance(metricsClassName, IMetricsTracker.class, pool);
    }
 }

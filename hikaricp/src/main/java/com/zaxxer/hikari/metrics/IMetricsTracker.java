@@ -30,7 +30,7 @@ public interface IMetricsTracker
     * @param startTime the timestamp of the start time as returned by System.currentTimeMillis() 
     * @return an instance of MetricsContext
     */
-   public MetricsContext recordConnectionRequest(long startTime);
+   MetricsContext recordConnectionRequest(long startTime);
 
    /**
     * This method is called when a Connection is closed, with the total time in milliseconds
@@ -38,7 +38,35 @@ public interface IMetricsTracker
     *
     * @param usageMilleseconds the Connection usage time in milliseconds
     */
-   public void recordConnectionUsage(long usageMilleseconds);
+   void recordConnectionUsage(long usageMilleseconds);
+
+   /**
+    * Get the current number of idle connections.
+    *
+    * @return the number of idle connections in the pool
+    */
+   int getIdleConnections();
+
+   /**
+    * Get the current number of active (in-use) connections.
+    *
+    * @return the number of active connections in the pool
+    */
+   int getActiveConnections();
+
+   /**
+    * Get the current total number of connections.
+    *
+    * @return the total number of connections in the pool
+    */
+   int getTotalConnections();
+
+   /**
+    * Get the current number of threads awaiting a connection.
+    *
+    * @return the number of awaiting threads
+    */
+   int getThreadsAwaitingConnection();
 
    /**
     * A base instance of a MetricsContext.  Classes extending this class should exhibit the

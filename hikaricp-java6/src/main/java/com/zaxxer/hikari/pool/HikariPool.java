@@ -134,7 +134,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       this.transactionIsolation = PoolUtilities.getTransactionIsolation(configuration.getTransactionIsolation());
       this.isRecordMetrics = configuration.isRecordMetrics();
       this.metricsTracker = MetricsFactory.createMetricsTracker((isRecordMetrics ? configuration.getMetricsTrackerClassName()
-            : "com.zaxxer.hikari.metrics.MetricsTracker"), configuration.getPoolName());
+            : "com.zaxxer.hikari.metrics.MetricsTracker"), this);
 
       this.dataSource = initializeDataSource();
 
@@ -273,6 +273,26 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    public DataSource getDataSource()
    {
       return dataSource;
+   }
+
+   /**
+    * Get the pool configuration object.
+    *
+    * @return the {@link HikariConfig} for this pool
+    */
+   public HikariConfig getConfiguration()
+   {
+      return configuration;
+   }
+
+   /**
+    * Get the metrics tracker for this pool.
+    *
+    * @return the metrics tracker
+    */
+   public IMetricsTracker getMetricsTracker()
+   {
+      return metricsTracker;
    }
 
    @Override

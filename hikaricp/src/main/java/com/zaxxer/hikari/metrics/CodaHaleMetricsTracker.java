@@ -27,23 +27,37 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    private final Timer connectionObtainTimer;
    private final Histogram connectionUsage;
 
-   public CodaHaleMetricsTracker(String poolName)
+   public CodaHaleMetricsTracker(final HikariPool pool)
    {
+      super(pool);
+
       registry = new MetricRegistry();
-      connectionObtainTimer = registry.timer(MetricRegistry.name(HikariPool.class, poolName + "-connection", "wait"));
-      connectionUsage = registry.histogram(MetricRegistry.name(HikariPool.class, poolName + "-connection", "usage"));
+      connectionObtainTimer = registry.timer(MetricRegistry.name(HikariPool.class, pool.getConfiguration().getPoolName() + "-connection", "wait"));
+      connectionUsage = registry.histogram(MetricRegistry.name(HikariPool.class, pool.getConfiguration().getPoolName() + "-connection", "usage"));
    }
 
+   /** {@inheritDoc} */
    @Override
    public Context recordConnectionRequest(long requestTime)
    {
       return new Context(connectionObtainTimer);
    }
 
+   /** {@inheritDoc} */
    @Override
    public void recordConnectionUsage(long usageMilleseconds)
    {
       connectionUsage.update(usageMilleseconds);
+   }
+
+   public Timer getConnectionAcquisitionTimer()
+   {
+      return connectionObtainTimer;
+   }
+
+   public Histogram getConnectionDurationHistogram()
+   {
+      return connectionUsage;
    }
 
    public static final class Context extends MetricsContext
