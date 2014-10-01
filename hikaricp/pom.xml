@@ -72,8 +72,17 @@
             <configuration>
                <instructions>
                   <Bundle-Name>HikariCP</Bundle-Name>
-                  <Export-Package>com.zaxxer.hikari,com.zaxxer.hikari.hibernate</Export-Package>
+                  <Export-Package>
+                     com.zaxxer.hikari,
+                     com.zaxxer.hikari.hibernate,
+                     com.zaxxer.hikari.metrics
+                  </Export-Package>
                   <Private-Package>com.zaxxer.hikari.*</Private-Package>
+                  <_exportcontents>
+                     com.zaxxer.hikari.pool,
+                     com.zaxxer.hikari.util,
+                     com.zaxxer.hikari.proxy
+                  </_exportcontents>
                   <Import-Package>
                      javassist.*,
                      javax.management,
@@ -83,7 +92,7 @@
                      javax.sql.rowset,
                      javax.sql.rowset.serial,
                      javax.sql.rowset.spi,
-                     com.codahale.metrics;;resolution:=optional,
+                     com.codahale.metrics;resolution:=optional,
                      org.slf4j,
                      org.hibernate;resolution:=optional,
                      org.hibernate.cfg;resolution:=optional,
