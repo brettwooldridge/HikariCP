@@ -24,14 +24,14 @@ import com.zaxxer.hikari.pool.HikariPool;
 public final class CodaHaleMetricsTracker extends MetricsTracker
 {
    private MetricRegistry registry;
-   private Timer connectionObtainTimer;
-   private Histogram connectionUsage;
+   private final Timer connectionObtainTimer;
+   private final Histogram connectionUsage;
 
    public CodaHaleMetricsTracker(String poolName)
    {
       registry = new MetricRegistry();
-      connectionObtainTimer = registry.timer(MetricRegistry.name(HikariPool.class, "connection", "wait"));
-      connectionUsage = registry.histogram(MetricRegistry.name(HikariPool.class, "connection", "usage"));
+      connectionObtainTimer = registry.timer(MetricRegistry.name(HikariPool.class, poolName + "-connection", "wait"));
+      connectionUsage = registry.histogram(MetricRegistry.name(HikariPool.class, poolName + "-connection", "usage"));
    }
 
    @Override
@@ -48,7 +48,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
 
    public static final class Context extends MetricsContext
    {
-      Timer.Context innerContext;
+      final Timer.Context innerContext;
 
       Context(Timer timer)
       {
