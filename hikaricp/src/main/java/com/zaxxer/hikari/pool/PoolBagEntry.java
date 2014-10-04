@@ -35,7 +35,18 @@ public final class PoolBagEntry extends BagEntry
    PoolBagEntry(final Connection connection, long maxLifetime) {
       this.connection = connection;
       expirationTime = (maxLifetime > 0 ? System.currentTimeMillis() + maxLifetime : Long.MAX_VALUE);
-      lastAccess = expirationTime;
+      lastAccess = System.currentTimeMillis();
+   }
+
+   @Override
+   public String toString()
+   {
+      StringBuilder sb = new StringBuilder();
+      sb.append("Connection:   ").append(connection).append('\n');
+      sb.append("Expiration:   ").append(expirationTime).append('\n');
+      sb.append("Last  access: ").append(lastAccess).append('\n');
+      sb.append("Last open:    ").append(lastOpenTime);
+      return sb.toString();
    }
 }
 

@@ -385,16 +385,12 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    private void closeConnection(final PoolBagEntry bagEntry)
    {
-      try {
-         int tc = totalConnections.decrementAndGet();
-         if (tc < 0) {
-            LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
-         }
-         closeConnectionExecutor.submit(() -> { quietlyCloseConnection(bagEntry.connection); });
+      int tc = totalConnections.decrementAndGet();
+      connectionBag.remove(bagEntry);
+      if (tc < 0) {
+         LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
       }
-      finally {
-         connectionBag.remove(bagEntry);
-      }
+      closeConnectionExecutor.submit(() -> { quietlyCloseConnection(bagEntry.connection); });
    }
 
    /**
@@ -469,7 +465,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          }
       }
       catch (SQLException e) {
-         LOGGER.warn("Exception during keep alive check, that means the connection must be dead.", e);
+         LOGGER.warn("Exception during keep alive check, that means the connection (" + connection + ") must be dead.", e);
          return false;
       }
    }
