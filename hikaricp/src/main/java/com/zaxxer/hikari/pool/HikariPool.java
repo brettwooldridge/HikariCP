@@ -241,7 +241,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          logPoolState("Before shutdown ");
          houseKeepingExecutorService.shutdownNow();
          addConnectionExecutor.shutdownNow();
-         closeConnectionExecutor.shutdownNow();
 
          final long start = System.currentTimeMillis();
          do {
@@ -249,6 +248,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             abortActiveConnections();
          }
          while ((getIdleConnections() > 0 || getActiveConnections() > 0) && elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5));
+
+         closeConnectionExecutor.shutdown();
+         closeConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
 
          logPoolState("After shutdown ");
 
