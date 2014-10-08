@@ -108,8 +108,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       executorService.schedule(leakTask, leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
-   /** {@inheritDoc} 
-    * @return */
+   /** {@inheritDoc} */
    @Override
    public final SQLException checkException(SQLException sqle)
    {

@@ -96,6 +96,8 @@ public final class ConcurrentBag<T extends BagEntry>
 
    /**
     * Construct a ConcurrentBag with the specified listener.
+    *
+    * @param listener the IBagStateListener to attach to this bag
     */
    public ConcurrentBag(IBagStateListener listener)
    {
