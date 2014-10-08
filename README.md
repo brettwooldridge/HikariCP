@@ -12,7 +12,7 @@ _Java 8 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>2.0.1</version>
+        <version>2.1.0</version>
         <scope>compile</scope>
     </dependency>
 ```
@@ -21,7 +21,7 @@ _Java 6 and Java 7 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP-java6</artifactId>
-        <version>2.0.1</version>
+        <version>2.1.0</version>
         <scope>compile</scope>
     </dependency>
 ```
@@ -38,7 +38,7 @@ Microbenchmarks were created to isolate and measure the overhead of pools using 
  * One *Statement Cycle* is defined as single ``Connection.prepareStatement()``, ``Statement.execute()``, ``Statement.close()``.
 
 <sup>
-<sup>1</sup> Versions: HikariCP 2.0.2, BoneCP 0.8.0, Tomcat 8.0.9, Vibur 1.2.0, C3P0 0.9.5-pre8, Java 8u20 <br/>
+<sup>1</sup> Versions: HikariCP 2.1.0, BoneCP 0.8.0, Tomcat 8.0.9, Vibur 1.2.0, C3P0 0.9.5-pre8, Java 8u20 <br/>
 <sup>2</sup> Java options: -server -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -Xmx512m <br/>
 </sup>
 
