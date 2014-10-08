@@ -141,8 +141,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          HikariMBeanElf.registerMBeans(configuration, this);
       }
 
-      addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler", configuration.getThreadFactory());
-      closeConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection closer", configuration.getThreadFactory());
+      addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory());
+      closeConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection closer (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory());
 
       fillPool();
 
