@@ -26,6 +26,9 @@ Changes between 2.0.1 and 2.1.0
  * Change to make HikariConfig.getTransactionIsolation()/setTransactionIsolation()
    follow proper bean semantics.
 
+ * Fixed issue where connections created in the pool would skip the alive check
+   the first time they were used.
+
 Changes between 1.4.0 and 2.0.1
 
  * Split project into Java 6/7 and Java 8 components.
