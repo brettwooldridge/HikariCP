@@ -42,9 +42,10 @@ public final class ProxyFactory
     *
     * @param pool the {@link HikariPool} that will own this proxy
     * @param bagEntry the PoolBagEntry entry for this proxy
+    * @param leakTask a leak detetection task
     * @return a proxy that wraps the specified {@link Connection}
     */
-   public static IHikariConnectionProxy getProxyConnection(final HikariPool pool, final PoolBagEntry bagEntry)
+   public static IHikariConnectionProxy getProxyConnection(final HikariPool pool, final PoolBagEntry bagEntry, final LeakTask leakTask)
    {
       // Body is injected by JavassistProxyFactory
       return null;

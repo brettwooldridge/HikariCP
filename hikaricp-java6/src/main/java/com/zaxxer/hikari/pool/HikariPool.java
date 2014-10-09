@@ -48,6 +48,7 @@ import com.zaxxer.hikari.metrics.IMetricsTracker.MetricsContext;
 import com.zaxxer.hikari.metrics.MetricsFactory;
 import com.zaxxer.hikari.metrics.MetricsTracker;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
+import com.zaxxer.hikari.proxy.LeakTask;
 import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
@@ -64,12 +65,13 @@ import com.zaxxer.hikari.util.PropertyBeanSetter;
  */
 public final class HikariPool implements HikariPoolMBean, IBagStateListener
 {
-   private static final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
+   private static final Logger LOGGER;
+   private static final LeakTask NO_LEAK;
 
-   public int transactionIsolation;
    public final String catalog;
    public final boolean isAutoCommit;
    public final boolean isReadOnly;
+   public int transactionIsolation;
 
    private final DataSource dataSource;
 
@@ -94,6 +96,14 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
    private volatile long connectionTimeout;
    private volatile boolean isShutdown;
+
+   // static initializer
+   static {
+      LOGGER = LoggerFactory.getLogger(HikariPool.class);
+      NO_LEAK = new LeakTask() {
+         public void cancel() {};
+      };
+   }
 
    /**
     * Construct a HikariPool with the specified configuration.
@@ -142,8 +152,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          HikariMBeanElf.registerMBeans(configuration, this);
       }
 
-      addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler", configuration.getThreadFactory());
-      closeConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection closer", configuration.getThreadFactory());
+      addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory());
+      closeConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection closer (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory());
 
       fillPool();
 
@@ -181,11 +191,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                continue;
             }
 
-            final IHikariConnectionProxy proxyConnection = ProxyFactory.getProxyConnection(this, bagEntry);
-
-            if (leakDetectionThreshold != 0) {
-               proxyConnection.captureStack(leakDetectionThreshold, houseKeepingExecutorService);
-            }
+            LeakTask leakTask = (leakDetectionThreshold == 0) ? NO_LEAK : new LeakTask(leakDetectionThreshold, houseKeepingExecutorService);
+            
+            final IHikariConnectionProxy proxyConnection = ProxyFactory.getProxyConnection(this, bagEntry, leakTask);
 
             if (isRecordMetrics) {
                bagEntry.lastOpenTime = now;

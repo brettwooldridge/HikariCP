@@ -19,7 +19,6 @@ package com.zaxxer.hikari.proxy;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.concurrent.ScheduledExecutorService;
 
 import com.zaxxer.hikari.pool.PoolBagEntry;
 
@@ -37,14 +36,6 @@ public interface IHikariConnectionProxy extends Connection
     * @return the PoolBagEntry
     */
    PoolBagEntry getPoolBagEntry();
-
-   /**
-    * Catpure the stack and start leak detection.
-    *
-    * @param leakThreshold the number of milliseconds before a leak is reported
-    * @param houseKeepingExecutorService the executor service to run the leak detection task with
-    */
-   void captureStack(long leakThreshold, ScheduledExecutorService houseKeepingExecutorService);
 
    /**
     * Check if the provided SQLException contains a SQLSTATE that indicates

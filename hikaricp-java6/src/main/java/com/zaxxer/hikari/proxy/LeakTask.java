@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Brett Wooldridge
+ * Copyright (C) 2013, 2014 Brett Wooldridge
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,36 @@
 
 package com.zaxxer.hikari.proxy;
 
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.LoggerFactory;
 
 /**
+ * A Runnable that is scheduled in the future to report leaks.  The ScheduledFuture is
+ * cancelled if the connection is closed before the leak time expires.
+ *
  * @author Brett Wooldridge
  */
-class LeakTask implements Runnable
+public class LeakTask implements Runnable
 {
    private final long leakTime;
+   private final ScheduledFuture<?> scheduledFuture;
    private StackTraceElement[] stackTrace;
 
-   public LeakTask(StackTraceElement[] stackTrace, long leakDetectionThreshold)
+   public LeakTask()
    {
-      this.stackTrace = stackTrace;
+      leakTime = 0;
+      scheduledFuture = null;
+   }
+
+   public LeakTask(final long leakDetectionThreshold, final ScheduledExecutorService executorService)
+   {
+      this.stackTrace = Thread.currentThread().getStackTrace();
+      
       this.leakTime = System.currentTimeMillis() + leakDetectionThreshold;
+      scheduledFuture = executorService.schedule(this, leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
    /** {@inheritDoc} */
@@ -37,8 +53,11 @@ class LeakTask implements Runnable
    public void run()
    {
       if (System.currentTimeMillis() > leakTime) {
+         StackTraceElement[] trace = new StackTraceElement[stackTrace.length - 3];
+         System.arraycopy(stackTrace, 4, trace, 0, trace.length);
+
          Exception e = new Exception();
-         e.setStackTrace(stackTrace);
+         e.setStackTrace(trace);
          LoggerFactory.getLogger(LeakTask.class).warn("Connection leak detection triggered, stack trace follows", e);
          stackTrace = null;
       }
@@ -47,5 +66,8 @@ class LeakTask implements Runnable
    public void cancel()
    {
       stackTrace = null;
+      if (scheduledFuture != null) {
+         scheduledFuture.cancel(false);
+      }
    }
 }

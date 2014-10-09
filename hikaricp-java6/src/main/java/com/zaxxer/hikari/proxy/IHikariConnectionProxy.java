@@ -19,7 +19,6 @@ package com.zaxxer.hikari.proxy;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.concurrent.ScheduledExecutorService;
 
 import com.zaxxer.hikari.pool.PoolBagEntry;
 
@@ -39,14 +38,6 @@ public interface IHikariConnectionProxy extends Connection
    PoolBagEntry getPoolBagEntry();
 
    /**
-    * Catpure the stack and start leak detection.
-    *
-    * @param leakThreshold the number of milliseconds before a leak is reported
-    * @param houseKeepingExecutorService the executor service to run the leak detection task with
-    */
-   void captureStack(long leakThreshold, ScheduledExecutorService houseKeepingExecutorService);
-
-   /**
     * Check if the provided SQLException contains a SQLSTATE that indicates
     * a disconnection from the server.
     *
@@ -54,27 +45,6 @@ public interface IHikariConnectionProxy extends Connection
     * @return return the passed in exception
     */
    SQLException checkException(SQLException sqle);
-
-   /**
-    * Get the expiration timestamp of the connection.
-    *
-    * @return the expiration timestamp, or Long.MAX_VALUE if there is no maximum lifetime
-    */
-   long getExpirationTime();
-
-   /**
-    * Get the last access timestamp of the connection.
-    *
-    * @return the last access timestamp
-    */
-   long getLastAccess();
-
-   /**
-    * Get the timestamp of when the connection was removed from the pool for use.
-    *
-    * @return the timestamp the connection started to be used in the most recent request
-    */
-   long getLastOpenTime();
 
    /**
     * Return the broken state of the connection.  If checkException() detected
