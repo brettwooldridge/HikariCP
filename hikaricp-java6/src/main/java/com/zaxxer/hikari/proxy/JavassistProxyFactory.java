@@ -118,7 +118,7 @@ public final class JavassistProxyFactory
          }
       }
 
-      proxyCt.toClass(classPool.getClassLoader(), null);
+      proxyCt.toClass(classPool.getClassLoader(), getClass().getProtectionDomain());
    }
 
    /**
@@ -189,7 +189,7 @@ public final class JavassistProxyFactory
          targetCt.debugWriteFile(System.getProperty("java.io.tmpdir"));
       }
 
-      return targetCt.toClass(classPool.getClassLoader(), null);
+      return targetCt.toClass(classPool.getClassLoader(), getClass().getProtectionDomain());
    }
 
    private boolean isThrowsSqlException(CtMethod method)
