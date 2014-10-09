@@ -46,8 +46,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    private final HikariPool parentPool;
    private final PoolBagEntry bagEntry;
-   private final FastList<Statement> openStatements;
    private final LeakTask leakTask;
+   private FastList<Statement> openStatements;
    
    private boolean forceClose;
    private boolean isAnythingDirty;
@@ -187,21 +187,19 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
          leakTask.cancel();
 
-         try {
-            final int size = openStatements.size();
-            if (size > 0) {
-               for (int i = 0; i < size; i++) {
-                  try {
-                     openStatements.get(i).close();
-                  }
-                  catch (SQLException e) {
-                     checkException(e);
-                  }
+         final int size = openStatements.size();
+         if (size > 0) {
+            for (int i = 0; i < size; i++) {
+               try {
+                  openStatements.get(i).close();
                }
-
-               openStatements.clear();
+               catch (SQLException e) {
+                  checkException(e);
+               }
             }
+         }
 
+         try {
             if (isAnythingDirty) {
                resetConnectionState();
             }
@@ -240,11 +238,11 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    /** {@inheritDoc} */
    @Override
-   public final Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException
+   public final Statement createStatement(int resultSetType, int concurrency) throws SQLException
    {
       checkClosed();
       try {
-         Statement proxyStatement = ProxyFactory.getProxyStatement(this, delegate.createStatement(resultSetType, resultSetConcurrency));
+         Statement proxyStatement = ProxyFactory.getProxyStatement(this, delegate.createStatement(resultSetType, concurrency));
          return trackStatement(proxyStatement);
       }
       catch (SQLException e) {
@@ -254,11 +252,11 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    /** {@inheritDoc} */
    @Override
-   public final Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
+   public final Statement createStatement(int resultSetType, int concurrency, int holdability) throws SQLException
    {
       checkClosed();
       try {
-         Statement proxyStatement = ProxyFactory.getProxyStatement(this, delegate.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability));
+         Statement proxyStatement = ProxyFactory.getProxyStatement(this, delegate.createStatement(resultSetType, concurrency, holdability));
          return trackStatement(proxyStatement);
       }
       catch (SQLException e) {
@@ -272,8 +270,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       checkClosed();
       try {
-         CallableStatement proxyCallableStatement = ProxyFactory.getProxyCallableStatement(this, delegate.prepareCall(sql));
-         return trackStatement(proxyCallableStatement);
+         CallableStatement pcs = ProxyFactory.getProxyCallableStatement(this, delegate.prepareCall(sql));
+         return trackStatement(pcs);
       }
       catch (SQLException e) {
          throw checkException(e);
@@ -282,12 +280,12 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    /** {@inheritDoc} */
    @Override
-   public final CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException
+   public final CallableStatement prepareCall(String sql, int resultSetType, int concurrency) throws SQLException
    {
       checkClosed();
       try {
-         CallableStatement proxyCallableStatement = ProxyFactory.getProxyCallableStatement(this, delegate.prepareCall(sql, resultSetType, resultSetConcurrency));
-         return trackStatement(proxyCallableStatement);
+         CallableStatement pcs = ProxyFactory.getProxyCallableStatement(this, delegate.prepareCall(sql, resultSetType, concurrency));
+         return trackStatement(pcs);
       }
       catch (SQLException e) {
          throw checkException(e);
@@ -296,13 +294,12 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    /** {@inheritDoc} */
    @Override
-   public final CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
+   public final CallableStatement prepareCall(String sql, int resultSetType, int concurrency, int holdability) throws SQLException
    {
       checkClosed();
       try {
-         CallableStatement proxyCallableStatement = ProxyFactory.getProxyCallableStatement(this, delegate.prepareCall(sql, resultSetType, resultSetConcurrency,
-                                                                                                                      resultSetHoldability));
-         return trackStatement(proxyCallableStatement);
+         CallableStatement pcs = ProxyFactory.getProxyCallableStatement(this, delegate.prepareCall(sql, resultSetType, concurrency, holdability));
+         return trackStatement(pcs);
       }
       catch (SQLException e) {
          throw checkException(e);
@@ -339,12 +336,11 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    /** {@inheritDoc} */
    @Override
-   public final PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException
+   public final PreparedStatement prepareStatement(String sql, int resultSetType, int concurrency) throws SQLException
    {
       checkClosed();
       try {
-         PreparedStatement proxyPreparedStatement = ProxyFactory.getProxyPreparedStatement(this,
-                                                                                           delegate.prepareStatement(sql, resultSetType, resultSetConcurrency));
+         PreparedStatement proxyPreparedStatement = ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql, resultSetType, concurrency));
          return trackStatement(proxyPreparedStatement);
       }
       catch (SQLException e) {
@@ -354,13 +350,11 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    /** {@inheritDoc} */
    @Override
-   public final PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException
+   public final PreparedStatement prepareStatement(String sql, int resultSetType, int concurrency, int holdability) throws SQLException
    {
       checkClosed();
       try {
-         PreparedStatement proxyPreparedStatement = ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql, resultSetType,
-                                                                                                                           resultSetConcurrency,
-                                                                                                                           resultSetHoldability));
+         PreparedStatement proxyPreparedStatement = ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql, resultSetType, concurrency, holdability));
          return trackStatement(proxyPreparedStatement);
       }
       catch (SQLException e) {
