@@ -5,6 +5,14 @@ Changes between 2.1.0 and 2.1.1
  * Generate proxy classes into the same protection domain as the HikariCP
    loaded classes.  This solves issues with signed jars.
 
+ * Improve accuracy of pool statistics available to JMX and logged at debug
+   level (at a slight performance cost).
+
+ * Fixed issue where after a database down condition, and when minimumIdle is
+   set to 0, when the database connectivity is restored the connections could
+   ramp up to the maximum pool size.  Eventually, idleTimeout and maxLifetime
+   would restore normal pool conditions, but it was still undesirable behavior.
+
 Changes between 2.0.1 and 2.1.0
 
  * Significant internal refactor supporting creation of new proxy instances

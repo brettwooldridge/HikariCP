@@ -329,6 +329,10 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             final int minIdle = configuration.getMinimumIdle();
             while (!isShutdown && totalConnections.get() < maxPoolSize && (minIdle == 0 || getIdleConnections() < minIdle)) {
                if (!addConnection()) {
+                  if (getThreadsAwaitingConnection() == 0) {
+                     break;
+                  }
+                  
                   quietlySleep(sleepBackoff);
                   sleepBackoff = Math.min(connectionTimeout / 2, (long) ((double) sleepBackoff * 1.5));
                   continue;
