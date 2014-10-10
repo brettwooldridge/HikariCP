@@ -76,6 +76,38 @@ public class TestFastList
     }
 
     @Test
+    public void testClear()
+    {
+       FastList<Statement> list = new FastList<Statement>(Statement.class);
+       for (int i = 0; i < 100; i++)
+       {
+           StubStatement statement = new StubStatement(null);
+           list.add(statement);
+       }
+
+       Assert.assertNotEquals(0, list.size());
+       list.clear();
+       Assert.assertEquals(0, list.size());
+    }
+
+    @Test
+    public void testRemoveLast()
+    {
+       FastList<Statement> list = new FastList<Statement>(Statement.class);
+
+       Statement last = null;
+       for (int i = 0; i < 100; i++)
+       {
+           StubStatement statement = new StubStatement(null);
+           list.add(statement);
+           last = statement;
+       }
+
+       Assert.assertEquals(last, list.removeLast());
+       Assert.assertEquals(99, list.size());
+    }
+    
+    @Test
     public void testPolyMorphism1()
     {
        class Foo implements Base2 {
