@@ -48,12 +48,12 @@ import com.zaxxer.hikari.metrics.IMetricsTracker.MetricsContext;
 import com.zaxxer.hikari.metrics.MetricsFactory;
 import com.zaxxer.hikari.metrics.MetricsTracker;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
-import com.zaxxer.hikari.proxy.LeakTask;
 import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.DriverDataSource;
+import com.zaxxer.hikari.util.LeakTask;
 import com.zaxxer.hikari.util.PoolUtilities;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 

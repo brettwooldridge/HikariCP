@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.pool.PoolBagEntry;
 import com.zaxxer.hikari.util.FastList;
+import com.zaxxer.hikari.util.LeakTask;
 
 /**
  * This is the proxy class for java.sql.Connection.
