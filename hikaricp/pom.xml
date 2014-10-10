@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
    <!-- For release: mvn release:perform -Darguments=-Dgpg.passphrase=PASSPHRASE -->
@@ -20,8 +21,8 @@
       <connection>scm:git:git@github.com:brettwooldridge/HikariCP.git</connection>
       <developerConnection>scm:git:git@github.com:brettwooldridge/HikariCP.git</developerConnection>
       <url>git@github.com:brettwooldridge/HikariCP.git</url>
-     <tag>HEAD</tag>
-  </scm>
+      <tag>HEAD</tag>
+   </scm>
 
    <licenses>
       <license>
@@ -55,6 +56,60 @@
       <testSourceDirectory>src/test/java</testSourceDirectory>
       <plugins>
          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>0.7.2.201409121644</version>
+            <executions>
+               <!-- Prepares the property pointing to the JaCoCo runtime 
+                  agent which is passed as VM argument when Maven the Surefire plugin is executed. -->
+               <execution>
+                  <id>pre-unit-test</id>
+                  <goals>
+                     <goal>prepare-agent</goal>
+                  </goals>
+                  <configuration>
+                     <!-- Sets the path to the file which contains the execution  data. -->
+                     <destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
+                     <!-- Sets the name of the property containing the settings for JaCoCo runtime agent. -->
+                     <propertyName>surefireArgLine</propertyName>
+                  </configuration>
+               </execution>
+               <!-- Ensures that the code coverage report for unit tests is created after unit tests have been run. -->
+               <execution>
+                  <id>post-unit-test</id>
+                  <phase>test</phase>
+                  <goals>
+                     <goal>report</goal>
+                  </goals>
+                  <configuration>
+                     <!-- Sets the path to the file which contains the execution  data. -->
+                     <dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
+                     <!-- Sets the output directory for the code coverage report. -->
+                     <outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
+            <groupId>org.eluder.coveralls</groupId>
+            <artifactId>coveralls-maven-plugin</artifactId>
+            <version>3.0.0-SNAPSHOT</version>
+            <executions>
+               <execution>
+                  <id></id>
+                  <phase>verify</phase>
+                  <goals>
+                     <goal>report</goal>
+                  </goals>
+                  <inherited>false</inherited>
+                  <configuration>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
             <version>3.1</version>
@@ -64,6 +119,7 @@
                <target>1.8</target>
             </configuration>
          </plugin>
+
          <plugin>
             <groupId>org.apache.felix</groupId>
             <artifactId>maven-bundle-plugin</artifactId>
