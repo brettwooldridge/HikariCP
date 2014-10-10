@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
    <!-- For release: mvn release:perform -Darguments=-Dgpg.passphrase=PASSPHRASE -->
@@ -60,15 +59,14 @@
             <artifactId>jacoco-maven-plugin</artifactId>
             <version>0.7.2.201409121644</version>
             <executions>
-               <!-- Prepares the property pointing to the JaCoCo runtime 
-                  agent which is passed as VM argument when Maven the Surefire plugin is executed. -->
+               <!-- Prepares the property pointing to the JaCoCo runtime agent which is passed as VM argument when Maven the Surefire plugin is executed. -->
                <execution>
                   <id>pre-unit-test</id>
                   <goals>
                      <goal>prepare-agent</goal>
                   </goals>
                   <configuration>
-                     <!-- Sets the path to the file which contains the execution  data. -->
+                     <!-- Sets the path to the file which contains the execution data. -->
                      <destFile>${project.build.directory}/coverage-reports/jacoco.exec</destFile>
                      <!-- Sets the name of the property containing the settings for JaCoCo runtime agent. -->
                      <propertyName>surefireArgLine</propertyName>
@@ -82,7 +80,7 @@
                      <goal>report</goal>
                   </goals>
                   <configuration>
-                     <!-- Sets the path to the file which contains the execution  data. -->
+                     <!-- Sets the path to the file which contains the execution data. -->
                      <dataFile>${project.build.directory}/coverage-reports/jacoco.exec</dataFile>
                      <!-- Sets the output directory for the code coverage report. -->
                      <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
@@ -91,24 +89,6 @@
             </executions>
          </plugin>
 
-         <plugin>
-            <groupId>org.eluder.coveralls</groupId>
-            <artifactId>coveralls-maven-plugin</artifactId>
-            <version>2.2.0</version>
-            <executions>
-               <execution>
-                  <id></id>
-                  <phase>verify</phase>
-                  <goals>
-                     <goal>jacoco</goal>
-                  </goals>
-                  <inherited>false</inherited>
-                  <configuration>
-                  </configuration>
-               </execution>
-            </executions>
-         </plugin>
- 
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
@@ -161,8 +141,7 @@
                </instructions>
             </configuration>
             <executions>
-               <!-- This execution makes sure that the manifest is available 
-                  when the tests are executed -->
+               <!-- This execution makes sure that the manifest is available when the tests are executed -->
                <execution>
                   <goals>
                      <goal>manifest</goal>
@@ -171,6 +150,7 @@
             </executions>
          </plugin>
       </plugins>
+
       <pluginManagement>
          <plugins>
             <plugin>
@@ -182,8 +162,7 @@
                </configuration>
             </plugin>
 
-            <!--This plugin's configuration is used to store Eclipse m2e 
-               settings only. It has no influence on the Maven build itself. -->
+            <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
             <plugin>
                <groupId>org.eclipse.m2e</groupId>
                <artifactId>lifecycle-mapping</artifactId>
@@ -215,6 +194,31 @@
    </build>
 
    <profiles>
+      <profile>
+         <id>coverage</id>
+         <build>
+            <plugins>
+               <plugin>
+                  <groupId>org.eluder.coveralls</groupId>
+                  <artifactId>coveralls-maven-plugin</artifactId>
+                  <version>2.2.0</version>
+                  <executions>
+                     <execution>
+                        <id>coveralls</id>
+                        <phase>verify</phase>
+                        <goals>
+                           <goal>jacoco</goal>
+                        </goals>
+                        <inherited>false</inherited>
+                        <configuration>
+                        </configuration>
+                     </execution>
+                  </executions>
+               </plugin>
+            </plugins>
+         </build>
+      </profile>
+
       <profile>
          <id>release-sign-artifacts</id>
          <activation>
