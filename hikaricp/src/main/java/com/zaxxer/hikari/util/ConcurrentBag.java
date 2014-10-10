@@ -82,18 +82,6 @@ public final class ConcurrentBag<T extends BagEntry>
    private final IBagStateListener listener;
 
    /**
-    * Default constructor.
-    */
-   public ConcurrentBag()
-   {
-      this.sharedList = new CopyOnWriteArrayList<T>();
-      this.synchronizer = new Synchronizer();
-      this.sequence = new AtomicLong(1);
-      this.listener = null;
-      this.threadList = new ThreadLocal<ArrayList<WeakReference<BagEntry>>>();
-   }
-
-   /**
     * Construct a ConcurrentBag with the specified listener.
     *
     * @param listener the IBagStateListener to attach to this bag
