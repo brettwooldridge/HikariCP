@@ -578,7 +578,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       return configuration.getConnectionCustomizer();
    }
 
-   private void logPoolState(String... prefix)
+   public void logPoolState(String... prefix)
    {
       if (LOGGER.isDebugEnabled()) {
          LOGGER.debug("{}pool stats {} (total={}, inUse={}, avail={}, waiting={})",
