@@ -79,7 +79,7 @@ public class LeakTask implements Runnable
        */
       public LeakException(final StackTraceElement[] stackTrace)
       {
-         super("Connection Leak", null, true, true);
+         super("Connection Leak", null, true, false);
          this.setStackTrace(stackTrace);
       }
    }
