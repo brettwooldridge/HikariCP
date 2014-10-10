@@ -41,7 +41,7 @@ public class StubStatement implements Statement
     public <T> T unwrap(Class<T> iface) throws SQLException
     {
         checkClosed();
-        return null;
+        return (T) this;
     }
 
     /** {@inheritDoc} */

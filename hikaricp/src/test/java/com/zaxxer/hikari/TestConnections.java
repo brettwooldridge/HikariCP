@@ -47,6 +47,8 @@ public class TestConnections
         config.setMaximumPoolSize(1);
         config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
+        config.setConnectionInitSql("SELECT 1");
+        config.setRecordMetrics(true);
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
         HikariDataSource ds = new HikariDataSource(config);

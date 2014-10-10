@@ -17,6 +17,7 @@ public class ConnectionStateTest
         ds.setAutoCommit(true);
         ds.setMinimumIdle(1);
         ds.setMaximumPoolSize(1);
+        ds.setJdbc4ConnectionTest(false);
         ds.setConnectionTestQuery("VALUES 1");
         ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
         ds.addDataSourceProperty("user", "bar");
@@ -29,6 +30,8 @@ public class ConnectionStateTest
             Connection connection = ds.getConnection();
             connection.setAutoCommit(false);
             connection.close();
+
+            PoolUtilities.quietlySleep(1100L);
 
             Connection connection2 = ds.getConnection();
             Assert.assertSame(connection.unwrap(Connection.class), connection2.unwrap(Connection.class));
@@ -80,6 +83,33 @@ public class ConnectionStateTest
         Assert.assertSame(Connection.TRANSACTION_REPEATABLE_READ, transactionIsolation);
     }
 
+    @Test
+    public void testReadOnly() throws Exception
+    {
+       HikariDataSource ds = new HikariDataSource();
+       ds.setCatalog("test");
+       ds.setMinimumIdle(1);
+       ds.setMaximumPoolSize(1);
+       ds.setConnectionTestQuery("VALUES 1");
+       ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+       try
+       {
+           Connection connection = ds.getConnection();
+           connection.setReadOnly(true);
+           connection.close();
+
+           Connection connection2 = ds.getConnection();
+           Assert.assertSame(connection.unwrap(Connection.class), connection2.unwrap(Connection.class));
+           Assert.assertFalse(connection2.isReadOnly());
+           connection2.close();
+       }
+       finally
+       {
+           ds.close();
+       }       
+    }
+    
     @Test
     public void testCatalog() throws SQLException
     {

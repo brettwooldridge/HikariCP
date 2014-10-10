@@ -22,10 +22,14 @@ import java.sql.SQLException;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.zaxxer.hikari.util.ConcurrentBag;
+import com.zaxxer.hikari.util.ConcurrentBag.BagEntry;
+import com.zaxxer.hikari.util.PoolUtilities;
+
 /**
  * @author Brett Wooldridge
  */
-public class MiscTests
+public class MiscTest
 {
    @Test
    public void testLogWriter() throws SQLException
@@ -45,5 +49,36 @@ public class MiscTests
       {
          ds.close();
       }
+   }
+
+   @Test
+   public void testInvalidIsolation()
+   {
+      try {
+         PoolUtilities.getTransactionIsolation("INVALID");
+         Assert.fail();
+      }
+      catch (Exception e) {
+         Assert.assertTrue(e instanceof IllegalArgumentException);
+      }
+   }
+
+   @Test
+   public void testCreateInstance()
+   {
+      try {
+         PoolUtilities.createInstance("invalid", null);
+         Assert.fail();
+      }
+      catch (RuntimeException e) {
+         Assert.assertTrue(e.getCause() instanceof ClassNotFoundException);
+      }
+   }
+
+   @Test
+   public void testBagDump()
+   {
+      ConcurrentBag<BagEntry> bag = new ConcurrentBag<BagEntry>(null);
+      bag.dumpState();
    }
 }
