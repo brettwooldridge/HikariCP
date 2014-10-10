@@ -100,7 +100,7 @@
                   <id></id>
                   <phase>verify</phase>
                   <goals>
-                     <goal>report</goal>
+                     <goal>jacoco</goal>
                   </goals>
                   <inherited>false</inherited>
                   <configuration>
