@@ -69,7 +69,7 @@
                   </goals>
                   <configuration>
                      <!-- Sets the path to the file which contains the execution  data. -->
-                     <destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
+                     <destFile>${project.build.directory}/coverage-reports/jacoco.exec</destFile>
                      <!-- Sets the name of the property containing the settings for JaCoCo runtime agent. -->
                      <propertyName>surefireArgLine</propertyName>
                   </configuration>
@@ -83,9 +83,9 @@
                   </goals>
                   <configuration>
                      <!-- Sets the path to the file which contains the execution  data. -->
-                     <dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
+                     <dataFile>${project.build.directory}/coverage-reports/jacoco.exec</dataFile>
                      <!-- Sets the output directory for the code coverage report. -->
-                     <outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
+                     <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
                   </configuration>
                </execution>
             </executions>
@@ -108,7 +108,7 @@
                </execution>
             </executions>
          </plugin>
-
+ 
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
