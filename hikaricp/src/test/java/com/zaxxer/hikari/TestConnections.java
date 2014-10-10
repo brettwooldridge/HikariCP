@@ -20,12 +20,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.zaxxer.hikari.mocks.StubConnection;
+import com.zaxxer.hikari.pool.HikariPool;
 
 /**
  * System property testProxy can be one of:
@@ -321,5 +323,32 @@ public class TestConnections
         {
             ds.close();
         }
+    }
+
+    @Test
+    public void testGetWithUsername() throws Exception
+    {
+       HikariConfig config = new HikariConfig();
+       config.setMinimumIdle(1);
+       config.setMaximumPoolSize(4);
+       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+       final HikariDataSource ds = new HikariDataSource(config);
+       try {
+          Connection connection1 = ds.getConnection("foo", "bar");
+          connection1.close();
+
+          Connection connection2 = ds.getConnection("faz", "baf");
+          connection2.close();
+
+          HashMap<Object,HikariPool> multiPool = TestElf.getMultiPool(ds);
+          Assert.assertTrue(multiPool.size() > 1);
+
+          Object[] array = multiPool.keySet().toArray();
+          Assert.assertNotEquals(array[0], array[1]);
+       }
+       finally {
+          ds.close();
+       }
     }
 }

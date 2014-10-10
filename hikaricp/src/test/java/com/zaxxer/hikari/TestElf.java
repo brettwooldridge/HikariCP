@@ -17,6 +17,7 @@
 package com.zaxxer.hikari;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
 
 import com.zaxxer.hikari.pool.HikariPool;
 
@@ -27,22 +28,32 @@ import com.zaxxer.hikari.pool.HikariPool;
  */
 public final class TestElf
 {
-    private TestElf()
-    {
-       // default constructor   
-    }
+   private TestElf() {
+      // default constructor   
+   }
 
-    public static HikariPool getPool(HikariDataSource ds)
-    {
-        try
-        {
-            Field field = ds.getClass().getDeclaredField("pool");
-            field.setAccessible(true);
-            return (HikariPool) field.get(ds);
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
+   public static HikariPool getPool(HikariDataSource ds)
+   {
+      try {
+         Field field = ds.getClass().getDeclaredField("pool");
+         field.setAccessible(true);
+         return (HikariPool) field.get(ds);
+      }
+      catch (Exception e) {
+         throw new RuntimeException(e);
+      }
+   }
+
+   @SuppressWarnings("unchecked")
+   public static HashMap<Object, HikariPool> getMultiPool(HikariDataSource ds)
+   {
+      try {
+         Field field = ds.getClass().getDeclaredField("multiPool");
+         field.setAccessible(true);
+         return (HashMap<Object, HikariPool>) field.get(ds);
+      }
+      catch (Exception e) {
+         throw new RuntimeException(e);
+      }
+   }
 }
