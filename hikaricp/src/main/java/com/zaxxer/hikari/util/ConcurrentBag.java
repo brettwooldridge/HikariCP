@@ -56,7 +56,7 @@ public final class ConcurrentBag<T extends BagEntry>
 
    public static final int STATE_NOT_IN_USE = 0;
    public static final int STATE_IN_USE = 1;
-   private static final int STATE_REMOVED = -1;
+   public static final int STATE_REMOVED = -1;
    private static final int STATE_RESERVED = -2;
 
    public static abstract class BagEntry

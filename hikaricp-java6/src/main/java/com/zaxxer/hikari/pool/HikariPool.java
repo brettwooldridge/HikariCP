@@ -18,6 +18,7 @@ package com.zaxxer.hikari.pool;
 
 import static com.zaxxer.hikari.util.ConcurrentBag.STATE_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.STATE_NOT_IN_USE;
+import static com.zaxxer.hikari.util.ConcurrentBag.STATE_REMOVED;
 import static com.zaxxer.hikari.util.PoolUtilities.IS_JAVA7;
 import static com.zaxxer.hikari.util.PoolUtilities.createInstance;
 import static com.zaxxer.hikari.util.PoolUtilities.createThreadPoolExecutor;
@@ -351,7 +352,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    @Override
    public int getActiveConnections()
    {
-      return Math.min(configuration.getMaximumPoolSize(), totalConnections.get() - getIdleConnections());
+      return connectionBag.getCount(STATE_IN_USE);
    }
 
    /** {@inheritDoc} */
@@ -365,7 +366,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    @Override
    public int getTotalConnections()
    {
-      return totalConnections.get();
+      return connectionBag.size() - connectionBag.getCount(STATE_REMOVED);
    }
 
    /** {@inheritDoc} */
@@ -579,10 +580,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
    private void logPoolState(String... prefix)
    {
-      int total = totalConnections.get();
-      int idle = getIdleConnections();
-      LOGGER.debug("{}pool stats {} (total={}, inUse={}, avail={}, waiting={})", (prefix.length > 0 ? prefix[0] : ""), configuration.getPoolName(), total,
-                   total - idle, idle, getThreadsAwaitingConnection());
+      if (LOGGER.isDebugEnabled()) {
+         LOGGER.debug("{}pool stats {} (total={}, inUse={}, avail={}, waiting={})",
+                      (prefix.length > 0 ? prefix[0] : ""), configuration.getPoolName(),
+                      getTotalConnections(), getActiveConnections(), getIdleConnections(), getThreadsAwaitingConnection());
+      }
    }
 
    /**
