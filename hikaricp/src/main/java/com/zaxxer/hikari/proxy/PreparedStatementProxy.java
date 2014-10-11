@@ -17,8 +17,6 @@
 package com.zaxxer.hikari.proxy;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 /**
  * This is the proxy class for java.sql.PreparedStatement.

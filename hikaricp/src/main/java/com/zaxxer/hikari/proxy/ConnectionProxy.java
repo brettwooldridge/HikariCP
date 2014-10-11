@@ -117,13 +117,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    /** {@inheritDoc} */
    @Override
-   public final boolean isBrokenConnection()
-   {
-      return forceClose;
-   }
-
-   /** {@inheritDoc} */
-   @Override
    public final void untrackStatement(Statement statement)
    {
       // If the connection is not closed.  If it is closed, it means this is being

@@ -47,14 +47,6 @@ public interface IHikariConnectionProxy extends Connection
    SQLException checkException(SQLException sqle);
 
    /**
-    * Return the broken state of the connection.  If checkException() detected
-    * a broken connection, this method will return true, otherwise false.
-    *
-    * @return the broken state of the connection
-    */
-   boolean isBrokenConnection();
-
-   /**
     * Called by Statement and its subclasses when they are closed to remove them
     * from the tracking list.
     *
