@@ -76,6 +76,13 @@ public class TestProxies
          Assert.assertNotNull(stmt.getResultSet());
          Assert.assertNotNull(stmt.getConnection());
          Assert.assertTrue(stmt.unwrap(StubStatement.class) instanceof StubStatement);
+         try {
+            stmt.unwrap(TestProxies.class);
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
       }
       finally {
          ds.close();
