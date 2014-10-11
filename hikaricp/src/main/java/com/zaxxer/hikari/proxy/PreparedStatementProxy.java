@@ -36,15 +36,4 @@ public abstract class PreparedStatementProxy extends StatementProxy implements P
    //              Overridden java.sql.PreparedStatement Methods
    // **********************************************************************
 
-   /** {@inheritDoc} */
-   @Override
-   public final ResultSet executeQuery() throws SQLException
-   {
-      try {
-         return ((PreparedStatement) delegate).executeQuery();
-      }
-      catch (SQLException e) {
-         throw connection.checkException(e);
-      }
-   }
 }

@@ -17,8 +17,6 @@
 package com.zaxxer.hikari.proxy;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 /**
  * This is the proxy class for java.sql.PreparedStatement.
@@ -36,15 +34,4 @@ public abstract class PreparedStatementProxy extends StatementProxy implements P
    //              Overridden java.sql.PreparedStatement Methods
    // **********************************************************************
 
-   /** {@inheritDoc} */
-   @Override
-   public final ResultSet executeQuery() throws SQLException
-   {
-      try {
-         return ((PreparedStatement) delegate).executeQuery();
-      }
-      catch (SQLException e) {
-         throw connection.checkException(e);
-      }
-   }
 }

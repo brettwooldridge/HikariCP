@@ -70,42 +70,6 @@ public abstract class StatementProxy implements Statement
 
    /** {@inheritDoc} */
    @Override
-   public final ResultSet executeQuery(String sql) throws SQLException
-   {
-      try {
-         return delegate.executeQuery(sql);
-      }
-      catch (SQLException e) {
-         throw connection.checkException(e);
-      }
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public final ResultSet getResultSet() throws SQLException
-   {
-      try {
-         return delegate.getResultSet();
-      }
-      catch (SQLException e) {
-         throw connection.checkException(e);
-      }
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public final ResultSet getGeneratedKeys() throws SQLException
-   {
-      try {
-         return delegate.getGeneratedKeys();
-      }
-      catch (SQLException e) {
-         throw connection.checkException(e);
-      }
-   }
-
-   /** {@inheritDoc} */
-   @Override
    public final Connection getConnection() throws SQLException
    {
       return connection;

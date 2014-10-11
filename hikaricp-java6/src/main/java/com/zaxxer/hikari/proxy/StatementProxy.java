@@ -17,7 +17,6 @@
 package com.zaxxer.hikari.proxy;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Wrapper;
@@ -62,42 +61,6 @@ public abstract class StatementProxy implements Statement
 
       try {
          delegate.close();
-      }
-      catch (SQLException e) {
-         throw connection.checkException(e);
-      }
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public final ResultSet executeQuery(String sql) throws SQLException
-   {
-      try {
-         return delegate.executeQuery(sql);
-      }
-      catch (SQLException e) {
-         throw connection.checkException(e);
-      }
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public final ResultSet getResultSet() throws SQLException
-   {
-      try {
-         return delegate.getResultSet();
-      }
-      catch (SQLException e) {
-         throw connection.checkException(e);
-      }
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public final ResultSet getGeneratedKeys() throws SQLException
-   {
-      try {
-         return delegate.getGeneratedKeys();
       }
       catch (SQLException e) {
          throw connection.checkException(e);
