@@ -55,5 +55,9 @@ public class JdbcDriverTest
 
         Connection connection = ds.getConnection();
         connection.close();
+
+        connection = ds.getConnection("foo", "bar");
+        connection.close();
+
     }
 }
