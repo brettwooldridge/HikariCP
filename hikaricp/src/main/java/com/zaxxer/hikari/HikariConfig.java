@@ -48,6 +48,7 @@ public class HikariConfig implements HikariConfigMBean
    private static final long MAX_LIFETIME = TimeUnit.MINUTES.toMillis(30);
 
    private static int poolNumber;
+   private static boolean unitTest;
 
    // Properties changeable at runtime through the MBean
    //
@@ -698,7 +699,7 @@ public class HikariConfig implements HikariConfigMBean
          poolName = "HikariPool-" + poolNumber++;
       }
 
-      if (LOGGER.isDebugEnabled()) {
+      if (LOGGER.isDebugEnabled() || unitTest) {
          logConfiguration();
       }
    }

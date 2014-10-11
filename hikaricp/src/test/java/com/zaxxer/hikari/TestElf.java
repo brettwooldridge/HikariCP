@@ -56,4 +56,16 @@ public final class TestElf
          throw new RuntimeException(e);
       }
    }
+
+   public static void setConfigUnitTest()
+   {
+      try {
+         Field field = HikariConfig.class.getDeclaredField("unitTest");
+         field.setAccessible(true);
+         field.setBoolean(null, true);
+      }
+      catch (Exception e) {
+         throw new RuntimeException(e);
+      }      
+   }
 }

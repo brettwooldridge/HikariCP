@@ -38,6 +38,7 @@ public class MiscTest
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(4);
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      TestElf.setConfigUnitTest();
 
       final HikariDataSource ds = new HikariDataSource(config);
       try {
