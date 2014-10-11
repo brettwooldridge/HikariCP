@@ -147,10 +147,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    private final void resetConnectionState() throws SQLException
    {
-      if (!delegate.getAutoCommit()) {
-         delegate.rollback();
-      }
-
       if (isReadOnlyDirty) {
          delegate.setReadOnly(parentPool.isReadOnly);
       }
@@ -194,6 +190,10 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          }
 
          try {
+            if (!delegate.getAutoCommit()) {
+               delegate.rollback();
+            }
+
             if (isAnythingDirty) {
                resetConnectionState();
             }
