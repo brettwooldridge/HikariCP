@@ -44,7 +44,7 @@ public final class PoolUtilities
     * @param start the start time
     * @return the elapsed milliseconds
     */
-   public static long elapsedTimeMs(long start)
+   public static long elapsedTimeMs(final long start)
    {
       return System.currentTimeMillis() - start;
    }
@@ -56,7 +56,7 @@ public final class PoolUtilities
     * @param sql the SQL to execute
     * @throws SQLException throws if the init SQL execution fails
     */
-   public static void executeSqlAutoCommit(Connection connection, String sql) throws SQLException
+   public static void executeSqlAutoCommit(final Connection connection, final String sql) throws SQLException
    {
       if (sql != null) {
          connection.setAutoCommit(true);
@@ -70,7 +70,12 @@ public final class PoolUtilities
       }
    }
 
-   public static void quietlySleep(long millis)
+   /**
+    * Sleep and transform an InterruptedException into a RuntimeException.
+    *
+    * @param millis the number of milliseconds to sleep
+    */
+   public static void quietlySleep(final long millis)
    {
       try {
          Thread.sleep(millis);
@@ -107,6 +112,25 @@ public final class PoolUtilities
       }
    }
 
+   /**
+    * Create/initialize the underlying DataSource.
+    *
+    * @return the DataSource
+    */
+   public static DataSource initializeDataSource(String dsClassName, DataSource dataSource, Properties dataSourceProperties, String jdbcUrl, String username, String password)
+   {
+      if (dataSource == null && dsClassName != null) {
+         dataSource = createInstance(dsClassName, DataSource.class);
+         PropertyBeanSetter.setTargetFromProperties(dataSource, dataSourceProperties);
+         return dataSource;
+      }
+      else if (jdbcUrl != null) {
+         return new DriverDataSource(jdbcUrl, dataSourceProperties, username, password);
+      }
+
+      return dataSource;
+   }
+
    public static int getTransactionIsolation(String transactionIsolationName)
    {
       if (transactionIsolationName != null) {
@@ -122,6 +146,14 @@ public final class PoolUtilities
       return -1;
    }
 
+   /**
+    * Create a ThreadPoolExecutor.
+    *
+    * @param queueSize the queue size
+    * @param threadName the thread name
+    * @param threadFactory an optional ThreadFactory
+    * @return a ThreadPoolExecutor
+    */
    public static ThreadPoolExecutor createThreadPoolExecutor(final int queueSize, final String threadName, ThreadFactory threadFactory)
    {
       if (threadFactory == null) {

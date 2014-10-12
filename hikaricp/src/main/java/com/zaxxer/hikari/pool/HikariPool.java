@@ -52,10 +52,8 @@ import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
-import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.LeakTask;
 import com.zaxxer.hikari.util.PoolUtilities;
-import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -146,7 +144,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       this.metricsTracker = MetricsFactory.createMetricsTracker((isRecordMetrics ? configuration.getMetricsTrackerClassName()
             : "com.zaxxer.hikari.metrics.MetricsTracker"), this);
 
-      this.dataSource = initializeDataSource();
+      this.dataSource = PoolUtilities.initializeDataSource(configuration.getDataSourceClassName(), configuration.getDataSource(), configuration.getDataSourceProperties(), configuration.getJdbcUrl(), username, password);
 
       if (isRegisteredMbeans) {
          HikariMBeanElf.registerMBeans(configuration, this);
@@ -531,26 +529,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
       assassinExecutor.shutdown();
       assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
-   }
-
-   /**
-    * Create/initialize the underlying DataSource.
-    *
-    * @return the DataSource
-    */
-   private DataSource initializeDataSource()
-   {
-      String dsClassName = configuration.getDataSourceClassName();
-      if (configuration.getDataSource() == null && dsClassName != null) {
-         DataSource dataSource = createInstance(dsClassName, DataSource.class);
-         PropertyBeanSetter.setTargetFromProperties(dataSource, configuration.getDataSourceProperties());
-         return dataSource;
-      }
-      else if (configuration.getJdbcUrl() != null) {
-         return new DriverDataSource(configuration.getJdbcUrl(), configuration.getDataSourceProperties(), username, password);
-      }
-
-      return configuration.getDataSource();
    }
 
    /**
