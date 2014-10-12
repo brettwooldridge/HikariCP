@@ -354,7 +354,7 @@ public class HikariConfig implements HikariConfigMBean
    @Override
    public void setIdleTimeout(long idleTimeoutMs)
    {
-      if (idleTimeout < 0) {
+      if (idleTimeoutMs < 0) {
          throw new IllegalArgumentException("idleTimeout cannot be negative");
       }
       this.idleTimeout = idleTimeoutMs;
@@ -506,8 +506,8 @@ public class HikariConfig implements HikariConfigMBean
    @Override
    public void setMaximumPoolSize(int maxPoolSize)
    {
-      if (maxPoolSize < 0) {
-         throw new IllegalArgumentException("maxPoolSize cannot be negative");
+      if (maxPoolSize < 1) {
+         throw new IllegalArgumentException("maxPoolSize cannot be less than 1");
       }
       this.maxPoolSize = maxPoolSize;
    }
