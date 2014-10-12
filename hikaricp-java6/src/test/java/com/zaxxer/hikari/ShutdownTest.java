@@ -158,7 +158,7 @@ public class ShutdownTest
 
       HikariDataSource ds = new HikariDataSource(config);
 
-      PoolUtilities.quietlySleep(300);
+      PoolUtilities.quietlySleep(500);
 
       ds.close();
 
