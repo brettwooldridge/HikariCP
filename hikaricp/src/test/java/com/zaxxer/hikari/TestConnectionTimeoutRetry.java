@@ -83,7 +83,7 @@ public class TestConnectionTimeoutRetry
         }
         catch (SQLException e)
         {
-            Assert.fail("Should not have timed out.");
+            Assert.fail("Should not have timed out: " + e.getMessage());
         }
         finally
         {
