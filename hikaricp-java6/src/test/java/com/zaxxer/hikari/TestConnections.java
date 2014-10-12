@@ -39,6 +39,7 @@ import com.zaxxer.hikari.pool.HikariPool;
  */
 public class TestConnections
 {
+    @SuppressWarnings("deprecation")
     @Test
     public void testCreate() throws SQLException
     {
@@ -49,6 +50,7 @@ public class TestConnections
         config.setConnectionTestQuery("VALUES 1");
         config.setConnectionInitSql("SELECT 1");
         config.setRecordMetrics(true);
+        config.setLeakDetectionThreshold(TimeUnit.SECONDS.toMillis(60));
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
         HikariDataSource ds = new HikariDataSource(config);
