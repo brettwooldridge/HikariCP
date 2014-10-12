@@ -199,6 +199,38 @@ public class ShutdownTest
       Assert.assertSame("Total connection count not as expected", 0, pool.getTotalConnections());
    }
 
+   @Test
+   public void testAfterShutdown() throws Exception
+   {
+       HikariConfig config = new HikariConfig();
+       config.setMinimumIdle(0);
+       config.setMaximumPoolSize(5);
+       config.setInitializationFailFast(true);
+       config.setConnectionTestQuery("VALUES 1");
+       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+       HikariDataSource ds = new HikariDataSource(config);
+       ds.close();
+       try
+       {
+           ds.getConnection();
+       }
+       catch (SQLException e) {
+          Assert.assertTrue(e.getMessage().contains("Pool has been shutdown"));
+       }
+
+       try
+       {
+           ds.getConnection("foo", "bar");
+       }
+       catch (SQLException e) {
+          Assert.assertTrue(e.getMessage().contains("Pool has been shutdown"));
+       }
+       finally {
+          ds.shutdown();
+       }
+   }
+
    private int threadCount()
    {
       Thread[] threads = new Thread[Thread.activeCount() * 2];
