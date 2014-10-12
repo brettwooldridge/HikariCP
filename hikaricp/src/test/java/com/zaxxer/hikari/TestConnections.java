@@ -216,6 +216,30 @@ public class TestConnections
     }
 
     @Test
+    public void testEviction() throws Exception
+    {
+        HikariConfig config = new HikariConfig();
+        config.setMinimumIdle(0);
+        config.setMaximumPoolSize(5);
+        config.setInitializationFailFast(true);
+        config.setConnectionTestQuery("VALUES 1");
+        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+        HikariDataSource ds = new HikariDataSource(config);
+        try
+        {
+            Connection connection = ds.getConnection();
+            Assert.assertEquals(1, TestElf.getPool(ds).getTotalConnections());
+            ds.evictConnection(connection);
+            Assert.assertEquals(0, TestElf.getPool(ds).getTotalConnections());            
+        }
+        finally
+        {
+            ds.close();
+        }
+    }
+
+    @Test
     public void testBackfill() throws Exception
     {
         HikariConfig config = new HikariConfig();
