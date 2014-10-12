@@ -250,6 +250,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          isShutdown = true;
          LOGGER.info("HikariCP pool {} is shutting down.", configuration.getPoolName());
 
+         connectionBag.close();
          logPoolState("Before shutdown ");
          houseKeepingExecutorService.shutdownNow();
          addConnectionExecutor.shutdownNow();

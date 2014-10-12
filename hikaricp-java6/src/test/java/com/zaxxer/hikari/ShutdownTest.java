@@ -167,7 +167,7 @@ public class ShutdownTest
          PoolUtilities.quietlySleep(250);
       }
 
-      Assert.assertSame("Thread was leaked", 0, threadCount());
+      Assert.assertSame("Unreleased connections after shutdown", 0, TestElf.getPool(ds).getTotalConnections());
    }
 
    @Test

@@ -80,6 +80,7 @@ public final class ConcurrentBag<T extends BagEntry>
    private final Synchronizer synchronizer;
    private final AtomicLong sequence;
    private final IBagStateListener listener;
+   private volatile boolean closed;
 
    /**
     * Construct a ConcurrentBag with the specified listener.
@@ -178,6 +179,10 @@ public final class ConcurrentBag<T extends BagEntry>
     */
    public void add(final T bagEntry)
    {
+      if (closed) {
+         throw new IllegalStateException("ConcurrentBag has been closed");
+      }
+
       sharedList.add(bagEntry);
       synchronizer.releaseShared(sequence.incrementAndGet());
    }
@@ -200,6 +205,14 @@ public final class ConcurrentBag<T extends BagEntry>
       else {
          throw new IllegalStateException("Attempt to remove an object from the bag that was not borrowed or reserved");
       }
+   }
+
+   /**
+    * Close the bag to further adds.
+    */
+   public void close()
+   {
+      closed = true;
    }
 
    /**
