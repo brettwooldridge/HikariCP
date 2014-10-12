@@ -94,10 +94,15 @@ public class StubDataSource implements DataSource
     }
 
     /** {@inheritDoc} */
+    @SuppressWarnings("unchecked")
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException
     {
-        return null;
+       if (iface.isInstance(this)) {
+          return (T) this;
+       }
+
+       throw new SQLException("Wrapped DataSource is not an instance of " + iface);
     }
 
     /** {@inheritDoc} */
