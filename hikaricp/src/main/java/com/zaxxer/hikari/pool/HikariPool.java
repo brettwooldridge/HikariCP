@@ -553,6 +553,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       return configuration.getDataSource();
    }
 
+   /**
+    * Construct the user's connection customizer, if specified.
+    *
+    * @return an IConnectionCustomizer instance
+    */
    private IConnectionCustomizer initializeCustomizer()
    {
       if (configuration.getConnectionCustomizerClassName() != null) {
