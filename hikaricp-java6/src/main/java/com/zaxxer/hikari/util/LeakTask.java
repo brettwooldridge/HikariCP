@@ -33,13 +33,11 @@ public class LeakTask implements Runnable
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(LeakTask.class);
 
-   private final long leakTime;
    private final ScheduledFuture<?> scheduledFuture;
    private StackTraceElement[] stackTrace;
 
    public LeakTask()
    {
-      leakTime = 0;
       scheduledFuture = null;
    }
 
@@ -47,7 +45,6 @@ public class LeakTask implements Runnable
    {
       this.stackTrace = new Exception().getStackTrace();
       
-      this.leakTime = System.currentTimeMillis() + leakDetectionThreshold;
       scheduledFuture = executorService.schedule(this, leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
@@ -55,14 +52,12 @@ public class LeakTask implements Runnable
    @Override
    public void run()
    {
-      if (System.currentTimeMillis() > leakTime) {
-         StackTraceElement[] trace = new StackTraceElement[stackTrace.length - 3];
-         System.arraycopy(stackTrace, 3, trace, 0, trace.length);
+      StackTraceElement[] trace = new StackTraceElement[stackTrace.length - 3];
+      System.arraycopy(stackTrace, 3, trace, 0, trace.length);
 
-         LeakException e = new LeakException(trace);
-         LOGGER.warn("Connection leak detection triggered, stack trace follows", e);
-         stackTrace = null;
-      }
+      LeakException e = new LeakException(trace);
+      LOGGER.warn("Connection leak detection triggered, stack trace follows", e);
+      stackTrace = null;
    }
 
    public void cancel()
