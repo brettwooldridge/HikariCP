@@ -33,7 +33,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
 
       registry = new MetricRegistry();
       connectionObtainTimer = registry.timer(MetricRegistry.name(pool.getConfiguration().getPoolName(), "-connection", "Wait"));
-      connectionUsage = registry.histogram(MetricRegistry.name(pool.getConfiguration().getPoolName(), "-connection", "Wsage"));
+      connectionUsage = registry.histogram(MetricRegistry.name(pool.getConfiguration().getPoolName(), "-connection", "Usage"));
    }
 
    /** {@inheritDoc} */
@@ -71,9 +71,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
 
       public void stop()
       {
-         if (innerContext != null) {
-            innerContext.stop();
-         }
+         innerContext.stop();
       }
    }
 }

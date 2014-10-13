@@ -71,9 +71,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
 
       public void stop()
       {
-         if (innerContext != null) {
-            innerContext.stop();
-         }
+         innerContext.stop();
       }
    }
 }
