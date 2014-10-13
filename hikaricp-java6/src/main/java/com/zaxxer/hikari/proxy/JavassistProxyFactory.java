@@ -31,8 +31,6 @@ import javassist.LoaderClassPath;
 import javassist.Modifier;
 import javassist.NotFoundException;
 
-import org.slf4j.LoggerFactory;
-
 import com.zaxxer.hikari.util.ClassLoaderUtils;
 
 /**
@@ -56,8 +54,7 @@ public final class JavassistProxyFactory
          proxyFactoryFactory.modifyProxyFactory();
       }
       catch (Exception e) {
-         LoggerFactory.getLogger(JavassistProxyFactory.class).error("Fatal exception during proxy generation", e);
-         throw new RuntimeException(e);
+         throw new RuntimeException("Fatal exception during proxy generation", e);
       }
       finally {
          Thread.currentThread().setContextClassLoader(contextClassLoader);
@@ -73,29 +70,24 @@ public final class JavassistProxyFactory
       // no-op
    }
 
-   private JavassistProxyFactory()
+   private JavassistProxyFactory() throws Exception
    {
       classPool = new ClassPool();
       classPool.importPackage("java.sql");
       classPool.appendClassPath(new LoaderClassPath(this.getClass().getClassLoader()));
 
-      try {
-         // Connection is special, it has a checkClosed() call at the beginning
-         String methodBody = "{ checkClosed(); try { return delegate.method($$); } catch (SQLException e) { throw checkException(e); } }";
-         generateProxyClass(Connection.class, ConnectionProxy.class, methodBody);
+      // Connection is special, it has a checkClosed() call at the beginning
+      String methodBody = "{ checkClosed(); try { return delegate.method($$); } catch (SQLException e) { throw checkException(e); } }";
+      generateProxyClass(Connection.class, ConnectionProxy.class, methodBody);
 
-         // Cast is not needed for these
-         methodBody = "{ try { return delegate.method($$); } catch (SQLException e) { throw checkException(e); } }";
-         generateProxyClass(Statement.class, StatementProxy.class, methodBody);
+      // Cast is not needed for these
+      methodBody = "{ try { return delegate.method($$); } catch (SQLException e) { throw checkException(e); } }";
+      generateProxyClass(Statement.class, StatementProxy.class, methodBody);
 
-         // For these we have to cast the delegate
-         methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { throw checkException(e); } }";
-         generateProxyClass(PreparedStatement.class, PreparedStatementProxy.class, methodBody);
-         generateProxyClass(CallableStatement.class, CallableStatementProxy.class, methodBody);
-      }
-      catch (Exception e) {
-         throw new RuntimeException(e);
-      }
+      // For these we have to cast the delegate
+      methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { throw checkException(e); } }";
+      generateProxyClass(PreparedStatement.class, PreparedStatementProxy.class, methodBody);
+      generateProxyClass(CallableStatement.class, CallableStatementProxy.class, methodBody);
    }
 
    private void modifyProxyFactory() throws Exception
@@ -183,10 +175,6 @@ public final class JavassistProxyFactory
             method.setBody(modifiedBody);
             targetCt.addMethod(method);
          }
-      }
-
-      if (Boolean.getBoolean("com.zaxxer.hikari.debug")) {
-         targetCt.debugWriteFile(System.getProperty("java.io.tmpdir"));
       }
 
       return targetCt.toClass(classPool.getClassLoader(), getClass().getProtectionDomain());
