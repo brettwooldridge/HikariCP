@@ -20,6 +20,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -30,6 +31,8 @@ import org.slf4j.LoggerFactory;
  */
 public class LeakTask implements Runnable
 {
+   private static final Logger LOGGER = LoggerFactory.getLogger(LeakTask.class);
+
    private final long leakTime;
    private final ScheduledFuture<?> scheduledFuture;
    private StackTraceElement[] stackTrace;
@@ -57,7 +60,7 @@ public class LeakTask implements Runnable
          System.arraycopy(stackTrace, 3, trace, 0, trace.length);
 
          LeakException e = new LeakException(trace);
-         LoggerFactory.getLogger(LeakTask.class).warn("Connection leak detection triggered, stack trace follows", e);
+         LOGGER.warn("Connection leak detection triggered, stack trace follows", e);
          stackTrace = null;
       }
    }

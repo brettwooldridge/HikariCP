@@ -93,6 +93,10 @@ public class MiscTest
    @Test
    public void testLeakDetection() throws SQLException
    {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      PrintStream ps = new PrintStream(baos, true);
+      TestElf.setSlf4jTargetStream(LeakTask.class, ps);
+
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(4);
@@ -103,14 +107,12 @@ public class MiscTest
 
       final HikariDataSource ds = new HikariDataSource(config);
       try {
-         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-         PrintStream ps = new PrintStream(baos, true);
-         TestElf.setSlf4jTargetStream(LeakTask.class, ps);
 
          Connection connection = ds.getConnection();
-         PoolUtilities.quietlySleep(TimeUnit.SECONDS.toMillis(5));
-         ps.close();
+         PoolUtilities.quietlySleep(TimeUnit.SECONDS.toMillis(4));
          connection.close();
+         PoolUtilities.quietlySleep(TimeUnit.SECONDS.toMillis(1));
+         ps.close();
          String s = new String(baos.toByteArray());
          Assert.assertNotNull("Exception string was null", s);
          Assert.assertTrue("Expected exception to contain 'Connection leak detection' but contains\n" + s, s.contains("Connection leak detection"));
