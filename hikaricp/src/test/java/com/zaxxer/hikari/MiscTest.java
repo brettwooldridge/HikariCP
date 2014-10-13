@@ -111,6 +111,7 @@ public class MiscTest
          PoolUtilities.quietlySleep(TimeUnit.SECONDS.toMillis(3));
          ps.flush();
          connection.close();
+         ps.close();
          String s = new String(baos.toByteArray());
          Assert.assertTrue(s.contains("Connection leak detection"));
       }
