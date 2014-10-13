@@ -25,9 +25,14 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.impl.SimpleLogger;
+import org.slf4j.spi.LocationAwareLogger;
 
+import com.zaxxer.hikari.pool.HikariPool;
+import com.zaxxer.hikari.pool.PoolBagEntry;
 import com.zaxxer.hikari.util.ConcurrentBag;
-import com.zaxxer.hikari.util.ConcurrentBag.BagEntry;
 import com.zaxxer.hikari.util.LeakTask;
 import com.zaxxer.hikari.util.PoolUtilities;
 
@@ -86,22 +91,19 @@ public class MiscTest
    @Test
    public void testConcurrentBag() throws InterruptedException
    {
-      class TestBagEntry extends BagEntry {
-      }
-
-      ConcurrentBag<TestBagEntry> bag = new ConcurrentBag<TestBagEntry>(null);
+      ConcurrentBag<PoolBagEntry> bag = new ConcurrentBag<PoolBagEntry>(null);
       Assert.assertEquals(0, bag.values(8).size());
 
-      TestBagEntry reserved = new TestBagEntry();
+      PoolBagEntry reserved = new PoolBagEntry(null, 0);
       bag.add(reserved);
       bag.reserve(reserved);      // reserved
 
-      TestBagEntry notinuse = new TestBagEntry();
-      bag.add(new TestBagEntry()); // not in use
-      
-      TestBagEntry inuse = new TestBagEntry();
+      PoolBagEntry inuse = new PoolBagEntry(null, 0);
       bag.add(inuse);
       bag.borrow(2L, TimeUnit.SECONDS); // in use
+      
+      PoolBagEntry notinuse = new PoolBagEntry(null, 0);
+      bag.add(notinuse); // not in use
       
       bag.dumpState();
 
@@ -140,12 +142,14 @@ public class MiscTest
 
       bag.close();
       try {
-         bag.add(new TestBagEntry());
+         bag.add(new PoolBagEntry(null, 0));
          Assert.fail();
       }
       catch (IllegalStateException e) {
          // pass
       }
+
+      Assert.assertNotNull(notinuse.toString());
    }
 
    @Test
@@ -165,6 +169,8 @@ public class MiscTest
 
       final HikariDataSource ds = new HikariDataSource(config);
       try {
+         TestElf.setSlf4jLogLevel(HikariPool.class, LocationAwareLogger.DEBUG_INT);
+         TestElf.getPool(ds).logPoolState();
 
          Connection connection = ds.getConnection();
          PoolUtilities.quietlySleep(TimeUnit.SECONDS.toMillis(4));

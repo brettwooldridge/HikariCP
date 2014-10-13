@@ -83,6 +83,19 @@ public final class TestElf
       }
       catch (Exception e) {
          throw new RuntimeException(e);
-      }      
+      }
+   }
+
+   public static void setSlf4jLogLevel(Class<?> clazz, int logLevel)
+   {
+      SimpleLogger simpleLogger = (SimpleLogger) LoggerFactory.getLogger(clazz);
+      try {
+         Field field = clazz.getClassLoader().loadClass("org.slf4j.impl.SimpleLogger").getDeclaredField("currentLogLevel");
+         field.setAccessible(true);
+         field.setInt(simpleLogger, logLevel);
+      }
+      catch (Exception e) {
+         throw new RuntimeException(e);
+      }
    }
 }

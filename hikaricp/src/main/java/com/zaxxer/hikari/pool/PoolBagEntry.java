@@ -32,7 +32,7 @@ public final class PoolBagEntry extends BagEntry
    long lastOpenTime;
    long lastAccess;
 
-   PoolBagEntry(final Connection connection, long maxLifetime) {
+   public PoolBagEntry(final Connection connection, long maxLifetime) {
       this.connection = connection;
       lastAccess = System.currentTimeMillis();
       expirationTime = (maxLifetime > 0 ? lastAccess + maxLifetime : Long.MAX_VALUE);
