@@ -40,7 +40,7 @@ public class MiscTest
    public void testLogWriter() throws SQLException
    {
       HikariConfig config = new HikariConfig();
-      config.setMinimumIdle(1);
+      config.setMinimumIdle(0);
       config.setMaximumPoolSize(4);
       config.setPoolName("test");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
@@ -98,7 +98,7 @@ public class MiscTest
       TestElf.setSlf4jTargetStream(LeakTask.class, ps);
 
       HikariConfig config = new HikariConfig();
-      config.setMinimumIdle(1);
+      config.setMinimumIdle(0);
       config.setMaximumPoolSize(4);
       config.setPoolName("test");
       config.setLeakDetectionThreshold(TimeUnit.SECONDS.toMillis(1));
