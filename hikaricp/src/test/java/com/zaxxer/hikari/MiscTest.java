@@ -84,10 +84,68 @@ public class MiscTest
    }
 
    @Test
-   public void testBagDump()
+   public void testConcurrentBag() throws InterruptedException
    {
-      ConcurrentBag<BagEntry> bag = new ConcurrentBag<BagEntry>(null);
+      class TestBagEntry extends BagEntry {
+      }
+
+      ConcurrentBag<TestBagEntry> bag = new ConcurrentBag<TestBagEntry>(null);
+      Assert.assertEquals(0, bag.values(8).size());
+
+      TestBagEntry reserved = new TestBagEntry();
+      bag.add(reserved);
+      bag.reserve(reserved);      // reserved
+
+      TestBagEntry notinuse = new TestBagEntry();
+      bag.add(new TestBagEntry()); // not in use
+      
+      TestBagEntry inuse = new TestBagEntry();
+      bag.add(inuse);
+      bag.borrow(2L, TimeUnit.SECONDS); // in use
+      
       bag.dumpState();
+
+      try {
+         bag.requite(reserved);
+         Assert.fail();
+      }
+      catch (IllegalStateException e) {
+         // pass
+      }
+
+      try {
+         bag.remove(notinuse);
+         Assert.fail();
+      }
+      catch (IllegalStateException e) {
+         // pass
+      }
+
+      try {
+         bag.unreserve(notinuse);
+         Assert.fail();
+      }
+      catch (IllegalStateException e) {
+         // pass
+      }
+
+      try {
+         bag.remove(inuse);
+         bag.remove(inuse);
+         Assert.fail();
+      }
+      catch (IllegalStateException e) {
+         // pass
+      }
+
+      bag.close();
+      try {
+         bag.add(new TestBagEntry());
+         Assert.fail();
+      }
+      catch (IllegalStateException e) {
+         // pass
+      }
    }
 
    @Test

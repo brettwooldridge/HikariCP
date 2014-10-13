@@ -17,6 +17,7 @@ package com.zaxxer.hikari.util;
 
 import java.io.PrintWriter;
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -28,8 +29,7 @@ public final class DriverDataSource implements DataSource
 {
    private final String jdbcUrl;
    private final Properties driverProperties;
-
-   private PrintWriter logWriter;
+   private final Driver driver;
 
    public DriverDataSource(String jdbcUrl, Properties properties, String username, String password)
    {
@@ -43,7 +43,7 @@ public final class DriverDataSource implements DataSource
             driverProperties.put("password", driverProperties.getProperty("password", password));
          }
 
-         DriverManager.getDriver(jdbcUrl);
+         driver = DriverManager.getDriver(jdbcUrl);
       }
       catch (SQLException e) {
          throw new RuntimeException("Unable to get driver for JDBC URL " + jdbcUrl, e);
@@ -65,13 +65,13 @@ public final class DriverDataSource implements DataSource
    @Override
    public PrintWriter getLogWriter() throws SQLException
    {
-      return logWriter;
+      throw new SQLFeatureNotSupportedException();
    }
 
    @Override
    public void setLogWriter(PrintWriter logWriter) throws SQLException
    {
-      this.logWriter = logWriter;
+      throw new SQLFeatureNotSupportedException();
    }
 
    @Override
@@ -88,7 +88,7 @@ public final class DriverDataSource implements DataSource
 
    public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException
    {
-      throw new SQLFeatureNotSupportedException();
+      return driver.getParentLogger();
    }
 
    @Override
