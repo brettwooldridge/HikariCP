@@ -113,7 +113,7 @@ public class MiscTest
          connection.close();
          String s = new String(baos.toByteArray());
          Assert.assertNotNull("Exception string was null", s);
-         Assert.assertTrue(s.contains("Connection leak detection"));
+         Assert.assertTrue("Expected exception to contain 'Connection leak detection' but contains\n" + s, s.contains("Connection leak detection"));
       }
       finally
       {
