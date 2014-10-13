@@ -721,7 +721,7 @@ public class HikariConfig implements HikariConfigMBean
          idleTimeout = IDLE_TIMEOUT;
       }
 
-      if (leakDetectionThreshold != 0 && leakDetectionThreshold < TimeUnit.SECONDS.toMillis(10)) {
+      if (leakDetectionThreshold != 0 && leakDetectionThreshold < TimeUnit.SECONDS.toMillis(10) && !unitTest) {
          logger.warn("leakDetectionThreshold is less than 10000ms, did you specify the wrong time unit?  Disabling leak detection");
          leakDetectionThreshold = 0;
       }

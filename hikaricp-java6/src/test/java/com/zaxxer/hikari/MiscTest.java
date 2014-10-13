@@ -16,14 +16,19 @@
 
 package com.zaxxer.hikari;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.BagEntry;
+import com.zaxxer.hikari.util.LeakTask;
 import com.zaxxer.hikari.util.PoolUtilities;
 
 /**
@@ -37,6 +42,7 @@ public class MiscTest
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(4);
+      config.setPoolName("test");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
       TestElf.setConfigUnitTest();
 
@@ -45,6 +51,7 @@ public class MiscTest
          PrintWriter writer = new PrintWriter(System.out);
          ds.setLogWriter(writer);
          Assert.assertSame(writer, ds.getLogWriter());
+         Assert.assertEquals("test", config.getPoolName());
       }
       finally
       {
@@ -81,5 +88,35 @@ public class MiscTest
    {
       ConcurrentBag<BagEntry> bag = new ConcurrentBag<BagEntry>(null);
       bag.dumpState();
+   }
+
+   @Test
+   public void testLeakDetection() throws SQLException
+   {
+      HikariConfig config = new HikariConfig();
+      config.setMinimumIdle(1);
+      config.setMaximumPoolSize(4);
+      config.setPoolName("test");
+      config.setLeakDetectionThreshold(TimeUnit.SECONDS.toMillis(1));
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      TestElf.setConfigUnitTest();
+
+      final HikariDataSource ds = new HikariDataSource(config);
+      try {
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         PrintStream ps = new PrintStream(baos, true);
+         TestElf.setSlf4jTargetStream(LeakTask.class, ps);
+
+         Connection connection = ds.getConnection();
+         PoolUtilities.quietlySleep(TimeUnit.SECONDS.toMillis(3));
+         ps.flush();
+         connection.close();
+         String s = new String(baos.toByteArray());
+         Assert.assertTrue(s.contains("Connection leak detection"));
+      }
+      finally
+      {
+         ds.close();
+      }
    }
 }
