@@ -15,14 +15,30 @@
  */
 package com.zaxxer.hikari;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.sql.Connection;
+import java.sql.SQLException;
+
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.zaxxer.hikari.mocks.StubDataSource;
 
 /**
  * @author Brett Wooldridge
  */
 public class TestValidation
 {
+   @Test
+   public void validateLoadProperties()
+   {
+      System.setProperty("hikaricp.configurationFile", "src/test/resources/propfile1.properties");
+      HikariConfig config = new HikariConfig();
+      System.clearProperty("hikaricp.configurationFile");
+      Assert.assertEquals(5, config.getMinimumIdle());
+   }
+
    @Test
    public void validateInvalidCustomizer()
    {
@@ -32,6 +48,36 @@ public class TestValidation
       config.validate();
 
       Assert.assertNull(config.getConnectionCustomizerClassName());
+   }
+
+   @Test
+   public void validateValidCustomizer()
+   {
+      try {
+         HikariConfig config = new HikariConfig();
+         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+         config.setConnectionCustomizerClassName("com.zaxxer.hikari.TestValidation$TestCustomizer");
+         config.validate();
+         Assert.assertNotNull(config.getConnectionCustomizer());
+      }
+      catch (Exception e) {
+         Assert.fail();
+      }
+   }
+
+   @Test
+   public void validateValidCustomizer2()
+   {
+      try {
+         HikariConfig config = new HikariConfig();
+         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+         config.setConnectionCustomizer(new TestCustomizer());
+         config.validate();
+         Assert.assertNotNull(config.getConnectionCustomizer());
+      }
+      catch (Exception e) {
+         Assert.fail();
+      }
    }
 
    @Test
@@ -170,6 +216,26 @@ public class TestValidation
    }
 
    @Test
+   public void validateBothDSAndDSName()
+   {
+      try {
+         HikariConfig config = new HikariConfig();
+
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         PrintStream ps = new PrintStream(baos, true);
+         TestElf.setSlf4jTargetStream(HikariConfig.class, ps);
+
+         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+         config.setDataSource(new StubDataSource());
+         config.validate();
+         Assert.assertTrue(new String(baos.toByteArray()).contains("both dataSource"));
+      }
+      catch (IllegalStateException ise) {
+         Assert.assertTrue(ise.getMessage().contains("both dataSource"));
+      }
+   }
+
+   @Test
    public void validateMissingTest()
    {
       try {
@@ -198,6 +264,28 @@ public class TestValidation
       }
       catch (IllegalArgumentException ise) {
          // pass
+      }
+   }
+
+   @Test
+   public void validateZeroConnectionTimeout()
+   {
+      try {
+         HikariConfig config = new HikariConfig();
+         config.setConnectionTimeout(0);
+         config.validate();
+         Assert.assertEquals(Integer.MAX_VALUE, config.getConnectionTimeout());
+      }
+      catch (IllegalArgumentException ise) {
+         // pass
+      }
+   }
+
+   public static class TestCustomizer implements IConnectionCustomizer
+   {
+      @Override
+      public void customize(Connection connection) throws SQLException
+      {
       }
    }
 }

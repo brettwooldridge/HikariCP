@@ -16,8 +16,12 @@
 
 package com.zaxxer.hikari;
 
+import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.util.HashMap;
+
+import org.slf4j.LoggerFactory;
+import org.slf4j.impl.SimpleLogger;
 
 import com.zaxxer.hikari.pool.HikariPool;
 
@@ -63,6 +67,19 @@ public final class TestElf
          Field field = HikariConfig.class.getDeclaredField("unitTest");
          field.setAccessible(true);
          field.setBoolean(null, true);
+      }
+      catch (Exception e) {
+         throw new RuntimeException(e);
+      }      
+   }
+
+   public static void setSlf4jTargetStream(Class<?> clazz, PrintStream stream)
+   {
+      SimpleLogger simpleLogger = (SimpleLogger) LoggerFactory.getLogger(clazz);
+      try {
+         Field field = SimpleLogger.class.getDeclaredField("TARGET_STREAM");
+         field.setAccessible(true);
+         field.set(simpleLogger, stream);
       }
       catch (Exception e) {
          throw new RuntimeException(e);

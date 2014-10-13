@@ -57,7 +57,7 @@ public class StubDriver implements Driver
     @Override
     public boolean acceptsURL(String url) throws SQLException
     {
-        return true;
+        return "jdbc:stub".equals(url);
     }
 
     /** {@inheritDoc} */

@@ -50,6 +50,7 @@ public class TestConnections
         config.setConnectionTestQuery("VALUES 1");
         config.setConnectionInitSql("SELECT 1");
         config.setRecordMetrics(true);
+        config.setReadOnly(true);
         config.setLeakDetectionThreshold(TimeUnit.SECONDS.toMillis(60));
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -357,7 +358,7 @@ public class TestConnections
     public void testGetWithUsername() throws Exception
     {
        HikariConfig config = new HikariConfig();
-       config.setMinimumIdle(1);
+       config.setMinimumIdle(0);
        config.setMaximumPoolSize(4);
        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -366,8 +367,13 @@ public class TestConnections
           Connection connection1 = ds.getConnection("foo", "bar");
           connection1.close();
 
-          Connection connection2 = ds.getConnection("faz", "baf");
+          Connection connection2 = ds.getConnection("foo", "bar");
           connection2.close();
+
+          Assert.assertSame(connection1.unwrap(Connection.class), connection2.unwrap(Connection.class));
+
+          Connection connection3 = ds.getConnection("faz", "baf");
+          connection3.close();
 
           HashMap<Object,HikariPool> multiPool = TestElf.getMultiPool(ds);
           Assert.assertTrue(multiPool.size() > 1);

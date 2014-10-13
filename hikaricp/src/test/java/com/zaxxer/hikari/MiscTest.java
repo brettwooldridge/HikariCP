@@ -37,6 +37,7 @@ public class MiscTest
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(4);
+      config.setPoolName("test");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
       TestElf.setConfigUnitTest();
 
@@ -45,6 +46,7 @@ public class MiscTest
          PrintWriter writer = new PrintWriter(System.out);
          ds.setLogWriter(writer);
          Assert.assertSame(writer, ds.getLogWriter());
+         Assert.assertEquals("test", config.getPoolName());
       }
       finally
       {

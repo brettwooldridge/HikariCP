@@ -43,9 +43,7 @@ public final class DriverDataSource implements DataSource
             driverProperties.put("password", driverProperties.getProperty("password", password));
          }
 
-         if (DriverManager.getDriver(jdbcUrl) == null) {
-            throw new IllegalArgumentException("DriverManager was unable to load driver for URL " + jdbcUrl);
-         }
+         DriverManager.getDriver(jdbcUrl);
       }
       catch (SQLException e) {
          throw new RuntimeException("Unable to get driver for JDBC URL " + jdbcUrl, e);
