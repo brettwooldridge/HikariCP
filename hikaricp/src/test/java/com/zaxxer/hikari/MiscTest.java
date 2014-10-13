@@ -108,7 +108,7 @@ public class MiscTest
          TestElf.setSlf4jTargetStream(LeakTask.class, ps);
 
          Connection connection = ds.getConnection();
-         PoolUtilities.quietlySleep(TimeUnit.SECONDS.toMillis(4));
+         PoolUtilities.quietlySleep(TimeUnit.SECONDS.toMillis(5));
          ps.close();
          connection.close();
          String s = new String(baos.toByteArray());
