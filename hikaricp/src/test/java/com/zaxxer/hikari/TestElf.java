@@ -77,7 +77,7 @@ public final class TestElf
    {
       SimpleLogger simpleLogger = (SimpleLogger) LoggerFactory.getLogger(clazz);
       try {
-         Field field = SimpleLogger.class.getDeclaredField("TARGET_STREAM");
+         Field field = clazz.getClassLoader().loadClass("org.slf4j.impl.SimpleLogger").getDeclaredField("TARGET_STREAM");
          field.setAccessible(true);
          field.set(simpleLogger, stream);
       }
