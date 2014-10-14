@@ -227,7 +227,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       }
 
       if (isBroken || isShutdown) {
-         LOGGER.debug("Connection returned to pool {} is broken, or the pool is shutting down.  Closing connection.", configuration.getPoolName());
+         LOGGER.debug("Connection returned to pool {} is broken, or the pool has been shut down.  Closing connection.", configuration.getPoolName());
          closeConnection(bagEntry);
          return;
       }
@@ -271,6 +271,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       }
    }
 
+   /**
+    * Evict a connection from the pool.
+    *
+    * @param proxyConnection the connection to evict
+    */
    public void evictConnection(IHikariConnectionProxy proxyConnection) {
       closeConnection(proxyConnection.getPoolBagEntry());
    }
