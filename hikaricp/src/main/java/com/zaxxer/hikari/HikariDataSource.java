@@ -49,7 +49,6 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    private volatile boolean isShutdown;
    private int loginTimeout;
 
-   /* Package scopped for testing */
    private final HikariPool fastPathPool;
    private volatile HikariPool pool;
 
