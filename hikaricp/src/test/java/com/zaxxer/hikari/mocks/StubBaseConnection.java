@@ -7,17 +7,25 @@ import java.sql.Statement;
 
 public abstract class StubBaseConnection implements Connection
 {
-    /** {@inheritDoc} */
-    @Override
-    public Statement createStatement() throws SQLException
-    {
-        return new StubStatement(this);
-    }
+   public volatile boolean throwException;
 
-    /** {@inheritDoc} */
-    @Override
-    public PreparedStatement prepareStatement(String sql) throws SQLException
-    {
-        return new StubPreparedStatement(this);
-    }
+   /** {@inheritDoc} */
+   @Override
+   public Statement createStatement() throws SQLException
+   {
+      if (throwException) {
+         throw new SQLException();
+      }
+      return new StubStatement(this);
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public PreparedStatement prepareStatement(String sql) throws SQLException
+   {
+      if (throwException) {
+         throw new SQLException();
+      }
+      return new StubPreparedStatement(this);
+   }
 }

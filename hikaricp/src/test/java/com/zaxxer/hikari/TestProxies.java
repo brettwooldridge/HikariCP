@@ -4,12 +4,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.mocks.StubStatement;
+import com.zaxxer.hikari.util.PoolUtilities;
 
 public class TestProxies
 {
@@ -84,6 +86,230 @@ public class TestProxies
             // pass
          }
       }
+      finally {
+         ds.close();
+      }
+   }
+
+   @Test
+   public void testStatementExceptions() throws SQLException
+   {
+      HikariConfig config = new HikariConfig();
+      config.setMinimumIdle(0);
+      config.setMaximumPoolSize(1);
+      config.setConnectionTimeout(TimeUnit.SECONDS.toMillis(1));
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      HikariDataSource ds = new HikariDataSource(config);
+      try {
+         Connection conn = ds.getConnection();
+         StubConnection stubConnection = conn.unwrap(StubConnection.class);
+         stubConnection.throwException = true;
+
+         try {
+            conn.createStatement();
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.createStatement(0, 0);
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.createStatement(0, 0, 0);
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.prepareCall("");
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.prepareCall("", 0, 0);
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.prepareCall("", 0, 0, 0);
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.prepareStatement("");
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.prepareStatement("", 0);
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.prepareStatement("", new int[0]);
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.prepareStatement("", new String[0]);
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.prepareStatement("", 0, 0);
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.prepareStatement("", 0, 0, 0);
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+      }
+      finally {
+         ds.close();
+      }
+   }
+
+   @Test
+   public void testOtherExceptions() throws SQLException
+   {
+      HikariConfig config = new HikariConfig();
+      config.setMinimumIdle(0);
+      config.setMaximumPoolSize(1);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      HikariDataSource ds = new HikariDataSource(config);
+      try {
+         Connection conn = ds.getConnection();
+         StubConnection stubConnection = conn.unwrap(StubConnection.class);
+         stubConnection.throwException = true;
+
+         try {
+            conn.setTransactionIsolation(Connection.TRANSACTION_NONE);
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.isReadOnly();
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.setReadOnly(false);
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.setCatalog("");
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.setAutoCommit(false);
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.clearWarnings();
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.isValid(0);
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.isWrapperFor(getClass());
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.unwrap(getClass());
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            conn.close();
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+
+         try {
+            Assert.assertFalse(conn.isValid(0));
+         }
+         catch (SQLException e) {
+            Assert.fail();
+         }
+}
       finally {
          ds.close();
       }

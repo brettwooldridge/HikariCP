@@ -25,14 +25,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.impl.SimpleLogger;
 import org.slf4j.spi.LocationAwareLogger;
 
 import com.zaxxer.hikari.pool.HikariPool;
-import com.zaxxer.hikari.pool.PoolBagEntry;
-import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.LeakTask;
 import com.zaxxer.hikari.util.PoolUtilities;
 
@@ -49,7 +44,7 @@ public class MiscTest
       config.setMaximumPoolSize(4);
       config.setPoolName("test");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-      TestElf.setConfigUnitTest();
+      TestElf.setConfigUnitTest(true);
 
       final HikariDataSource ds = new HikariDataSource(config);
       try {
@@ -60,6 +55,7 @@ public class MiscTest
       }
       finally
       {
+         TestElf.setConfigUnitTest(false);
          ds.close();
       }
    }
@@ -89,70 +85,6 @@ public class MiscTest
    }
 
    @Test
-   public void testConcurrentBag() throws InterruptedException
-   {
-      ConcurrentBag<PoolBagEntry> bag = new ConcurrentBag<PoolBagEntry>(null);
-      Assert.assertEquals(0, bag.values(8).size());
-
-      PoolBagEntry reserved = new PoolBagEntry(null, 0);
-      bag.add(reserved);
-      bag.reserve(reserved);      // reserved
-
-      PoolBagEntry inuse = new PoolBagEntry(null, 0);
-      bag.add(inuse);
-      bag.borrow(2L, TimeUnit.SECONDS); // in use
-      
-      PoolBagEntry notinuse = new PoolBagEntry(null, 0);
-      bag.add(notinuse); // not in use
-      
-      bag.dumpState();
-
-      try {
-         bag.requite(reserved);
-         Assert.fail();
-      }
-      catch (IllegalStateException e) {
-         // pass
-      }
-
-      try {
-         bag.remove(notinuse);
-         Assert.fail();
-      }
-      catch (IllegalStateException e) {
-         // pass
-      }
-
-      try {
-         bag.unreserve(notinuse);
-         Assert.fail();
-      }
-      catch (IllegalStateException e) {
-         // pass
-      }
-
-      try {
-         bag.remove(inuse);
-         bag.remove(inuse);
-         Assert.fail();
-      }
-      catch (IllegalStateException e) {
-         // pass
-      }
-
-      bag.close();
-      try {
-         bag.add(new PoolBagEntry(null, 0));
-         Assert.fail();
-      }
-      catch (IllegalStateException e) {
-         // pass
-      }
-
-      Assert.assertNotNull(notinuse.toString());
-   }
-
-   @Test
    public void testLeakDetection() throws SQLException
    {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -165,7 +97,7 @@ public class MiscTest
       config.setPoolName("test");
       config.setLeakDetectionThreshold(TimeUnit.SECONDS.toMillis(1));
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-      TestElf.setConfigUnitTest();
+      TestElf.setConfigUnitTest(true);
 
       final HikariDataSource ds = new HikariDataSource(config);
       try {
@@ -183,6 +115,7 @@ public class MiscTest
       }
       finally
       {
+         TestElf.setConfigUnitTest(false);
          ds.close();
       }
    }

@@ -68,6 +68,22 @@ public class TestJNDI
       Assert.assertEquals("foo", ds.getUsername());
    }
 
+   @Test
+   public void testJndiLookup3() throws Exception
+   {
+      HikariJNDIFactory jndi = new HikariJNDIFactory();
+
+      Reference ref = new Reference("javax.sql.DataSource");
+      ref.add(new BogusRef("dataSourceJNDI", "java:comp/env/HikariDS"));
+      try {
+         jndi.getObjectInstance(ref, null, null, null);
+         Assert.fail();
+      }
+      catch (RuntimeException e) {
+         Assert.assertTrue(e.getMessage().contains("JNDI context is null"));
+      }
+   }
+
    private class BogusContext extends AbstractContext
    {
       @Override

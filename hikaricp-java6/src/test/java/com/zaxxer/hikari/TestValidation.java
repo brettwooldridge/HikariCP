@@ -268,6 +268,21 @@ public class TestValidation
    }
 
    @Test
+   public void validateInvalidLeakDetection()
+   {
+      try {
+         HikariConfig config = new HikariConfig();
+         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+         config.setLeakDetectionThreshold(1000L);
+         config.validate();
+         Assert.assertEquals(0, config.getLeakDetectionThreshold());
+      }
+      catch (IllegalArgumentException ise) {
+         // pass
+      }
+   }
+
+   @Test
    public void validateZeroConnectionTimeout()
    {
       try {

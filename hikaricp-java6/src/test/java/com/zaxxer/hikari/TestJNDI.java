@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2014 Brett Wooldridge
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.zaxxer.hikari;
 
 import javax.naming.Context;
@@ -51,6 +66,22 @@ public class TestJNDI
       HikariDataSource ds = (HikariDataSource) jndi.getObjectInstance(ref, null, nameCtx, null);
       Assert.assertNotNull(ds);
       Assert.assertEquals("foo", ds.getUsername());
+   }
+
+   @Test
+   public void testJndiLookup3() throws Exception
+   {
+      HikariJNDIFactory jndi = new HikariJNDIFactory();
+
+      Reference ref = new Reference("javax.sql.DataSource");
+      ref.add(new BogusRef("dataSourceJNDI", "java:comp/env/HikariDS"));
+      try {
+         jndi.getObjectInstance(ref, null, null, null);
+         Assert.fail();
+      }
+      catch (RuntimeException e) {
+         Assert.assertTrue(e.getMessage().contains("JNDI context is null"));
+      }
    }
 
    private class BogusContext extends AbstractContext
