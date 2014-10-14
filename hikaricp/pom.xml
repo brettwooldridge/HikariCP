@@ -58,6 +58,11 @@
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
             <version>0.7.2.201409121644</version>
+            <configuration>
+               <excludes>
+                  <exclude>**/com/zaxxer/hikari/proxy/ProxyFactory.*</exclude>
+               </excludes>
+            </configuration>
             <executions>
                <!-- Prepares the property pointing to the JaCoCo runtime agent which is passed as VM argument when Maven the Surefire plugin is executed. -->
                <execution>
