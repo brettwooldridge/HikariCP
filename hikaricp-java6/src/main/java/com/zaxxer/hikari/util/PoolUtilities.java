@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -157,7 +158,7 @@ public final class PoolUtilities
     * @param threadFactory an optional ThreadFactory
     * @return a ThreadPoolExecutor
     */
-   public static ThreadPoolExecutor createThreadPoolExecutor(final int queueSize, final String threadName, ThreadFactory threadFactory)
+   public static ThreadPoolExecutor createThreadPoolExecutor(final int queueSize, final String threadName, ThreadFactory threadFactory, RejectedExecutionHandler policy)
    {
       if (threadFactory == null) {
          threadFactory = new DefaultThreadFactory(threadName, true);
@@ -165,8 +166,7 @@ public final class PoolUtilities
 
       int processors = Math.max(1, Runtime.getRuntime().availableProcessors() / 4);
       LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>(queueSize);
-      ThreadPoolExecutor executor = new ThreadPoolExecutor(processors, processors, 5, TimeUnit.SECONDS, queue, threadFactory,
-                                                           new ThreadPoolExecutor.DiscardPolicy());
+      ThreadPoolExecutor executor = new ThreadPoolExecutor(processors, processors, 5, TimeUnit.SECONDS, queue, threadFactory, policy);
       executor.allowCoreThreadTimeOut(true);
       return executor;
    }

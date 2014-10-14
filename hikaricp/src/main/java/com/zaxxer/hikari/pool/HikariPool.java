@@ -150,8 +150,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          HikariMBeanElf.registerMBeans(configuration, this);
       }
 
-      addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory());
-      closeConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection closer (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory());
+      addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
+      closeConnectionExecutor = createThreadPoolExecutor(4, "HikariCP connection closer (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
 
       fillPool();
 
@@ -508,7 +508,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    private void abortActiveConnections() throws InterruptedException
    {
-      ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin", configuration.getThreadFactory());
+      ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin", configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
       connectionBag.values(STATE_IN_USE).parallelStream().forEach(bagEntry -> {
          try {
             bagEntry.connection.abort(assassinExecutor);
