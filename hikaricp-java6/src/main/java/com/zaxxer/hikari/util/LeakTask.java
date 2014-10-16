@@ -34,7 +34,7 @@ public class LeakTask implements Runnable
    private static final Logger LOGGER = LoggerFactory.getLogger(LeakTask.class);
 
    private final ScheduledFuture<?> scheduledFuture;
-   private StackTraceElement[] stackTrace;
+   private Exception exception;
 
    public LeakTask()
    {
@@ -43,7 +43,7 @@ public class LeakTask implements Runnable
 
    public LeakTask(final long leakDetectionThreshold, final ScheduledExecutorService executorService)
    {
-      this.stackTrace = new Exception().getStackTrace();
+      this.exception = new Exception();
       
       scheduledFuture = executorService.schedule(this, leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
@@ -52,33 +52,20 @@ public class LeakTask implements Runnable
    @Override
    public void run()
    {
-      StackTraceElement[] trace = new StackTraceElement[stackTrace.length - 3];
+      final StackTraceElement[] stackTrace = exception.getStackTrace(); 
+      final StackTraceElement[] trace = new StackTraceElement[stackTrace.length - 3];
       System.arraycopy(stackTrace, 3, trace, 0, trace.length);
 
-      LeakException e = new LeakException(trace);
-      LOGGER.warn("Connection leak detection triggered, stack trace follows", e);
-      stackTrace = null;
+      exception.setStackTrace(trace);
+      LOGGER.warn("Connection leak detection triggered, stack trace follows", exception);
+      exception = null;
    }
 
    public void cancel()
    {
-      stackTrace = null;
+      exception = null;
       if (scheduledFuture != null) {
          scheduledFuture.cancel(false);
-      }
-   }
-
-   private static class LeakException extends Exception
-   {
-      private static final long serialVersionUID = -2021997004669670337L;
-
-      /**
-       * No-op constructor to avoid the call to fillInStackTrace() 
-       */
-      public LeakException(final StackTraceElement[] stackTrace)
-      {
-         super("Connection Leak", null, true, true);
-         this.setStackTrace(stackTrace);
       }
    }
 }
