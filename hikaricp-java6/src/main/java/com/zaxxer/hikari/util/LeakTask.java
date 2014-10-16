@@ -34,11 +34,12 @@ public class LeakTask implements Runnable
    private static final Logger LOGGER = LoggerFactory.getLogger(LeakTask.class);
 
    private final ScheduledFuture<?> scheduledFuture;
-   private Exception exception;
+   private final Exception exception;
 
    public LeakTask()
    {
       scheduledFuture = null;
+      exception = null;
    }
 
    public LeakTask(final long leakDetectionThreshold, final ScheduledExecutorService executorService)
@@ -58,12 +59,10 @@ public class LeakTask implements Runnable
 
       exception.setStackTrace(trace);
       LOGGER.warn("Connection leak detection triggered, stack trace follows", exception);
-      exception = null;
    }
 
    public void cancel()
    {
-      exception = null;
       scheduledFuture.cancel(false);
    }
 }
