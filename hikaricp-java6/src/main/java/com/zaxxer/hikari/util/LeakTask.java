@@ -64,8 +64,6 @@ public class LeakTask implements Runnable
    public void cancel()
    {
       exception = null;
-      if (scheduledFuture != null) {
-         scheduledFuture.cancel(false);
-      }
+      scheduledFuture.cancel(false);
    }
 }
