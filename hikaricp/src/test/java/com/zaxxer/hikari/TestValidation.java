@@ -107,20 +107,6 @@ public class TestValidation
    }
 
    @Test
-   public void validateMissingDriver()
-   {
-      try {
-         HikariConfig config = new HikariConfig();
-         config.setJdbcUrl("jdbc:stub");
-         config.validate();
-         Assert.fail();
-      }
-      catch (IllegalStateException ise) {
-         // pass
-      }
-   }
-
-   @Test
    public void validateBadDriver()
    {
       try {
