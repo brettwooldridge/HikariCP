@@ -47,9 +47,9 @@ Microbenchmarks were created to isolate and measure the overhead of pools using 
 
 [![](https://github.com/brettwooldridge/HikariCP/wiki/tweet3.png)](https://twitter.com/jkuipers)
 
-![](https://github.com/brettwooldridge/HikariCP/wiki/tweet1.png)
+[![](https://github.com/brettwooldridge/HikariCP/wiki/tweet1.png)](https://twitter.com/steve_objectify)
 
-![](https://github.com/brettwooldridge/HikariCP/wiki/tweet2.png)
+[![](https://github.com/brettwooldridge/HikariCP/wiki/tweet2.png)](https://twitter.com/brettemeyer)
 
 The guys over at [Edulify](https://edulify.com) were experiencing connection leaks and other issues using BoneCP in their Play Framework application.  They created a [HikariCP plugin for Play Framework](http://edulify.github.io/play-hikaricp.edulify.com/) to give HikariCP a try.
 
