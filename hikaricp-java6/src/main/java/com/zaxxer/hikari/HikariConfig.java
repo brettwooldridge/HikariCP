@@ -705,30 +705,34 @@ public class HikariConfig implements HikariConfigMBean
       Logger logger = LoggerFactory.getLogger(getClass());
 
       if (connectionTimeout == Integer.MAX_VALUE) {
-         logger.warn("No connection wait timeout is set, this might cause an infinite wait");
+         logger.warn("No connection wait timeout is set, this might cause an infinite wait.");
       }
 
       if (minIdle < 0 || minIdle > maxPoolSize) {
          minIdle = maxPoolSize;
       }
 
-      if (idleTimeout != 0 && idleTimeout < TimeUnit.SECONDS.toMillis(30)) {
-         logger.warn("idleTimeout is less than 30000ms, did you specify the wrong time unit?  Using default instead");
-         idleTimeout = IDLE_TIMEOUT;
-      }
-
-      if (leakDetectionThreshold != 0 && leakDetectionThreshold < TimeUnit.SECONDS.toMillis(10) && !unitTest) {
-         logger.warn("leakDetectionThreshold is less than 10000ms, did you specify the wrong time unit?  Disabling leak detection");
-         leakDetectionThreshold = 0;
-      }
-
       if (maxLifetime < 0) {
          logger.error("maxLifetime cannot be negative.");
          throw new IllegalArgumentException("maxLifetime cannot be negative.");
       }
-      else if (maxLifetime != 0 && maxLifetime < TimeUnit.SECONDS.toMillis(120)) {
-         logger.warn("maxLifetime is less than 120000ms, did you specify the wrong time unit?  Using default instead.");
+      else if (maxLifetime > 0 && maxLifetime < TimeUnit.SECONDS.toMillis(120)) {
+         logger.warn("maxLifetime is less than 120000ms, using default {}ms.", MAX_LIFETIME);
          maxLifetime = MAX_LIFETIME;
+      }
+
+      if (idleTimeout != 0 && idleTimeout < TimeUnit.SECONDS.toMillis(30)) {
+         logger.warn("idleTimeout is less than 30000ms, using default {}ms.", IDLE_TIMEOUT);
+         idleTimeout = IDLE_TIMEOUT;
+      }
+      else if (idleTimeout > maxLifetime && maxLifetime > 0) {
+         logger.warn("idleTimeout is greater than maxLifetime, setting to maxLifetime.");
+         idleTimeout = maxLifetime;
+      }
+
+      if (leakDetectionThreshold != 0 && leakDetectionThreshold < TimeUnit.SECONDS.toMillis(10) && !unitTest) {
+         logger.warn("leakDetectionThreshold is less than 10000ms, disabling leak detection.");
+         leakDetectionThreshold = 0;
       }
    }
 
