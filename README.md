@@ -45,6 +45,8 @@ Microbenchmarks were created to isolate and measure the overhead of pools using 
 ----------------------------------------------------
 ***User Testimonials***<br/>
 
+![](https://github.com/brettwooldridge/HikariCP/wiki/tweet3.png)
+
 ![](https://github.com/brettwooldridge/HikariCP/wiki/tweet1.png)
 
 ![](https://github.com/brettwooldridge/HikariCP/wiki/tweet2.png)
