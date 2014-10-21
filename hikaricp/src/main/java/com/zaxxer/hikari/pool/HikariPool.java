@@ -94,7 +94,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
    private volatile boolean isShutdown;
    private volatile long connectionTimeout;
-   private volatile boolean isJdbc41Compliant;
+   private volatile boolean isUseNetworkTimeout;
 
    /**
     * Construct a HikariPool with the specified configuration.
@@ -415,7 +415,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
          transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
          connectionCustomizer.customize(connection);
-         isJdbc41Compliant = isJdbc41Compliant(connection);
+         isUseNetworkTimeout = isJdbc41Compliant(connection) && (configuration.getConnectionTimeout() != Integer.MAX_VALUE);
 
          executeSqlAutoCommit(connection, configuration.getConnectionInitSql());
 
@@ -461,9 +461,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          }
 
          int networkTimeout = 0;
-         if (isJdbc41Compliant) {
+         if (isUseNetworkTimeout) {
             networkTimeout = connection.getNetworkTimeout();
-            connection.setNetworkTimeout(houseKeepingExecutorService, timeoutEnabled ? (int) timeoutMs : 0); 
+            connection.setNetworkTimeout(houseKeepingExecutorService, (int) timeoutMs); 
          }
 
          try (Statement statement = connection.createStatement()) {
@@ -474,7 +474,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          if (isIsolateInternalQueries && !isAutoCommit) {
             connection.rollback();
          }
-         if (isJdbc41Compliant) {
+
+         if (isUseNetworkTimeout) {
             connection.setNetworkTimeout(houseKeepingExecutorService, networkTimeout);
          }
 
