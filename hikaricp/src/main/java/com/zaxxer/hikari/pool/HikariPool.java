@@ -25,6 +25,7 @@ import static com.zaxxer.hikari.util.PoolUtilities.elapsedTimeMs;
 import static com.zaxxer.hikari.util.PoolUtilities.executeSqlAutoCommit;
 import static com.zaxxer.hikari.util.PoolUtilities.quietlyCloseConnection;
 import static com.zaxxer.hikari.util.PoolUtilities.quietlySleep;
+import static com.zaxxer.hikari.util.PoolUtilities.isJdbc41Compliant;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -414,7 +415,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
          transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
          connectionCustomizer.customize(connection);
-         isJdbc41Compliant = PoolUtilities.isJdbc41Compliant(connection);
+         isJdbc41Compliant = isJdbc41Compliant(connection);
 
          executeSqlAutoCommit(connection, configuration.getConnectionInitSql());
 
