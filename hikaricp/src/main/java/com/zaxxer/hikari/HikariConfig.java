@@ -668,7 +668,7 @@ public class HikariConfig implements HikariConfigMBean
          logger.error("both driverClassName and dataSourceClassName are specified, one or the other should be used");
          throw new IllegalStateException("both driverClassName and dataSourceClassName are specified, one or the other should be used");
       }
-      else if (driverClassName != null && jdbcUrl != null) {
+      else if (jdbcUrl != null) {
          // OK
       }
       else if (dataSource == null && dataSourceClassName == null) {
