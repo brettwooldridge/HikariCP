@@ -64,45 +64,36 @@ import com.zaxxer.hikari.util.PoolUtilities;
  */
 public final class HikariPool implements HikariPoolMBean, IBagStateListener
 {
-   private static final Logger LOGGER;
-   private static final LeakTask NO_LEAK;
+   private static final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
 
    public final String catalog;
-   public final boolean isAutoCommit;
    public final boolean isReadOnly;
+   public final boolean isAutoCommit;
    public int transactionIsolation;
 
    private final DataSource dataSource;
 
-   private final IConnectionCustomizer connectionCustomizer;
    private final HikariConfig configuration;
-   private final ConcurrentBag<PoolBagEntry> connectionBag;
-   private final ThreadPoolExecutor addConnectionExecutor;
-   private final ThreadPoolExecutor closeConnectionExecutor;
    private final IMetricsTracker metricsTracker;
+   private final ThreadPoolExecutor addConnectionExecutor;
+   private final ConcurrentBag<PoolBagEntry> connectionBag;
+   private final ThreadPoolExecutor closeConnectionExecutor;
+   private final IConnectionCustomizer connectionCustomizer;
 
-   private final AtomicReference<Throwable> lastConnectionFailure;
    private final AtomicInteger totalConnections;
+   private final AtomicReference<Throwable> lastConnectionFailure;
    private final ScheduledThreadPoolExecutor houseKeepingExecutorService;
 
-   private final boolean isIsolateInternalQueries;
+   private final String username;
+   private final String password;
    private final boolean isRecordMetrics;
    private final boolean isRegisteredMbeans;
    private final boolean isJdbc4ConnectionTest;
+   private final boolean isIsolateInternalQueries;
    private final long leakDetectionThreshold;
-   private final String username;
-   private final String password;
 
-   private volatile long connectionTimeout;
    private volatile boolean isShutdown;
-
-   // static initializer
-   static {
-      LOGGER = LoggerFactory.getLogger(HikariPool.class);
-      NO_LEAK = new LeakTask() {
-         public void cancel() {};
-      };
-   }
+   private volatile long connectionTimeout;
 
    /**
     * Construct a HikariPool with the specified configuration.
@@ -173,7 +164,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    public Connection getConnection() throws SQLException
    {
       final long start = System.currentTimeMillis();
-      final MetricsContext context = (isRecordMetrics ? metricsTracker.recordConnectionRequest(start) : MetricsTracker.NO_CONTEXT);
+      final MetricsContext metricsContext = (isRecordMetrics ? metricsTracker.recordConnectionRequest(start) : MetricsTracker.NO_CONTEXT);
       long timeout = connectionTimeout;
 
       try {
@@ -190,8 +181,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                continue;
             }
 
-            LeakTask leakTask = (leakDetectionThreshold == 0) ? NO_LEAK : new LeakTask(leakDetectionThreshold, houseKeepingExecutorService);
-            
+            final LeakTask leakTask = (leakDetectionThreshold == 0) ? LeakTask.NO_LEAK : new LeakTask(leakDetectionThreshold, houseKeepingExecutorService);
             final IHikariConnectionProxy proxyConnection = ProxyFactory.getProxyConnection(this, bagEntry, leakTask);
 
             if (isRecordMetrics) {
@@ -206,12 +196,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          throw new SQLException("Interrupted during connection acquisition", e);
       }
       finally {
-         context.stop();
+         metricsContext.stop();
       }
 
       logPoolState("Timeout failure ");
-      throw new SQLException(String.format("Timeout of %dms encountered waiting for connection.", configuration.getConnectionTimeout()),
-                             lastConnectionFailure.getAndSet(null));
+      throw new SQLException(String.format("Timeout of %dms encountered waiting for connection.", connectionTimeout), lastConnectionFailure.getAndSet(null));
    }
 
    /**
@@ -430,14 +419,14 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    private boolean addConnection()
    {
+      // Speculative increment of totalConnections with expectation of success
+      if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize() || isShutdown) {
+         totalConnections.decrementAndGet();
+         return true;
+      }
+      
       Connection connection = null;
       try {
-         // Speculative increment of totalConnections with expectation of success
-         if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize() || isShutdown) {
-            totalConnections.decrementAndGet();
-            return true;
-         }
-
          connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
          transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
          connectionCustomizer.customize(connection);

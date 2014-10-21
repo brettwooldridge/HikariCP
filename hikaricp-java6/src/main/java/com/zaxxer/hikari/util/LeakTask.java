@@ -31,10 +31,19 @@ import org.slf4j.LoggerFactory;
  */
 public class LeakTask implements Runnable
 {
+   public static final LeakTask NO_LEAK;
    private static final Logger LOGGER = LoggerFactory.getLogger(LeakTask.class);
 
    private final ScheduledFuture<?> scheduledFuture;
    private final Exception exception;
+
+   static
+   {
+      NO_LEAK = new LeakTask() {
+         @Override
+         public void cancel() {};
+      };
+   }
 
    public LeakTask()
    {
