@@ -19,6 +19,9 @@ public final class PoolUtilities
 {
    public static final boolean IS_JAVA7;
 
+   private static volatile boolean IS_JDBC4;
+   private static volatile boolean jdbc4checked; 
+
    static {
       boolean b = false;
       try {
@@ -30,7 +33,12 @@ public final class PoolUtilities
       IS_JAVA7 = b;
    }
 
-   public static void quietlyCloseConnection(Connection connection)
+   /**
+    * Close connection and eat any exception.
+    *
+    * @param connection the connection to close
+    */
+   public static void quietlyCloseConnection(final Connection connection)
    {
       if (connection != null) {
          try {
@@ -164,10 +172,27 @@ public final class PoolUtilities
          threadFactory = new DefaultThreadFactory(threadName, true);
       }
 
-      int processors = Math.max(1, Runtime.getRuntime().availableProcessors() / 4);
       LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>(queueSize);
-      ThreadPoolExecutor executor = new ThreadPoolExecutor(processors, processors, 5, TimeUnit.SECONDS, queue, threadFactory, policy);
+      ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 5, TimeUnit.SECONDS, queue, threadFactory, policy);
       executor.allowCoreThreadTimeOut(true);
       return executor;
+   }
+
+   public static boolean isJdbc41Compliant(Connection connection)
+   {
+      if (jdbc4checked) {
+         return IS_JDBC4;
+      }
+
+      try {
+         connection.getNetworkTimeout();  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
+         IS_JDBC4 = true;
+      }
+      catch (Exception e) {
+         IS_JDBC4 = false;
+      }
+
+      jdbc4checked = true;
+      return IS_JDBC4;
    }
 }

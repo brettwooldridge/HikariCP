@@ -94,6 +94,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
    private volatile boolean isShutdown;
    private volatile long connectionTimeout;
+   private volatile boolean isJdbc41Compliant;
 
    /**
     * Construct a HikariPool with the specified configuration.
@@ -430,6 +431,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
          transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
          connectionCustomizer.customize(connection);
+         isJdbc41Compliant = PoolUtilities.isJdbc41Compliant(connection);
 
          executeSqlAutoCommit(connection, configuration.getConnectionInitSql());
 
@@ -474,21 +476,32 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
          }
 
+         int networkTimeout = 0;
+         if (isJdbc41Compliant) {
+            networkTimeout = connection.getNetworkTimeout();
+            connection.setNetworkTimeout(houseKeepingExecutorService, timeoutEnabled ? (int) timeoutMs : 0); 
+         }
+
          Statement statement = connection.createStatement();
          try {
             statement.setQueryTimeout((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
             statement.executeQuery(configuration.getConnectionTestQuery());
-            return true;
          }
          finally {
             statement.close();
-            if (isIsolateInternalQueries && !isAutoCommit) {
-               connection.rollback();
-            }
          }
+
+         if (isIsolateInternalQueries && !isAutoCommit) {
+            connection.rollback();
+         }
+         if (isJdbc41Compliant) {
+            connection.setNetworkTimeout(houseKeepingExecutorService, networkTimeout);
+         }
+
+         return true;
       }
       catch (SQLException e) {
-         LOGGER.warn("Exception during keep alive check, that means the connection must be dead.", e);
+         LOGGER.warn("Exception during keep alive check, that means the connection ({}) must be dead.", connection, e);
          return false;
       }
    }
