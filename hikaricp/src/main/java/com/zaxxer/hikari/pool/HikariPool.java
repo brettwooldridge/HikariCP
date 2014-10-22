@@ -134,10 +134,19 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
       this.transactionIsolation = PoolUtilities.getTransactionIsolation(configuration.getTransactionIsolation());
       this.isRecordMetrics = configuration.isRecordMetrics();
-      this.metricsTracker = MetricsFactory.createMetricsTracker((isRecordMetrics ? configuration.getMetricsTrackerClassName()
-            : "com.zaxxer.hikari.metrics.MetricsTracker"), this);
+      this.metricsTracker = MetricsFactory.createMetricsTracker((isRecordMetrics ? configuration.getMetricsTrackerClassName() : "com.zaxxer.hikari.metrics.MetricsTracker"), this);
 
       this.dataSource = PoolUtilities.initializeDataSource(configuration.getDataSourceClassName(), configuration.getDataSource(), configuration.getDataSourceProperties(), configuration.getJdbcUrl(), username, password);
+
+      final long connectionTimeout = configuration.getConnectionTimeout(); 
+      if (connectionTimeout != Integer.MAX_VALUE) {
+         try {
+            this.dataSource.setLoginTimeout((int) TimeUnit.MILLISECONDS.toSeconds(Math.min(1000L, connectionTimeout)));
+         }
+         catch (SQLException e) {
+            LOGGER.warn("Unable to set DataSource login timeout", e);
+         }
+      }
 
       if (isRegisteredMbeans) {
          HikariMBeanElf.registerMBeans(configuration, this);
@@ -450,24 +459,24 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     * @param timeoutMs the timeout before we consider the test a failure
     * @return true if the connection is alive, false if it is not alive or we timed out
     */
-   private boolean isConnectionAlive(final Connection connection, long timeoutMs)
+   private boolean isConnectionAlive(final Connection connection, final long timeoutMs)
    {
       try {
          final boolean timeoutEnabled = (configuration.getConnectionTimeout() != Integer.MAX_VALUE);
-         timeoutMs = timeoutEnabled ? Math.max(1000L, timeoutMs) : 0L;
+         int timeoutSec = timeoutEnabled ? Math.max(1000, (int) timeoutMs) : 0;
 
          if (isJdbc4ConnectionTest) {
-            return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
+            return connection.isValid(timeoutSec);
          }
 
          int networkTimeout = 0;
          if (isUseNetworkTimeout) {
             networkTimeout = connection.getNetworkTimeout();
-            connection.setNetworkTimeout(houseKeepingExecutorService, (int) timeoutMs); 
+            connection.setNetworkTimeout(houseKeepingExecutorService, Math.max(250, (int) timeoutMs)); 
          }
 
          try (Statement statement = connection.createStatement()) {
-            statement.setQueryTimeout((int) TimeUnit.MILLISECONDS.toSeconds(timeoutMs));
+            statement.setQueryTimeout(timeoutSec);
             statement.executeQuery(configuration.getConnectionTestQuery());
          }
 
@@ -512,7 +521,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    private void abortActiveConnections() throws InterruptedException
    {
       ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin", configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
-      connectionBag.values(STATE_IN_USE).parallelStream().forEach(bagEntry -> {
+      connectionBag.values(STATE_IN_USE).stream().forEach(bagEntry -> {
          try {
             bagEntry.connection.abort(assassinExecutor);
          }
