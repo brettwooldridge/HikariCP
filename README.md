@@ -59,9 +59,8 @@ In their own words, *"HikariCP is supposed to be the fastest connection pool in 
 
 ----------------------------------------------------
 
-#### What's up with other pools?
-
-Not all pools are created equal.  Read our [pool analysis](https://github.com/brettwooldridge/HikariCP/wiki/Pool-Analysis) here if you care to know the good, bad, and ugly.
+#### Failure: Pools behaving badly
+Read our interesting ["Database down" pool challenge](https://github.com/brettwooldridge/HikariCP/wiki/Bad-Behavior:-Handling-Database-Down).
 
 #### You're [probably] doing it wrong.
 AKA ["What you probably didn't know about connection pool sizing"](https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing).  Read on to find out.
