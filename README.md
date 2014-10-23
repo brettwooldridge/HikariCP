@@ -89,12 +89,12 @@ by the JDBC driver is used.  Typically, the JDBC driver default transaction isol
 should be used.  Only use this property if you have specific isolation requirements that are
 common for all queries, otherwise simply set the isolation level manually when creating or
 preparing statements.  The value of this property is the constant name from the ``Connection``
-class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, etc.  *Default: none*
+class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, etc.  *Default: driver default*
 
 :abc:``catalog``<br/>
 This property sets the default *catalog* for databases that support the concept of catalogs.
 If this property is not specified, the default catalog defined by the JDBC driver is used.
-*Default: none*
+*Default: driver default*
 
 :watch:``connectionTimeout``<br/>
 This property controls the maximum number of milliseconds that a client (that's you) will wait
@@ -119,12 +119,7 @@ value of 0 indicates no maximum lifetime (infinite lifetime), subject of course 
 :watch:``leakDetectionThreshold``<br/>
 This property controls the amount of time that a connection can be out of the pool before a
 message is logged indicating a possible connection leak.  A value of 0 means leak detection
-is disabled.  While the default is 0, and other connection pool implementations state that
-leak detection is "not for production" as it imposes a high overhead, at least in the case
-of HikariCP the imposed overhead is only 5μs (*microseconds*) split between getConnection()
-and close().  Maybe other pools are doing it wrong, but feel free to use leak detection under
-HikariCP in production environments if you wish. Lowest acceptable value for enabling leak 
-detection is 10000 (10 secs). *Default: 0*
+is disabled.  Lowest acceptable value for enabling leak detection is 10000 (10 secs). *Default: 0*
 
 :negative_squared_cross_mark:``initializationFailFast``<br/>
 This property controls whether the pool will "fail fast" if the pool cannot be seeded with
@@ -141,10 +136,10 @@ preferred if supported by the JDBC driver.  *Default: true*
 :abc:``connectionTestQuery``<br/>
 This is for "legacy" databases that do not support the JDBC4 Connection.isValid() API.  This
 is the query that will be executed just before a connection is given to you from the pool to
-validate that the connection to the database is still alive.  It is database dependent and
-should be a query that takes very little processing by the database (eg. "VALUES 1").  **See
-the ``jdbc4ConnectionTest`` property for a more efficent alive test.**  One of either this
-property or ``jdbc4ConnectionTest`` must be specified.  *Default: none*
+validate that the connection to the database is still alive.  **If your drvier supports JDBC4
+we strongly recommend not setting this property.**  See the ``jdbc4ConnectionTest`` property
+for a more efficent alive test.  One of either this property or ``jdbc4ConnectionTest`` must
+be specified.  *Default: none*
 
 :abc:``connectionInitSql``<br/>
 This property sets a SQL statement that will be executed after every new connection creation
@@ -159,13 +154,6 @@ Note XA data sources are not supported.  XA requires a real transaction manager 
 ``driverClassName`` to wrap an old-school DriverManager-based JDBC driver.  The HikariCP team
 considers ``dataSourceClassName`` to be a superior method of creating connections compared to
 ``driverClassName``. *Default: none*
-
-:arrow_right:``dataSource``<br/>
-This property is only available via programmatic configuration.  This property allows you
-to directly set the instance of the ``DataSource`` to be wrapped by the pool, rather than
-having HikariCP construct it via reflection.  When this property is specified, the
-``dataSourceClassName`` property and all DataSource-specific properties will be ignored.
-*Default: none*
 
 :abc:``driverClassName``<br/>
 This property allows HikariCP to wrap an old-school JDBC driver as a ``javax.sql.DataSource``.
@@ -226,23 +214,38 @@ in logging and JMX management consoles to identify pools and pool configurations
 This property controls whether or not JMX Management Beans ("MBeans") are registered or not.
 *Default: false*
 
+##### Infrequently used
+
+:arrow_right:``dataSource``<br/>
+This property is only available via programmatic configuration.  This property allows you
+to directly set the instance of the ``DataSource`` to be wrapped by the pool, rather than
+having HikariCP construct it via reflection.  When this property is specified, the
+``dataSourceClassName`` property and all DataSource-specific properties will be ignored.
+*Default: none*
+
+:abc: ``connectionCustomizerClassName``<br/>
+This property allows you to specify an implementation of the ``IConnectionCustomizer`` interface.  The
+``customize(Connection)`` method will be invoked on each new connection *before* it is added to the
+pool.
+
 :negative_squared_cross_mark:``isolateInternalQueries``<br/>
 This property determines whether HikariCP isolates internal pool queries, such as the
 connection alive test, in their own transaction.  Since these are typically read-only
 queries, it is rarely necessary to encapsulate them in their own transaction.  This
 property only applies if ``autoCommit`` is disabled.  *Default: false*
 
+
 ***Missing Knobs***<br/>
 HikariCP has plenty of "knobs" to turn as you can see above, but comparatively less than some other pools.
 This is a design philosophy.  The HikariCP design asthetic is Minimalism.  In keeping with the
-*simple is better* or *less is more* design philosophy, some knobs and  features are intentionally left out.
+*simple is better* or *less is more* design philosophy, some knobs and features are intentionally left out.
 Here are two, and the rationale.
 
 **Statement Cache**<br/>
 Most major database JDBC drivers already have a Statement cache that can be configured (Oracle, 
-MySQL, PostgreSQL, Derby, etc).  A statement cache in the pool would add unneeded weight and no
-additional functionality.  It is simply unnecessary with modern database drivers to implement a
-cache at the pool level.
+[MySQL](https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration), PostgreSQL, Derby, etc).
+A statement cache in the pool would add unneeded weight and no additional functionality.  It is simply
+unnecessary with modern database drivers to implement a cache at the pool level.
 
 **Log Statement Text / Slow Query Logging**<br/>
 Like Statement caching, most major database vendors support statement logging through
@@ -267,6 +270,17 @@ config.addDataSourceProperty("user", "bart");
 config.addDataSourceProperty("password", "51mp50n");
 
 HikariDataSource ds = new HikariDataSource(config);
+```
+or directly instantiate a ``HikariDataSource`` like so:
+```java
+HikariDataSource ds = new HikariDataSource();
+ds.setMaximumPoolSize(100);
+ds.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
+ds.addDataSourceProperty("serverName", "localhost");
+ds.addDataSourceProperty("port", "3306");
+ds.addDataSourceProperty("databaseName", "mydb");
+ds.addDataSourceProperty("user", "bart");
+ds.addDataSourceProperty("password", "51mp50n");
 ```
 or property file based:
 ```java
@@ -296,20 +310,10 @@ HikariDataSource ds = new HikariDataSource(config);
 ```
 
 #### HikariConfig vs. HikariDataSource
-Finally, you can skip the HikariConfig class altogether and configure the ``HikariDataSource`` directly:
-```java
-HikariDataSource ds = new HikariDataSource();
-ds.setMaximumPoolSize(15);
-ds.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
-ds.addDataSourceProperty("serverName", "localhost");
-ds.addDataSourceProperty("databaseName", "mydb");
-ds.addDataSourceProperty("user", "bart");
-ds.addDataSourceProperty("password", "51mp50n");
-```
-The advantage of configuring via ``HikariConfig`` over ``HikariDataSource`` is that when using the ``HikariConfig`` we know at ``DataSource`` construction-time what the configuration is, so the pool can be initialized at that point.  However, when using ``HikariDataSource`` alone, we don't know that you are *done* configuring the DataSource until ``getConnection()`` is called.  In that case, ``getConnection()`` must perform an additional check to see if the pool has been initialized yet or not.  The cost (albeit small) of this check is incurred on every invocation of ``getConnection()`` in that case.  In summary, intialization by ``HikariConfig`` is ever so slightly more performant than initialization directly on the ``HikariDataSource`` -- not just at construction time but also at runtime.
+The advantage of configuring via ``HikariConfig`` over ``HikariDataSource`` is that when using the ``HikariConfig`` we know at ``DataSource`` construction-time what the configuration is, so the pool can be initialized at that point.  However, when using ``HikariDataSource`` alone, we don't know that you are *done* configuring the DataSource until ``getConnection()`` is called.  In that case, ``getConnection()`` must perform an additional check to see if the pool has been initialized yet or not.  The cost (albeit small) of this check is incurred on every invocation of ``getConnection()`` in that case.
 
 ### Popular DataSource Class Names
-We recommended using ``dataSourceClassName`` instead of ``driverClassName``/``jdbcUrl``, as using the driver class requires HikariCP to wrap the driver with an internal *DataSource* class.  Here is a list of JDBC *DataSource* classes for popular databases:
+We recommended using ``dataSourceClassName`` instead of ``driverClassName``/``jdbcUrl``, *but both are acceptable*.  Here is a list of JDBC *DataSource* classes for popular databases:
 
 | Database         | Driver       | *DataSource* class |
 |:---------------- |:------------ |:-------------------|
