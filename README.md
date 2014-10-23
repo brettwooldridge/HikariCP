@@ -239,12 +239,12 @@ property only applies if ``autoCommit`` is disabled.  *Default: false*
 ***Missing Knobs***<br/>
 HikariCP has plenty of "knobs" to turn as you can see above, but comparatively less than some other pools.
 This is a design philosophy.  The HikariCP design asthetic is Minimalism.  In keeping with the
-*simple is better* or *less is more* design philosophy, some knobs and features are intentionally left out.
-Here are two, and the rationale.
+*simple is better* or *less is more* design philosophy, some knobs are intentionally left out.  Here are two,
+and the rationale.
 
 **Statement Cache**<br/>
-Most major database JDBC drivers already have a Statement cache that can be configured (Oracle, 
-[MySQL](https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration), PostgreSQL, Derby, etc).
+Most major database JDBC drivers already have a Statement cache that can be configured
+([MySQL](https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration), PostgreSQL, Derby, etc).
 A statement cache in the pool would add unneeded weight and no additional functionality.  It is simply
 unnecessary with modern database drivers to implement a cache at the pool level.
 
