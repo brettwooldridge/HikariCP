@@ -26,6 +26,8 @@ import com.zaxxer.hikari.util.PoolUtilities;
  *
  */
 public class TestConnectionCloseBlocking {
+   private volatile boolean shouldSleep = true;
+
    @Test
    public void testConnectionCloseBlocking() throws SQLException {
       HikariConfig config = new HikariConfig();
@@ -51,11 +53,12 @@ public class TestConnectionCloseBlocking {
          Assert.assertTrue("getConnection failed because close connection took longer than timeout",
                (PoolUtilities.elapsedTimeMs(start) < config.getConnectionTimeout()));
       } finally {
+         shouldSleep = false;
          ds.close();
       }
    }
 
-   private static class CustomMockDataSource extends MockDataSource {
+   private class CustomMockDataSource extends MockDataSource {
       @Override
       public Connection getConnection() throws SQLException {
          Connection mockConnection = super.getConnection();
@@ -63,7 +66,9 @@ public class TestConnectionCloseBlocking {
          doAnswer(new Answer<Void>() {
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
-               TimeUnit.SECONDS.sleep(2);
+               if (shouldSleep) {
+                  TimeUnit.SECONDS.sleep(2);
+               }
                return null;
             }
          }).when(mockConnection).close();
