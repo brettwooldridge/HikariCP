@@ -65,6 +65,7 @@ import com.zaxxer.hikari.util.PoolUtilities;
 public final class HikariPool implements HikariPoolMBean, IBagStateListener
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
+   private static final long ALIVE_BYPASS_WINDOW = Long.getLong("com.zaxxer.hikari.aliveBypassWindow", 1000L);
 
    public final String catalog;
    public final boolean isReadOnly;
@@ -183,7 +184,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             }
 
             final long now = System.currentTimeMillis();
-            if (now > bagEntry.expirationTime || (now - bagEntry.lastAccess > 1000L && !isConnectionAlive(bagEntry.connection, timeout))) {
+            if (now > bagEntry.expirationTime || (now - bagEntry.lastAccess > ALIVE_BYPASS_WINDOW && !isConnectionAlive(bagEntry.connection, timeout))) {
                closeConnection(bagEntry); // Throw away the dead connection and try again
                timeout = connectionTimeout - elapsedTimeMs(start);
                continue;
