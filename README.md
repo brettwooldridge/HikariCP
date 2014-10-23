@@ -219,8 +219,9 @@ This property controls whether or not JMX Management Beans ("MBeans") are regist
 :arrow_right:``dataSource``<br/>
 This property is only available via programmatic configuration.  This property allows you
 to directly set the instance of the ``DataSource`` to be wrapped by the pool, rather than
-having HikariCP construct it via reflection.  When this property is specified, the
-``dataSourceClassName`` property and all DataSource-specific properties will be ignored.
+having HikariCP construct it via reflection.  This can be useful in some dependency injection
+frameworks. When this property is specified, the ``dataSourceClassName`` property and all
+DataSource-specific properties will be ignored.
 *Default: none*
 
 :abc: ``connectionCustomizerClassName``<br/>
@@ -258,7 +259,7 @@ a good option.  Great stuff during development and pre-Production.
 
 ### Initialization
 
-You can use the HikariConfig class like so:
+You can use the ``HikariConfig`` class like so:
 ```java
 HikariConfig config = new HikariConfig();
 config.setMaximumPoolSize(100);
@@ -308,6 +309,10 @@ props.setProperty("dataSource.logWriter", new PrintWriter(System.out));
 HikariConfig config = new HikariConfig(props);
 HikariDataSource ds = new HikariDataSource(config);
 ```
+
+There is also a System property available, ``hikaricp.configurationFile``, that can be used to specify the
+location of a properties file.  If you intend to use this option, construct a ``HikariConfig`` or ``HikariDataSource``
+instance using the default constructor and the properties file will be loaded.
 
 #### HikariConfig vs. HikariDataSource
 The advantage of configuring via ``HikariConfig`` over ``HikariDataSource`` is that when using the ``HikariConfig`` we know at ``DataSource`` construction-time what the configuration is, so the pool can be initialized at that point.  However, when using ``HikariDataSource`` alone, we don't know that you are *done* configuring the DataSource until ``getConnection()`` is called.  In that case, ``getConnection()`` must perform an additional check to see if the pool has been initialized yet or not.  The cost (albeit small) of this check is incurred on every invocation of ``getConnection()`` in that case.
