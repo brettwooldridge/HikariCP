@@ -13,6 +13,12 @@ Changes between 2.1.0 and 2.1.1
    ramp up to the maximum pool size.  Eventually, idleTimeout and maxLifetime
    would restore normal pool conditions, but it was still undesirable behavior.
 
+ * Improved connection timeout handling by using Connection.setNetworkTimeout()
+   if available (JDBC 4.1).
+
+ * drvierClassName is no longer a required property when jdbcUrl is specified.
+   Omitting this property only works for compliant drivers.
+
 Changes between 2.0.1 and 2.1.0
 
  * Significant internal refactor supporting creation of new proxy instances
