@@ -318,7 +318,9 @@ instance using the default constructor and the properties file will be loaded.
 The advantage of configuring via ``HikariConfig`` over ``HikariDataSource`` is that when using the ``HikariConfig`` we know at ``DataSource`` construction-time what the configuration is, so the pool can be initialized at that point.  However, when using ``HikariDataSource`` alone, we don't know that you are *done* configuring the DataSource until ``getConnection()`` is called.  In that case, ``getConnection()`` must perform an additional check to see if the pool has been initialized yet or not.  The cost (albeit small) of this check is incurred on every invocation of ``getConnection()`` in that case.
 
 ### Popular DataSource Class Names
-We recommended using ``dataSourceClassName`` instead of ``driverClassName``/``jdbcUrl``, *but both are acceptable*.  Here is a list of JDBC *DataSource* classes for popular databases:
+We recommended using ``dataSourceClassName`` instead of ``driverClassName``/``jdbcUrl``, *but both are acceptable*.  *Note: Spring Boot auto-configuration users, you need to use ``driverClassName``/``jdbcUrl``-based configuration.*
+
+Here is a list of JDBC *DataSource* classes for popular databases:
 
 | Database         | Driver       | *DataSource* class |
 |:---------------- |:------------ |:-------------------|
