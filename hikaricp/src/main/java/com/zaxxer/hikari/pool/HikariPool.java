@@ -23,9 +23,10 @@ import static com.zaxxer.hikari.util.PoolUtilities.createInstance;
 import static com.zaxxer.hikari.util.PoolUtilities.createThreadPoolExecutor;
 import static com.zaxxer.hikari.util.PoolUtilities.elapsedTimeMs;
 import static com.zaxxer.hikari.util.PoolUtilities.executeSqlAutoCommit;
+import static com.zaxxer.hikari.util.PoolUtilities.isJdbc41Compliant;
 import static com.zaxxer.hikari.util.PoolUtilities.quietlyCloseConnection;
 import static com.zaxxer.hikari.util.PoolUtilities.quietlySleep;
-import static com.zaxxer.hikari.util.PoolUtilities.isJdbc41Compliant;
+import static com.zaxxer.hikari.util.PoolUtilities.setQueryTimeout;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -477,7 +478,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          }
 
          try (Statement statement = connection.createStatement()) {
-            statement.setQueryTimeout(timeoutSec);
+            setQueryTimeout(statement, timeoutSec);
             statement.executeQuery(configuration.getConnectionTestQuery());
          }
 

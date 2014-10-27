@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -21,6 +22,7 @@ public final class PoolUtilities
 
    private static volatile boolean IS_JDBC4;
    private static volatile boolean jdbc4checked; 
+   private static volatile boolean queryTimeoutSupported = true;
 
    static {
       boolean b = false;
@@ -97,6 +99,15 @@ public final class PoolUtilities
       }
    }
 
+   /**
+    * Create and instance of the specified class using the constructor matching the specified
+    * arguments.
+    *
+    * @param className the name of the classto instantiate
+    * @param clazz a class to cast the result as
+    * @param args arguments to a constructor
+    * @return an instance of the specified class
+    */
    @SuppressWarnings("unchecked")
    public static <T> T createInstance(String className, Class<T> clazz, Object... args)
    {
@@ -143,6 +154,12 @@ public final class PoolUtilities
       return dataSource;
    }
 
+   /**
+    * Get the int value of a transaction isolation level by name.
+    *
+    * @param transactionIsolationName the name of the transaction isolation level
+    * @return the int value of the isolation level or -1
+    */
    public static int getTransactionIsolation(String transactionIsolationName)
    {
       if (transactionIsolationName != null) {
@@ -178,7 +195,14 @@ public final class PoolUtilities
       return executor;
    }
 
-   public static boolean isJdbc41Compliant(Connection connection)
+   /**
+    * Return true if the driver appears to be JDBC 4.1 compliant.
+    *
+    * @param connection a Connection to check
+    * @return true if JDBC 4.1 compliance, false otherwise
+    * @throws SQLException re-thrown exception from Connection.getNetworkTimeout()
+    */
+   public static boolean isJdbc41Compliant(Connection connection) throws SQLException
    {
       if (jdbc4checked) {
          return IS_JDBC4;
@@ -188,11 +212,38 @@ public final class PoolUtilities
          connection.getNetworkTimeout();  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
          IS_JDBC4 = true;
       }
-      catch (Exception e) {
+      catch (AbstractMethodError e) {
+         IS_JDBC4 = false;
+      }
+      catch (SQLFeatureNotSupportedException e) {
          IS_JDBC4 = false;
       }
 
       jdbc4checked = true;
       return IS_JDBC4;
+   }
+
+   /**
+    * Set the query timeout, if it is supported by the driver.
+    *
+    * @param statement a statement to set the query timeout on
+    * @param timeoutSec the number of seconds before timeout
+    * @throws SQLException re-thrown exception from Statement.setQueryTimeout()
+    */
+   public static void setQueryTimeout(Statement statement, int timeoutSec) throws SQLException
+   {
+      if (!queryTimeoutSupported) {
+         return;
+      }
+
+      try {
+         statement.setQueryTimeout(timeoutSec);
+      }
+      catch (AbstractMethodError e) {
+         queryTimeoutSupported = false;
+      }
+      catch (SQLFeatureNotSupportedException e) {
+         queryTimeoutSupported = false;
+      }
    }
 }
