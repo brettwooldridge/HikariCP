@@ -123,9 +123,8 @@ is disabled.  Lowest acceptable value for enabling leak detection is 10000 (10 s
 
 :negative_squared_cross_mark:``initializationFailFast``<br/>
 This property controls whether the pool will "fail fast" if the pool cannot be seeded with
-initial connections successfully.  If connections cannot be created at pool startup time,
-a ``RuntimeException`` will be thrown from the ``HikariDataSource`` constructor.  This
-property has no effect if ``minimumIdle`` is 0.  *Default: false*
+initial connections successfully.  This property has no effect if ``minimumIdle`` is 0.
+*Default: false*
 
 :white_check_mark:``jdbc4ConnectionTest``<br/>
 This property is a boolean value that determines whether the JDBC4 Connection.isValid() method
