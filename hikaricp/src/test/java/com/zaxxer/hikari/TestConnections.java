@@ -57,6 +57,8 @@ public class TestConnections
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       HikariDataSource ds = new HikariDataSource(config);
+      ds.setLoginTimeout(10);
+      Assert.assertSame(10, ds.getLoginTimeout());
       try {
          Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
@@ -385,6 +387,9 @@ public class TestConnections
 
          Connection connection = ds.getConnection();
          connection.close();
+
+         PoolUtilities.quietlySleep(1001L);
+         connection = ds.getConnection();
       }
       finally {
          StubConnection.oldDriver = false;

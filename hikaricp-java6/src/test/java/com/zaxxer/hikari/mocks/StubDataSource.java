@@ -30,109 +30,110 @@ import javax.sql.DataSource;
  */
 public class StubDataSource implements DataSource
 {
-    private String user;
-    private String password;
-    private PrintWriter logWriter;
-    private SQLException throwException;
+   private String user;
+   private String password;
+   private PrintWriter logWriter;
+   private SQLException throwException;
+   private int loginTimeout;
 
-    public String getUser()
-    {
-        return user;
-    }
+   public String getUser()
+   {
+      return user;
+   }
 
-    public void setUser(String user)
-    {
-        this.user = user;
-    }
+   public void setUser(String user)
+   {
+      this.user = user;
+   }
 
-    public String getPassword()
-    {
-        return password;
-    }
+   public String getPassword()
+   {
+      return password;
+   }
 
-    public void setPassword(String password)
-    {
-        this.password = password;
-    }
+   public void setPassword(String password)
+   {
+      this.password = password;
+   }
 
-    public void setURL(String url)
-    {
-        // we don't care
-    }
+   public void setURL(String url)
+   {
+      // we don't care
+   }
 
-    /** {@inheritDoc} */
-    @Override
-    public PrintWriter getLogWriter() throws SQLException
-    {
-        return logWriter;
-    }
+   /** {@inheritDoc} */
+   @Override
+   public PrintWriter getLogWriter() throws SQLException
+   {
+      return logWriter;
+   }
 
-    /** {@inheritDoc} */
-    @Override
-    public void setLogWriter(PrintWriter out) throws SQLException
-    {
-        this.logWriter = out;
-    }
+   /** {@inheritDoc} */
+   @Override
+   public void setLogWriter(PrintWriter out) throws SQLException
+   {
+      this.logWriter = out;
+   }
 
-    /** {@inheritDoc} */
-    @Override
-    public void setLoginTimeout(int seconds) throws SQLException
-    {
-    }
+   /** {@inheritDoc} */
+   @Override
+   public void setLoginTimeout(int seconds) throws SQLException
+   {
+      this.loginTimeout = seconds;
+   }
 
-    /** {@inheritDoc} */
-    @Override
-    public int getLoginTimeout() throws SQLException
-    {
-        return 0;
-    }
+   /** {@inheritDoc} */
+   @Override
+   public int getLoginTimeout() throws SQLException
+   {
+      return loginTimeout;
+   }
 
-    /** {@inheritDoc} */
-    public Logger getParentLogger() throws SQLFeatureNotSupportedException
-    {
-        return null;
-    }
+   /** {@inheritDoc} */
+   public Logger getParentLogger() throws SQLFeatureNotSupportedException
+   {
+      return null;
+   }
 
-    /** {@inheritDoc} */
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T> T unwrap(Class<T> iface) throws SQLException
-    {
-       if (iface.isInstance(this)) {
-          return (T) this;
-       }
+   /** {@inheritDoc} */
+   @SuppressWarnings("unchecked")
+   @Override
+   public <T> T unwrap(Class<T> iface) throws SQLException
+   {
+      if (iface.isInstance(this)) {
+         return (T) this;
+      }
 
-       throw new SQLException("Wrapped DataSource is not an instance of " + iface);
-    }
+      throw new SQLException("Wrapped DataSource is not an instance of " + iface);
+   }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean isWrapperFor(Class<?> iface) throws SQLException
-    {
-        return false;
-    }
+   /** {@inheritDoc} */
+   @Override
+   public boolean isWrapperFor(Class<?> iface) throws SQLException
+   {
+      return false;
+   }
 
-    /** {@inheritDoc} */
-    @Override
-    public Connection getConnection() throws SQLException
-    {
-        if (throwException != null)
-        {
-            throw throwException;
-        }
+   /** {@inheritDoc} */
+   @Override
+   public Connection getConnection() throws SQLException
+   {
+      if (throwException != null) {
+         throw throwException;
+      }
 
-        return new StubConnection();
-    }
+      return new StubConnection();
+   }
 
-    /** {@inheritDoc} */
-    @Override
-    public Connection getConnection(String username, String password) throws SQLException
-    {
-        return new StubConnection();
-    }
+   /** {@inheritDoc} */
+   @Override
+   public Connection getConnection(String username, String password) throws SQLException
+   {
+      return new StubConnection();
+   }
 
-    public void setThrowException(SQLException e)
-    {
-        this.throwException = e;
-    }
+   public void setThrowException(SQLException e)
+   {
+      this.throwException = e;
+   }
 }

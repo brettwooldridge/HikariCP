@@ -47,7 +47,6 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    private final HashMap<MultiPoolKey, HikariPool> multiPool;
 
    private volatile boolean isShutdown;
-   private int loginTimeout;
 
    private final HikariPool fastPathPool;
    private volatile HikariPool pool;
@@ -152,14 +151,21 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @Override
    public void setLoginTimeout(int seconds) throws SQLException
    {
-      this.loginTimeout = seconds;
+      for (HikariPool hikariPool : multiPool.values()) {
+         hikariPool.getDataSource().setLoginTimeout(seconds);
+      }
    }
 
    /** {@inheritDoc} */
    @Override
    public int getLoginTimeout() throws SQLException
    {
-      return loginTimeout;
+      HikariPool hikariPool = multiPool.values().iterator().next();
+      if (hikariPool != null) {
+         return hikariPool.getDataSource().getLoginTimeout();
+      }
+
+      return 0;
    }
 
    /** {@inheritDoc} */
