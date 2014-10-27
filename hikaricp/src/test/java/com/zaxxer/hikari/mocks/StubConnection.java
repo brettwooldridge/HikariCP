@@ -47,6 +47,7 @@ public class StubConnection extends StubBaseConnection implements Connection
 {
    public static final AtomicInteger count = new AtomicInteger();
    public static volatile boolean slowCreate;
+   public static volatile boolean oldDriver;
 
    private static long foo;
    private boolean autoCommit;
@@ -476,6 +477,10 @@ public class StubConnection extends StubBaseConnection implements Connection
    /** {@inheritDoc} */
    public int getNetworkTimeout() throws SQLException
    {
+      if (oldDriver) {
+         throw new AbstractMethodError();
+      }
+
       return 0;
    }
 

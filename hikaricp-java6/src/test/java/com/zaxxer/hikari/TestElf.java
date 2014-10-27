@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.impl.SimpleLogger;
 
 import com.zaxxer.hikari.pool.HikariPool;
+import com.zaxxer.hikari.util.PoolUtilities;
 
 /**
  * Utility methods for testing.
@@ -67,6 +68,22 @@ public final class TestElf
          Field field = HikariConfig.class.getDeclaredField("unitTest");
          field.setAccessible(true);
          field.setBoolean(null, unitTest);
+      }
+      catch (Exception e) {
+         throw new RuntimeException(e);
+      }      
+   }
+
+   public static void resetPoolUtilities()
+   {
+      try {
+         Field field = PoolUtilities.class.getDeclaredField("jdbc4checked");
+         field.setAccessible(true);
+         field.setBoolean(null, false);
+
+         field = PoolUtilities.class.getDeclaredField("queryTimeoutSupported");
+         field.setAccessible(true);
+         field.setBoolean(null, true);
       }
       catch (Exception e) {
          throw new RuntimeException(e);
