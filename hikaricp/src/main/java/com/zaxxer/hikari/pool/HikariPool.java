@@ -384,13 +384,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       connectionBag.values(STATE_NOT_IN_USE).stream().filter(p -> connectionBag.reserve(p)).forEach(bagEntry -> closeConnection(bagEntry));
    }
 
-   /** {@inheritDoc} */
-   @Override
-   public void dumpPoolState()
-   {
-      connectionBag.dumpState();
-   }
-
    // ***********************************************************************
    //                           Private methods
    // ***********************************************************************
