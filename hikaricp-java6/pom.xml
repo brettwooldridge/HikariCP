@@ -93,7 +93,7 @@
                      javax.sql.rowset.serial,
                      javax.sql.rowset.spi,
                      com.codahale.metrics;resolution:=optional,
-                     org.slf4j,
+                     org.slf4j;version="[1.6,2)",
                      org.hibernate;resolution:=optional,
                      org.hibernate.cfg;resolution:=optional,
                      org.hibernate.engine.jdbc.connections.spi;resolution:=optional,
@@ -105,8 +105,7 @@
                </instructions>
             </configuration>
             <executions>
-               <!-- This execution makes sure that the manifest is available 
-                  when the tests are executed -->
+               <!-- This execution makes sure that the manifest is available when the tests are executed -->
                <execution>
                   <goals>
                      <goal>manifest</goal>
@@ -115,6 +114,7 @@
             </executions>
          </plugin>
       </plugins>
+
       <pluginManagement>
          <plugins>
             <plugin>
@@ -125,8 +125,8 @@
                   <tagNameFormat>HikariCP-@{project.version}</tagNameFormat>
                </configuration>
             </plugin>
-            <!--This plugin's configuration is used to store Eclipse m2e 
-               settings only. It has no influence on the Maven build itself. -->
+
+            <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
             <plugin>
                <groupId>org.eclipse.m2e</groupId>
                <artifactId>lifecycle-mapping</artifactId>
