@@ -19,6 +19,10 @@ Changes between 2.1.0 and 2.1.1
  * drvierClassName is no longer a required property when jdbcUrl is specified.
    Omitting this property only works for compliant drivers.
 
+ * Add auto-detection of support for Statement.setQueryTimeout() used in the
+   alive check.  Fixes failures with test queries on the PostgreSQL driver
+   when not using JDBC4 isValid() alive checks.
+
 Changes between 2.0.1 and 2.1.0
 
  * Significant internal refactor supporting creation of new proxy instances
