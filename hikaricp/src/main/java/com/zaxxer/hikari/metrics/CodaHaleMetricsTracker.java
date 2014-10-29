@@ -20,6 +20,7 @@ import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.zaxxer.hikari.pool.HikariPool;
+import com.zaxxer.hikari.pool.PoolBagEntry;
 
 public final class CodaHaleMetricsTracker extends MetricsTracker
 {
@@ -69,9 +70,18 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
          innerContext = timer.time();
       }
 
+      /** {@inheritDoc} */
+      @Override
       public void stop()
       {
          innerContext.stop();
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public void setConnectionLastOpen(final PoolBagEntry bagEntry, final long now)
+      {
+         bagEntry.lastOpenTime = now;
       }
    }
 }

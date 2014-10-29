@@ -16,6 +16,8 @@
 
 package com.zaxxer.hikari.metrics;
 
+import com.zaxxer.hikari.pool.PoolBagEntry;
+
 /**
  *
  * @author Brett Wooldridge
@@ -78,6 +80,17 @@ public interface IMetricsTracker
    public static class MetricsContext
    {
       public void stop()
+      {
+         // do nothing
+      }
+
+      /**
+       * Set the lastOpenTime on the provided bag entry.
+       *
+       * @param bagEntry the bag entry
+       * @param now the current timestamp
+       */
+      public void setConnectionLastOpen(final PoolBagEntry bagEntry, final long now)
       {
          // do nothing
       }

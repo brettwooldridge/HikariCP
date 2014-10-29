@@ -188,9 +188,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             final LeakTask leakTask = (leakDetectionThreshold == 0) ? LeakTask.NO_LEAK : new LeakTask(leakDetectionThreshold, houseKeepingExecutorService);
             final IHikariConnectionProxy proxyConnection = ProxyFactory.getProxyConnection(this, bagEntry, leakTask);
 
-            if (isRecordMetrics) {
-               bagEntry.lastOpenTime = now;
-            }
+            metricsContext.setConnectionLastOpen(bagEntry, now);
 
             return proxyConnection;
          }

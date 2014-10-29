@@ -29,7 +29,7 @@ public final class PoolBagEntry extends BagEntry
 {
    public final Connection connection;
    public final long expirationTime;
-   long lastOpenTime;
+   public long lastOpenTime;
    long lastAccess;
 
    public PoolBagEntry(final Connection connection, long maxLifetime) {
