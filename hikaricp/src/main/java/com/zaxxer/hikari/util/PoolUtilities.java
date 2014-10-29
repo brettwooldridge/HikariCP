@@ -214,15 +214,13 @@ public final class PoolUtilities
     */
    public static void setQueryTimeout(final Statement statement, final int timeoutSec) throws SQLException
    {
-      if (!queryTimeoutSupported) {
-         return;
-      }
-
-      try {
-         statement.setQueryTimeout(timeoutSec);
-      }
-      catch (AbstractMethodError | SQLFeatureNotSupportedException e) {
-         queryTimeoutSupported = false;
+      if (queryTimeoutSupported) {
+         try {
+            statement.setQueryTimeout(timeoutSec);
+         }
+         catch (AbstractMethodError | SQLFeatureNotSupportedException e) {
+            queryTimeoutSupported = false;
+         }
       }
    }
 
