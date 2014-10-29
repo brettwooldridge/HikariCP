@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.Properties;
+import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
@@ -15,6 +16,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
 
 import javax.sql.DataSource;
+
+import org.slf4j.Logger;
 
 public final class PoolUtilities
 {
@@ -109,7 +112,7 @@ public final class PoolUtilities
     * @return an instance of the specified class
     */
    @SuppressWarnings("unchecked")
-   public static <T> T createInstance(String className, Class<T> clazz, Object... args)
+   public static <T> T createInstance(final String className, final Class<T> clazz, final Object... args)
    {
       if (className == null) {
          return null;
@@ -140,7 +143,7 @@ public final class PoolUtilities
     *
     * @return the DataSource
     */
-   public static DataSource initializeDataSource(String dsClassName, DataSource dataSource, Properties dataSourceProperties, String jdbcUrl, String username, String password)
+   public static DataSource initializeDataSource(final String dsClassName, DataSource dataSource, final Properties dataSourceProperties, final String jdbcUrl, final String username, final String password)
    {
       if (dataSource == null && dsClassName != null) {
          dataSource = createInstance(dsClassName, DataSource.class);
@@ -160,7 +163,7 @@ public final class PoolUtilities
     * @param transactionIsolationName the name of the transaction isolation level
     * @return the int value of the isolation level or -1
     */
-   public static int getTransactionIsolation(String transactionIsolationName)
+   public static int getTransactionIsolation(final String transactionIsolationName)
    {
       if (transactionIsolationName != null) {
          try {
@@ -183,7 +186,7 @@ public final class PoolUtilities
     * @param threadFactory an optional ThreadFactory
     * @return a ThreadPoolExecutor
     */
-   public static ThreadPoolExecutor createThreadPoolExecutor(final int queueSize, final String threadName, ThreadFactory threadFactory, RejectedExecutionHandler policy)
+   public static ThreadPoolExecutor createThreadPoolExecutor(final int queueSize, final String threadName, ThreadFactory threadFactory, final RejectedExecutionHandler policy)
    {
       if (threadFactory == null) {
          threadFactory = new DefaultThreadFactory(threadName, true);
@@ -202,7 +205,7 @@ public final class PoolUtilities
     * @return true if JDBC 4.1 compliance, false otherwise
     * @throws SQLException re-thrown exception from Connection.getNetworkTimeout()
     */
-   public static boolean isJdbc41Compliant(Connection connection) throws SQLException
+   public static boolean isJdbc41Compliant(final Connection connection) throws SQLException
    {
       if (jdbc4checked) {
          return IS_JDBC4;
@@ -230,7 +233,7 @@ public final class PoolUtilities
     * @param timeoutSec the number of seconds before timeout
     * @throws SQLException re-thrown exception from Statement.setQueryTimeout()
     */
-   public static void setQueryTimeout(Statement statement, int timeoutSec) throws SQLException
+   public static void setQueryTimeout(final Statement statement, final int timeoutSec) throws SQLException
    {
       if (!queryTimeoutSupported) {
          return;
@@ -242,8 +245,47 @@ public final class PoolUtilities
       catch (AbstractMethodError e) {
          queryTimeoutSupported = false;
       }
-      catch (SQLFeatureNotSupportedException e) {
-         queryTimeoutSupported = false;
+   }
+
+   /**
+    * Set the network timeout, if <code>isUseNetworkTimeout</code> is <code>true</code>, and return the
+    * pre-existing value of the network timeout.
+    *
+    * @param executor an Executor
+    * @param connection the connection to set the network timeout on
+    * @param timeoutMs the number of milliseconds before timeout
+    * @param isUseNetworkTimeout true if the network timeout should be set, false otherwise
+    * @return the pre-existing network timeout value
+    * @throws SQLException thrown if the network timeout cannot be set
+    */
+   public static int setNetworkTimeout(final Executor executor, final Connection connection, final long timeoutMs, final boolean isUseNetworkTimeout) throws SQLException
+   {
+      if (!isUseNetworkTimeout) {
+         return 0;
+      }
+
+      final int networkTimeout = connection.getNetworkTimeout();
+      connection.setNetworkTimeout(executor, Math.max(250, (int) timeoutMs)); 
+
+      return networkTimeout;
+   }
+
+   /**
+    * Set the loginTimeout on the specified DataSource.
+    *
+    * @param dataSource the DataSource
+    * @param connectionTimeout the timeout in milliseconds
+    * @param logger a logger to use for a warning
+    */
+   public static void setLoginTimeout(final DataSource dataSource, final long connectionTimeout, final Logger logger)
+   {
+      if (connectionTimeout != Integer.MAX_VALUE) {
+         try {
+            dataSource.setLoginTimeout((int) TimeUnit.MILLISECONDS.toSeconds(Math.min(1000L, connectionTimeout)));
+         }
+         catch (SQLException e) {
+            logger.warn("Unable to set DataSource login timeout", e);
+         }
       }
    }
 }

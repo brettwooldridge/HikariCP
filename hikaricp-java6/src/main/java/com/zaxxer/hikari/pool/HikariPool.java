@@ -28,6 +28,8 @@ import static com.zaxxer.hikari.util.PoolUtilities.isJdbc41Compliant;
 import static com.zaxxer.hikari.util.PoolUtilities.quietlyCloseConnection;
 import static com.zaxxer.hikari.util.PoolUtilities.quietlySleep;
 import static com.zaxxer.hikari.util.PoolUtilities.setQueryTimeout;
+import static com.zaxxer.hikari.util.PoolUtilities.setNetworkTimeout;
+import static com.zaxxer.hikari.util.PoolUtilities.setLoginTimeout;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -141,15 +143,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
       this.dataSource = PoolUtilities.initializeDataSource(configuration.getDataSourceClassName(), configuration.getDataSource(), configuration.getDataSourceProperties(), configuration.getJdbcUrl(), username, password);
 
-      final long connectionTimeout = configuration.getConnectionTimeout(); 
-      if (connectionTimeout != Integer.MAX_VALUE) {
-         try {
-            this.dataSource.setLoginTimeout((int) TimeUnit.MILLISECONDS.toSeconds(Math.min(1000L, connectionTimeout)));
-         }
-         catch (SQLException e) {
-            LOGGER.warn("Unable to set DataSource login timeout", e);
-         }
-      }
+      setLoginTimeout(dataSource, configuration.getConnectionTimeout(), LOGGER);
 
       if (isRegisteredMbeans) {
          HikariMBeanElf.registerMBeans(configuration, this);
@@ -434,9 +428,14 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       Connection connection = null;
       try {
          connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
+         isUseNetworkTimeout = isJdbc41Compliant(connection) && (configuration.getConnectionTimeout() != Integer.MAX_VALUE);
+
+         final boolean timeoutEnabled = (configuration.getConnectionTimeout() != Integer.MAX_VALUE);
+         final long timeoutMs = timeoutEnabled ? Math.max(250L, configuration.getConnectionTimeout()) : 0L;
+         final int networkTimeout = setNetworkTimeout(houseKeepingExecutorService, connection, timeoutMs, isUseNetworkTimeout);
+
          transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
          connectionCustomizer.customize(connection);
-         isUseNetworkTimeout = isJdbc41Compliant(connection) && (configuration.getConnectionTimeout() != Integer.MAX_VALUE);
 
          executeSqlAutoCommit(connection, configuration.getConnectionInitSql());
 
@@ -447,9 +446,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             connection.setCatalog(catalog);
          }
 
-         PoolBagEntry bagEntry = new PoolBagEntry(connection, configuration.getMaxLifetime());
-
-         connectionBag.add(bagEntry);
+         setNetworkTimeout(houseKeepingExecutorService, connection, networkTimeout, isUseNetworkTimeout);
+         
+         connectionBag.add(new PoolBagEntry(connection, configuration.getMaxLifetime()));
          lastConnectionFailure.set(null);
          return true;
       }
@@ -481,11 +480,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             return connection.isValid(timeoutSec);
          }
 
-         int networkTimeout = 0;
-         if (isUseNetworkTimeout) {
-            networkTimeout = connection.getNetworkTimeout();
-            connection.setNetworkTimeout(houseKeepingExecutorService, Math.max(250, (int) timeoutMs)); 
-         }
+         final int networkTimeout = setNetworkTimeout(houseKeepingExecutorService, connection, Math.max(250, (int) timeoutMs), isUseNetworkTimeout);
 
          Statement statement = connection.createStatement();
          try {
@@ -500,9 +495,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             connection.rollback();
          }
 
-         if (isUseNetworkTimeout) {
-            connection.setNetworkTimeout(houseKeepingExecutorService, networkTimeout);
-         }
+         setNetworkTimeout(houseKeepingExecutorService, connection, networkTimeout, isUseNetworkTimeout);
 
          return true;
       }
