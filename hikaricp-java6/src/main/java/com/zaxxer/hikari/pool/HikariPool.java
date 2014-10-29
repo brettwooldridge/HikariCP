@@ -216,9 +216,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    public void releaseConnection(final PoolBagEntry bagEntry, final boolean isBroken)
    {
-      if (isRecordMetrics) {
-         metricsTracker.recordConnectionUsage(elapsedTimeMs(bagEntry.lastOpenTime));
-      }
+      metricsTracker.recordConnectionUsage(bagEntry);
 
       if (isBroken || isShutdown) {
          LOGGER.debug("Connection returned to pool {} is broken, or the pool has been shut down.  Closing connection.", configuration.getPoolName());

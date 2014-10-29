@@ -38,9 +38,9 @@ public interface IMetricsTracker
     * This method is called when a Connection is closed, with the total time in milliseconds
     * that the Connection was out of the pool.
     *
-    * @param usageMilleseconds the Connection usage time in milliseconds
+    * @param bagEntry the entry to calculate usage for
     */
-   void recordConnectionUsage(long usageMilleseconds);
+   void recordConnectionUsage(PoolBagEntry bagEntry);
 
    /**
     * Get the current number of idle connections.

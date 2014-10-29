@@ -17,6 +17,7 @@
 package com.zaxxer.hikari.metrics;
 
 import com.zaxxer.hikari.pool.HikariPool;
+import com.zaxxer.hikari.pool.PoolBagEntry;
 
 /**
  * This class only supports realtime, not historical metrics.
@@ -43,7 +44,7 @@ public class MetricsTracker implements IMetricsTracker
 
    /** {@inheritDoc} */
    @Override
-   public void recordConnectionUsage(long usageMilleseconds)
+   public void recordConnectionUsage(final PoolBagEntry bagEntry)
    {
    }
 

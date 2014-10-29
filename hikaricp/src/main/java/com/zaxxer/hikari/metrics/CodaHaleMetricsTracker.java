@@ -21,6 +21,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.pool.PoolBagEntry;
+import com.zaxxer.hikari.util.PoolUtilities;
 
 public final class CodaHaleMetricsTracker extends MetricsTracker
 {
@@ -39,18 +40,18 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
 
    /** {@inheritDoc} */
    @Override
-   public Context recordConnectionRequest(long requestTime)
+   public Context recordConnectionRequest(final long requestTime)
    {
       return new Context(connectionObtainTimer);
    }
 
    /** {@inheritDoc} */
    @Override
-   public void recordConnectionUsage(long usageMilleseconds)
+   public void recordConnectionUsage(final PoolBagEntry bagEntry)
    {
-      connectionUsage.update(usageMilleseconds);
+      connectionUsage.update(PoolUtilities.elapsedTimeMs(bagEntry.lastOpenTime));
    }
-
+   
    public Timer getConnectionAcquisitionTimer()
    {
       return connectionObtainTimer;
