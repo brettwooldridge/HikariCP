@@ -81,7 +81,7 @@ public class ShutdownTest
          threads[i].start();
       }
 
-      PoolUtilities.quietlySleep(1200);
+      PoolUtilities.quietlySleep(1200L);
 
       Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() > 0);
 
@@ -109,7 +109,7 @@ public class ShutdownTest
       HikariDataSource ds = new HikariDataSource(config);
       HikariPool pool = TestElf.getPool(ds);
 
-      PoolUtilities.quietlySleep(1200);
+      PoolUtilities.quietlySleep(1200L);
 
       Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() > 0);
 
@@ -135,6 +135,8 @@ public class ShutdownTest
       HikariDataSource ds = new HikariDataSource(config);
       HikariPool pool = TestElf.getPool(ds);
 
+      PoolUtilities.quietlySleep(500L);
+
       Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() == 5);
 
       ds.close();
@@ -158,7 +160,7 @@ public class ShutdownTest
 
       HikariDataSource ds = new HikariDataSource(config);
 
-      PoolUtilities.quietlySleep(500);
+      PoolUtilities.quietlySleep(500L);
 
       ds.close();
 
