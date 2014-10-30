@@ -23,6 +23,10 @@ Changes between 2.1.0 and 2.1.1
    alive check.  Fixes failures with test queries on the PostgreSQL driver
    when not using JDBC4 isValid() alive checks.
 
+ * The pool now defaults to fail-fast initialization.  If you need to start
+   your application without/before the database, you will need to explicitly
+   set initializationFailFast to false.
+
 Changes between 2.0.1 and 2.1.0
 
  * Significant internal refactor supporting creation of new proxy instances
