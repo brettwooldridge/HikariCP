@@ -485,14 +485,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    private void fillPool()
    {
-      if (configuration.isInitializationFailFast()) {
-         for (int maxIters = configuration.getMinimumIdle(); maxIters > 0; maxIters--) {
-            if (!addConnection()) {
-               throw new RuntimeException("Fail-fast during pool initialization", lastConnectionFailure.getAndSet(null));
-            }
+      if (configuration.getMinimumIdle() == 0) {
+         if (configuration.isInitializationFailFast() && !addConnection()) {
+            throw new RuntimeException("Fail-fast during pool initialization", lastConnectionFailure.getAndSet(null));
          }
-      }
-      else if (configuration.getMinimumIdle() > 0) {
+
          addBagItem();
       }
    }

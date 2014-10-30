@@ -101,6 +101,7 @@ public class HikariConfig implements HikariConfigMBean
       idleTimeout = IDLE_TIMEOUT;
       isAutoCommit = true;
       isJdbc4connectionTest = true;
+      isInitializationFailFast = true;
       minIdle = -1;
       maxPoolSize = 10;
       maxLifetime = MAX_LIFETIME;
