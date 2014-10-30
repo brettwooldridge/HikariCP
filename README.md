@@ -45,20 +45,18 @@ Microbenchmarks were created to isolate and measure the overhead of pools using 
 ----------------------------------------------------
 ***User Testimonials***<br/>
 
-[![](https://github.com/brettwooldridge/HikariCP/wiki/tweet3.png)](https://twitter.com/jkuipers)
+[![](https://github.com/brettwooldridge/HikariCP/wiki/tweet3.png)](https://twitter.com/jkuipers)<br/>
+[![](https://github.com/brettwooldridge/HikariCP/wiki/tweet1.png)](https://twitter.com/steve_objectify)<br/>
+[![](https://github.com/brettwooldridge/HikariCP/wiki/tweet2.png)](https://twitter.com/brettemeyer)<br/>
+[![](https://github.com/brettwooldridge/HikariCP/wiki/tweet4.png)](https://twitter.com/dgomesbr)
 
-[![](https://github.com/brettwooldridge/HikariCP/wiki/tweet1.png)](https://twitter.com/steve_objectify)
-
-[![](https://github.com/brettwooldridge/HikariCP/wiki/tweet2.png)](https://twitter.com/brettemeyer)
-
-The guys over at [Edulify](https://edulify.com) were experiencing connection leaks and other issues using BoneCP in their Play Framework application.  They created a [HikariCP plugin for Play Framework](http://edulify.github.io/play-hikaricp.edulify.com/) to give HikariCP a try.
+The guys over at [Edulify](https://edulify.com) were experiencing connection leaks and other issues using another pool in their Play Framework application.  They created a [HikariCP plugin for Play Framework](http://edulify.github.io/play-hikaricp.edulify.com/) to give HikariCP a try.
 
 In their own words, *"HikariCP is supposed to be the fastest connection pool in Java land. But we did not start to use it because of speed, but because of its reliability.  Here is a cool graph that shows connections opened to PostgreSQL.  As you can see, the pool is way more stable. Also it is keeping its size at the minimum since we deploy it."*
 
 ![](https://github.com/brettwooldridge/HikariCP/wiki/HikariVsBone.png)
 
 ----------------------------------------------------
-
 #### Failure: Pools behaving badly
 Read our interesting ["Database down" pool challenge](https://github.com/brettwooldridge/HikariCP/wiki/Bad-Behavior:-Handling-Database-Down).
 
@@ -66,7 +64,6 @@ Read our interesting ["Database down" pool challenge](https://github.com/brettwo
 AKA ["What you probably didn't know about connection pool sizing"](https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing).  Read on to find out.
 
 ------------------------------
-
 #### Configuration (knobs, baby!)
 HikariCP comes with *sane* defaults that perform well in most deployments without additional tweaking.
 
