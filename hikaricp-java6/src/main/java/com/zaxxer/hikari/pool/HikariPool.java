@@ -120,24 +120,26 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    public HikariPool(HikariConfig configuration, String username, String password)
    {
-      this.configuration = configuration;
       this.username = username;
       this.password = password;
+      this.configuration = configuration;
 
-      this.totalConnections = new AtomicInteger();
       this.connectionBag = new ConcurrentBag<PoolBagEntry>(this);
-      this.lastConnectionFailure = new AtomicReference<Throwable>();
+      this.totalConnections = new AtomicInteger();
       this.connectionTimeout = configuration.getConnectionTimeout();
+      this.lastConnectionFailure = new AtomicReference<Throwable>();
+
+      this.isReadOnly = configuration.isReadOnly();
+      this.isAutoCommit = configuration.isAutoCommit();
+      this.isRegisteredMbeans = configuration.isRegisterMbeans();
+      this.isJdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
 
       this.catalog = configuration.getCatalog();
       this.connectionCustomizer = initializeCustomizer();
-      this.isAutoCommit = configuration.isAutoCommit();
-      this.isIsolateInternalQueries = configuration.isIsolateInternalQueries();
-      this.isReadOnly = configuration.isReadOnly();
-      this.isRegisteredMbeans = configuration.isRegisterMbeans();
-      this.isJdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
-      this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
       this.transactionIsolation = PoolUtilities.getTransactionIsolation(configuration.getTransactionIsolation());
+      this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
+      this.isIsolateInternalQueries = configuration.isIsolateInternalQueries();
+
       this.isRecordMetrics = configuration.isRecordMetrics();
       this.metricsTracker = MetricsFactory.createMetricsTracker((isRecordMetrics ? configuration.getMetricsTrackerClassName() : "com.zaxxer.hikari.metrics.MetricsTracker"), this);
 
@@ -170,9 +172,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    public Connection getConnection() throws SQLException
    {
+      long timeout = connectionTimeout;
       final long start = System.currentTimeMillis();
       final MetricsContext metricsContext = (isRecordMetrics ? metricsTracker.recordConnectionRequest(start) : MetricsTracker.NO_CONTEXT);
-      long timeout = connectionTimeout;
 
       try {
          do {
@@ -268,7 +270,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     *
     * @param proxyConnection the connection to evict
     */
-   public void evictConnection(IHikariConnectionProxy proxyConnection) {
+   public void evictConnection(IHikariConnectionProxy proxyConnection)
+   {
       closeConnection(proxyConnection.getPoolBagEntry());
    }
 
