@@ -35,6 +35,8 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.MetricRegistry;
+import com.zaxxer.hikari.metrics.CodaHaleShim;
 import com.zaxxer.hikari.proxy.JavassistProxyFactory;
 import com.zaxxer.hikari.util.PoolUtilities;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
@@ -69,7 +71,6 @@ public class HikariConfig implements HikariConfigMBean
    private String dataSourceJndiName;
    private String driverClassName;
    private String jdbcUrl;
-   private String metricsTrackerClassName;
    private String password;
    private String poolName;
    private String transactionIsolationName;
@@ -79,15 +80,16 @@ public class HikariConfig implements HikariConfigMBean
    private boolean isInitializationFailFast;
    private boolean isJdbc4connectionTest;
    private boolean isIsolateInternalQueries;
-   private boolean isRecordMetrics;
    private boolean isRegisterMbeans;
    private DataSource dataSource;
    private Properties dataSourceProperties;
    private IConnectionCustomizer customizer;
    private ThreadFactory threadFactory;
+   private MetricRegistry metricRegistry;
 
    static {
       JavassistProxyFactory.initialize();
+      CodaHaleShim.initialize();
    }
 
    /**
@@ -105,8 +107,6 @@ public class HikariConfig implements HikariConfigMBean
       minIdle = -1;
       maxPoolSize = 10;
       maxLifetime = MAX_LIFETIME;
-      isRecordMetrics = false;
-      metricsTrackerClassName = "com.zaxxer.hikari.metrics.CodaHaleMetricsTracker";
       customizer = new IConnectionCustomizer() {
          @Override
          public void customize(Connection connection) throws SQLException
@@ -433,6 +433,26 @@ public class HikariConfig implements HikariConfigMBean
       this.isJdbc4connectionTest = useIsValid;
    }
 
+   /**
+    * Get the Codahale MetricRegistry, could be null.
+    *
+    * @return the codahale MetricRegistry instance
+    */
+   public MetricRegistry getMetricRegistry()
+   {
+      return metricRegistry;
+   }
+
+   /**
+    * Set a Codahale MetricRegistry to use for HikariCP.
+    *
+    * @param metricRegistry the Codahale MetricRegistry to set
+    */
+   public void setMetricRegistry(MetricRegistry metricRegistry)
+   {
+      this.metricRegistry = metricRegistry;
+   }
+
    public boolean isReadOnly()
    {
       return isReadOnly;
@@ -441,21 +461,6 @@ public class HikariConfig implements HikariConfigMBean
    public void setReadOnly(boolean readOnly)
    {
       this.isReadOnly = readOnly;
-   }
-
-   public boolean isRecordMetrics()
-   {
-      return isRecordMetrics;
-   }
-
-   /**
-    * Currently not supported.
-    * @param recordMetrics <code>true</code> if metrics should be recorded
-    */
-   @Deprecated
-   public void setRecordMetrics(boolean recordMetrics)
-   {
-      this.isRecordMetrics = recordMetrics;
    }
 
    public boolean isRegisterMbeans()
@@ -511,28 +516,6 @@ public class HikariConfig implements HikariConfigMBean
          throw new IllegalArgumentException("maxPoolSize cannot be less than 1");
       }
       this.maxPoolSize = maxPoolSize;
-   }
-
-   /**
-    * Get the name of the class that implements the IMetricsTracker interface to
-    * be used for metrics tracking.
-    *
-    * @return the name of the class that implements the IMetricsTracker interface
-    */
-   public String getMetricsTrackerClassName()
-   {
-      return metricsTrackerClassName;
-   }
-
-   /**
-    * Set the name of the class that implements the IMetricsTracker interface to
-    * be used for metrics tracking.
-    *
-    * @param className the name of the class that implements the IMetricsTracker interface
-    */
-   public void setMetricsTrackerClassName(String className)
-   {
-      this.metricsTrackerClassName = className;
    }
 
    /** {@inheritDoc} */

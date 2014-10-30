@@ -25,15 +25,13 @@ import com.zaxxer.hikari.util.PoolUtilities;
 
 public final class CodaHaleMetricsTracker extends MetricsTracker
 {
-   private MetricRegistry registry;
    private final Timer connectionObtainTimer;
    private final Histogram connectionUsage;
 
-   public CodaHaleMetricsTracker(final HikariPool pool)
+   public CodaHaleMetricsTracker(final HikariPool pool, final MetricRegistry registry)
    {
       super(pool);
 
-      registry = new MetricRegistry();
       connectionObtainTimer = registry.timer(MetricRegistry.name(pool.getConfiguration().getPoolName(), "-connection", "Wait"));
       connectionUsage = registry.histogram(MetricRegistry.name(pool.getConfiguration().getPoolName(), "-connection", "Usage"));
    }

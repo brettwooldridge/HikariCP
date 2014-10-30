@@ -48,9 +48,9 @@ import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.IConnectionCustomizer;
+import com.zaxxer.hikari.metrics.CodaHaleMetricsTracker;
 import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.metrics.IMetricsTracker.MetricsContext;
-import com.zaxxer.hikari.metrics.MetricsFactory;
 import com.zaxxer.hikari.metrics.MetricsTracker;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.ProxyFactory;
@@ -140,8 +140,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
       this.isIsolateInternalQueries = configuration.isIsolateInternalQueries();
 
-      this.isRecordMetrics = configuration.isRecordMetrics();
-      this.metricsTracker = MetricsFactory.createMetricsTracker((isRecordMetrics ? configuration.getMetricsTrackerClassName() : "com.zaxxer.hikari.metrics.MetricsTracker"), this);
+      this.isRecordMetrics = configuration.getMetricRegistry() != null;
+      this.metricsTracker = (isRecordMetrics ? new CodaHaleMetricsTracker(this, configuration.getMetricRegistry()) : new MetricsTracker(this));
 
       this.dataSource = PoolUtilities.initializeDataSource(configuration.getDataSourceClassName(), configuration.getDataSource(), configuration.getDataSourceProperties(), configuration.getJdbcUrl(), username, password);
 
