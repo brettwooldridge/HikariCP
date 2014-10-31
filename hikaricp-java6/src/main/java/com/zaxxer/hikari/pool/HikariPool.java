@@ -24,6 +24,7 @@ import static com.zaxxer.hikari.util.PoolUtilities.createInstance;
 import static com.zaxxer.hikari.util.PoolUtilities.createThreadPoolExecutor;
 import static com.zaxxer.hikari.util.PoolUtilities.elapsedTimeMs;
 import static com.zaxxer.hikari.util.PoolUtilities.executeSqlAutoCommit;
+import static com.zaxxer.hikari.util.PoolUtilities.isJdbc40Compliant;
 import static com.zaxxer.hikari.util.PoolUtilities.isJdbc41Compliant;
 import static com.zaxxer.hikari.util.PoolUtilities.quietlyCloseConnection;
 import static com.zaxxer.hikari.util.PoolUtilities.quietlySleep;
@@ -92,13 +93,13 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    private final String password;
    private final boolean isRecordMetrics;
    private final boolean isRegisteredMbeans;
-   private final boolean isJdbc4ConnectionTest;
    private final boolean isIsolateInternalQueries;
    private final long leakDetectionThreshold;
 
    private volatile boolean isShutdown;
    private volatile long connectionTimeout;
    private volatile boolean isUseNetworkTimeout;
+   private volatile boolean isUseJdbc4Validation;
 
    /**
     * Construct a HikariPool with the specified configuration.
@@ -131,7 +132,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       this.isReadOnly = configuration.isReadOnly();
       this.isAutoCommit = configuration.isAutoCommit();
       this.isRegisteredMbeans = configuration.isRegisterMbeans();
-      this.isJdbc4ConnectionTest = configuration.isJdbc4ConnectionTest();
 
       this.catalog = configuration.getCatalog();
       this.connectionCustomizer = initializeCustomizer();
@@ -414,6 +414,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       try {
          connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
          isUseNetworkTimeout = isJdbc41Compliant(connection) && (configuration.getConnectionTimeout() != Integer.MAX_VALUE);
+         isUseJdbc4Validation = isJdbc40Compliant(connection);
+         if (!isUseJdbc4Validation && configuration.getConnectionTestQuery() == null) {
+            LOGGER.error("JDBC4 Connection.isValid() method not supported, connection test query must be configured");
+         }
+         isUseJdbc4Validation &= configuration.getConnectionTestQuery() == null;
 
          final boolean timeoutEnabled = (configuration.getConnectionTimeout() != Integer.MAX_VALUE);
          final long timeoutMs = timeoutEnabled ? Math.max(250L, configuration.getConnectionTimeout()) : 0L;
@@ -427,9 +432,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          connection.setAutoCommit(isAutoCommit);
          connection.setTransactionIsolation(transactionIsolation);
          connection.setReadOnly(isReadOnly);
-         if (catalog != null) {
-            connection.setCatalog(catalog);
-         }
+         connection.setCatalog(catalog);
 
          setNetworkTimeout(houseKeepingExecutorService, connection, networkTimeout, isUseNetworkTimeout);
          
@@ -461,7 +464,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          final boolean timeoutEnabled = (configuration.getConnectionTimeout() != Integer.MAX_VALUE);
          int timeoutSec = timeoutEnabled ? (int) Math.max(1L, TimeUnit.MILLISECONDS.toSeconds(timeoutMs)) : 0;
 
-         if (isJdbc4ConnectionTest) {
+         if (isUseJdbc4Validation) {
             return connection.isValid(timeoutSec);
          }
 

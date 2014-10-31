@@ -78,7 +78,6 @@ public class HikariConfig implements HikariConfigMBean
    private boolean isAutoCommit;
    private boolean isReadOnly;
    private boolean isInitializationFailFast;
-   private boolean isJdbc4connectionTest;
    private boolean isIsolateInternalQueries;
    private boolean isRegisterMbeans;
    private DataSource dataSource;
@@ -102,7 +101,6 @@ public class HikariConfig implements HikariConfigMBean
       connectionTimeout = CONNECTION_TIMEOUT;
       idleTimeout = IDLE_TIMEOUT;
       isAutoCommit = true;
-      isJdbc4connectionTest = true;
       isInitializationFailFast = true;
       minIdle = -1;
       maxPoolSize = 10;
@@ -423,14 +421,16 @@ public class HikariConfig implements HikariConfigMBean
       this.isIsolateInternalQueries = isolate;
    }
 
+   @Deprecated
    public boolean isJdbc4ConnectionTest()
    {
-      return isJdbc4connectionTest;
+      return false;
    }
 
+   @Deprecated
    public void setJdbc4ConnectionTest(boolean useIsValid)
    {
-      this.isJdbc4connectionTest = useIsValid;
+      // ignored deprecated property
    }
 
    /**
@@ -661,14 +661,6 @@ public class HikariConfig implements HikariConfigMBean
       }
       else if (dataSource != null && dataSourceClassName != null) {
          logger.warn("both dataSource and dataSourceClassName are specified, ignoring dataSourceClassName");
-      }
-
-      if (connectionTestQuery != null) {
-         isJdbc4connectionTest = false;
-      }
-      else if (!isJdbc4connectionTest) {
-         logger.error("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified");
-         throw new IllegalStateException("Either jdbc4ConnectionTest must be enabled or a connectionTestQuery must be specified");
       }
 
       if (transactionIsolationName != null) {

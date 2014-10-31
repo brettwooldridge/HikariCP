@@ -252,21 +252,6 @@ public class TestValidation
    }
 
    @Test
-   public void validateMissingTest()
-   {
-      try {
-         HikariConfig config = new HikariConfig();
-         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-         config.setJdbc4ConnectionTest(false);
-         config.validate();
-         Assert.fail();
-      }
-      catch (IllegalStateException ise) {
-         Assert.assertTrue(ise.getMessage().contains("Either jdbc4ConnectionTest"));
-      }
-   }
-
-   @Test
    public void validateInvalidLifetime()
    {
       try {

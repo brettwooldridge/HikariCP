@@ -77,13 +77,17 @@ public final class TestElf
    public static void resetPoolUtilities()
    {
       try {
-         Field field = PoolUtilities.class.getDeclaredField("jdbc4checked");
+         Field field = PoolUtilities.class.getDeclaredField("jdbc41checked");
          field.setAccessible(true);
          field.setBoolean(null, false);
 
          field = PoolUtilities.class.getDeclaredField("queryTimeoutSupported");
          field.setAccessible(true);
          field.setBoolean(null, true);
+
+         field = PoolUtilities.class.getDeclaredField("jdbc40checked");
+         field.setAccessible(true);
+         field.setBoolean(null, false);
       }
       catch (Exception e) {
          throw new RuntimeException(e);

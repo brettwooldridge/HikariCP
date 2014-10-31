@@ -20,8 +20,10 @@ import org.slf4j.Logger;
 
 public final class PoolUtilities
 {
-   private static volatile boolean IS_JDBC4;
-   private static volatile boolean jdbc4checked; 
+   private static volatile boolean IS_JDBC40;
+   private static volatile boolean IS_JDBC41;
+   private static volatile boolean jdbc40checked; 
+   private static volatile boolean jdbc41checked; 
    private static volatile boolean queryTimeoutSupported = true;
 
    /**
@@ -181,6 +183,31 @@ public final class PoolUtilities
    }
 
    /**
+    * Return true if the driver appears to be JDBC 4.0 compliant.
+    *
+    * @param connection a Connection to check
+    * @return true if JDBC 4.1 compliance, false otherwise
+    * @throws SQLException re-thrown exception from Connection.getNetworkTimeout()
+    */
+   public static boolean isJdbc40Compliant(final Connection connection) throws SQLException
+   {
+      if (jdbc40checked) {
+         return IS_JDBC40;
+      }
+
+      try {
+         connection.isValid(100);  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
+         IS_JDBC40 = true;
+      }
+      catch (AbstractMethodError | SQLFeatureNotSupportedException e) {
+         IS_JDBC40 = false;
+      }
+
+      jdbc40checked = true;
+      return IS_JDBC40;
+   }
+
+   /**
     * Return true if the driver appears to be JDBC 4.1 compliant.
     *
     * @param connection a Connection to check
@@ -189,20 +216,20 @@ public final class PoolUtilities
     */
    public static boolean isJdbc41Compliant(final Connection connection) throws SQLException
    {
-      if (jdbc4checked) {
-         return IS_JDBC4;
+      if (jdbc41checked) {
+         return IS_JDBC41;
       }
 
       try {
          connection.getNetworkTimeout();  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
-         IS_JDBC4 = true;
+         IS_JDBC41 = true;
       }
       catch (AbstractMethodError | SQLFeatureNotSupportedException e) {
-         IS_JDBC4 = false;
+         IS_JDBC41 = false;
       }
 
-      jdbc4checked = true;
-      return IS_JDBC4;
+      jdbc41checked = true;
+      return IS_JDBC41;
    }
 
    /**
