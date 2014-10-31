@@ -245,6 +245,8 @@ public class TestConnections
 
       HikariDataSource ds = new HikariDataSource(config);
       try {
+         PoolUtilities.quietlySleep(250L);
+
          Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
 
