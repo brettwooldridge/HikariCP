@@ -75,6 +75,7 @@
             <configuration>
                <excludes>
                   <exclude>**/com/zaxxer/hikari/proxy/ProxyFactory.*</exclude>
+                  <exclude>**/com/zaxxer/hikari/metrics/CodaHaleMetricsTracker.*</exclude>
                </excludes>
             </configuration>
             <executions>
