@@ -27,6 +27,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * This class is used to validate that Codahale metrics is available in the class
+ * path, or if not to generate a fake "shim" that avoids ClassNotFound exceptions
+ * in code that depends on (but does not use if not present) Codahale metrics.
  *
  * @author Brett Wooldridge
  */

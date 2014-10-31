@@ -16,6 +16,9 @@
 
 package com.zaxxer.hikari.metrics;
 
+import java.util.concurrent.TimeUnit;
+
+import com.codahale.metrics.CachedGauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
@@ -28,12 +31,47 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    private final Timer connectionObtainTimer;
    private final Histogram connectionUsage;
 
-   public CodaHaleMetricsTracker(final HikariPool pool, final MetricRegistry registry)
-   {
+   public CodaHaleMetricsTracker(final HikariPool pool, final MetricRegistry registry) {
       super(pool);
 
       connectionObtainTimer = registry.timer(MetricRegistry.name(pool.getConfiguration().getPoolName(), "connection", "Wait"));
       connectionUsage = registry.histogram(MetricRegistry.name(pool.getConfiguration().getPoolName(), "connection", "Usage"));
+
+      registry.register(MetricRegistry.name(pool.getConfiguration().getPoolName(), "connection", "TotalConnections"),
+                        new CachedGauge<Integer>(10, TimeUnit.SECONDS) {
+                           @Override
+                           protected Integer loadValue()
+                           {
+                              return pool.getTotalConnections();
+                           }
+                        });
+
+      registry.register(MetricRegistry.name(pool.getConfiguration().getPoolName(), "connection", "IdleConnections"),
+                        new CachedGauge<Integer>(10, TimeUnit.SECONDS) {
+                           @Override
+                           protected Integer loadValue()
+                           {
+                              return pool.getIdleConnections();
+                           }
+                        });
+
+      registry.register(MetricRegistry.name(pool.getConfiguration().getPoolName(), "connection", "ActiveConnections"),
+                        new CachedGauge<Integer>(10, TimeUnit.SECONDS) {
+                           @Override
+                           protected Integer loadValue()
+                           {
+                              return pool.getActiveConnections();
+                           }
+                        });
+
+      registry.register(MetricRegistry.name(pool.getConfiguration().getPoolName(), "connection", "PendingConnections"),
+                        new CachedGauge<Integer>(10, TimeUnit.SECONDS) {
+                           @Override
+                           protected Integer loadValue()
+                           {
+                              return pool.getThreadsAwaitingConnection();
+                           }
+                        });
    }
 
    /** {@inheritDoc} */
@@ -49,7 +87,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    {
       connectionUsage.update(PoolUtilities.elapsedTimeMs(bagEntry.lastOpenTime));
    }
-   
+
    public Timer getConnectionAcquisitionTimer()
    {
       return connectionObtainTimer;
@@ -64,8 +102,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    {
       final Timer.Context innerContext;
 
-      Context(Timer timer)
-      {
+      Context(Timer timer) {
          innerContext = timer.time();
       }
 
