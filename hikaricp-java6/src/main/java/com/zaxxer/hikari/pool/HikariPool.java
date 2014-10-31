@@ -242,10 +242,10 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          LOGGER.info("HikariCP pool {} is shutting down.", configuration.getPoolName());
 
          connectionBag.close();
-         logPoolState("Before shutdown ");
          houseKeepingExecutorService.shutdownNow();
          addConnectionExecutor.shutdownNow();
 
+         logPoolState("Before shutdown ");
          final long start = System.currentTimeMillis();
          do {
             closeIdleConnections();
@@ -255,12 +255,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
          closeConnectionExecutor.shutdown();
          closeConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
-
          logPoolState("After shutdown ");
 
-         if (isRegisteredMbeans) {
-            HikariMBeanElf.unregisterMBeans(configuration, this);
-         }
+         HikariMBeanElf.unregisterMBeans(configuration, this);
       }
    }
 
