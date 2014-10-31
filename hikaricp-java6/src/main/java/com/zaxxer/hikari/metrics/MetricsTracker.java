@@ -24,7 +24,7 @@ import com.zaxxer.hikari.pool.PoolBagEntry;
  *
  * @author Brett Wooldridge
  */
-public class MetricsTracker implements IMetricsTracker
+public class MetricsTracker
 {
    public static final MetricsContext NO_CONTEXT = new MetricsContext();
 
@@ -36,43 +36,63 @@ public class MetricsTracker implements IMetricsTracker
    }
 
    /** {@inheritDoc} */
-   @Override
    public MetricsContext recordConnectionRequest(long requestTime)
    {
       return NO_CONTEXT;
    }
 
    /** {@inheritDoc} */
-   @Override
    public void recordConnectionUsage(final PoolBagEntry bagEntry)
    {
    }
 
    /** {@inheritDoc} */
-   @Override
    public int getIdleConnections()
    {
       return pool.getIdleConnections();
    }
 
    /** {@inheritDoc} */
-   @Override
    public int getActiveConnections()
    {
       return pool.getActiveConnections();
    }
 
    /** {@inheritDoc} */
-   @Override
    public int getTotalConnections()
    {
       return pool.getTotalConnections();
    }
 
    /** {@inheritDoc} */
-   @Override
    public int getThreadsAwaitingConnection()
    {
       return pool.getThreadsAwaitingConnection();
+   }
+
+   /**
+    * A base instance of a MetricsContext.  Classes extending this class should exhibit the
+    * behavior of "starting" a timer upon contruction, and "stopping" the timer when the
+    * {@link MetricsContext#stop()} method is called.
+    *
+    * @author Brett Wooldridge
+    */
+   public static class MetricsContext
+   {
+      public void stop()
+      {
+         // do nothing
+      }
+
+      /**
+       * Set the lastOpenTime on the provided bag entry.
+       *
+       * @param bagEntry the bag entry
+       * @param now the current timestamp
+       */
+      public void setConnectionLastOpen(final PoolBagEntry bagEntry, final long now)
+      {
+         // do nothing
+      }
    }
 }

@@ -32,8 +32,8 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    {
       super(pool);
 
-      connectionObtainTimer = registry.timer(MetricRegistry.name(pool.getConfiguration().getPoolName(), "-connection", "Wait"));
-      connectionUsage = registry.histogram(MetricRegistry.name(pool.getConfiguration().getPoolName(), "-connection", "Usage"));
+      connectionObtainTimer = registry.timer(MetricRegistry.name(pool.getConfiguration().getPoolName(), "connection", "Wait"));
+      connectionUsage = registry.histogram(MetricRegistry.name(pool.getConfiguration().getPoolName(), "connection", "Usage"));
    }
 
    /** {@inheritDoc} */

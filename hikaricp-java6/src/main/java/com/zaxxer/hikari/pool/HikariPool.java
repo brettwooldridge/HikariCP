@@ -49,9 +49,8 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.IConnectionCustomizer;
 import com.zaxxer.hikari.metrics.CodaHaleMetricsTracker;
-import com.zaxxer.hikari.metrics.IMetricsTracker;
-import com.zaxxer.hikari.metrics.IMetricsTracker.MetricsContext;
 import com.zaxxer.hikari.metrics.MetricsTracker;
+import com.zaxxer.hikari.metrics.MetricsTracker.MetricsContext;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
@@ -79,7 +78,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    private final DataSource dataSource;
 
    private final HikariConfig configuration;
-   private final IMetricsTracker metricsTracker;
+   private final MetricsTracker metricsTracker;
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ConcurrentBag<PoolBagEntry> connectionBag;
    private final ThreadPoolExecutor closeConnectionExecutor;
@@ -293,16 +292,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    public HikariConfig getConfiguration()
    {
       return configuration;
-   }
-
-   /**
-    * Get the metrics tracker for this pool.
-    *
-    * @return the metrics tracker
-    */
-   public IMetricsTracker getMetricsTracker()
-   {
-      return metricsTracker;
    }
 
    @Override

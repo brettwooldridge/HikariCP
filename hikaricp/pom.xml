@@ -47,13 +47,27 @@
    <parent>
       <groupId>com.zaxxer</groupId>
       <artifactId>HikariCP-parent</artifactId>
-      <version>2.1.1-SNAPSHOT</version>
+      <version>2.2.0-SNAPSHOT</version>
    </parent>
 
    <build>
       <sourceDirectory>src/main/java</sourceDirectory>
       <testSourceDirectory>src/test/java</testSourceDirectory>
       <plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+               <!-- Sets the VM argument line used when unit tests are  run. -->
+               <argLine>${surefireArgLine}</argLine>
+               <!-- Skips unit tests if the value of skip.unit.tests property is true -->
+               <skipTests>${skip.unit.tests}</skipTests>
+               <classpathDependencyExcludes>
+                  <classpathDependencyExclude>com.codahale.metrics:metrics-core</classpathDependencyExclude>
+               </classpathDependencyExcludes>
+            </configuration>
+         </plugin>
+
          <plugin>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>

@@ -29,7 +29,6 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.util.DriverDataSource;
@@ -219,18 +218,6 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       if (!isShutdown && pool != null && connection instanceof IHikariConnectionProxy) {
          pool.evictConnection((IHikariConnectionProxy) connection);
       }
-   }
-
-   /**
-    * Get the metrics tracker associated with this DataSource.  If metrics collection is
-    * disabled, the resulting object will provide no meaning data or return null from
-    * some APIs.
-    *
-    * @return the metrics tracker for this DataSource
-    */
-   public IMetricsTracker getMetricsTracker()
-   {
-      return (pool != null ? pool.getMetricsTracker() : null);
    }
 
    /**
