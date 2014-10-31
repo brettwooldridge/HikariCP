@@ -19,6 +19,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -157,6 +158,35 @@ public class TestValidation
       catch (IllegalArgumentException ise) {
          Assert.assertTrue(ise.getMessage().contains("idleTimeout cannot be negative"));
       }
+   }
+
+   @Test
+   public void validateIdleTimeoutTooSmall()
+   {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      PrintStream ps = new PrintStream(baos, true);
+      TestElf.setSlf4jTargetStream(HikariConfig.class, ps);
+
+      HikariConfig config = new HikariConfig();
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      config.setIdleTimeout(TimeUnit.SECONDS.toMillis(25));
+      config.validate();
+      Assert.assertTrue(new String(baos.toByteArray()).contains("less than 30000ms"));
+   }
+
+   @Test
+   public void validateIdleTimeoutExceedsLifetime()
+   {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      PrintStream ps = new PrintStream(baos, true);
+      TestElf.setSlf4jTargetStream(HikariConfig.class, ps);
+
+      HikariConfig config = new HikariConfig();
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      config.setMaxLifetime(TimeUnit.MINUTES.toMillis(2));
+      config.setIdleTimeout(TimeUnit.MINUTES.toMillis(3));
+      config.validate();
+      Assert.assertTrue(new String(baos.toByteArray()).contains("greater than maxLifetime"));
    }
 
    @Test
