@@ -10,6 +10,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.zaxxer.hikari.util.PoolUtilities;
+
 public class ExceptionTest
 {
     private HikariDataSource ds;
@@ -25,6 +27,8 @@ public class ExceptionTest
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
         ds = new HikariDataSource(config);
+
+        PoolUtilities.quietlySleep(250L);
     }
 
     @After
