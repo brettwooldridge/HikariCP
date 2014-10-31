@@ -129,12 +129,12 @@ is used to check that a connection is still alive.  This value is mutually exclu
 preferred if supported by the JDBC driver.  *Default: true*
 
 :abc:``connectionTestQuery``<br/>
-This is for "legacy" databases that do not support the JDBC4 Connection.isValid() API.  This
-is the query that will be executed just before a connection is given to you from the pool to
-validate that the connection to the database is still alive.  **If your drvier supports JDBC4
-we strongly recommend not setting this property.**  See the ``jdbc4ConnectionTest`` property
-for a more efficent alive test.  One of either this property or ``jdbc4ConnectionTest`` must
-be specified.  *Default: none*
+**If your drvier supports JDBC4 we strongly recommend not setting this property.** This is for 
+"legacy" databases that do not support the JDBC4 Connection.isValid() API.  This is the query that
+will be executed just before a connection is given to you from the pool to validate that the 
+connection to the database is still alive.  See the ``jdbc4ConnectionTest`` property for a more 
+efficent alive test.  One of either this property or ``jdbc4ConnectionTest`` must be specified. 
+*Default: none*
 
 :hash:``minimumIdle``<br/>
 This property controls the minimum number of *idle connections* that HikariCP tries to maintain
@@ -218,7 +218,7 @@ treated as a connection failure and the standard retry logic will be followed.  
 :abc: ``connectionCustomizerClassName``<br/>
 This property allows you to specify an implementation of the ``IConnectionCustomizer`` interface.  The
 ``customize(Connection)`` method will be invoked on each new connection *before* it is added to the
-pool.
+pool. *Default: none*
 
 :negative_squared_cross_mark:``registerMbeans``<br/>
 This property controls whether or not JMX Management Beans ("MBeans") are registered or not.
