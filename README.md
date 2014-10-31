@@ -69,78 +69,7 @@ HikariCP comes with *sane* defaults that perform well in most deployments withou
 
 <sup>:paperclip:</sup>&nbsp;*HikariCP uses milliseconds for all time values.*
 
-:white_check_mark:``autoCommit``<br/>
-This property controls the default auto-commit behavior of connections returned from the pool.
-It is a boolean value.  *Default: true*
-
-:negative_squared_cross_mark:``readOnly``<br/>
-This property controls whether *Connections* obtained from the pool are in read-only mode by
-default.  Note some databases do not support the concept of read-only mode, while others provide
-query optimizations when the *Connection* is set to read-only.  Whether you need this property
-or not will depend largely on your application and database.  *Default: false*
-
-:abc:``transactionIsolation``<br/>
-This property controls the default transaction isolation level of connections returned from
-the pool.  If this property is not specified, the default transaction isolation level defined
-by the JDBC driver is used.  Typically, the JDBC driver default transaction isolation level
-should be used.  Only use this property if you have specific isolation requirements that are
-common for all queries, otherwise simply set the isolation level manually when creating or
-preparing statements.  The value of this property is the constant name from the ``Connection``
-class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, etc.  *Default: driver default*
-
-:abc:``catalog``<br/>
-This property sets the default *catalog* for databases that support the concept of catalogs.
-If this property is not specified, the default catalog defined by the JDBC driver is used.
-*Default: driver default*
-
-:watch:``connectionTimeout``<br/>
-This property controls the maximum number of milliseconds that a client (that's you) will wait
-for a connection from the pool.  If this time is exceeded without a connection becoming
-available, a SQLException will be thrown.  100ms is the minimum value.  *Default: 30000 (30 seconds)*
-
-:watch:``idleTimeout``<br/>
-This property controls the maximum amount of time (in milliseconds) that a connection is
-allowed to sit idle in the pool.  Whether a connection is retired as idle or not is subject
-to a maximum variation of +30 seconds, and average variation of +15 seconds.  A connection
-will never be retired as idle *before* this timeout.  A value of 0 means that idle connections
-are never removed from the pool.  *Default: 600000 (10 minutes)*
-
-:watch:``maxLifetime``<br/>
-This property controls the maximum lifetime of a connection in the pool.  When a connection
-reaches this timeout, even if recently used, it will be retired from the pool.  An in-use
-connection will never be retired, only when it is idle will it be removed.  We strongly
-recommend setting this value, and using something reasonable like 30 minutes or 1 hour.  A
-value of 0 indicates no maximum lifetime (infinite lifetime), subject of course to the
-``idleTimeout`` setting.  *Default: 1800000 (30 minutes)*
-
-:watch:``leakDetectionThreshold``<br/>
-This property controls the amount of time that a connection can be out of the pool before a
-message is logged indicating a possible connection leak.  A value of 0 means leak detection
-is disabled.  Lowest acceptable value for enabling leak detection is 10000 (10 secs). *Default: 0*
-
-:negative_squared_cross_mark:``initializationFailFast``<br/>
-This property controls whether the pool will "fail fast" if the pool cannot be seeded with
-initial connections successfully.  This property has no effect if ``minimumIdle`` is 0.
-*Default: false*
-
-:white_check_mark:``jdbc4ConnectionTest``<br/>
-This property is a boolean value that determines whether the JDBC4 Connection.isValid() method
-is used to check that a connection is still alive.  This value is mutually exclusive with the
-``connectionTestQuery`` property, and this method of testing connection validity should be
-preferred if supported by the JDBC driver.  *Default: true*
-
-:abc:``connectionTestQuery``<br/>
-This is for "legacy" databases that do not support the JDBC4 Connection.isValid() API.  This
-is the query that will be executed just before a connection is given to you from the pool to
-validate that the connection to the database is still alive.  **If your drvier supports JDBC4
-we strongly recommend not setting this property.**  See the ``jdbc4ConnectionTest`` property
-for a more efficent alive test.  One of either this property or ``jdbc4ConnectionTest`` must
-be specified.  *Default: none*
-
-:abc:``connectionInitSql``<br/>
-This property sets a SQL statement that will be executed after every new connection creation
-before adding it to the pool. If this SQL is not valid or throws an exception, it will be
-treated as a connection failure and the standard retry logic will be followed.  *Default: none*
+##### Essentials
 
 :abc:``dataSourceClassName``<br/>
 This is the name of the ``DataSource`` class provided by the JDBC driver.  Consult the
@@ -166,6 +95,46 @@ the ``jdbcUrl`` and ``driverClassName`` because that's the way you've always don
 using the more modern and maintainable ``dataSourceClassName`` approach instead.  Note that if
 this property is used, you may still use *DataSource* properties to configure your driver and
 is in fact recommended.  *Default: none*
+
+##### Frequently used
+
+:white_check_mark:``autoCommit``<br/>
+This property controls the default auto-commit behavior of connections returned from the pool.
+It is a boolean value.  *Default: true*
+
+:watch:``connectionTimeout``<br/>
+This property controls the maximum number of milliseconds that a client (that's you) will wait
+for a connection from the pool.  If this time is exceeded without a connection becoming
+available, a SQLException will be thrown.  100ms is the minimum value.  *Default: 30000 (30 seconds)*
+
+:watch:``idleTimeout``<br/>
+This property controls the maximum amount of time (in milliseconds) that a connection is
+allowed to sit idle in the pool.  Whether a connection is retired as idle or not is subject
+to a maximum variation of +30 seconds, and average variation of +15 seconds.  A connection
+will never be retired as idle *before* this timeout.  A value of 0 means that idle connections
+are never removed from the pool.  *Default: 600000 (10 minutes)*
+
+:watch:``maxLifetime``<br/>
+This property controls the maximum lifetime of a connection in the pool.  When a connection
+reaches this timeout, even if recently used, it will be retired from the pool.  An in-use
+connection will never be retired, only when it is idle will it be removed.  We strongly
+recommend setting this value, and using something reasonable like 30 minutes or 1 hour.  A
+value of 0 indicates no maximum lifetime (infinite lifetime), subject of course to the
+``idleTimeout`` setting.  *Default: 1800000 (30 minutes)*
+
+:white_check_mark:``jdbc4ConnectionTest``<br/>
+This property is a boolean value that determines whether the JDBC4 Connection.isValid() method
+is used to check that a connection is still alive.  This value is mutually exclusive with the
+``connectionTestQuery`` property, and this method of testing connection validity should be
+preferred if supported by the JDBC driver.  *Default: true*
+
+:abc:``connectionTestQuery``<br/>
+This is for "legacy" databases that do not support the JDBC4 Connection.isValid() API.  This
+is the query that will be executed just before a connection is given to you from the pool to
+validate that the connection to the database is still alive.  **If your drvier supports JDBC4
+we strongly recommend not setting this property.**  See the ``jdbc4ConnectionTest`` property
+for a more efficent alive test.  One of either this property or ``jdbc4ConnectionTest`` must
+be specified.  *Default: none*
 
 :hash:``minimumIdle``<br/>
 This property controls the minimum number of *idle connections* that HikariCP tries to maintain
@@ -206,11 +175,32 @@ skip this method entirely and call ``addDataSourceProperty("pass", ...)``, for e
 This property represents a user-defined name for the connection pool and appears mainly
 in logging and JMX management consoles to identify pools and pool configurations.  *Default: auto-generated*
 
-:negative_squared_cross_mark:``registerMbeans``<br/>
-This property controls whether or not JMX Management Beans ("MBeans") are registered or not.
-*Default: false*
-
 ##### Infrequently used
+
+:watch:``leakDetectionThreshold``<br/>
+This property controls the amount of time that a connection can be out of the pool before a
+message is logged indicating a possible connection leak.  A value of 0 means leak detection
+is disabled.  Lowest acceptable value for enabling leak detection is 10000 (10 secs). *Default: 0*
+
+:abc:``transactionIsolation``<br/>
+This property controls the default transaction isolation level of connections returned from
+the pool.  If this property is not specified, the default transaction isolation level defined
+by the JDBC driver is used.  Typically, the JDBC driver default transaction isolation level
+should be used.  Only use this property if you have specific isolation requirements that are
+common for all queries, otherwise simply set the isolation level manually when creating or
+preparing statements.  The value of this property is the constant name from the ``Connection``
+class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, etc.  *Default: driver default*
+
+:abc:``catalog``<br/>
+This property sets the default *catalog* for databases that support the concept of catalogs.
+If this property is not specified, the default catalog defined by the JDBC driver is used.
+*Default: driver default*
+
+:negative_squared_cross_mark:``readOnly``<br/>
+This property controls whether *Connections* obtained from the pool are in read-only mode by
+default.  Note some databases do not support the concept of read-only mode, while others provide
+query optimizations when the *Connection* is set to read-only.  Whether you need this property
+or not will depend largely on your application and database.  *Default: false*
 
 :arrow_right:``dataSource``<br/>
 This property is only available via programmatic configuration.  This property allows you
@@ -220,17 +210,30 @@ frameworks. When this property is specified, the ``dataSourceClassName`` propert
 DataSource-specific properties will be ignored.
 *Default: none*
 
+:abc:``connectionInitSql``<br/>
+This property sets a SQL statement that will be executed after every new connection creation
+before adding it to the pool. If this SQL is not valid or throws an exception, it will be
+treated as a connection failure and the standard retry logic will be followed.  *Default: none*
+
 :abc: ``connectionCustomizerClassName``<br/>
 This property allows you to specify an implementation of the ``IConnectionCustomizer`` interface.  The
 ``customize(Connection)`` method will be invoked on each new connection *before* it is added to the
 pool.
+
+:negative_squared_cross_mark:``registerMbeans``<br/>
+This property controls whether or not JMX Management Beans ("MBeans") are registered or not.
+*Default: false*
+
+:negative_squared_cross_mark:``initializationFailFast``<br/>
+This property controls whether the pool will "fail fast" if the pool cannot be seeded with
+initial connections successfully.  This property has no effect if ``minimumIdle`` is 0.
+*Default: false*
 
 :negative_squared_cross_mark:``isolateInternalQueries``<br/>
 This property determines whether HikariCP isolates internal pool queries, such as the
 connection alive test, in their own transaction.  Since these are typically read-only
 queries, it is rarely necessary to encapsulate them in their own transaction.  This
 property only applies if ``autoCommit`` is disabled.  *Default: false*
-
 
 ***Missing Knobs***<br/>
 HikariCP has plenty of "knobs" to turn as you can see above, but comparatively less than some other pools.
