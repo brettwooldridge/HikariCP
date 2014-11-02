@@ -431,6 +431,7 @@ public class HikariConfig implements HikariConfigMBean
    public void setJdbc4ConnectionTest(boolean useIsValid)
    {
       // ignored deprecated property
+      LOGGER.warn("The jdbcConnectionTest property is now deprecated, see the documentation for connectionTestQuery");
    }
 
    /**
