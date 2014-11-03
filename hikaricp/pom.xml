@@ -72,13 +72,6 @@
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
             <version>0.7.2.201409121644</version>
-            <configuration>
-               <excludes>
-                  <exclude>**/com/zaxxer/hikari/proxy/ProxyFactory.*</exclude>
-                  <exclude>**/com/zaxxer/hikari/metrics/CodaHaleMetricsTracker.*</exclude>
-                  <exclude>**/com/zaxxer/hikari/metrics/CodaHaleMetricsTracker.Context.*</exclude>
-               </excludes>
-            </configuration>
             <executions>
                <!-- Prepares the property pointing to the JaCoCo runtime agent which is passed as VM argument when Maven the Surefire plugin is executed. -->
                <execution>
@@ -91,6 +84,11 @@
                      <destFile>${project.build.directory}/coverage-reports/jacoco.exec</destFile>
                      <!-- Sets the name of the property containing the settings for JaCoCo runtime agent. -->
                      <propertyName>surefireArgLine</propertyName>
+                     <excludes>
+                        <exclude>**/com/zaxxer/hikari/proxy/ProxyFactory</exclude>
+                        <exclude>**/com/zaxxer/hikari/metrics/CodaHaleMetricsTracker</exclude>
+                        <exclude>**/com/zaxxer/hikari/metrics/CodaHaleMetricsTracker.Context</exclude>
+                     </excludes>
                   </configuration>
                </execution>
                <!-- Ensures that the code coverage report for unit tests is created after unit tests have been run. -->
@@ -105,6 +103,11 @@
                      <dataFile>${project.build.directory}/coverage-reports/jacoco.exec</dataFile>
                      <!-- Sets the output directory for the code coverage report. -->
                      <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
+                     <excludes>
+                        <exclude>**/com/zaxxer/hikari/proxy/ProxyFactory.class</exclude>
+                        <exclude>**/com/zaxxer/hikari/metrics/CodaHaleMetricsTracker.class</exclude>
+                        <exclude>**/com/zaxxer/hikari/metrics/CodaHaleMetricsTracker.Context.class</exclude>
+                     </excludes>
                   </configuration>
                </execution>
             </executions>

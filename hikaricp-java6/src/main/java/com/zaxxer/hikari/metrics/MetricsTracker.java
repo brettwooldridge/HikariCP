@@ -46,30 +46,6 @@ public class MetricsTracker
    {
    }
 
-   /** {@inheritDoc} */
-   public int getIdleConnections()
-   {
-      return pool.getIdleConnections();
-   }
-
-   /** {@inheritDoc} */
-   public int getActiveConnections()
-   {
-      return pool.getActiveConnections();
-   }
-
-   /** {@inheritDoc} */
-   public int getTotalConnections()
-   {
-      return pool.getTotalConnections();
-   }
-
-   /** {@inheritDoc} */
-   public int getThreadsAwaitingConnection()
-   {
-      return pool.getThreadsAwaitingConnection();
-   }
-
    /**
     * A base instance of a MetricsContext.  Classes extending this class should exhibit the
     * behavior of "starting" a timer upon contruction, and "stopping" the timer when the
