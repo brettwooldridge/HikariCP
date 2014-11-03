@@ -52,13 +52,17 @@ public final class HikariMBeanElf
     * @param configuration a HikariConfig instance
     * @param pool a HikariPool instance
     */
-   public static void registerMBeans(HikariConfig configuration, HikariPool pool)
+   public static void registerMBeans(final HikariConfig configuration, final HikariPool pool)
    {
-      try {
-         MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+      if (!configuration.isRegisterMbeans()) {
+         return;
+      }
 
-         ObjectName poolConfigName = new ObjectName("com.zaxxer.hikari:type=PoolConfig (" + configuration.getPoolName() + ")");
-         ObjectName poolName = new ObjectName("com.zaxxer.hikari:type=Pool (" + configuration.getPoolName() + ")");
+      try {
+         final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+
+         final ObjectName poolConfigName = new ObjectName("com.zaxxer.hikari:type=PoolConfig (" + configuration.getPoolName() + ")");
+         final ObjectName poolName = new ObjectName("com.zaxxer.hikari:type=Pool (" + configuration.getPoolName() + ")");
          if (!mBeanServer.isRegistered(poolConfigName)) {
             mBeanServer.registerMBean(configuration, poolConfigName);
             mBeanServer.registerMBean(pool, poolName);

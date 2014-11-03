@@ -92,7 +92,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    private final String username;
    private final String password;
    private final boolean isRecordMetrics;
-   private final boolean isRegisteredMbeans;
    private final boolean isIsolateInternalQueries;
    private final long leakDetectionThreshold;
 
@@ -131,7 +130,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
       this.isReadOnly = configuration.isReadOnly();
       this.isAutoCommit = configuration.isAutoCommit();
-      this.isRegisteredMbeans = configuration.isRegisterMbeans();
 
       this.catalog = configuration.getCatalog();
       this.connectionCustomizer = initializeCustomizer();
@@ -146,9 +144,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
       setLoginTimeout(dataSource, configuration.getConnectionTimeout(), LOGGER);
 
-      if (isRegisteredMbeans) {
-         HikariMBeanElf.registerMBeans(configuration, this);
-      }
+      HikariMBeanElf.registerMBeans(configuration, this);
 
       addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
       closeConnectionExecutor = createThreadPoolExecutor(4, "HikariCP connection closer (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
@@ -432,7 +428,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          connection.setAutoCommit(isAutoCommit);
          connection.setTransactionIsolation(transactionIsolation);
          connection.setReadOnly(isReadOnly);
-         connection.setCatalog(catalog);
+         if (catalog != null) {
+            connection.setCatalog(catalog);
+         }
 
          setNetworkTimeout(houseKeepingExecutorService, connection, networkTimeout, isUseNetworkTimeout);
          
