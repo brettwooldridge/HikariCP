@@ -12,7 +12,7 @@ _Java 8 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>2.1.0</version>
+        <version>2.2.0</version>
         <scope>compile</scope>
     </dependency>
 ```
@@ -21,7 +21,7 @@ _Java 6 and Java 7 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP-java6</artifactId>
-        <version>2.1.0</version>
+        <version>2.2.0</version>
         <scope>compile</scope>
     </dependency>
 ```
@@ -76,25 +76,19 @@ This is the name of the ``DataSource`` class provided by the JDBC driver.  Consu
 documentation for your specific JDBC driver to get this class name, or see the [table](https://github.com/brettwooldridge/HikariCP#popular-datasource-class-names) below.
 Note XA data sources are not supported.  XA requires a real transaction manager like
 [bitronix](https://github.com/bitronix/btm). Note that you do not need this property if you are using
-``driverClassName`` to wrap an old-school DriverManager-based JDBC driver.  The HikariCP team
+``jdbcUrl`` for "old-school" DriverManager-based JDBC driver configuration.  The HikariCP team
 considers ``dataSourceClassName`` to be a superior method of creating connections compared to
-``driverClassName``. *Default: none*
+``jdbcUrl``, *but in the end either is fine*. *Default: none*
 
-:abc:``driverClassName``<br/>
-This property allows HikariCP to wrap an old-school JDBC driver as a ``javax.sql.DataSource``.
-It is unnecessary when using the ``dataSourceClassName`` property, which is the preferred way
-of creating connections in HikariCP.  DataSources are provided by all but the oldest JDBC drivers.
-If ``driverClassName`` is used, then the ``jdbcUrl`` property must also be set. *Default: none*
+*or*
 
 :abc:``jdbcUrl``<br/>
-This property is only used when the ``driverClassName`` property is used to wrap an old-school
-JDBC driver as a ``javax.sql.DataSource``.  While JBDC URLs are popular, HikariCP does not
-recommend using them.  The *DataSource* implementation provided by your driver provides bean
-properties for all the driver parameters that used to be specified in the JDBC URL. Before using
-the ``jdbcUrl`` and ``driverClassName`` because that's the way you've always done it, consider
-using the more modern and maintainable ``dataSourceClassName`` approach instead.  Note that if
-this property is used, you may still use *DataSource* properties to configure your driver and
-is in fact recommended.  *Default: none*
+This property directs HikariCP to use "DriverManager-based" configuration.  We feel that DataSource-based
+configuration is superior for a variety of reasons (see below), but for many deployments there is
+little significant difference.  When using this property with "old" drivers, you may also need to set
+the  ``driverClassName`` property, but try it first without.  Note that if this property is used, you may
+still use *DataSource* properties to configure your driver and is in fact recommended over driver parameters
+specified in the URL itself.  *Default: none*
 
 ##### Frequently used
 
@@ -122,18 +116,12 @@ recommend setting this value, and using something reasonable like 30 minutes or 
 value of 0 indicates no maximum lifetime (infinite lifetime), subject of course to the
 ``idleTimeout`` setting.  *Default: 1800000 (30 minutes)*
 
-:white_check_mark:``jdbc4ConnectionTest``<br/>
-This property is a boolean value that determines whether the JDBC4 Connection.isValid() method
-is used to check that a connection is still alive.  This value is mutually exclusive with the
-``connectionTestQuery`` property, and this method of testing connection validity should be
-preferred if supported by the JDBC driver.  *Default: true*
-
 :abc:``connectionTestQuery``<br/>
 **If your drvier supports JDBC4 we strongly recommend not setting this property.** This is for 
 "legacy" databases that do not support the JDBC4 Connection.isValid() API.  This is the query that
 will be executed just before a connection is given to you from the pool to validate that the 
-connection to the database is still alive.  See the ``jdbc4ConnectionTest`` property for a more 
-efficent alive test.  One of either this property or ``jdbc4ConnectionTest`` must be specified. 
+connection to the database is still alive. **Again, try running the pool without this property,
+HikariCP will log a warning if your driver is not JDBC4 compliant to let you know.**
 *Default: none*
 
 :hash:``minimumIdle``<br/>
@@ -150,6 +138,12 @@ actual connections to the database backend.  A reasonable value for this is best
 by your execution environment.  When the pool reaches this size, and no idle connections are
 available, calls to getConnection() will block for up to ``connectionTimeout`` milliseconds
 before timing out.  *Default: 10*
+
+:arrow_right:``metricRegistry``<br/>
+This property is only available via programmatic configuration.  This property allows you
+to specify an instance of a *Codahale/Dropwizard* ``MetricRegistry`` to be used by the pool to
+record various metrics.  See the [Metrics](https://github.com/brettwooldridge/HikariCP/wiki/Codahale-Metrics)
+wiki page for details. *Default: none*
 
 :abc:``username``<br/>
 This property sets the default authentication username used when obtaining *Connections* from
@@ -177,10 +171,10 @@ in logging and JMX management consoles to identify pools and pool configurations
 
 ##### Infrequently used
 
-:watch:``leakDetectionThreshold``<br/>
-This property controls the amount of time that a connection can be out of the pool before a
-message is logged indicating a possible connection leak.  A value of 0 means leak detection
-is disabled.  Lowest acceptable value for enabling leak detection is 10000 (10 secs). *Default: 0*
+:abc:``driverClassName``<br/>
+HikariCP will attempt to resolve a driver through the DriverManager based solely on the ``jdbcUrl``,
+but for some older drivers the ``driverClassName`` must also be specified.  Omit this property unless
+you get an obvious error message indicating that the driver was not found.  *Default: none*
 
 :abc:``transactionIsolation``<br/>
 This property controls the default transaction isolation level of connections returned from
@@ -195,6 +189,11 @@ class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, e
 This property sets the default *catalog* for databases that support the concept of catalogs.
 If this property is not specified, the default catalog defined by the JDBC driver is used.
 *Default: driver default*
+
+:watch:``leakDetectionThreshold``<br/>
+This property controls the amount of time that a connection can be out of the pool before a
+message is logged indicating a possible connection leak.  A value of 0 means leak detection
+is disabled.  Lowest acceptable value for enabling leak detection is 10000 (10 secs). *Default: 0*
 
 :negative_squared_cross_mark:``readOnly``<br/>
 This property controls whether *Connections* obtained from the pool are in read-only mode by
@@ -226,8 +225,10 @@ This property controls whether or not JMX Management Beans ("MBeans") are regist
 
 :negative_squared_cross_mark:``initializationFailFast``<br/>
 This property controls whether the pool will "fail fast" if the pool cannot be seeded with
-initial connections successfully.  This property has no effect if ``minimumIdle`` is 0.
-*Default: false*
+initial connections successfully.  This property has no effect if ``minimumIdle`` is 0.  If you
+want your application to start *even when* the database is down/unavailable, set this property
+to ``false``.
+*Default: true*
 
 :negative_squared_cross_mark:``isolateInternalQueries``<br/>
 This property determines whether HikariCP isolates internal pool queries, such as the
@@ -261,26 +262,18 @@ a good option.  Great stuff during development and pre-Production.
 You can use the ``HikariConfig`` class like so:
 ```java
 HikariConfig config = new HikariConfig();
-config.setMaximumPoolSize(100);
-config.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
-config.addDataSourceProperty("serverName", "localhost");
-config.addDataSourceProperty("port", "3306");
-config.addDataSourceProperty("databaseName", "mydb");
-config.addDataSourceProperty("user", "bart");
-config.addDataSourceProperty("password", "51mp50n");
+config.setJdbcUrl("jdbc:mysql://localhost:3306/simpsons");
+config.setUsername("bart");
+config.setPassword("51mp50n");
 
 HikariDataSource ds = new HikariDataSource(config);
 ```
 or directly instantiate a ``HikariDataSource`` like so:
 ```java
 HikariDataSource ds = new HikariDataSource();
-ds.setMaximumPoolSize(100);
-ds.setDataSourceClassName("com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
-ds.addDataSourceProperty("serverName", "localhost");
-ds.addDataSourceProperty("port", "3306");
-ds.addDataSourceProperty("databaseName", "mydb");
-ds.addDataSourceProperty("user", "bart");
-ds.addDataSourceProperty("password", "51mp50n");
+ds.setJdbcUrl("jdbc:mysql://localhost:3306/simpsons");
+ds.setUsername("bart");
+ds.setPassword("51mp50n");
 ```
 or property file based:
 ```java
@@ -313,11 +306,8 @@ There is also a System property available, ``hikaricp.configurationFile``, that 
 location of a properties file.  If you intend to use this option, construct a ``HikariConfig`` or ``HikariDataSource``
 instance using the default constructor and the properties file will be loaded.
 
-#### HikariConfig vs. HikariDataSource
-The advantage of configuring via ``HikariConfig`` over ``HikariDataSource`` is that when using the ``HikariConfig`` we know at ``DataSource`` construction-time what the configuration is, so the pool can be initialized at that point.  However, when using ``HikariDataSource`` alone, we don't know that you are *done* configuring the DataSource until ``getConnection()`` is called.  In that case, ``getConnection()`` must perform an additional check to see if the pool has been initialized yet or not.  The cost (albeit small) of this check is incurred on every invocation of ``getConnection()`` in that case.
-
 ### Popular DataSource Class Names
-We recommended using ``dataSourceClassName`` instead of ``driverClassName``/``jdbcUrl``, *but both are acceptable*.  *Note: Spring Boot auto-configuration users, you need to use ``driverClassName``/``jdbcUrl``-based configuration.*
+We recommended using ``dataSourceClassName`` instead of ``jdbcUrl``, but both are acceptable.  We'll say that again, *both are acceptable*.  *Note: Spring Boot auto-configuration users, you need to use ``jdbcUrl``-based configuration.*
 
 Here is a list of JDBC *DataSource* classes for popular databases:
 
