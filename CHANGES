@@ -27,6 +27,9 @@ Changes between 2.1.0 and 2.1.1
    your application without/before the database, you will need to explicitly
    set initializationFailFast to false.
 
+ * Dropwizard/Codahale metrics are now supported via the setMetricRegistry()
+   method in HikariConfig and in HikariDataSource.
+
 Changes between 2.0.1 and 2.1.0
 
  * Significant internal refactor supporting creation of new proxy instances
