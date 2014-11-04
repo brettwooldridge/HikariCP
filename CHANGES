@@ -1,6 +1,6 @@
 HikariCP Changes
 
-Changes between 2.1.0 and 2.1.1
+Changes between 2.1.0 and 2.2.0
 
  * Generate proxy classes into the same protection domain as the HikariCP
    loaded classes.  This solves issues with signed jars.
