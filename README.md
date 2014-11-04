@@ -140,9 +140,9 @@ available, calls to getConnection() will block for up to ``connectionTimeout`` m
 before timing out.  *Default: 10*
 
 :arrow_right:``metricRegistry``<br/>
-This property is only available via programmatic configuration.  This property allows you
-to specify an instance of a *Codahale/Dropwizard* ``MetricRegistry`` to be used by the pool to
-record various metrics.  See the [Metrics](https://github.com/brettwooldridge/HikariCP/wiki/Codahale-Metrics)
+This property is only available via programmatic configuration or IoC container.  This property
+allows you to specify an instance of a *Codahale/Dropwizard* ``MetricRegistry`` to be used by the
+pool to record various metrics.  See the [Metrics](https://github.com/brettwooldridge/HikariCP/wiki/Codahale-Metrics)
 wiki page for details. *Default: none*
 
 :abc:``username``<br/>
@@ -202,8 +202,8 @@ query optimizations when the *Connection* is set to read-only.  Whether you need
 or not will depend largely on your application and database.  *Default: false*
 
 :arrow_right:``dataSource``<br/>
-This property is only available via programmatic configuration.  This property allows you
-to directly set the instance of the ``DataSource`` to be wrapped by the pool, rather than
+This property is only available via programmatic configuration or IoC container.  This property
+allows you to directly set the instance of the ``DataSource`` to be wrapped by the pool, rather than
 having HikariCP construct it via reflection.  This can be useful in some dependency injection
 frameworks. When this property is specified, the ``dataSourceClassName`` property and all
 DataSource-specific properties will be ignored.
