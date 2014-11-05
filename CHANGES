@@ -1,5 +1,10 @@
 HikariCP Changes
 
+Changes between 2.2.2 and 2.2.3
+
+ * Further shadow runtime dependency on Codahale metrics from reflection
+   performed by Spring and other IoC containers.
+
 Changes between 2.2.0 and 2.2.2
 
  * Fixed issue with pool initialization of MySQL after default value of

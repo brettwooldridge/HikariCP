@@ -35,7 +35,6 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.codahale.metrics.MetricRegistry;
 import com.zaxxer.hikari.metrics.CodaHaleShim;
 import com.zaxxer.hikari.proxy.JavassistProxyFactory;
 import com.zaxxer.hikari.util.PoolUtilities;
@@ -84,7 +83,7 @@ public class HikariConfig implements HikariConfigMBean
    private Properties dataSourceProperties;
    private IConnectionCustomizer customizer;
    private ThreadFactory threadFactory;
-   private MetricRegistry metricRegistry;
+   private Object metricRegistry;
 
    static {
       JavassistProxyFactory.initialize();
@@ -439,7 +438,7 @@ public class HikariConfig implements HikariConfigMBean
     *
     * @return the codahale MetricRegistry instance
     */
-   public MetricRegistry getMetricRegistry()
+   public Object getMetricRegistry()
    {
       return metricRegistry;
    }
@@ -449,8 +448,11 @@ public class HikariConfig implements HikariConfigMBean
     *
     * @param metricRegistry the Codahale MetricRegistry to set
     */
-   public void setMetricRegistry(MetricRegistry metricRegistry)
+   public void setMetricRegistry(Object metricRegistry)
    {
+      if (metricRegistry != null && !metricRegistry.getClass().getName().contains("MetricRegistry")) {
+         throw new IllegalArgumentException("Class must be an instance of com.codahale.metrics.MetricRegistry");
+      }
       this.metricRegistry = metricRegistry;
    }
 

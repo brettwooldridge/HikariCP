@@ -31,9 +31,9 @@ import static com.zaxxer.hikari.util.PoolUtilities.isJdbc40Compliant;
 import static com.zaxxer.hikari.util.PoolUtilities.isJdbc41Compliant;
 import static com.zaxxer.hikari.util.PoolUtilities.quietlyCloseConnection;
 import static com.zaxxer.hikari.util.PoolUtilities.quietlySleep;
-import static com.zaxxer.hikari.util.PoolUtilities.setQueryTimeout;
-import static com.zaxxer.hikari.util.PoolUtilities.setNetworkTimeout;
 import static com.zaxxer.hikari.util.PoolUtilities.setLoginTimeout;
+import static com.zaxxer.hikari.util.PoolUtilities.setNetworkTimeout;
+import static com.zaxxer.hikari.util.PoolUtilities.setQueryTimeout;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -50,6 +50,7 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.MetricRegistry;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.IConnectionCustomizer;
 import com.zaxxer.hikari.metrics.CodaHaleMetricsTracker;
@@ -140,7 +141,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       this.isIsolateInternalQueries = configuration.isIsolateInternalQueries();
 
       this.isRecordMetrics = configuration.getMetricRegistry() != null;
-      this.metricsTracker = (isRecordMetrics ? new CodaHaleMetricsTracker(this, configuration.getMetricRegistry()) : new MetricsTracker(this));
+      this.metricsTracker = (isRecordMetrics ? new CodaHaleMetricsTracker(this, (MetricRegistry) configuration.getMetricRegistry()) : new MetricsTracker(this));
 
       this.dataSource = initializeDataSource(configuration.getDataSourceClassName(), configuration.getDataSource(), configuration.getDataSourceProperties(), configuration.getJdbcUrl(), username, password);
 
