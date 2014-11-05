@@ -1,6 +1,6 @@
 HikariCP Changes
 
-Changes between 2.2.0 and 2.2.1
+Changes between 2.2.0 and 2.2.2
 
  * Fixed issue with pool initialization of MySQL after default value of
    initializationFailFast property was changed to false.
