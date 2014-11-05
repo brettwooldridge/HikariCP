@@ -57,7 +57,7 @@ public class TestMetrics
             @Override
             public boolean matches(String name, Metric metric)
             {
-               return "test.connection.Wait".equals(MetricRegistry.name("test", "connection", "Wait"));
+               return "test.pool.Wait".equals(MetricRegistry.name("test", "pool", "Wait"));
             }
          }).values().iterator().next();
 
@@ -92,7 +92,7 @@ public class TestMetrics
             @Override
             public boolean matches(String name, Metric metric)
             {
-               return "test.connection.Usage".equals(MetricRegistry.name("test", "connection", "Usage"));
+               return "test.pool.Usage".equals(MetricRegistry.name("test", "pool", "Usage"));
             }
          }).values().iterator().next();
 
