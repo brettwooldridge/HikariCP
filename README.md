@@ -73,6 +73,8 @@ HikariCP comes with *sane* defaults that perform well in most deployments withou
 
 ##### Essentials
 
+<div style='background-color: #eee'>
+
 :abc:``dataSourceClassName``<br/>
 This is the name of the ``DataSource`` class provided by the JDBC driver.  Consult the
 documentation for your specific JDBC driver to get this class name, or see the [table](https://github.com/brettwooldridge/HikariCP#popular-datasource-class-names) below.
@@ -91,6 +93,8 @@ the  ``driverClassName`` property, but try it first without.  Note that if this 
 still use *DataSource* properties to configure your driver and is in fact recommended over driver parameters
 specified in the URL itself.
 *Default: none*
+
+</div>
 
 :abc:``username``<br/>
 This property sets the default authentication username used when obtaining *Connections* from
