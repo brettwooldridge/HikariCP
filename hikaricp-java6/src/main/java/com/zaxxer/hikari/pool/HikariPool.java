@@ -16,6 +16,8 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.HikariMBeanElf.registerMBeans;
+import static com.zaxxer.hikari.pool.HikariMBeanElf.unregisterMBeans;
 import static com.zaxxer.hikari.util.ConcurrentBag.STATE_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.STATE_NOT_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.STATE_REMOVED;
@@ -24,6 +26,8 @@ import static com.zaxxer.hikari.util.PoolUtilities.createInstance;
 import static com.zaxxer.hikari.util.PoolUtilities.createThreadPoolExecutor;
 import static com.zaxxer.hikari.util.PoolUtilities.elapsedTimeMs;
 import static com.zaxxer.hikari.util.PoolUtilities.executeSqlAutoCommit;
+import static com.zaxxer.hikari.util.PoolUtilities.getTransactionIsolation;
+import static com.zaxxer.hikari.util.PoolUtilities.initializeDataSource;
 import static com.zaxxer.hikari.util.PoolUtilities.isJdbc40Compliant;
 import static com.zaxxer.hikari.util.PoolUtilities.isJdbc41Compliant;
 import static com.zaxxer.hikari.util.PoolUtilities.quietlyCloseConnection;
@@ -58,7 +62,6 @@ import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.LeakTask;
-import com.zaxxer.hikari.util.PoolUtilities;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -133,18 +136,18 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
       this.catalog = configuration.getCatalog();
       this.connectionCustomizer = initializeCustomizer();
-      this.transactionIsolation = PoolUtilities.getTransactionIsolation(configuration.getTransactionIsolation());
+      this.transactionIsolation = getTransactionIsolation(configuration.getTransactionIsolation());
       this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
       this.isIsolateInternalQueries = configuration.isIsolateInternalQueries();
 
       this.isRecordMetrics = configuration.getMetricRegistry() != null;
       this.metricsTracker = (isRecordMetrics ? new CodaHaleMetricsTracker(this, configuration.getMetricRegistry()) : new MetricsTracker(this));
 
-      this.dataSource = PoolUtilities.initializeDataSource(configuration.getDataSourceClassName(), configuration.getDataSource(), configuration.getDataSourceProperties(), configuration.getJdbcUrl(), username, password);
+      this.dataSource = initializeDataSource(configuration.getDataSourceClassName(), configuration.getDataSource(), configuration.getDataSourceProperties(), configuration.getJdbcUrl(), username, password);
 
       setLoginTimeout(dataSource, configuration.getConnectionTimeout(), LOGGER);
 
-      HikariMBeanElf.registerMBeans(configuration, this);
+      registerMBeans(configuration, this);
 
       addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
       closeConnectionExecutor = createThreadPoolExecutor(4, "HikariCP connection closer (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
@@ -155,7 +158,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
       }
       houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), delayPeriod, delayPeriod, TimeUnit.MILLISECONDS);
-      
+
       fillPool();
    }
 
@@ -253,7 +256,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          closeConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
          logPoolState("After shutdown ");
 
-         HikariMBeanElf.unregisterMBeans(configuration, this);
+         unregisterMBeans(configuration, this);
       }
    }
 

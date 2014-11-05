@@ -196,7 +196,7 @@ public final class PoolUtilities
       }
 
       try {
-         connection.isValid(100);  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
+         connection.isValid(5);  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
          IS_JDBC40 = true;
       }
       catch (AbstractMethodError | SQLFeatureNotSupportedException e) {
