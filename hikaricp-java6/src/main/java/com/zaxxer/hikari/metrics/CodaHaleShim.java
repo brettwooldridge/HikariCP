@@ -69,6 +69,8 @@ public class CodaHaleShim
       }
       catch (ClassNotFoundException e) {
          // OK, it is not present, we have to generate a shim
+         LOGGER.debug("com.codahale.metrics.MetricRegistry not found, generating stub");
+
          ClassPool classPool = new ClassPool();
          classPool.appendClassPath(new LoaderClassPath(this.getClass().getClassLoader()));
 
