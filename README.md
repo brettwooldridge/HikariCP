@@ -92,6 +92,26 @@ the  ``driverClassName`` property, but try it first without.  Note that if this 
 still use *DataSource* properties to configure your driver and is in fact recommended over driver parameters
 specified in the URL itself.  *Default: none*
 
+:abc:``username``<br/>
+This property sets the default authentication username used when obtaining *Connections* from
+the underlying driver.  Note that for DataSources this works in a very deterministic fashion by
+calling ``DataSource.getConnection(*username*, password)`` on the underlying DataSource.  However,
+for Driver-based configurations, every driver is different.  In the case of Driver-based, HikariCP
+will use this ``username`` property to set a ``user`` property in the ``Properties`` passed to the
+driver's ``DriverManager.getConnection(jdbcUrl, props)`` call.  If this is not what you need,
+skip this method entirely and call ``addDataSourceProperty("username", ...)``, for example.
+*Default: none*
+
+:abc:``password``<br/>
+This property sets the default authentication password used when obtaining *Connections* from
+the underlying driver. Note that for DataSources this works in a very deterministic fashion by
+calling ``DataSource.getConnection(username, *password*)`` on the underlying DataSource.  However,
+for Driver-based configurations, every driver is different.  In the case of Driver-based, HikariCP
+will use this ``password`` property to set a ``password`` property in the ``Properties`` passed to the
+driver's ``DriverManager.getConnection(jdbcUrl, props)`` call.  If this is not what you need,
+skip this method entirely and call ``addDataSourceProperty("pass", ...)``, for example.
+*Default: none*
+
 ##### Frequently used
 
 :white_check_mark:``autoCommit``<br/>
@@ -122,8 +142,8 @@ value of 0 indicates no maximum lifetime (infinite lifetime), subject of course 
 **If your drvier supports JDBC4 we strongly recommend not setting this property.** This is for 
 "legacy" databases that do not support the JDBC4 ``Connection.isValid() API``.  This is the query that
 will be executed just before a connection is given to you from the pool to validate that the 
-connection to the database is still alive. **Again, try running the pool without this property,
-HikariCP will log an error if your driver is not JDBC4 compliant to let you know.**
+connection to the database is still alive. *Again, try running the pool without this property,
+HikariCP will log an error if your driver is not JDBC4 compliant to let you know.*
 *Default: none*
 
 :hash:``minimumIdle``<br/>
@@ -146,26 +166,6 @@ This property is only available via programmatic configuration or IoC container.
 allows you to specify an instance of a *Codahale/Dropwizard* ``MetricRegistry`` to be used by the
 pool to record various metrics.  See the [Metrics](https://github.com/brettwooldridge/HikariCP/wiki/Codahale-Metrics)
 wiki page for details. *Default: none*
-
-:abc:``username``<br/>
-This property sets the default authentication username used when obtaining *Connections* from
-the underlying driver.  Note that for DataSources this works in a very deterministic fashion by
-calling ``DataSource.getConnection(*username*, password)`` on the underlying DataSource.  However,
-for Driver-based configurations, every driver is different.  In the case of Driver-based, HikariCP
-will use this ``username`` property to set a ``user`` property in the ``Properties`` passed to the
-driver's ``DriverManager.getConnection(jdbcUrl, props)`` call.  If this is not what you need,
-skip this method entirely and call ``addDataSourceProperty("username", ...)``, for example.
-*Default: none*
-
-:abc:``password``<br/>
-This property sets the default authentication password used when obtaining *Connections* from
-the underlying driver. Note that for DataSources this works in a very deterministic fashion by
-calling ``DataSource.getConnection(username, *password*)`` on the underlying DataSource.  However,
-for Driver-based configurations, every driver is different.  In the case of Driver-based, HikariCP
-will use this ``password`` property to set a ``password`` property in the ``Properties`` passed to the
-driver's ``DriverManager.getConnection(jdbcUrl, props)`` call.  If this is not what you need,
-skip this method entirely and call ``addDataSourceProperty("pass", ...)``, for example.
-*Default: none*
 
 :abc:``poolName``<br/>
 This property represents a user-defined name for the connection pool and appears mainly
