@@ -293,6 +293,7 @@ HikariDataSource ds = new HikariDataSource();
 ds.setJdbcUrl("jdbc:mysql://localhost:3306/simpsons");
 ds.setUsername("bart");
 ds.setPassword("51mp50n");
+...
 ```
 or property file based:
 ```java
@@ -301,7 +302,6 @@ HikariDataSource ds = new HikariDataSource(config);
 ```
 Example property file:
 ```ini
-connectionTestQuery=SELECT 1
 dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
 dataSource.user=test
 dataSource.password=test
