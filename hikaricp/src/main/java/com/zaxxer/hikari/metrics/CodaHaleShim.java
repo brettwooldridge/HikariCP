@@ -37,12 +37,6 @@ public class CodaHaleShim
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(CodaHaleShim.class);
 
-   static
-   {
-      CodaHaleShim codaHaleShim = new CodaHaleShim();
-      codaHaleShim.loadOrShimCodahale();
-   }
-
    private CodaHaleShim()
    {
       // empty
@@ -54,7 +48,8 @@ public class CodaHaleShim
     */
    public static void initialize()
    {
-      // no-op
+      CodaHaleShim codaHaleShim = new CodaHaleShim();
+      codaHaleShim.loadOrShimCodahale();
    }
 
    /**
