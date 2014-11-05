@@ -1,5 +1,10 @@
 HikariCP Changes
 
+Changes between 2.2.0 and 2.2.1
+
+ * Fixed issue with pool initialization of MySQL after default value of
+   initializationFailFast property was changed to false.
+
 Changes between 2.1.0 and 2.2.0
 
  * Generate proxy classes into the same protection domain as the HikariCP

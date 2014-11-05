@@ -149,14 +149,14 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
       closeConnectionExecutor = createThreadPoolExecutor(4, "HikariCP connection closer (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
 
-      fillPool();
-
       long delayPeriod = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30L));
       houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, configuration.getThreadFactory() != null ? configuration.getThreadFactory() : new DefaultThreadFactory("Hikari Housekeeping Timer (pool " + configuration.getPoolName() + ")", true));
       if (IS_JAVA7) {
          houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
       }
       houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), delayPeriod, delayPeriod, TimeUnit.MILLISECONDS);
+      
+      fillPool();
    }
 
    /**
