@@ -78,19 +78,19 @@ This is the name of the ``DataSource`` class provided by the JDBC driver.  Consu
 documentation for your specific JDBC driver to get this class name, or see the [table](https://github.com/brettwooldridge/HikariCP#popular-datasource-class-names) below.
 Note XA data sources are not supported.  XA requires a real transaction manager like
 [bitronix](https://github.com/bitronix/btm). Note that you do not need this property if you are using
-``jdbcUrl`` for "old-school" DriverManager-based JDBC driver configuration.  The HikariCP team
-considers ``dataSourceClassName`` to be a superior method of creating connections compared to
-``jdbcUrl``, *but in the end either is fine*. *Default: none*
+``jdbcUrl`` for "old-school" DriverManager-based JDBC driver configuration.
+*Default: none*
 
 *or*
 
 :abc:``jdbcUrl``<br/>
 This property directs HikariCP to use "DriverManager-based" configuration.  We feel that DataSource-based
-configuration is superior for a variety of reasons (see below), but for many deployments there is
+configuration (above) is superior for a variety of reasons (see below), but for many deployments there is
 little significant difference.  When using this property with "old" drivers, you may also need to set
 the  ``driverClassName`` property, but try it first without.  Note that if this property is used, you may
 still use *DataSource* properties to configure your driver and is in fact recommended over driver parameters
-specified in the URL itself.  *Default: none*
+specified in the URL itself.
+*Default: none*
 
 :abc:``username``<br/>
 This property sets the default authentication username used when obtaining *Connections* from
@@ -116,19 +116,21 @@ skip this method entirely and call ``addDataSourceProperty("pass", ...)``, for e
 
 :white_check_mark:``autoCommit``<br/>
 This property controls the default auto-commit behavior of connections returned from the pool.
-It is a boolean value.  *Default: true*
+It is a boolean value.
+*Default: true*
 
 :watch:``connectionTimeout``<br/>
 This property controls the maximum number of milliseconds that a client (that's you) will wait
 for a connection from the pool.  If this time is exceeded without a connection becoming
-available, a SQLException will be thrown.  100ms is the minimum value.  *Default: 30000 (30 seconds)*
+available, a SQLException will be thrown.  100ms is the minimum value.
+*Default: 30000 (30 seconds)*
 
 :watch:``idleTimeout``<br/>
-This property controls the maximum amount of time (in milliseconds) that a connection is
-allowed to sit idle in the pool.  Whether a connection is retired as idle or not is subject
-to a maximum variation of +30 seconds, and average variation of +15 seconds.  A connection
-will never be retired as idle *before* this timeout.  A value of 0 means that idle connections
-are never removed from the pool.  *Default: 600000 (10 minutes)*
+This property controls the maximum amount of time that a connection is allowed to sit idle in the
+pool.  Whether a connection is retired as idle or not is subject to a maximum variation of +30
+seconds, and average variation of +15 seconds.  A connection will never be retired as idle *before*
+this timeout.  A value of 0 means that idle connections are never removed from the pool.
+*Default: 600000 (10 minutes)*
 
 :watch:``maxLifetime``<br/>
 This property controls the maximum lifetime of a connection in the pool.  When a connection
@@ -136,7 +138,8 @@ reaches this timeout, even if recently used, it will be retired from the pool.  
 connection will never be retired, only when it is idle will it be removed.  We strongly
 recommend setting this value, and using something reasonable like 30 minutes or 1 hour.  A
 value of 0 indicates no maximum lifetime (infinite lifetime), subject of course to the
-``idleTimeout`` setting.  *Default: 1800000 (30 minutes)*
+``idleTimeout`` setting.
+*Default: 1800000 (30 minutes)*
 
 :abc:``connectionTestQuery``<br/>
 **If your drvier supports JDBC4 we strongly recommend not setting this property.** This is for 
@@ -151,7 +154,8 @@ This property controls the minimum number of *idle connections* that HikariCP tr
 in the pool.  If the idle connections dip below this value, HikariCP will make a best effort to
 add additional connections quickly and efficiently.  However, for maximum performance and
 responsiveness to spike demands, we recommend *not* setting this value and instead allowing
-HikariCP to act as a *fixed size* connection pool.  *Default: same as maximumPoolSize*
+HikariCP to act as a *fixed size* connection pool.
+*Default: same as maximumPoolSize*
 
 :hash:``maximumPoolSize``<br/>
 This property controls the maximum size that the pool is allowed to reach, including both
@@ -159,33 +163,36 @@ idle and in-use connections.  Basically this value will determine the maximum nu
 actual connections to the database backend.  A reasonable value for this is best determined
 by your execution environment.  When the pool reaches this size, and no idle connections are
 available, calls to getConnection() will block for up to ``connectionTimeout`` milliseconds
-before timing out.  *Default: 10*
+before timing out.
+*Default: 10*
 
 :arrow_right:``metricRegistry``<br/>
 This property is only available via programmatic configuration or IoC container.  This property
 allows you to specify an instance of a *Codahale/Dropwizard* ``MetricRegistry`` to be used by the
 pool to record various metrics.  See the [Metrics](https://github.com/brettwooldridge/HikariCP/wiki/Codahale-Metrics)
-wiki page for details. *Default: none*
+wiki page for details.
+*Default: none*
 
 :abc:``poolName``<br/>
 This property represents a user-defined name for the connection pool and appears mainly
-in logging and JMX management consoles to identify pools and pool configurations.  *Default: auto-generated*
+in logging and JMX management consoles to identify pools and pool configurations.
+*Default: auto-generated*
 
 ##### Infrequently used
 
 :abc:``driverClassName``<br/>
 HikariCP will attempt to resolve a driver through the DriverManager based solely on the ``jdbcUrl``,
 but for some older drivers the ``driverClassName`` must also be specified.  Omit this property unless
-you get an obvious error message indicating that the driver was not found.  *Default: none*
+you get an obvious error message indicating that the driver was not found.
+*Default: none*
 
 :abc:``transactionIsolation``<br/>
 This property controls the default transaction isolation level of connections returned from
 the pool.  If this property is not specified, the default transaction isolation level defined
-by the JDBC driver is used.  Typically, the JDBC driver default transaction isolation level
-should be used.  Only use this property if you have specific isolation requirements that are
-common for all queries, otherwise simply set the isolation level manually when creating or
-preparing statements.  The value of this property is the constant name from the ``Connection``
-class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, etc.  *Default: driver default*
+by the JDBC driver is used.  Only use this property if you have specific isolation requirements that are
+common for all queries.  The value of this property is the constant name from the ``Connection``
+class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, etc.
+*Default: driver default*
 
 :abc:``catalog``<br/>
 This property sets the default *catalog* for databases that support the concept of catalogs.
@@ -195,13 +202,15 @@ If this property is not specified, the default catalog defined by the JDBC drive
 :watch:``leakDetectionThreshold``<br/>
 This property controls the amount of time that a connection can be out of the pool before a
 message is logged indicating a possible connection leak.  A value of 0 means leak detection
-is disabled.  Lowest acceptable value for enabling leak detection is 10000 (10 secs). *Default: 0*
+is disabled.  Lowest acceptable value for enabling leak detection is 10000 (10 secs).
+*Default: 0*
 
 :negative_squared_cross_mark:``readOnly``<br/>
 This property controls whether *Connections* obtained from the pool are in read-only mode by
 default.  Note some databases do not support the concept of read-only mode, while others provide
 query optimizations when the *Connection* is set to read-only.  Whether you need this property
-or not will depend largely on your application and database.  *Default: false*
+or not will depend largely on your application and database. 
+*Default: false*
 
 :arrow_right:``dataSource``<br/>
 This property is only available via programmatic configuration or IoC container.  This property
@@ -214,12 +223,14 @@ DataSource-specific properties will be ignored.
 :abc:``connectionInitSql``<br/>
 This property sets a SQL statement that will be executed after every new connection creation
 before adding it to the pool. If this SQL is not valid or throws an exception, it will be
-treated as a connection failure and the standard retry logic will be followed.  *Default: none*
+treated as a connection failure and the standard retry logic will be followed.
+*Default: none*
 
 :abc: ``connectionCustomizerClassName``<br/>
 This property allows you to specify an implementation of the ``IConnectionCustomizer`` interface.  The
 ``customize(Connection)`` method will be invoked on each new connection *before* it is added to the
-pool. *Default: none*
+pool.
+*Default: none*
 
 :negative_squared_cross_mark:``registerMbeans``<br/>
 This property controls whether or not JMX Management Beans ("MBeans") are registered or not.
@@ -236,7 +247,8 @@ to ``false``.
 This property determines whether HikariCP isolates internal pool queries, such as the
 connection alive test, in their own transaction.  Since these are typically read-only
 queries, it is rarely necessary to encapsulate them in their own transaction.  This
-property only applies if ``autoCommit`` is disabled.  *Default: false*
+property only applies if ``autoCommit`` is disabled.
+*Default: false*
 
 ***Missing Knobs***<br/>
 HikariCP has plenty of "knobs" to turn as you can see above, but comparatively less than some other pools.
