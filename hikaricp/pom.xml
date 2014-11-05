@@ -63,7 +63,7 @@
                <!-- Skips unit tests if the value of skip.unit.tests property is true -->
                <skipTests>${skip.unit.tests}</skipTests>
                <classpathDependencyExcludes>
-                  <classpathDependencyExclude>com.codahale.metrics:metrics-core</classpathDependencyExclude>
+                  <classpathDependencyExclude>io.dropwizard.metrics:metrics-core</classpathDependencyExclude>
                </classpathDependencyExcludes>
             </configuration>
          </plugin>
