@@ -1,16 +1,6 @@
 HikariCP Changes
 
-Changes between 2.2.2 and 2.2.3
-
- * Further shadow runtime dependency on Codahale metrics from reflection
-   performed by Spring and other IoC containers.
-
-Changes between 2.2.0 and 2.2.2
-
- * Fixed issue with pool initialization of MySQL after default value of
-   initializationFailFast property was changed to false.
-
-Changes between 2.1.0 and 2.2.0
+Changes between 2.1.0 and 2.2.4
 
  * Generate proxy classes into the same protection domain as the HikariCP
    loaded classes.  This solves issues with signed jars.
@@ -39,6 +29,15 @@ Changes between 2.1.0 and 2.2.0
 
  * Dropwizard/Codahale metrics are now supported via the setMetricRegistry()
    method in HikariConfig and in HikariDataSource.
+
+ * Fixed issue with pool initialization of MySQL after default value of
+   initializationFailFast property was changed to false.
+
+ * Further shadow runtime dependency on Codahale metrics from reflection
+   performed by Spring and other IoC containers.
+
+ * Fix issue where network timeout was not properly restored to its default
+   value after modifying it for the duration of the addConnection() method.
 
 Changes between 2.0.1 and 2.1.0
 
