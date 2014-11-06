@@ -24,7 +24,7 @@ import static com.zaxxer.hikari.util.ConcurrentBag.STATE_REMOVED;
 import static com.zaxxer.hikari.util.PoolUtilities.createInstance;
 import static com.zaxxer.hikari.util.PoolUtilities.createThreadPoolExecutor;
 import static com.zaxxer.hikari.util.PoolUtilities.elapsedTimeMs;
-import static com.zaxxer.hikari.util.PoolUtilities.executeSqlAutoCommit;
+import static com.zaxxer.hikari.util.PoolUtilities.executeSql;
 import static com.zaxxer.hikari.util.PoolUtilities.getTransactionIsolation;
 import static com.zaxxer.hikari.util.PoolUtilities.initializeDataSource;
 import static com.zaxxer.hikari.util.PoolUtilities.isJdbc40Compliant;
@@ -412,7 +412,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          
          setupConnection(connection, isAutoCommit, isReadOnly, transactionIsolation, catalog);
          connectionCustomizer.customize(connection);
-         executeSqlAutoCommit(connection, configuration.getConnectionInitSql());
+         executeSql(connection, configuration.getConnectionInitSql(), isAutoCommit);
          setNetworkTimeout(houseKeepingExecutorService, connection, originalTimeout, isUseNetworkTimeout);
          
          connectionBag.add(new PoolBagEntry(connection, configuration.getMaxLifetime()));

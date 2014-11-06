@@ -75,13 +75,15 @@ public final class PoolUtilities
     * @param sql the SQL to execute
     * @throws SQLException throws if the init SQL execution fails
     */
-   public static void executeSqlAutoCommit(final Connection connection, final String sql) throws SQLException
+   public static void executeSql(final Connection connection, final String sql, final boolean isAutoCommit) throws SQLException
    {
       if (sql != null) {
-         connection.setAutoCommit(true);
          Statement statement = connection.createStatement();
          try {
             statement.execute(sql);
+            if (!isAutoCommit) {
+               connection.commit();
+            }
          }
          finally {
             statement.close();
