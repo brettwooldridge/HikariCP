@@ -295,10 +295,15 @@ public final class PoolUtilities
          return 0;
       }
 
-      final int networkTimeout = connection.getNetworkTimeout();
-      connection.setNetworkTimeout(executor, (int) timeoutMs); 
-
-      return networkTimeout;
+      try {
+         final int networkTimeout = connection.getNetworkTimeout();
+         connection.setNetworkTimeout(executor, (int) timeoutMs);
+         return networkTimeout;
+      }
+      catch (SQLFeatureNotSupportedException e) {
+         IS_JDBC41 = false;
+         return 0;
+      }
    }
 
    /**
