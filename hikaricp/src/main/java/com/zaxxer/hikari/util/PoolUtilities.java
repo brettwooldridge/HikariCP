@@ -269,7 +269,7 @@ public final class PoolUtilities
       }
 
       final int networkTimeout = connection.getNetworkTimeout();
-      connection.setNetworkTimeout(executor, Math.max(250, (int) timeoutMs)); 
+      connection.setNetworkTimeout(executor, (int) timeoutMs); 
 
       return networkTimeout;
    }
