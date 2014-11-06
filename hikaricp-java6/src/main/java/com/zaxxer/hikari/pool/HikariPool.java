@@ -35,6 +35,7 @@ import static com.zaxxer.hikari.util.PoolUtilities.quietlySleep;
 import static com.zaxxer.hikari.util.PoolUtilities.setLoginTimeout;
 import static com.zaxxer.hikari.util.PoolUtilities.setNetworkTimeout;
 import static com.zaxxer.hikari.util.PoolUtilities.setQueryTimeout;
+import static com.zaxxer.hikari.util.PoolUtilities.setupConnection;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -413,6 +414,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       Connection connection = null;
       try {
          connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
+
          isUseNetworkTimeout = isJdbc41Compliant(connection) && (configuration.getConnectionTimeout() != Integer.MAX_VALUE);
          isUseJdbc4Validation = isJdbc40Compliant(connection);
          if (!isUseJdbc4Validation && configuration.getConnectionTestQuery() == null) {
@@ -422,29 +424,23 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
          final boolean timeoutEnabled = (configuration.getConnectionTimeout() != Integer.MAX_VALUE);
          final long timeoutMs = timeoutEnabled ? Math.max(250L, configuration.getConnectionTimeout()) : 0L;
-         final int networkTimeout = setNetworkTimeout(houseKeepingExecutorService, connection, timeoutMs, isUseNetworkTimeout);
+         final int originalTimeout = setNetworkTimeout(houseKeepingExecutorService, connection, timeoutMs, isUseNetworkTimeout);
 
          transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
          connectionCustomizer.customize(connection);
 
          executeSqlAutoCommit(connection, configuration.getConnectionInitSql());
 
-         connection.setAutoCommit(isAutoCommit);
-         connection.setTransactionIsolation(transactionIsolation);
-         connection.setReadOnly(isReadOnly);
-         if (catalog != null) {
-            connection.setCatalog(catalog);
-         }
+         setupConnection(connection, isAutoCommit, isReadOnly, transactionIsolation, catalog);
 
-         setNetworkTimeout(houseKeepingExecutorService, connection, networkTimeout, isUseNetworkTimeout);
+         setNetworkTimeout(houseKeepingExecutorService, connection, originalTimeout, isUseNetworkTimeout);
          
          connectionBag.add(new PoolBagEntry(connection, configuration.getMaxLifetime()));
          lastConnectionFailure.set(null);
          return true;
       }
       catch (Exception e) {
-         // We failed, so undo speculative increment of totalConnections
-         totalConnections.decrementAndGet();
+         totalConnections.decrementAndGet(); // We failed, so undo speculative increment of totalConnections
 
          lastConnectionFailure.set(e);
          quietlyCloseConnection(connection);

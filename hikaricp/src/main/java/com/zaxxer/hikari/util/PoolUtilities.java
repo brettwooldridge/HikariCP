@@ -163,6 +163,26 @@ public final class PoolUtilities
    }
 
    /**
+    * Setup a connection intial state.
+    *
+    * @param connection a Connection
+    * @param isAutoCommit auto-commit state
+    * @param isReadOnly read-only state
+    * @param transactionIsolation transaction isolation
+    * @param catalog default catalog
+    * @throws SQLException thrown from driver
+    */
+   public static void setupConnection(final Connection connection, final boolean isAutoCommit, final boolean isReadOnly, final int transactionIsolation, final String catalog) throws SQLException
+   {
+      connection.setAutoCommit(isAutoCommit);
+      connection.setTransactionIsolation(transactionIsolation);
+      connection.setReadOnly(isReadOnly);
+      if (catalog != null) {
+         connection.setCatalog(catalog);
+      }
+   }
+
+   /**
     * Create a ThreadPoolExecutor.
     *
     * @param queueSize the queue size
