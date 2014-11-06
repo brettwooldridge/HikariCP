@@ -53,4 +53,9 @@ public interface IHikariConnectionProxy extends Connection
     * @param statement the Statement to remove from tracking
     */
    void untrackStatement(Statement statement);
+
+   /**
+    * Sets the commit state of the connection to dirty.
+    */
+   void setCommitStateDirty();
 }

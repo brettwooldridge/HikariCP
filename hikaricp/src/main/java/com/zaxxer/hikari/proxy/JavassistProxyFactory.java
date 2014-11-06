@@ -129,12 +129,10 @@ public final class JavassistProxyFactory
       // Make a set of method signatures we inherit implementation for, so we don't generate delegates for these
       Set<String> superSigs = new HashSet<String>();
       for (CtMethod method : superClassCt.getMethods()) {
-         if ((method.getModifiers() & Modifier.ABSTRACT) != Modifier.ABSTRACT) {
+         if ((method.getModifiers() & Modifier.FINAL) == Modifier.FINAL) {
             superSigs.add(method.getName() + method.getSignature());
          }
       }
-
-      methodBody = methodBody.replace("cast", primaryInterface.getName());
 
       Set<String> methods = new HashSet<String>();
       Set<Class<?>> interfaces = ClassLoaderUtils.getAllInterfaces(primaryInterface);
@@ -160,10 +158,20 @@ public final class JavassistProxyFactory
             // Clone the method we want to inject into
             CtMethod method = CtNewMethod.copy(intfMethod, targetCt, null);
 
+            String modifiedBody = methodBody;
+
+            CtMethod superMethod = superClassCt.getMethod(intfMethod.getName(), intfMethod.getSignature());
+            if ((superMethod.getModifiers() & Modifier.ABSTRACT) != Modifier.ABSTRACT) {
+               modifiedBody = modifiedBody.replace("((cast) ", "");
+               modifiedBody = modifiedBody.replace("delegate", "super");
+               modifiedBody = modifiedBody.replace("super)", "super");
+            }
+
+            modifiedBody = modifiedBody.replace("cast", primaryInterface.getName());
+
             // Generate a method that simply invokes the same method on the delegate
-            String modifiedBody;
             if (isThrowsSqlException(intfMethod)) {
-               modifiedBody = methodBody.replace("method", method.getName());
+               modifiedBody = modifiedBody.replace("method", method.getName());
             }
             else {
                modifiedBody = "{ return ((cast) delegate).method($$); }".replace("method", method.getName()).replace("cast", primaryInterface.getName());
