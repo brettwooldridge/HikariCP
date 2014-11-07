@@ -8,6 +8,9 @@ Changes between 2.2.4 and 2.2.5
    the automatic rollback when connections are returned to the pool if the
    transaction state is "clean". 
 
+ * Rename MBean closeIdleConnections() to softEvictConnections() and implement
+   "evict on return" semantics.
+
 Changes between 2.1.0 and 2.2.4
 
  * Generate proxy classes into the same protection domain as the HikariCP
