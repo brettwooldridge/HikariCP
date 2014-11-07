@@ -1,8 +1,4 @@
 language: java
-jdk:
-  - oraclejdk8
-  - openjdk6
-
 matrix:
   include:
     - jdk: oraclejdk8
