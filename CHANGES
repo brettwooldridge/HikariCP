@@ -1,6 +1,6 @@
 HikariCP Changes
 
-Changes between 2.1.4 and 2.2.5
+Changes between 2.2.4 and 2.2.5
 
  * Fixes for Java 6 compatibility.
 
