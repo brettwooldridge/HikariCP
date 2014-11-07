@@ -584,10 +584,10 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             if (connectionBag.reserve(bagEntry)) {
                if ((idleTimeout > 0L && now > bagEntry.lastAccess + idleTimeout) || (now > bagEntry.expirationTime)) {
                   closeConnection(bagEntry);
-                  continue;
                }
-
-               connectionBag.unreserve(bagEntry);
+               else {
+                  connectionBag.unreserve(bagEntry);
+               }
             }
          }
 
