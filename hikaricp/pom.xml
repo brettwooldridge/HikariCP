@@ -109,6 +109,10 @@
                      <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
                      <excludes>
                         <exclude>**/com/zaxxer/hikari/proxy/ProxyFactory.class</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/ResultSetProxy.class</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/StatementProxy.class</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/CallableStatementProxy.class</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/PreparedStatementProxy.class</exclude>
                         <exclude>**/com/zaxxer/hikari/metrics/CodaHaleMetricsTracker.class</exclude>
                         <exclude>**/com/zaxxer/hikari/metrics/CodaHaleMetricsTracker.Context.class</exclude>
                      </excludes>
