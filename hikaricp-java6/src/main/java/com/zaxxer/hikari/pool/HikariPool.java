@@ -220,8 +220,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    {
       metricsTracker.recordConnectionUsage(bagEntry);
 
-      if (isBroken || isShutdown) {
-         LOGGER.debug("Connection returned to pool {} is broken, or the pool has been shut down.  Closing connection.", configuration.getPoolName());
+      if (isBroken || bagEntry.evicted) {
+         LOGGER.debug("Connection returned to pool {} is broken or evicted.  Closing connection.", configuration.getPoolName());
          closeConnection(bagEntry);
          return;
       }
@@ -249,7 +249,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          logPoolState("Before shutdown ");
          final long start = System.currentTimeMillis();
          do {
-            closeIdleConnections();
+            softEvictConnections();
             abortActiveConnections();
          }
          while ((getIdleConnections() > 0 || getActiveConnections() > 0) && elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5));
@@ -368,8 +368,12 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
    /** {@inheritDoc} */
    @Override
-   public void closeIdleConnections()
+   public void softEvictConnections()
    {
+      for (PoolBagEntry bagEntry : connectionBag.values(STATE_IN_USE)) {
+         bagEntry.evicted = true;
+      }
+
       for (PoolBagEntry bagEntry : connectionBag.values(STATE_NOT_IN_USE)) {
          if (connectionBag.reserve(bagEntry)) {
             closeConnection(bagEntry);
