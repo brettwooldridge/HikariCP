@@ -11,50 +11,49 @@ import org.junit.Test;
 
 import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.mocks.StubStatement;
-import com.zaxxer.hikari.util.PoolUtilities;
 
 public class TestProxies
 {
    @Test
    public void testProxyCreation() throws SQLException
    {
-       HikariConfig config = new HikariConfig();
-       config.setMinimumIdle(0);
-       config.setMaximumPoolSize(1);
-       config.setConnectionTestQuery("VALUES 1");
-       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      HikariConfig config = new HikariConfig();
+      config.setMinimumIdle(0);
+      config.setMaximumPoolSize(1);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-       HikariDataSource ds = new HikariDataSource(config);
-       try {
-          Connection conn = ds.getConnection();
+      HikariDataSource ds = new HikariDataSource(config);
+      try {
+         Connection conn = ds.getConnection();
 
-          Assert.assertNotNull(conn.createStatement(ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE));
-          Assert.assertNotNull(conn.createStatement(ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.HOLD_CURSORS_OVER_COMMIT));
-          Assert.assertNotNull(conn.prepareCall("some sql"));
-          Assert.assertNotNull(conn.prepareCall("some sql", ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE));
-          Assert.assertNotNull(conn.prepareCall("some sql", ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.HOLD_CURSORS_OVER_COMMIT));
-          Assert.assertNotNull(conn.prepareStatement("some sql", PreparedStatement.NO_GENERATED_KEYS));
-          Assert.assertNotNull(conn.prepareStatement("some sql", new int[3]));
-          Assert.assertNotNull(conn.prepareStatement("some sql", new String[3]));
-          Assert.assertNotNull(conn.prepareStatement("some sql", ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE));
-          Assert.assertNotNull(conn.prepareStatement("some sql", ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.HOLD_CURSORS_OVER_COMMIT));
-          Assert.assertNotNull(conn.toString());
+         Assert.assertNotNull(conn.createStatement(ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE));
+         Assert.assertNotNull(conn.createStatement(ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.HOLD_CURSORS_OVER_COMMIT));
+         Assert.assertNotNull(conn.prepareCall("some sql"));
+         Assert.assertNotNull(conn.prepareCall("some sql", ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE));
+         Assert.assertNotNull(conn.prepareCall("some sql", ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.HOLD_CURSORS_OVER_COMMIT));
+         Assert.assertNotNull(conn.prepareStatement("some sql", PreparedStatement.NO_GENERATED_KEYS));
+         Assert.assertNotNull(conn.prepareStatement("some sql", new int[3]));
+         Assert.assertNotNull(conn.prepareStatement("some sql", new String[3]));
+         Assert.assertNotNull(conn.prepareStatement("some sql", ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE));
+         Assert.assertNotNull(conn.prepareStatement("some sql", ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.HOLD_CURSORS_OVER_COMMIT));
+         Assert.assertNotNull(conn.toString());
 
-          Assert.assertTrue(conn.isWrapperFor(Connection.class));
-          Assert.assertTrue(conn.isValid(10));
-          Assert.assertFalse(conn.isClosed());
-          Assert.assertTrue(conn.unwrap(StubConnection.class) instanceof StubConnection);
-          try {
-             conn.unwrap(TestProxies.class);
-             Assert.fail();
-          }
-          catch (SQLException e) {
-             // pass
-          }
-       }
-       finally {
-          ds.close();
-       }
+         Assert.assertTrue(conn.isWrapperFor(Connection.class));
+         Assert.assertTrue(conn.isValid(10));
+         Assert.assertFalse(conn.isClosed());
+         Assert.assertTrue(conn.unwrap(StubConnection.class) instanceof StubConnection);
+         try {
+            conn.unwrap(TestProxies.class);
+            Assert.fail();
+         }
+         catch (SQLException e) {
+            // pass
+         }
+      }
+      finally {
+         ds.close();
+      }
    }
 
    @Test
@@ -309,7 +308,7 @@ public class TestProxies
          catch (SQLException e) {
             Assert.fail();
          }
-}
+      }
       finally {
          ds.close();
       }
