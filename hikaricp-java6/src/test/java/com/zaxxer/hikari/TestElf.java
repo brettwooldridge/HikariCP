@@ -18,12 +18,14 @@ package com.zaxxer.hikari;
 
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.sql.Connection;
 import java.util.HashMap;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.impl.SimpleLogger;
 
 import com.zaxxer.hikari.pool.HikariPool;
+import com.zaxxer.hikari.proxy.ConnectionProxy;
 import com.zaxxer.hikari.util.PoolUtilities;
 
 /**
@@ -60,6 +62,18 @@ public final class TestElf
       catch (Exception e) {
          throw new RuntimeException(e);
       }
+   }
+
+   public static boolean getConnectionCommitDirtyState(Connection connection)
+   {
+      try {
+         Field field = ConnectionProxy.class.getDeclaredField("commitStateDirty");
+         field.setAccessible(true);
+         return field.getBoolean(connection);
+      }
+      catch (Exception e) {
+         throw new RuntimeException(e);
+      }      
    }
 
    public static void setConfigUnitTest(boolean unitTest)

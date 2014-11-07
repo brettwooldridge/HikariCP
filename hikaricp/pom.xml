@@ -86,6 +86,10 @@
                      <propertyName>surefireArgLine</propertyName>
                      <excludes>
                         <exclude>**/com/zaxxer/hikari/proxy/ProxyFactory</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/ResultSetProxy</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/StatementProxy</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/CallableStatementProxy</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/PreparedStatementProxy</exclude>
                         <exclude>**/com/zaxxer/hikari/metrics/CodaHaleMetricsTracker</exclude>
                         <exclude>**/com/zaxxer/hikari/metrics/CodaHaleMetricsTracker.Context</exclude>
                      </excludes>
