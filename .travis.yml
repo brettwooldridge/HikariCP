@@ -1,13 +1,11 @@
 language: java
-matrix:
-  include:
-    - jdk: oraclejdk8
-      env: TARGET=hikaricp
-    - jdk: openjdk6
-      env: TARGET=hikaricp-java6
+jdk:
+  - oraclejdk8
 
 install: /bin/true
 
 script:
-  - if [ "$TARGET" = "hikaricp" ]; then mvn install -DskipTests -Dmaven.javadoc.skip=true -V -pl $TARGET -P coverage; else /bin/true; fi
-  - if [ "$TARGET" == "hikaricp-java6" ]; then mvn install -DskipTests -Dmaven.javadoc.skip=true -V -pl $TARGET; else /bin/true; fi
+  - mvn install -Dskip.unit.tests=true -Dmaven.javadoc.skip=true -V -B
+  - mvn test -V -pl hikaricp -P coverage
+  - jdk_switcher use openjdk6
+  - mvn test -V -pl hikaricp-java6
