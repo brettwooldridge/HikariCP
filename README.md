@@ -143,7 +143,7 @@ value of 0 indicates no maximum lifetime (infinite lifetime), subject of course 
 *Default: 1800000 (30 minutes)*
 
 :abc:``connectionTestQuery``<br/>
-**If your drvier supports JDBC4 we strongly recommend not setting this property.** This is for 
+**If your driver supports JDBC4 we strongly recommend not setting this property.** This is for 
 "legacy" databases that do not support the JDBC4 ``Connection.isValid() API``.  This is the query that
 will be executed just before a connection is given to you from the pool to validate that the 
 connection to the database is still alive. *Again, try running the pool without this property,
