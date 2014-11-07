@@ -19,6 +19,7 @@ package com.zaxxer.hikari.proxy;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
@@ -83,6 +84,7 @@ public final class JavassistProxyFactory
       // Cast is not needed for these
       methodBody = "{ try { return delegate.method($$); } catch (SQLException e) { throw checkException(e); } }";
       generateProxyClass(Statement.class, StatementProxy.class, methodBody);
+      generateProxyClass(ResultSet.class, ResultSetProxy.class, methodBody);
 
       // For these we have to cast the delegate
       methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { throw checkException(e); } }";
@@ -107,6 +109,9 @@ public final class JavassistProxyFactory
             break;
          case "getProxyCallableStatement":
             method.setBody("{return new " + packageName + ".CallableStatementJavassistProxy($$);}");
+            break;
+         case "getProxyResultSet":
+            method.setBody("{return new " + packageName + ".ResultSetJavassistProxy($$);}");
             break;
          }
       }
@@ -160,6 +165,7 @@ public final class JavassistProxyFactory
 
             String modifiedBody = methodBody;
 
+            // If the super-Proxy has concrete methods (non-abstract), transform the call into a simple super.method() call
             CtMethod superMethod = superClassCt.getMethod(intfMethod.getName(), intfMethod.getSignature());
             if ((superMethod.getModifiers() & Modifier.ABSTRACT) != Modifier.ABSTRACT) {
                modifiedBody = modifiedBody.replace("((cast) ", "");

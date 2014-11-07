@@ -57,5 +57,5 @@ public interface IHikariConnectionProxy extends Connection
    /**
     * Sets the commit state of the connection to dirty.
     */
-   void setCommitStateDirty();
+   void markCommitStateDirty();
 }

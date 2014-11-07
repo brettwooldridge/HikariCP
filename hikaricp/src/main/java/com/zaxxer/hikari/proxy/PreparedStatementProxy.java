@@ -40,7 +40,7 @@ public abstract class PreparedStatementProxy extends StatementProxy implements P
    @Override
    public boolean execute() throws SQLException
    {
-      connection.setCommitStateDirty();
+      connection.markCommitStateDirty();
       return ((PreparedStatement) delegate).execute();
    }
 
@@ -48,15 +48,16 @@ public abstract class PreparedStatementProxy extends StatementProxy implements P
    @Override
    public ResultSet executeQuery() throws SQLException
    {
-      connection.setCommitStateDirty();
-      return ((PreparedStatement) delegate).executeQuery();
+      connection.markCommitStateDirty();
+      ResultSet resultSet = ((PreparedStatement) delegate).executeQuery();
+      return ProxyFactory.getProxyResultSet(connection, resultSet); 
    }
 
    /** {@inheritDoc} */
    @Override
    public int executeUpdate() throws SQLException
    {
-      connection.setCommitStateDirty();
+      connection.markCommitStateDirty();
       return ((PreparedStatement) delegate).executeUpdate();
    }
 
@@ -64,7 +65,7 @@ public abstract class PreparedStatementProxy extends StatementProxy implements P
    @Override
    public long executeLargeUpdate() throws SQLException
    {
-      connection.setCommitStateDirty();
+      connection.markCommitStateDirty();
       return ((PreparedStatement) delegate).executeLargeUpdate();
    }
 }

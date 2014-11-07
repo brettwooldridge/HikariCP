@@ -20,6 +20,7 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Wrapper;
 import java.util.HashSet;
@@ -51,6 +52,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    private FastList<Statement> openStatements;
    
    private boolean forceClose;
+   private boolean commitStateDirty;
    private boolean isAnythingDirty;
    private boolean isAutoCommitDirty;
    private boolean isCatalogDirty;
@@ -92,7 +94,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    /** {@inheritDoc} */
    @Override
-   public PoolBagEntry getPoolBagEntry()
+   public final PoolBagEntry getPoolBagEntry()
    {
       return bagEntry;
    }
@@ -127,6 +129,13 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       }
    }
 
+   /** {@inheritDoc} */
+   @Override
+   public final void markCommitStateDirty()
+   {
+      commitStateDirty = true;
+   }
+
    // ***********************************************************************
    //                        Internal methods
    // ***********************************************************************
@@ -138,7 +147,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       }
    }
 
-   private <T extends Statement> T trackStatement(T statement)
+   private final <T extends Statement> T trackStatement(T statement)
    {
       openStatements.add(statement);
 
@@ -190,7 +199,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          }
 
          try {
-            if (!delegate.getAutoCommit()) {
+            if (commitStateDirty && !delegate.getAutoCommit()) {
                delegate.rollback();
             }
 
@@ -218,170 +227,122 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    /** {@inheritDoc} */
    @Override
-   public final Statement createStatement() throws SQLException
+   public Statement createStatement() throws SQLException
    {
-      checkClosed();
-      try {
-         Statement proxyStatement = ProxyFactory.getProxyStatement(this, delegate.createStatement());
-         return trackStatement(proxyStatement);
-      }
-      catch (SQLException e) {
-         throw checkException(e);
-      }
+      Statement proxyStatement = ProxyFactory.getProxyStatement(this, delegate.createStatement());
+      return trackStatement(proxyStatement);
    }
 
    /** {@inheritDoc} */
    @Override
-   public final Statement createStatement(int resultSetType, int concurrency) throws SQLException
+   public Statement createStatement(int resultSetType, int concurrency) throws SQLException
    {
-      checkClosed();
-      try {
-         Statement proxyStatement = ProxyFactory.getProxyStatement(this, delegate.createStatement(resultSetType, concurrency));
-         return trackStatement(proxyStatement);
-      }
-      catch (SQLException e) {
-         throw checkException(e);
-      }
+      Statement proxyStatement = ProxyFactory.getProxyStatement(this, delegate.createStatement(resultSetType, concurrency));
+      return trackStatement(proxyStatement);
    }
 
    /** {@inheritDoc} */
    @Override
-   public final Statement createStatement(int resultSetType, int concurrency, int holdability) throws SQLException
+   public Statement createStatement(int resultSetType, int concurrency, int holdability) throws SQLException
    {
-      checkClosed();
-      try {
-         Statement proxyStatement = ProxyFactory.getProxyStatement(this, delegate.createStatement(resultSetType, concurrency, holdability));
-         return trackStatement(proxyStatement);
-      }
-      catch (SQLException e) {
-         throw checkException(e);
-      }
+      Statement proxyStatement = ProxyFactory.getProxyStatement(this, delegate.createStatement(resultSetType, concurrency, holdability));
+      return trackStatement(proxyStatement);
    }
 
    /** {@inheritDoc} */
    @Override
-   public final CallableStatement prepareCall(String sql) throws SQLException
+   public CallableStatement prepareCall(String sql) throws SQLException
    {
-      checkClosed();
-      try {
-         CallableStatement pcs = ProxyFactory.getProxyCallableStatement(this, delegate.prepareCall(sql));
-         return trackStatement(pcs);
-      }
-      catch (SQLException e) {
-         throw checkException(e);
-      }
+      CallableStatement pcs = ProxyFactory.getProxyCallableStatement(this, delegate.prepareCall(sql));
+      return trackStatement(pcs);
    }
 
    /** {@inheritDoc} */
    @Override
-   public final CallableStatement prepareCall(String sql, int resultSetType, int concurrency) throws SQLException
+   public CallableStatement prepareCall(String sql, int resultSetType, int concurrency) throws SQLException
    {
-      checkClosed();
-      try {
-         CallableStatement pcs = ProxyFactory.getProxyCallableStatement(this, delegate.prepareCall(sql, resultSetType, concurrency));
-         return trackStatement(pcs);
-      }
-      catch (SQLException e) {
-         throw checkException(e);
-      }
+      CallableStatement pcs = ProxyFactory.getProxyCallableStatement(this, delegate.prepareCall(sql, resultSetType, concurrency));
+      return trackStatement(pcs);
    }
 
    /** {@inheritDoc} */
    @Override
-   public final CallableStatement prepareCall(String sql, int resultSetType, int concurrency, int holdability) throws SQLException
+   public CallableStatement prepareCall(String sql, int resultSetType, int concurrency, int holdability) throws SQLException
    {
-      checkClosed();
-      try {
-         CallableStatement pcs = ProxyFactory.getProxyCallableStatement(this, delegate.prepareCall(sql, resultSetType, concurrency, holdability));
-         return trackStatement(pcs);
-      }
-      catch (SQLException e) {
-         throw checkException(e);
-      }
+      CallableStatement pcs = ProxyFactory.getProxyCallableStatement(this, delegate.prepareCall(sql, resultSetType, concurrency, holdability));
+      return trackStatement(pcs);
    }
 
    /** {@inheritDoc} */
    @Override
-   public final PreparedStatement prepareStatement(String sql) throws SQLException
+   public PreparedStatement prepareStatement(String sql) throws SQLException
    {
-      checkClosed();
-      try {
-         PreparedStatement proxyPreparedStatement = ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql));
-         return trackStatement(proxyPreparedStatement);
-      }
-      catch (SQLException e) {
-         throw checkException(e);
-      }
+      PreparedStatement proxyPreparedStatement = ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql));
+      return trackStatement(proxyPreparedStatement);
    }
 
    /** {@inheritDoc} */
    @Override
-   public final PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException
+   public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException
    {
-      checkClosed();
-      try {
-         PreparedStatement proxyPreparedStatement = ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql, autoGeneratedKeys));
-         return trackStatement(proxyPreparedStatement);
-      }
-      catch (SQLException e) {
-         throw checkException(e);
-      }
+      PreparedStatement proxyPreparedStatement = ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql, autoGeneratedKeys));
+      return trackStatement(proxyPreparedStatement);
    }
 
    /** {@inheritDoc} */
    @Override
-   public final PreparedStatement prepareStatement(String sql, int resultSetType, int concurrency) throws SQLException
+   public PreparedStatement prepareStatement(String sql, int resultSetType, int concurrency) throws SQLException
    {
-      checkClosed();
-      try {
-         PreparedStatement proxyPreparedStatement = ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql, resultSetType, concurrency));
-         return trackStatement(proxyPreparedStatement);
-      }
-      catch (SQLException e) {
-         throw checkException(e);
-      }
+      PreparedStatement proxyPreparedStatement = ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql, resultSetType, concurrency));
+      return trackStatement(proxyPreparedStatement);
    }
 
    /** {@inheritDoc} */
    @Override
-   public final PreparedStatement prepareStatement(String sql, int resultSetType, int concurrency, int holdability) throws SQLException
+   public PreparedStatement prepareStatement(String sql, int resultSetType, int concurrency, int holdability) throws SQLException
    {
-      checkClosed();
-      try {
-         PreparedStatement proxyPreparedStatement = ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql, resultSetType, concurrency, holdability));
-         return trackStatement(proxyPreparedStatement);
-      }
-      catch (SQLException e) {
-         throw checkException(e);
-      }
+      PreparedStatement proxyPreparedStatement = ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql, resultSetType, concurrency, holdability));
+      return trackStatement(proxyPreparedStatement);
    }
 
    /** {@inheritDoc} */
    @Override
-   public final PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException
+   public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException
    {
-      checkClosed();
-      try {
-         PreparedStatement proxyPreparedStatement = ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql, columnIndexes));
-         return trackStatement(proxyPreparedStatement);
-      }
-      catch (SQLException e) {
-         throw checkException(e);
-      }
+      PreparedStatement proxyPreparedStatement = ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql, columnIndexes));
+      return trackStatement(proxyPreparedStatement);
    }
 
    /** {@inheritDoc} */
    @Override
-   public final PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException
+   public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException
    {
-      checkClosed();
-      try {
-         PreparedStatement proxyPreparedStatement = ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql, columnNames));
-         return trackStatement(proxyPreparedStatement);
-      }
-      catch (SQLException e) {
-         throw checkException(e);
-      }
+      PreparedStatement proxyPreparedStatement = ProxyFactory.getProxyPreparedStatement(this, delegate.prepareStatement(sql, columnNames));
+      return trackStatement(proxyPreparedStatement);
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public void commit() throws SQLException
+   {
+      delegate.commit();
+      commitStateDirty = false;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public void rollback() throws SQLException
+   {
+      delegate.rollback();
+      commitStateDirty = false;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public void rollback(Savepoint savepoint) throws SQLException
+   {
+      delegate.rollback(savepoint);
+      commitStateDirty = false;
    }
 
    /** {@inheritDoc} */
@@ -402,61 +363,38 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    /** {@inheritDoc} */
    @Override
-   public final void setAutoCommit(boolean autoCommit) throws SQLException
+   public void setAutoCommit(boolean autoCommit) throws SQLException
    {
-      checkClosed();
-      try {
-         delegate.setAutoCommit(autoCommit);
-         isAnythingDirty = true;
-         isAutoCommitDirty = (autoCommit != parentPool.isAutoCommit);
-      }
-      catch (SQLException e) {
-         throw checkException(e);
-      }
+      delegate.setAutoCommit(autoCommit);
+      isAnythingDirty = true;
+      isAutoCommitDirty = (autoCommit != parentPool.isAutoCommit);
    }
 
    /** {@inheritDoc} */
    @Override
-   public final void setReadOnly(boolean readOnly) throws SQLException
+   public void setReadOnly(boolean readOnly) throws SQLException
    {
-      checkClosed();
-      try {
-         delegate.setReadOnly(readOnly);
-         isAnythingDirty = true;
-         isReadOnlyDirty = (readOnly != parentPool.isReadOnly);
-      }
-      catch (SQLException e) {
-         throw checkException(e);
-      }
+      delegate.setReadOnly(readOnly);
+      isAnythingDirty = true;
+      isReadOnlyDirty = (readOnly != parentPool.isReadOnly);
    }
 
    /** {@inheritDoc} */
    @Override
-   public final void setTransactionIsolation(int level) throws SQLException
+   public void setTransactionIsolation(int level) throws SQLException
    {
-      checkClosed();
-      try {
-         delegate.setTransactionIsolation(level);
-         isAnythingDirty = true;
-         isTransactionIsolationDirty = (level != parentPool.transactionIsolation);
-      }
-      catch (SQLException e) {
-         throw checkException(e);
-      }
+      delegate.setTransactionIsolation(level);
+      isAnythingDirty = true;
+      isTransactionIsolationDirty = (level != parentPool.transactionIsolation);
    }
 
+   /** {@inheritDoc} */
    @Override
-   public final void setCatalog(String catalog) throws SQLException
+   public void setCatalog(String catalog) throws SQLException
    {
-      checkClosed();
-      try {
-         delegate.setCatalog(catalog);
-         isAnythingDirty = true;
-         isCatalogDirty = (catalog != null && !catalog.equals(parentPool.catalog)) || (catalog == null && parentPool.catalog != null);
-      }
-      catch (SQLException e) {
-         throw checkException(e);
-      }
+      delegate.setCatalog(catalog);
+      isAnythingDirty = true;
+      isCatalogDirty = (catalog != null && !catalog.equals(parentPool.catalog)) || (catalog == null && parentPool.catalog != null);
    }
 
    /** {@inheritDoc} */

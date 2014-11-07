@@ -220,7 +220,7 @@ public final class PoolUtilities
             connection.isValid(5);  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
             IS_JDBC40 = true;
          }
-         catch (AbstractMethodError | SQLFeatureNotSupportedException e) {
+         catch (NoSuchMethodError | AbstractMethodError | SQLFeatureNotSupportedException e) {
             IS_JDBC40 = false;
          }
       }
@@ -244,7 +244,7 @@ public final class PoolUtilities
             connection.getNetworkTimeout();  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
             IS_JDBC41 = true;
          }
-         catch (AbstractMethodError | SQLFeatureNotSupportedException e) {
+         catch (NoSuchMethodError | AbstractMethodError | SQLFeatureNotSupportedException e) {
             IS_JDBC41 = false;
          }
       }
@@ -265,7 +265,7 @@ public final class PoolUtilities
          try {
             statement.setQueryTimeout(timeoutSec);
          }
-         catch (AbstractMethodError | SQLFeatureNotSupportedException e) {
+         catch (NoSuchMethodError | AbstractMethodError | SQLFeatureNotSupportedException e) {
             queryTimeoutSupported = false;
          }
       }

@@ -19,6 +19,7 @@ package com.zaxxer.hikari.proxy;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
@@ -83,6 +84,7 @@ public final class JavassistProxyFactory
       // Cast is not needed for these
       methodBody = "{ try { return delegate.method($$); } catch (SQLException e) { throw checkException(e); } }";
       generateProxyClass(Statement.class, StatementProxy.class, methodBody);
+      generateProxyClass(ResultSet.class, ResultSetProxy.class, methodBody);
 
       // For these we have to cast the delegate
       methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { throw checkException(e); } }";
@@ -108,6 +110,9 @@ public final class JavassistProxyFactory
          else if ("getProxyCallableStatement".equals(methodName)) {
             method.setBody("{return new " + packageName + ".CallableStatementJavassistProxy($$);}");
          }
+         else if ("getProxyResultSet".equals(methodName)) {
+            method.setBody("{return new " + packageName + ".ResultSetJavassistProxy($$);}");
+         }
       }
 
       proxyCt.toClass(classPool.getClassLoader(), getClass().getProtectionDomain());
@@ -128,12 +133,10 @@ public final class JavassistProxyFactory
       // Make a set of method signatures we inherit implementation for, so we don't generate delegates for these
       Set<String> superSigs = new HashSet<String>();
       for (CtMethod method : superClassCt.getMethods()) {
-         if ((method.getModifiers() & Modifier.ABSTRACT) != Modifier.ABSTRACT) {
+         if ((method.getModifiers() & Modifier.FINAL) == Modifier.FINAL) {
             superSigs.add(method.getName() + method.getSignature());
          }
       }
-
-      methodBody = methodBody.replace("cast", primaryInterface.getName());
 
       Set<String> methods = new HashSet<String>();
       Set<Class<?>> interfaces = ClassLoaderUtils.getAllInterfaces(primaryInterface);
@@ -159,10 +162,21 @@ public final class JavassistProxyFactory
             // Clone the method we want to inject into
             CtMethod method = CtNewMethod.copy(intfMethod, targetCt, null);
 
+            String modifiedBody = methodBody;
+
+            // If the super-Proxy has concrete methods (non-abstract), transform the call into a simple super.method() call
+            CtMethod superMethod = superClassCt.getMethod(intfMethod.getName(), intfMethod.getSignature());
+            if ((superMethod.getModifiers() & Modifier.ABSTRACT) != Modifier.ABSTRACT) {
+               modifiedBody = modifiedBody.replace("((cast) ", "");
+               modifiedBody = modifiedBody.replace("delegate", "super");
+               modifiedBody = modifiedBody.replace("super)", "super");
+            }
+
+            modifiedBody = modifiedBody.replace("cast", primaryInterface.getName());
+
             // Generate a method that simply invokes the same method on the delegate
-            String modifiedBody;
             if (isThrowsSqlException(intfMethod)) {
-               modifiedBody = methodBody.replace("method", method.getName());
+               modifiedBody = modifiedBody.replace("method", method.getName());
             }
             else {
                modifiedBody = "{ return ((cast) delegate).method($$); }".replace("method", method.getName()).replace("cast", primaryInterface.getName());

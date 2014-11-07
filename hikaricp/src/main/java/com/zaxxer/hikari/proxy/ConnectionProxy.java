@@ -131,7 +131,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    /** {@inheritDoc} */
    @Override
-   public final void setCommitStateDirty()
+   public final void markCommitStateDirty()
    {
       commitStateDirty = true;
    }
