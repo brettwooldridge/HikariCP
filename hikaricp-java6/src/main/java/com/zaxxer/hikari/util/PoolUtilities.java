@@ -231,22 +231,21 @@ public final class PoolUtilities
     */
    public static boolean isJdbc40Compliant(final Connection connection) throws SQLException
    {
-      if (jdbc40checked) {
-         return IS_JDBC40;
+      if (!jdbc40checked) {
+         jdbc40checked = true;
+         
+         try {
+            connection.isValid(5);  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
+            IS_JDBC40 = true;
+         }
+         catch (SQLFeatureNotSupportedException e) {
+            IS_JDBC40 = false;
+         }
+         catch (AbstractMethodError e) {
+            IS_JDBC40 = false;
+         }
       }
-
-      try {
-         connection.isValid(5);  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
-         IS_JDBC40 = true;
-      }
-      catch (AbstractMethodError e) {
-         IS_JDBC40 = false;
-      }
-      catch (SQLFeatureNotSupportedException e) {
-         IS_JDBC40 = false;
-      }
-
-      jdbc40checked = true;
+      
       return IS_JDBC40;
    }
 
@@ -259,22 +258,21 @@ public final class PoolUtilities
     */
    public static boolean isJdbc41Compliant(final Connection connection) throws SQLException
    {
-      if (jdbc41checked) {
-         return IS_JDBC41;
+      if (!jdbc41checked) {
+         jdbc41checked = true;
+
+         try {
+            connection.getNetworkTimeout();  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
+            IS_JDBC41 = true;
+         }
+         catch (AbstractMethodError e) {
+            IS_JDBC41 = false;
+         }
+         catch (SQLFeatureNotSupportedException e) {
+            IS_JDBC41 = false;
+         }
       }
 
-      try {
-         connection.getNetworkTimeout();  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
-         IS_JDBC41 = true;
-      }
-      catch (AbstractMethodError e) {
-         IS_JDBC41 = false;
-      }
-      catch (SQLFeatureNotSupportedException e) {
-         IS_JDBC41 = false;
-      }
-
-      jdbc41checked = true;
       return IS_JDBC41;
    }
 
@@ -313,19 +311,18 @@ public final class PoolUtilities
     */
    public static int setNetworkTimeout(final Executor executor, final Connection connection, final long timeoutMs, final boolean isUseNetworkTimeout) throws SQLException
    {
-      if (!isUseNetworkTimeout) {
-         return 0;
+      if (isUseNetworkTimeout) {
+         try {
+            final int networkTimeout = connection.getNetworkTimeout();
+            connection.setNetworkTimeout(executor, (int) timeoutMs);
+            return networkTimeout;
+         }
+         catch (SQLFeatureNotSupportedException e) {
+            IS_JDBC41 = false;
+         }
       }
 
-      try {
-         final int networkTimeout = connection.getNetworkTimeout();
-         connection.setNetworkTimeout(executor, (int) timeoutMs);
-         return networkTimeout;
-      }
-      catch (SQLFeatureNotSupportedException e) {
-         IS_JDBC41 = false;
-         return 0;
-      }
+      return 0;
    }
 
    /**
