@@ -1,5 +1,13 @@
 HikariCP Changes
 
+Changes between 2.1.4 and 2.2.5
+
+ * Fixes for Java 6 compatibility.
+
+ * Implement full transaction state tracking.  This allows HikariCP to bypass
+   the automatic rollback when connections are returned to the pool if the
+   transaction state is "clean". 
+
 Changes between 2.1.0 and 2.2.4
 
  * Generate proxy classes into the same protection domain as the HikariCP
