@@ -1,5 +1,11 @@
 language: java
-jdk:
-  - oraclejdk8
+matrix:
+  include:
+    - jdk: oraclejdk8
+      env: TARGET=hikaricp
+      env: OPTS=-P coverage
+    - jdk: openjdk6
+      env: TARGET=hikaricp-java6
+      env: OPTS=
 
-script: "mvn install -P coverage"
+script: "mvn install -pl $TARGET $OPTS"
