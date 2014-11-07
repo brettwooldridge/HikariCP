@@ -6,8 +6,8 @@ matrix:
     - jdk: openjdk6
       env: TARGET=hikaricp-java6
 
-install:
+install: /bin/true
 
 script:
-  - if [ "$TARGET" = "hikaricp" ]; then mvn install -DskipTests -Dmaven.javadoc.skip=true -V -pl $TARGET -P coverage; fi"
-  - if [ "$TARGET" == "hikaricp-java6" ]; then mvn install -DskipTests -Dmaven.javadoc.skip=true -V -pl $TARGET; fi"
+  - if [ "$TARGET" = "hikaricp" ]; then mvn install -DskipTests -Dmaven.javadoc.skip=true -V -pl $TARGET -P coverage; else /bin/true; fi
+  - if [ "$TARGET" == "hikaricp-java6" ]; then mvn install -DskipTests -Dmaven.javadoc.skip=true -V -pl $TARGET; else /bin/true; fi
