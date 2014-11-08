@@ -21,8 +21,8 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
+import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
@@ -46,9 +46,10 @@ public final class PropertyBeanSetter
          return;
       }
 
-      for (Entry<Object, Object> propEntry : properties.entrySet()) {
-         String propName = propEntry.getKey().toString();
-         Object propValue = propEntry.getValue();
+      Enumeration<?> propertyNames = properties.propertyNames();
+      while (propertyNames.hasMoreElements()) {
+         String propName = propertyNames.nextElement().toString();
+         Object propValue = properties.getProperty(propName);
 
          if (target instanceof HikariConfig && propName.startsWith("dataSource.")) {
             HikariConfig config = (HikariConfig) target;
