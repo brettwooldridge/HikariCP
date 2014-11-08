@@ -11,6 +11,9 @@ Changes between 2.2.4 and 2.2.5
  * Rename MBean closeIdleConnections() to softEvictConnections() and implement
    "evict on return" semantics.
 
+ * Fixed bug in code that sets HikariConfig values from a Properties instance
+   that prevented defaults from being read properly.
+
 Changes between 2.1.0 and 2.2.4
 
  * Generate proxy classes into the same protection domain as the HikariCP
