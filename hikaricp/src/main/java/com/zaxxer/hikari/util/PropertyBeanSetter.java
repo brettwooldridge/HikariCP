@@ -48,8 +48,12 @@ public final class PropertyBeanSetter
 
       Enumeration<?> propertyNames = properties.propertyNames();
       while (propertyNames.hasMoreElements()) {
-         String propName = propertyNames.nextElement().toString();
+         Object key = propertyNames.nextElement();
+         String propName = key.toString();
          Object propValue = properties.getProperty(propName);
+         if (propValue == null) {
+            propValue = properties.get(key);
+         }
 
          if (target instanceof HikariConfig && propName.startsWith("dataSource.")) {
             HikariConfig config = (HikariConfig) target;
