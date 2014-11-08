@@ -147,7 +147,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
       this.dataSource = initializeDataSource(configuration.getDataSourceClassName(), configuration.getDataSource(), configuration.getDataSourceProperties(), configuration.getJdbcUrl(), username, password);
 
-      setLoginTimeout(dataSource, configuration.getConnectionTimeout(), LOGGER);
+      setLoginTimeout(dataSource, connectionTimeout, LOGGER);
 
       registerMBeans(configuration, this);
 
@@ -419,7 +419,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       try {
          connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
 
-         final long connectionTimeout = configuration.getConnectionTimeout();
          isUseNetworkTimeout = isJdbc41Compliant(connection) && (connectionTimeout != Integer.MAX_VALUE);
          isUseJdbc4Validation = isJdbc40Compliant(connection) && configuration.getConnectionTestQuery() == null;
          if (!isUseJdbc4Validation && configuration.getConnectionTestQuery() == null) {
@@ -461,7 +460,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    private boolean isConnectionAlive(final Connection connection, final long timeoutMs)
    {
       try {
-         final boolean timeoutEnabled = (configuration.getConnectionTimeout() != Integer.MAX_VALUE);
+         final boolean timeoutEnabled = (connectionTimeout != Integer.MAX_VALUE);
          int timeoutSec = timeoutEnabled ? (int) Math.max(1L, TimeUnit.MILLISECONDS.toSeconds(timeoutMs)) : 0;
 
          if (isUseJdbc4Validation) {
