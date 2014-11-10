@@ -265,8 +265,7 @@ public final class PoolUtilities
          jdbc41checked = true;
 
          try {
-            connection.getNetworkTimeout();  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
-            IS_JDBC41 = true;
+            IS_JDBC41 = connection.getNetworkTimeout() != Integer.MIN_VALUE;  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
          }
          catch (SQLFeatureNotSupportedException e) {
             IS_JDBC41 = false;
@@ -327,6 +326,12 @@ public final class PoolUtilities
             return networkTimeout;
          }
          catch (SQLFeatureNotSupportedException e) {
+            IS_JDBC41 = false;
+         }
+         catch (AbstractMethodError e) {
+            IS_JDBC41 = false;
+         }
+         catch (NoSuchMethodError e) {
             IS_JDBC41 = false;
          }
       }
