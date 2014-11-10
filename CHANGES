@@ -1,6 +1,6 @@
 HikariCP Changes
 
-Changes between 2.2.4 and 2.2.5
+Changes in 2.2.5
 
  * Fixes for Java 6 compatibility.
 
@@ -14,7 +14,7 @@ Changes between 2.2.4 and 2.2.5
  * Fixed bug in code that sets HikariConfig values from a Properties instance
    that prevented defaults from being read properly.
 
-Changes between 2.1.0 and 2.2.4
+Changes in 2.2.4
 
  * Generate proxy classes into the same protection domain as the HikariCP
    loaded classes.  This solves issues with signed jars.
@@ -53,7 +53,7 @@ Changes between 2.1.0 and 2.2.4
  * Fix issue where network timeout was not properly restored to its default
    value after modifying it for the duration of the addConnection() method.
 
-Changes between 2.0.1 and 2.1.0
+Changes in 2.1.0
 
  * Significant internal refactor supporting creation of new proxy instances
    (throwaway) around Connections for each call to getConnection().  This
@@ -82,7 +82,7 @@ Changes between 2.0.1 and 2.1.0
  * Fixed issue where connections created in the pool would skip the alive check
    the first time they were used.
 
-Changes between 1.4.0 and 2.0.1
+Changes in 2.0.1
 
  * Split project into Java 6/7 and Java 8 components.
 
@@ -113,11 +113,11 @@ Changes between 1.4.0 and 2.0.1
  * Integrated change to allow specifying a ThreadGroup for thread
    creation is certain restricted environments.
  
-Changes between 1.3.9 and 1.4.0
+Changes in 1.4.0
 
  *) Fix bug that did not allow minIdle property to be set.
 
-Changes between 1.3.8 and 1.3.9
+Changes in 1.3.9
 
  *) Added pool name to housekeeping thread name to make thread dumps
     more meaningful in containers with multiple pools.
@@ -127,12 +127,12 @@ Changes between 1.3.8 and 1.3.9
 
  *) Performance enhancements.
 
-Changes between 1.3.7 and 1.3.8
+Changes in 1.3.8
 
  *) Fixed incorrect logic when using JDBC4 isValid() test for alive
     status of connection.
 
-Changes between 1.3.6 and 1.3.7
+Changes in 1.3.7
 
  *) Added JNDI object factory (com.zaxxer.hikari.HikariJNDIFactory)
     for Tomcat and other containers that prefer JNDI-registered DataSource
@@ -143,7 +143,7 @@ Changes between 1.3.6 and 1.3.7
 
  *) Various bug fixes and minor enhancements.
 
-Changes between 1.3.5 and 1.3.6
+Changes in 1.3.6
 
  *) Include connection failure cause in calls to getConnection() that
     timeout (due to connection failure).  Removed chatty logging.
@@ -153,13 +153,13 @@ Changes between 1.3.5 and 1.3.6
  *) Include pool name in logging messages.  Thanks for the contribution
     @jaredstehler.
 
-Changes between 1.3.4 and 1.3.5
+Changes in 1.3.5
 
  *) Fixed a regression in the Javassist code generation.
 
  *) Various bug fixes and minor enhancements.
 
-Changes between 1.3.3 and 1.3.4
+Changes in 1.3.4
 
  *) Added new property isolateInternalQueries used to control whether
     internal pool queries such as connection alive tests are isolated
@@ -194,7 +194,7 @@ Changes between 1.3.3 and 1.3.4
 
  *) Various bug fixes and minor enhancements.
 
-Changes between 1.3.2 and 1.3.3
+Changes in 1.3.3
 
  *) Removed shared state contention that was causing excessive CPU cache-line
     flushing.  Nearly 4x improvement in Connection acquisition/release
@@ -206,7 +206,7 @@ Changes between 1.3.2 and 1.3.3
  *) Fixed issue where the maximum configured connections could be overrun
     during large burst requests for connections.
 
-Changes between 1.3.0 and 1.3.2
+Changes in 1.3.2
 
  *) Java 6 compatibility.
  
@@ -226,7 +226,7 @@ Changes between 1.3.0 and 1.3.2
 
  *) Moved benchmarks to https://github.com/brettwooldridge/HikariCP-benchmark
 
-Changes between 1.2.9 and 1.3.0
+Changes in 1.3.0
 
  *) Pool is now backed by a custom lock-less ConcurrentBag that
     provides superior performance to LinkedBlockingQueue and
@@ -237,7 +237,7 @@ Changes between 1.2.9 and 1.3.0
  *) Added more detailed logging for broken connections and failures
     during new connection creation.
 
-Changes between 1.2.8 and 1.2.9
+Changes in 1.2.9
 
  *) Added a fail-fast option for pool initialization.  If enabled, a
     RuntimeException will be thrown if there are errors during pool
@@ -256,12 +256,12 @@ Changes between 1.2.8 and 1.2.9
 
  *) Listened to "Adele - Live At The Royal Albert Hall" on endless loop.
 
-Changes between 1.2.7 and 1.2.8
+Changes in 1.2.8
 
  *) Fixed a critical bug introduced in 1.2.7 occurring when the number of
     concurrently open statements exceeds sixteen.
 
-Changes between 1.2.6 and 1.2.7
+Changes in 1.2.7
 
  *) Finally achieved performance parity between the generated delegates
     and the former method of instrumenting driver classes directly.
@@ -282,14 +282,14 @@ Changes between 1.2.6 and 1.2.7
     property 'connectionCustomizerClassName' to allow users to specify
     a connection customization implementation.
 
-Changes between 1.2.5 and 1.2.6
+Changes in 1.2.6
 
  *) Fixed regression that caused IndexOutOfBounds when multiple unclosed
     Statements existed at the time of Connection.close().
 
  *) Fixed incorrect pom.xml dependency on Hibernate.
  
-Changes between 1.2.4 and 1.2.5
+Changes in 1.2.5
 
  *) Instrumentation mode (agent) removed due to narrowing gap between
     delegation mode and instrumentation (and to simplify the code base).
@@ -310,13 +310,13 @@ Changes between 1.2.4 and 1.2.5
  *) Fixed issue where idleTimeout could not be set to 0, thereby disabling
     it. Incorrect value validation caused 0 to be rejected as a valid value. 
 
-Changes between 1.2.3 and 1.2.4
+Changes in 1.2.4
 
  *) Fix another Hibernate-related issue whereby an NPE is encountered when
     a thread that was not the thread that obtained a Connection tries to
     interact with that Connection.
 
-Changes between 1.2.2 and 1.2.3
+Changes in 1.2.3
 
  *) Fix internal (but suppressed) exception during rollback of connections
     returned to the pool with auto-commit turned off.
@@ -325,7 +325,7 @@ Changes between 1.2.2 and 1.2.3
     CallableStatement interface being incorrectly injected into statement
     proxies that are PreparedStatement or Statement instances.
 
-Changes between 1.2.1 and 1.2.2
+Changes in 1.2.2
 
  *) Perform a rollback() on connections returned to the pool with
     auto commit disabled.
@@ -343,7 +343,7 @@ Changes between 1.2.1 and 1.2.2
  *) Add transactionIsolation property to allow setting the default
     transaction isolation level for connections.
 
-Changes between 1.1.9 and 1.2.1
+Changes in 1.2.1
 
  *) Clear SQL warnings before returning a connection to the user.
 
@@ -354,7 +354,7 @@ Changes between 1.1.9 and 1.2.1
  *) Changed default acquireIncrement to 1, set minimum timeout of
     100ms for acquiring a connection.
 
-Changes between 1.1.8 and 1.1.9
+Changes in 1.1.9
 
  *) Added connectionInitSql property to allow setting connection
     properties when a new connection is created.
