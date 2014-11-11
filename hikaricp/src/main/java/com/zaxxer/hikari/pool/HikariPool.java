@@ -100,7 +100,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
    private volatile boolean isShutdown;
    private volatile long connectionTimeout;
-   private volatile boolean isUseNetworkTimeout;
    private volatile boolean isUseJdbc4Validation;
 
    /**
@@ -412,7 +411,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          setupConnection(connection, isAutoCommit, isReadOnly, transactionIsolation, catalog);
          connectionCustomizer.customize(connection);
          executeSql(connection, configuration.getConnectionInitSql(), isAutoCommit);
-         setNetworkTimeout(houseKeepingExecutorService, connection, originalTimeout, isUseNetworkTimeout);
+         setNetworkTimeout(houseKeepingExecutorService, connection, originalTimeout, timeoutEnabled);
          
          connectionBag.add(new PoolBagEntry(connection, configuration.getMaxLifetime()));
          lastConnectionFailure.set(null);
@@ -445,7 +444,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             return connection.isValid(timeoutSec);
          }
 
-         final int networkTimeout = setNetworkTimeout(houseKeepingExecutorService, connection, Math.max(250, (int) timeoutMs), isUseNetworkTimeout);
+         final int networkTimeout = setNetworkTimeout(houseKeepingExecutorService, connection, Math.max(250, (int) timeoutMs), timeoutEnabled);
 
          try (Statement statement = connection.createStatement()) {
             setQueryTimeout(statement, timeoutSec);
@@ -456,7 +455,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             connection.rollback();
          }
 
-         setNetworkTimeout(houseKeepingExecutorService, connection, networkTimeout, isUseNetworkTimeout);
+         setNetworkTimeout(houseKeepingExecutorService, connection, networkTimeout, timeoutEnabled);
 
          return true;
       }

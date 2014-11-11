@@ -266,6 +266,7 @@ public final class PoolUtilities
          try {
             final int networkTimeout = connection.getNetworkTimeout();
             connection.setNetworkTimeout(executor, (int) timeoutMs);
+            IS_JDBC41 = true;
             return networkTimeout;
          }
          catch (SQLFeatureNotSupportedException | AbstractMethodError | NoSuchMethodError e) {
