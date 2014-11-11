@@ -101,7 +101,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
    private volatile boolean isShutdown;
    private volatile long connectionTimeout;
-   private volatile boolean isUseNetworkTimeout;
    private volatile boolean isUseJdbc4Validation;
 
    /**
@@ -425,14 +424,14 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
          final boolean timeoutEnabled = (connectionTimeout != Integer.MAX_VALUE);
          final long timeoutMs = timeoutEnabled ? Math.max(250L, connectionTimeout) : 0L;
-         final int originalTimeout = setNetworkTimeout(houseKeepingExecutorService, connection, timeoutMs, isUseNetworkTimeout);
+         final int originalTimeout = setNetworkTimeout(houseKeepingExecutorService, connection, timeoutMs, timeoutEnabled);
 
          transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
          
          setupConnection(connection, isAutoCommit, isReadOnly, transactionIsolation, catalog);
          connectionCustomizer.customize(connection);
          executeSql(connection, configuration.getConnectionInitSql(), isAutoCommit);
-         setNetworkTimeout(houseKeepingExecutorService, connection, originalTimeout, isUseNetworkTimeout);
+         setNetworkTimeout(houseKeepingExecutorService, connection, originalTimeout, timeoutEnabled);
          
          connectionBag.add(new PoolBagEntry(connection, configuration.getMaxLifetime()));
          lastConnectionFailure.set(null);
@@ -465,7 +464,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             return connection.isValid(timeoutSec);
          }
 
-         final int networkTimeout = setNetworkTimeout(houseKeepingExecutorService, connection, Math.max(250, (int) timeoutMs), isUseNetworkTimeout);
+         final int networkTimeout = setNetworkTimeout(houseKeepingExecutorService, connection, Math.max(250, (int) timeoutMs), timeoutEnabled);
 
          Statement statement = connection.createStatement();
          try {
@@ -480,7 +479,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             connection.rollback();
          }
 
-         setNetworkTimeout(houseKeepingExecutorService, connection, networkTimeout, isUseNetworkTimeout);
+         setNetworkTimeout(houseKeepingExecutorService, connection, networkTimeout, timeoutEnabled);
 
          return true;
       }
