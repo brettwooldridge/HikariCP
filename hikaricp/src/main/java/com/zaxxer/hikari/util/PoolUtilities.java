@@ -229,29 +229,6 @@ public final class PoolUtilities
    }
 
    /**
-    * Return true if the driver appears to be JDBC 4.1 compliant.
-    *
-    * @param connection a Connection to check
-    * @return true if JDBC 4.1 compliance, false otherwise
-    * @throws SQLException re-thrown exception from Connection.getNetworkTimeout()
-    */
-   public static boolean isJdbc41Compliant(final Connection connection) throws SQLException
-   {
-      if (!jdbc41checked) {
-         jdbc41checked = true;
-
-         try {
-            IS_JDBC41 = connection.getNetworkTimeout() != Integer.MIN_VALUE;  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
-         }
-         catch (NoSuchMethodError | AbstractMethodError | SQLFeatureNotSupportedException e) {
-            IS_JDBC41 = false;
-         }
-      }
-
-      return IS_JDBC41;
-   }
-
-   /**
     * Set the query timeout, if it is supported by the driver.
     *
     * @param statement a statement to set the query timeout on
@@ -283,7 +260,9 @@ public final class PoolUtilities
     */
    public static int setNetworkTimeout(final Executor executor, final Connection connection, final long timeoutMs, final boolean isUseNetworkTimeout) throws SQLException
    {
-      if (isUseNetworkTimeout) {
+      if ((IS_JDBC41 || !jdbc41checked) && isUseNetworkTimeout) {
+         jdbc41checked = true;
+
          try {
             final int networkTimeout = connection.getNetworkTimeout();
             connection.setNetworkTimeout(executor, (int) timeoutMs);
