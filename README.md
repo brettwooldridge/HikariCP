@@ -181,6 +181,48 @@ in logging and JMX management consoles to identify pools and pool configurations
 
 ##### Infrequently used
 
+:white_check_mark:``initializationFailFast``<br/>
+This property controls whether the pool will "fail fast" if the pool cannot be seeded with
+initial connections successfully.  This property has no effect if ``minimumIdle`` is 0.  If you
+want your application to start *even when* the database is down/unavailable, set this property
+to ``false``.
+*Default: true*
+
+:negative_squared_cross_mark:``isolateInternalQueries``<br/>
+This property determines whether HikariCP isolates internal pool queries, such as the
+connection alive test, in their own transaction.  Since these are typically read-only
+queries, it is rarely necessary to encapsulate them in their own transaction.  This
+property only applies if ``autoCommit`` is disabled.
+*Default: false*
+
+:negative_squared_cross_mark:``readOnly``<br/>
+This property controls whether *Connections* obtained from the pool are in read-only mode by
+default.  Note some databases do not support the concept of read-only mode, while others provide
+query optimizations when the *Connection* is set to read-only.  Whether you need this property
+or not will depend largely on your application and database. 
+*Default: false*
+
+:negative_squared_cross_mark:``registerMbeans``<br/>
+This property controls whether or not JMX Management Beans ("MBeans") are registered or not.
+*Default: false*
+
+:abc:``catalog``<br/>
+This property sets the default *catalog* for databases that support the concept of catalogs.
+If this property is not specified, the default catalog defined by the JDBC driver is used.
+*Default: driver default*
+
+:abc:``connectionInitSql``<br/>
+This property sets a SQL statement that will be executed after every new connection creation
+before adding it to the pool. If this SQL is not valid or throws an exception, it will be
+treated as a connection failure and the standard retry logic will be followed.
+*Default: none*
+
+:abc: ``connectionCustomizerClassName``<br/>
+This property allows you to specify an implementation of the ``IConnectionCustomizer`` interface.  The
+``customize(Connection)`` method will be invoked on each new connection *before* it is added to the
+pool.
+*Default: none*
+
 :abc:``driverClassName``<br/>
 HikariCP will attempt to resolve a driver through the DriverManager based solely on the ``jdbcUrl``,
 but for some older drivers the ``driverClassName`` must also be specified.  Omit this property unless
@@ -195,23 +237,11 @@ common for all queries.  The value of this property is the constant name from th
 class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, etc.
 *Default: driver default*
 
-:abc:``catalog``<br/>
-This property sets the default *catalog* for databases that support the concept of catalogs.
-If this property is not specified, the default catalog defined by the JDBC driver is used.
-*Default: driver default*
-
 :watch:``leakDetectionThreshold``<br/>
 This property controls the amount of time that a connection can be out of the pool before a
 message is logged indicating a possible connection leak.  A value of 0 means leak detection
 is disabled.  Lowest acceptable value for enabling leak detection is 10000 (10 secs).
 *Default: 0*
-
-:negative_squared_cross_mark:``readOnly``<br/>
-This property controls whether *Connections* obtained from the pool are in read-only mode by
-default.  Note some databases do not support the concept of read-only mode, while others provide
-query optimizations when the *Connection* is set to read-only.  Whether you need this property
-or not will depend largely on your application and database. 
-*Default: false*
 
 :arrow_right:``dataSource``<br/>
 This property is only available via programmatic configuration or IoC container.  This property
@@ -220,36 +250,6 @@ having HikariCP construct it via reflection.  This can be useful in some depende
 frameworks. When this property is specified, the ``dataSourceClassName`` property and all
 DataSource-specific properties will be ignored.
 *Default: none*
-
-:abc:``connectionInitSql``<br/>
-This property sets a SQL statement that will be executed after every new connection creation
-before adding it to the pool. If this SQL is not valid or throws an exception, it will be
-treated as a connection failure and the standard retry logic will be followed.
-*Default: none*
-
-:abc: ``connectionCustomizerClassName``<br/>
-This property allows you to specify an implementation of the ``IConnectionCustomizer`` interface.  The
-``customize(Connection)`` method will be invoked on each new connection *before* it is added to the
-pool.
-*Default: none*
-
-:negative_squared_cross_mark:``registerMbeans``<br/>
-This property controls whether or not JMX Management Beans ("MBeans") are registered or not.
-*Default: false*
-
-:white_check_mark:``initializationFailFast``<br/>
-This property controls whether the pool will "fail fast" if the pool cannot be seeded with
-initial connections successfully.  This property has no effect if ``minimumIdle`` is 0.  If you
-want your application to start *even when* the database is down/unavailable, set this property
-to ``false``.
-*Default: true*
-
-:negative_squared_cross_mark:``isolateInternalQueries``<br/>
-This property determines whether HikariCP isolates internal pool queries, such as the
-connection alive test, in their own transaction.  Since these are typically read-only
-queries, it is rarely necessary to encapsulate them in their own transaction.  This
-property only applies if ``autoCommit`` is disabled.
-*Default: false*
 
 ***Missing Knobs***<br/>
 HikariCP has plenty of "knobs" to turn as you can see above, but comparatively less than some other pools.
