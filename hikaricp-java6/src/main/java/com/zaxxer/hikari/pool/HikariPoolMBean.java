@@ -33,7 +33,7 @@ public interface HikariPoolMBean
 
    void softEvictConnections();
 
-   boolean suspendPool();
+   void suspendPool();
 
-   boolean resumePool();
+   void resumePool();
 }

@@ -104,6 +104,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
    private volatile boolean isShutdown;
    private volatile long connectionTimeout;
+   private volatile boolean isPoolSuspended;
    private volatile boolean isUseJdbc4Validation;
 
    /**
@@ -386,18 +387,22 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
    /** {@inheritDoc} */
    @Override
-   public boolean suspendPool()
+   public void suspendPool()
    {
-      acquisitionSemaphore.acquireUninterruptibly(10000);
-      return configuration.isAllowPoolSuspension();
+      if (!isPoolSuspended) {
+         acquisitionSemaphore.acquireUninterruptibly(10000);
+         isPoolSuspended = true;
+      }
    }
 
    /** {@inheritDoc} */
    @Override
-   public boolean resumePool()
+   public void resumePool()
    {
-      acquisitionSemaphore.release(10000);
-      return configuration.isAllowPoolSuspension();
+      if (isPoolSuspended) {
+         acquisitionSemaphore.release(10000);
+         isPoolSuspended = false;
+      }
    }
 
    // ***********************************************************************
