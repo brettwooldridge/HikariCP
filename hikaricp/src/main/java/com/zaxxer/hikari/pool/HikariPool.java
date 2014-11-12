@@ -40,6 +40,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -61,6 +62,7 @@ import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
+import com.zaxxer.hikari.util.FauxSemaphore;
 import com.zaxxer.hikari.util.LeakTask;
 
 /**
@@ -87,6 +89,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    private final ConcurrentBag<PoolBagEntry> connectionBag;
    private final ThreadPoolExecutor closeConnectionExecutor;
    private final IConnectionCustomizer connectionCustomizer;
+   private final Semaphore acquisitionSemaphore;
 
    private final AtomicInteger totalConnections;
    private final AtomicReference<Throwable> lastConnectionFailure;
@@ -133,6 +136,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       this.isReadOnly = configuration.isReadOnly();
       this.isAutoCommit = configuration.isAutoCommit();
 
+      this.acquisitionSemaphore = configuration.isAllowPoolSuspension() ? new Semaphore(10000, true) : FauxSemaphore.FAUX_SEMAPHORE;
+
       this.catalog = configuration.getCatalog();
       this.connectionCustomizer = initializeCustomizer();
       this.transactionIsolation = getTransactionIsolation(configuration.getTransactionIsolation());
@@ -144,18 +149,16 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
 
       this.dataSource = initializeDataSource(configuration.getDataSourceClassName(), configuration.getDataSource(), configuration.getDataSourceProperties(), configuration.getJdbcUrl(), username, password);
 
-      setLoginTimeout(dataSource, connectionTimeout, LOGGER);
-
-      registerMBeans(configuration, this);
-
-      addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
-      closeConnectionExecutor = createThreadPoolExecutor(4, "HikariCP connection closer (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
+      this.addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
+      this.closeConnectionExecutor = createThreadPoolExecutor(4, "HikariCP connection closer (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
 
       long delayPeriod = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30L));
-      houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, configuration.getThreadFactory() != null ? configuration.getThreadFactory() : new DefaultThreadFactory("Hikari Housekeeping Timer (pool " + configuration.getPoolName() + ")", true));
-      houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
-      houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), delayPeriod, delayPeriod, TimeUnit.MILLISECONDS);
+      this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, configuration.getThreadFactory() != null ? configuration.getThreadFactory() : new DefaultThreadFactory("Hikari Housekeeping Timer (pool " + configuration.getPoolName() + ")", true));
+      this.houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
+      this.houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), delayPeriod, delayPeriod, TimeUnit.MILLISECONDS);
 
+      setLoginTimeout(dataSource, connectionTimeout, LOGGER);
+      registerMBeans(configuration, this);
       fillPool();
    }
 
@@ -167,6 +170,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    public Connection getConnection() throws SQLException
    {
+      acquisitionSemaphore.acquireUninterruptibly();
       long timeout = connectionTimeout;
       final long start = System.currentTimeMillis();
       final MetricsContext metricsContext = (isRecordMetrics ? metricsTracker.recordConnectionRequest(start) : MetricsTracker.NO_CONTEXT);
@@ -198,6 +202,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          throw new SQLException("Interrupted during connection acquisition", e);
       }
       finally {
+         acquisitionSemaphore.release();
          metricsContext.stop();
       }
 
@@ -361,6 +366,22 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    {
       connectionBag.values(STATE_IN_USE).forEach(bagEntry -> bagEntry.evicted = true);
       connectionBag.values(STATE_NOT_IN_USE).stream().filter(p -> connectionBag.reserve(p)).forEach(bagEntry -> closeConnection(bagEntry));
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public boolean suspendPool()
+   {
+      acquisitionSemaphore.acquireUninterruptibly(10000);
+      return configuration.isAllowPoolSuspension();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public boolean resumePool()
+   {
+      acquisitionSemaphore.release(10000);
+      return configuration.isAllowPoolSuspension();
    }
 
    // ***********************************************************************

@@ -79,6 +79,7 @@ public class HikariConfig implements HikariConfigMBean
    private boolean isInitializationFailFast;
    private boolean isIsolateInternalQueries;
    private boolean isRegisterMbeans;
+   private boolean isAllowPoolSuspension;
    private DataSource dataSource;
    private Properties dataSourceProperties;
    private IConnectionCustomizer customizer;
@@ -386,6 +387,28 @@ public class HikariConfig implements HikariConfigMBean
    public void setAutoCommit(boolean isAutoCommit)
    {
       this.isAutoCommit = isAutoCommit;
+   }
+
+   /**
+    * Get the pool suspension behavior (allowed or disallowed).
+    *
+    * @return the pool suspension behavior
+    */
+   public boolean isAllowPoolSuspension()
+   {
+      return isAllowPoolSuspension;
+   }
+
+   /**
+    * Set whether or not pool suspension is allowed.  There is a performance
+    * impact when pool suspension is enabled.  Unless you need it (for a
+    * redundancy system for example) do not enable it.
+    *
+    * @param isAllowPoolSuspension the desired pool suspension allowance
+    */
+   public void setAllowPoolSuspension(boolean isAllowPoolSuspension)
+   {
+      this.isAllowPoolSuspension = isAllowPoolSuspension;
    }
 
    /**

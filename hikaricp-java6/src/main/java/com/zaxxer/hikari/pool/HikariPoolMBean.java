@@ -32,4 +32,8 @@ public interface HikariPoolMBean
    int getThreadsAwaitingConnection();
 
    void softEvictConnections();
+
+   boolean suspendPool();
+
+   boolean resumePool();
 }
