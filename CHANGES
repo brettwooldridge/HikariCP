@@ -14,6 +14,13 @@ Changes in 2.2.5
  * Fixed bug in code that sets HikariConfig values from a Properties instance
    that prevented defaults from being read properly.
 
+ * Fixed an obscure bug in connection creation with a driver that throws an
+   exception when setTransactionIsolation() is called with the value returned
+   by getTransactionIsolation().  We now bypass setTransactionIsolation() if
+   the user has not configured an isolation level (using the default).
+
+ * Fix a bug where DataSource.loginTimeout() was always being set to 1 second.
+
 Changes in 2.2.4
 
  * Generate proxy classes into the same protection domain as the HikariCP

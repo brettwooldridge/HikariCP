@@ -195,8 +195,10 @@ public final class PoolUtilities
    public static void setupConnection(final Connection connection, final boolean isAutoCommit, final boolean isReadOnly, final int transactionIsolation, final String catalog) throws SQLException
    {
       connection.setAutoCommit(isAutoCommit);
-      connection.setTransactionIsolation(transactionIsolation);
       connection.setReadOnly(isReadOnly);
+      if (transactionIsolation != connection.getTransactionIsolation()) {
+         connection.setTransactionIsolation(transactionIsolation);
+      }
       if (catalog != null) {
          connection.setCatalog(catalog);
       }
@@ -324,7 +326,7 @@ public final class PoolUtilities
    {
       if (connectionTimeout != Integer.MAX_VALUE) {
          try {
-            dataSource.setLoginTimeout((int) TimeUnit.MILLISECONDS.toSeconds(Math.min(1000L, connectionTimeout)));
+            dataSource.setLoginTimeout((int) TimeUnit.MILLISECONDS.toSeconds(Math.max(1000L, connectionTimeout)));
          }
          catch (SQLException e) {
             logger.warn("Unable to set DataSource login timeout", e);
