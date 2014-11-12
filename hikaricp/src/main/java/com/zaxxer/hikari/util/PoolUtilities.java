@@ -177,8 +177,10 @@ public final class PoolUtilities
    public static void setupConnection(final Connection connection, final boolean isAutoCommit, final boolean isReadOnly, final int transactionIsolation, final String catalog) throws SQLException
    {
       connection.setAutoCommit(isAutoCommit);
-      connection.setTransactionIsolation(transactionIsolation);
       connection.setReadOnly(isReadOnly);
+      if (transactionIsolation != connection.getTransactionIsolation()) {
+         connection.setTransactionIsolation(transactionIsolation);
+      }
       if (catalog != null) {
          connection.setCatalog(catalog);
       }
