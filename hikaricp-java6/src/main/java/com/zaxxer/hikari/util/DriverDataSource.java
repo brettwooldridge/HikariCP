@@ -35,7 +35,8 @@ public final class DriverDataSource implements DataSource
    {
       try {
          this.jdbcUrl = jdbcUrl;
-         this.driverProperties = new Properties(properties);
+         this.driverProperties = new Properties();
+         this.driverProperties.putAll(properties);
          if (username != null) {
             driverProperties.put("user", driverProperties.getProperty("user", username));
          }
