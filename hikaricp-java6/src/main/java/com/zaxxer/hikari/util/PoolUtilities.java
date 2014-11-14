@@ -243,6 +243,11 @@ public final class PoolUtilities
 
       try {
          connection.getNetworkTimeout();  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
+         connection.setNetworkTimeout(new Executor() {
+            @Override public void execute(Runnable runnable) {
+               runnable.run();
+            }
+         }, 1000);
          IS_JDBC41 = true;
       }
       catch (AbstractMethodError e) {
