@@ -20,6 +20,11 @@ Changes in 2.2.5
    the user has not configured an isolation level (using the default).
 
  * Fix a bug where DataSource.loginTimeout() was always being set to 1 second.
+ 
+ * Fix bug where some drivers return 0 from Connection.getNetworkTimeout(),
+   and yet throw SQLFeatureNotSupportedException when setNetworkTimeout() is
+   called. This broke they way that HikariCP had implemented JDBC 4.1 support
+   detection.
 
 Changes in 2.2.4
 
