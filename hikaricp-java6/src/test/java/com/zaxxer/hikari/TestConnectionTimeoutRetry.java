@@ -235,7 +235,7 @@ public class TestConnectionTimeoutRetry
          Connection connection6 = ds.getConnection();
          Connection connection7 = ds.getConnection();
 
-         Thread.sleep(1350);
+         Thread.sleep(1500);
 
          Assert.assertSame("Totals connections not as expected", 10, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 3, TestElf.getPool(ds).getIdleConnections());
