@@ -227,11 +227,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       if (isBroken || bagEntry.evicted) {
          LOGGER.debug("Connection returned to pool {} is broken or evicted.  Closing connection.", configuration.getPoolName());
          closeConnection(bagEntry);
-         return;
       }
-
-      bagEntry.lastAccess = System.currentTimeMillis();
-      connectionBag.requite(bagEntry);
+      else {
+         bagEntry.lastAccess = System.currentTimeMillis();
+         connectionBag.requite(bagEntry);
+      }
    }
 
    /**
