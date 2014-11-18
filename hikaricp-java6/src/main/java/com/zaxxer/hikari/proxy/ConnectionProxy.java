@@ -51,6 +51,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    private final LeakTask leakTask;
    private FastList<Statement> openStatements;
    
+   private boolean isClosed;
    private boolean forceClose;
    private boolean commitStateDirty;
    private boolean isAnythingDirty;
@@ -58,7 +59,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    private boolean isCatalogDirty;
    private boolean isReadOnlyDirty;
    private boolean isTransactionIsolationDirty;
-   private volatile boolean isClosed;
 
    // static initializer
    static {
