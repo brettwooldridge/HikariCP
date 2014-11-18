@@ -234,8 +234,6 @@ public final class PoolUtilities
    public static boolean isJdbc40Compliant(final Connection connection) throws SQLException
    {
       if (!jdbc40checked) {
-         jdbc40checked = true;
-         
          try {
             connection.isValid(5);  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
             IS_JDBC40 = true;
@@ -248,6 +246,9 @@ public final class PoolUtilities
          }
          catch (NoSuchMethodError e) {
             IS_JDBC40 = false;
+         }
+         finally {
+            jdbc40checked = true;
          }
       }
       
@@ -293,8 +294,6 @@ public final class PoolUtilities
    public static int setNetworkTimeout(final Executor executor, final Connection connection, final long timeoutMs, final boolean isUseNetworkTimeout) throws SQLException
    {
       if ((IS_JDBC41 || !jdbc41checked) && isUseNetworkTimeout) {
-         jdbc41checked = true;
-
          try {
             final int networkTimeout = connection.getNetworkTimeout();
             connection.setNetworkTimeout(executor, (int) timeoutMs);
@@ -309,6 +308,9 @@ public final class PoolUtilities
          }
          catch (NoSuchMethodError e) {
             IS_JDBC41 = false;
+         }
+         finally {
+            jdbc41checked = true;
          }
       }
 
