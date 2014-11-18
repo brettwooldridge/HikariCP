@@ -1,5 +1,13 @@
 HikariCP Changes
 
+Changes in 2.2.6
+
+ * Fix an InvalidStateException thrown from the ConcurrentBag when two separate
+   threads call close() on the same connection by making the isClosed state of
+   the ConnectionProxy visible across threads through volatility.
+
+ * Support pool suspend/resume though JMX to support certain failover scenarios.
+
 Changes in 2.2.5
 
  * Fixes for Java 6 compatibility.
