@@ -539,6 +539,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin", configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
       for (PoolBagEntry bagEntry : connectionBag.values(STATE_IN_USE)) {
          try {
+            bagEntry.evicted = true;
             bagEntry.connection.abort(assassinExecutor);
          }
          catch (AbstractMethodError e) {

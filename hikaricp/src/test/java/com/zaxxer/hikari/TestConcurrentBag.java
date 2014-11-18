@@ -84,8 +84,9 @@ public class TestConcurrentBag
 
       bag.close();
       try {
-         bag.add(new PoolBagEntry(null, 0));
-         Assert.fail();
+         PoolBagEntry bagEntry = new PoolBagEntry(null, 0);
+         bag.add(bagEntry);
+         Assert.assertNotEquals(bagEntry, bag.borrow(100, TimeUnit.MILLISECONDS));
       }
       catch (IllegalStateException e) {
          // pass

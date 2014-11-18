@@ -180,11 +180,12 @@ public final class ConcurrentBag<T extends BagEntry>
    public void add(final T bagEntry)
    {
       if (closed) {
-         throw new IllegalStateException("ConcurrentBag has been closed");
+         LOGGER.warn("ConcurrentBag has been closed, ignoring add()");
       }
-
-      sharedList.add(bagEntry);
-      synchronizer.releaseShared(sequence.incrementAndGet());
+      else {
+         sharedList.add(bagEntry);
+         synchronizer.releaseShared(sequence.incrementAndGet());
+      }
    }
 
    /**
@@ -197,13 +198,11 @@ public final class ConcurrentBag<T extends BagEntry>
     */
    public void remove(final T bagEntry)
    {
-      if (bagEntry.state.compareAndSet(STATE_IN_USE, STATE_REMOVED) || bagEntry.state.compareAndSet(STATE_RESERVED, STATE_REMOVED)) {
-         if (!sharedList.remove(bagEntry)) {
-            throw new IllegalStateException("Attempt to remove an object from the bag that does not exist");
-         }
-      }
-      else {
+      if (!bagEntry.state.compareAndSet(STATE_IN_USE, STATE_REMOVED) && !bagEntry.state.compareAndSet(STATE_RESERVED, STATE_REMOVED) && !closed) {
          throw new IllegalStateException("Attempt to remove an object from the bag that was not borrowed or reserved");
+      }
+      else if (!sharedList.remove(bagEntry) && !closed) {
+         throw new IllegalStateException("Attempt to remove an object from the bag that does not exist");
       }
    }
 

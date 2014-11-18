@@ -17,6 +17,7 @@
 package com.zaxxer.hikari;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
@@ -231,6 +232,73 @@ public class ShutdownTest
        finally {
           ds.shutdown();
        }
+   }
+
+   @Test
+   public void testThreadedShutdown() throws Exception
+   {
+      HikariConfig config = new HikariConfig();
+      config.setMinimumIdle(5);
+      config.setMaximumPoolSize(5);
+      config.setConnectionTimeout(200);
+      config.setInitializationFailFast(true);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      for (int i = 0; i < 4; i++) {
+         final HikariDataSource ds = new HikariDataSource(config);
+         Thread t = new Thread() {
+            public void run() {
+               try {
+                  Connection connection = ds.getConnection();
+                  for (int i = 0; i < 10; i++) {
+                     Connection connection2 = null;
+                     try {
+                        connection2 = ds.getConnection();
+                        PreparedStatement stmt = connection2.prepareStatement("SOMETHING");
+                        PoolUtilities.quietlySleep(20);
+                        stmt.getMaxFieldSize();
+                     }
+                     catch (SQLException e) {
+                        try {
+                           if (connection2 != null) {
+                              connection2.close();
+                           }
+                        }
+                        catch (SQLException e2) {
+                           if (e2.getMessage().contains("shutdown") || e2.getMessage().contains("evicted")) {
+                              break;
+                           }
+                        }
+                     }
+                  }
+               }
+               catch (Exception e) {
+                  Assert.fail(e.getMessage());
+               }
+               finally {
+                  ds.shutdown();
+               }
+            };
+         };
+         t.start();
+   
+         Thread t2 = new Thread() {
+            public void run() {
+               PoolUtilities.quietlySleep(100);
+               try {
+                  ds.shutdown();
+               }
+               catch (IllegalStateException e) {
+                  Assert.fail(e.getMessage());
+               }
+            };
+         };
+         t2.start();
+
+         t.join();
+         t2.join();
+      }
    }
 
    private int threadCount()
