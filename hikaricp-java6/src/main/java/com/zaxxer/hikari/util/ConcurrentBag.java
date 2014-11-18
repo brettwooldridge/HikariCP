@@ -63,6 +63,22 @@ public final class ConcurrentBag<T extends BagEntry>
    public static abstract class BagEntry
    {
       final AtomicInteger state = new AtomicInteger();
+
+      @Override
+      public String toString() {
+         switch (state.get()) {
+         case STATE_IN_USE:
+            return super.toString() + " state IN_USE";
+         case STATE_NOT_IN_USE:
+            return super.toString() + " state NOT_IN_USE";
+         case STATE_REMOVED:
+            return super.toString() + " state REMOVED";
+         case STATE_RESERVED:
+            return super.toString() + " state RESERVED";
+         default:
+            return super.toString() + " state " + state.get();
+         }
+      }
    }
 
    /**
@@ -203,7 +219,7 @@ public final class ConcurrentBag<T extends BagEntry>
          throw new IllegalStateException("Attempt to remove an object from the bag that was not borrowed or reserved");
       }
       else if (!sharedList.remove(bagEntry) && !closed) {
-         throw new IllegalStateException("Attempt to remove an object from the bag that does not exist");
+         throw new IllegalStateException("Attempt to remove an object from the bag that does not exist: " + bagEntry);
       }
    }
 
@@ -311,20 +327,7 @@ public final class ConcurrentBag<T extends BagEntry>
    public void dumpState()
    {
       for (T bagEntry : sharedList) {
-         switch (bagEntry.state.get()) {
-         case STATE_IN_USE:
-            LOGGER.info(bagEntry.toString() + " state IN_USE");
-            break;
-         case STATE_NOT_IN_USE:
-            LOGGER.info(bagEntry.toString() + " state NOT_IN_USE");
-            break;
-         case STATE_REMOVED:
-            LOGGER.info(bagEntry.toString() + " state REMOVED");
-            break;
-         case STATE_RESERVED:
-            LOGGER.info(bagEntry.toString() + " state RESERVED");
-            break;
-         }
+         LOGGER.info(bagEntry.toString());
       }
    }
 
