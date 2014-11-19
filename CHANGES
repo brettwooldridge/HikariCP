@@ -8,6 +8,12 @@ Changes in 2.2.6
 
  * Support pool suspend/resume though JMX to support certain failover scenarios.
 
+ * Fix theoretical race in JDBC 4.0 detection support.
+
+ * Suppress ordinary internal accounting sanity checks when the pool is being
+   undergoing forced shutdown.  All bets are off when live connections are being
+   aborted.
+
 Changes in 2.2.5
 
  * Fixes for Java 6 compatibility.

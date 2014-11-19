@@ -418,7 +418,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    {
       int tc = totalConnections.decrementAndGet();
       connectionBag.remove(bagEntry);
-      if (tc < 0) {
+      if (tc < 0 && !isShutdown) {
          LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
       }
       closeConnectionExecutor.submit(new Runnable() {
@@ -434,7 +434,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    private boolean addConnection()
    {
       // Speculative increment of totalConnections with expectation of success
-      if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize() || isShutdown) {
+      if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize() || isShutdown || isPoolSuspended) {
          totalConnections.decrementAndGet();
          return true;
       }
@@ -539,7 +539,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin", configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
       for (PoolBagEntry bagEntry : connectionBag.values(STATE_IN_USE)) {
          try {
-            bagEntry.evicted = true;
             bagEntry.connection.abort(assassinExecutor);
          }
          catch (AbstractMethodError e) {
@@ -557,7 +556,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
                totalConnections.decrementAndGet();
             }
             catch (IllegalStateException ise) {
-               break;
+               continue;
             }
          }
       }
