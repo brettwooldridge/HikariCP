@@ -167,7 +167,7 @@ available, calls to getConnection() will block for up to ``connectionTimeout`` m
 before timing out.
 *Default: 10*
 
-:arrow_right:``metricRegistry``<br/>
+:chart_with_upwards_trend:``metricRegistry``<br/>
 This property is only available via programmatic configuration or IoC container.  This property
 allows you to specify an instance of a *Codahale/Dropwizard* ``MetricRegistry`` to be used by the
 pool to record various metrics.  See the [Metrics](https://github.com/brettwooldridge/HikariCP/wiki/Codahale-Metrics)
