@@ -400,9 +400,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    private void closeConnection(final PoolBagEntry bagEntry)
    {
-      int tc = totalConnections.decrementAndGet();
       connectionBag.remove(bagEntry);
-      if (tc < 0 && !isShutdown) {
+      final int tc = totalConnections.decrementAndGet();
+      if (tc < 0) {
          LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
       }
       closeConnectionExecutor.submit(() -> { quietlyCloseConnection(bagEntry.connection); });
