@@ -2,16 +2,11 @@ HikariCP Changes
 
 Changes in 2.2.6
 
- * Fix an InvalidStateException thrown from the ConcurrentBag when two separate
-   threads call close() on the same connection by making the isClosed state of
-   the ConnectionProxy visible across threads through volatility.
-
  * Support pool suspend/resume though JMX to support certain failover scenarios.
 
  * Fix theoretical race in JDBC 4.0 detection support.
 
- * Suppress ordinary internal accounting sanity checks when the pool is being
-   undergoing forced shutdown.  All bets are off when live connections are being
+ * Improve shutdown() semantics to avoid exceptions as connections are forcefully
    aborted.
 
 Changes in 2.2.5

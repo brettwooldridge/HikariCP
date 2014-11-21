@@ -215,24 +215,16 @@ public final class PoolUtilities
     */
    public static boolean isJdbc40Compliant(final Connection connection) throws SQLException
    {
-      // See http://en.wikipedia.org/wiki/Double-checked_locking#Usage_in_Java
-      boolean checked = jdbc40checked;
-      if (!checked) {
-         synchronized (PoolUtilities.class) {
-            checked = jdbc40checked;
-            if (!checked) {
-               try {
-                  connection.isValid(5);  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
-                  IS_JDBC40 = true;
-               }
-               catch (NoSuchMethodError | AbstractMethodError | SQLFeatureNotSupportedException e) {
-                  IS_JDBC40 = false;
-               }
-               finally {
-                  jdbc40checked = checked = true;
-               }
-            }
+      if (!jdbc40checked) {
+         try {
+            connection.isValid(5);  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
+            IS_JDBC40 = true;
          }
+         catch (NoSuchMethodError | AbstractMethodError | SQLFeatureNotSupportedException e) {
+            IS_JDBC40 = false;
+         }
+
+         jdbc40checked = true;
       }
       
       return IS_JDBC40;

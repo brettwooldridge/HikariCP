@@ -91,6 +91,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    private final IConnectionCustomizer connectionCustomizer;
    private final Semaphore acquisitionSemaphore;
 
+   private final LeakTask leakTask;
    private final AtomicInteger totalConnections;
    private final AtomicReference<Throwable> lastConnectionFailure;
    private final ScheduledThreadPoolExecutor houseKeepingExecutorService;
@@ -99,7 +100,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    private final String password;
    private final boolean isRecordMetrics;
    private final boolean isIsolateInternalQueries;
-   private final long leakDetectionThreshold;
 
    private volatile boolean isShutdown;
    private volatile long connectionTimeout;
@@ -142,7 +142,6 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       this.catalog = configuration.getCatalog();
       this.connectionCustomizer = initializeCustomizer();
       this.transactionIsolation = getTransactionIsolation(configuration.getTransactionIsolation());
-      this.leakDetectionThreshold = configuration.getLeakDetectionThreshold();
       this.isIsolateInternalQueries = configuration.isIsolateInternalQueries();
 
       this.isRecordMetrics = configuration.getMetricRegistry() != null;
@@ -157,6 +156,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, configuration.getThreadFactory() != null ? configuration.getThreadFactory() : new DefaultThreadFactory("Hikari Housekeeping Timer (pool " + configuration.getPoolName() + ")", true));
       this.houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
       this.houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), delayPeriod, delayPeriod, TimeUnit.MILLISECONDS);
+      this.leakTask = (configuration.getLeakDetectionThreshold() == 0) ? LeakTask.NO_LEAK : new LeakTask(configuration.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
       setLoginTimeout(dataSource, connectionTimeout, LOGGER);
       registerMBeans(configuration, this);
@@ -187,15 +187,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             if (now > bagEntry.expirationTime || (now - bagEntry.lastAccess > ALIVE_BYPASS_WINDOW && !isConnectionAlive(bagEntry.connection, timeout))) {
                closeConnection(bagEntry); // Throw away the dead connection and try again
                timeout = connectionTimeout - elapsedTimeMs(start);
-               continue;
             }
-
-            final LeakTask leakTask = (leakDetectionThreshold == 0) ? LeakTask.NO_LEAK : new LeakTask(leakDetectionThreshold, houseKeepingExecutorService);
-            final IHikariConnectionProxy proxyConnection = ProxyFactory.getProxyConnection(this, bagEntry, leakTask);
-
-            metricsContext.setConnectionLastOpen(bagEntry, now);
-
-            return proxyConnection;
+            else {
+               metricsContext.setConnectionLastOpen(bagEntry, now);
+               return ProxyFactory.getProxyConnection(this, bagEntry, leakTask.start());
+            }
          }
          while (timeout > 0L);
       }
@@ -311,7 +307,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          long sleepBackoff = 200L;
          final int maxPoolSize = configuration.getMaximumPoolSize();
          final int minIdle = configuration.getMinimumIdle();
-         while (!isShutdown && totalConnections.get() < maxPoolSize && (minIdle == 0 || getIdleConnections() < minIdle)) {
+         while (!isPoolSuspended && !isShutdown && totalConnections.get() < maxPoolSize && (minIdle == 0 || getIdleConnections() < minIdle)) {
             if (addConnection()) {
                if (minIdle == 0) {
                   break; // This break is here so we only add one connection when there is no min. idle
@@ -386,6 +382,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       if (isPoolSuspended) {
          acquisitionSemaphore.release(10000);
          isPoolSuspended = false;
+         addBagItem(); // re-populate the pool
       }
    }
 
@@ -400,12 +397,13 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    private void closeConnection(final PoolBagEntry bagEntry)
    {
-      int tc = totalConnections.decrementAndGet();
-      connectionBag.remove(bagEntry);
-      if (tc < 0 && !isShutdown) {
-         LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
+      if (connectionBag.remove(bagEntry)) {
+         final int tc = totalConnections.decrementAndGet();
+         if (tc < 0) {
+            LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
+         }
+         closeConnectionExecutor.submit(() -> { quietlyCloseConnection(bagEntry.connection); });
       }
-      closeConnectionExecutor.submit(() -> { quietlyCloseConnection(bagEntry.connection); });
    }
 
    /**
@@ -515,18 +513,15 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin", configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
       connectionBag.values(STATE_IN_USE).stream().forEach(bagEntry -> {
          try {
+            bagEntry.evicted = true;
             bagEntry.connection.abort(assassinExecutor);
          }
          catch (SQLException | AbstractMethodError e) {
             quietlyCloseConnection(bagEntry.connection);
          }
          finally {
-            try {
-               connectionBag.remove(bagEntry);
+            if (connectionBag.remove(bagEntry)) {
                totalConnections.decrementAndGet();
-            }
-            catch (IllegalStateException ise) {
-               return;
             }
          }
       });
