@@ -432,7 +432,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       // Speculative increment of totalConnections with expectation of success
       if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize() || isShutdown || isPoolSuspended) {
          totalConnections.decrementAndGet();
-         return true;
+         return !isPoolSuspended;
       }
 
       Connection connection = null;
