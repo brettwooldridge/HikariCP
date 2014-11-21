@@ -307,7 +307,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          long sleepBackoff = 200L;
          final int maxPoolSize = configuration.getMaximumPoolSize();
          final int minIdle = configuration.getMinimumIdle();
-         while (!isShutdown && totalConnections.get() < maxPoolSize && (minIdle == 0 || getIdleConnections() < minIdle)) {
+         while (!isPoolSuspended && !isShutdown && totalConnections.get() < maxPoolSize && (minIdle == 0 || getIdleConnections() < minIdle)) {
             if (addConnection()) {
                if (minIdle == 0) {
                   break; // This break is here so we only add one connection when there is no min. idle
@@ -382,6 +382,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       if (isPoolSuspended) {
          acquisitionSemaphore.release(10000);
          isPoolSuspended = false;
+         addBagItem(); // re-populate the pool
       }
    }
 
@@ -396,12 +397,13 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    private void closeConnection(final PoolBagEntry bagEntry)
    {
-      connectionBag.remove(bagEntry);
-      final int tc = totalConnections.decrementAndGet();
-      if (tc < 0) {
-         LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
+      if (connectionBag.remove(bagEntry)) {
+         final int tc = totalConnections.decrementAndGet();
+         if (tc < 0) {
+            LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
+         }
+         closeConnectionExecutor.submit(() -> { quietlyCloseConnection(bagEntry.connection); });
       }
-      closeConnectionExecutor.submit(() -> { quietlyCloseConnection(bagEntry.connection); });
    }
 
    /**
@@ -412,7 +414,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       // Speculative increment of totalConnections with expectation of success
       if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize() || isShutdown || isPoolSuspended) {
          totalConnections.decrementAndGet();
-         return !isPoolSuspended;
+         return true;
       }
 
       Connection connection = null;
@@ -511,18 +513,15 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin", configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
       connectionBag.values(STATE_IN_USE).stream().forEach(bagEntry -> {
          try {
+            bagEntry.evicted = true;
             bagEntry.connection.abort(assassinExecutor);
          }
          catch (SQLException | AbstractMethodError e) {
             quietlyCloseConnection(bagEntry.connection);
          }
          finally {
-            try {
-               connectionBag.remove(bagEntry);
+            if (connectionBag.remove(bagEntry)) {
                totalConnections.decrementAndGet();
-            }
-            catch (IllegalStateException ise) {
-               return;
             }
          }
       });

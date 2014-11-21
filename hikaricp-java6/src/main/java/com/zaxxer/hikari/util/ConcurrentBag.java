@@ -194,17 +194,20 @@ public final class ConcurrentBag<T extends BagEntry>
     * with objects obtained by {@link #borrow(long, TimeUnit)} or {@link #reserve(BagEntry)}.
     *
     * @param bagEntry the value to remove
+    * @return true if the entry was removed, false otherwise
     * @throws IllegalStateException if an attempt is made to remove an object
     *         from the bag that was not borrowed or reserved first
     */
-   public void remove(final T bagEntry)
+   public boolean remove(final T bagEntry)
    {
       if (!bagEntry.state.compareAndSet(STATE_IN_USE, STATE_REMOVED) && !bagEntry.state.compareAndSet(STATE_RESERVED, STATE_REMOVED) && !closed) {
          throw new IllegalStateException("Attempt to remove an object from the bag that was not borrowed or reserved");
       }
-      else if (!sharedList.remove(bagEntry) && !closed) {
+      final boolean removed = sharedList.remove(bagEntry);
+      if (!removed && !closed) {
          throw new IllegalStateException("Attempt to remove an object from the bag that does not exist");
       }
+      return removed;
    }
 
    /**
