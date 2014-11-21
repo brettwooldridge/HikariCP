@@ -44,7 +44,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    private static final Logger LOGGER;
    private static final Set<String> SQL_ERRORS;
 
-   protected final Connection delegate;
+   protected Connection delegate;
 
    private final HikariPool parentPool;
    private final PoolBagEntry bagEntry;
@@ -140,13 +140,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    //                        Internal methods
    // ***********************************************************************
 
-   protected final void checkClosed() throws SQLException
-   {
-      if (isClosed) {
-         throw new SQLException("Connection is closed");
-      }
-   }
-
    private final <T extends Statement> T trackStatement(T statement)
    {
       openStatements.add(statement);
@@ -183,7 +176,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       if (!isClosed) {
          isClosed = true;
-
          leakTask.cancel();
 
          final int size = openStatements.size();
@@ -213,16 +205,10 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             throw checkException(e);
          }
          finally {
+            delegate = ClosedConnection.CLOSED_CONNECTION;
             parentPool.releaseConnection(bagEntry, forceClose);
          }
       }
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public final boolean isClosed() throws SQLException
-   {
-      return isClosed;
    }
 
    /** {@inheritDoc} */
@@ -343,22 +329,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       delegate.rollback(savepoint);
       commitStateDirty = false;
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public final boolean isValid(int timeout) throws SQLException
-   {
-      if (isClosed) {
-         return false;
-      }
-
-      try {
-         return delegate.isValid(timeout);
-      }
-      catch (SQLException e) {
-         throw checkException(e);
-      }
    }
 
    /** {@inheritDoc} */

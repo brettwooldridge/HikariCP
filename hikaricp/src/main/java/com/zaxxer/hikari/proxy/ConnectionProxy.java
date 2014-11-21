@@ -177,7 +177,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       if (!isClosed) {
          isClosed = true;
          leakTask.cancel();
-   
+
          final int size = openStatements.size();
          if (size > 0) {
             for (int i = 0; i < size; i++) {
@@ -189,16 +189,16 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
                }
             }
          }
-   
+
          try {
             if (commitStateDirty && !delegate.getAutoCommit()) {
                delegate.rollback();
             }
-   
+
             if (isAnythingDirty) {
                resetConnectionState();
             }
-   
+
             delegate.clearWarnings();
          }
          catch (SQLException e) {
