@@ -80,7 +80,7 @@ Note XA data sources are not supported.  XA requires a real transaction manager 
 ``jdbcUrl`` for "old-school" DriverManager-based JDBC driver configuration.
 *Default: none*
 
-*or*
+*- or -*
 
 :abc:``jdbcUrl``<br/>
 This property directs HikariCP to use "DriverManager-based" configuration.  We feel that DataSource-based
