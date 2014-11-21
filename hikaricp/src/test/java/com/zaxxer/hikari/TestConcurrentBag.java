@@ -34,7 +34,6 @@ public class TestConcurrentBag
    public void testConcurrentBag() throws InterruptedException
    {
       ConcurrentBag<PoolBagEntry> bag = new ConcurrentBag<PoolBagEntry>(null);
-      Assert.assertEquals(0, bag.values(8).size());
 
       PoolBagEntry reserved = new PoolBagEntry(null, 0);
       bag.add(reserved);
