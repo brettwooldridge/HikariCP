@@ -30,15 +30,11 @@ public class ConnectionStateTest
 
       try {
          Connection connection = ds.getConnection();
+         Connection unwrap = connection.unwrap(Connection.class);
          connection.setAutoCommit(false);
          connection.close();
 
-         PoolUtilities.quietlySleep(1100L);
-
-         Connection connection2 = ds.getConnection();
-         Assert.assertSame(connection.unwrap(Connection.class), connection2.unwrap(Connection.class));
-         Assert.assertTrue(connection2.getAutoCommit());
-         connection2.close();
+         Assert.assertTrue(unwrap.getAutoCommit());
       }
       finally {
          ds.close();
@@ -57,13 +53,11 @@ public class ConnectionStateTest
 
       try {
          Connection connection = ds.getConnection();
+         Connection unwrap = connection.unwrap(Connection.class);
          connection.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
          connection.close();
 
-         Connection connection2 = ds.getConnection();
-         Assert.assertSame(connection.unwrap(Connection.class), connection2.unwrap(Connection.class));
-         Assert.assertEquals(Connection.TRANSACTION_READ_COMMITTED, connection2.getTransactionIsolation());
-         connection2.close();
+         Assert.assertEquals(Connection.TRANSACTION_READ_COMMITTED, unwrap.getTransactionIsolation());
       }
       finally {
          ds.close();
@@ -94,13 +88,11 @@ public class ConnectionStateTest
 
       try {
          Connection connection = ds.getConnection();
+         Connection unwrap = connection.unwrap(Connection.class);
          connection.setReadOnly(true);
          connection.close();
 
-         Connection connection2 = ds.getConnection();
-         Assert.assertSame(connection.unwrap(Connection.class), connection2.unwrap(Connection.class));
-         Assert.assertFalse(connection2.isReadOnly());
-         connection2.close();
+         Assert.assertFalse(unwrap.isReadOnly());
       }
       finally {
          ds.close();
@@ -119,13 +111,11 @@ public class ConnectionStateTest
 
       try {
          Connection connection = ds.getConnection();
+         Connection unwrap = connection.unwrap(Connection.class);
          connection.setCatalog("other");
          connection.close();
 
-         Connection connection2 = ds.getConnection();
-         Assert.assertSame(connection.unwrap(Connection.class), connection2.unwrap(Connection.class));
-         Assert.assertEquals("test", connection2.getCatalog());
-         connection2.close();
+         Assert.assertEquals("test", unwrap.getCatalog());
       }
       finally {
          ds.close();
