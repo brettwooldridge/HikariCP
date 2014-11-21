@@ -190,12 +190,11 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             if (now > bagEntry.expirationTime || (now - bagEntry.lastAccess > ALIVE_BYPASS_WINDOW && !isConnectionAlive(bagEntry.connection, timeout))) {
                closeConnection(bagEntry); // Throw away the dead connection and try again
                timeout = connectionTimeout - elapsedTimeMs(start);
-               continue;
             }
-
-            metricsContext.setConnectionLastOpen(bagEntry, now);
-
-            return ProxyFactory.getProxyConnection(this, bagEntry, leakTask.start());
+            else {
+               metricsContext.setConnectionLastOpen(bagEntry, now);
+               return ProxyFactory.getProxyConnection(this, bagEntry, leakTask.start());
+            }
          }
          while (timeout > 0L);
       }
