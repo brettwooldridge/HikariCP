@@ -202,8 +202,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             delegate.clearWarnings();
          }
          catch (SQLException e) {
-            // when connections are evicted, exceptions are often thrown that should not reach the application
-            if (!bagEntry.evicted) {
+            // when connections are aborted, exceptions are often thrown that should not reach the application
+            if (!bagEntry.aborted) {
                throw checkException(e);
             }
          }

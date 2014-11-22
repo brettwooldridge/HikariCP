@@ -31,6 +31,7 @@ public final class PoolBagEntry extends BagEntry
    public final long expirationTime;
    public long lastOpenTime;
    public volatile boolean evicted;
+   public volatile boolean aborted;
    long lastAccess;
 
    public PoolBagEntry(final Connection connection, long maxLifetime) {
