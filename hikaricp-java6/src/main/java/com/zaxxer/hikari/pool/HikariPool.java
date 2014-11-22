@@ -144,6 +144,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       this.connectionCustomizer = initializeCustomizer();
       this.transactionIsolation = getTransactionIsolation(configuration.getTransactionIsolation());
       this.isIsolateInternalQueries = configuration.isIsolateInternalQueries();
+      this.isUseJdbc4Validation = configuration.getConnectionTestQuery() == null;
 
       this.isRecordMetrics = configuration.getMetricRegistry() != null;
       this.metricsTracker = (isRecordMetrics ? new CodaHaleMetricsTracker(this, (MetricRegistry) configuration.getMetricRegistry()) : new MetricsTracker(this));
@@ -442,8 +443,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       try {
          connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
 
-         isUseJdbc4Validation = isJdbc40Compliant(connection) && configuration.getConnectionTestQuery() == null;
-         if (!isUseJdbc4Validation && configuration.getConnectionTestQuery() == null) {
+         if (configuration.getConnectionTestQuery() == null && !(isUseJdbc4Validation &= isJdbc40Compliant(connection))) {
             LOGGER.error("JDBC4 Connection.isValid() method not supported, connection test query must be configured");
          }
 
