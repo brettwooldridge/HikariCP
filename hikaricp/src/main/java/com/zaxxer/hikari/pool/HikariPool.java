@@ -423,8 +423,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       try {
          connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
 
-         if (configuration.getConnectionTestQuery() == null && !(isUseJdbc4Validation &= isJdbc40Compliant(connection))) {
+         if (isUseJdbc4Validation && !isJdbc40Compliant(connection)) {
             LOGGER.error("JDBC4 Connection.isValid() method not supported, connection test query must be configured");
+            return true;
          }
 
          final boolean timeoutEnabled = (connectionTimeout != Integer.MAX_VALUE);
