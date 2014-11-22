@@ -380,9 +380,9 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    public void resumePool()
    {
       if (isPoolSuspended) {
-         acquisitionSemaphore.release(10000);
          isPoolSuspended = false;
          addBagItem(); // re-populate the pool
+         acquisitionSemaphore.release(10000);
       }
    }
 
@@ -468,7 +468,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
             return connection.isValid(timeoutSec);
          }
 
-         final int networkTimeout = setNetworkTimeout(houseKeepingExecutorService, connection, Math.max(250, (int) timeoutMs), timeoutEnabled);
+         final int networkTimeout = setNetworkTimeout(houseKeepingExecutorService, connection, Math.max(1000, (int) timeoutMs), timeoutEnabled);
 
          try (Statement statement = connection.createStatement()) {
             setQueryTimeout(statement, timeoutSec);
