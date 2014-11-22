@@ -256,6 +256,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          logPoolState("After shutdown ");
 
          unregisterMBeans(configuration, this);
+         metricsTracker.close();
       }
    }
 

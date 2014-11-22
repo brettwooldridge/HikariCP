@@ -35,14 +35,16 @@ public class MetricsTracker
       this.pool = pool;
    }
 
-   /** {@inheritDoc} */
    public MetricsContext recordConnectionRequest(long requestTime)
    {
       return NO_CONTEXT;
    }
 
-   /** {@inheritDoc} */
    public void recordConnectionUsage(final PoolBagEntry bagEntry)
+   {
+   }
+
+   public void close()
    {
    }
 
