@@ -34,8 +34,8 @@ public class LeakTask implements Runnable
    public static final LeakTask NO_LEAK;
    private static final Logger LOGGER = LoggerFactory.getLogger(LeakTask.class);
 
-   private final ScheduledExecutorService executorService;
-   private final long leakDetectionThreshold;
+   private ScheduledExecutorService executorService;
+   private long leakDetectionThreshold;
    private ScheduledFuture<?> scheduledFuture;
    private Exception exception;
 
@@ -53,23 +53,25 @@ public class LeakTask implements Runnable
       };
    }
 
-   public LeakTask()
-   {
-      executorService = null;
-      leakDetectionThreshold = 0;
-   }
-
    public LeakTask(final long leakDetectionThreshold, final ScheduledExecutorService executorService)
    {
       this.executorService = executorService;
       this.leakDetectionThreshold = leakDetectionThreshold;
    }
 
-   public LeakTask start()
+   private LeakTask()
+   {
+   }
+   
+   private LeakTask(final LeakTask parent)
    {
       exception = new Exception();
-      scheduledFuture = executorService.schedule(this, leakDetectionThreshold, TimeUnit.MILLISECONDS);
-      return this;
+      scheduledFuture = parent.executorService.schedule(this, parent.leakDetectionThreshold, TimeUnit.MILLISECONDS);
+   }
+
+   public LeakTask start()
+   {
+      return new LeakTask(this);
    }
 
    /** {@inheritDoc} */
