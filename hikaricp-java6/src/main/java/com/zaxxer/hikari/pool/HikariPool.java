@@ -100,12 +100,12 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    private final String username;
    private final String password;
    private final boolean isRecordMetrics;
+   private final boolean isUseJdbc4Validation;
    private final boolean isIsolateInternalQueries;
 
    private volatile boolean isShutdown;
    private volatile long connectionTimeout;
    private volatile boolean isPoolSuspended;
-   private volatile boolean isUseJdbc4Validation;
 
    /**
     * Construct a HikariPool with the specified configuration.
