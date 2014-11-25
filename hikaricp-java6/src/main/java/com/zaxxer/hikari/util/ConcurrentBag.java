@@ -179,7 +179,7 @@ public final class ConcurrentBag<T extends BagEntry>
    public void add(final T bagEntry)
    {
       if (closed) {
-         LOGGER.warn("ConcurrentBag has been closed, ignoring add()");
+         throw new IllegalStateException("ConcurrentBag has been closed, ignoring add()");
       }
       else {
          sharedList.add(bagEntry);
