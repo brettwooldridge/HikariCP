@@ -332,7 +332,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          }
       }
 
-      addConnectionExecutor.submit(new AddConnection());
+      addConnectionExecutor.execute(new AddConnection());
    }
 
    // ***********************************************************************

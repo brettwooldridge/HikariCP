@@ -304,7 +304,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    @Override
    public void addBagItem()
    {
-      addConnectionExecutor.submit( () -> {
+      addConnectionExecutor.execute( () -> {
          long sleepBackoff = 200L;
          final int maxPoolSize = configuration.getMaximumPoolSize();
          final int minIdle = configuration.getMinimumIdle();
