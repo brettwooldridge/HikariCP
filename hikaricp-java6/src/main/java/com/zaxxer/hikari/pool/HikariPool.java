@@ -41,7 +41,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -60,10 +59,10 @@ import com.zaxxer.hikari.metrics.MetricsTracker;
 import com.zaxxer.hikari.metrics.MetricsTracker.MetricsContext;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.ProxyFactory;
+import com.zaxxer.hikari.util.GlobalPoolLock;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
-import com.zaxxer.hikari.util.FauxSemaphore;
 import com.zaxxer.hikari.util.LeakTask;
 
 /**
@@ -90,7 +89,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    private final ConcurrentBag<PoolBagEntry> connectionBag;
    private final ThreadPoolExecutor closeConnectionExecutor;
    private final IConnectionCustomizer connectionCustomizer;
-   private final Semaphore acquisitionSemaphore;
+   private final GlobalPoolLock suspendResumeLock;
 
    private final LeakTask leakTask;
    private final AtomicInteger totalConnections;
@@ -138,7 +137,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       this.isReadOnly = configuration.isReadOnly();
       this.isAutoCommit = configuration.isAutoCommit();
 
-      this.acquisitionSemaphore = configuration.isAllowPoolSuspension() ? new Semaphore(10000, true) : FauxSemaphore.FAUX_SEMAPHORE;
+      this.suspendResumeLock = configuration.isAllowPoolSuspension() ? GlobalPoolLock.SUSPEND_RESUME_LOCK : GlobalPoolLock.FAUX_LOCK;
 
       this.catalog = configuration.getCatalog();
       this.connectionCustomizer = initializeCustomizer();
@@ -175,7 +174,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    public Connection getConnection() throws SQLException
    {
-      acquisitionSemaphore.acquireUninterruptibly();
+      suspendResumeLock.acquire();
       long timeout = connectionTimeout;
       final long start = System.currentTimeMillis();
       final MetricsContext metricsContext = (isRecordMetrics ? metricsTracker.recordConnectionRequest(start) : MetricsTracker.NO_CONTEXT);
@@ -203,7 +202,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          throw new SQLException("Interrupted during connection acquisition", e);
       }
       finally {
-         acquisitionSemaphore.release();
+         suspendResumeLock.release();
          metricsContext.stop();
       }
 
@@ -388,7 +387,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    public void suspendPool()
    {
       if (!isPoolSuspended) {
-         acquisitionSemaphore.acquireUninterruptibly(10000);
+         suspendResumeLock.suspend();
          isPoolSuspended = true;
       }
    }
@@ -400,7 +399,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
       if (isPoolSuspended) {
          isPoolSuspended = false;
          addBagItem(); // re-populate the pool
-         acquisitionSemaphore.release(10000);
+         suspendResumeLock.resume();
       }
    }
 

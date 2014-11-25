@@ -47,7 +47,6 @@ public class TestConnections
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(1);
-      config.setInitializationFailFast(true);
       config.setConnectionTestQuery("VALUES 1");
       config.setConnectionInitSql("SELECT 1");
       config.setReadOnly(true);
@@ -95,7 +94,6 @@ public class TestConnections
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(1);
-      config.setInitializationFailFast(true);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -149,7 +147,6 @@ public class TestConnections
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(1);
-      config.setInitializationFailFast(true);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -199,7 +196,6 @@ public class TestConnections
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(1);
-      config.setInitializationFailFast(true);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -220,7 +216,6 @@ public class TestConnections
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(5);
-      config.setInitializationFailFast(true);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -243,7 +238,6 @@ public class TestConnections
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(4);
       config.setConnectionTimeout(500);
-      config.setInitializationFailFast(true);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -378,7 +372,6 @@ public class TestConnections
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(1);
-      config.setInitializationFailFast(true);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -399,6 +392,55 @@ public class TestConnections
          StubConnection.oldDriver = false;
          StubStatement.oldDriver = false;
          TestElf.resetPoolUtilities();
+         ds.close();
+      }
+   }
+
+   @Test
+   public void testSuspendResume() throws Exception
+   {
+      HikariConfig config = new HikariConfig();
+      config.setMinimumIdle(3);
+      config.setMaximumPoolSize(3);
+      config.setAllowPoolSuspension(true);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      final HikariDataSource ds = new HikariDataSource(config);
+      try {
+         HikariPool pool = TestElf.getPool(ds);
+         while (pool.getTotalConnections() < 3) {
+            PoolUtilities.quietlySleep(50);
+         }
+
+         Thread t = new Thread(new Runnable() {
+            public void run()
+            {
+               try {
+                  ds.getConnection();
+                  ds.getConnection();
+               }
+               catch (Exception e) {
+                  Assert.fail();
+               }
+            }
+         });
+
+         Connection c3 = ds.getConnection();
+         Assert.assertEquals(2, pool.getIdleConnections());
+
+         pool.suspendPool();
+         t.start();
+
+         PoolUtilities.quietlySleep(500);
+         Assert.assertEquals(2, pool.getIdleConnections());
+         c3.close();
+         Assert.assertEquals(3, pool.getIdleConnections());
+         pool.resumePool();
+         PoolUtilities.quietlySleep(500);
+         Assert.assertEquals(1, pool.getIdleConnections());
+      }
+      finally {
          ds.close();
       }
    }
