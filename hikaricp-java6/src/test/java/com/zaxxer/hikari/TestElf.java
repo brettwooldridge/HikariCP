@@ -67,7 +67,7 @@ public final class TestElf
    public static boolean getConnectionCommitDirtyState(Connection connection)
    {
       try {
-         Field field = ConnectionProxy.class.getDeclaredField("commitStateDirty");
+         Field field = ConnectionProxy.class.getDeclaredField("isCommitStateDirty");
          field.setAccessible(true);
          return field.getBoolean(connection);
       }

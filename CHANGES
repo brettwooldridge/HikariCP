@@ -9,6 +9,8 @@ Changes in 2.2.6
  * Improve shutdown() semantics to avoid exceptions as connections are forcefully
    aborted.
 
+ * Unregister Codahale metrics at shutdown, if metrics are enabled.
+
 Changes in 2.2.5
 
  * Fixes for Java 6 compatibility.

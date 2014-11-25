@@ -58,7 +58,7 @@ public abstract class StatementProxy implements Statement
       }
 
       isClosed = true;
-      connection.untrackStatement(this);
+      connection.untrackStatement(delegate);
 
       try {
          delegate.close();
