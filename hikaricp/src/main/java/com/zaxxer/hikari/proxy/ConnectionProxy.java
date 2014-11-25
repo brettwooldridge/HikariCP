@@ -209,6 +209,13 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    /** {@inheritDoc} */
    @Override
+   public final boolean isClosed() throws SQLException
+   {
+      return delegate == ClosedConnection.CLOSED_CONNECTION;
+   }
+
+   /** {@inheritDoc} */
+   @Override
    public Statement createStatement() throws SQLException
    {
       return ProxyFactory.getProxyStatement(this, trackStatement(delegate.createStatement()));
