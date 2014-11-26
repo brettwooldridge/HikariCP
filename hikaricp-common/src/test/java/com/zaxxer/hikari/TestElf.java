@@ -79,7 +79,7 @@ public final class TestElf
    public static void setConfigUnitTest(boolean unitTest)
    {
       try {
-         Field field = HikariConfig.class.getDeclaredField("unitTest");
+         Field field = AbstractHikariConfig.class.getDeclaredField("unitTest");
          field.setAccessible(true);
          field.setBoolean(null, unitTest);
       }

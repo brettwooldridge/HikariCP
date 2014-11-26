@@ -276,7 +276,7 @@ public class TestValidation
          config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
          config.setLeakDetectionThreshold(1000L);
          config.validate();
-         Assert.assertEquals(0, config.getLeakDetectionThreshold());
+         Assert.assertEquals(2000L, config.getLeakDetectionThreshold());
       }
       catch (IllegalArgumentException ise) {
          // pass
