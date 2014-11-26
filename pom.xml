@@ -54,6 +54,7 @@
    <modules>
       <module>hikaricp</module>
       <module>hikaricp-java6</module>
+      <module>hikaricp-common</module>
    </modules>
 
    <build>

@@ -50,6 +50,7 @@
       <version>2.2.6-SNAPSHOT</version>
    </parent>
 
+
    <build>
       <sourceDirectory>src/main/java</sourceDirectory>
       <testSourceDirectory>src/test/java</testSourceDirectory>
@@ -302,4 +303,11 @@
          </dependencies>
       </profile>
    </profiles>
+   <dependencies>
+      <dependency>
+         <groupId>com.zaxxer</groupId>
+         <artifactId>hikaricp-common</artifactId>
+         <version>2.2.6-SNAPSHOT</version>
+      </dependency>
+   </dependencies>
 </project>
