@@ -166,7 +166,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
     * @return a java.sql.Connection instance
     * @throws SQLException thrown if a timeout occurs trying to obtain a connection
     */
-   public Connection getConnection() throws SQLException
+   public final Connection getConnection() throws SQLException
    {
       suspendResumeLock.acquire();
       long timeout = connectionTimeout;
@@ -210,7 +210,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
     * @param bagEntry the PoolBagEntry to release back to the pool
     * @param isBroken true if the connection was detected as broken
     */
-   public void releaseConnection(final PoolBagEntry bagEntry, final boolean isBroken)
+   public final void releaseConnection(final PoolBagEntry bagEntry, final boolean isBroken)
    {
       metricsTracker.recordConnectionUsage(bagEntry);
 
@@ -230,7 +230,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
     *
     * @throws InterruptedException thrown if the thread is interrupted during shutdown
     */
-   public void shutdown() throws InterruptedException
+   public final void shutdown() throws InterruptedException
    {
       if (!isShutdown) {
          isShutdown = true;
@@ -262,7 +262,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
     *
     * @param proxyConnection the connection to evict
     */
-   public void evictConnection(IHikariConnectionProxy proxyConnection)
+   public final void evictConnection(IHikariConnectionProxy proxyConnection)
    {
       closeConnection(proxyConnection.getPoolBagEntry());
    }
@@ -272,7 +272,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
     *
     * @return the wrapped DataSource
     */
-   public DataSource getDataSource()
+   public final DataSource getDataSource()
    {
       return dataSource;
    }
@@ -282,7 +282,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
     *
     * @return the {@link HikariConfig} for this pool
     */
-   public HikariConfig getConfiguration()
+   public final HikariConfig getConfiguration()
    {
       return configuration;
    }
@@ -299,35 +299,35 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
 
    /** {@inheritDoc} */
    @Override
-   public int getActiveConnections()
+   public final int getActiveConnections()
    {
       return connectionBag.getCount(STATE_IN_USE);
    }
 
    /** {@inheritDoc} */
    @Override
-   public int getIdleConnections()
+   public final int getIdleConnections()
    {
       return connectionBag.getCount(STATE_NOT_IN_USE);
    }
 
    /** {@inheritDoc} */
    @Override
-   public int getTotalConnections()
+   public final int getTotalConnections()
    {
       return connectionBag.size() - connectionBag.getCount(STATE_REMOVED);
    }
 
    /** {@inheritDoc} */
    @Override
-   public int getThreadsAwaitingConnection()
+   public final int getThreadsAwaitingConnection()
    {
       return connectionBag.getPendingQueue();
    }
 
    /** {@inheritDoc} */
    @Override
-   public void suspendPool()
+   public final void suspendPool()
    {
       if (!isPoolSuspended) {
          suspendResumeLock.suspend();
@@ -337,7 +337,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
 
    /** {@inheritDoc} */
    @Override
-   public void resumePool()
+   public final void resumePool()
    {
       if (isPoolSuspended) {
          isPoolSuspended = false;
@@ -360,7 +360,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    /**
     * Create and add a single connection to the pool.
     */
-   protected boolean addConnection()
+   protected final boolean addConnection()
    {
       // Speculative increment of totalConnections with expectation of success
       if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize()) {
@@ -451,7 +451,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       return configuration.getConnectionCustomizer();
    }
 
-   public void logPoolState(String... prefix)
+   public final void logPoolState(String... prefix)
    {
       if (LOGGER.isDebugEnabled()) {
          LOGGER.debug("{}pool stats {} (total={}, inUse={}, avail={}, waiting={})",
