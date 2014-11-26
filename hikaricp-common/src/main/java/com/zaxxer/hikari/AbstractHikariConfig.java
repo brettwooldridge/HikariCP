@@ -82,11 +82,6 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
    private ThreadFactory threadFactory;
    private Object metricRegistry;
 
-   static {
-      JavassistProxyFactory.initialize();
-      CodaHaleShim.initialize();
-   }
-
    /**
     * Default constructor
     */

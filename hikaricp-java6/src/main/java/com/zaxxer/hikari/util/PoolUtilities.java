@@ -10,6 +10,7 @@ import java.util.Properties;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -139,6 +140,18 @@ public final class PoolUtilities
       }
       catch (Exception e) {
          throw new RuntimeException(e);
+      }
+   }
+
+   /**
+    * If the scheduled executor supports it, set the removeonCancelPolicy.
+    *
+    * @param executor the executor to set
+    */
+   public static void setRemoveOnCancelPolicy(ScheduledThreadPoolExecutor executor)
+   {
+      if (IS_JAVA7) {
+         executor.setRemoveOnCancelPolicy(true);
       }
    }
 

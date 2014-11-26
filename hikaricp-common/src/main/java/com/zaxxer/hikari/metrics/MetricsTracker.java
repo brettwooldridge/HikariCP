@@ -16,7 +16,7 @@
 
 package com.zaxxer.hikari.metrics;
 
-import com.zaxxer.hikari.pool.HikariPool;
+import com.zaxxer.hikari.pool.BaseHikariPool;
 import com.zaxxer.hikari.pool.PoolBagEntry;
 
 /**
@@ -28,9 +28,9 @@ public class MetricsTracker
 {
    public static final MetricsContext NO_CONTEXT = new MetricsContext();
 
-   protected final HikariPool pool;
+   protected final BaseHikariPool pool;
 
-   public MetricsTracker(final HikariPool pool)
+   public MetricsTracker(final BaseHikariPool pool)
    {
       this.pool = pool;
    }

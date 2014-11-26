@@ -52,7 +52,7 @@ public final class HikariMBeanElf
     * @param configuration a HikariConfig instance
     * @param pool a HikariPool instance
     */
-   public static void registerMBeans(final HikariConfig configuration, final HikariPool pool)
+   public static void registerMBeans(final HikariConfig configuration, final BaseHikariPool pool)
    {
       if (!configuration.isRegisterMbeans()) {
          return;
@@ -82,7 +82,7 @@ public final class HikariMBeanElf
     * @param configuration a HikariConfig instance
     * @param pool a HikariPool instance
     */
-   public static void unregisterMBeans(final HikariConfig configuration, final HikariPool pool)
+   public static void unregisterMBeans(final HikariConfig configuration, final BaseHikariPool pool)
    {
       try {
          final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();

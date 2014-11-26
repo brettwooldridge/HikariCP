@@ -22,7 +22,7 @@ import com.codahale.metrics.CachedGauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.zaxxer.hikari.pool.HikariPool;
+import com.zaxxer.hikari.pool.BaseHikariPool;
 import com.zaxxer.hikari.pool.PoolBagEntry;
 import com.zaxxer.hikari.util.PoolUtilities;
 
@@ -32,7 +32,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    private final Histogram connectionUsage;
    private final MetricRegistry registry;
 
-   public CodaHaleMetricsTracker(final HikariPool pool, final MetricRegistry registry) {
+   public CodaHaleMetricsTracker(final BaseHikariPool pool, final MetricRegistry registry) {
       super(pool);
 
       this.registry = registry;
