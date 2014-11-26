@@ -77,12 +77,9 @@ public final class JavassistProxyFactory
       classPool.importPackage("java.sql");
       classPool.appendClassPath(new LoaderClassPath(this.getClass().getClassLoader()));
 
-      // Connection is special, it has a checkClosed() call at the beginning
+      // Cast is not needed for these
       String methodBody = "{ try { return delegate.method($$); } catch (SQLException e) { throw checkException(e); } }";
       generateProxyClass(Connection.class, ConnectionProxy.class, methodBody);
-
-      // Cast is not needed for these
-      methodBody = "{ try { return delegate.method($$); } catch (SQLException e) { throw checkException(e); } }";
       generateProxyClass(Statement.class, StatementProxy.class, methodBody);
       generateProxyClass(ResultSet.class, ResultSetProxy.class, methodBody);
 
