@@ -46,7 +46,8 @@ public final class PoolBagEntry extends BagEntry
       return "Connection......" + connection + "\n"
            + "  Expiration...." + expirationTime + "\n"
            + "  Last  access.." + lastAccess + "\n"
-           + "  Last open....." + lastOpenTime + "\n";
+           + "  Last open....." + lastOpenTime + "\n"
+           + super.toString();
    }
 }
 

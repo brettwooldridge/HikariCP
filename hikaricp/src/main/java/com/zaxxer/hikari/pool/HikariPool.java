@@ -18,9 +18,7 @@ package com.zaxxer.hikari.pool;
 
 import static com.zaxxer.hikari.pool.HikariMBeanElf.registerMBeans;
 import static com.zaxxer.hikari.pool.HikariMBeanElf.unregisterMBeans;
-import static com.zaxxer.hikari.util.ConcurrentBag.STATE_IN_USE;
-import static com.zaxxer.hikari.util.ConcurrentBag.STATE_NOT_IN_USE;
-import static com.zaxxer.hikari.util.ConcurrentBag.STATE_REMOVED;
+import static com.zaxxer.hikari.util.ConcurrentBag.State;
 import static com.zaxxer.hikari.util.PoolUtilities.createInstance;
 import static com.zaxxer.hikari.util.PoolUtilities.createThreadPoolExecutor;
 import static com.zaxxer.hikari.util.PoolUtilities.elapsedTimeMs;
@@ -334,21 +332,21 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    @Override
    public int getActiveConnections()
    {
-      return connectionBag.getCount(STATE_IN_USE);
+      return connectionBag.getCount(State.IN_USE);
    }
 
    /** {@inheritDoc} */
    @Override
    public int getIdleConnections()
    {
-      return connectionBag.getCount(STATE_NOT_IN_USE);
+      return connectionBag.getCount(State.NOT_IN_USE);
    }
 
    /** {@inheritDoc} */
    @Override
    public int getTotalConnections()
    {
-      return connectionBag.size() - connectionBag.getCount(STATE_REMOVED);
+      return connectionBag.size() - connectionBag.getCount(State.REMOVED);
    }
 
    /** {@inheritDoc} */
@@ -362,8 +360,8 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    @Override
    public void softEvictConnections()
    {
-      connectionBag.values(STATE_IN_USE).forEach(bagEntry -> bagEntry.evicted = true);
-      connectionBag.values(STATE_NOT_IN_USE).stream().filter(p -> connectionBag.reserve(p)).forEach(bagEntry -> closeConnection(bagEntry));
+      connectionBag.values(State.IN_USE).forEach(bagEntry -> bagEntry.evicted = true);
+      connectionBag.values(State.NOT_IN_USE).stream().filter(p -> connectionBag.reserve(p)).forEach(bagEntry -> closeConnection(bagEntry));
    }
 
    /** {@inheritDoc} */
@@ -511,7 +509,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
    private void abortActiveConnections() throws InterruptedException
    {
       ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin", configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
-      connectionBag.values(STATE_IN_USE).stream().forEach(bagEntry -> {
+      connectionBag.values(State.IN_USE).stream().forEach(bagEntry -> {
          try {
             bagEntry.aborted = bagEntry.evicted = true;
             bagEntry.connection.abort(assassinExecutor);
@@ -568,7 +566,7 @@ public final class HikariPool implements HikariPoolMBean, IBagStateListener
          final long now = System.currentTimeMillis();
          final long idleTimeout = configuration.getIdleTimeout();
 
-         connectionBag.values(STATE_NOT_IN_USE).stream().filter(p -> connectionBag.reserve(p)).forEach(bagEntry -> {
+         connectionBag.values(State.NOT_IN_USE).stream().filter(p -> connectionBag.reserve(p)).forEach(bagEntry -> {
             if ((idleTimeout > 0L && now > bagEntry.lastAccess + idleTimeout) || (now > bagEntry.expirationTime)) {
                closeConnection(bagEntry);
             }

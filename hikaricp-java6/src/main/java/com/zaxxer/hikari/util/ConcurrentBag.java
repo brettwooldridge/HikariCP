@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
 
@@ -30,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.util.ConcurrentBag.BagEntry;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * This is a specialized concurrent bag that achieves superior performance
@@ -54,15 +54,33 @@ import com.zaxxer.hikari.util.ConcurrentBag.BagEntry;
 public final class ConcurrentBag<T extends BagEntry>
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentBag.class);
-
-   public static final int STATE_NOT_IN_USE = 0;
-   public static final int STATE_IN_USE = 1;
-   public static final int STATE_REMOVED = -1;
-   private static final int STATE_RESERVED = -2;
+   public enum State
+   {
+      NOT_IN_USE,
+      IN_USE,
+      REMOVED,
+      RESERVED;
+   };
 
    public static abstract class BagEntry
    {
-      final AtomicInteger state = new AtomicInteger();
+      final AtomicReference<State> state = new AtomicReference<State>(State.IN_USE);
+
+      @Override
+      public String toString() {
+         switch (state.get()) {
+         case IN_USE:
+            return super.toString() + " state IN_USE";
+         case NOT_IN_USE:
+            return super.toString() + " state NOT_IN_USE";
+         case REMOVED:
+            return super.toString() + " state REMOVED";
+         case RESERVED:
+            return super.toString() + " state RESERVED";
+         default:
+            return super.toString() + " state " + state.get();
+         }
+      }
    }
 
    /**
@@ -117,7 +135,7 @@ public final class ConcurrentBag<T extends BagEntry>
       else {
          for (int i = list.size() - 1; i >= 0; i--) {
             final BagEntry bagEntry = list.remove(i).get();
-            if (bagEntry != null && bagEntry.state.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
+            if (bagEntry != null && bagEntry.state.compareAndSet(State.NOT_IN_USE, State.IN_USE)) {
                return (T) bagEntry;
             }
          }
@@ -131,7 +149,7 @@ public final class ConcurrentBag<T extends BagEntry>
          do {
             startSeq = sequence.longValue();
             for (final T bagEntry : sharedList) {
-               if (bagEntry.state.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
+               if (bagEntry.state.compareAndSet(State.NOT_IN_USE, State.IN_USE)) {
                   return bagEntry;
                }
             }
@@ -159,7 +177,7 @@ public final class ConcurrentBag<T extends BagEntry>
     */
    public void requite(final T bagEntry)
    {
-      if (bagEntry.state.compareAndSet(STATE_IN_USE, STATE_NOT_IN_USE)) {
+      if (bagEntry.state.compareAndSet(State.IN_USE, State.NOT_IN_USE)) {
          final ArrayList<WeakReference<BagEntry>> list = threadList.get();
          if (list != null) {
             list.add(new WeakReference<BagEntry>(bagEntry));
@@ -198,12 +216,12 @@ public final class ConcurrentBag<T extends BagEntry>
     */
    public boolean remove(final T bagEntry)
    {
-      if (!bagEntry.state.compareAndSet(STATE_IN_USE, STATE_REMOVED) && !bagEntry.state.compareAndSet(STATE_RESERVED, STATE_REMOVED) && !closed) {
+      if (!bagEntry.state.compareAndSet(State.IN_USE, State.REMOVED) && !bagEntry.state.compareAndSet(State.RESERVED, State.REMOVED) && !closed) {
          throw new IllegalStateException("Attempt to remove an object from the bag that was not borrowed or reserved");
       }
       final boolean removed = sharedList.remove(bagEntry);
       if (!removed && !closed) {
-         throw new IllegalStateException("Attempt to remove an object from the bag that does not exist");
+         throw new IllegalStateException("Attempt to remove an object from the bag that does not exist: " + bagEntry);
       }
       return removed;
    }
@@ -222,13 +240,13 @@ public final class ConcurrentBag<T extends BagEntry>
     * or reserve items in any way.  Call {@link #reserve(BagEntry)}
     * on items in list before performing any action on them.
     *
-    * @param state one of STATE_NOT_IN_USE or STATE_IN_USE
+    * @param state one of State.NOT_IN_USE or State.IN_USE
     * @return a possibly empty list of objects having the state specified
     */
-   public List<T> values(final int state)
+   public List<T> values(final State state)
    {
       final ArrayList<T> list = new ArrayList<T>(sharedList.size());
-      if (state == STATE_IN_USE || state == STATE_NOT_IN_USE) {
+      if (state == State.IN_USE || state == State.NOT_IN_USE) {
          for (final T reference : sharedList) {
             if (reference.state.get() == state) {
                list.add(reference);
@@ -252,7 +270,7 @@ public final class ConcurrentBag<T extends BagEntry>
     */
    public boolean reserve(final T bagEntry)
    {
-      return bagEntry.state.compareAndSet(STATE_NOT_IN_USE, STATE_RESERVED);
+      return bagEntry.state.compareAndSet(State.NOT_IN_USE, State.RESERVED);
    }
 
    /**
@@ -264,7 +282,7 @@ public final class ConcurrentBag<T extends BagEntry>
    public void unreserve(final T bagEntry)
    {
       final long checkInSeq = sequence.incrementAndGet();
-      if (!bagEntry.state.compareAndSet(STATE_RESERVED, STATE_NOT_IN_USE)) {
+      if (!bagEntry.state.compareAndSet(State.RESERVED, State.NOT_IN_USE)) {
          throw new IllegalStateException("Attempt to relinquish an object to the bag that was not reserved");
       }
 
@@ -288,7 +306,7 @@ public final class ConcurrentBag<T extends BagEntry>
     * @param state the state of the items to count
     * @return a count of how many items in the bag are in the specified state
     */
-   public int getCount(final int state)
+   public int getCount(final State state)
    {
       int count = 0;
       for (final T reference : sharedList) {
@@ -312,20 +330,7 @@ public final class ConcurrentBag<T extends BagEntry>
    public void dumpState()
    {
       for (T bagEntry : sharedList) {
-         switch (bagEntry.state.get()) {
-         case STATE_IN_USE:
-            LOGGER.info(bagEntry.toString() + " state IN_USE");
-            break;
-         case STATE_NOT_IN_USE:
-            LOGGER.info(bagEntry.toString() + " state NOT_IN_USE");
-            break;
-         case STATE_REMOVED:
-            LOGGER.info(bagEntry.toString() + " state REMOVED");
-            break;
-         case STATE_RESERVED:
-            LOGGER.info(bagEntry.toString() + " state RESERVED");
-            break;
-         }
+         LOGGER.info(bagEntry.toString());
       }
    }
 
