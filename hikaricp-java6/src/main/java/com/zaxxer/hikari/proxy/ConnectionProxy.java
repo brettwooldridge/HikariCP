@@ -46,12 +46,12 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    protected Connection delegate;
 
+   private final LeakTask leakTask;
    private final HikariPool parentPool;
    private final PoolBagEntry bagEntry;
-   private final LeakTask leakTask;
    private final FastList<Statement> openStatements;
    
-   private boolean forceClose;
+   private boolean isForceClose;
    private boolean isCommitStateDirty;
    private boolean isConnectionStateDirty;
    private boolean isAutoCommitDirty;
@@ -104,8 +104,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       String sqlState = sqle.getSQLState();
       if (sqlState != null) {
-         forceClose |= sqlState.startsWith("08") | SQL_ERRORS.contains(sqlState);
-         if (forceClose) {
+         isForceClose |= sqlState.startsWith("08") | SQL_ERRORS.contains(sqlState);
+         if (isForceClose) {
             LOGGER.warn(String.format("Connection %s (%s) marked as broken because of SQLSTATE(%s), ErrorCode(%d).", delegate.toString(),
                                       parentPool.toString(), sqlState, sqle.getErrorCode()), sqle);
          }
@@ -202,16 +202,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          }
          finally {
             delegate = ClosedConnection.CLOSED_CONNECTION;
-            parentPool.releaseConnection(bagEntry, forceClose);
+            parentPool.releaseConnection(bagEntry, isForceClose);
          }
       }
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public final boolean isClosed() throws SQLException
-   {
-      return delegate == ClosedConnection.CLOSED_CONNECTION;
    }
 
    /** {@inheritDoc} */
