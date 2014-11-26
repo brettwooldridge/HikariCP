@@ -38,8 +38,6 @@ public class PostgresTest
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(10);
-      config.setInitializationFailFast(true);
-      config.setJdbc4ConnectionTest(false);
       config.setConnectionTimeout(5000);
       config.setConnectionTestQuery("VALUES 1");
 
@@ -78,8 +76,6 @@ public class PostgresTest
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(10);
-      config.setInitializationFailFast(true);
-      config.setJdbc4ConnectionTest(false);
       config.setConnectionTimeout(5000);
       config.setConnectionTestQuery("VALUES 1");
 
@@ -133,7 +129,6 @@ public class PostgresTest
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(10);
       config.setInitializationFailFast(false);
-      config.setJdbc4ConnectionTest(false);
       config.setConnectionTimeout(2000);
       config.setConnectionTestQuery("VALUES 1");
 

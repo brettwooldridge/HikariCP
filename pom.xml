@@ -54,73 +54,7 @@
    <modules>
       <module>hikaricp</module>
       <module>hikaricp-java6</module>
-      <module>hikaricp-common</module>
    </modules>
-
-   <build>
-      <pluginManagement>
-         <plugins>
-            <plugin>
-               <groupId>org.apache.maven.plugins</groupId>
-               <artifactId>maven-release-plugin</artifactId>
-               <version>2.5</version>
-               <configuration>
-                  <autoVersionSubmodules>true</autoVersionSubmodules>
-                  <tagNameFormat>HikariCP-@{project.version}</tagNameFormat>
-               </configuration>
-            </plugin>
-
-            <plugin>
-               <groupId>org.apache.maven.plugins</groupId>
-               <artifactId>maven-surefire-plugin</artifactId>
-               <version>2.15</version>
-               <configuration>
-                  <!-- Sets the VM argument line used when unit tests are  run. -->
-                  <argLine>${surefireArgLine}</argLine>
-                  <!-- Skips unit tests if the value of skip.unit.tests property is true -->
-                  <skipTests>${skip.unit.tests}</skipTests>
-               </configuration>
-            </plugin>
-
-            <plugin>
-               <groupId>org.apache.maven.plugins</groupId>
-               <artifactId>maven-source-plugin</artifactId>
-               <version>2.2.1</version>
-               <configuration>
-                  <!-- outputDirectory>/absolute/path/to/the/output/directory</outputDirectory> 
-                     <finalName>filename-of-generated-jar-file</finalName -->
-                  <attach>true</attach>
-               </configuration>
-               <executions>
-                  <execution>
-                     <id>attach-sources</id>
-                     <goals>
-                        <goal>jar</goal>
-                     </goals>
-                  </execution>
-               </executions>
-            </plugin>
-            <plugin>
-               <groupId>org.apache.maven.plugins</groupId>
-               <artifactId>maven-javadoc-plugin</artifactId>
-               <version>2.9.1</version>
-               <configuration>
-                  <show>public</show>
-                  <!-- excludePackageNames>com.zaxxer.hikari.*</excludePackageNames -->
-                  <attach>true</attach>
-                  <maxmemory>1024m</maxmemory>
-               </configuration>
-               <executions>
-                  <execution>
-                     <goals>
-                        <goal>jar</goal>
-                     </goals>
-                  </execution>
-               </executions>
-            </plugin>
-         </plugins>
-      </pluginManagement>
-   </build>
 
    <dependencies>
       <dependency>
@@ -205,6 +139,71 @@
          <scope>test</scope>
       </dependency>
    </dependencies>
+
+   <build>
+      <pluginManagement>
+         <plugins>
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-release-plugin</artifactId>
+               <version>2.5</version>
+               <configuration>
+                  <autoVersionSubmodules>true</autoVersionSubmodules>
+                  <tagNameFormat>HikariCP-@{project.version}</tagNameFormat>
+               </configuration>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-surefire-plugin</artifactId>
+               <version>2.15</version>
+               <configuration>
+                  <!-- Sets the VM argument line used when unit tests are run. -->
+                  <argLine>${surefireArgLine}</argLine>
+                  <!-- Skips unit tests if the value of skip.unit.tests property is true -->
+                  <skipTests>${skip.unit.tests}</skipTests>
+               </configuration>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-source-plugin</artifactId>
+               <version>2.2.1</version>
+               <configuration>
+                  <!-- outputDirectory>/absolute/path/to/the/output/directory</outputDirectory> <finalName>filename-of-generated-jar-file</finalName -->
+                  <attach>true</attach>
+               </configuration>
+               <executions>
+                  <execution>
+                     <id>attach-sources</id>
+                     <goals>
+                        <goal>jar</goal>
+                     </goals>
+                  </execution>
+               </executions>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-javadoc-plugin</artifactId>
+               <version>2.9.1</version>
+               <configuration>
+                  <show>public</show>
+                  <!-- excludePackageNames>com.zaxxer.hikari.*</excludePackageNames -->
+                  <attach>true</attach>
+                  <maxmemory>1024m</maxmemory>
+               </configuration>
+               <executions>
+                  <execution>
+                     <goals>
+                        <goal>jar</goal>
+                     </goals>
+                  </execution>
+               </executions>
+            </plugin>
+         </plugins>
+      </pluginManagement>
+   </build>
 
    <profiles>
       <profile>

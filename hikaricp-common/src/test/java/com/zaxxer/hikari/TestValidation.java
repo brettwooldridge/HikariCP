@@ -34,7 +34,7 @@ public class TestValidation
    @Test
    public void validateLoadProperties()
    {
-      System.setProperty("hikaricp.configurationFile", "src/test/resources/propfile1.properties");
+      System.setProperty("hikaricp.configurationFile", "/propfile1.properties");
       HikariConfig config = new HikariConfig();
       System.clearProperty("hikaricp.configurationFile");
       Assert.assertEquals(5, config.getMinimumIdle());

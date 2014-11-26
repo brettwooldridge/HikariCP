@@ -18,7 +18,7 @@ public class TestPropertySetter
    @Test
    public void testProperty1()
    {
-      File file = new File("src/test/resources/propfile1.properties");
+      File file = new File("/propfile1.properties");
       HikariConfig config = new HikariConfig(file.getPath());
       config.validate();
 
@@ -29,7 +29,7 @@ public class TestPropertySetter
    @Test
    public void testProperty2() throws Exception
    {
-      File file = new File("src/test/resources/propfile2.properties");
+      File file = new File("/propfile2.properties");
       HikariConfig config = new HikariConfig(file.getPath());
       config.validate();
 
@@ -56,7 +56,7 @@ public class TestPropertySetter
    @Test
    public void testPropertyUpperCase() throws Exception
    {
-      File file = new File("src/test/resources/propfile3.properties");
+      File file = new File("/propfile3.properties");
       HikariConfig config = new HikariConfig(file.getPath());
       config.validate();
 

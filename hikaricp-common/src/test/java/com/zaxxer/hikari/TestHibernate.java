@@ -1,6 +1,5 @@
 package com.zaxxer.hikari;
 
-import java.io.FileInputStream;
 import java.sql.Connection;
 import java.util.Properties;
 
@@ -17,7 +16,7 @@ public class TestHibernate
       HikariConnectionProvider provider = new HikariConnectionProvider();
 
       Properties props = new Properties();
-      props.load(new FileInputStream("src/test/resources/hibernate.properties"));
+      props.load(getClass().getResourceAsStream("/hibernate.properties"));
 
       provider.configure(props);
       Connection connection = provider.getConnection();

@@ -16,4 +16,11 @@
      <version>2.2.6-SNAPSHOT</version>
   </parent>
 
+  <dependencies>
+     <dependency>
+        <groupId>com.zaxxer</groupId>
+        <artifactId>HikariCP</artifactId>
+        <version>2.2.6-SNAPSHOT</version>
+     </dependency>
+  </dependencies>
 </project>

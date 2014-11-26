@@ -181,10 +181,9 @@ public final class ConcurrentBag<T extends BagEntry>
       if (closed) {
          throw new IllegalStateException("ConcurrentBag has been closed, ignoring add()");
       }
-      else {
-         sharedList.add(bagEntry);
-         synchronizer.releaseShared(sequence.incrementAndGet());
-      }
+
+      sharedList.add(bagEntry);
+      synchronizer.releaseShared(sequence.incrementAndGet());
    }
 
    /**

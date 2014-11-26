@@ -249,8 +249,9 @@ public class ShutdownTest
          final HikariDataSource ds = new HikariDataSource(config);
          Thread t = new Thread() {
             public void run() {
+               Connection connection = null;
                try {
-                  Connection connection = ds.getConnection();
+                  connection = ds.getConnection();
                   for (int i = 0; i < 10; i++) {
                      Connection connection2 = null;
                      try {
@@ -277,6 +278,7 @@ public class ShutdownTest
                   Assert.fail(e.getMessage());
                }
                finally {
+                  PoolUtilities.quietlyCloseConnection(connection);
                   ds.shutdown();
                }
             };
@@ -298,6 +300,8 @@ public class ShutdownTest
 
          t.join();
          t2.join();
+
+         ds.close();
       }
    }
 

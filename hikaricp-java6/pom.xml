@@ -54,6 +54,53 @@
       <sourceDirectory>src/main/java</sourceDirectory>
       <testSourceDirectory>src/test/java</testSourceDirectory>
       <plugins>
+
+
+         <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>src</id>
+                  <phase>generate-sources</phase>
+                  <goals>
+                     <goal>add-source</goal>
+                  </goals>
+                  <configuration>
+                     <sources>
+                        <source>../hikaricp-common/src/main/java</source>
+                     </sources>
+                  </configuration>
+               </execution>
+               <execution>
+                  <id>test</id>
+                  <phase>generate-test-sources</phase>
+                  <goals>
+                     <goal>add-test-source</goal>
+                  </goals>
+                  <configuration>
+                     <sources>
+                        <source>../hikaricp-common/src/test/java</source>
+                     </sources>
+                  </configuration>
+               </execution>
+               <execution>
+                  <id>test-resources</id>
+                  <phase>generate-test-resources</phase>
+                  <goals>
+                     <goal>add-test-resource</goal>
+                  </goals>
+                  <configuration>
+                     <resources>
+                        <resource>
+                           <directory>../hikaricp-common/src/test/resources</directory>
+                        </resource>
+                     </resources>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
@@ -64,6 +111,7 @@
                <target>1.6</target>
             </configuration>
          </plugin>
+
          <plugin>
             <groupId>org.apache.felix</groupId>
             <artifactId>maven-bundle-plugin</artifactId>
