@@ -26,7 +26,6 @@ import org.slf4j.impl.SimpleLogger;
 
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.proxy.ConnectionProxy;
-import com.zaxxer.hikari.util.PoolUtilities;
 
 /**
  * Utility methods for testing.

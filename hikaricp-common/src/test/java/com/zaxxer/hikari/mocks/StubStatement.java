@@ -38,6 +38,7 @@ public class StubStatement implements Statement
    }
 
    /** {@inheritDoc} */
+   @SuppressWarnings("unchecked")
    @Override
    public <T> T unwrap(Class<T> iface) throws SQLException
    {
