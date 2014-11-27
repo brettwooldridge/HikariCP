@@ -17,7 +17,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import com.zaxxer.hikari.mocks.MockDataSource;
-import com.zaxxer.hikari.util.PoolUtilities;
+import com.zaxxer.hikari.util.UtilityElf;
 
 /**
  * Test for cases when db network connectivity goes down and close is called on existing connections. By default Hikari
@@ -44,14 +44,14 @@ public class TestConnectionCloseBlocking {
          connection.close();
          // Hikari only checks for validity for connections with lastAccess > 1000 ms so we sleep for 1001 ms to force
          // Hikari to do a connection validation which will fail and will trigger the connection to be closed
-         PoolUtilities.quietlySleep(1001);
+         UtilityElf.quietlySleep(1001);
          start = System.currentTimeMillis();
          connection = ds.getConnection(); // on physical connection close we sleep 2 seconds
          Assert.assertTrue("Waited longer than timeout",
-               (PoolUtilities.elapsedTimeMs(start) < config.getConnectionTimeout()));
+               (UtilityElf.elapsedTimeMs(start) < config.getConnectionTimeout()));
       } catch (SQLException e) {
          Assert.assertTrue("getConnection failed because close connection took longer than timeout",
-               (PoolUtilities.elapsedTimeMs(start) < config.getConnectionTimeout()));
+               (UtilityElf.elapsedTimeMs(start) < config.getConnectionTimeout()));
       } finally {
          shouldSleep = false;
          ds.close();

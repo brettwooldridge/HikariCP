@@ -31,10 +31,8 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.zaxxer.hikari.metrics.CodaHaleShim;
-import com.zaxxer.hikari.proxy.JavassistProxyFactory;
-import com.zaxxer.hikari.util.PoolUtilities;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
+import com.zaxxer.hikari.util.UtilityElf;
 
 public abstract class AbstractHikariConfig implements HikariConfigMBean
 {
@@ -681,7 +679,7 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
       }
 
       if (transactionIsolationName != null) {
-         PoolUtilities.getTransactionIsolation(transactionIsolationName);
+         UtilityElf.getTransactionIsolation(transactionIsolationName);
       }
 
       if (poolName == null) {

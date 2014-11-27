@@ -27,7 +27,7 @@ import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.zaxxer.hikari.util.PoolUtilities;
+import com.zaxxer.hikari.util.UtilityElf;
 
 /**
  * Test HikariCP/CodaHale metrics integration.
@@ -84,7 +84,7 @@ public class TestMetrics
       HikariDataSource ds = new HikariDataSource(config);
       try {
          Connection connection = ds.getConnection();
-         PoolUtilities.quietlySleep(250L);
+         UtilityElf.quietlySleep(250L);
          connection.close();
 
          Histogram histo = metricRegistry.getHistograms(new MetricFilter() {

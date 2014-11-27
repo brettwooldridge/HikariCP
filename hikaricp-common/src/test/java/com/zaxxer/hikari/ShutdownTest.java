@@ -29,6 +29,7 @@ import org.junit.Test;
 import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.util.PoolUtilities;
+import com.zaxxer.hikari.util.UtilityElf;
 
 /**
  * @author Brett Wooldridge
@@ -71,7 +72,7 @@ public class ShutdownTest
             {
                try {
                   if (ds.getConnection() != null) {
-                     PoolUtilities.quietlySleep(TimeUnit.SECONDS.toMillis(1));
+                     UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(1));
                   }
                }
                catch (SQLException e) {
@@ -82,7 +83,7 @@ public class ShutdownTest
          threads[i].start();
       }
 
-      PoolUtilities.quietlySleep(1200L);
+      UtilityElf.quietlySleep(1200L);
 
       Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() > 0);
 
@@ -110,7 +111,7 @@ public class ShutdownTest
       HikariDataSource ds = new HikariDataSource(config);
       HikariPool pool = TestElf.getPool(ds);
 
-      PoolUtilities.quietlySleep(1200L);
+      UtilityElf.quietlySleep(1200L);
 
       Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() > 0);
 
@@ -136,7 +137,7 @@ public class ShutdownTest
       HikariDataSource ds = new HikariDataSource(config);
       HikariPool pool = TestElf.getPool(ds);
 
-      PoolUtilities.quietlySleep(500L);
+      UtilityElf.quietlySleep(500L);
 
       Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() == 5);
 
@@ -161,13 +162,13 @@ public class ShutdownTest
 
       HikariDataSource ds = new HikariDataSource(config);
 
-      PoolUtilities.quietlySleep(500L);
+      UtilityElf.quietlySleep(500L);
 
       ds.close();
 
       long start = System.currentTimeMillis();
-      while (PoolUtilities.elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5) && threadCount() > 0) {
-         PoolUtilities.quietlySleep(250);
+      while (UtilityElf.elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5) && threadCount() > 0) {
+         UtilityElf.quietlySleep(250);
       }
 
       Assert.assertSame("Unreleased connections after shutdown", 0, TestElf.getPool(ds).getTotalConnections());
@@ -257,7 +258,7 @@ public class ShutdownTest
                      try {
                         connection2 = ds.getConnection();
                         PreparedStatement stmt = connection2.prepareStatement("SOMETHING");
-                        PoolUtilities.quietlySleep(20);
+                        UtilityElf.quietlySleep(20);
                         stmt.getMaxFieldSize();
                      }
                      catch (SQLException e) {
@@ -278,7 +279,7 @@ public class ShutdownTest
                   Assert.fail(e.getMessage());
                }
                finally {
-                  PoolUtilities.quietlyCloseConnection(connection);
+                  new PoolUtilities().quietlyCloseConnection(connection);
                   ds.shutdown();
                }
             };
@@ -287,7 +288,7 @@ public class ShutdownTest
    
          Thread t2 = new Thread() {
             public void run() {
-               PoolUtilities.quietlySleep(100);
+               UtilityElf.quietlySleep(100);
                try {
                   ds.shutdown();
                }

@@ -29,7 +29,7 @@ import org.junit.Test;
 import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.mocks.StubStatement;
 import com.zaxxer.hikari.pool.HikariPool;
-import com.zaxxer.hikari.util.PoolUtilities;
+import com.zaxxer.hikari.util.UtilityElf;
 
 /**
  * System property testProxy can be one of:
@@ -243,7 +243,7 @@ public class TestConnections
 
       HikariDataSource ds = new HikariDataSource(config);
       try {
-         PoolUtilities.quietlySleep(250L);
+         UtilityElf.quietlySleep(250L);
 
          Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
@@ -380,12 +380,12 @@ public class TestConnections
       TestElf.resetPoolUtilities();
       HikariDataSource ds = new HikariDataSource(config);
       try {
-         PoolUtilities.quietlySleep(1001L);
+         UtilityElf.quietlySleep(1001L);
 
          Connection connection = ds.getConnection();
          connection.close();
 
-         PoolUtilities.quietlySleep(1001L);
+         UtilityElf.quietlySleep(1001L);
          connection = ds.getConnection();
       }
       finally {
@@ -410,7 +410,7 @@ public class TestConnections
       try {
          HikariPool pool = TestElf.getPool(ds);
          while (pool.getTotalConnections() < 3) {
-            PoolUtilities.quietlySleep(50);
+            UtilityElf.quietlySleep(50);
          }
 
          Thread t = new Thread(new Runnable() {
@@ -432,12 +432,12 @@ public class TestConnections
          pool.suspendPool();
          t.start();
 
-         PoolUtilities.quietlySleep(500);
+         UtilityElf.quietlySleep(500);
          Assert.assertEquals(2, pool.getIdleConnections());
          c3.close();
          Assert.assertEquals(3, pool.getIdleConnections());
          pool.resumePool();
-         PoolUtilities.quietlySleep(500);
+         UtilityElf.quietlySleep(500);
          Assert.assertEquals(1, pool.getIdleConnections());
       }
       finally {

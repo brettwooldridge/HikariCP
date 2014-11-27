@@ -15,7 +15,7 @@
  */
 package com.zaxxer.hikari.util;
 
-import static com.zaxxer.hikari.util.PoolUtilities.IS_JAVA7;
+import static com.zaxxer.hikari.util.UtilityElf.IS_JAVA7;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;

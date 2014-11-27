@@ -22,7 +22,7 @@ import java.sql.SQLException;
 import org.junit.Assert;
 import org.junit.Before;
 
-import com.zaxxer.hikari.util.PoolUtilities;
+import com.zaxxer.hikari.util.UtilityElf;
 
 /**
  * This test is meant to be run manually and interactively and was
@@ -51,7 +51,7 @@ public class PostgresTest
       try (HikariDataSource ds = new HikariDataSource(config)) {
 
          System.err.println("\nMake sure the firewall is enabled.  Attempting connection in 5 seconds...");
-         PoolUtilities.quietlySleep(5000L);
+         UtilityElf.quietlySleep(5000L);
 
          TestElf.getPool(ds).logPoolState();
 
@@ -89,14 +89,14 @@ public class PostgresTest
       try (HikariDataSource ds = new HikariDataSource(config)) {
 
          System.err.println("\nDisable the firewall, please.  Starting test in 5 seconds...");
-         PoolUtilities.quietlySleep(5000L);
+         UtilityElf.quietlySleep(5000L);
 
          try (Connection conn = ds.getConnection()) {
             System.err.println("\nGot a connection, and released it.  Now, enable the firewall.");
          }
          
          TestElf.getPool(ds).logPoolState();
-         PoolUtilities.quietlySleep(5000L);
+         UtilityElf.quietlySleep(5000L);
 
          System.err.println("\nNow attempting another getConnection(), expecting a timeout...");
 
@@ -111,7 +111,7 @@ public class PostgresTest
          }
 
          System.err.println("\nOk, so far so good.  Now, disable the firewall again.  Attempting connection in 5 seconds...");
-         PoolUtilities.quietlySleep(5000L);
+         UtilityElf.quietlySleep(5000L);
          TestElf.getPool(ds).logPoolState();
 
          try (Connection conn = ds.getConnection()) {
@@ -140,7 +140,7 @@ public class PostgresTest
       config.addDataSourceProperty("tcpKeepAlive", true);
 
       System.err.println("\nShutdown the database, please.  Starting test in 15 seconds...");
-      PoolUtilities.quietlySleep(15000L);
+      UtilityElf.quietlySleep(15000L);
 
       try (final HikariDataSource ds = new HikariDataSource(config)) {
          for (int i = 0; i < 10; i++) {
@@ -156,10 +156,10 @@ public class PostgresTest
             }.start();
          }
 
-         PoolUtilities.quietlySleep(5000L);
+         UtilityElf.quietlySleep(5000L);
 
          System.err.println("Now, bring the DB online.  Checking pool in 15 seconds.");
-         PoolUtilities.quietlySleep(15000L);
+         UtilityElf.quietlySleep(15000L);
 
          TestElf.getPool(ds).logPoolState();
       }

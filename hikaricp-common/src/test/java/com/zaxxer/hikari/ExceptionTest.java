@@ -10,7 +10,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.zaxxer.hikari.util.PoolUtilities;
+import com.zaxxer.hikari.util.UtilityElf;
 
 public class ExceptionTest
 {
@@ -28,7 +28,7 @@ public class ExceptionTest
 
         ds = new HikariDataSource(config);
 
-        PoolUtilities.quietlySleep(250L);
+        UtilityElf.quietlySleep(250L);
     }
 
     @After

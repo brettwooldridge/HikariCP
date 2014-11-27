@@ -16,6 +16,8 @@
 
 package com.zaxxer.hikari.metrics;
 
+import static com.zaxxer.hikari.util.UtilityElf.elapsedTimeMs;
+
 import java.util.concurrent.TimeUnit;
 
 import com.codahale.metrics.CachedGauge;
@@ -24,7 +26,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.zaxxer.hikari.pool.BaseHikariPool;
 import com.zaxxer.hikari.pool.PoolBagEntry;
-import com.zaxxer.hikari.util.PoolUtilities;
 
 public final class CodaHaleMetricsTracker extends MetricsTracker
 {
@@ -99,7 +100,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    @Override
    public void recordConnectionUsage(final PoolBagEntry bagEntry)
    {
-      connectionUsage.update(PoolUtilities.elapsedTimeMs(bagEntry.lastOpenTime));
+      connectionUsage.update(elapsedTimeMs(bagEntry.lastOpenTime));
    }
 
    public Timer getConnectionAcquisitionTimer()

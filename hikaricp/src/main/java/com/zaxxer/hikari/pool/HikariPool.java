@@ -18,11 +18,8 @@ package com.zaxxer.hikari.pool;
 
 import static com.zaxxer.hikari.util.ConcurrentBag.STATE_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.STATE_NOT_IN_USE;
-import static com.zaxxer.hikari.util.PoolUtilities.createThreadPoolExecutor;
-import static com.zaxxer.hikari.util.PoolUtilities.quietlyCloseConnection;
-import static com.zaxxer.hikari.util.PoolUtilities.quietlySleep;
-import static com.zaxxer.hikari.util.PoolUtilities.setNetworkTimeout;
-import static com.zaxxer.hikari.util.PoolUtilities.setQueryTimeout;
+import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
+import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -121,7 +118,7 @@ public final class HikariPool extends BaseHikariPool
          if (tc < 0) {
             LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
          }
-         closeConnectionExecutor.execute(() -> { quietlyCloseConnection(bagEntry.connection); });
+         closeConnectionExecutor.execute(() -> { poolUtils.quietlyCloseConnection(bagEntry.connection); });
       }
    }
 
@@ -142,10 +139,10 @@ public final class HikariPool extends BaseHikariPool
             return connection.isValid(timeoutSec);
          }
 
-         final int networkTimeout = setNetworkTimeout(houseKeepingExecutorService, connection, Math.max(1000, (int) timeoutMs), timeoutEnabled);
+         final int networkTimeout = poolUtils.setNetworkTimeout(houseKeepingExecutorService, connection, Math.max(1000, (int) timeoutMs), timeoutEnabled);
 
          try (Statement statement = connection.createStatement()) {
-            setQueryTimeout(statement, timeoutSec);
+            poolUtils.setQueryTimeout(statement, timeoutSec);
             statement.executeQuery(configuration.getConnectionTestQuery());
          }
 
@@ -153,7 +150,7 @@ public final class HikariPool extends BaseHikariPool
             connection.rollback();
          }
 
-         setNetworkTimeout(houseKeepingExecutorService, connection, networkTimeout, timeoutEnabled);
+         poolUtils.setNetworkTimeout(houseKeepingExecutorService, connection, networkTimeout, timeoutEnabled);
 
          return true;
       }
@@ -177,7 +174,7 @@ public final class HikariPool extends BaseHikariPool
             bagEntry.connection.abort(assassinExecutor);
          }
          catch (SQLException | NoSuchMethodError | AbstractMethodError e) {
-            quietlyCloseConnection(bagEntry.connection);
+            poolUtils.quietlyCloseConnection(bagEntry.connection);
          }
          finally {
             if (connectionBag.remove(bagEntry)) {

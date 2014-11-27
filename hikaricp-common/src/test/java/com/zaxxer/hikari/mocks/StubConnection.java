@@ -37,7 +37,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.zaxxer.hikari.util.PoolUtilities;
+import com.zaxxer.hikari.util.UtilityElf;
 
 /**
  *
@@ -61,7 +61,7 @@ public class StubConnection extends StubBaseConnection implements Connection
    public StubConnection() {
       count.incrementAndGet();
       if (slowCreate) {
-         PoolUtilities.quietlySleep(TimeUnit.SECONDS.toMillis(1));
+         UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(1));
       }
    }
 

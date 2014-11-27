@@ -30,7 +30,7 @@ import org.slf4j.spi.LocationAwareLogger;
 
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.util.LeakTask;
-import com.zaxxer.hikari.util.PoolUtilities;
+import com.zaxxer.hikari.util.UtilityElf;
 
 /**
  * @author Brett Wooldridge
@@ -65,7 +65,7 @@ public class MiscTest
    public void testInvalidIsolation()
    {
       try {
-         PoolUtilities.getTransactionIsolation("INVALID");
+         UtilityElf.getTransactionIsolation("INVALID");
          Assert.fail();
       }
       catch (Exception e) {
@@ -77,7 +77,7 @@ public class MiscTest
    public void testCreateInstance()
    {
       try {
-         PoolUtilities.createInstance("invalid", null);
+         UtilityElf.createInstance("invalid", null);
          Assert.fail();
       }
       catch (RuntimeException e) {
@@ -108,9 +108,9 @@ public class MiscTest
          TestElf.getPool(ds).logPoolState();
 
          Connection connection = ds.getConnection();
-         PoolUtilities.quietlySleep(TimeUnit.SECONDS.toMillis(4));
+         UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(4));
          connection.close();
-         PoolUtilities.quietlySleep(TimeUnit.SECONDS.toMillis(1));
+         UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(1));
          ps.close();
          String s = new String(baos.toByteArray());
          Assert.assertNotNull("Exception string was null", s);

@@ -21,18 +21,11 @@ import static com.zaxxer.hikari.pool.HikariMBeanElf.unregisterMBeans;
 import static com.zaxxer.hikari.util.ConcurrentBag.STATE_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.STATE_NOT_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.STATE_REMOVED;
-import static com.zaxxer.hikari.util.PoolUtilities.createInstance;
-import static com.zaxxer.hikari.util.PoolUtilities.createThreadPoolExecutor;
-import static com.zaxxer.hikari.util.PoolUtilities.elapsedTimeMs;
-import static com.zaxxer.hikari.util.PoolUtilities.executeSql;
-import static com.zaxxer.hikari.util.PoolUtilities.getTransactionIsolation;
-import static com.zaxxer.hikari.util.PoolUtilities.initializeDataSource;
-import static com.zaxxer.hikari.util.PoolUtilities.isJdbc40Compliant;
-import static com.zaxxer.hikari.util.PoolUtilities.quietlyCloseConnection;
-import static com.zaxxer.hikari.util.PoolUtilities.setLoginTimeout;
-import static com.zaxxer.hikari.util.PoolUtilities.setNetworkTimeout;
-import static com.zaxxer.hikari.util.PoolUtilities.setRemoveOnCancelPolicy;
-import static com.zaxxer.hikari.util.PoolUtilities.setupConnection;
+import static com.zaxxer.hikari.util.UtilityElf.createInstance;
+import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
+import static com.zaxxer.hikari.util.UtilityElf.elapsedTimeMs;
+import static com.zaxxer.hikari.util.UtilityElf.getTransactionIsolation;
+import static com.zaxxer.hikari.util.UtilityElf.setRemoveOnCancelPolicy;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -61,6 +54,7 @@ import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.GlobalPoolLock;
 import com.zaxxer.hikari.util.LeakTask;
+import com.zaxxer.hikari.util.PoolUtilities;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -78,6 +72,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    public final boolean isAutoCommit;
    public int transactionIsolation;
 
+   protected final PoolUtilities poolUtils;
    protected final HikariConfig configuration;
    protected final AtomicInteger totalConnections;
    protected final ConcurrentBag<PoolBagEntry> connectionBag;
@@ -126,6 +121,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       this.password = password;
       this.configuration = configuration;
 
+      this.poolUtils = new PoolUtilities();
       this.connectionBag = new ConcurrentBag<PoolBagEntry>(this);
       this.totalConnections = new AtomicInteger();
       this.connectionTimeout = configuration.getConnectionTimeout();
@@ -145,7 +141,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       this.isRecordMetrics = configuration.getMetricRegistry() != null;
       this.metricsTracker = (isRecordMetrics ? new CodaHaleMetricsTracker(this, (MetricRegistry) configuration.getMetricRegistry()) : new MetricsTracker(this));
 
-      this.dataSource = initializeDataSource(configuration.getDataSourceClassName(), configuration.getDataSource(), configuration.getDataSourceProperties(), configuration.getJdbcUrl(), username, password);
+      this.dataSource = poolUtils.initializeDataSource(configuration.getDataSourceClassName(), configuration.getDataSource(), configuration.getDataSourceProperties(), configuration.getJdbcUrl(), username, password);
 
       this.addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
       this.closeConnectionExecutor = createThreadPoolExecutor(4, "HikariCP connection closer (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
@@ -157,7 +153,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       this.leakTask = (configuration.getLeakDetectionThreshold() == 0) ? LeakTask.NO_LEAK : new LeakTask(configuration.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
       setRemoveOnCancelPolicy(houseKeepingExecutorService);
-      setLoginTimeout(dataSource, connectionTimeout, LOGGER);
+      poolUtils.setLoginTimeout(dataSource, connectionTimeout, LOGGER);
       registerMBeans(configuration, this);
       fillPool();
    }
@@ -374,20 +370,20 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       try {
          connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
 
-         if (isUseJdbc4Validation && !isJdbc40Compliant(connection)) {
+         if (isUseJdbc4Validation && !poolUtils.isJdbc40Compliant(connection)) {
             throw new SQLException("JDBC4 Connection.isValid() method not supported, connection test query must be configured");
          }
 
          final boolean timeoutEnabled = (connectionTimeout != Integer.MAX_VALUE);
          final long timeoutMs = timeoutEnabled ? Math.max(250L, connectionTimeout) : 0L;
-         final int originalTimeout = setNetworkTimeout(houseKeepingExecutorService, connection, timeoutMs, timeoutEnabled);
+         final int originalTimeout = poolUtils.setNetworkTimeout(houseKeepingExecutorService, connection, timeoutMs, timeoutEnabled);
 
          transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
          
-         setupConnection(connection, isAutoCommit, isReadOnly, transactionIsolation, catalog);
+         poolUtils.setupConnection(connection, isAutoCommit, isReadOnly, transactionIsolation, catalog);
          connectionCustomizer.customize(connection);
-         executeSql(connection, configuration.getConnectionInitSql(), isAutoCommit);
-         setNetworkTimeout(houseKeepingExecutorService, connection, originalTimeout, timeoutEnabled);
+         poolUtils.executeSql(connection, configuration.getConnectionInitSql(), isAutoCommit);
+         poolUtils.setNetworkTimeout(houseKeepingExecutorService, connection, originalTimeout, timeoutEnabled);
          
          connectionBag.add(new PoolBagEntry(connection, configuration.getMaxLifetime()));
          lastConnectionFailure.set(null);
@@ -397,7 +393,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
          totalConnections.decrementAndGet(); // We failed, so undo speculative increment of totalConnections
 
          lastConnectionFailure.set(e);
-         quietlyCloseConnection(connection);
+         poolUtils.quietlyCloseConnection(connection);
          LOGGER.debug("Connection attempt to database {} failed: {}", configuration.getPoolName(), e.getMessage(), e);
          return false;
       }
