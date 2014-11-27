@@ -16,11 +16,11 @@ import org.slf4j.Logger;
 
 public final class PoolUtilities
 {
-   private static volatile boolean IS_JDBC40;
-   private static volatile boolean IS_JDBC41;
-   private static volatile boolean jdbc40checked; 
-   private static volatile boolean jdbc41checked; 
-   private static volatile boolean queryTimeoutSupported = true;
+   private volatile boolean IS_JDBC40;
+   private volatile boolean IS_JDBC41;
+   private volatile boolean jdbc40checked; 
+   private volatile boolean jdbc41checked; 
+   private volatile boolean queryTimeoutSupported = true;
 
    /**
     * Close connection and eat any exception.
