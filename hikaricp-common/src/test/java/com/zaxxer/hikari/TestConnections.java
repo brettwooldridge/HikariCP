@@ -377,7 +377,6 @@ public class TestConnections
 
       StubConnection.oldDriver = true;
       StubStatement.oldDriver = true;
-      TestElf.resetPoolUtilities();
       HikariDataSource ds = new HikariDataSource(config);
       try {
          UtilityElf.quietlySleep(1001L);
@@ -391,7 +390,6 @@ public class TestConnections
       finally {
          StubConnection.oldDriver = false;
          StubStatement.oldDriver = false;
-         TestElf.resetPoolUtilities();
          ds.close();
       }
    }
