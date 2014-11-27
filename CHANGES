@@ -14,6 +14,10 @@ Changes in 2.3.0
  * Major internal project layout restructuring to allow shared use of common code
    between the Java 6/7 and Java 8 versions.
 
+ * Fixed bug where two pools in the same VM, using drivers with differing JDBC
+   support levels, would fail unless both pools were using connectionTestQuery.
+   This was due to inappropriate use of static.
+
 Changes in 2.2.5
 
  * Fixes for Java 6 compatibility.
