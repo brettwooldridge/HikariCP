@@ -1,6 +1,6 @@
 HikariCP Changes
 
-Changes in 2.2.6
+Changes in 2.3.0
 
  * Support pool suspend/resume though JMX to support certain failover scenarios.
 
@@ -10,6 +10,9 @@ Changes in 2.2.6
    aborted.
 
  * Unregister Codahale metrics at shutdown, if metrics are enabled.
+
+ * Major internal project layout restructuring to allow shared use of common code
+   between the Java 6/7 and Java 8 versions.
 
 Changes in 2.2.5
 
