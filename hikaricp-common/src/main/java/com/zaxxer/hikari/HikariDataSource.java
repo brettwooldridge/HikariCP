@@ -178,7 +178,10 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @SuppressWarnings("unchecked")
    public <T> T unwrap(Class<T> iface) throws SQLException
    {
-      if (pool != null) {
+      if (iface == this.getClass()) {
+         return (T) this;
+      }
+      else if (pool != null) {
          if (iface.isInstance(pool.getDataSource())) {
             return (T) pool.getDataSource();
          }
@@ -194,7 +197,10 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @Override
    public boolean isWrapperFor(Class<?> iface) throws SQLException
    {
-      if (pool != null) {
+      if (iface == this.getClass()) {
+         return true;
+      }
+      else if (pool != null) {
          if (iface.isInstance(pool.getDataSource())) {
             return true;
          }
