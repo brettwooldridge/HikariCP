@@ -23,6 +23,7 @@ import org.junit.Test;
 
 import com.zaxxer.hikari.pool.PoolBagEntry;
 import com.zaxxer.hikari.util.ConcurrentBag;
+import com.zaxxer.hikari.util.Java8ConcurrentBag;
 
 /**
  *
@@ -33,7 +34,7 @@ public class TestConcurrentBag
    @Test
    public void testConcurrentBag() throws InterruptedException
    {
-      ConcurrentBag<PoolBagEntry> bag = new ConcurrentBag<PoolBagEntry>(null);
+      ConcurrentBag<PoolBagEntry> bag = new Java8ConcurrentBag(null);
       Assert.assertEquals(0, bag.values(8).size());
 
       PoolBagEntry reserved = new PoolBagEntry(null, 0);

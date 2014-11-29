@@ -18,9 +18,9 @@ package com.zaxxer.hikari.pool;
 
 import static com.zaxxer.hikari.pool.HikariMBeanElf.registerMBeans;
 import static com.zaxxer.hikari.pool.HikariMBeanElf.unregisterMBeans;
-import static com.zaxxer.hikari.util.ConcurrentBag.STATE_IN_USE;
-import static com.zaxxer.hikari.util.ConcurrentBag.STATE_NOT_IN_USE;
-import static com.zaxxer.hikari.util.ConcurrentBag.STATE_REMOVED;
+import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_IN_USE;
+import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_NOT_IN_USE;
+import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_REMOVED;
 import static com.zaxxer.hikari.util.UtilityElf.createInstance;
 import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
 import static com.zaxxer.hikari.util.UtilityElf.elapsedTimeMs;
@@ -50,7 +50,7 @@ import com.zaxxer.hikari.metrics.MetricsTracker.MetricsContext;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
-import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
+import com.zaxxer.hikari.util.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.GlobalPoolLock;
 import com.zaxxer.hikari.util.LeakTask;
@@ -122,7 +122,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       this.configuration = configuration;
 
       this.poolUtils = new PoolUtilities();
-      this.connectionBag = new ConcurrentBag<PoolBagEntry>(this);
+      this.connectionBag = createConcurrentBag(this);
       this.totalConnections = new AtomicInteger();
       this.connectionTimeout = configuration.getConnectionTimeout();
       this.lastConnectionFailure = new AtomicReference<Throwable>();
@@ -354,6 +354,8 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
     * @param connectionProxy the connection to actually close
     */
    protected abstract void closeConnection(final PoolBagEntry bagEntry);
+
+   protected abstract ConcurrentBag<PoolBagEntry> createConcurrentBag(IBagStateListener listener);
 
    /**
     * Create and add a single connection to the pool.

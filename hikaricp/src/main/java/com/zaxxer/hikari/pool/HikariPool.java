@@ -16,8 +16,8 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.util.ConcurrentBag.STATE_IN_USE;
-import static com.zaxxer.hikari.util.ConcurrentBag.STATE_NOT_IN_USE;
+import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_IN_USE;
+import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_NOT_IN_USE;
 import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 
@@ -29,6 +29,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.util.ConcurrentBag;
+import com.zaxxer.hikari.util.IBagStateListener;
+import com.zaxxer.hikari.util.Java8ConcurrentBag;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -192,6 +195,13 @@ public final class HikariPool extends BaseHikariPool
    protected Runnable getHouseKeeper()
    {
       return new HouseKeeper();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   protected ConcurrentBag<PoolBagEntry> createConcurrentBag(IBagStateListener listener)
+   {
+      return new Java8ConcurrentBag(listener);
    }
 
    /**

@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.zaxxer.hikari.pool;
 
 import java.sql.Connection;
 
-import com.zaxxer.hikari.util.ConcurrentBag.BagEntry;
+import com.zaxxer.hikari.util.AbstractBagEntry;
 
 /**
  * Entry used in the ConcurrentBag to track Connection instances.
  *
  * @author Brett Wooldridge
  */
-public final class PoolBagEntry extends BagEntry
+public final class PoolBagEntry extends AbstractBagEntry
 {
    public final Connection connection;
    public final long expirationTime;

@@ -15,20 +15,22 @@
  */
 package com.zaxxer.hikari.util;
 
+import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_IN_USE;
+import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_NOT_IN_USE;
+import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_REMOVED;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.zaxxer.hikari.util.ConcurrentBag.BagEntry;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * This is a specialized concurrent bag that achieves superior performance
@@ -50,34 +52,16 @@ import com.zaxxer.hikari.util.ConcurrentBag.BagEntry;
  *
  * @param <T> the templated type to store in the bag
  */
-public final class ConcurrentBag<T extends BagEntry>
+public class ConcurrentBag<T extends AbstractBagEntry>
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentBag.class);
 
-   public static final int STATE_NOT_IN_USE = 0;
-   public static final int STATE_IN_USE = 1;
-   public static final int STATE_REMOVED = -1;
    private static final int STATE_RESERVED = -2;
 
-   public static abstract class BagEntry
-   {
-      final AtomicInteger state = new AtomicInteger();
-   }
+   protected final AbstractQueuedLongSynchronizer synchronizer;
+   protected final CopyOnWriteArrayList<T> sharedList;
 
-   /**
-    * This interface is implemented by a listener to the bag.  The listener
-    * will be informed of when the bag has become empty.  The usual course
-    * of action by the listener in this case is to attempt to add an item
-    * to the bag.
-    */
-   public static interface IBagStateListener
-   {
-      void addBagItem();
-   }
-
-   private final ThreadLocal<ArrayList<WeakReference<BagEntry>>> threadList;
-   private final CopyOnWriteArrayList<T> sharedList;
-   private final Synchronizer synchronizer;
+   private final ThreadLocal<ArrayList<WeakReference<AbstractBagEntry>>> threadList;
    private final AtomicLong sequence;
    private final IBagStateListener listener;
    private volatile boolean closed;
@@ -90,10 +74,15 @@ public final class ConcurrentBag<T extends BagEntry>
    public ConcurrentBag(IBagStateListener listener)
    {
       this.sharedList = new CopyOnWriteArrayList<T>();
-      this.synchronizer = new Synchronizer();
+      this.synchronizer = createQueuedSynchronizer();
       this.sequence = new AtomicLong(1);
       this.listener = listener;
-      this.threadList = new ThreadLocal<ArrayList<WeakReference<BagEntry>>>();
+      this.threadList = new ThreadLocal<ArrayList<WeakReference<AbstractBagEntry>>>();
+   }
+
+   protected AbstractQueuedLongSynchronizer createQueuedSynchronizer()
+   {
+      throw new NotImplementedException();
    }
 
    /**
@@ -109,13 +98,13 @@ public final class ConcurrentBag<T extends BagEntry>
    public T borrow(long timeout, final TimeUnit timeUnit) throws InterruptedException
    {
       // Try the thread-local list first
-      final ArrayList<WeakReference<BagEntry>> list = threadList.get();
+      final ArrayList<WeakReference<AbstractBagEntry>> list = threadList.get();
       if (list == null) {
-         threadList.set(new ArrayList<WeakReference<BagEntry>>(16));
+         threadList.set(new ArrayList<WeakReference<AbstractBagEntry>>(16));
       }
       else {
          for (int i = list.size() - 1; i >= 0; i--) {
-            final BagEntry bagEntry = list.remove(i).get();
+            final AbstractBagEntry bagEntry = list.remove(i).get();
             if (bagEntry != null && bagEntry.state.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
                return (T) bagEntry;
             }
@@ -159,9 +148,9 @@ public final class ConcurrentBag<T extends BagEntry>
    public void requite(final T bagEntry)
    {
       if (bagEntry.state.compareAndSet(STATE_IN_USE, STATE_NOT_IN_USE)) {
-         final ArrayList<WeakReference<BagEntry>> list = threadList.get();
+         final ArrayList<WeakReference<AbstractBagEntry>> list = threadList.get();
          if (list != null) {
-            list.add(new WeakReference<BagEntry>(bagEntry));
+            list.add(new WeakReference<AbstractBagEntry>(bagEntry));
          }
          synchronizer.releaseShared(sequence.incrementAndGet());
       }
@@ -225,13 +214,15 @@ public final class ConcurrentBag<T extends BagEntry>
     */
    public List<T> values(final int state)
    {
+      final ArrayList<T> list = new ArrayList<T>(sharedList.size());
       if (state == STATE_IN_USE || state == STATE_NOT_IN_USE) {
-         return sharedList.stream()
-                   .filter(reference -> reference.state.get() == state)
-                   .collect(Collectors.toList());
+         for (final T reference : sharedList) {
+            if (reference.state.get() == state) {
+               list.add(reference);
+            }
+         }
       }
-
-      return new ArrayList<T>(0);
+      return list;
    }
 
    /**
@@ -286,7 +277,13 @@ public final class ConcurrentBag<T extends BagEntry>
     */
    public int getCount(final int state)
    {
-      return (int) sharedList.stream().filter(reference -> reference.state.get() == state).count();
+      int count = 0;
+      for (final T reference : sharedList) {
+         if (reference.state.get() == state) {
+            count++;
+         }
+      }
+      return count;
    }
 
    /**
@@ -316,29 +313,6 @@ public final class ConcurrentBag<T extends BagEntry>
             LOGGER.info(bagEntry.toString() + " state RESERVED");
             break;
          }
-      }
-   }
-
-   /**
-    * Our private synchronizer that handles notify/wait type semantics.
-    */
-   private static final class Synchronizer extends AbstractQueuedLongSynchronizer
-   {
-      private static final long serialVersionUID = 104753538004341218L;
-
-      @Override
-      protected long tryAcquireShared(long seq)
-      {
-         return getState() > seq && !hasQueuedPredecessors() ? 1L : -1L;
-      }
-
-      /** {@inheritDoc} */
-      @Override
-      protected boolean tryReleaseShared(long updateSeq)
-      {
-         setState(updateSeq);
-
-         return true;
       }
    }
 }
