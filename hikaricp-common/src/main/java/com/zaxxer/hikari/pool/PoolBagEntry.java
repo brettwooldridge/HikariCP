@@ -16,6 +16,8 @@
 package com.zaxxer.hikari.pool;
 
 import java.sql.Connection;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import com.zaxxer.hikari.util.AbstractBagEntry;
 
@@ -27,23 +29,45 @@ import com.zaxxer.hikari.util.AbstractBagEntry;
 public final class PoolBagEntry extends AbstractBagEntry
 {
    public final Connection connection;
-   public final long expirationTime;
    public long lastOpenTime;
    public volatile boolean evicted;
    public volatile boolean aborted;
-   long lastAccess;
+   
+   protected long lastAccess;
 
-   public PoolBagEntry(final Connection connection, long maxLifetime) {
+   private volatile ScheduledFuture<?> endOfLife;
+
+   public PoolBagEntry(final Connection connection, final BaseHikariPool pool) {
       this.connection = connection;
-      lastAccess = System.currentTimeMillis();
-      expirationTime = (maxLifetime > 0 ? lastAccess + maxLifetime : Long.MAX_VALUE);
+      this.lastAccess = System.currentTimeMillis();
+
+      final long maxLifetime = pool.configuration.getMaxLifetime();
+      if (maxLifetime > 0) {
+         endOfLife = pool.houseKeepingExecutorService.schedule(new Runnable() {
+            public void run()
+            {
+               if (pool.connectionBag.reserve(PoolBagEntry.this)) {
+                  pool.closeConnection(PoolBagEntry.this);
+               }
+               else {
+                  PoolBagEntry.this.evicted = true;
+               }
+            }
+         }, maxLifetime, TimeUnit.MILLISECONDS);
+      }
+   }
+
+   void cancelMaxLifeTermination()
+   {
+      if (endOfLife != null) {
+         endOfLife.cancel(false);
+      }
    }
 
    @Override
    public String toString()
    {
       return "Connection......" + connection + "\n"
-           + "  Expiration...." + expirationTime + "\n"
            + "  Last  access.." + lastAccess + "\n"
            + "  Last open....." + lastOpenTime + "\n";
    }

@@ -129,6 +129,7 @@ public final class HikariPool extends BaseHikariPool
     */
    protected void closeConnection(final PoolBagEntry bagEntry)
    {
+      bagEntry.cancelMaxLifeTermination();
       if (connectionBag.remove(bagEntry)) {
          final int tc = totalConnections.decrementAndGet();
          if (tc < 0) {
@@ -232,7 +233,7 @@ public final class HikariPool extends BaseHikariPool
    }
 
    /**
-    * The house keeping task to retire idle and maxAge connections.
+    * The house keeping task to retire idle connections.
     */
    private class HouseKeeper implements Runnable
    {
@@ -248,7 +249,7 @@ public final class HikariPool extends BaseHikariPool
 
          for (PoolBagEntry bagEntry : connectionBag.values(STATE_NOT_IN_USE)) {
             if (connectionBag.reserve(bagEntry)) {
-               if ((idleTimeout > 0L && now > bagEntry.lastAccess + idleTimeout) || (now > bagEntry.expirationTime)) {
+               if (idleTimeout > 0L && now > bagEntry.lastAccess + idleTimeout) {
                   closeConnection(bagEntry);
                }
                else {

@@ -18,9 +18,12 @@ package com.zaxxer.hikari;
 
 import java.util.concurrent.TimeUnit;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.pool.PoolBagEntry;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.Java8ConcurrentBag;
@@ -31,21 +34,43 @@ import com.zaxxer.hikari.util.Java8ConcurrentBag;
  */
 public class TestConcurrentBag
 {
+   private static HikariDataSource ds;
+
+   @BeforeClass
+   public static void setup()
+   {
+      HikariConfig config = new HikariConfig();
+      config.setMinimumIdle(1);
+      config.setMaximumPoolSize(2);
+      config.setInitializationFailFast(true);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      ds = new HikariDataSource(config);      
+   }
+
+   @AfterClass
+   public static void teardown()
+   {
+      ds.close();
+   }
+
    @Test
    public void testConcurrentBag() throws InterruptedException
    {
       ConcurrentBag<PoolBagEntry> bag = new Java8ConcurrentBag(null);
       Assert.assertEquals(0, bag.values(8).size());
 
-      PoolBagEntry reserved = new PoolBagEntry(null, 0);
+      HikariPool pool = TestElf.getPool(ds);
+      PoolBagEntry reserved = new PoolBagEntry(null, TestElf.getPool(ds));
       bag.add(reserved);
       bag.reserve(reserved);      // reserved
 
-      PoolBagEntry inuse = new PoolBagEntry(null, 0);
+      PoolBagEntry inuse = new PoolBagEntry(null, pool);
       bag.add(inuse);
       bag.borrow(2L, TimeUnit.SECONDS); // in use
       
-      PoolBagEntry notinuse = new PoolBagEntry(null, 0);
+      PoolBagEntry notinuse = new PoolBagEntry(null, pool);
       bag.add(notinuse); // not in use
       
       bag.dumpState();
@@ -85,7 +110,7 @@ public class TestConcurrentBag
 
       bag.close();
       try {
-         PoolBagEntry bagEntry = new PoolBagEntry(null, 0);
+         PoolBagEntry bagEntry = new PoolBagEntry(null, pool);
          bag.add(bagEntry);
          Assert.assertNotEquals(bagEntry, bag.borrow(100, TimeUnit.MILLISECONDS));
       }

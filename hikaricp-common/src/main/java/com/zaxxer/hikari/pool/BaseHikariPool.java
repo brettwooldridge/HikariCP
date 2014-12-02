@@ -179,7 +179,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             }
 
             final long now = System.currentTimeMillis();
-            if (now > bagEntry.expirationTime || (now - bagEntry.lastAccess > ALIVE_BYPASS_WINDOW && !isConnectionAlive(bagEntry.connection, timeout))) {
+            if (now - bagEntry.lastAccess > ALIVE_BYPASS_WINDOW && !isConnectionAlive(bagEntry.connection, timeout)) {
                closeConnection(bagEntry); // Throw away the dead connection and try again
                timeout = connectionTimeout - elapsedTimeMs(start);
             }
@@ -234,11 +234,13 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
          isShutdown = true;
          LOGGER.info("HikariCP pool {} is shutting down.", configuration.getPoolName());
 
-         connectionBag.close();
-         houseKeepingExecutorService.shutdownNow();
-         addConnectionExecutor.shutdownNow();
-
          logPoolState("Before shutdown ");
+         connectionBag.close();
+         softEvictConnections();
+         houseKeepingExecutorService.shutdownNow();
+         addConnectionExecutor.shutdown();
+         addConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
+
          final long start = System.currentTimeMillis();
          do {
             softEvictConnections();
@@ -387,7 +389,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
          poolUtils.executeSql(connection, configuration.getConnectionInitSql(), isAutoCommit);
          poolUtils.setNetworkTimeout(houseKeepingExecutorService, connection, originalTimeout, timeoutEnabled);
          
-         connectionBag.add(new PoolBagEntry(connection, configuration.getMaxLifetime()));
+         connectionBag.add(new PoolBagEntry(connection, this));
          lastConnectionFailure.set(null);
          return true;
       }
