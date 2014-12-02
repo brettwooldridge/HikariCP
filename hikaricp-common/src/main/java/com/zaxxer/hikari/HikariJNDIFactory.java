@@ -30,7 +30,6 @@ import javax.naming.Reference;
 import javax.naming.spi.ObjectFactory;
 import javax.sql.DataSource;
 
-import com.zaxxer.hikari.metrics.CodaHaleShim;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 /**
@@ -40,11 +39,6 @@ import com.zaxxer.hikari.util.PropertyBeanSetter;
  */
 public class HikariJNDIFactory implements ObjectFactory
 {
-   static
-   {
-      CodaHaleShim.initialize();
-   }
-
    @Override
    public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment) throws Exception
    {
