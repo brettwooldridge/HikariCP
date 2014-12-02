@@ -30,8 +30,6 @@ import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 /**
  * This is a specialized concurrent bag that achieves superior performance
  * to LinkedBlockingQueue and LinkedTransferQueue for the purposes of a
@@ -82,7 +80,7 @@ public class ConcurrentBag<T extends AbstractBagEntry>
 
    protected AbstractQueuedLongSynchronizer createQueuedSynchronizer()
    {
-      throw new NotImplementedException();
+      throw new RuntimeException("createQueuedSynchronizer() method must be overridden");
    }
 
    /**
