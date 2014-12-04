@@ -374,6 +374,11 @@ Don't forget the [Wiki](https://github.com/brettwooldridge/HikariCP/wiki) for ad
  &#8658; Javassist 3.18.1+ library<br/>
  &#8658; slf4j library<br/>
 
+### Sponsors
+
+YourKit supports open source projects with its full-featured Java Profiler.  Click the YourKit logo below to learn more.
+[![](https://github.com/brettwooldridge/HikariCP/wiki/yklogo.png)](http://www.yourkit.com/java/profiler/index.jsp)<br/>
+
 ### Contributions
 Please perform changes and submit pull requests from the ``dev`` branch instead of ``master``.  Please set your editor to use spaces instead of tabs, and adhere to the apparent style of the code you are editing.  The ``dev`` branch is always more "current" than the ``master`` if you are looking to live life on the edge.
 
