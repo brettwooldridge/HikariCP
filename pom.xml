@@ -192,15 +192,19 @@
                   <!-- excludePackageNames>com.zaxxer.hikari.*</excludePackageNames -->
                   <attach>true</attach>
                   <maxmemory>1024m</maxmemory>
+                  <sourcepath>../hikaricp-common/src/main/java</sourcepath>
                </configuration>
                <executions>
                   <execution>
+                     <id>bundle-sources</id>
+                     <phase>package</phase>
                      <goals>
-                        <goal>jar</goal>
+                        <goal>jar-no-fork</goal>
                      </goals>
                   </execution>
                </executions>
             </plugin>
+
          </plugins>
       </pluginManagement>
    </build>
