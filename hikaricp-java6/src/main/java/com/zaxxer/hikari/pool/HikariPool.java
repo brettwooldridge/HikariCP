@@ -249,7 +249,7 @@ public final class HikariPool extends BaseHikariPool
 
          for (PoolBagEntry bagEntry : connectionBag.values(STATE_NOT_IN_USE)) {
             if (connectionBag.reserve(bagEntry)) {
-               if (idleTimeout > 0L && now > bagEntry.lastAccess + idleTimeout) {
+               if (bagEntry.evicted || (idleTimeout > 0L && now > bagEntry.lastAccess + idleTimeout)) {
                   closeConnection(bagEntry);
                }
                else {

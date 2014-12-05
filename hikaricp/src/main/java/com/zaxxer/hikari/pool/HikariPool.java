@@ -222,7 +222,7 @@ public final class HikariPool extends BaseHikariPool
          final long idleTimeout = configuration.getIdleTimeout();
 
          connectionBag.values(STATE_NOT_IN_USE).stream().filter(p -> connectionBag.reserve(p)).forEach(bagEntry -> {
-            if (idleTimeout > 0L && now > bagEntry.lastAccess + idleTimeout) {
+            if (bagEntry.evicted || (idleTimeout > 0L && now > bagEntry.lastAccess + idleTimeout)) {
                closeConnection(bagEntry);
             }
             else {

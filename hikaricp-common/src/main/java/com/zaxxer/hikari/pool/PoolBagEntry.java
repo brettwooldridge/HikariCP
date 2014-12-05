@@ -46,10 +46,12 @@ public final class PoolBagEntry extends AbstractBagEntry
          endOfLife = pool.houseKeepingExecutorService.schedule(new Runnable() {
             public void run()
             {
+               // If we can reserve it, close it
                if (pool.connectionBag.reserve(PoolBagEntry.this)) {
                   pool.closeConnection(PoolBagEntry.this);
                }
                else {
+                  // else the connection is "in-use" and we mark it for eviction by pool.releaseConnection() or the housekeeper
                   PoolBagEntry.this.evicted = true;
                }
             }
