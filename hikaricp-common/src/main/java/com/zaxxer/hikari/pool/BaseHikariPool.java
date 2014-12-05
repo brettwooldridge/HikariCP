@@ -109,7 +109,8 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    }
 
    /**
-    * Construct a HikariPool with the specified configuration.
+    * Construct a HikariPool with the specified configuration.  We cache lots of configuration
+    * items in class-local final members for speed.
     *
     * @param configuration a HikariConfig instance
     * @param username authentication username
@@ -206,13 +207,12 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
     * Release a connection back to the pool, or permanently close it if it is broken.
     *
     * @param bagEntry the PoolBagEntry to release back to the pool
-    * @param isBroken true if the connection was detected as broken
     */
-   public final void releaseConnection(final PoolBagEntry bagEntry, final boolean isBroken)
+   public final void releaseConnection(final PoolBagEntry bagEntry)
    {
       metricsTracker.recordConnectionUsage(bagEntry);
 
-      if (isBroken || bagEntry.evicted) {
+      if (bagEntry.evicted) {
          LOGGER.debug("Connection returned to pool {} is broken or evicted.  Closing connection.", configuration.getPoolName());
          closeConnection(bagEntry);
       }
@@ -351,15 +351,6 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    // ***********************************************************************
 
    /**
-    * Permanently close the real (underlying) connection (eat any exception).
-    *
-    * @param connectionProxy the connection to actually close
-    */
-   protected abstract void closeConnection(final PoolBagEntry bagEntry);
-
-   protected abstract ConcurrentBag<PoolBagEntry> createConcurrentBag(IBagStateListener listener);
-
-   /**
     * Create and add a single connection to the pool.
     */
    protected final boolean addConnection()
@@ -403,6 +394,17 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       }
    }
 
+   // ***********************************************************************
+   //                           Abstract methods
+   // ***********************************************************************
+
+   /**
+    * Permanently close the real (underlying) connection (eat any exception).
+    *
+    * @param connectionProxy the connection to actually close
+    */
+   protected abstract void closeConnection(final PoolBagEntry bagEntry);
+
    /**
     * Check whether the connection is alive or not.
     *
@@ -418,7 +420,19 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
     * @throws InterruptedException 
     */
    protected abstract void abortActiveConnections() throws InterruptedException;
+   
+   /**
+    * Create the JVM version-specific ConcurrentBag instance used by the pool.
+    *
+    * @param listener the IBagStateListener instance
+    * @return a ConcurrentBag instance
+    */
+   protected abstract ConcurrentBag<PoolBagEntry> createConcurrentBag(IBagStateListener listener);
 
+   /**
+    * Create the JVM version-specific Housekeeping runnable instance used by the pool.
+    * @return the HouseKeeper instance
+    */
    protected abstract Runnable getHouseKeeper();
 
    // ***********************************************************************
