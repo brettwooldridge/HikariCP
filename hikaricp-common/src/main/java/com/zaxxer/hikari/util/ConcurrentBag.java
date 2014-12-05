@@ -173,7 +173,7 @@ public class ConcurrentBag<T extends AbstractBagEntry>
 
    /**
     * Remove a value from the bag.  This method should only be called
-    * with objects obtained by {@link #borrow(long, TimeUnit)} or {@link #reserve(BagEntry)}.
+    * with objects obtained by {@link #borrow(long, TimeUnit)} or {@link #reserve(T)}.
     *
     * @param bagEntry the value to remove
     * @return true if the entry was removed, false otherwise
@@ -203,7 +203,7 @@ public class ConcurrentBag<T extends AbstractBagEntry>
    /**
     * This method provides a "snaphot" in time of the BagEntry
     * items in the bag in the specified state.  It does not "lock"
-    * or reserve items in any way.  Call {@link #reserve(BagEntry)}
+    * or reserve items in any way.  Call {@link #reserve(T)}
     * on items in list before performing any action on them.
     *
     * @param state one of STATE_NOT_IN_USE or STATE_IN_USE
@@ -226,10 +226,10 @@ public class ConcurrentBag<T extends AbstractBagEntry>
     * The method is used to make an item in the bag "unavailable" for
     * borrowing.  It is primarily used when wanting to operate on items
     * returned by the {@link #values(int)} method.  Items that are
-    * reserved can be removed from the bag via {@link #remove(BagEntry)}
+    * reserved can be removed from the bag via {@link #remove(T)}
     * without the need to unreserve them.  Items that are not removed
     * from the bag can be make available for borrowing again by calling
-    * the {@link #unreserve(BagEntry)} method.
+    * the {@link #unreserve(T)} method.
     *
     * @param bagEntry the item to reserve
     * @return true if the item was able to be reserved, false otherwise
@@ -240,7 +240,7 @@ public class ConcurrentBag<T extends AbstractBagEntry>
    }
 
    /**
-    * This method is used to make an item reserved via {@link #reserve(BagEntry)}
+    * This method is used to make an item reserved via {@link #reserve(T)}
     * available again for borrowing.
     *
     * @param bagEntry the item to unreserve
