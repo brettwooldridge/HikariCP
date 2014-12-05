@@ -18,6 +18,16 @@ Changes in 2.3.0
    with differing JDBC support levels, would fail unless both pools were using
    connectionTestQuery.
 
+ * Improved timeliness of maxLifetime evictions, while increasing performance of
+   getConnection() slightly as a side-effect.
+
+ * Fixed bug in HikariDataSource unwrap() semantics.
+
+ * Allow a lower leakDetectionThreshold of 2 seconds.
+
+ * Fixed bug when using the HikariJNDIFactory that required the presence of 
+   Codahale metrics.
+
 Changes in 2.2.5
 
  * Fixes for Java 6 compatibility.
