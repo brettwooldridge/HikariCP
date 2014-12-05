@@ -401,7 +401,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    /**
     * Permanently close the real (underlying) connection (eat any exception).
     *
-    * @param connectionProxy the connection to actually close
+    * @param bagEntry the bagEntry which track the connection to actually close
     */
    protected abstract void closeConnection(final PoolBagEntry bagEntry);
 
