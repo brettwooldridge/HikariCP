@@ -88,10 +88,10 @@ public final class UtilityElf
     * Create and instance of the specified class using the constructor matching the specified
     * arguments.
     *
+    * @param <T> the class type
     * @param className the name of the classto instantiate
     * @param clazz a class to cast the result as
     * @param args arguments to a constructor
-    * @param T the class type
     * @return an instance of the specified class
     */
    @SuppressWarnings("unchecked")
