@@ -61,7 +61,7 @@ public final class Java6ConcurrentBag extends ConcurrentBag<PoolBagEntry>
    /**
     * This method provides a "snaphot" in time of the BagEntry
     * items in the bag in the specified state.  It does not "lock"
-    * or reserve items in any way.  Call {@link #reserve(BagEntry)}
+    * or reserve items in any way.  Call <code>reserve(BagEntry)</code>
     * on items in list before performing any action on them.
     *
     * @param state one of STATE_NOT_IN_USE or STATE_IN_USE

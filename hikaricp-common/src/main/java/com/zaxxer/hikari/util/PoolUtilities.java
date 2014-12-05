@@ -44,6 +44,7 @@ public final class PoolUtilities
     *
     * @param connection the connection to initialize
     * @param sql the SQL to execute
+    * @param isAutoCommit whether to commit the SQL after execution or not
     * @throws SQLException throws if the init SQL execution fails
     */
    public void executeSql(final Connection connection, final String sql, final boolean isAutoCommit) throws SQLException
@@ -65,7 +66,13 @@ public final class PoolUtilities
    /**
     * Create/initialize the underlying DataSource.
     *
-    * @return the DataSource
+    * @param dsClassName a DataSource class name (optional)
+    * @param dataSource a DataSource instance (optional)
+    * @param dataSourceProperties a Properties instance of DataSource properties
+    * @param jdbcUrl a JDBC connection URL (optional)
+    * @param username a username (optional)
+    * @param password a password (optional)
+    * @return a DataSource instance
     */
    public DataSource initializeDataSource(final String dsClassName, DataSource dataSource, final Properties dataSourceProperties, final String jdbcUrl, final String username, final String password)
    {

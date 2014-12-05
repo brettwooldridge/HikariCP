@@ -91,6 +91,7 @@ public final class UtilityElf
     * @param className the name of the classto instantiate
     * @param clazz a class to cast the result as
     * @param args arguments to a constructor
+    * @param T the class type
     * @return an instance of the specified class
     */
    @SuppressWarnings("unchecked")
@@ -126,6 +127,7 @@ public final class UtilityElf
     * @param queueSize the queue size
     * @param threadName the thread name
     * @param threadFactory an optional ThreadFactory
+    * @param policy the RejectedExecutionHandler policy
     * @return a ThreadPoolExecutor
     */
    public static ThreadPoolExecutor createThreadPoolExecutor(final int queueSize, final String threadName, ThreadFactory threadFactory, final RejectedExecutionHandler policy)

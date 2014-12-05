@@ -173,7 +173,7 @@ public class ConcurrentBag<T extends AbstractBagEntry>
 
    /**
     * Remove a value from the bag.  This method should only be called
-    * with objects obtained by <code>borrow(long, TimeUnit)<code> or <code>reserve(T)</code>
+    * with objects obtained by <code>borrow(long, TimeUnit)</code> or <code>reserve(T)</code>
     *
     * @param bagEntry the value to remove
     * @return true if the entry was removed, false otherwise
