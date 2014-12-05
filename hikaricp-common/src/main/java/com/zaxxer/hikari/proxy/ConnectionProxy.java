@@ -51,7 +51,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    private final PoolBagEntry bagEntry;
    private final FastList<Statement> openStatements;
    
-   private boolean isForceClose;
    private boolean isCommitStateDirty;
    private boolean isConnectionStateDirty;
    private boolean isAutoCommitDirty;
@@ -103,9 +102,10 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    public final SQLException checkException(final SQLException sqle)
    {
       String sqlState = sqle.getSQLState();
-      if (sqlState != null) {
-         isForceClose |= sqlState.startsWith("08") | SQL_ERRORS.contains(sqlState);
+      if (sqlState != null && !bagEntry.evicted) {
+         boolean isForceClose = sqlState.startsWith("08") | SQL_ERRORS.contains(sqlState);
          if (isForceClose) {
+            bagEntry.evicted = true;
             LOGGER.warn(String.format("Connection %s (%s) marked as broken because of SQLSTATE(%s), ErrorCode(%d).", delegate.toString(),
                                       parentPool.toString(), sqlState, sqle.getErrorCode()), sqle);
          }
@@ -202,7 +202,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          }
          finally {
             delegate = ClosedConnection.CLOSED_CONNECTION;
-            parentPool.releaseConnection(bagEntry, isForceClose);
+            parentPool.releaseConnection(bagEntry);
          }
       }
    }
