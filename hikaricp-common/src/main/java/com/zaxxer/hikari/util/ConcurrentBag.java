@@ -18,6 +18,7 @@ package com.zaxxer.hikari.util;
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_IN_USE;
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_NOT_IN_USE;
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_REMOVED;
+import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_RESERVED;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -53,8 +54,6 @@ import org.slf4j.LoggerFactory;
 public class ConcurrentBag<T extends AbstractBagEntry>
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentBag.class);
-
-   private static final int STATE_RESERVED = -2;
 
    protected final AbstractQueuedLongSynchronizer synchronizer;
    protected final CopyOnWriteArrayList<T> sharedList;
@@ -297,20 +296,7 @@ public class ConcurrentBag<T extends AbstractBagEntry>
    public void dumpState()
    {
       for (T bagEntry : sharedList) {
-         switch (bagEntry.state.get()) {
-         case STATE_IN_USE:
-            LOGGER.info(bagEntry.toString() + " state IN_USE");
-            break;
-         case STATE_NOT_IN_USE:
-            LOGGER.info(bagEntry.toString() + " state NOT_IN_USE");
-            break;
-         case STATE_REMOVED:
-            LOGGER.info(bagEntry.toString() + " state REMOVED");
-            break;
-         case STATE_RESERVED:
-            LOGGER.info(bagEntry.toString() + " state RESERVED");
-            break;
-         }
+         LOGGER.info(bagEntry.toString());
       }
    }
 }

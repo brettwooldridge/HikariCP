@@ -71,7 +71,8 @@ public final class PoolBagEntry extends AbstractBagEntry
    {
       return "Connection......" + connection + "\n"
            + "  Last  access.." + lastAccess + "\n"
-           + "  Last open....." + lastOpenTime + "\n";
+           + "  Last open....." + lastOpenTime + "\n"
+           + "  State........." + super.toString();
    }
 }
 

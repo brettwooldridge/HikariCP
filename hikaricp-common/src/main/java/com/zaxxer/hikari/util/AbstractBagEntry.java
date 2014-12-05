@@ -23,4 +23,21 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class AbstractBagEntry implements IConcurrentBagEntry
 {
    public final AtomicInteger state = new AtomicInteger();
+
+   @Override
+   public String toString()
+   {
+      switch (state.get()) {
+      case STATE_IN_USE:
+         return "IN_USE";
+      case STATE_NOT_IN_USE:
+         return "NOT_IN_USE";
+      case STATE_REMOVED:
+         return "REMOVED";
+      case STATE_RESERVED:
+         return "RESERVED";
+      default:
+         return "Invalid";
+      }
+   }
 }
