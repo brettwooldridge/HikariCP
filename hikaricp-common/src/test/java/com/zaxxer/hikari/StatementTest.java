@@ -9,6 +9,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.zaxxer.hikari.util.UtilityElf;
+
 public class StatementTest
 {
     private HikariDataSource ds;
@@ -19,7 +21,6 @@ public class StatementTest
         HikariConfig config = new HikariConfig();
         config.setMinimumIdle(1);
         config.setMaximumPoolSize(2);
-        config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -35,12 +36,16 @@ public class StatementTest
     @Test
     public void testStatementClose() throws SQLException
     {
+        UtilityElf.quietlySleep(200);
+       
         Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
         Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
 
         Connection connection = ds.getConnection();
         Assert.assertNotNull(connection);
 
+        UtilityElf.quietlySleep(200);
+        
         Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
         Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
 
