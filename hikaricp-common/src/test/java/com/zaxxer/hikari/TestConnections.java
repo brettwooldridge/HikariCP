@@ -238,6 +238,7 @@ public class TestConnections
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(4);
       config.setConnectionTimeout(500);
+      config.setInitializationFailFast(false);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
