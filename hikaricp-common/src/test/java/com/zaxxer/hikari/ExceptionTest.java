@@ -10,8 +10,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.zaxxer.hikari.util.UtilityElf;
-
 public class ExceptionTest
 {
     private HikariDataSource ds;
