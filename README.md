@@ -183,9 +183,8 @@ in logging and JMX management consoles to identify pools and pool configurations
 
 :white_check_mark:``initializationFailFast``<br/>
 This property controls whether the pool will "fail fast" if the pool cannot be seeded with
-initial connections successfully.  This property has no effect if ``minimumIdle`` is 0.  If you
-want your application to start *even when* the database is down/unavailable, set this property
-to ``false``.
+initial connections successfully.  If you want your application to start *even when* the
+database is down/unavailable, set this property to ``false``.
 *Default: true*
 
 :negative_squared_cross_mark:``isolateInternalQueries``<br/>
