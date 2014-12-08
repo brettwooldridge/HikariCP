@@ -181,11 +181,13 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       if (iface.isInstance(this)) {
          return (T) this;
       }
-      else if (pool != null) {
+
+      if (pool != null) {
          if (iface.isInstance(pool.getDataSource())) {
             return (T) pool.getDataSource();
          }
-         else if (pool.getDataSource() instanceof Wrapper) {
+
+         if (pool.getDataSource() instanceof Wrapper) {
             return (T) pool.getDataSource().unwrap(iface);
          }
       }
