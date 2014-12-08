@@ -85,15 +85,8 @@ public class ExceptionTest
     @Test
     public void testUseAfterClose() throws SQLException
     {
-        Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
-
         Connection connection = ds.getConnection();
         Assert.assertNotNull(connection);
-
-        Assert.assertSame("Totals (2) connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
-        Assert.assertSame("Idle (2) connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
-
         connection.close();
 
         try
@@ -105,9 +98,6 @@ public class ExceptionTest
         {
             Assert.assertSame("Connection is closed", e.getMessage());
         }
-
-        Assert.assertSame("Totals (3) connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
-        Assert.assertSame("Idle (3) connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
     }
 
 }
