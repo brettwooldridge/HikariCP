@@ -43,7 +43,7 @@ public class StatementTest
         Assert.assertNotNull(connection);
 
         Assert.assertTrue("Totals connections not as expected", TestElf.getPool(ds).getTotalConnections() >= 1);
-        Assert.assertTrue("Idle connections not as expected", TestElf.getPool(ds).getIdleConnections() >= 1);
+        Assert.assertTrue("Idle connections not as expected", TestElf.getPool(ds).getIdleConnections() >= 0);
 
         Statement statement = connection.createStatement();
         Assert.assertNotNull(statement);
