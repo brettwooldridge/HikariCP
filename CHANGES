@@ -28,6 +28,8 @@ Changes in 2.3.0
  * Fixed bug when using the HikariJNDIFactory that required the presence of 
    Codahale metrics.
 
+ * Support initializationFailFast even when minimumIdle = 0
+
 Changes in 2.2.5
 
  * Fixes for Java 6 compatibility.
