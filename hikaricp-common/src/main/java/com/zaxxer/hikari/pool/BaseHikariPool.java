@@ -448,9 +448,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       if (configuration.isInitializationFailFast()) {
          try {
             ConnectionProxy connection = (ConnectionProxy) getConnection();
-            if (configuration.getMinimumIdle() == 0) {
-               connection.getPoolBagEntry().evicted = true;
-            }
+            connection.getPoolBagEntry().evicted = (configuration.getMinimumIdle() == 0);
             connection.close();
          }
          catch (SQLException e) {
