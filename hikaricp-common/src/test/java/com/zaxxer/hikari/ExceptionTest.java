@@ -10,6 +10,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.zaxxer.hikari.util.PoolUtilities;
 import com.zaxxer.hikari.util.UtilityElf;
 
 public class ExceptionTest
@@ -40,12 +41,10 @@ public class ExceptionTest
     @Test
     public void testException1() throws SQLException
     {
-        Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
-        Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
-
         Connection connection = ds.getConnection();
         Assert.assertNotNull(connection);
 
+        UtilityElf.quietlySleep(100);
         Assert.assertSame("Totals (2) connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
         Assert.assertSame("Idle (2) connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
 

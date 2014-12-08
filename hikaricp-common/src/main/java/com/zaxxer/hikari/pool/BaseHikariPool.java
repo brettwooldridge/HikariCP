@@ -47,6 +47,7 @@ import com.zaxxer.hikari.IConnectionCustomizer;
 import com.zaxxer.hikari.metrics.CodaHaleMetricsTracker;
 import com.zaxxer.hikari.metrics.MetricsTracker;
 import com.zaxxer.hikari.metrics.MetricsTracker.MetricsContext;
+import com.zaxxer.hikari.proxy.ConnectionProxy;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
@@ -444,21 +445,19 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
     */
    private void fillPool()
    {
-      // Create a Connection and throw it away
       if (configuration.isInitializationFailFast()) {
-         if (!addConnection()) {
-            throw new RuntimeException("Fail-fast during pool initialization", lastConnectionFailure.getAndSet(null));
-         }
-
          try {
-            evictConnection((IHikariConnectionProxy) getConnection());
+            ConnectionProxy connection = (ConnectionProxy) getConnection();
+            if (configuration.getMinimumIdle() == 0) {
+               connection.getPoolBagEntry().evicted = true;
+            }
+            connection.close();
          }
          catch (SQLException e) {
             throw new RuntimeException("Fail-fast during pool initialization", e);
          }
       }
-
-      if (configuration.getMinimumIdle() > 0) {
+      else {
          addBagItem();
       }
    }
