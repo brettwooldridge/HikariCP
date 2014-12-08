@@ -102,7 +102,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    public final SQLException checkException(final SQLException sqle)
    {
       String sqlState = sqle.getSQLState();
-      if (sqlState != null && !bagEntry.evicted) {
+      if (sqlState != null) {
          boolean isForceClose = sqlState.startsWith("08") | SQL_ERRORS.contains(sqlState);
          if (isForceClose) {
             bagEntry.evicted = true;
