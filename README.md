@@ -251,6 +251,13 @@ frameworks. When this property is specified, the ``dataSourceClassName`` propert
 DataSource-specific properties will be ignored.
 *Default: none*
 
+:arrow_right:``threadFactory``<br/>
+This property is only available via programmatic configuration or IoC container.  This property
+allows you to set the instance of the ``java.util.concurrent.ThreadFactory`` that will be used
+for creating all threads used by the pool. It is needed in some restricted execution environments
+where threads can only be created through a ``ThreadFactory`` provided by the application container.
+*Default: none*
+
 ***Missing Knobs***<br/>
 HikariCP has plenty of "knobs" to turn as you can see above, but comparatively less than some other pools.
 This is a design philosophy.  The HikariCP design asthetic is Minimalism.  In keeping with the
