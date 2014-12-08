@@ -45,6 +45,7 @@ public class TestMetrics
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(1);
       config.setMetricRegistry(metricRegistry);
+      config.setInitializationFailFast(false);
       config.setPoolName("test");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -78,6 +79,7 @@ public class TestMetrics
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(1);
       config.setMetricRegistry(metricRegistry);
+      config.setInitializationFailFast(false);
       config.setPoolName("test");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
