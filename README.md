@@ -194,6 +194,12 @@ queries, it is rarely necessary to encapsulate them in their own transaction.  T
 property only applies if ``autoCommit`` is disabled.
 *Default: false*
 
+:negative_squared_cross_mark:``allowPoolSuspension``<br/>
+This property controls whether the pool can be suspended and resumed through JMX.  This is
+useful for certain failover automation scenarios.  When the pool is suspended, calls to
+``getConnection()`` will *not* timeout and will be held until the pool is resumed.
+*Default: false*
+
 :negative_squared_cross_mark:``readOnly``<br/>
 This property controls whether *Connections* obtained from the pool are in read-only mode by
 default.  Note some databases do not support the concept of read-only mode, while others provide
