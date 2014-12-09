@@ -151,7 +151,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       long delayPeriod = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30L));
       ThreadFactory threadFactory = configuration.getThreadFactory() != null ? configuration.getThreadFactory() : new DefaultThreadFactory("Hikari Housekeeping Timer (pool " + configuration.getPoolName() + ")", true);
       this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
-      this.houseKeepingExecutorService.scheduleAtFixedRate(getHouseKeeper(), delayPeriod, delayPeriod, TimeUnit.MILLISECONDS);
+      this.houseKeepingExecutorService.scheduleAtFixedRate(getHouseKeeper(), TimeUnit.SECONDS.toMillis(10L), delayPeriod, TimeUnit.MILLISECONDS);
       this.leakTask = (configuration.getLeakDetectionThreshold() == 0) ? LeakTask.NO_LEAK : new LeakTask(configuration.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
       setRemoveOnCancelPolicy(houseKeepingExecutorService);
