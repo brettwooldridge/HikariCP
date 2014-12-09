@@ -13,7 +13,7 @@ _Java 8 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>2.2.5</version>
+        <version>2.3.0</version>
         <scope>compile</scope>
     </dependency>
 ```
@@ -22,7 +22,7 @@ _Java 6 and Java 7 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP-java6</artifactId>
-        <version>2.2.5</version>
+        <version>2.3.0</version>
         <scope>compile</scope>
     </dependency>
 ```
@@ -239,7 +239,7 @@ class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, e
 :watch:``leakDetectionThreshold``<br/>
 This property controls the amount of time that a connection can be out of the pool before a
 message is logged indicating a possible connection leak.  A value of 0 means leak detection
-is disabled.  Lowest acceptable value for enabling leak detection is 10000 (10 secs).
+is disabled.  Lowest acceptable value for enabling leak detection is 2000 (2 secs).
 *Default: 0*
 
 :arrow_right:``dataSource``<br/>
