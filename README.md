@@ -66,7 +66,7 @@ AKA ["What you probably didn't know about connection pool sizing"](https://githu
 
 ------------------------------
 #### Configuration (knobs, baby!)
-HikariCP comes with *sane* defaults that perform well in most deployments without additional tweaking.
+HikariCP comes with *sane* defaults that perform well in most deployments without additional tweaking. **Every property is optional, except for the "essentials" marked below.**
 
 <sup>:paperclip:</sup>&nbsp;*HikariCP uses milliseconds for all time values.*
 
