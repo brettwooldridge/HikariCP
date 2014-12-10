@@ -126,6 +126,9 @@ public final class PoolUtilities
          catch (NoSuchMethodError e) {
             IS_JDBC40 = false;
          }
+         catch (UnsupportedOperationException e) {
+            IS_JDBC40 = false;
+         }
 
          jdbc40checked = true;
       }
