@@ -130,6 +130,9 @@ public final class PoolUtilities
          catch (AbstractMethodError e) {
             IS_JDBC40 = false;
          }
+         catch (UnsupportedOperationException e) {
+            IS_JDBC40 = false;
+         }
          catch (NoSuchMethodError e) {
             IS_JDBC40 = false;
          }
