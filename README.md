@@ -26,6 +26,7 @@ _Java 6 and Java 7 maven artifact:_
         <scope>compile</scope>
     </dependency>
 ```
+Or [download from here](http://search.maven.org/#search%7Cga%7C1%7Ccom.zaxxer.hikaricp).
 
 ----------------------------------------------------
 ***JMH Benchmarks***<br/>
