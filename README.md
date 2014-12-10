@@ -136,7 +136,7 @@ this timeout.  A value of 0 means that idle connections are never removed from t
 :watch:``maxLifetime``<br/>
 This property controls the maximum lifetime of a connection in the pool.  When a connection
 reaches this timeout it will be retired from the pool, subject to a maximum variation of +30
-seconds, and average variation of +15 seconds..  An in-use connection will never be retired,
+seconds, and average variation of +15 seconds.  An in-use connection will never be retired,
 only when it is closed will it then be removed.  We strongly recommend setting this value,
 and using something reasonable like 30 minutes or 1 hour.  A value of 0 indicates no maximum
 lifetime (infinite lifetime), subject of course to the ``idleTimeout`` setting.
