@@ -1,6 +1,7 @@
 package com.zaxxer.hikari.util;
 
 import static com.zaxxer.hikari.util.UtilityElf.createInstance;
+import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -8,11 +9,14 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.Properties;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 
 import org.slf4j.Logger;
+
+import com.zaxxer.hikari.HikariConfig;
 
 public final class PoolUtilities
 {
@@ -21,6 +25,12 @@ public final class PoolUtilities
    private volatile boolean jdbc40checked; 
    private volatile boolean jdbc41checked; 
    private volatile boolean queryTimeoutSupported = true;
+   private volatile ThreadPoolExecutor executorService;
+
+   public PoolUtilities(HikariConfig configuration)
+   {
+      executorService = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP utility thread (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
+   }
 
    /**
     * Close connection and eat any exception.
@@ -31,9 +41,10 @@ public final class PoolUtilities
    {
       if (connection != null) {
          try {
+            setNetworkTimeout(executorService, connection, TimeUnit.SECONDS.toMillis(30), true);
             connection.close();
          }
-         catch (SQLException e) {
+         catch (Exception e) {
             return;
          }
       }

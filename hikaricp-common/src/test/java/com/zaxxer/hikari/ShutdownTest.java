@@ -238,7 +238,7 @@ public class ShutdownTest
    @Test
    public void testThreadedShutdown() throws Exception
    {
-      HikariConfig config = new HikariConfig();
+      final HikariConfig config = new HikariConfig();
       config.setMinimumIdle(5);
       config.setMaximumPoolSize(5);
       config.setConnectionTimeout(200);
@@ -279,7 +279,7 @@ public class ShutdownTest
                   Assert.fail(e.getMessage());
                }
                finally {
-                  new PoolUtilities().quietlyCloseConnection(connection);
+                  new PoolUtilities(config).quietlyCloseConnection(connection);
                   ds.shutdown();
                }
             };

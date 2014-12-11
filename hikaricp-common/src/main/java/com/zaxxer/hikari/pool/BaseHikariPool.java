@@ -123,7 +123,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       this.password = password;
       this.configuration = configuration;
 
-      this.poolUtils = new PoolUtilities();
+      this.poolUtils = new PoolUtilities(configuration);
       this.connectionBag = createConcurrentBag(this);
       this.totalConnections = new AtomicInteger();
       this.connectionTimeout = configuration.getConnectionTimeout();
