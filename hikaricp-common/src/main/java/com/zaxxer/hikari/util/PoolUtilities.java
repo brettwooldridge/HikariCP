@@ -41,7 +41,13 @@ public final class PoolUtilities
    {
       if (connection != null) {
          try {
-            setNetworkTimeout(executorService, connection, TimeUnit.SECONDS.toMillis(30), true);
+            try {
+               setNetworkTimeout(executorService, connection, TimeUnit.SECONDS.toMillis(30), true);
+            }
+            catch (SQLException e) {
+               // keep going, close anyway
+            }
+
             connection.close();
          }
          catch (Exception e) {
