@@ -144,7 +144,7 @@ public final class HikariPool extends BaseHikariPool
             return connection.isValid(timeoutSec);
          }
 
-         final int networkTimeout = poolUtils.setNetworkTimeout(houseKeepingExecutorService, connection, Math.max(1000, (int) timeoutMs), timeoutEnabled);
+         final int networkTimeout = poolUtils.setNetworkTimeout(connection, Math.max(1000, (int) timeoutMs), timeoutEnabled);
 
          try (Statement statement = connection.createStatement()) {
             poolUtils.setQueryTimeout(statement, timeoutSec);
@@ -155,7 +155,7 @@ public final class HikariPool extends BaseHikariPool
             connection.rollback();
          }
 
-         poolUtils.setNetworkTimeout(houseKeepingExecutorService, connection, networkTimeout, timeoutEnabled);
+         poolUtils.setNetworkTimeout(connection, networkTimeout, timeoutEnabled);
 
          return true;
       }

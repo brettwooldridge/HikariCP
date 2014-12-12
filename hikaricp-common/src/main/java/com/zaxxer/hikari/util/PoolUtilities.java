@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.Properties;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -20,14 +19,15 @@ import com.zaxxer.hikari.HikariConfig;
 
 public final class PoolUtilities
 {
+   private final ThreadPoolExecutor executorService;
+
    private volatile boolean IS_JDBC40;
    private volatile boolean IS_JDBC41;
    private volatile boolean jdbc40checked; 
    private volatile boolean jdbc41checked; 
    private volatile boolean queryTimeoutSupported = true;
-   private volatile ThreadPoolExecutor executorService;
 
-   public PoolUtilities(HikariConfig configuration)
+   public PoolUtilities(final HikariConfig configuration)
    {
       executorService = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP utility thread (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
    }
@@ -42,7 +42,7 @@ public final class PoolUtilities
       if (connection != null) {
          try {
             try {
-               setNetworkTimeout(executorService, connection, TimeUnit.SECONDS.toMillis(30), true);
+               setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(30), true);
             }
             catch (SQLException e) {
                // keep going, close anyway
@@ -196,12 +196,12 @@ public final class PoolUtilities
     * @return the pre-existing network timeout value
     * @throws SQLException thrown if the network timeout cannot be set
     */
-   public int setNetworkTimeout(final Executor executor, final Connection connection, final long timeoutMs, final boolean isUseNetworkTimeout) throws SQLException
+   public int setNetworkTimeout(final Connection connection, final long timeoutMs, final boolean isUseNetworkTimeout) throws SQLException
    {
       if ((IS_JDBC41 || !jdbc41checked) && isUseNetworkTimeout) {
          try {
             final int networkTimeout = connection.getNetworkTimeout();
-            connection.setNetworkTimeout(executor, (int) timeoutMs);
+            connection.setNetworkTimeout(executorService, (int) timeoutMs);
             IS_JDBC41 = true;
             return networkTimeout;
          }

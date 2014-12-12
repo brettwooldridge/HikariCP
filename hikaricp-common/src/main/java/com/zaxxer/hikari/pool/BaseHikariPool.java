@@ -372,14 +372,14 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
 
          final boolean timeoutEnabled = (connectionTimeout != Integer.MAX_VALUE);
          final long timeoutMs = timeoutEnabled ? Math.max(250L, connectionTimeout) : 0L;
-         final int originalTimeout = poolUtils.setNetworkTimeout(houseKeepingExecutorService, connection, timeoutMs, timeoutEnabled);
+         final int originalTimeout = poolUtils.setNetworkTimeout(connection, timeoutMs, timeoutEnabled);
 
          transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
          
          poolUtils.setupConnection(connection, isAutoCommit, isReadOnly, transactionIsolation, catalog);
          connectionCustomizer.customize(connection);
          poolUtils.executeSql(connection, configuration.getConnectionInitSql(), isAutoCommit);
-         poolUtils.setNetworkTimeout(houseKeepingExecutorService, connection, originalTimeout, timeoutEnabled);
+         poolUtils.setNetworkTimeout(connection, originalTimeout, timeoutEnabled);
          
          connectionBag.add(new PoolBagEntry(connection, this));
          lastConnectionFailure.set(null);
