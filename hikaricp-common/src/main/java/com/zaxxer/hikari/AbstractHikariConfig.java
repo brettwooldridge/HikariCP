@@ -158,6 +158,7 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
     *
     * @return the name of the customizer class, or null
     */
+   @Deprecated
    public String getConnectionCustomizerClassName()
    {
       return connectionCustomizerClassName;
@@ -169,9 +170,11 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
     *
     * @param connectionCustomizerClassName the name of the customizer class
     */
+   @Deprecated
    public void setConnectionCustomizerClassName(String connectionCustomizerClassName)
    {
       this.connectionCustomizerClassName = connectionCustomizerClassName;
+      LOGGER.warn("The connectionCustomizerClassName property has been deprecated and may be removed in a future release");
    }
 
    /**
@@ -179,6 +182,7 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
     *
     * @return an instance of IConnectionCustomizer
     */
+   @Deprecated
    public IConnectionCustomizer getConnectionCustomizer()
    {
       return customizer;
@@ -189,9 +193,11 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
     *
     * @param customizer an instance of IConnectionCustomizer
     */
+   @Deprecated
    public void setConnectionCustomizer(IConnectionCustomizer customizer)
    {
       this.customizer = customizer;
+      LOGGER.warn("The connectionCustomizer property has been deprecated and may be removed in a future release");
    }
 
    /**
@@ -223,6 +229,7 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
     *
     * @return the SQL to execute on new connections, or null
     */
+   @Deprecated
    public String getConnectionInitSql()
    {
       return connectionInitSql;
@@ -235,9 +242,11 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
     *
     * @param connectionInitSql the SQL to execute on new connections
     */
+   @Deprecated
    public void setConnectionInitSql(String connectionInitSql)
    {
       this.connectionInitSql = connectionInitSql;
+      LOGGER.warn("The connectionInitSql property has been deprecated and may be removed in a future release");
    }
 
    /** {@inheritDoc} */
