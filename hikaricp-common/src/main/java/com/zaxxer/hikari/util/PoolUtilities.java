@@ -152,7 +152,7 @@ public final class PoolUtilities
     * @param timeoutSec the number of seconds before timeout
     * @throws SQLException re-thrown exception from Statement.setQueryTimeout()
     */
-   public void setQueryTimeout(final Statement statement, final int timeoutSec) throws SQLException
+   public void setQueryTimeout(final Statement statement, final int timeoutSec)
    {
       if (queryTimeoutSupported) {
          try {
@@ -160,9 +160,6 @@ public final class PoolUtilities
          }
          catch (Throwable e) {
             queryTimeoutSupported = false;
-            if (e instanceof SQLException) {
-               throw (SQLException) e;
-            }
          }
       }
    }
