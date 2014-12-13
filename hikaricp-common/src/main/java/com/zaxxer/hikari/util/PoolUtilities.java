@@ -5,7 +5,6 @@ import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.Properties;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -41,13 +40,7 @@ public final class PoolUtilities
    {
       if (connection != null) {
          try {
-            try {
-               setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(30), true);
-            }
-            catch (SQLException e) {
-               // keep going, close anyway
-            }
-
+            setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(30), true);
             connection.close();
          }
          catch (Exception e) {
@@ -141,20 +134,12 @@ public final class PoolUtilities
             connection.isValid(5);  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
             IS_JDBC40 = true;
          }
-         catch (SQLFeatureNotSupportedException e) {
+         catch (Throwable e) {
             IS_JDBC40 = false;
          }
-         catch (AbstractMethodError e) {
-            IS_JDBC40 = false;
+         finally {
+            jdbc40checked = true;
          }
-         catch (UnsupportedOperationException e) {
-            IS_JDBC40 = false;
-         }
-         catch (NoSuchMethodError e) {
-            IS_JDBC40 = false;
-         }
-
-         jdbc40checked = true;
       }
       
       return IS_JDBC40;
@@ -173,14 +158,11 @@ public final class PoolUtilities
          try {
             statement.setQueryTimeout(timeoutSec);
          }
-         catch (SQLFeatureNotSupportedException e) {
+         catch (Throwable e) {
             queryTimeoutSupported = false;
-         }
-         catch (AbstractMethodError e) {
-            queryTimeoutSupported = false;
-         }
-         catch (NoSuchMethodError e) {
-            queryTimeoutSupported = false;
+            if (e instanceof SQLException) {
+               throw (SQLException) e;
+            }
          }
       }
    }
@@ -196,22 +178,16 @@ public final class PoolUtilities
     * @return the pre-existing network timeout value
     * @throws SQLException thrown if the network timeout cannot be set
     */
-   public int setNetworkTimeout(final Connection connection, final long timeoutMs, final boolean isUseNetworkTimeout) throws SQLException
+   public int setNetworkTimeout(final Connection connection, final long timeoutMs, final boolean isUseNetworkTimeout)
    {
-      if ((IS_JDBC41 || !jdbc41checked) && isUseNetworkTimeout) {
+      if (isUseNetworkTimeout && (IS_JDBC41 || !jdbc41checked)) {
          try {
             final int networkTimeout = connection.getNetworkTimeout();
             connection.setNetworkTimeout(executorService, (int) timeoutMs);
             IS_JDBC41 = true;
             return networkTimeout;
          }
-         catch (SQLFeatureNotSupportedException e) {
-            IS_JDBC41 = false;
-         }
-         catch (AbstractMethodError e) {
-            IS_JDBC41 = false;
-         }
-         catch (NoSuchMethodError e) {
+         catch (Throwable e) {
             IS_JDBC41 = false;
          }
          finally {

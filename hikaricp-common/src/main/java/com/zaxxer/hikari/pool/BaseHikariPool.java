@@ -68,6 +68,10 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    protected static final Logger LOGGER = LoggerFactory.getLogger("HikariPool");
    private static final long ALIVE_BYPASS_WINDOW = Long.getLong("com.zaxxer.hikari.aliveBypassWindow", 1000L);
 
+   protected static final int POOL_RUNNING = 0;
+   protected static final int POOL_SUSPENDED = 1;
+   protected static final int POOL_SHUTDOWN = 2;
+
    public final String catalog;
    public final boolean isReadOnly;
    public final boolean isAutoCommit;
@@ -84,9 +88,8 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    protected final boolean isUseJdbc4Validation;
    protected final boolean isIsolateInternalQueries;
 
-   protected volatile boolean isShutdown;
+   protected volatile int poolState;
    protected volatile long connectionTimeout;
-   protected volatile boolean isPoolSuspended;
    
    private final LeakTask leakTask;
    private final DataSource dataSource;
@@ -231,8 +234,8 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
     */
    public final void shutdown() throws InterruptedException
    {
-      if (!isShutdown) {
-         isShutdown = true;
+      if (poolState != POOL_SHUTDOWN) {
+         poolState = POOL_SHUTDOWN;
          LOGGER.info("HikariCP pool {} is shutting down.", configuration.getPoolName());
 
          logPoolState("Before shutdown ");
@@ -330,9 +333,9 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    @Override
    public final void suspendPool()
    {
-      if (!isPoolSuspended) {
+      if (poolState != POOL_SUSPENDED) {
          suspendResumeLock.suspend();
-         isPoolSuspended = true;
+         poolState = POOL_SUSPENDED;
       }
    }
 
@@ -340,8 +343,8 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    @Override
    public final void resumePool()
    {
-      if (isPoolSuspended) {
-         isPoolSuspended = false;
+      if (poolState == POOL_SUSPENDED) {
+         poolState = POOL_RUNNING;
          addBagItem(); // re-populate the pool
          suspendResumeLock.resume();
       }

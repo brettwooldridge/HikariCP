@@ -75,7 +75,7 @@ public final class HikariPool extends BaseHikariPool
          long sleepBackoff = 200L;
          final int maxPoolSize = configuration.getMaximumPoolSize();
          final int minIdle = configuration.getMinimumIdle();
-         while (!isPoolSuspended && !isShutdown && totalConnections.get() < maxPoolSize && (minIdle == 0 || getIdleConnections() < minIdle)) {
+         while (poolState == POOL_RUNNING && totalConnections.get() < maxPoolSize && (minIdle == 0 || getIdleConnections() < minIdle)) {
             if (addConnection()) {
                if (minIdle == 0) {
                   break; // This break is here so we only add one connection when there is no min. idle
