@@ -290,6 +290,7 @@
                         </goals>
                         <inherited>false</inherited>
                         <configuration>
+                           <sourceDirectories>../hikaricp-common/src/main/java</sourceDirectories>
                         </configuration>
                      </execution>
                   </executions>
