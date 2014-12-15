@@ -128,7 +128,7 @@ public final class PoolUtilities
     * @return true if JDBC 4.1 compliance, false otherwise
     * @throws SQLException re-thrown exception from Connection.getNetworkTimeout()
     */
-   public boolean isJdbc40Compliant(final Connection connection) throws SQLException
+   public boolean isJdbc40Compliant(final Connection connection)
    {
       if (!jdbc40checked) {
          try {
