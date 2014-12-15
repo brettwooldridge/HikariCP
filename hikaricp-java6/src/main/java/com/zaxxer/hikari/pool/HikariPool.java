@@ -234,6 +234,8 @@ public final class HikariPool extends BaseHikariPool
     */
    private class HouseKeeper implements Runnable
    {
+      private long past;
+
       @Override
       public void run()
       {
@@ -244,17 +246,23 @@ public final class HikariPool extends BaseHikariPool
          final long now = System.currentTimeMillis();
          final long idleTimeout = configuration.getIdleTimeout();
 
-         for (PoolBagEntry bagEntry : connectionBag.values(STATE_NOT_IN_USE)) {
-            if (connectionBag.reserve(bagEntry)) {
-               if (bagEntry.evicted || (idleTimeout > 0L && now > bagEntry.lastAccess + idleTimeout)) {
-                  closeConnection(bagEntry);
-               }
-               else {
-                  connectionBag.unreserve(bagEntry);
+         if (now < past) {  // handles the aberrant case of a computer clock rolling backward
+            past = now;
+            softEvictConnections();
+         }
+         else {
+            for (PoolBagEntry bagEntry : connectionBag.values(STATE_NOT_IN_USE)) {
+               if (connectionBag.reserve(bagEntry)) {
+                  if (bagEntry.evicted || (idleTimeout > 0L && now > bagEntry.lastAccess + idleTimeout)) {
+                     closeConnection(bagEntry);
+                  }
+                  else {
+                     connectionBag.unreserve(bagEntry);
+                  }
                }
             }
          }
-
+         
          logPoolState("After cleanup ");
 
          if (configuration.getMinimumIdle() > 0) {
