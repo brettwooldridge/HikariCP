@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import javax.sql.DataSource;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.HikariConfig;
 
@@ -44,6 +45,7 @@ public final class PoolUtilities
             connection.close();
          }
          catch (Exception e) {
+            LoggerFactory.getLogger(getClass()).debug("Exception closing connection {}", connection.toString(), e);
             return;
          }
       }
