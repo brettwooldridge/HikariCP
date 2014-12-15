@@ -126,7 +126,8 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
 
          synchronizer.tryAcquireSharedNanos(startSeq, timeout);
 
-         timeout -= (System.nanoTime() - startScan);
+         final long delta = (System.nanoTime() - startScan);
+         timeout -= (delta > 0 ? delta : TimeUnit.MILLISECONDS.toNanos(1L));
       }
       while (timeout > 0L);
 
