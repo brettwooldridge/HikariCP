@@ -15,6 +15,8 @@
  */
 package com.zaxxer.hikari.util;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * @author Brett Wooldridge
  */
@@ -24,4 +26,6 @@ public interface IConcurrentBagEntry
    int STATE_IN_USE = 1;
    int STATE_REMOVED = -1;
    int STATE_RESERVED = -2;
+
+   AtomicInteger state();
 }

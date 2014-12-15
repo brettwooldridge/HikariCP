@@ -51,14 +51,14 @@ import org.slf4j.LoggerFactory;
  *
  * @param <T> the templated type to store in the bag
  */
-public class ConcurrentBag<T extends AbstractBagEntry>
+public class ConcurrentBag<T extends IConcurrentBagEntry>
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentBag.class);
 
    protected final AbstractQueuedLongSynchronizer synchronizer;
    protected final CopyOnWriteArrayList<T> sharedList;
 
-   private final ThreadLocal<ArrayList<WeakReference<AbstractBagEntry>>> threadList;
+   private final ThreadLocal<ArrayList<WeakReference<IConcurrentBagEntry>>> threadList;
    private final AtomicLong sequence;
    private final IBagStateListener listener;
    private volatile boolean closed;
@@ -74,7 +74,7 @@ public class ConcurrentBag<T extends AbstractBagEntry>
       this.synchronizer = createQueuedSynchronizer();
       this.sequence = new AtomicLong(1);
       this.listener = listener;
-      this.threadList = new ThreadLocal<ArrayList<WeakReference<AbstractBagEntry>>>();
+      this.threadList = new ThreadLocal<ArrayList<WeakReference<IConcurrentBagEntry>>>();
    }
 
    protected AbstractQueuedLongSynchronizer createQueuedSynchronizer()
@@ -95,14 +95,14 @@ public class ConcurrentBag<T extends AbstractBagEntry>
    public T borrow(long timeout, final TimeUnit timeUnit) throws InterruptedException
    {
       // Try the thread-local list first
-      final ArrayList<WeakReference<AbstractBagEntry>> list = threadList.get();
+      final ArrayList<WeakReference<IConcurrentBagEntry>> list = threadList.get();
       if (list == null) {
-         threadList.set(new ArrayList<WeakReference<AbstractBagEntry>>(16));
+         threadList.set(new ArrayList<WeakReference<IConcurrentBagEntry>>(16));
       }
       else {
          for (int i = list.size() - 1; i >= 0; i--) {
-            final AbstractBagEntry bagEntry = list.remove(i).get();
-            if (bagEntry != null && bagEntry.state.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
+            final IConcurrentBagEntry bagEntry = list.remove(i).get();
+            if (bagEntry != null && bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
                return (T) bagEntry;
             }
          }
@@ -116,7 +116,7 @@ public class ConcurrentBag<T extends AbstractBagEntry>
          do {
             startSeq = sequence.longValue();
             for (final T bagEntry : sharedList) {
-               if (bagEntry.state.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
+               if (bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
                   return bagEntry;
                }
             }
@@ -144,10 +144,10 @@ public class ConcurrentBag<T extends AbstractBagEntry>
     */
    public void requite(final T bagEntry)
    {
-      if (bagEntry.state.compareAndSet(STATE_IN_USE, STATE_NOT_IN_USE)) {
-         final ArrayList<WeakReference<AbstractBagEntry>> list = threadList.get();
+      if (bagEntry.state().compareAndSet(STATE_IN_USE, STATE_NOT_IN_USE)) {
+         final ArrayList<WeakReference<IConcurrentBagEntry>> list = threadList.get();
          if (list != null) {
-            list.add(new WeakReference<AbstractBagEntry>(bagEntry));
+            list.add(new WeakReference<IConcurrentBagEntry>(bagEntry));
          }
          synchronizer.releaseShared(sequence.incrementAndGet());
       }
@@ -182,7 +182,7 @@ public class ConcurrentBag<T extends AbstractBagEntry>
     */
    public boolean remove(final T bagEntry)
    {
-      if (!bagEntry.state.compareAndSet(STATE_IN_USE, STATE_REMOVED) && !bagEntry.state.compareAndSet(STATE_RESERVED, STATE_REMOVED) && !closed) {
+      if (!bagEntry.state().compareAndSet(STATE_IN_USE, STATE_REMOVED) && !bagEntry.state().compareAndSet(STATE_RESERVED, STATE_REMOVED) && !closed) {
          throw new IllegalStateException("Attempt to remove an object from the bag that was not borrowed or reserved");
       }
       final boolean removed = sharedList.remove(bagEntry);
@@ -214,7 +214,7 @@ public class ConcurrentBag<T extends AbstractBagEntry>
       final ArrayList<T> list = new ArrayList<T>(sharedList.size());
       if (state == STATE_IN_USE || state == STATE_NOT_IN_USE) {
          for (final T reference : sharedList) {
-            if (reference.state.get() == state) {
+            if (reference.state().get() == state) {
                list.add(reference);
             }
          }
@@ -236,7 +236,7 @@ public class ConcurrentBag<T extends AbstractBagEntry>
     */
    public boolean reserve(final T bagEntry)
    {
-      return bagEntry.state.compareAndSet(STATE_NOT_IN_USE, STATE_RESERVED);
+      return bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_RESERVED);
    }
 
    /**
@@ -248,7 +248,7 @@ public class ConcurrentBag<T extends AbstractBagEntry>
    public void unreserve(final T bagEntry)
    {
       final long checkInSeq = sequence.incrementAndGet();
-      if (!bagEntry.state.compareAndSet(STATE_RESERVED, STATE_NOT_IN_USE)) {
+      if (!bagEntry.state().compareAndSet(STATE_RESERVED, STATE_NOT_IN_USE)) {
          throw new IllegalStateException("Attempt to relinquish an object to the bag that was not reserved");
       }
 
@@ -276,7 +276,7 @@ public class ConcurrentBag<T extends AbstractBagEntry>
    {
       int count = 0;
       for (final T reference : sharedList) {
-         if (reference.state.get() == state) {
+         if (reference.state().get() == state) {
             count++;
          }
       }

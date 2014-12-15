@@ -18,16 +18,19 @@ package com.zaxxer.hikari.pool;
 import java.sql.Connection;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import com.zaxxer.hikari.util.AbstractBagEntry;
+import com.zaxxer.hikari.util.IConcurrentBagEntry;
 
 /**
  * Entry used in the ConcurrentBag to track Connection instances.
  *
  * @author Brett Wooldridge
  */
-public final class PoolBagEntry extends AbstractBagEntry
+public final class PoolBagEntry implements IConcurrentBagEntry
 {
+   public final AtomicInteger state = new AtomicInteger();
+
    public final Connection connection;
    public long lastOpenTime;
    public volatile boolean evicted;
@@ -66,13 +69,36 @@ public final class PoolBagEntry extends AbstractBagEntry
       }
    }
 
+
+   /** {@inheritDoc} */
+   @Override
+   public AtomicInteger state()
+   {
+      return state;
+   }
+
    @Override
    public String toString()
    {
       return "Connection......" + connection + "\n"
            + "  Last  access.." + lastAccess + "\n"
            + "  Last open....." + lastOpenTime + "\n"
-           + "  State........." + super.toString();
+           + "  State........." + stateToString();
+   }
+
+   private String stateToString()
+   {
+      switch (state.get()) {
+      case STATE_IN_USE:
+         return "IN_USE";
+      case STATE_NOT_IN_USE:
+         return "NOT_IN_USE";
+      case STATE_REMOVED:
+         return "REMOVED";
+      case STATE_RESERVED:
+         return "RESERVED";
+      default:
+         return "Invalid";
+      }
    }
 }
-
