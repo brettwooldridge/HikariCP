@@ -67,7 +67,7 @@ public class HikariJNDIFactory implements ObjectFactory
       return createDataSource(properties, nameCtx);
    }
 
-   private DataSource createDataSource(Properties properties, Context context)
+   private DataSource createDataSource(Properties properties, Context context) throws NamingException
    {
       if (properties.getProperty("dataSourceJNDI") != null) {
          return lookupJndiDataSource(properties, context);
@@ -76,30 +76,20 @@ public class HikariJNDIFactory implements ObjectFactory
       return new HikariDataSource(new HikariConfig(properties));
    }
 
-   private DataSource lookupJndiDataSource(Properties properties, Context context)
+   private DataSource lookupJndiDataSource(Properties properties, Context context) throws NamingException
    {
       DataSource jndiDS = null;
       String jndiName = properties.getProperty("dataSourceJNDI");
-      try {
-         if (context != null) {
-            jndiDS = (DataSource) context.lookup(jndiName);
-         }
-         else {
-            throw new RuntimeException("dataSourceJNDI property is configued, but local JNDI context is null.");
-         }
+      if (context != null) {
+         jndiDS = (DataSource) context.lookup(jndiName);
       }
-      catch (NamingException e) {
-         throw new RuntimeException("The name \"" + jndiName + "\" can not be found in the local context.");
+      else {
+         throw new RuntimeException("dataSourceJNDI property is configued, but local JNDI context is null.");
       }
 
       if (jndiDS == null) {
-         try {
-            context = (Context) (new InitialContext());
-            jndiDS = (DataSource) context.lookup(jndiName);
-         }
-         catch (NamingException e) {
-            throw new RuntimeException("The name \"" + jndiName + "\" can not be found in the InitialContext.");
-         }
+         context = (Context) (new InitialContext());
+         jndiDS = (DataSource) context.lookup(jndiName);
       }
 
       if (jndiDS != null) {
