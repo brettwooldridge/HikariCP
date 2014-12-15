@@ -166,7 +166,7 @@ public class ShutdownTest
 
       ds.close();
 
-      long start = System.nanoTime();
+      long start = System.currentTimeMillis();
       while (UtilityElf.elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5) && threadCount() > 0) {
          UtilityElf.quietlySleep(250);
       }
