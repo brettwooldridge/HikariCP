@@ -42,7 +42,7 @@ public final class PoolBagEntry implements IConcurrentBagEntry
 
    public PoolBagEntry(final Connection connection, final BaseHikariPool pool) {
       this.connection = connection;
-      this.lastAccess = System.currentTimeMillis();
+      this.lastAccess = System.nanoTime();
 
       final long maxLifetime = pool.configuration.getMaxLifetime();
       if (maxLifetime > 0) {
@@ -81,7 +81,7 @@ public final class PoolBagEntry implements IConcurrentBagEntry
    public String toString()
    {
       return "Connection......" + connection + "\n"
-           + "  Last  access.." + lastAccess + "\n"
+           + "  Last  access.." + TimeUnit.NANOSECONDS.toMillis(lastAccess) + "\n"
            + "  Last open....." + lastOpenTime + "\n"
            + "  State........." + stateToString();
    }

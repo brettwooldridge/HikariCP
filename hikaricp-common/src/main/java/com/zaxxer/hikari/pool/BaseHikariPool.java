@@ -66,7 +66,7 @@ import com.zaxxer.hikari.util.PoolUtilities;
 public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListener
 {
    protected static final Logger LOGGER = LoggerFactory.getLogger("HikariPool");
-   private static final long ALIVE_BYPASS_WINDOW = Long.getLong("com.zaxxer.hikari.aliveBypassWindow", 1000L);
+   private static final long ALIVE_BYPASS_WINDOW = TimeUnit.MILLISECONDS.toNanos(Long.getLong("com.zaxxer.hikari.aliveBypassWindow", 1000L));
 
    protected static final int POOL_RUNNING = 0;
    protected static final int POOL_SUSPENDED = 1;
@@ -154,7 +154,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       long delayPeriod = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30L));
       ThreadFactory threadFactory = configuration.getThreadFactory() != null ? configuration.getThreadFactory() : new DefaultThreadFactory("Hikari Housekeeping Timer (pool " + configuration.getPoolName() + ")", true);
       this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
-      this.houseKeepingExecutorService.scheduleAtFixedRate(getHouseKeeper(), TimeUnit.SECONDS.toMillis(10L), delayPeriod, TimeUnit.MILLISECONDS);
+      this.houseKeepingExecutorService.scheduleAtFixedRate(getHouseKeeper(), delayPeriod, delayPeriod, TimeUnit.MILLISECONDS);
       this.leakTask = (configuration.getLeakDetectionThreshold() == 0) ? LeakTask.NO_LEAK : new LeakTask(configuration.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
       setRemoveOnCancelPolicy(houseKeepingExecutorService);
@@ -173,7 +173,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    {
       suspendResumeLock.acquire();
       long timeout = connectionTimeout;
-      final long start = System.currentTimeMillis();
+      final long start = System.nanoTime();
       final MetricsContext metricsContext = (isRecordMetrics ? metricsTracker.recordConnectionRequest(start) : MetricsTracker.NO_CONTEXT);
 
       try {
@@ -183,7 +183,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
                break; // We timed out... break and throw exception
             }
 
-            final long now = System.currentTimeMillis();
+            final long now = System.nanoTime();
             if (now - bagEntry.lastAccess > ALIVE_BYPASS_WINDOW && !isConnectionAlive(bagEntry.connection, timeout)) {
                closeConnection(bagEntry); // Throw away the dead connection and try again
                timeout = connectionTimeout - elapsedTimeMs(start);
@@ -221,7 +221,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
          closeConnection(bagEntry);
       }
       else {
-         bagEntry.lastAccess = System.currentTimeMillis();
+         bagEntry.lastAccess = System.nanoTime();
          connectionBag.requite(bagEntry);
       }
    }
@@ -245,7 +245,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
          addConnectionExecutor.shutdown();
          addConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
 
-         final long start = System.currentTimeMillis();
+         final long start = System.nanoTime();
          do {
             softEvictConnections();
             abortActiveConnections();

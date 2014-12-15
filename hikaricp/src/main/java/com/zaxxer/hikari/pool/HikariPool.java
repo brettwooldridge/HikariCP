@@ -218,8 +218,8 @@ public final class HikariPool extends BaseHikariPool
 
          connectionTimeout = configuration.getConnectionTimeout(); // refresh member in case it changed
 
-         final long now = System.currentTimeMillis();
-         final long idleTimeout = configuration.getIdleTimeout();
+         final long now = System.nanoTime();
+         final long idleTimeout = TimeUnit.MILLISECONDS.toNanos(configuration.getIdleTimeout());
 
          connectionBag.values(STATE_NOT_IN_USE).stream().filter(p -> connectionBag.reserve(p)).forEach(bagEntry -> {
             if (bagEntry.evicted || (idleTimeout > 0L && now > bagEntry.lastAccess + idleTimeout)) {
