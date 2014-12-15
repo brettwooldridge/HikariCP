@@ -360,42 +360,39 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    protected final boolean addConnection()
    {
       // Speculative increment of totalConnections with expectation of success
-      if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize()) {
-         totalConnections.decrementAndGet();
-         return true;
-      }
-
-      Connection connection = null;
-      try {
-         connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
-
-         if (isUseJdbc4Validation && !poolUtils.isJdbc40Compliant(connection)) {
-            throw new SQLException("JDBC4 Connection.isValid() method not supported, connection test query must be configured");
+      if (totalConnections.incrementAndGet() <= configuration.getMaximumPoolSize()) {
+         Connection connection = null;
+         try {
+            connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
+            
+            if (isUseJdbc4Validation && !poolUtils.isJdbc40Compliant(connection)) {
+               throw new SQLException("JDBC4 Connection.isValid() method not supported, connection test query must be configured");
+            }
+            
+            final boolean timeoutEnabled = (connectionTimeout != Integer.MAX_VALUE);
+            final long timeoutMs = timeoutEnabled ? Math.max(250L, connectionTimeout) : 0L;
+            final int originalTimeout = poolUtils.setNetworkTimeout(connection, timeoutMs, timeoutEnabled);
+            
+            transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
+            
+            poolUtils.setupConnection(connection, isAutoCommit, isReadOnly, transactionIsolation, catalog);
+            connectionCustomizer.customize(connection);
+            poolUtils.executeSql(connection, configuration.getConnectionInitSql(), isAutoCommit);
+            poolUtils.setNetworkTimeout(connection, originalTimeout, timeoutEnabled);
+            
+            connectionBag.add(new PoolBagEntry(connection, this));
+            lastConnectionFailure.set(null);
+            return true;
          }
-
-         final boolean timeoutEnabled = (connectionTimeout != Integer.MAX_VALUE);
-         final long timeoutMs = timeoutEnabled ? Math.max(250L, connectionTimeout) : 0L;
-         final int originalTimeout = poolUtils.setNetworkTimeout(connection, timeoutMs, timeoutEnabled);
-
-         transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
-         
-         poolUtils.setupConnection(connection, isAutoCommit, isReadOnly, transactionIsolation, catalog);
-         connectionCustomizer.customize(connection);
-         poolUtils.executeSql(connection, configuration.getConnectionInitSql(), isAutoCommit);
-         poolUtils.setNetworkTimeout(connection, originalTimeout, timeoutEnabled);
-         
-         connectionBag.add(new PoolBagEntry(connection, this));
-         lastConnectionFailure.set(null);
-         return true;
+         catch (Exception e) {
+            lastConnectionFailure.set(e);
+            poolUtils.quietlyCloseConnection(connection);
+            LOGGER.debug("Connection attempt to database {} failed: {}", configuration.getPoolName(), e.getMessage(), e);
+         }
       }
-      catch (Exception e) {
-         totalConnections.decrementAndGet(); // We failed, so undo speculative increment of totalConnections
-
-         lastConnectionFailure.set(e);
-         poolUtils.quietlyCloseConnection(connection);
-         LOGGER.debug("Connection attempt to database {} failed: {}", configuration.getPoolName(), e.getMessage(), e);
-         return false;
-      }
+   
+      totalConnections.decrementAndGet(); // We failed or pool is max, so undo speculative increment of totalConnections
+      return false;
    }
 
    // ***********************************************************************
