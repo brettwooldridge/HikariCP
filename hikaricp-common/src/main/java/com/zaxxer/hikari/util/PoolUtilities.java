@@ -46,7 +46,6 @@ public final class PoolUtilities
          }
          catch (Exception e) {
             LoggerFactory.getLogger(getClass()).debug("Exception closing connection {}", connection.toString(), e);
-            return;
          }
       }
    }
