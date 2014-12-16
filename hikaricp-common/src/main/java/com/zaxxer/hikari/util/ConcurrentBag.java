@@ -110,8 +110,9 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
 
       // Otherwise, scan the shared list ... for maximum of timeout
       timeout = timeUnit.toNanos(timeout);
+      final long startScan = System.nanoTime();
+      final long originTimeout = timeout;
       do {
-         final long startScan = System.nanoTime();
          long startSeq;
          do {
             startSeq = sequence.longValue();
@@ -126,8 +127,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
 
          synchronizer.tryAcquireSharedNanos(startSeq, timeout);
 
-         final long delta = (System.nanoTime() - startScan);
-         timeout -= (delta > 0 ? delta : TimeUnit.MILLISECONDS.toNanos(1L));
+         timeout = originTimeout - (System.nanoTime() - startScan);
       }
       while (timeout > 0L);
 
