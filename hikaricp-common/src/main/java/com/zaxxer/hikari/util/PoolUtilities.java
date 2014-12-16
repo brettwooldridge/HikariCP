@@ -24,12 +24,14 @@ public final class PoolUtilities
    private volatile boolean IS_JDBC40;
    private volatile boolean IS_JDBC41;
    private volatile boolean jdbc40checked; 
-   private volatile boolean jdbc41checked; 
-   private volatile boolean queryTimeoutSupported = true;
+   private volatile boolean queryTimeoutSupported;
 
    public PoolUtilities(final HikariConfig configuration)
    {
-      executorService = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP utility thread (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
+      this.IS_JDBC40 = true;
+      this.IS_JDBC41 = true;
+      this.queryTimeoutSupported = true;
+      this.executorService = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP utility thread (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
    }
 
    /**
@@ -132,15 +134,13 @@ public final class PoolUtilities
    {
       if (!jdbc40checked) {
          try {
-            connection.isValid(5);  // This will throw AbstractMethodError or SQLException in the case of a non-JDBC 41 compliant driver
-            IS_JDBC40 = true;
+            connection.isValid(5);  // This will throw various exceptions in the case of a non-JDBC 41 compliant driver
          }
          catch (Throwable e) {
             IS_JDBC40 = false;
          }
-         finally {
-            jdbc40checked = true;
-         }
+
+         jdbc40checked = true;
       }
       
       return IS_JDBC40;
@@ -178,18 +178,14 @@ public final class PoolUtilities
     */
    public int setNetworkTimeout(final Connection connection, final long timeoutMs, final boolean isUseNetworkTimeout)
    {
-      if (isUseNetworkTimeout && (IS_JDBC41 || !jdbc41checked)) {
+      if (isUseNetworkTimeout && IS_JDBC41) {
          try {
             final int networkTimeout = connection.getNetworkTimeout();
             connection.setNetworkTimeout(executorService, (int) timeoutMs);
-            IS_JDBC41 = true;
             return networkTimeout;
          }
          catch (Throwable e) {
             IS_JDBC41 = false;
-         }
-         finally {
-            jdbc41checked = true;
          }
       }
 
