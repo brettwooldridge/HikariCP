@@ -365,7 +365,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
          try {
             connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
             
-            if (isUseJdbc4Validation && !poolUtils.isJdbc40Compliant(connection)) {
+            if (isUseJdbc4Validation && !poolUtils.isJdbc4ValidationSupported(connection)) {
                throw new SQLException("JDBC4 Connection.isValid() method not supported, connection test query must be configured");
             }
             

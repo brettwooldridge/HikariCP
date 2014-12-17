@@ -19,19 +19,23 @@ import com.zaxxer.hikari.HikariConfig;
 
 public final class PoolUtilities
 {
+   private static final Logger LOGGER = LoggerFactory.getLogger(PoolUtilities.class);
+
    private final ThreadPoolExecutor executorService;
 
-   private volatile boolean IS_JDBC40;
-   private volatile boolean IS_JDBC41;
-   private volatile boolean jdbc40checked; 
+   private String poolName;
+   private volatile boolean isValidChecked; 
+   private volatile boolean isValidSupported;
+   private volatile boolean isNetworkTimeoutSupported;
    private volatile boolean queryTimeoutSupported;
 
    public PoolUtilities(final HikariConfig configuration)
    {
-      this.IS_JDBC40 = true;
-      this.IS_JDBC41 = true;
+      this.poolName = configuration.getPoolName();
+      this.isValidSupported = true;
+      this.isNetworkTimeoutSupported = true;
       this.queryTimeoutSupported = true;
-      this.executorService = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP utility thread (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
+      this.executorService = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP utility thread (pool " + poolName + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
    }
 
    /**
@@ -47,7 +51,7 @@ public final class PoolUtilities
             connection.close();
          }
          catch (Exception e) {
-            LoggerFactory.getLogger(getClass()).debug("Exception closing connection {}", connection.toString(), e);
+            LOGGER.debug("{} - Exception closing connection {}", poolName, connection.toString(), e);
          }
       }
    }
@@ -130,20 +134,21 @@ public final class PoolUtilities
     * @return true if JDBC 4.1 compliance, false otherwise
     * @throws SQLException re-thrown exception from Connection.getNetworkTimeout()
     */
-   public boolean isJdbc40Compliant(final Connection connection)
+   public boolean isJdbc4ValidationSupported(final Connection connection)
    {
-      if (!jdbc40checked) {
+      if (!isValidChecked) {
          try {
-            connection.isValid(5);  // This will throw various exceptions in the case of a non-JDBC 41 compliant driver
+            connection.isValid(5);  // This will throw various exceptions in the case of a non-JDBC 4.0 compliant driver
          }
          catch (Throwable e) {
-            IS_JDBC40 = false;
+            isValidSupported = false;
+            LOGGER.debug("{} - JDBC4 Connection.isValid() not supported", poolName);
          }
 
-         jdbc40checked = true;
+         isValidChecked = true;
       }
       
-      return IS_JDBC40;
+      return isValidSupported;
    }
 
    /**
@@ -161,6 +166,7 @@ public final class PoolUtilities
          }
          catch (Throwable e) {
             queryTimeoutSupported = false;
+            LOGGER.debug("{} - Statement.setQueryTimeout() not supported", poolName);
          }
       }
    }
@@ -178,14 +184,15 @@ public final class PoolUtilities
     */
    public int setNetworkTimeout(final Connection connection, final long timeoutMs, final boolean isUseNetworkTimeout)
    {
-      if (isUseNetworkTimeout && IS_JDBC41) {
+      if (isUseNetworkTimeout && isNetworkTimeoutSupported) {
          try {
             final int networkTimeout = connection.getNetworkTimeout();
             connection.setNetworkTimeout(executorService, (int) timeoutMs);
             return networkTimeout;
          }
          catch (Throwable e) {
-            IS_JDBC41 = false;
+            isNetworkTimeoutSupported = false;
+            LOGGER.debug("{} - Connection.setNetworkTimeout() not supported", poolName);
          }
       }
 
