@@ -110,6 +110,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
 
    /** {@inheritDoc} */
    @Override
+   @Deprecated
    public Connection getConnection(String username, String password) throws SQLException
    {
       if (isShutdown) {
