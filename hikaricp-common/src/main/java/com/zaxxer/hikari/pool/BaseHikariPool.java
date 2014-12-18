@@ -158,7 +158,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       this.leakTask = (configuration.getLeakDetectionThreshold() == 0) ? LeakTask.NO_LEAK : new LeakTask(configuration.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
       setRemoveOnCancelPolicy(houseKeepingExecutorService);
-      poolUtils.setLoginTimeout(dataSource, connectionTimeout, LOGGER);
+      poolUtils.setLoginTimeout(dataSource, connectionTimeout);
       registerMBeans(configuration, this);
       fillPool();
    }
