@@ -27,14 +27,14 @@ public final class PoolUtilities
    private volatile boolean isValidChecked; 
    private volatile boolean isValidSupported;
    private volatile boolean isNetworkTimeoutSupported;
-   private volatile boolean queryTimeoutSupported;
+   private volatile boolean isQueryTimeoutSupported;
 
    public PoolUtilities(final HikariConfig configuration)
    {
       this.poolName = configuration.getPoolName();
       this.isValidSupported = true;
       this.isNetworkTimeoutSupported = true;
-      this.queryTimeoutSupported = true;
+      this.isQueryTimeoutSupported = true;
       this.executorService = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP utility thread (pool " + poolName + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
    }
 
@@ -160,12 +160,12 @@ public final class PoolUtilities
     */
    public void setQueryTimeout(final Statement statement, final int timeoutSec)
    {
-      if (queryTimeoutSupported) {
+      if (isQueryTimeoutSupported) {
          try {
             statement.setQueryTimeout(timeoutSec);
          }
          catch (Throwable e) {
-            queryTimeoutSupported = false;
+            isQueryTimeoutSupported = false;
             LOGGER.debug("{} - Statement.setQueryTimeout() not supported", poolName);
          }
       }
@@ -206,14 +206,14 @@ public final class PoolUtilities
     * @param connectionTimeout the timeout in milliseconds
     * @param logger a logger to use for a warning
     */
-   public void setLoginTimeout(final DataSource dataSource, final long connectionTimeout, final Logger logger)
+   public void setLoginTimeout(final DataSource dataSource, final long connectionTimeout)
    {
       if (connectionTimeout != Integer.MAX_VALUE) {
          try {
             dataSource.setLoginTimeout((int) TimeUnit.MILLISECONDS.toSeconds(Math.max(1000L, connectionTimeout)));
          }
          catch (SQLException e) {
-            logger.warn("Unable to set DataSource login timeout", e);
+            LOGGER.warn("Unable to set DataSource login timeout", e);
          }
       }
    }
