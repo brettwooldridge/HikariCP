@@ -241,8 +241,9 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
          logPoolState("Before shutdown ");
          connectionBag.close();
          softEvictConnections();
-         houseKeepingExecutorService.shutdownNow();
+         houseKeepingExecutorService.shutdown();
          addConnectionExecutor.shutdown();
+         houseKeepingExecutorService.awaitTermination(5L, TimeUnit.SECONDS);
          addConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
 
          final long start = System.currentTimeMillis();
