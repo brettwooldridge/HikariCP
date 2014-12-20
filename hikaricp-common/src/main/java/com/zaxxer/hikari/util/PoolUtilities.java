@@ -26,8 +26,8 @@ public final class PoolUtilities
    private String poolName;
    private volatile boolean isValidChecked; 
    private volatile boolean isValidSupported;
-   private volatile boolean isNetworkTimeoutSupported;
-   private volatile boolean isQueryTimeoutSupported;
+   private boolean isNetworkTimeoutSupported;
+   private boolean isQueryTimeoutSupported;
 
    public PoolUtilities(final HikariConfig configuration)
    {
