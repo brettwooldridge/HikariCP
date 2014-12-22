@@ -134,7 +134,6 @@ public final class PoolUtilities
     *
     * @param connection a Connection to check
     * @return true if JDBC 4.1 compliance, false otherwise
-    * @throws SQLException re-thrown exception from Connection.getNetworkTimeout()
     */
    public boolean isJdbc4ValidationSupported(final Connection connection)
    {
@@ -158,7 +157,6 @@ public final class PoolUtilities
     *
     * @param statement a statement to set the query timeout on
     * @param timeoutSec the number of seconds before timeout
-    * @throws SQLException re-thrown exception from Statement.setQueryTimeout()
     */
    public void setQueryTimeout(final Statement statement, final int timeoutSec)
    {
@@ -224,7 +222,6 @@ public final class PoolUtilities
     *
     * @param dataSource the DataSource
     * @param connectionTimeout the timeout in milliseconds
-    * @param logger a logger to use for a warning
     */
    public void setLoginTimeout(final DataSource dataSource, final long connectionTimeout)
    {
