@@ -115,13 +115,13 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
       do {
          long startSeq;
          do {
-            startSeq = sequence.longValue();
+            startSeq = sequence.get();
             for (final T bagEntry : sharedList) {
                if (bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
                   return bagEntry;
                }
             }
-         } while (startSeq < sequence.longValue());
+         } while (startSeq < sequence.get());
          
          listener.addBagItem();
 
