@@ -129,7 +129,8 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
             return null;
          }
 
-         timeout = originTimeout - (System.nanoTime() - startScan);
+         final long elapsed = (System.nanoTime() - startScan);
+         timeout = originTimeout - Math.max(elapsed, 100L);  // don't trust the nanoTime() impl. not to go backwards due to NTP adjustments
       }
       while (timeout > 1000L);  // 1000ns is the minimum resolution on many systems
 
@@ -155,7 +156,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
          synchronizer.releaseShared(sequence.incrementAndGet());
       }
       else {
-         throw new IllegalStateException("Value was returned to the bag that was not borrowed: " + bagEntry);
+         LOGGER.warn("Attempt to remove an object from the bag that does not exist: {}", bagEntry.toString());
       }
    }
 
@@ -167,6 +168,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
    public void add(final T bagEntry)
    {
       if (closed) {
+         LOGGER.info("ConcurrentBag has been closed, ignoring add()");
          throw new IllegalStateException("ConcurrentBag has been closed, ignoring add()");
       }
 
@@ -186,11 +188,13 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
    public boolean remove(final T bagEntry)
    {
       if (!bagEntry.state().compareAndSet(STATE_IN_USE, STATE_REMOVED) && !bagEntry.state().compareAndSet(STATE_RESERVED, STATE_REMOVED) && !closed) {
-         throw new IllegalStateException("Attempt to remove an object from the bag that was not borrowed or reserved");
+         LOGGER.warn("Attempt to remove an object from the bag that was not borrowed or reserved: {}", bagEntry.toString());
+         return false;
       }
+
       final boolean removed = sharedList.remove(bagEntry);
       if (!removed && !closed) {
-         throw new IllegalStateException("Attempt to remove an object from the bag that does not exist");
+         LOGGER.warn("Attempt to remove an object from the bag that does not exist: {}", bagEntry.toString());
       }
       return removed;
    }
@@ -251,11 +255,12 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
    public void unreserve(final T bagEntry)
    {
       final long checkInSeq = sequence.incrementAndGet();
-      if (!bagEntry.state().compareAndSet(STATE_RESERVED, STATE_NOT_IN_USE)) {
-         throw new IllegalStateException("Attempt to relinquish an object to the bag that was not reserved");
+      if (bagEntry.state().compareAndSet(STATE_RESERVED, STATE_NOT_IN_USE)) {
+         synchronizer.releaseShared(checkInSeq);
       }
-
-      synchronizer.releaseShared(checkInSeq);
+      else {
+         LOGGER.warn("Attempt to relinquish an object to the bag that was not reserved: {}", bagEntry.toString());
+      }
    }
 
    /**
