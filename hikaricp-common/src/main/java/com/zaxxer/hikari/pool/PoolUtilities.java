@@ -52,7 +52,7 @@ public final class PoolUtilities
             setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(30), true);
             connection.close();
          }
-         catch (Exception e) {
+         catch (Throwable e) {
             LOGGER.debug("{} - Exception closing connection {}", poolName, connection.toString(), e);
          }
       }
@@ -212,7 +212,7 @@ public final class PoolUtilities
             connection.setNetworkTimeout(executorService, (int) timeoutMs);
          }
          catch (Throwable e) {
-            isNetworkTimeoutSupported = false;
+            LOGGER.warn("Unable to reset network timeout for connection {} in pool {}", connection.toString(), poolName, e);
          }
       }
    }
