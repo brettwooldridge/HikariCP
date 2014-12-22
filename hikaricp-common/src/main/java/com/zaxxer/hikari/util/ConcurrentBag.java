@@ -125,11 +125,13 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
          
          listener.addBagItem();
 
-         synchronizer.tryAcquireSharedNanos(startSeq, timeout);
+         if (!synchronizer.tryAcquireSharedNanos(startSeq, timeout)) {
+            return null;
+         }
 
          timeout = originTimeout - (System.nanoTime() - startScan);
       }
-      while (timeout > 0L);
+      while (timeout > 1000L);  // 1000ns is the minimum resolution on many systems
 
       return null;
    }
