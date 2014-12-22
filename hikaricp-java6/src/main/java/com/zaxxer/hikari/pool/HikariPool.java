@@ -18,14 +18,12 @@ package com.zaxxer.hikari.pool;
 
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_IN_USE;
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_NOT_IN_USE;
-import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -127,6 +125,7 @@ public final class HikariPool extends BaseHikariPool
     *
     * @param connectionProxy the connection to actually close
     */
+   @Override
    protected void closeConnection(final PoolBagEntry bagEntry)
    {
       bagEntry.cancelMaxLifeTermination();
@@ -150,6 +149,7 @@ public final class HikariPool extends BaseHikariPool
     * @param timeoutMs the timeout before we consider the test a failure
     * @return true if the connection is alive, false if it is not alive or we timed out
     */
+   @Override
    protected boolean isConnectionAlive(final Connection connection, final long timeoutMs)
    {
       try {
@@ -190,9 +190,9 @@ public final class HikariPool extends BaseHikariPool
     *
     * @throws InterruptedException 
     */
-   protected void abortActiveConnections() throws InterruptedException
+   @Override
+   protected void abortActiveConnections(final ExecutorService assassinExecutor) throws InterruptedException
    {
-      ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin", configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
       for (PoolBagEntry bagEntry : connectionBag.values(STATE_IN_USE)) {
          try {
             bagEntry.aborted = bagEntry.evicted = true;
@@ -210,9 +210,6 @@ public final class HikariPool extends BaseHikariPool
             }
          }
       }
-
-      assassinExecutor.shutdown();
-      assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
    }
 
    /** {@inheritDoc} */

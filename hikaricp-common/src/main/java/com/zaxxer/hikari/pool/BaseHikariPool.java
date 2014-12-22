@@ -29,6 +29,7 @@ import static com.zaxxer.hikari.util.UtilityElf.setRemoveOnCancelPolicy;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -244,13 +245,17 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
          houseKeepingExecutorService.awaitTermination(5L, TimeUnit.SECONDS);
          addConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
 
+         final ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin",
+                                                                     configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
          final long start = System.currentTimeMillis();
          do {
             softEvictConnections();
-            abortActiveConnections();
+            abortActiveConnections(assassinExecutor);
          }
-         while ((getIdleConnections() > 0 || getActiveConnections() > 0) && elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5));
+         while (getTotalConnections() > 0 && elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5));
 
+         assassinExecutor.shutdown();
+         assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
          closeConnectionExecutor.shutdown();
          closeConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
          logPoolState("After shutdown ");
@@ -419,10 +424,11 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
 
    /**
     * Attempt to abort() active connections on Java7+, or close() them on Java6.
+    * @param assassinExecutor 
     *
     * @throws InterruptedException 
     */
-   protected abstract void abortActiveConnections() throws InterruptedException;
+   protected abstract void abortActiveConnections(final ExecutorService assassinExecutor) throws InterruptedException;
    
    /**
     * Create the JVM version-specific ConcurrentBag instance used by the pool.
