@@ -174,17 +174,15 @@ public final class PoolUtilities
    }
 
    /**
-    * Set the network timeout, if <code>isUseNetworkTimeout</code> is <code>true</code>, and return the
-    * pre-existing value of the network timeout.
+    * Set the network timeout, if <code>isUseNetworkTimeout</code> is <code>true</code> and the
+    * driver supports it.  Return the pre-existing value of the network timeout.
     *
-    * @param executor an Executor
     * @param connection the connection to set the network timeout on
     * @param timeoutMs the number of milliseconds before timeout
     * @param isUseNetworkTimeout true if the network timeout should be set, false otherwise
     * @return the pre-existing network timeout value
-    * @throws SQLException thrown if the network timeout cannot be set
     */
-   public int setNetworkTimeout(final Connection connection, final long timeoutMs, final boolean isUseNetworkTimeout)
+   public int getAndSetNetworkTimeout(final Connection connection, final long timeoutMs, final boolean isUseNetworkTimeout)
    {
       if (isUseNetworkTimeout && isNetworkTimeoutSupported) {
          try {
@@ -199,6 +197,26 @@ public final class PoolUtilities
       }
 
       return 0;
+   }
+
+   /**
+    * Set the network timeout, if <code>isUseNetworkTimeout</code> is <code>true</code> and the
+    * driver supports it.
+    *
+    * @param connection the connection to set the network timeout on
+    * @param timeoutMs the number of milliseconds before timeout
+    * @param isUseNetworkTimeout true if the network timeout should be set, false otherwise
+    */
+   public void setNetworkTimeout(final Connection connection, final long timeoutMs, final boolean isUseNetworkTimeout)
+   {
+      if (isUseNetworkTimeout && isNetworkTimeoutSupported) {
+         try {
+            connection.setNetworkTimeout(executorService, (int) timeoutMs);
+         }
+         catch (Throwable e) {
+            isNetworkTimeoutSupported = false;
+         }
+      }
    }
 
    /**

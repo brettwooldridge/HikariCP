@@ -373,7 +373,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             
             final boolean timeoutEnabled = (connectionTimeout != Integer.MAX_VALUE);
             final long timeoutMs = timeoutEnabled ? Math.max(250L, connectionTimeout) : 0L;
-            final int originalTimeout = poolUtils.setNetworkTimeout(connection, timeoutMs, timeoutEnabled);
+            final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, timeoutMs, timeoutEnabled);
             
             transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
             

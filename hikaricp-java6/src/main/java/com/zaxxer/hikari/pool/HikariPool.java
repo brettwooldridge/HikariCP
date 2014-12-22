@@ -160,7 +160,7 @@ public final class HikariPool extends BaseHikariPool
             return connection.isValid(timeoutSec);
          }
 
-         final int networkTimeout = poolUtils.setNetworkTimeout(connection, Math.max(1000, (int) timeoutMs), timeoutEnabled);
+         final int networkTimeout = poolUtils.getAndSetNetworkTimeout(connection, Math.max(1000, (int) timeoutMs), timeoutEnabled);
 
          Statement statement = connection.createStatement();
          try {
