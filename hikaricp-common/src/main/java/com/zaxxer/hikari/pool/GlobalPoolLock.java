@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.util;
+package com.zaxxer.hikari.pool;
 
 import java.util.concurrent.Semaphore;
 

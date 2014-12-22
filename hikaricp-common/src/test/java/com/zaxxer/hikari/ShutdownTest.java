@@ -28,7 +28,7 @@ import org.junit.Test;
 
 import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.pool.HikariPool;
-import com.zaxxer.hikari.util.PoolUtilities;
+import com.zaxxer.hikari.pool.PoolUtilities;
 import com.zaxxer.hikari.util.UtilityElf;
 
 /**

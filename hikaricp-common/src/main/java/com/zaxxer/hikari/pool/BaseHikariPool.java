@@ -53,9 +53,7 @@ import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
-import com.zaxxer.hikari.util.GlobalPoolLock;
 import com.zaxxer.hikari.util.LeakTask;
-import com.zaxxer.hikari.util.PoolUtilities;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -334,7 +332,10 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    @Override
    public final void suspendPool()
    {
-      if (poolState != POOL_SUSPENDED) {
+      if (suspendResumeLock == GlobalPoolLock.FAUX_LOCK) {
+         throw new IllegalStateException("Pool " + configuration.getPoolName() + " is not suspendable");
+      }
+      else if (poolState != POOL_SUSPENDED) {
          suspendResumeLock.suspend();
          poolState = POOL_SUSPENDED;
       }

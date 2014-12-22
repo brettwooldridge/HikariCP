@@ -102,7 +102,7 @@ public final class UtilityElf
       }
 
       try {
-         Class<?> loaded = PoolUtilities.class.getClassLoader().loadClass(className);
+         Class<?> loaded = UtilityElf.class.getClassLoader().loadClass(className);
 
          Class<?>[] argClasses = new Class<?>[args.length];
          for (int i = 0; i < args.length; i++) {

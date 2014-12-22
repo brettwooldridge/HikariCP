@@ -1,4 +1,4 @@
-package com.zaxxer.hikari.util;
+package com.zaxxer.hikari.pool;
 
 import static com.zaxxer.hikari.util.UtilityElf.createInstance;
 import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
@@ -16,6 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.util.DriverDataSource;
+import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 public final class PoolUtilities
 {
