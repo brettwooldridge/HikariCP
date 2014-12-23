@@ -18,6 +18,8 @@ package com.zaxxer.hikari;
 
 import static com.zaxxer.hikari.util.UtilityElf.IS_JAVA7;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
 
@@ -79,38 +81,22 @@ public class TestConcurrentBag
       
       bag.dumpState();
 
-      try {
-         bag.requite(reserved);
-         Assert.fail();
-      }
-      catch (IllegalStateException e) {
-         // pass
-      }
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      PrintStream ps = new PrintStream(baos, true);
+      TestElf.setSlf4jTargetStream(Java8ConcurrentBag.class, ps);
+      
+      bag.requite(reserved);
+      Assert.assertTrue(new String(baos.toByteArray()).contains("does not exist"));
 
-      try {
-         bag.remove(notinuse);
-         Assert.fail();
-      }
-      catch (IllegalStateException e) {
-         // pass
-      }
+      bag.remove(notinuse);
+      Assert.assertTrue(new String(baos.toByteArray()).contains("not borrowed or reserved"));
 
-      try {
-         bag.unreserve(notinuse);
-         Assert.fail();
-      }
-      catch (IllegalStateException e) {
-         // pass
-      }
+      bag.unreserve(notinuse);
+      Assert.assertTrue(new String(baos.toByteArray()).contains("was not reserved"));
 
-      try {
-         bag.remove(inuse);
-         bag.remove(inuse);
-         Assert.fail();
-      }
-      catch (IllegalStateException e) {
-         // pass
-      }
+      bag.remove(inuse);
+      bag.remove(inuse);
+      Assert.assertTrue(new String(baos.toByteArray()).contains("not borrowed or reserved"));
 
       bag.close();
       try {
@@ -119,7 +105,7 @@ public class TestConcurrentBag
          Assert.assertNotEquals(bagEntry, bag.borrow(100, TimeUnit.MILLISECONDS));
       }
       catch (IllegalStateException e) {
-         // pass
+         Assert.assertTrue(new String(baos.toByteArray()).contains("ignoring add()"));
       }
 
       Assert.assertNotNull(notinuse.toString());
