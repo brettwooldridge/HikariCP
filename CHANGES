@@ -2,7 +2,7 @@ HikariCP Changes
 
 Changes in 2.3.0
 
- * Support pool suspend/resume though JMX to support certain failover scenarios.
+ * Support pool suspend/resume to support certain failover scenarios.
 
  * Fix theoretical race in JDBC 4.0 detection support.
 
@@ -29,6 +29,11 @@ Changes in 2.3.0
    Codahale metrics.
 
  * Support initializationFailFast even when minimumIdle = 0
+
+ * Log internal pool inconsistencies rather than throwing exceptions that might
+   disrupt internal executors.
+
+ * Guard against poor or unreliable System.nanoTime() implementations.
 
 Changes in 2.2.5
 
