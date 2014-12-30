@@ -198,6 +198,16 @@ public abstract class StatementProxy implements Statement
 
    /** {@inheritDoc} */
    @Override
+   public ResultSet getResultSet() throws SQLException {
+      final ResultSet resultSet = delegate.getResultSet();
+      if (resultSet != null) {
+         return ProxyFactory.getProxyResultSet(connection, resultSet);
+      }
+      return null;
+   }
+
+   /** {@inheritDoc} */
+   @Override
    @SuppressWarnings("unchecked")
    public final <T> T unwrap(Class<T> iface) throws SQLException
    {
