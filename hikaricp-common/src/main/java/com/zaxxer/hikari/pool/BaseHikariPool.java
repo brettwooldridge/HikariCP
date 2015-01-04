@@ -159,7 +159,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       setRemoveOnCancelPolicy(houseKeepingExecutorService);
       poolUtils.setLoginTimeout(dataSource, connectionTimeout);
       registerMBeans(configuration, this);
-      fillPool();
+      initializeConnections();
    }
 
    /**
@@ -402,6 +402,22 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       return false;
    }
 
+   /**
+    * Fill pool up from current idle connections (as they are perceived at the point of execution) to minimumIdle connections.
+    */
+   protected void fillPool()
+   {
+      houseKeepingExecutorService.schedule(new Runnable() {
+         public void run()
+         {
+            final int connectionsToAdd = configuration.getMinimumIdle() - getIdleConnections();
+            for (int i = 0; i < connectionsToAdd; i++) {
+               addBagItem();
+            }
+         }
+      }, 1, TimeUnit.SECONDS);
+   }
+
    // ***********************************************************************
    //                           Abstract methods
    // ***********************************************************************
@@ -451,7 +467,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    /**
     * Fill the pool up to the minimum size.
     */
-   private void fillPool()
+   private void initializeConnections()
    {
       if (configuration.isInitializationFailFast()) {
          try {
@@ -463,9 +479,8 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             throw new RuntimeException("Fail-fast during pool initialization", e);
          }
       }
-      else {
-         addBagItem();
-      }
+
+      fillPool();
    }
 
    /**

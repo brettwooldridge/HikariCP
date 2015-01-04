@@ -104,7 +104,7 @@ public class ShutdownTest
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(10);
       config.setMaximumPoolSize(10);
-      config.setInitializationFailFast(false);
+      config.setInitializationFailFast(true);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -127,6 +127,8 @@ public class ShutdownTest
    {
       Assert.assertSame("StubConnection count not as expected", 0, StubConnection.count.get());
 
+      StubConnection.slowCreate = false;
+      
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(5);
       config.setMaximumPoolSize(5);
@@ -137,7 +139,7 @@ public class ShutdownTest
       HikariDataSource ds = new HikariDataSource(config);
       HikariPool pool = TestElf.getPool(ds);
 
-      UtilityElf.quietlySleep(500L);
+      UtilityElf.quietlySleep(1200L);
 
       Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() == 5);
 

@@ -72,20 +72,13 @@ public final class HikariPool extends BaseHikariPool
       addConnectionExecutor.execute( () -> {
          long sleepBackoff = 200L;
          final int maxPoolSize = configuration.getMaximumPoolSize();
-         final int minIdle = configuration.getMinimumIdle();
-         while (poolState == POOL_RUNNING && totalConnections.get() < maxPoolSize && (minIdle == 0 || getIdleConnections() < minIdle)) {
-            if (addConnection()) {
-               if (minIdle == 0) {
-                  break; // This break is here so we only add one connection when there is no min. idle
-               }
-            }
-            else {
-               if (minIdle == 0 && getThreadsAwaitingConnection() == 0) {
-                  break;
-               }
-               
+         while (poolState == POOL_RUNNING && totalConnections.get() < maxPoolSize) {
+            if (!addConnection()) {
                quietlySleep(sleepBackoff);
                sleepBackoff = Math.min(connectionTimeout / 2, (long) ((double) sleepBackoff * 1.5));
+            }
+            else {
+               break;
             }
          }
       });
@@ -104,7 +97,7 @@ public final class HikariPool extends BaseHikariPool
    }
 
    // ***********************************************************************
-   //                           Private methods
+   //                           Protected methods
    // ***********************************************************************
 
    /**
@@ -202,6 +195,10 @@ public final class HikariPool extends BaseHikariPool
       return new Java8ConcurrentBag(listener);
    }
 
+   // ***********************************************************************
+   //                      Non-anonymous Inner-classes
+   // ***********************************************************************
+
    /**
     * The house keeping task to retire idle connections.
     */
@@ -228,9 +225,7 @@ public final class HikariPool extends BaseHikariPool
 
          logPoolState("After cleanup ");
 
-         if (configuration.getMinimumIdle() > 0) {
-            addBagItem(); // Try to maintain minimum connections
-         }
+         fillPool(); // Try to maintain minimum connections
       }
    }
 }
