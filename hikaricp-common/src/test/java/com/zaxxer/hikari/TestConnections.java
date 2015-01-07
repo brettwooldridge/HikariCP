@@ -41,6 +41,7 @@ import com.zaxxer.hikari.util.UtilityElf;
  */
 public class TestConnections
 {
+   @SuppressWarnings("deprecation")
    @Test
    public void testCreate() throws SQLException
    {
@@ -138,6 +139,7 @@ public class TestConnections
       }
       finally {
          ds.close();
+         System.getProperties().remove("com.zaxxer.hikari.housekeeping.periodMs", "100");
       }
    }
 
@@ -335,6 +337,7 @@ public class TestConnections
       }
    }
 
+   @SuppressWarnings("deprecation")
    @Test
    public void testGetWithUsername() throws Exception
    {
