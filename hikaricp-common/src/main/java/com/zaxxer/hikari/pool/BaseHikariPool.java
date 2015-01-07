@@ -183,7 +183,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             }
 
             final long now = System.currentTimeMillis();
-            if (bagEntry.evicted || now - bagEntry.lastAccess > ALIVE_BYPASS_WINDOW && !isConnectionAlive(bagEntry.connection, timeout)) {
+            if (bagEntry.evicted || (now - bagEntry.lastAccess > ALIVE_BYPASS_WINDOW && !isConnectionAlive(bagEntry.connection, timeout))) {
                closeConnection(bagEntry); // Throw away the dead connection and try again
                timeout = connectionTimeout - elapsedTimeMs(start);
             }
@@ -407,15 +407,10 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
     */
    protected void fillPool()
    {
-      houseKeepingExecutorService.schedule(new Runnable() {
-         public void run()
-         {
-            final int connectionsToAdd = configuration.getMinimumIdle() - getIdleConnections();
-            for (int i = 0; i < connectionsToAdd; i++) {
-               addBagItem();
-            }
-         }
-      }, 1, TimeUnit.SECONDS);
+      final int connectionsToAdd = configuration.getMinimumIdle() - getIdleConnections();
+      for (int i = 0; i < connectionsToAdd; i++) {
+         addBagItem();
+      }
    }
 
    // ***********************************************************************
