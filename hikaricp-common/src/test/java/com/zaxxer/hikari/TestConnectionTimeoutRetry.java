@@ -221,10 +221,10 @@ public class TestConnectionTimeoutRetry
       config.setMinimumIdle(5);
       config.setMaximumPoolSize(10);
       config.setConnectionTimeout(1000);
-      config.setConnectionTestQuery("VALUES 1");
+      config.setConnectionTestQuery("VALUES 2");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "100");
+      System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "500");
 
       HikariDataSource ds = new HikariDataSource(config);
 
@@ -237,7 +237,7 @@ public class TestConnectionTimeoutRetry
          Connection connection6 = ds.getConnection();
          Connection connection7 = ds.getConnection();
 
-         Thread.sleep(1500);
+         Thread.sleep(1200);
 
          Assert.assertSame("Totals connections not as expected", 10, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 3, TestElf.getPool(ds).getIdleConnections());
@@ -254,7 +254,7 @@ public class TestConnectionTimeoutRetry
          Assert.assertSame("Idle connections not as expected", 10, TestElf.getPool(ds).getIdleConnections());
       }
       finally {
-         System.getProperties().remove("com.zaxxer.hikari.housekeeping.periodMs", "100");
+         System.getProperties().remove("com.zaxxer.hikari.housekeeping.periodMs");
          ds.close();
       }
    }
