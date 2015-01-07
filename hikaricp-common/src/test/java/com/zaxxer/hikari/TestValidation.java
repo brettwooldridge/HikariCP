@@ -29,6 +29,7 @@ import com.zaxxer.hikari.mocks.StubDataSource;
 /**
  * @author Brett Wooldridge
  */
+@SuppressWarnings("deprecation")
 public class TestValidation
 {
    @Test

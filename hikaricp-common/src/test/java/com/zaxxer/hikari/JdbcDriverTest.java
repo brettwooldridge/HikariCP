@@ -36,6 +36,7 @@ public class JdbcDriverTest
       }
    }
 
+   @SuppressWarnings("deprecation")
    @Test
    public void driverTest1() throws SQLException
    {

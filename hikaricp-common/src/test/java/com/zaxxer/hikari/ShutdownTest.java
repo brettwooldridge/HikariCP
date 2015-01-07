@@ -205,6 +205,7 @@ public class ShutdownTest
       Assert.assertSame("Total connection count not as expected", 0, pool.getTotalConnections());
    }
 
+   @SuppressWarnings("deprecation")
    @Test
    public void testAfterShutdown() throws Exception
    {
