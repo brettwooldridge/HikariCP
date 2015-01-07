@@ -4,7 +4,7 @@
 
    <groupId>com.zaxxer</groupId>
    <artifactId>HikariCP-parent</artifactId>
-   <version>2.3.0-rc4-SNAPSHOT</version>
+   <version>2.3.0-rc4</version>
    <packaging>pom</packaging>
 
    <name>HikariCP-parent</name>
@@ -20,7 +20,7 @@
       <connection>scm:git:git@github.com:brettwooldridge/HikariCP.git</connection>
       <developerConnection>scm:git:git@github.com:brettwooldridge/HikariCP.git</developerConnection>
       <url>git@github.com:brettwooldridge/HikariCP.git</url>
-      <tag>HEAD</tag>
+      <tag>HikariCP-2.3.0-rc4</tag>
    </scm>
 
    <licenses>
