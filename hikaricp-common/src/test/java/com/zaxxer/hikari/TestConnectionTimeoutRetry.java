@@ -224,6 +224,8 @@ public class TestConnectionTimeoutRetry
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
+      System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "100");
+
       HikariDataSource ds = new HikariDataSource(config);
 
       try {
@@ -252,6 +254,7 @@ public class TestConnectionTimeoutRetry
          Assert.assertSame("Idle connections not as expected", 10, TestElf.getPool(ds).getIdleConnections());
       }
       finally {
+         System.getProperties().remove("com.zaxxer.hikari.housekeeping.periodMs", "100");
          ds.close();
       }
    }
