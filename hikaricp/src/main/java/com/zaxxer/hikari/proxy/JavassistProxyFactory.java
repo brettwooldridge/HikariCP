@@ -227,7 +227,7 @@ public final class JavassistProxyFactory
          paramTypes.add(toJavaClass(pt));
       }
 
-      return intf.getDeclaredMethod(intfMethod.getName(), paramTypes.toArray(new Class[0])).toString().contains("default ");
+      return intf.getDeclaredMethod(intfMethod.getName(), paramTypes.toArray(new Class[0])).isDefault();
    }
 
    private Class toJavaClass(CtClass cls) throws Exception
