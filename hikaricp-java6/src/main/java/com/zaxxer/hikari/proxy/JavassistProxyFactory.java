@@ -16,12 +16,15 @@
 
 package com.zaxxer.hikari.proxy;
 
+import java.lang.reflect.Array;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javassist.ClassPool;
@@ -156,6 +159,11 @@ public final class JavassistProxyFactory
                continue;
             }
 
+            // Ignore default methods (only for Jre8 or later)
+            if (isDefaultMethod(intf, intfCt, intfMethod)) {
+               continue;
+            }
+
             // Track what methods we've added
             methods.add(signature);
 
@@ -208,5 +216,40 @@ public final class JavassistProxyFactory
       }
 
       return false;
+   }
+
+   private boolean isDefaultMethod(Class intf, CtClass intfCt, CtMethod intfMethod) throws Exception
+   {
+      List<Class> paramTypes = new ArrayList<Class>();
+
+      for (CtClass pt : intfMethod.getParameterTypes()) {
+         paramTypes.add(toJavaClass(pt));
+      }
+
+      return intf.getDeclaredMethod(intfMethod.getName(), paramTypes.toArray(new Class[0])).toString().contains("default ");
+   }
+
+   private Class toJavaClass(CtClass cls) throws Exception
+   {
+      if (cls.getName().endsWith("[]")) {
+         return Array.newInstance(toJavaClass(cls.getName().replace("[]", "")), 0).getClass();
+      } else {
+         return toJavaClass(cls.getName());
+      }
+   }
+
+   private Class toJavaClass(String cn) throws Exception
+   {
+      if ("int".equals(cn)) { return int.class; }
+      if ("long".equals(cn)) { return long.class; }
+      if ("short".equals(cn)) { return short.class; }
+      if ("byte".equals(cn)) { return byte.class; }
+      if ("float".equals(cn)) { return float.class; }
+      if ("double".equals(cn)) { return double.class; }
+      if ("boolean".equals(cn)) { return boolean.class; }
+      if ("char".equals(cn)) { return char.class; }
+      if ("void".equals(cn)) { return void.class; }
+
+      return Class.forName(cn);
    }
 }

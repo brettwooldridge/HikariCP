@@ -48,7 +48,7 @@ public class OSGiBundleTest
             systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("WARN"),
             mavenBundle("org.slf4j","slf4j-api","1.7.5"),
             mavenBundle("org.slf4j","slf4j-simple","1.7.5").noStart(),
-            mavenBundle("org.javassist", "javassist", "3.18.1-GA"),
+            mavenBundle("org.javassist", "javassist", "3.19.0-GA"),
             new File("target/classes").exists()
                 ?  bundle("reference:file:target/classes")
                 :  bundle("reference:file:../target/classes"),
