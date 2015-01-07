@@ -54,7 +54,7 @@ public final class DriverDataSource implements DataSource
    @Override
    public Connection getConnection() throws SQLException
    {
-      return DriverManager.getConnection(jdbcUrl, driverProperties);
+      return driver.connect(jdbcUrl, driverProperties);
    }
 
    @Override
