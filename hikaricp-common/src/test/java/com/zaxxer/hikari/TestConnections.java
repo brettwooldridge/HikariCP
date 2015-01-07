@@ -139,7 +139,7 @@ public class TestConnections
       }
       finally {
          ds.close();
-         System.getProperties().remove("com.zaxxer.hikari.housekeeping.periodMs", "100");
+         System.getProperties().remove("com.zaxxer.hikari.housekeeping.periodMs");
       }
    }
 
