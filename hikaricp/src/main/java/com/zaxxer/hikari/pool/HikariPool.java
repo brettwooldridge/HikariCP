@@ -72,14 +72,10 @@ public final class HikariPool extends BaseHikariPool
       addConnectionExecutor.execute( () -> {
          long sleepBackoff = 200L;
          final int maxPoolSize = configuration.getMaximumPoolSize();
-         while (poolState == POOL_RUNNING && totalConnections.get() < maxPoolSize) {
-            if (!addConnection()) {
-               quietlySleep(sleepBackoff);
-               sleepBackoff = Math.min(connectionTimeout / 2, (long) ((double) sleepBackoff * 1.5));
-            }
-            else {
-               break;
-            }
+         while (poolState == POOL_RUNNING && totalConnections.get() < maxPoolSize && !addConnection()) {
+            // If we got into the loop, addConnection() failed, so we sleep and retry
+            quietlySleep(sleepBackoff);
+            sleepBackoff = Math.min(connectionTimeout / 2, (long) ((double) sleepBackoff * 1.5));
          }
       });
    }
