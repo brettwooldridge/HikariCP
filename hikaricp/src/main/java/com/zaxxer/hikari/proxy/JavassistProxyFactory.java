@@ -16,12 +16,15 @@
 
 package com.zaxxer.hikari.proxy;
 
+import java.lang.reflect.Array;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javassist.ClassPool;
@@ -154,6 +157,11 @@ public final class JavassistProxyFactory
                continue;
             }
 
+            // Ignore default methods (only for Jre8 or later)
+            if (isDefaultMethod(intf, intfCt, intfMethod)) {
+               continue;
+            }
+
             // Track what methods we've added
             methods.add(signature);
 
@@ -206,5 +214,52 @@ public final class JavassistProxyFactory
       }
 
       return false;
+   }
+
+   private boolean isDefaultMethod(Class<?> intf, CtClass intfCt, CtMethod intfMethod) throws Exception
+   {
+      List<Class<?>> paramTypes = new ArrayList<Class<?>>();
+
+      for (CtClass pt : intfMethod.getParameterTypes()) {
+         paramTypes.add(toJavaClass(pt));
+      }
+
+      return intf.getDeclaredMethod(intfMethod.getName(), paramTypes.toArray(new Class[0])).toString().contains("default ");
+   }
+
+   private Class<?> toJavaClass(CtClass cls) throws Exception
+   {
+      if (cls.getName().endsWith("[]")) {
+         return Array.newInstance(toJavaClass(cls.getName().replace("[]", "")), 0).getClass();
+      }
+      else {
+         return toJavaClass(cls.getName());
+      }
+   }
+
+   private Class<?> toJavaClass(String cn) throws Exception
+   {
+      switch (cn) {
+      case "int":
+         return int.class;
+      case "long":
+         return long.class;
+      case "short":
+         return short.class;
+      case "byte":
+         return byte.class;
+      case "float":
+         return float.class;
+      case "double":
+         return double.class;
+      case "boolean":
+         return boolean.class;
+      case "char":
+         return char.class;
+      case "void":
+         return void.class;
+      default:
+         return Class.forName(cn);
+      }
    }
 }

@@ -77,7 +77,7 @@
       <dependency>
          <groupId>org.javassist</groupId>
          <artifactId>javassist</artifactId>
-         <version>3.18.1-GA</version>
+         <version>3.19.0-GA</version>
          <scope>compile</scope>
       </dependency>
       <dependency>
