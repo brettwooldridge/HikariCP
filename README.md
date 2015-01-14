@@ -72,7 +72,7 @@ HikariCP comes with *sane* defaults that perform well in most deployments withou
 
 ##### Essentials
 
-:abc:``dataSourceClassName``<br/>
+&#128288;``dataSourceClassName``<br/>
 This is the name of the ``DataSource`` class provided by the JDBC driver.  Consult the
 documentation for your specific JDBC driver to get this class name, or see the [table](https://github.com/brettwooldridge/HikariCP#popular-datasource-class-names) below.
 Note XA data sources are not supported.  XA requires a real transaction manager like
@@ -82,7 +82,7 @@ Note XA data sources are not supported.  XA requires a real transaction manager 
 
 *- or -*
 
-:abc:``jdbcUrl``<br/>
+&#128288;``jdbcUrl``<br/>
 This property directs HikariCP to use "DriverManager-based" configuration.  We feel that DataSource-based
 configuration (above) is superior for a variety of reasons (see below), but for many deployments there is
 little significant difference.  When using this property with "old" drivers, you may also need to set
@@ -93,7 +93,7 @@ specified in the URL itself.
 
 ***
 
-:abc:``username``<br/>
+&#128288;``username``<br/>
 This property sets the default authentication username used when obtaining *Connections* from
 the underlying driver.  Note that for DataSources this works in a very deterministic fashion by
 calling ``DataSource.getConnection(*username*, password)`` on the underlying DataSource.  However,
@@ -103,7 +103,7 @@ driver's ``DriverManager.getConnection(jdbcUrl, props)`` call.  If this is not w
 skip this method entirely and call ``addDataSourceProperty("username", ...)``, for example.
 *Default: none*
 
-:abc:``password``<br/>
+&#128288;``password``<br/>
 This property sets the default authentication password used when obtaining *Connections* from
 the underlying driver. Note that for DataSources this works in a very deterministic fashion by
 calling ``DataSource.getConnection(username, *password*)`` on the underlying DataSource.  However,
@@ -115,25 +115,25 @@ skip this method entirely and call ``addDataSourceProperty("pass", ...)``, for e
 
 ##### Frequently used
 
-:white_check_mark:``autoCommit``<br/>
+&#9989;``autoCommit``<br/>
 This property controls the default auto-commit behavior of connections returned from the pool.
 It is a boolean value.
 *Default: true*
 
-:watch:``connectionTimeout``<br/>
+&#8986;``connectionTimeout``<br/>
 This property controls the maximum number of milliseconds that a client (that's you) will wait
 for a connection from the pool.  If this time is exceeded without a connection becoming
 available, a SQLException will be thrown.  100ms is the minimum value.
 *Default: 30000 (30 seconds)*
 
-:watch:``idleTimeout``<br/>
+&#8986;``idleTimeout``<br/>
 This property controls the maximum amount of time that a connection is allowed to sit idle in the
 pool.  Whether a connection is retired as idle or not is subject to a maximum variation of +30
 seconds, and average variation of +15 seconds.  A connection will never be retired as idle *before*
 this timeout.  A value of 0 means that idle connections are never removed from the pool.
 *Default: 600000 (10 minutes)*
 
-:watch:``maxLifetime``<br/>
+&#8986;``maxLifetime``<br/>
 This property controls the maximum lifetime of a connection in the pool.  When a connection
 reaches this timeout, even if recently used, it will be retired from the pool.  An in-use
 connection will never be retired, only when it is idle will it be removed.  We strongly
@@ -142,7 +142,7 @@ value of 0 indicates no maximum lifetime (infinite lifetime), subject of course 
 ``idleTimeout`` setting.
 *Default: 1800000 (30 minutes)*
 
-:abc:``connectionTestQuery``<br/>
+&#128288;``connectionTestQuery``<br/>
 **If your driver supports JDBC4 we strongly recommend not setting this property.** This is for 
 "legacy" databases that do not support the JDBC4 ``Connection.isValid() API``.  This is the query that
 will be executed just before a connection is given to you from the pool to validate that the 
@@ -150,7 +150,7 @@ connection to the database is still alive. *Again, try running the pool without 
 HikariCP will log an error if your driver is not JDBC4 compliant to let you know.*
 *Default: none*
 
-:hash:``minimumIdle``<br/>
+&#128290;``minimumIdle``<br/>
 This property controls the minimum number of *idle connections* that HikariCP tries to maintain
 in the pool.  If the idle connections dip below this value, HikariCP will make a best effort to
 add additional connections quickly and efficiently.  However, for maximum performance and
@@ -158,7 +158,7 @@ responsiveness to spike demands, we recommend *not* setting this value and inste
 HikariCP to act as a *fixed size* connection pool.
 *Default: same as maximumPoolSize*
 
-:hash:``maximumPoolSize``<br/>
+&#128290;``maximumPoolSize``<br/>
 This property controls the maximum size that the pool is allowed to reach, including both
 idle and in-use connections.  Basically this value will determine the maximum number of
 actual connections to the database backend.  A reasonable value for this is best determined
@@ -167,69 +167,69 @@ available, calls to getConnection() will block for up to ``connectionTimeout`` m
 before timing out.
 *Default: 10*
 
-:chart_with_upwards_trend:``metricRegistry``<br/>
+&#128200;``metricRegistry``<br/>
 This property is only available via programmatic configuration or IoC container.  This property
 allows you to specify an instance of a *Codahale/Dropwizard* ``MetricRegistry`` to be used by the
 pool to record various metrics.  See the [Metrics](https://github.com/brettwooldridge/HikariCP/wiki/Codahale-Metrics)
 wiki page for details.
 *Default: none*
 
-:abc:``poolName``<br/>
+&#128288;``poolName``<br/>
 This property represents a user-defined name for the connection pool and appears mainly
 in logging and JMX management consoles to identify pools and pool configurations.
 *Default: auto-generated*
 
 ##### Infrequently used
 
-:white_check_mark:``initializationFailFast``<br/>
+&#9989;``initializationFailFast``<br/>
 This property controls whether the pool will "fail fast" if the pool cannot be seeded with
 initial connections successfully.  This property has no effect if ``minimumIdle`` is 0.  If you
 want your application to start *even when* the database is down/unavailable, set this property
 to ``false``.
 *Default: true*
 
-:negative_squared_cross_mark:``isolateInternalQueries``<br/>
+&#10062;``isolateInternalQueries``<br/>
 This property determines whether HikariCP isolates internal pool queries, such as the
 connection alive test, in their own transaction.  Since these are typically read-only
 queries, it is rarely necessary to encapsulate them in their own transaction.  This
 property only applies if ``autoCommit`` is disabled.
 *Default: false*
 
-:negative_squared_cross_mark:``readOnly``<br/>
+&#10062;``readOnly``<br/>
 This property controls whether *Connections* obtained from the pool are in read-only mode by
 default.  Note some databases do not support the concept of read-only mode, while others provide
 query optimizations when the *Connection* is set to read-only.  Whether you need this property
 or not will depend largely on your application and database. 
 *Default: false*
 
-:negative_squared_cross_mark:``registerMbeans``<br/>
+&#10062;``registerMbeans``<br/>
 This property controls whether or not JMX Management Beans ("MBeans") are registered or not.
 *Default: false*
 
-:abc:``catalog``<br/>
+&#128288;``catalog``<br/>
 This property sets the default *catalog* for databases that support the concept of catalogs.
 If this property is not specified, the default catalog defined by the JDBC driver is used.
 *Default: driver default*
 
-:abc:``connectionInitSql``<br/>
+&#128288;``connectionInitSql``<br/>
 This property sets a SQL statement that will be executed after every new connection creation
 before adding it to the pool. If this SQL is not valid or throws an exception, it will be
 treated as a connection failure and the standard retry logic will be followed.
 *Default: none*
 
-:abc: ``connectionCustomizerClassName``<br/>
+&#128288;``connectionCustomizerClassName``<br/>
 This property allows you to specify an implementation of the ``IConnectionCustomizer`` interface.  The
 ``customize(Connection)`` method will be invoked on each new connection *before* it is added to the
 pool.
 *Default: none*
 
-:abc:``driverClassName``<br/>
+&#128288;``driverClassName``<br/>
 HikariCP will attempt to resolve a driver through the DriverManager based solely on the ``jdbcUrl``,
 but for some older drivers the ``driverClassName`` must also be specified.  Omit this property unless
 you get an obvious error message indicating that the driver was not found.
 *Default: none*
 
-:abc:``transactionIsolation``<br/>
+&#128288;``transactionIsolation``<br/>
 This property controls the default transaction isolation level of connections returned from
 the pool.  If this property is not specified, the default transaction isolation level defined
 by the JDBC driver is used.  Only use this property if you have specific isolation requirements that are
@@ -237,13 +237,13 @@ common for all queries.  The value of this property is the constant name from th
 class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, etc.
 *Default: driver default*
 
-:watch:``leakDetectionThreshold``<br/>
+&#8986;``leakDetectionThreshold``<br/>
 This property controls the amount of time that a connection can be out of the pool before a
 message is logged indicating a possible connection leak.  A value of 0 means leak detection
 is disabled.  Lowest acceptable value for enabling leak detection is 10000 (10 secs).
 *Default: 0*
 
-:arrow_right:``dataSource``<br/>
+&#10145;``dataSource``<br/>
 This property is only available via programmatic configuration or IoC container.  This property
 allows you to directly set the instance of the ``DataSource`` to be wrapped by the pool, rather than
 having HikariCP construct it via reflection.  This can be useful in some dependency injection
