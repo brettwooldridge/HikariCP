@@ -759,7 +759,7 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
 
    abstract protected void loadProperties(String propertyFileName);
 
-   void copyState(AbstractHikariConfig other)
+   public void copyState(AbstractHikariConfig other)
    {
       for (Field field : AbstractHikariConfig.class.getDeclaredFields()) {
          if (!Modifier.isFinal(field.getModifiers())) {
