@@ -36,7 +36,7 @@ import com.zaxxer.hikari.util.UtilityElf;
 
 public abstract class AbstractHikariConfig implements HikariConfigMBean
 {
-   private static final Logger LOGGER = LoggerFactory.getLogger(HikariConfig.class);
+   private static final Logger LOGGER = LoggerFactory.getLogger(AbstractHikariConfig.class);
 
    private static final long CONNECTION_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
    private static final long IDLE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
