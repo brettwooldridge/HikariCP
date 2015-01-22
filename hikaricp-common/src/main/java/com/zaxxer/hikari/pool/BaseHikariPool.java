@@ -89,6 +89,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
 
    protected volatile int poolState;
    protected volatile long connectionTimeout;
+   protected volatile long validationTimeout;
    
    private final LeakTask leakTask;
    private final DataSource dataSource;
@@ -129,6 +130,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       this.connectionBag = createConcurrentBag(this);
       this.totalConnections = new AtomicInteger();
       this.connectionTimeout = configuration.getConnectionTimeout();
+      this.validationTimeout = configuration.getValidationTimeout();
       this.lastConnectionFailure = new AtomicReference<Throwable>();
 
       this.isReadOnly = configuration.isReadOnly();
@@ -183,7 +185,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             }
 
             final long now = System.currentTimeMillis();
-            if (bagEntry.evicted || (now - bagEntry.lastAccess > ALIVE_BYPASS_WINDOW && !isConnectionAlive(bagEntry.connection, timeout))) {
+            if (bagEntry.evicted || (now - bagEntry.lastAccess > ALIVE_BYPASS_WINDOW && !isConnectionAlive(bagEntry.connection))) {
                closeConnection(bagEntry); // Throw away the dead connection and try again
                timeout = connectionTimeout - elapsedTimeMs(start);
             }
@@ -378,14 +380,14 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             
             final boolean timeoutEnabled = (connectionTimeout != Integer.MAX_VALUE);
             final long timeoutMs = timeoutEnabled ? Math.max(250L, connectionTimeout) : 0L;
-            final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, timeoutMs, timeoutEnabled);
+            final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, timeoutMs);
             
             transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
             
             poolUtils.setupConnection(connection, isAutoCommit, isReadOnly, transactionIsolation, catalog);
             connectionCustomizer.customize(connection);
             poolUtils.executeSql(connection, configuration.getConnectionInitSql(), isAutoCommit);
-            poolUtils.setNetworkTimeout(connection, originalTimeout, timeoutEnabled);
+            poolUtils.setNetworkTimeout(connection, originalTimeout);
             
             connectionBag.add(new PoolBagEntry(connection, this));
             lastConnectionFailure.set(null);
@@ -431,7 +433,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
     * @param timeoutMs the timeout before we consider the test a failure
     * @return true if the connection is alive, false if it is not alive or we timed out
     */
-   protected abstract boolean isConnectionAlive(final Connection connection, final long timeoutMs);
+   protected abstract boolean isConnectionAlive(final Connection connection);
 
    /**
     * Attempt to abort() active connections on Java7+, or close() them on Java6.

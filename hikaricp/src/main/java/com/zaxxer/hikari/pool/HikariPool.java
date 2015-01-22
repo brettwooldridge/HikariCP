@@ -118,21 +118,19 @@ public final class HikariPool extends BaseHikariPool
     * Check whether the connection is alive or not.
     *
     * @param connection the connection to test
-    * @param timeoutMs the timeout before we consider the test a failure
     * @return true if the connection is alive, false if it is not alive or we timed out
     */
    @Override
-   protected boolean isConnectionAlive(final Connection connection, final long timeoutMs)
+   protected boolean isConnectionAlive(final Connection connection)
    {
       try {
-         final boolean timeoutEnabled = (connectionTimeout != Integer.MAX_VALUE);
-         int timeoutSec = timeoutEnabled ? (int) Math.max(1L, TimeUnit.MILLISECONDS.toSeconds(timeoutMs)) : 0;
+         final int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout);
 
          if (isUseJdbc4Validation) {
             return connection.isValid(timeoutSec);
          }
 
-         final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, Math.max(1000, (int) timeoutMs), timeoutEnabled);
+         final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, validationTimeout);
 
          try (Statement statement = connection.createStatement()) {
             poolUtils.setQueryTimeout(statement, timeoutSec);
@@ -143,7 +141,7 @@ public final class HikariPool extends BaseHikariPool
             connection.rollback();
          }
 
-         poolUtils.setNetworkTimeout(connection, originalTimeout, timeoutEnabled);
+         poolUtils.setNetworkTimeout(connection, originalTimeout);
 
          return true;
       }
@@ -206,6 +204,7 @@ public final class HikariPool extends BaseHikariPool
          logPoolState("Before cleanup ");
 
          connectionTimeout = configuration.getConnectionTimeout(); // refresh member in case it changed
+         validationTimeout = configuration.getValidationTimeout(); // refresh member in case it changed
 
          final long now = System.currentTimeMillis();
          final long idleTimeout = configuration.getIdleTimeout();

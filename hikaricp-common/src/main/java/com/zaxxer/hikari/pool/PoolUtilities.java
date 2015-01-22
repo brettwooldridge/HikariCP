@@ -49,7 +49,7 @@ public final class PoolUtilities
    {
       if (connection != null) {
          try {
-            setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(30), true);
+            setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(30));
             connection.close();
          }
          catch (Throwable e) {
@@ -177,12 +177,11 @@ public final class PoolUtilities
     *
     * @param connection the connection to set the network timeout on
     * @param timeoutMs the number of milliseconds before timeout
-    * @param isUseNetworkTimeout true if the network timeout should be set, false otherwise
     * @return the pre-existing network timeout value
     */
-   public int getAndSetNetworkTimeout(final Connection connection, final long timeoutMs, final boolean isUseNetworkTimeout)
+   public int getAndSetNetworkTimeout(final Connection connection, final long timeoutMs)
    {
-      if (isUseNetworkTimeout && isNetworkTimeoutSupported) {
+      if (isNetworkTimeoutSupported) {
          try {
             final int networkTimeout = connection.getNetworkTimeout();
             connection.setNetworkTimeout(executorService, (int) timeoutMs);
@@ -203,11 +202,10 @@ public final class PoolUtilities
     *
     * @param connection the connection to set the network timeout on
     * @param timeoutMs the number of milliseconds before timeout
-    * @param isUseNetworkTimeout true if the network timeout should be set, false otherwise
     */
-   public void setNetworkTimeout(final Connection connection, final long timeoutMs, final boolean isUseNetworkTimeout)
+   public void setNetworkTimeout(final Connection connection, final long timeoutMs)
    {
-      if (isUseNetworkTimeout && isNetworkTimeoutSupported) {
+      if (isNetworkTimeoutSupported) {
          try {
             connection.setNetworkTimeout(executorService, (int) timeoutMs);
          }

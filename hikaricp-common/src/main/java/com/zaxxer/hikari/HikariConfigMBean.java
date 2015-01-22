@@ -42,6 +42,22 @@ public interface HikariConfigMBean
    void setConnectionTimeout(long connectionTimeoutMs);
 
    /**
+    * Get the maximum number of milliseconds that the pool will wait for a connection to be validated as
+    * alive.
+    *
+    * @return the validation timeout in milliseconds
+    */
+   long getValidationTimeout();
+
+   /**
+    * Sets the maximum number of milliseconds that the pool will wait for a connection to be validated as
+    * alive.
+    *
+    * @param validationTimeoutMs the validation timeout in milliseconds
+    */
+   void setValidationTimeout(long validationTimeoutMs);
+
+   /**
     * This property controls the maximum amount of time (in milliseconds) that a connection is allowed to sit 
     * idle in the pool. Whether a connection is retired as idle or not is subject to a maximum variation of +30
     * seconds, and average variation of +15 seconds. A connection will never be retired as idle before this timeout.

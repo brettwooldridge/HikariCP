@@ -39,6 +39,7 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariConfig.class);
 
    private static final long CONNECTION_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
+   private static final long VALIDATION_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
    private static final long IDLE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
    private static final long MAX_LIFETIME = TimeUnit.MINUTES.toMillis(30);
 
@@ -48,6 +49,7 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
    // Properties changeable at runtime through the MBean
    //
    private volatile long connectionTimeout;
+   private volatile long validationTimeout;
    private volatile long idleTimeout;
    private volatile long leakDetectionThreshold;
    private volatile long maxLifetime;
@@ -88,6 +90,7 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
       dataSourceProperties = new Properties();
 
       connectionTimeout = CONNECTION_TIMEOUT;
+      validationTimeout = VALIDATION_TIMEOUT;
       idleTimeout = IDLE_TIMEOUT;
       isAutoCommit = true;
       isInitializationFailFast = true;
@@ -263,11 +266,30 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
       if (connectionTimeoutMs == 0) {
          this.connectionTimeout = Integer.MAX_VALUE;
       }
-      else if (connectionTimeoutMs < 100) {
-         throw new IllegalArgumentException("connectionTimeout cannot be less than 100ms");
+      else if (connectionTimeoutMs < 1000) {
+         throw new IllegalArgumentException("connectionTimeout cannot be less than 1000ms");
       }
       else {
          this.connectionTimeout = connectionTimeoutMs;
+      }
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public long getValidationTimeout()
+   {
+      return validationTimeout;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public void setValidationTimeout(long validationTimeoutMs)
+   {
+      if (validationTimeoutMs < 1000) {
+         throw new IllegalArgumentException("connectionTimeout cannot be less than 1000ms");
+      }
+      else {
+         this.validationTimeout = validationTimeoutMs;
       }
    }
 
@@ -706,6 +728,11 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
 
       if (connectionTimeout == Integer.MAX_VALUE) {
          logger.warn("No connection wait timeout is set, this might cause an infinite wait.");
+      }
+
+      if (validationTimeout > connectionTimeout) {
+         logger.warn("validationTimeout is greater than connectionTimeout, setting validationTimeout to connectionTimeout.");
+         validationTimeout = connectionTimeout;
       }
 
       if (minIdle < 0 || minIdle > maxPoolSize) {
