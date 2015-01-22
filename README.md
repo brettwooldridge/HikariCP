@@ -223,12 +223,6 @@ before adding it to the pool. If this SQL is not valid or throws an exception, i
 treated as a connection failure and the standard retry logic will be followed.
 *Default: none*
 
-&#128288;``connectionCustomizerClassName``<br/>
-This property allows you to specify an implementation of the ``IConnectionCustomizer`` interface.  The
-``customize(Connection)`` method will be invoked on each new connection *before* it is added to the
-pool.
-*Default: none*
-
 &#128288;``driverClassName``<br/>
 HikariCP will attempt to resolve a driver through the DriverManager based solely on the ``jdbcUrl``,
 but for some older drivers the ``driverClassName`` must also be specified.  Omit this property unless
