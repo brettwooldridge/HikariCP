@@ -195,7 +195,7 @@ queries, it is rarely necessary to encapsulate them in their own transaction.  T
 property only applies if ``autoCommit`` is disabled.
 *Default: false*
 
-:negative_squared_cross_mark:``allowPoolSuspension``<br/>
+&#10062;``allowPoolSuspension``<br/>
 This property controls whether the pool can be suspended and resumed through JMX.  This is
 useful for certain failover automation scenarios.  When the pool is suspended, calls to
 ``getConnection()`` will *not* timeout and will be held until the pool is resumed.
@@ -257,7 +257,7 @@ frameworks. When this property is specified, the ``dataSourceClassName`` propert
 DataSource-specific properties will be ignored.
 *Default: none*
 
-:arrow_right:``threadFactory``<br/>
+&#10145;``threadFactory``<br/>
 This property is only available via programmatic configuration or IoC container.  This property
 allows you to set the instance of the ``java.util.concurrent.ThreadFactory`` that will be used
 for creating all threads used by the pool. It is needed in some restricted execution environments
