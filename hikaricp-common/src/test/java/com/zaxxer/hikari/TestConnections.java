@@ -239,7 +239,7 @@ public class TestConnections
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(4);
-      config.setConnectionTimeout(500);
+      config.setConnectionTimeout(1000);
       config.setInitializationFailFast(false);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");

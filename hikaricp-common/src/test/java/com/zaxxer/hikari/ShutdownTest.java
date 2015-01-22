@@ -244,7 +244,7 @@ public class ShutdownTest
       final HikariConfig config = new HikariConfig();
       config.setMinimumIdle(5);
       config.setMaximumPoolSize(5);
-      config.setConnectionTimeout(200);
+      config.setConnectionTimeout(1000);
       config.setInitializationFailFast(true);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");

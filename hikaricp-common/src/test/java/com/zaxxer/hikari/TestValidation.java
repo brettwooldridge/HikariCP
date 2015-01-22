@@ -144,7 +144,7 @@ public class TestValidation
          Assert.fail();
       }
       catch (IllegalArgumentException ise) {
-         Assert.assertTrue(ise.getMessage().contains("connectionTimeout cannot be less than 100ms"));
+         Assert.assertTrue(ise.getMessage().contains("connectionTimeout cannot be less than 1000ms"));
       }
    }
 

@@ -118,13 +118,14 @@ public final class HikariPool extends BaseHikariPool
     * Check whether the connection is alive or not.
     *
     * @param connection the connection to test
+    * @param timeoutMs the timeout before we consider the test a failure
     * @return true if the connection is alive, false if it is not alive or we timed out
     */
    @Override
-   protected boolean isConnectionAlive(final Connection connection)
+   protected boolean isConnectionAlive(final Connection connection, final long timeoutMs)
    {
       try {
-         final int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout);
+         int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout);
 
          if (isUseJdbc4Validation) {
             return connection.isValid(timeoutSec);
