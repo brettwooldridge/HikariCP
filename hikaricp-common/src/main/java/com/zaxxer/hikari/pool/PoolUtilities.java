@@ -1,13 +1,12 @@
 package com.zaxxer.hikari.pool;
 
 import static com.zaxxer.hikari.util.UtilityElf.createInstance;
-import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
@@ -23,7 +22,7 @@ public final class PoolUtilities
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(PoolUtilities.class);
 
-   private final ThreadPoolExecutor executorService;
+   private final Executor synchronousExecutor;
 
    private String poolName;
    private volatile boolean isValidChecked; 
@@ -37,7 +36,7 @@ public final class PoolUtilities
       this.isValidSupported = true;
       this.isNetworkTimeoutSupported = true;
       this.isQueryTimeoutSupported = true;
-      this.executorService = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP utility thread (pool " + poolName + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
+      this.synchronousExecutor = new SynchronousExecutor();
    }
 
    /**
@@ -184,7 +183,7 @@ public final class PoolUtilities
       if (isNetworkTimeoutSupported) {
          try {
             final int networkTimeout = connection.getNetworkTimeout();
-            connection.setNetworkTimeout(executorService, (int) timeoutMs);
+            connection.setNetworkTimeout(synchronousExecutor, (int) timeoutMs);
             return networkTimeout;
          }
          catch (Throwable e) {
@@ -207,7 +206,7 @@ public final class PoolUtilities
    {
       if (isNetworkTimeoutSupported) {
          try {
-            connection.setNetworkTimeout(executorService, (int) timeoutMs);
+            connection.setNetworkTimeout(synchronousExecutor, (int) timeoutMs);
          }
          catch (Throwable e) {
             LOGGER.warn("Unable to reset network timeout for connection {} in pool {}", connection.toString(), poolName, e);
@@ -229,6 +228,21 @@ public final class PoolUtilities
          }
          catch (SQLException e) {
             LOGGER.warn("Unable to set DataSource login timeout", e);
+         }
+      }
+   }
+
+   private static class SynchronousExecutor implements Executor
+   {
+      /** {@inheritDoc} */
+      @Override
+      public void execute(Runnable command)
+      {
+         try {
+            command.run();
+         }
+         catch (Throwable t) {
+            LOGGER.warn("Exception executing {}", command.toString(), t);
          }
       }
    }
