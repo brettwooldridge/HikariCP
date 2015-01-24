@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
@@ -15,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
@@ -22,7 +25,7 @@ public final class PoolUtilities
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(PoolUtilities.class);
 
-   private final Executor synchronousExecutor;
+   private Executor netTimeoutExecutor;
 
    private String poolName;
    private volatile boolean isValidChecked; 
@@ -36,7 +39,6 @@ public final class PoolUtilities
       this.isValidSupported = true;
       this.isNetworkTimeoutSupported = true;
       this.isQueryTimeoutSupported = true;
-      this.synchronousExecutor = new SynchronousExecutor();
    }
 
    /**
@@ -94,16 +96,23 @@ public final class PoolUtilities
     */
    public DataSource initializeDataSource(final String dsClassName, DataSource dataSource, final Properties dataSourceProperties, final String jdbcUrl, final String username, final String password)
    {
-      if (dataSource == null && dsClassName != null) {
-         dataSource = createInstance(dsClassName, DataSource.class);
-         PropertyBeanSetter.setTargetFromProperties(dataSource, dataSourceProperties);
+      try {
+         if (dataSource == null && dsClassName != null) {
+            dataSource = createInstance(dsClassName, DataSource.class);
+            PropertyBeanSetter.setTargetFromProperties(dataSource, dataSourceProperties);
+            return dataSource;
+         }
+         else if (jdbcUrl != null) {
+            return new DriverDataSource(jdbcUrl, dataSourceProperties, username, password);
+         }
+   
          return dataSource;
       }
-      else if (jdbcUrl != null) {
-         return new DriverDataSource(jdbcUrl, dataSourceProperties, username, password);
+      finally {
+         if (dataSource != null) {
+            createNetworkTimeoutExecutor(dataSource, dsClassName, jdbcUrl);
+         }
       }
-
-      return dataSource;
    }
 
    /**
@@ -183,7 +192,7 @@ public final class PoolUtilities
       if (isNetworkTimeoutSupported) {
          try {
             final int networkTimeout = connection.getNetworkTimeout();
-            connection.setNetworkTimeout(synchronousExecutor, (int) timeoutMs);
+            connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
             return networkTimeout;
          }
          catch (Throwable e) {
@@ -206,7 +215,7 @@ public final class PoolUtilities
    {
       if (isNetworkTimeoutSupported) {
          try {
-            connection.setNetworkTimeout(synchronousExecutor, (int) timeoutMs);
+            connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
          }
          catch (Throwable e) {
             LOGGER.warn("Unable to reset network timeout for connection {} in pool {}", connection.toString(), poolName, e);
@@ -229,6 +238,20 @@ public final class PoolUtilities
          catch (SQLException e) {
             LOGGER.warn("Unable to set DataSource login timeout", e);
          }
+      }
+   }
+
+   // Temporary hack for MySQL issue: http://bugs.mysql.com/bug.php?id=75615
+   private void createNetworkTimeoutExecutor(final DataSource dataSource, final String dsClassName, final String jdbcUrl)
+   {
+      if ((dsClassName != null && dsClassName.contains("Mysql")) ||
+          (jdbcUrl != null && jdbcUrl.contains("mysql")) ||
+          (dataSource != null && dataSource.getClass().getName().contains("Mysql"))) {
+         netTimeoutExecutor = new SynchronousExecutor();
+      }
+      else {
+         netTimeoutExecutor = Executors.newCachedThreadPool(new DefaultThreadFactory("Hikari JDBC Timeout Executor", true));
+         ((ThreadPoolExecutor) netTimeoutExecutor).allowCoreThreadTimeOut(true);
       }
    }
 
