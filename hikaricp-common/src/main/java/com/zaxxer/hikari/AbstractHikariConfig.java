@@ -286,7 +286,7 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
    public void setValidationTimeout(long validationTimeoutMs)
    {
       if (validationTimeoutMs < 1000) {
-         throw new IllegalArgumentException("connectionTimeout cannot be less than 1000ms");
+         throw new IllegalArgumentException("validationTimeout cannot be less than 1000ms");
       }
       else {
          this.validationTimeout = validationTimeoutMs;
@@ -726,11 +726,7 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
    {
       Logger logger = LoggerFactory.getLogger(getClass());
 
-      if (connectionTimeout == Integer.MAX_VALUE) {
-         logger.warn("No connection wait timeout is set, this might cause an infinite wait.");
-      }
-
-      if (validationTimeout > connectionTimeout) {
+      if (validationTimeout > connectionTimeout && connectionTimeout != 0) {
          logger.warn("validationTimeout is greater than connectionTimeout, setting validationTimeout to connectionTimeout.");
          validationTimeout = connectionTimeout;
       }
