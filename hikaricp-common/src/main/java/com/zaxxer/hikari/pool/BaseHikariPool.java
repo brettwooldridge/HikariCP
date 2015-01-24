@@ -379,9 +379,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
                throw new SQLException("JDBC4 Connection.isValid() method not supported, connection test query must be configured");
             }
             
-            final boolean timeoutEnabled = (connectionTimeout != Integer.MAX_VALUE);
-            final long timeoutMs = timeoutEnabled ? Math.max(1000L, connectionTimeout) : 0L;
-            final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, timeoutMs);
+            final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, connectionTimeout);
             
             transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
             
