@@ -186,7 +186,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             }
 
             final long now = System.currentTimeMillis();
-            if (bagEntry.evicted || (now - bagEntry.lastAccess > ALIVE_BYPASS_WINDOW && !isConnectionAlive(bagEntry.connection, timeout))) {
+            if (bagEntry.evicted || (now - bagEntry.lastAccess > ALIVE_BYPASS_WINDOW && !isConnectionAlive(bagEntry.connection))) {
                closeConnection(bagEntry); // Throw away the dead connection and try again
                timeout = connectionTimeout - elapsedTimeMs(start);
             }
@@ -380,7 +380,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             }
             
             final boolean timeoutEnabled = (connectionTimeout != Integer.MAX_VALUE);
-            final long timeoutMs = timeoutEnabled ? Math.max(250L, connectionTimeout) : 0L;
+            final long timeoutMs = timeoutEnabled ? Math.max(1000L, connectionTimeout) : 0L;
             final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, timeoutMs);
             
             transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
@@ -431,10 +431,9 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
     * Check whether the connection is alive or not.
     *
     * @param connection the connection to test
-    * @param timeoutMs the timeout before we consider the test a failure
     * @return true if the connection is alive, false if it is not alive or we timed out
     */
-   protected abstract boolean isConnectionAlive(final Connection connection, final long timeoutMs);
+   protected abstract boolean isConnectionAlive(final Connection connection);
 
    /**
     * Attempt to abort() active connections on Java7+, or close() them on Java6.

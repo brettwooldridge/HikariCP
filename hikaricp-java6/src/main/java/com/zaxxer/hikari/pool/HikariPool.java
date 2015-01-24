@@ -139,7 +139,7 @@ public final class HikariPool extends BaseHikariPool
     * @return true if the connection is alive, false if it is not alive or we timed out
     */
    @Override
-   protected boolean isConnectionAlive(final Connection connection, final long timeoutMs)
+   protected boolean isConnectionAlive(final Connection connection)
    {
       try {
          final int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout);
