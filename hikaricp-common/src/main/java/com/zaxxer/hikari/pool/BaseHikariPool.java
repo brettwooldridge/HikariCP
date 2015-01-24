@@ -466,16 +466,23 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    {
       if (configuration.isInitializationFailFast()) {
          try {
-            if (!addConnection()) {
-               throw new RuntimeException("Fail-fast during pool initialization", lastConnectionFailure.getAndSet(null));
+            try {
+               if (!addConnection()) {
+                  shutdown();
+                  throw new RuntimeException("Fail-fast during pool initialization", lastConnectionFailure.getAndSet(null));
+               }
+   
+               ConnectionProxy connection = (ConnectionProxy) getConnection();
+               connection.getPoolBagEntry().evicted = (configuration.getMinimumIdle() == 0);
+               connection.close();
             }
-
-            ConnectionProxy connection = (ConnectionProxy) getConnection();
-            connection.getPoolBagEntry().evicted = (configuration.getMinimumIdle() == 0);
-            connection.close();
+            catch (SQLException e) {
+               shutdown();
+               throw new RuntimeException("Fail-fast during pool initialization", e);
+            }
          }
-         catch (SQLException e) {
-            throw new RuntimeException("Fail-fast during pool initialization", e);
+         catch (InterruptedException ie) {
+            throw new RuntimeException("Fail-fast during pool initialization", ie);
          }
       }
 
