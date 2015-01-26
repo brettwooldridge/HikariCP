@@ -1,5 +1,16 @@
 HikariCP Changes
 
+Changes in 2.3.1
+
+ * Work around a bug in the MySQL Connector/J implementation of Connection.setNetworkTimeout()
+   that results in non-deterministic asynchronous application of the timeout, resulting in an
+   NPE from the MySQL driver when setNetworkTimeout() is followed immediately by close().
+
+ * Introduced a separate validationTimeout property, distict from connectionTimeout, to allow
+   greater control for some deployments that desire a long (or infinite) connectionTimeout
+   but expect the aliveness check to succeed for fail within a different (shorter) amount of
+   time.
+
 Changes in 2.3.0
 
  * Support pool suspend/resume to support certain failover scenarios.
