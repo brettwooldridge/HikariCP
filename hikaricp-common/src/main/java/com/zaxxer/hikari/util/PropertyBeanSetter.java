@@ -130,7 +130,7 @@ public final class PropertyBeanSetter
             propertyDescriptor = new PropertyDescriptor(propName, target.getClass(), null, capitalized);
          }
          catch (IntrospectionException e1) {
-            LOGGER.error("Property {} is does not exist on target class {}", propName, target.getClass());
+            LOGGER.error("Property {} does not exist on target {}", propName, target.getClass());
             throw new RuntimeException(e);
          }
       }
@@ -155,7 +155,7 @@ public final class PropertyBeanSetter
          }
       }
       catch (Exception e) {
-         LOGGER.error("Exception setting property {} on target class {}", propName, target.getClass(), e);
+         LOGGER.error("Exception setting property {} on target {}", propName, target.getClass(), e);
          throw new RuntimeException(e);
       }
    }
