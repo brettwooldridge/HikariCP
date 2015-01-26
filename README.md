@@ -1,4 +1,4 @@
-![](https://raw.github.com/wiki/brettwooldridge/HikariCP/Hikari.png) HikariCP <sup><sup>It's Faster.&nbsp;</sup></sup>[![Travis branch](https://img.shields.io/travis/joyent/node/v0.6.svg)](https://travis-ci.org/brettwooldridge/HikariCP)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Issue Stats](http://issuestats.com/github/brettwooldridge/HikariCP/badge/issue)](http://issuestats.com/github/brettwooldridge/HikariCP)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Coverage Status](https://img.shields.io/coveralls/brettwooldridge/HikariCP/2.3.0.svg)](https://coveralls.io/r/brettwooldridge/HikariCP?branch=2.3.0)<br><sub><sub><sup>Hi·ka·ri [hi·ka·'lē] &#40;*Origin: Japanese*): light; ray.</sup></sub></sub>
+![](https://raw.github.com/wiki/brettwooldridge/HikariCP/Hikari.png) HikariCP <sup><sup>It's Faster.&nbsp;</sup></sup>[![Travis branch](https://img.shields.io/travis/joyent/node/v0.6.svg)](https://travis-ci.org/brettwooldridge/HikariCP)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Issue Stats](http://issuestats.com/github/brettwooldridge/HikariCP/badge/issue)](http://issuestats.com/github/brettwooldridge/HikariCP)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Coverage Status](https://img.shields.io/coveralls/brettwooldridge/HikariCP/2.3.2.svg)](https://coveralls.io/r/brettwooldridge/HikariCP?branch=2.3.2)<br><sub><sub><sup>Hi·ka·ri [hi·ka·'lē] &#40;*Origin: Japanese*): light; ray.</sup></sub></sub>
 ==========
 
 Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC connection pool.  Coming in at roughly 70Kb, the library is very light.  Read about [how we do it here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).
@@ -13,7 +13,7 @@ _Java 8 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>2.3.0</version>
+        <version>2.3.1</version>
         <scope>compile</scope>
     </dependency>
 ```
@@ -22,7 +22,7 @@ _Java 6 and Java 7 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP-java6</artifactId>
-        <version>2.3.0</version>
+        <version>2.3.1</version>
         <scope>compile</scope>
     </dependency>
 ```
@@ -236,6 +236,12 @@ by the JDBC driver is used.  Only use this property if you have specific isolati
 common for all queries.  The value of this property is the constant name from the ``Connection``
 class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, etc.
 *Default: driver default*
+
+&#8986;``validationTimeout``<br/>
+This property controls the maximum amount of time that a connection will be tested for aliveness.
+This value must be less than the ``connectionTimeout``.  The lowest accepted validation timeout is
+1000ms (1 second).
+*Default: 5000*
 
 &#8986;``leakDetectionThreshold``<br/>
 This property controls the amount of time that a connection can be out of the pool before a
