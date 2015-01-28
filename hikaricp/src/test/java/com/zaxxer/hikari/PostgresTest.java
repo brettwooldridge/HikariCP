@@ -18,6 +18,7 @@ package com.zaxxer.hikari;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -36,60 +37,50 @@ public class PostgresTest
    public void testCase1() throws Exception
    {
       HikariConfig config = new HikariConfig();
-      config.setMinimumIdle(0);
+      config.setMinimumIdle(3);
       config.setMaximumPoolSize(10);
-      config.setConnectionTimeout(5000);
-      config.setConnectionTestQuery("VALUES 1");
+      config.setConnectionTimeout(3000);
+      config.setIdleTimeout(TimeUnit.SECONDS.toMillis(10));
+      config.setValidationTimeout(TimeUnit.SECONDS.toMillis(2));
 
-      config.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
-      config.addDataSourceProperty("serverName", "192.168.0.114");
-      config.addDataSourceProperty("portNumber", "5432");
-      config.addDataSourceProperty("databaseName", "test");
-      config.addDataSourceProperty("user", "brettw");
-      config.addDataSourceProperty("tcpKeepAlive", true);
+      config.setJdbcUrl("jdbc:pgsql://localhost:5432/test");
+      config.setUsername("brettw");
 
-      try (HikariDataSource ds = new HikariDataSource(config)) {
+      try (final HikariDataSource ds = new HikariDataSource(config)) {
+         final long start = System.currentTimeMillis();
+         do {
+            Thread t = new Thread() {
+               public void run() {
+                  try (Connection connection = ds.getConnection()) {
+                     System.err.println("Obtained connection " + connection);
+                     UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis((long)(10 + (Math.random() * 20))));
+                  }
+                  catch (SQLException e) {
+                     e.printStackTrace();
+                  }
+               }
+            };
+            t.setDaemon(true);
+            t.start();
 
-         System.err.println("\nMake sure the firewall is enabled.  Attempting connection in 5 seconds...");
-         UtilityElf.quietlySleep(5000L);
-
-         TestElf.getPool(ds).logPoolState();
-
-         System.err.println("\nNow attempting getConnection(), expecting a timeout...");
-
-         long start = System.currentTimeMillis();
-         try (Connection conn = ds.getConnection()) {
-            System.err.println("\nOpps, got a connection.  Are you sure the firewall is enabled?");
-         }
-         catch (SQLException e)
-         {
-            Assert.assertTrue("Timeout less than expected " + (System.currentTimeMillis() - start) + "ms", (System.currentTimeMillis() - start) > 5000);
-         }
+            UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis((long)((Math.random() * 20))));
+         } while (UtilityElf.elapsedTimeMs(start) < TimeUnit.MINUTES.toMillis(15));
       }
-
-      System.err.println("\nPassed.");
    }
 
    //@Test
    public void testCase2() throws Exception
    {
       HikariConfig config = new HikariConfig();
-      config.setMinimumIdle(0);
+      config.setMinimumIdle(3);
       config.setMaximumPoolSize(10);
-      config.setConnectionTimeout(5000);
-      config.setConnectionTestQuery("VALUES 1");
+      config.setConnectionTimeout(1000);
+      config.setIdleTimeout(TimeUnit.SECONDS.toMillis(60));
 
-      config.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
-      config.addDataSourceProperty("serverName", "192.168.0.114");
-      config.addDataSourceProperty("portNumber", "5432");
-      config.addDataSourceProperty("databaseName", "test");
-      config.addDataSourceProperty("user", "brettw");
-      config.addDataSourceProperty("tcpKeepAlive", true);
+      config.setJdbcUrl("jdbc:pgsql://localhost:5432/test");
+      config.setUsername("brettw");
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
-
-         System.err.println("\nDisable the firewall, please.  Starting test in 5 seconds...");
-         UtilityElf.quietlySleep(5000L);
 
          try (Connection conn = ds.getConnection()) {
             System.err.println("\nGot a connection, and released it.  Now, enable the firewall.");
@@ -126,21 +117,13 @@ public class PostgresTest
    public void testCase3() throws Exception
    {
       HikariConfig config = new HikariConfig();
-      config.setMinimumIdle(0);
+      config.setMinimumIdle(3);
       config.setMaximumPoolSize(10);
-      config.setInitializationFailFast(false);
-      config.setConnectionTimeout(2000);
-      config.setConnectionTestQuery("VALUES 1");
+      config.setConnectionTimeout(1000);
+      config.setIdleTimeout(TimeUnit.SECONDS.toMillis(60));
 
-      config.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
-      config.addDataSourceProperty("serverName", "192.168.0.114");
-      config.addDataSourceProperty("portNumber", "5432");
-      config.addDataSourceProperty("databaseName", "test");
-      config.addDataSourceProperty("user", "brettw");
-      config.addDataSourceProperty("tcpKeepAlive", true);
-
-      System.err.println("\nShutdown the database, please.  Starting test in 15 seconds...");
-      UtilityElf.quietlySleep(15000L);
+      config.setJdbcUrl("jdbc:pgsql://localhost:5432/test");
+      config.setUsername("brettw");
 
       try (final HikariDataSource ds = new HikariDataSource(config)) {
          for (int i = 0; i < 10; i++) {
