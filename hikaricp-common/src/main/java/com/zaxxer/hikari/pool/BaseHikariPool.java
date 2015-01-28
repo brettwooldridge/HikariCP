@@ -412,6 +412,14 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       for (int i = 0; i < connectionsToAdd; i++) {
          addBagItem();
       }
+
+      if (connectionsToAdd > 0 && LOGGER.isDebugEnabled()) {
+         addConnectionExecutor.execute(new Runnable() {
+            public void run() {
+               logPoolState("After fill ");
+            }
+         });
+      }
    }
 
    // ***********************************************************************

@@ -50,6 +50,7 @@ public final class PoolUtilities
    {
       if (connection != null) {
          try {
+            LOGGER.debug("Closing connection {}", connection);
             setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(30));
             connection.close();
          }
