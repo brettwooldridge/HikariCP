@@ -170,9 +170,9 @@ public class TestValidation
 
       HikariConfig config = new HikariConfig();
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-      config.setIdleTimeout(TimeUnit.SECONDS.toMillis(25));
+      config.setIdleTimeout(TimeUnit.SECONDS.toMillis(5));
       config.validate();
-      Assert.assertTrue(new String(baos.toByteArray()).contains("less than 30000ms"));
+      Assert.assertTrue(new String(baos.toByteArray()).contains("less than 10000ms"));
    }
 
    @Test
