@@ -739,13 +739,13 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
          logger.error("maxLifetime cannot be negative.");
          throw new IllegalArgumentException("maxLifetime cannot be negative.");
       }
-      else if (maxLifetime > 0 && maxLifetime < TimeUnit.SECONDS.toMillis(120)) {
-         logger.warn("maxLifetime is less than 120000ms, using default {}ms.", MAX_LIFETIME);
+      else if (maxLifetime > 0 && maxLifetime < TimeUnit.SECONDS.toMillis(30)) {
+         logger.warn("maxLifetime is less than 30000ms, using default {}ms.", MAX_LIFETIME);
          maxLifetime = MAX_LIFETIME;
       }
 
-      if (idleTimeout != 0 && idleTimeout < TimeUnit.SECONDS.toMillis(30)) {
-         logger.warn("idleTimeout is less than 30000ms, using default {}ms.", IDLE_TIMEOUT);
+      if (idleTimeout != 0 && idleTimeout < TimeUnit.SECONDS.toMillis(10)) {
+         logger.warn("idleTimeout is less than 10000ms, using default {}ms.", IDLE_TIMEOUT);
          idleTimeout = IDLE_TIMEOUT;
       }
       else if (idleTimeout > maxLifetime && maxLifetime > 0) {
