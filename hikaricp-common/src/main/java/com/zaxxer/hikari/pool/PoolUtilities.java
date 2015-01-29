@@ -48,15 +48,15 @@ public final class PoolUtilities
     */
    public void quietlyCloseConnection(final Connection connection)
    {
-      if (connection != null) {
-         try {
-            LOGGER.debug("Closing connection {}", connection);
+      try {
+         LOGGER.debug("Closing connection {}", connection);
+         if (connection != null && !connection.isClosed()) {
             setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(30));
             connection.close();
          }
-         catch (Throwable e) {
-            LOGGER.debug("{} - Exception closing connection {}", poolName, connection.toString(), e);
-         }
+      }
+      catch (Throwable e) {
+         LOGGER.debug("{} - Exception closing connection {}", poolName, connection.toString(), e);
       }
    }
 
@@ -219,7 +219,7 @@ public final class PoolUtilities
             connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
          }
          catch (Throwable e) {
-            LOGGER.warn("Unable to reset network timeout for connection {} in pool {}", connection.toString(), poolName, e);
+            LOGGER.debug("Unable to reset network timeout for connection {} in pool {}", connection.toString(), poolName, e);
          }
       }
    }
@@ -266,7 +266,7 @@ public final class PoolUtilities
             command.run();
          }
          catch (Throwable t) {
-            LOGGER.warn("Exception executing {}", command.toString(), t);
+            LOGGER.debug("Exception executing {}", command.toString(), t);
          }
       }
    }
