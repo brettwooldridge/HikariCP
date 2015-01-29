@@ -81,6 +81,8 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
    private IConnectionCustomizer customizer;
    private ThreadFactory threadFactory;
    private Object metricRegistry;
+   private Object healthCheckRegistry;
+   private Properties healthCheckProperties; 
 
    /**
     * Default constructor
@@ -88,6 +90,7 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
    public AbstractHikariConfig()
    {
       dataSourceProperties = new Properties();
+      healthCheckProperties = new Properties();
 
       connectionTimeout = CONNECTION_TIMEOUT;
       validationTimeout = VALIDATION_TIMEOUT;
@@ -497,6 +500,44 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
          throw new IllegalArgumentException("Class must be an instance of com.codahale.metrics.MetricRegistry");
       }
       this.metricRegistry = metricRegistry;
+   }
+
+   /**
+    * Get the Codahale HealthCheckRegistry, could be null.
+    *
+    * @return the Codahale HealthCheckRegistry instance
+    */
+   public Object getHealthCheckRegistry()
+   {
+      return healthCheckRegistry;
+   }
+
+   /**
+    * Set a Codahale HealthCheckRegistry to use for HikariCP.
+    *
+    * @param healthCheckRegistry the Codahale HealthCheckRegistry to set
+    */
+   public void setHealthCheckRegistry(Object healthCheckRegistry)
+   {
+      if (healthCheckRegistry != null && !healthCheckRegistry.getClass().getName().contains("HealthCheckRegistry")) {
+         throw new IllegalArgumentException("Class must be an instance of com.codahale.metrics.health.HealthCheckRegistry");
+      }
+      this.healthCheckRegistry = healthCheckRegistry;
+   }
+
+   public Properties getHealthCheckProperties()
+   {
+      return healthCheckProperties;
+   }
+
+   public void setHealthCheckProperties(Properties healthCheckProperties)
+   {
+      this.healthCheckProperties.putAll(healthCheckProperties);
+   }
+
+   public void addHealthCheckProperty(String key, String value)
+   {
+      healthCheckProperties.setProperty(key, value);
    }
 
    public boolean isReadOnly()

@@ -66,6 +66,7 @@
                <skipTests>${skip.unit.tests}</skipTests>
                <classpathDependencyExcludes>
                   <classpathDependencyExclude>io.dropwizard.metrics:metrics-core</classpathDependencyExclude>
+                  <classpathDependencyExclude>io.dropwizard.metrics:metrics-healthchecks</classpathDependencyExclude>
                </classpathDependencyExcludes>
             </configuration>
          </plugin>
@@ -92,8 +93,7 @@
                         <exclude>**/com/zaxxer/hikari/proxy/StatementProxy</exclude>
                         <exclude>**/com/zaxxer/hikari/proxy/CallableStatementProxy</exclude>
                         <exclude>**/com/zaxxer/hikari/proxy/PreparedStatementProxy</exclude>
-                        <exclude>**/com/zaxxer/hikari/metrics/CodaHaleMetricsTracker</exclude>
-                        <exclude>**/com/zaxxer/hikari/metrics/CodaHaleMetricsTracker.Context</exclude>
+                        <exclude>**/com/zaxxer/hikari/metrics/**</exclude>
                      </excludes>
                   </configuration>
                </execution>
@@ -115,8 +115,7 @@
                         <exclude>**/com/zaxxer/hikari/proxy/StatementProxy.class</exclude>
                         <exclude>**/com/zaxxer/hikari/proxy/CallableStatementProxy.class</exclude>
                         <exclude>**/com/zaxxer/hikari/proxy/PreparedStatementProxy.class</exclude>
-                        <exclude>**/com/zaxxer/hikari/metrics/CodaHaleMetricsTracker.class</exclude>
-                        <exclude>**/com/zaxxer/hikari/metrics/CodaHaleMetricsTracker.Context.class</exclude>
+                        <exclude>**/com/zaxxer/hikari/metrics/**</exclude>
                      </excludes>
                   </configuration>
                </execution>
@@ -190,8 +189,7 @@
                   <Bundle-Name>HikariCP</Bundle-Name>
                   <Export-Package>
                      com.zaxxer.hikari,
-                     com.zaxxer.hikari.hibernate,
-                     com.zaxxer.hikari.metrics
+                     com.zaxxer.hikari.hibernate
                   </Export-Package>
                   <Private-Package>com.zaxxer.hikari.*</Private-Package>
                   <_exportcontents>
@@ -209,6 +207,7 @@
                      javax.sql.rowset.serial,
                      javax.sql.rowset.spi,
                      com.codahale.metrics;resolution:=optional,
+                     com.codahale.metrics.health;resolution:=optional,
                      org.slf4j;version="[1.6,2)",
                      org.hibernate;resolution:=optional,
                      org.hibernate.cfg;resolution:=optional,

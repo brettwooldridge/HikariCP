@@ -123,8 +123,7 @@
                   <Bundle-Name>HikariCP-java6</Bundle-Name>
                   <Export-Package>
                      com.zaxxer.hikari,
-                     com.zaxxer.hikari.hibernate,
-                     com.zaxxer.hikari.metrics
+                     com.zaxxer.hikari.hibernate
                   </Export-Package>
                   <Private-Package>com.zaxxer.hikari.*</Private-Package>
                   <_exportcontents>
@@ -142,6 +141,7 @@
                      javax.sql.rowset.serial,
                      javax.sql.rowset.spi,
                      com.codahale.metrics;resolution:=optional,
+                     com.codahale.metrics.health;resolution:=optional,
                      org.slf4j;version="[1.6,2)",
                      org.hibernate;resolution:=optional,
                      org.hibernate.cfg;resolution:=optional,

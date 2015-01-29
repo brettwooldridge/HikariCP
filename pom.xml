@@ -95,6 +95,13 @@
          <optional>true</optional>
       </dependency>
       <dependency>
+         <groupId>io.dropwizard.metrics</groupId>
+         <artifactId>metrics-healthchecks</artifactId>
+         <version>3.1.0</version>
+         <scope>provided</scope>
+         <optional>true</optional>
+      </dependency>
+      <dependency>
          <groupId>simple-jndi</groupId>
          <artifactId>simple-jndi</artifactId>
          <version>0.11.4.1</version>

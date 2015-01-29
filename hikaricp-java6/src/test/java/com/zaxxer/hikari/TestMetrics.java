@@ -18,6 +18,8 @@ package com.zaxxer.hikari;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.SortedMap;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -27,6 +29,8 @@ import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import com.codahale.metrics.health.HealthCheck.Result;
+import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.util.UtilityElf;
 
 /**
@@ -101,6 +105,44 @@ public class TestMetrics
          Assert.assertEquals(1, histo.getCount());
          double seventyFifth = histo.getSnapshot().get75thPercentile();
          Assert.assertTrue("Seventy-fith percentile less than 250ms: " + seventyFifth, seventyFifth >= 250.0);
+      }
+      finally {
+         ds.close();
+      }
+   }
+
+   @Test
+   public void testHealthChecks() throws Exception
+   {
+      MetricRegistry metricRegistry = new MetricRegistry();
+      HealthCheckRegistry healthRegistry = new HealthCheckRegistry();
+
+      HikariConfig config = new HikariConfig();
+      config.setMaximumPoolSize(10);
+      config.setMetricRegistry(metricRegistry);
+      config.setHealthCheckRegistry(healthRegistry);
+      config.setPoolName("test");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      config.addHealthCheckProperty("connectivityCheckTimeoutMs", "1000");
+      config.addHealthCheckProperty("expected99thPercentileMs", "10");
+
+      HikariDataSource ds = new HikariDataSource(config);
+      try {
+         UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(2));
+
+         Connection connection = ds.getConnection();
+         connection.close();
+
+         connection = ds.getConnection();
+         connection.close();
+
+         SortedMap<String, Result> healthChecks = healthRegistry.runHealthChecks();
+
+         Result connectivityResult = healthChecks.get("test.pool.ConnectivityCheck");
+         Assert.assertTrue(connectivityResult.isHealthy());
+
+         Result slaResult = healthChecks.get("test.pool.Connection99Percent");
+         Assert.assertTrue(slaResult.isHealthy());
       }
       finally {
          ds.close();

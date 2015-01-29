@@ -29,6 +29,7 @@ import static com.zaxxer.hikari.util.UtilityElf.setRemoveOnCancelPolicy;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -43,17 +44,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.IConnectionCustomizer;
 import com.zaxxer.hikari.metrics.CodaHaleMetricsTracker;
+import com.zaxxer.hikari.metrics.CodahaleHealthChecker;
 import com.zaxxer.hikari.metrics.MetricsTracker;
 import com.zaxxer.hikari.metrics.MetricsTracker.MetricsContext;
 import com.zaxxer.hikari.proxy.ConnectionProxy;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
-import com.zaxxer.hikari.util.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
+import com.zaxxer.hikari.util.IBagStateListener;
 import com.zaxxer.hikari.util.LeakTask;
 
 /**
@@ -159,6 +162,10 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       this.houseKeepingExecutorService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
       this.leakTask = (configuration.getLeakDetectionThreshold() == 0) ? LeakTask.NO_LEAK : new LeakTask(configuration.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
+      if (configuration.getHealthCheckRegistry() != null) {
+         CodahaleHealthChecker.registerHealthChecks(this, (HealthCheckRegistry) configuration.getHealthCheckRegistry());
+      }
+
       setRemoveOnCancelPolicy(houseKeepingExecutorService);
       poolUtils.setLoginTimeout(dataSource, connectionTimeout);
       registerMBeans(configuration, this);
@@ -166,15 +173,27 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    }
 
    /**
-    * Get a connection from the pool, or timeout trying.
+    * Get a connection from the pool, or timeout after connectionTimeout milliseconds.
     *
     * @return a java.sql.Connection instance
     * @throws SQLException thrown if a timeout occurs trying to obtain a connection
     */
    public final Connection getConnection() throws SQLException
    {
+      return getConnection(connectionTimeout);
+   }
+
+   /**
+    * Get a connection from the pool, or timeout after the specified number of milliseconds.
+    *
+    * @param hardTimeout the maximum time to wait for a connection from the pool
+    * @return a java.sql.Connection instance
+    * @throws SQLException thrown if a timeout occurs trying to obtain a connection
+    */
+   public final Connection getConnection(final long hardTimeout) throws SQLException
+   {
       suspendResumeLock.acquire();
-      long timeout = connectionTimeout;
+      long timeout = hardTimeout;
       final long start = System.currentTimeMillis();
       final MetricsContext metricsContext = (isRecordMetrics ? metricsTracker.recordConnectionRequest(start) : MetricsTracker.NO_CONTEXT);
 
@@ -188,10 +207,11 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             final long now = System.currentTimeMillis();
             if (bagEntry.evicted || (now - bagEntry.lastAccess > ALIVE_BYPASS_WINDOW && !isConnectionAlive(bagEntry.connection))) {
                closeConnection(bagEntry); // Throw away the dead connection and try again
-               timeout = connectionTimeout - elapsedTimeMs(start);
+               timeout = hardTimeout - elapsedTimeMs(start);
             }
             else {
                metricsContext.setConnectionLastOpen(bagEntry, now);
+               metricsContext.stop();
                return ProxyFactory.getProxyConnection((HikariPool) this, bagEntry, leakTask.start());
             }
          }
@@ -202,12 +222,12 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       }
       finally {
          suspendResumeLock.release();
-         metricsContext.stop();
       }
 
       logPoolState("Timeout failure ");
-      throw new SQLException(String.format("Timeout after %dms of waiting for a connection.", elapsedTimeMs(start)), lastConnectionFailure.getAndSet(null));
+      throw new SQLTimeoutException(String.format("Timeout after %dms of waiting for a connection.", elapsedTimeMs(start)), lastConnectionFailure.getAndSet(null));
    }
+
 
    /**
     * Release a connection back to the pool, or permanently close it if it is broken.
@@ -509,6 +529,16 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       }
 
       return configuration.getConnectionCustomizer();
+   }
+
+   /**
+    * @param healthCheckRegistry
+    */
+   private void registerHealthChecks(Object healthCheckRegistry)
+   {
+      if (healthCheckRegistry != null) {
+         
+      }
    }
 
    public final void logPoolState(String... prefix)
