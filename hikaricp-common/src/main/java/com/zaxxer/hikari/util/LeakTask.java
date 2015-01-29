@@ -65,7 +65,7 @@ public class LeakTask implements Runnable
    
    private LeakTask(final LeakTask parent)
    {
-      exception = new Exception();
+      exception = new Exception("Apparent connection leak detected");
       scheduledFuture = parent.executorService.schedule(this, parent.leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
