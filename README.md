@@ -178,7 +178,7 @@ wiki page for details.
 &#128200;``healthCheckRegistry``<br/>
 This property is only available via programmatic configuration or IoC container.  This property
 allows you to specify an instance of a *Codahale/Dropwizard* ``HealthCheckRegistry`` to be used by the
-pool to report current health information.  See the [Metrics](https://github.com/brettwooldridge/HikariCP/wiki/Dropwizard-HealthChecks)
+pool to report current health information.  See the [Health Checks](https://github.com/brettwooldridge/HikariCP/wiki/Dropwizard-HealthChecks)
 wiki page for details.
 *Default: none*
 
