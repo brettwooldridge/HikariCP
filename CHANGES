@@ -1,5 +1,18 @@
 HikariCP Changes
 
+Changes in 2.3.2
+
+ * Add support for Dropwizard HealthChecks through the introduction of two initial health
+   checks: ConnectivityCheck and Connection99Percent.  See the Github project wiki for
+   documentation.
+
+ * Allow a lower maxLifetime setting of 30 seconds (compared to previous 120 second limit)
+
+ * Improve the message displayed when a connection leak is detected.
+
+ * Fixed a bug where Connection.setNetworkTimeout() was called on an already closed connection
+   resulting in a warning log from the AS400 JDBC driver.
+
 Changes in 2.3.1
 
  * Work around a bug in the MySQL Connector/J implementation of Connection.setNetworkTimeout()
