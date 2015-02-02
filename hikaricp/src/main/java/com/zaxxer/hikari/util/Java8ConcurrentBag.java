@@ -20,7 +20,6 @@ import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_NOT_IN_USE;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
 import java.util.stream.Collectors;
 
 import com.zaxxer.hikari.pool.PoolBagEntry;
@@ -57,12 +56,6 @@ public final class Java8ConcurrentBag extends ConcurrentBag<PoolBagEntry>
       super(listener);
    }
 
-   @Override
-   protected AbstractQueuedLongSynchronizer createQueuedSynchronizer()
-   {
-      return new Synchronizer();
-   }
-   
    /**
     * This method provides a "snaphot" in time of the BagEntry
     * items in the bag in the specified state.  It does not "lock"
@@ -92,28 +85,5 @@ public final class Java8ConcurrentBag extends ConcurrentBag<PoolBagEntry>
    public int getCount(final int state)
    {
       return (int) sharedList.stream().filter(reference -> reference.state.get() == state).count();
-   }
-
-   /**
-    * Our private synchronizer that handles notify/wait type semantics.
-    */
-   private static final class Synchronizer extends AbstractQueuedLongSynchronizer
-   {
-      private static final long serialVersionUID = 104753538004341218L;
-
-      @Override
-      protected long tryAcquireShared(long seq)
-      {
-         return getState() > seq && !hasQueuedPredecessors() ? 1L : -1L;
-      }
-
-      /** {@inheritDoc} */
-      @Override
-      protected boolean tryReleaseShared(long updateSeq)
-      {
-         setState(updateSeq);
-
-         return true;
-      }
    }
 }

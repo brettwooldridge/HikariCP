@@ -25,11 +25,11 @@ import static com.zaxxer.hikari.util.UtilityElf.createInstance;
 import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
 import static com.zaxxer.hikari.util.UtilityElf.elapsedTimeMs;
 import static com.zaxxer.hikari.util.UtilityElf.getTransactionIsolation;
-import static com.zaxxer.hikari.util.UtilityElf.setRemoveOnCancelPolicy;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
+import java.sql.Statement;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -160,13 +160,13 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
       this.houseKeepingExecutorService.scheduleAtFixedRate(getHouseKeeper(), delayPeriod, delayPeriod, TimeUnit.MILLISECONDS);
       this.houseKeepingExecutorService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+      this.houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
       this.leakTask = (configuration.getLeakDetectionThreshold() == 0) ? LeakTask.NO_LEAK : new LeakTask(configuration.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
       if (configuration.getHealthCheckRegistry() != null) {
          CodahaleHealthChecker.registerHealthChecks(this, (HealthCheckRegistry) configuration.getHealthCheckRegistry());
       }
 
-      setRemoveOnCancelPolicy(houseKeepingExecutorService);
       poolUtils.setLoginTimeout(dataSource, connectionTimeout);
       registerMBeans(configuration, this);
       initializeConnections();
@@ -453,13 +453,6 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
     */
    protected abstract void closeConnection(final PoolBagEntry bagEntry);
 
-   /**
-    * Check whether the connection is alive or not.
-    *
-    * @param connection the connection to test
-    * @return true if the connection is alive, false if it is not alive or we timed out
-    */
-   protected abstract boolean isConnectionAlive(final Connection connection);
 
    /**
     * Attempt to abort() active connections on Java7+, or close() them on Java6.
@@ -515,6 +508,43 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       }
 
       fillPool();
+   }
+
+   /**
+    * Check whether the connection is alive or not.
+    *
+    * @param connection the connection to test
+    * @param timeoutMs the timeout before we consider the test a failure
+    * @return true if the connection is alive, false if it is not alive or we timed out
+    */
+   private boolean isConnectionAlive(final Connection connection)
+   {
+      try {
+         int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout);
+
+         if (isUseJdbc4Validation) {
+            return connection.isValid(timeoutSec);
+         }
+
+         final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, validationTimeout);
+
+         try (Statement statement = connection.createStatement()) {
+            poolUtils.setQueryTimeout(statement, timeoutSec);
+            statement.executeQuery(configuration.getConnectionTestQuery());
+         }
+
+         if (isIsolateInternalQueries && !isAutoCommit) {
+            connection.rollback();
+         }
+
+         poolUtils.setNetworkTimeout(connection, originalTimeout);
+
+         return true;
+      }
+      catch (SQLException e) {
+         LOGGER.warn("Exception during keep alive check, that means the connection ({}) must be dead.", connection, e);
+         return false;
+      }
    }
 
    /**

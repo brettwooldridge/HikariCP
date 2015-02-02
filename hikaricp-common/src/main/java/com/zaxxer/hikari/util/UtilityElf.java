@@ -21,11 +21,9 @@ import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
 
 /**
  *
@@ -33,19 +31,6 @@ import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
  */
 public final class UtilityElf
 {
-   public static final boolean IS_JAVA7;
-
-   static {
-      boolean b = false;
-      try {
-         b = AbstractQueuedLongSynchronizer.class.getMethod("hasQueuedPredecessors", new Class<?>[0]) != null;
-      }
-      catch (Exception e) {
-      }
-
-      IS_JAVA7 = b;
-   }
-
    /**
     * Get the elapsed time in millisecond between the specified start time and now.
     *
@@ -69,18 +54,6 @@ public final class UtilityElf
       }
       catch (InterruptedException e) {
          // I said be quiet!
-      }
-   }
-
-   /**
-    * If the scheduled executor supports it, set the removeonCancelPolicy.
-    *
-    * @param executor the executor to set
-    */
-   public static void setRemoveOnCancelPolicy(ScheduledThreadPoolExecutor executor)
-   {
-      if (IS_JAVA7) {
-         executor.setRemoveOnCancelPolicy(true);
       }
    }
 

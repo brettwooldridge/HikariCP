@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Brett Wooldridge
+ * Copyright (C) 2015 Brett Wooldridge
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ public class OSGiBundleTest
         {
             if(bundle != null)
             {
-                if(bundle.getSymbolicName().equals("com.zaxxer.HikariCP-java6"))
+                if(bundle.getSymbolicName().equals("com.zaxxer.HikariCP-java7"))
                 {
                     bundleFound = true;
                     if(bundle.getState() == Bundle.ACTIVE)

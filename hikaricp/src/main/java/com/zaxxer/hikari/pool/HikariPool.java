@@ -20,11 +20,8 @@ import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_IN_USE;
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_NOT_IN_USE;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 
-import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.util.ConcurrentBag;
@@ -111,44 +108,6 @@ public final class HikariPool extends BaseHikariPool
             LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
          }
          closeConnectionExecutor.execute(() -> { poolUtils.quietlyCloseConnection(bagEntry.connection); });
-      }
-   }
-
-   /**
-    * Check whether the connection is alive or not.
-    *
-    * @param connection the connection to test
-    * @param timeoutMs the timeout before we consider the test a failure
-    * @return true if the connection is alive, false if it is not alive or we timed out
-    */
-   @Override
-   protected boolean isConnectionAlive(final Connection connection)
-   {
-      try {
-         int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout);
-
-         if (isUseJdbc4Validation) {
-            return connection.isValid(timeoutSec);
-         }
-
-         final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, validationTimeout);
-
-         try (Statement statement = connection.createStatement()) {
-            poolUtils.setQueryTimeout(statement, timeoutSec);
-            statement.executeQuery(configuration.getConnectionTestQuery());
-         }
-
-         if (isIsolateInternalQueries && !isAutoCommit) {
-            connection.rollback();
-         }
-
-         poolUtils.setNetworkTimeout(connection, originalTimeout);
-
-         return true;
-      }
-      catch (SQLException e) {
-         LOGGER.warn("Exception during keep alive check, that means the connection ({}) must be dead.", connection, e);
-         return false;
       }
    }
 

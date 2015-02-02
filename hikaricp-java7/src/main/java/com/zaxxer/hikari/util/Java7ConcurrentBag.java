@@ -17,11 +17,9 @@ package com.zaxxer.hikari.util;
 
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_IN_USE;
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_NOT_IN_USE;
-import static com.zaxxer.hikari.util.UtilityElf.IS_JAVA7;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
 
 import com.zaxxer.hikari.pool.PoolBagEntry;
 
@@ -45,17 +43,11 @@ import com.zaxxer.hikari.pool.PoolBagEntry;
  *
  * @param <T> the templated type to store in the bag
  */
-public final class Java6ConcurrentBag extends ConcurrentBag<PoolBagEntry>
+public final class Java7ConcurrentBag extends ConcurrentBag<PoolBagEntry>
 {
-   public Java6ConcurrentBag(IBagStateListener listener)
+   public Java7ConcurrentBag(IBagStateListener listener)
    {
       super(listener);
-   }
-
-   @Override
-   protected AbstractQueuedLongSynchronizer createQueuedSynchronizer()
-   {
-      return new Synchronizer();
    }
 
    /**
@@ -95,38 +87,5 @@ public final class Java6ConcurrentBag extends ConcurrentBag<PoolBagEntry>
          }
       }
       return count;
-   }
-
-
-   /**
-    * Our private synchronizer that handles notify/wait type semantics.
-    */
-   private static final class Synchronizer extends AbstractQueuedLongSynchronizer
-   {
-      private static final long serialVersionUID = 104753538004341218L;
-
-      @Override
-      protected long tryAcquireShared(long seq)
-      {
-         return getState() > seq && !java67hasQueuedPredecessors() ? 1L : -1L;
-      }
-
-      /** {@inheritDoc} */
-      @Override
-      protected boolean tryReleaseShared(long updateSeq)
-      {
-         setState(updateSeq);
-
-         return true;
-      }
-
-      private boolean java67hasQueuedPredecessors()
-      {
-         if (IS_JAVA7) {
-            return hasQueuedPredecessors();
-         }
-
-         return false;
-      }
    }
 }

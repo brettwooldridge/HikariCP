@@ -16,6 +16,10 @@
 
 package com.zaxxer.hikari;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.sql.Connection;
@@ -31,10 +35,11 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.zaxxer.hikari.proxy.JavassistProxyFactory;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 import com.zaxxer.hikari.util.UtilityElf;
 
-public abstract class AbstractHikariConfig implements HikariConfigMBean
+public class HikariConfig implements HikariConfigMBean
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariConfig.class);
 
@@ -84,10 +89,15 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
    private Object healthCheckRegistry;
    private Properties healthCheckProperties; 
 
+   static
+   {
+      JavassistProxyFactory.initialize();
+   }
+
    /**
     * Default constructor
     */
-   public AbstractHikariConfig()
+   public HikariConfig()
    {
       dataSourceProperties = new Properties();
       healthCheckProperties = new Properties();
@@ -118,7 +128,7 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
     *
     * @param properties the name of the property file
     */
-   public AbstractHikariConfig(Properties properties)
+   public HikariConfig(Properties properties)
    {
       this();
       PropertyBeanSetter.setTargetFromProperties(this, properties);
@@ -131,7 +141,7 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
     *
     * @param propertyFileName the name of the property file
     */
-   public AbstractHikariConfig(String propertyFileName)
+   public HikariConfig(String propertyFileName)
    {
       this();
 
@@ -821,11 +831,27 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
       }
    }
 
-   abstract protected void loadProperties(String propertyFileName);
-
-   public void copyState(AbstractHikariConfig other)
+   private void loadProperties(String propertyFileName)
    {
-      for (Field field : AbstractHikariConfig.class.getDeclaredFields()) {
+      final File propFile = new File(propertyFileName);
+      try (final InputStream is = propFile.isFile() ? new FileInputStream(propFile) : this.getClass().getResourceAsStream(propertyFileName)) {
+         if (is != null) {
+            Properties props = new Properties();
+            props.load(is);
+            PropertyBeanSetter.setTargetFromProperties(this, props);
+         }
+         else {
+            throw new IllegalArgumentException("Property file " + propertyFileName + " was not found.");
+         }
+      }
+      catch (IOException io) {
+         throw new RuntimeException("Error loading properties file", io);
+      }
+   }
+
+   public void copyState(HikariConfig other)
+   {
+      for (Field field : HikariConfig.class.getDeclaredFields()) {
          if (!Modifier.isFinal(field.getModifiers())) {
             field.setAccessible(true);
             try {

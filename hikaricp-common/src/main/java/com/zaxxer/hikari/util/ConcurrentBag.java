@@ -71,15 +71,10 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
    public ConcurrentBag(IBagStateListener listener)
    {
       this.sharedList = new CopyOnWriteArrayList<T>();
-      this.synchronizer = createQueuedSynchronizer();
+      this.synchronizer = new Synchronizer();
       this.sequence = new AtomicLong(1);
       this.listener = listener;
       this.threadList = new ThreadLocal<ArrayList<WeakReference<IConcurrentBagEntry>>>();
-   }
-
-   protected AbstractQueuedLongSynchronizer createQueuedSynchronizer()
-   {
-      throw new RuntimeException("createQueuedSynchronizer() method must be overridden");
    }
 
    /**
@@ -305,6 +300,30 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
    {
       for (T bagEntry : sharedList) {
          LOGGER.info(bagEntry.toString());
+      }
+   }
+
+
+   /**
+    * Our private synchronizer that handles notify/wait type semantics.
+    */
+   private static final class Synchronizer extends AbstractQueuedLongSynchronizer
+   {
+      private static final long serialVersionUID = 104753538004341218L;
+
+      @Override
+      protected long tryAcquireShared(long seq)
+      {
+         return getState() > seq && !hasQueuedPredecessors() ? 1L : -1L;
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      protected boolean tryReleaseShared(long updateSeq)
+      {
+         setState(updateSeq);
+
+         return true;
       }
    }
 }

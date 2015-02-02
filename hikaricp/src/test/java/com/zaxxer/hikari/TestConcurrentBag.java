@@ -16,12 +16,9 @@
 
 package com.zaxxer.hikari;
 
-import static com.zaxxer.hikari.util.UtilityElf.IS_JAVA7;
-
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -31,7 +28,6 @@ import org.junit.Test;
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.pool.PoolBagEntry;
 import com.zaxxer.hikari.util.ConcurrentBag;
-import com.zaxxer.hikari.util.IConcurrentBagEntry;
 import com.zaxxer.hikari.util.Java8ConcurrentBag;
 
 /**
@@ -109,61 +105,5 @@ public class TestConcurrentBag
       }
 
       Assert.assertNotNull(notinuse.toString());
-   }
-
-   @Test
-   public void testConcurrentBag2() throws InterruptedException
-   {
-      ConcurrentBag<PoolBagEntry> bag = new FauxJava6ConcurrentBag();
-      Assert.assertEquals(0, bag.values(IConcurrentBagEntry.STATE_IN_USE).size());
-      Assert.assertEquals(0, bag.getCount(IConcurrentBagEntry.STATE_IN_USE));
-   }
-
-   private static class FauxJava6ConcurrentBag extends ConcurrentBag<PoolBagEntry>
-   {
-      /**
-       * @param listener
-       */
-      public FauxJava6ConcurrentBag() {
-         super(null);
-      }
-
-      @Override
-      protected AbstractQueuedLongSynchronizer createQueuedSynchronizer()
-      {
-         return new Synchronizer();
-      }
-   }
-
-   /**
-    * Our private synchronizer that handles notify/wait type semantics.
-    */
-   private static final class Synchronizer extends AbstractQueuedLongSynchronizer
-   {
-      private static final long serialVersionUID = 104753538004341218L;
-
-      @Override
-      protected long tryAcquireShared(long seq)
-      {
-         return getState() > seq && !java67hasQueuedPredecessors() ? 1L : -1L;
-      }
-
-      /** {@inheritDoc} */
-      @Override
-      protected boolean tryReleaseShared(long updateSeq)
-      {
-         setState(updateSeq);
-
-         return true;
-      }
-
-      private boolean java67hasQueuedPredecessors()
-      {
-         if (IS_JAVA7) {
-            return hasQueuedPredecessors();
-         }
-
-         return false;
-      }
    }
 }

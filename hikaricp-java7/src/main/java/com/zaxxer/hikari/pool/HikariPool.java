@@ -20,16 +20,12 @@ import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_IN_USE;
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_NOT_IN_USE;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.IBagStateListener;
-import com.zaxxer.hikari.util.Java6ConcurrentBag;
+import com.zaxxer.hikari.util.Java7ConcurrentBag;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -132,48 +128,6 @@ public final class HikariPool extends BaseHikariPool
    }
 
    /**
-    * Check whether the connection is alive or not.
-    *
-    * @param connection the connection to test
-    * @param timeoutMs the timeout before we consider the test a failure
-    * @return true if the connection is alive, false if it is not alive or we timed out
-    */
-   @Override
-   protected boolean isConnectionAlive(final Connection connection)
-   {
-      try {
-         final int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout);
-
-         if (isUseJdbc4Validation) {
-            return connection.isValid(timeoutSec);
-         }
-
-         final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, validationTimeout);
-
-         Statement statement = connection.createStatement();
-         try {
-            poolUtils.setQueryTimeout(statement, timeoutSec);
-            statement.executeQuery(configuration.getConnectionTestQuery());
-         }
-         finally {
-            statement.close();
-         }
-
-         if (isIsolateInternalQueries && !isAutoCommit) {
-            connection.rollback();
-         }
-
-         poolUtils.setNetworkTimeout(connection, originalTimeout);
-
-         return true;
-      }
-      catch (SQLException e) {
-         LOGGER.warn("Exception during keep alive check, that means the connection ({}) must be dead.", connection, e);
-         return false;
-      }
-   }
-
-   /**
     * Attempt to abort() active connections on Java7+, or close() them on Java6.
     *
     * @throws InterruptedException 
@@ -211,7 +165,7 @@ public final class HikariPool extends BaseHikariPool
    @Override
    protected ConcurrentBag<PoolBagEntry> createConcurrentBag(IBagStateListener listener)
    {
-      return new Java6ConcurrentBag(listener);
+      return new Java7ConcurrentBag(listener);
    }
 
    // ***********************************************************************
