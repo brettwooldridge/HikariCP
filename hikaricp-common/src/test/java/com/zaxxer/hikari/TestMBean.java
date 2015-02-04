@@ -17,6 +17,7 @@ package com.zaxxer.hikari;
 
 import java.sql.SQLException;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TestMBean
@@ -33,6 +34,10 @@ public class TestMBean
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
         HikariDataSource ds = new HikariDataSource(config);
+        Assert.assertEquals(0, ds.getIdleConnections());
+        Assert.assertEquals(0, ds.getActiveConnections());
+        Assert.assertEquals(0, ds.getTotalConnections());
+        Assert.assertEquals(0, ds.getThreadsAwaitingConnection());
         ds.close();
     }
 }
