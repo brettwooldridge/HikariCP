@@ -124,7 +124,7 @@ It is a boolean value.
 &#8986;``connectionTimeout``<br/>
 This property controls the maximum number of milliseconds that a client (that's you) will wait
 for a connection from the pool.  If this time is exceeded without a connection becoming
-available, a SQLException will be thrown.  100ms is the minimum value.
+available, a SQLException will be thrown.  1000ms is the minimum value.
 *Default: 30000 (30 seconds)*
 
 &#8986;``idleTimeout``<br/>
