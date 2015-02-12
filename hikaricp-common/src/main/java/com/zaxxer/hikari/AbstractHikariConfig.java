@@ -26,11 +26,16 @@ import java.util.TreeSet;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 import com.zaxxer.hikari.util.UtilityElf;
 
@@ -496,9 +501,23 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
     */
    public void setMetricRegistry(Object metricRegistry)
    {
-      if (metricRegistry != null && !metricRegistry.getClass().getName().contains("MetricRegistry")) {
-         throw new IllegalArgumentException("Class must be an instance of com.codahale.metrics.MetricRegistry");
+      if (metricRegistry != null) {
+         if (metricRegistry instanceof String) {
+            try {
+               InitialContext initCtx = new InitialContext();
+               Context envCtx = (Context) initCtx.lookup("java:comp/env");
+               metricRegistry = (MetricRegistry) envCtx.lookup((String) metricRegistry);
+            }
+            catch (NamingException e) {
+               throw new IllegalArgumentException(e);
+            }
+         }
+
+         if (!(metricRegistry instanceof MetricRegistry)) {
+            throw new IllegalArgumentException("Class must be an instance of com.codahale.metrics.MetricRegistry");            
+         }
       }
+
       this.metricRegistry = metricRegistry;
    }
 
@@ -519,9 +538,23 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
     */
    public void setHealthCheckRegistry(Object healthCheckRegistry)
    {
-      if (healthCheckRegistry != null && !healthCheckRegistry.getClass().getName().contains("HealthCheckRegistry")) {
-         throw new IllegalArgumentException("Class must be an instance of com.codahale.metrics.health.HealthCheckRegistry");
+      if (healthCheckRegistry != null) {
+         if (healthCheckRegistry instanceof String) {
+            try {
+               InitialContext initCtx = new InitialContext();
+               Context envCtx = (Context) initCtx.lookup("java:comp/env");
+               healthCheckRegistry = (MetricRegistry) envCtx.lookup((String) healthCheckRegistry);
+            }
+            catch (NamingException e) {
+               throw new IllegalArgumentException(e);
+            }
+         }
+
+         if (!(healthCheckRegistry instanceof HealthCheckRegistry)) {
+            throw new IllegalArgumentException("Class must be an instance of com.codahale.metrics.health.HealthCheckRegistry");
+         }
       }
+
       this.healthCheckRegistry = healthCheckRegistry;
    }
 
