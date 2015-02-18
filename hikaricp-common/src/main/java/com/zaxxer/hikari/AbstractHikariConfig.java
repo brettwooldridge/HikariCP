@@ -26,7 +26,6 @@ import java.util.TreeSet;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
@@ -505,8 +504,7 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
          if (metricRegistry instanceof String) {
             try {
                InitialContext initCtx = new InitialContext();
-               Context envCtx = (Context) initCtx.lookup("java:comp/env");
-               metricRegistry = (MetricRegistry) envCtx.lookup((String) metricRegistry);
+               metricRegistry = (MetricRegistry) initCtx.lookup((String) metricRegistry);
             }
             catch (NamingException e) {
                throw new IllegalArgumentException(e);
@@ -542,8 +540,7 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
          if (healthCheckRegistry instanceof String) {
             try {
                InitialContext initCtx = new InitialContext();
-               Context envCtx = (Context) initCtx.lookup("java:comp/env");
-               healthCheckRegistry = (MetricRegistry) envCtx.lookup((String) healthCheckRegistry);
+               healthCheckRegistry = (MetricRegistry) initCtx.lookup((String) healthCheckRegistry);
             }
             catch (NamingException e) {
                throw new IllegalArgumentException(e);
