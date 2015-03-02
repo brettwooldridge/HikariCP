@@ -73,6 +73,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    protected static final int POOL_RUNNING = 0;
    protected static final int POOL_SUSPENDED = 1;
    protected static final int POOL_SHUTDOWN = 2;
+   private static final String FAIL_FAST_EXCEPTION_MSG = "Fail-fast during pool initialization";
 
    public final String catalog;
    public final boolean isReadOnly;
@@ -93,7 +94,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    protected volatile int poolState;
    protected volatile long connectionTimeout;
    protected volatile long validationTimeout;
-   
+
    private final LeakTask leakTask;
    private final DataSource dataSource;
    private final MetricsTracker metricsTracker;
@@ -394,20 +395,20 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
          Connection connection = null;
          try {
             connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
-            
+
             if (isUseJdbc4Validation && !poolUtils.isJdbc4ValidationSupported(connection)) {
                throw new SQLException("JDBC4 Connection.isValid() method not supported, connection test query must be configured");
             }
-            
+
             final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, connectionTimeout);
-            
+
             transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
-            
+
             poolUtils.setupConnection(connection, isAutoCommit, isReadOnly, transactionIsolation, catalog);
             connectionCustomizer.customize(connection);
             poolUtils.executeSql(connection, configuration.getConnectionInitSql(), isAutoCommit);
             poolUtils.setNetworkTimeout(connection, originalTimeout);
-            
+
             connectionBag.add(new PoolBagEntry(connection, this));
             lastConnectionFailure.set(null);
             return true;
@@ -418,7 +419,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             LOGGER.debug("Connection attempt to database {} failed: {}", configuration.getPoolName(), e.getMessage(), e);
          }
       }
-   
+
       totalConnections.decrementAndGet(); // We failed or pool is max, so undo speculative increment of totalConnections
       return false;
    }
@@ -463,12 +464,12 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
 
    /**
     * Attempt to abort() active connections on Java7+, or close() them on Java6.
-    * @param assassinExecutor 
+    * @param assassinExecutor
     *
-    * @throws InterruptedException 
+    * @throws InterruptedException
     */
    protected abstract void abortActiveConnections(final ExecutorService assassinExecutor) throws InterruptedException;
-   
+
    /**
     * Create the JVM version-specific ConcurrentBag instance used by the pool.
     *
@@ -497,20 +498,20 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             try {
                if (!addConnection()) {
                   shutdown();
-                  throw new RuntimeException("Fail-fast during pool initialization", lastConnectionFailure.getAndSet(null));
+                  throw new FailFastException(FAIL_FAST_EXCEPTION_MSG, lastConnectionFailure.getAndSet(null));
                }
-   
+
                ConnectionProxy connection = (ConnectionProxy) getConnection();
                connection.getPoolBagEntry().evicted = (configuration.getMinimumIdle() == 0);
                connection.close();
             }
             catch (SQLException e) {
                shutdown();
-               throw new RuntimeException("Fail-fast during pool initialization", e);
+               throw new FailFastException(FAIL_FAST_EXCEPTION_MSG, e);
             }
          }
          catch (InterruptedException ie) {
-            throw new RuntimeException("Fail-fast during pool initialization", ie);
+            throw new FailFastException(FAIL_FAST_EXCEPTION_MSG, ie);
          }
       }
 
@@ -537,7 +538,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    private void registerHealthChecks(Object healthCheckRegistry)
    {
       if (healthCheckRegistry != null) {
-         
+
       }
    }
 
