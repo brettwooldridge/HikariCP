@@ -497,7 +497,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             try {
                if (!addConnection()) {
                   shutdown();
-                  throw new RuntimeException("Fail-fast during pool initialization", lastConnectionFailure.getAndSet(null));
+                  throw new PoolInitializationException(lastConnectionFailure.getAndSet(null));
                }
    
                ConnectionProxy connection = (ConnectionProxy) getConnection();
@@ -506,11 +506,11 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             }
             catch (SQLException e) {
                shutdown();
-               throw new RuntimeException("Fail-fast during pool initialization", e);
+               throw new PoolInitializationException(e);
             }
          }
          catch (InterruptedException ie) {
-            throw new RuntimeException("Fail-fast during pool initialization", ie);
+            throw new PoolInitializationException(ie);
          }
       }
 
@@ -529,16 +529,6 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       }
 
       return configuration.getConnectionCustomizer();
-   }
-
-   /**
-    * @param healthCheckRegistry
-    */
-   private void registerHealthChecks(Object healthCheckRegistry)
-   {
-      if (healthCheckRegistry != null) {
-         
-      }
    }
 
    public final void logPoolState(String... prefix)
