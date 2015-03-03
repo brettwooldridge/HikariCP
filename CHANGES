@@ -1,5 +1,16 @@
 HikariCP Changes
 
+Changes in 2.3.3
+
+ * Fixed bad interaction with PostgeSQL JDBC driver whereby a SQLException thrown by
+   PostgreSQL where the getNextException() call returns the original exception and causes
+   an infinite loop in HikariCP (and eventual stack overflow).
+   
+ * Throw a typed Exception rather than a simple RuntimeException when pool initialization
+   fails.
+
+ * Allow Dropwizard Metrics and HealthChecks to be configured by a JNDI lookup.
+
 Changes in 2.3.2
 
  * Add support for Dropwizard HealthChecks through the introduction of two initial health
