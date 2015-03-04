@@ -31,6 +31,8 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
+import javax.sql.DataSource;
+
 /**
  * Connection provider for Hibernate 4.3.
  *
@@ -125,12 +127,16 @@ public class HikariConnectionProvider implements ConnectionProvider, Configurabl
    @SuppressWarnings("unchecked")
    public <T> T unwrap(Class<T> unwrapType)
    {
-      if (isUnwrappableAs(unwrapType)) {
-         return (T) this;
-      }
-      else {
-         throw new UnknownUnwrapTypeException(unwrapType);
-      }
+       if ( ConnectionProvider.class.equals( unwrapType ) ||
+               HikariConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+           return (T) this;
+       }
+       else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
+           return (T) this.hds;
+       }
+       else {
+           throw new UnknownUnwrapTypeException( unwrapType );
+       }
    }
 
    // *************************************************************************
