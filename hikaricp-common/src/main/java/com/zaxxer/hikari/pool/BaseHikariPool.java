@@ -139,7 +139,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       this.isReadOnly = configuration.isReadOnly();
       this.isAutoCommit = configuration.isAutoCommit();
 
-      this.suspendResumeLock = configuration.isAllowPoolSuspension() ? GlobalPoolLock.SUSPEND_RESUME_LOCK : GlobalPoolLock.FAUX_LOCK;
+      this.suspendResumeLock = configuration.isAllowPoolSuspension() ? new GlobalPoolLock(true) : GlobalPoolLock.FAUX_LOCK;
 
       this.catalog = configuration.getCatalog();
       this.connectionCustomizer = initializeCustomizer();
