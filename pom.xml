@@ -46,7 +46,7 @@
       <jndi.version>0.11.4.1</jndi.version>
       <metrics.version>3.1.0</metrics.version>
       <mockito.version>1.10.19</mockito.version>
-      <pax.exam.version>4.4.0</pax.exam.version>
+      <pax.exam.version>3.4.0</pax.exam.version>
       <pax.url.version>2.3.0</pax.url.version>
       <slf4j.version>1.7.10</slf4j.version>
    </properties>
