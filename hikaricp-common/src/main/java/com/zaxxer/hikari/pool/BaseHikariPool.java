@@ -67,7 +67,7 @@ import com.zaxxer.hikari.util.LeakTask;
  */
 public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListener
 {
-   protected static final Logger LOGGER = LoggerFactory.getLogger("HikariPool");
+   protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
    private static final long ALIVE_BYPASS_WINDOW = Long.getLong("com.zaxxer.hikari.aliveBypassWindow", 1000L);
 
    protected static final int POOL_RUNNING = 0;
