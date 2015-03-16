@@ -96,14 +96,15 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    
    private final LeakTask leakTask;
    private final DataSource dataSource;
-   private final MetricsTracker metricsTracker;
    private final GlobalPoolLock suspendResumeLock;
    private final IConnectionCustomizer connectionCustomizer;
    private final AtomicReference<Throwable> lastConnectionFailure;
 
    private final String username;
    private final String password;
-   private final boolean isRecordMetrics;
+
+   private volatile MetricsTracker metricsTracker;
+   private volatile boolean isRecordMetrics;
 
    /**
     * Construct a HikariPool with the specified configuration.
@@ -147,8 +148,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       this.isIsolateInternalQueries = configuration.isIsolateInternalQueries();
       this.isUseJdbc4Validation = configuration.getConnectionTestQuery() == null;
 
-      this.isRecordMetrics = configuration.getMetricRegistry() != null;
-      this.metricsTracker = (isRecordMetrics ? new CodaHaleMetricsTracker(this, (MetricRegistry) configuration.getMetricRegistry()) : new MetricsTracker(this));
+      setMetricRegistry((MetricRegistry) configuration.getMetricRegistry());
 
       this.dataSource = poolUtils.initializeDataSource(configuration.getDataSourceClassName(), configuration.getDataSource(), configuration.getDataSourceProperties(), configuration.getJdbcUrl(), username, password);
 
@@ -163,7 +163,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       this.leakTask = (configuration.getLeakDetectionThreshold() == 0) ? LeakTask.NO_LEAK : new LeakTask(configuration.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
       if (configuration.getHealthCheckRegistry() != null) {
-         CodahaleHealthChecker.registerHealthChecks(this, (HealthCheckRegistry) configuration.getHealthCheckRegistry());
+         setHealthCheckRegistry((HealthCheckRegistry) configuration.getHealthCheckRegistry());
       }
 
       setRemoveOnCancelPolicy(houseKeepingExecutorService);
@@ -378,6 +378,22 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
          addBagItem(); // re-populate the pool
          suspendResumeLock.resume();
       }
+   }
+
+   public void setMetricRegistry(MetricRegistry metricRegistry)
+   {
+      this.isRecordMetrics = metricRegistry != null;
+      if (isRecordMetrics) {
+         this.metricsTracker = new CodaHaleMetricsTracker(this, metricRegistry);
+      }
+      else {
+         this.metricsTracker = new MetricsTracker(this);
+      }
+   }
+
+   public void setHealthCheckRegistry(HealthCheckRegistry healthCheckRegistry)
+   {
+      CodahaleHealthChecker.registerHealthChecks(this, healthCheckRegistry);
    }
 
    // ***********************************************************************
