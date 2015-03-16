@@ -239,7 +239,6 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
     *
     * @return the SQL to execute on new connections, or null
     */
-   @Deprecated
    public String getConnectionInitSql()
    {
       return connectionInitSql;
@@ -252,11 +251,9 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
     *
     * @param connectionInitSql the SQL to execute on new connections
     */
-   @Deprecated
    public void setConnectionInitSql(String connectionInitSql)
    {
       this.connectionInitSql = connectionInitSql;
-      LOGGER.warn("The connectionInitSql property has been deprecated and may be removed in a future release");
    }
 
    /** {@inheritDoc} */
@@ -540,7 +537,7 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
          if (healthCheckRegistry instanceof String) {
             try {
                InitialContext initCtx = new InitialContext();
-               healthCheckRegistry = (MetricRegistry) initCtx.lookup((String) healthCheckRegistry);
+               healthCheckRegistry = (HealthCheckRegistry) initCtx.lookup((String) healthCheckRegistry);
             }
             catch (NamingException e) {
                throw new IllegalArgumentException(e);
