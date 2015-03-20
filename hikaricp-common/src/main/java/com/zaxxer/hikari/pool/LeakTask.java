@@ -81,8 +81,8 @@ public class LeakTask implements Runnable
    public void run()
    {
       final StackTraceElement[] stackTrace = exception.getStackTrace(); 
-      final StackTraceElement[] trace = new StackTraceElement[stackTrace.length - 3];
-      System.arraycopy(stackTrace, 3, trace, 0, trace.length);
+      final StackTraceElement[] trace = new StackTraceElement[stackTrace.length - 5];
+      System.arraycopy(stackTrace, 5, trace, 0, trace.length);
 
       exception.setStackTrace(trace);
       LOGGER.warn("Connection leak detection triggered for connection {}, stack trace follows", bagEntry.connection.toString(), exception);
