@@ -2,7 +2,7 @@ HikariCP Changes
 
 Changes in 2.3.4
 
- * Fix class cast exception when setting the HealthCheckRegistry via JNDI lookup.
+ * Fixed class cast exception when setting the HealthCheckRegistry via JNDI lookup.
  
  * Allow Dropwizard MetricRegistry/HealthCheckRegistry to be set after pool startup --
    one time only.
@@ -10,11 +10,13 @@ Changes in 2.3.4
  * Make logger in BaseHikariPool non-static and use getClass() to log messages as the
    implementation class rather than as BaseHikariPool.
 
- * Remove deprecation from connectionInitSql, it will be allowed.
+ * Removed deprecation from connectionInitSql, it will be allowed.
 
- * Make suspect/resume lock non-static (should be be shared across pools).
+ * Made suspect/resume lock non-static (should be be shared across pools).
  
- * Improve unwrap() behavior in the Hibernate HikariConnectionProvider.
+ * Improved unwrap() behavior in the Hibernate HikariConnectionProvider.
+
+ * Improved leak detection log
 
 Changes in 2.3.3
 
