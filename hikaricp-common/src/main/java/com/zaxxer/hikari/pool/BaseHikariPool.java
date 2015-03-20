@@ -212,7 +212,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             else {
                metricsContext.setConnectionLastOpen(bagEntry, now);
                metricsContext.stop();
-               return ProxyFactory.getProxyConnection((HikariPool) this, bagEntry, leakTask.start());
+               return ProxyFactory.getProxyConnection((HikariPool) this, bagEntry, leakTask.start(bagEntry.connection));
             }
          }
          while (timeout > 0L);

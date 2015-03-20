@@ -16,6 +16,7 @@
 
 package com.zaxxer.hikari.util;
 
+import java.sql.Connection;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -37,6 +38,7 @@ public class LeakTask implements Runnable
    private ScheduledExecutorService executorService;
    private long leakDetectionThreshold;
    private ScheduledFuture<?> scheduledFuture;
+   private Connection connection;
    private Exception exception;
 
    static
@@ -46,7 +48,7 @@ public class LeakTask implements Runnable
          public void cancel() {};
 
          @Override
-         public LeakTask start()
+         public LeakTask start(final Connection connection)
          {
             return this;
          }
@@ -63,15 +65,16 @@ public class LeakTask implements Runnable
    {
    }
    
-   private LeakTask(final LeakTask parent)
+   private LeakTask(final LeakTask parent, final Connection connection)
    {
-      exception = new Exception("Apparent connection leak detected");
+      this.exception = new Exception("Apparent connection leak detected");
+      this.connection = connection;
       scheduledFuture = parent.executorService.schedule(this, parent.leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
-   public LeakTask start()
+   public LeakTask start(final Connection connection)
    {
-      return new LeakTask(this);
+      return new LeakTask(this, connection);
    }
 
    /** {@inheritDoc} */
@@ -83,7 +86,7 @@ public class LeakTask implements Runnable
       System.arraycopy(stackTrace, 3, trace, 0, trace.length);
 
       exception.setStackTrace(trace);
-      LOGGER.warn("Connection leak detection triggered, stack trace follows", exception);
+      LOGGER.warn("Connection leak detection triggered for connection {}, stack trace follows", connection.toString(), exception);
    }
 
    public void cancel()
