@@ -21,6 +21,7 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -36,7 +37,11 @@ public final class DriverDataSource implements DataSource
       try {
          this.jdbcUrl = jdbcUrl;
          this.driverProperties = new Properties();
-         this.driverProperties.putAll(properties);
+
+         for (Entry<Object, Object> entry : properties.entrySet()) {
+            driverProperties.setProperty(entry.getKey().toString(), entry.getValue().toString());
+         }
+
          if (username != null) {
             driverProperties.put("user", driverProperties.getProperty("user", username));
          }
