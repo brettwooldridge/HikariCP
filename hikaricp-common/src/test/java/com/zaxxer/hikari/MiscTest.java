@@ -29,7 +29,7 @@ import org.junit.Test;
 import org.slf4j.spi.LocationAwareLogger;
 
 import com.zaxxer.hikari.pool.HikariPool;
-import com.zaxxer.hikari.util.LeakTask;
+import com.zaxxer.hikari.pool.LeakTask;
 import com.zaxxer.hikari.util.UtilityElf;
 
 /**

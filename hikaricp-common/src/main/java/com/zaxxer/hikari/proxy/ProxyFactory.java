@@ -23,8 +23,8 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 import com.zaxxer.hikari.pool.HikariPool;
+import com.zaxxer.hikari.pool.LeakTask;
 import com.zaxxer.hikari.pool.PoolBagEntry;
-import com.zaxxer.hikari.util.LeakTask;
 
 /**
  * A factory class that produces proxies around instances of the standard

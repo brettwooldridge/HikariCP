@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.util;
+package com.zaxxer.hikari.pool;
 
-import java.sql.Connection;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -38,7 +37,7 @@ public class LeakTask implements Runnable
    private ScheduledExecutorService executorService;
    private long leakDetectionThreshold;
    private ScheduledFuture<?> scheduledFuture;
-   private Connection connection;
+   private PoolBagEntry bagEntry;
    private Exception exception;
 
    static
@@ -48,7 +47,7 @@ public class LeakTask implements Runnable
          public void cancel() {};
 
          @Override
-         public LeakTask start(final Connection connection)
+         public LeakTask start(final PoolBagEntry bagEntry)
          {
             return this;
          }
@@ -65,16 +64,16 @@ public class LeakTask implements Runnable
    {
    }
    
-   private LeakTask(final LeakTask parent, final Connection connection)
+   private LeakTask(final LeakTask parent, final PoolBagEntry bagEntry)
    {
       this.exception = new Exception("Apparent connection leak detected");
-      this.connection = connection;
+      this.bagEntry = bagEntry;
       scheduledFuture = parent.executorService.schedule(this, parent.leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
-   public LeakTask start(final Connection connection)
+   public LeakTask start(final PoolBagEntry bagEntry)
    {
-      return new LeakTask(this, connection);
+      return new LeakTask(this, bagEntry);
    }
 
    /** {@inheritDoc} */
@@ -86,7 +85,7 @@ public class LeakTask implements Runnable
       System.arraycopy(stackTrace, 3, trace, 0, trace.length);
 
       exception.setStackTrace(trace);
-      LOGGER.warn("Connection leak detection triggered for connection {}, stack trace follows", connection.toString(), exception);
+      LOGGER.warn("Connection leak detection triggered for connection {}, stack trace follows", bagEntry.connection.toString(), exception);
    }
 
    public void cancel()

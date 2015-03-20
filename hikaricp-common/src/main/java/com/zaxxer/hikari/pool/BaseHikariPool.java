@@ -57,7 +57,6 @@ import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.IBagStateListener;
-import com.zaxxer.hikari.util.LeakTask;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -212,7 +211,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             else {
                metricsContext.setConnectionLastOpen(bagEntry, now);
                metricsContext.stop();
-               return ProxyFactory.getProxyConnection((HikariPool) this, bagEntry, leakTask.start(bagEntry.connection));
+               return ProxyFactory.getProxyConnection((HikariPool) this, bagEntry, leakTask.start(bagEntry));
             }
          }
          while (timeout > 0L);
