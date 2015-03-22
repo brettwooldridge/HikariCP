@@ -119,6 +119,7 @@
          <groupId>javax.inject</groupId>
          <artifactId>javax.inject</artifactId>
          <version>1</version>
+         <scope>test</scope>
       </dependency>
       <dependency>
          <groupId>org.apache.felix</groupId>
