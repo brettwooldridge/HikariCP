@@ -1,5 +1,10 @@
 HikariCP Changes
 
+Changes in 2.3.5
+
+ * Fixed regression caused by enhancement #279 that imposed a runtime dependency on
+   Dropwizard metrics.
+
 Changes in 2.3.4
 
  * Fixed class cast exception when setting the HealthCheckRegistry via JNDI lookup.
