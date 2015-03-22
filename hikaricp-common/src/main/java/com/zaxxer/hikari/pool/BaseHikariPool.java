@@ -147,7 +147,8 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       this.isIsolateInternalQueries = configuration.isIsolateInternalQueries();
       this.isUseJdbc4Validation = configuration.getConnectionTestQuery() == null;
 
-      setMetricRegistry((MetricRegistry) configuration.getMetricRegistry());
+      setMetricRegistry(configuration.getMetricRegistry());
+      setHealthCheckRegistry(configuration.getHealthCheckRegistry());
 
       this.dataSource = poolUtils.initializeDataSource(configuration.getDataSourceClassName(), configuration.getDataSource(), configuration.getDataSourceProperties(), configuration.getJdbcUrl(), username, password);
 
@@ -160,10 +161,6 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       this.houseKeepingExecutorService.scheduleAtFixedRate(getHouseKeeper(), delayPeriod, delayPeriod, TimeUnit.MILLISECONDS);
       this.houseKeepingExecutorService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
       this.leakTask = (configuration.getLeakDetectionThreshold() == 0) ? LeakTask.NO_LEAK : new LeakTask(configuration.getLeakDetectionThreshold(), houseKeepingExecutorService);
-
-      if (configuration.getHealthCheckRegistry() != null) {
-         setHealthCheckRegistry((HealthCheckRegistry) configuration.getHealthCheckRegistry());
-      }
 
       setRemoveOnCancelPolicy(houseKeepingExecutorService);
       poolUtils.setLoginTimeout(dataSource, connectionTimeout);
@@ -379,20 +376,22 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       }
    }
 
-   public void setMetricRegistry(MetricRegistry metricRegistry)
+   public void setMetricRegistry(Object metricRegistry)
    {
       this.isRecordMetrics = metricRegistry != null;
       if (isRecordMetrics) {
-         this.metricsTracker = new CodaHaleMetricsTracker(this, metricRegistry);
+         this.metricsTracker = new CodaHaleMetricsTracker(this, (MetricRegistry) metricRegistry);
       }
       else {
          this.metricsTracker = new MetricsTracker(this);
       }
    }
 
-   public void setHealthCheckRegistry(HealthCheckRegistry healthCheckRegistry)
+   public void setHealthCheckRegistry(Object healthCheckRegistry)
    {
-      CodahaleHealthChecker.registerHealthChecks(this, healthCheckRegistry);
+      if (healthCheckRegistry != null) {
+         CodahaleHealthChecker.registerHealthChecks(this, (HealthCheckRegistry) healthCheckRegistry);
+      }
    }
 
    // ***********************************************************************
