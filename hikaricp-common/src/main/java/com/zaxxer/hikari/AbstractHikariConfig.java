@@ -354,6 +354,11 @@ public abstract class AbstractHikariConfig implements HikariConfigMBean
       dataSourceProperties.putAll(dsProperties);
    }
 
+   public String getDriverClassName()
+   {
+      return driverClassName;
+   }
+
    public void setDriverClassName(String driverClassName)
    {
       try {

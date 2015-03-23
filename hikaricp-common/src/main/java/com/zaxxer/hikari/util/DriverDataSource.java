@@ -21,6 +21,7 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.Enumeration;
 import java.util.Map.Entry;
 import java.util.Properties;
 
@@ -32,7 +33,7 @@ public final class DriverDataSource implements DataSource
    private final Properties driverProperties;
    private final Driver driver;
 
-   public DriverDataSource(String jdbcUrl, Properties properties, String username, String password)
+   public DriverDataSource(String jdbcUrl, String driverClassName, Properties properties, String username, String password)
    {
       try {
          this.jdbcUrl = jdbcUrl;
@@ -49,7 +50,27 @@ public final class DriverDataSource implements DataSource
             driverProperties.put("password", driverProperties.getProperty("password", password));
          }
 
-         driver = DriverManager.getDriver(jdbcUrl);
+         if (driverClassName != null) {
+            Driver matched = null;
+            Enumeration<Driver> drivers = DriverManager.getDrivers();
+            while (drivers.hasMoreElements()) {
+               Driver d = drivers.nextElement();
+               if (d.getClass().getName().equals(driverClassName)) {
+                  matched = d;
+                  break;
+               }
+            }
+
+            if (matched != null) {
+               driver = matched;
+            }
+            else {
+               throw new IllegalArgumentException("Driver with class name " + driverClassName + " was not found among registered drivers");
+            }
+         }
+         else {
+            driver = DriverManager.getDriver(jdbcUrl);
+         }
       }
       catch (SQLException e) {
          throw new RuntimeException("Unable to get driver for JDBC URL " + jdbcUrl, e);
