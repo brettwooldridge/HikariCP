@@ -29,6 +29,8 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.util.DriverDataSource;
@@ -215,6 +217,40 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       }
 
       return false;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public void setMetricRegistry(Object metricRegistry)
+   {
+      boolean isAlreadySet = getMetricRegistry() != null;
+      super.setMetricRegistry(metricRegistry);
+
+      if (fastPathPool != null || pool != null) {
+         if (isAlreadySet) {
+            throw new IllegalStateException("MetricRegistry can only be set one time");
+         }
+         else {
+            pool.setMetricRegistry((MetricRegistry) super.getMetricRegistry());
+         }
+      }
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public void setHealthCheckRegistry(Object healthCheckRegistry)
+   {
+      boolean isAlreadySet = getHealthCheckRegistry() != null;
+      super.setHealthCheckRegistry(healthCheckRegistry);
+
+      if (fastPathPool != null || pool != null) {
+         if (isAlreadySet) {
+            throw new IllegalStateException("HealthCheckRegistry can only be set one time");
+         }
+         else {
+            pool.setHealthCheckRegistry((HealthCheckRegistry) super.getHealthCheckRegistry());
+         }
+      }
    }
 
    /**

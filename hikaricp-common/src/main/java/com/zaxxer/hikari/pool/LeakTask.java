@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.util;
+package com.zaxxer.hikari.pool;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -37,6 +37,7 @@ public class LeakTask implements Runnable
    private ScheduledExecutorService executorService;
    private long leakDetectionThreshold;
    private ScheduledFuture<?> scheduledFuture;
+   private PoolBagEntry bagEntry;
    private Exception exception;
 
    static
@@ -46,7 +47,7 @@ public class LeakTask implements Runnable
          public void cancel() {};
 
          @Override
-         public LeakTask start()
+         public LeakTask start(final PoolBagEntry bagEntry)
          {
             return this;
          }
@@ -63,15 +64,16 @@ public class LeakTask implements Runnable
    {
    }
    
-   private LeakTask(final LeakTask parent)
+   private LeakTask(final LeakTask parent, final PoolBagEntry bagEntry)
    {
-      exception = new Exception("Apparent connection leak detected");
+      this.exception = new Exception("Apparent connection leak detected");
+      this.bagEntry = bagEntry;
       scheduledFuture = parent.executorService.schedule(this, parent.leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
-   public LeakTask start()
+   public LeakTask start(final PoolBagEntry bagEntry)
    {
-      return new LeakTask(this);
+      return new LeakTask(this, bagEntry);
    }
 
    /** {@inheritDoc} */
@@ -79,11 +81,11 @@ public class LeakTask implements Runnable
    public void run()
    {
       final StackTraceElement[] stackTrace = exception.getStackTrace(); 
-      final StackTraceElement[] trace = new StackTraceElement[stackTrace.length - 3];
-      System.arraycopy(stackTrace, 3, trace, 0, trace.length);
+      final StackTraceElement[] trace = new StackTraceElement[stackTrace.length - 5];
+      System.arraycopy(stackTrace, 5, trace, 0, trace.length);
 
       exception.setStackTrace(trace);
-      LOGGER.warn("Connection leak detection triggered, stack trace follows", exception);
+      LOGGER.warn("Connection leak detection triggered for connection {}, stack trace follows", bagEntry.connection.toString(), exception);
    }
 
    public void cancel()

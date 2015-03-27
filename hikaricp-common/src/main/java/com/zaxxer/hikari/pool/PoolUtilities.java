@@ -90,12 +90,13 @@ public final class PoolUtilities
     * @param dsClassName a DataSource class name (optional)
     * @param dataSource a DataSource instance (optional)
     * @param dataSourceProperties a Properties instance of DataSource properties
+    * @param driverClassName the JDBC driver class name (optional)
     * @param jdbcUrl a JDBC connection URL (optional)
     * @param username a username (optional)
     * @param password a password (optional)
     * @return a DataSource instance
     */
-   public DataSource initializeDataSource(final String dsClassName, DataSource dataSource, final Properties dataSourceProperties, final String jdbcUrl, final String username, final String password)
+   public DataSource initializeDataSource(final String dsClassName, DataSource dataSource, final Properties dataSourceProperties, final String driverClassName, final String jdbcUrl, final String username, final String password)
    {
       try {
          if (dataSource == null && dsClassName != null) {
@@ -104,7 +105,7 @@ public final class PoolUtilities
             return dataSource;
          }
          else if (jdbcUrl != null) {
-            return new DriverDataSource(jdbcUrl, dataSourceProperties, username, password);
+            return new DriverDataSource(jdbcUrl, driverClassName, dataSourceProperties, username, password);
          }
    
          return dataSource;

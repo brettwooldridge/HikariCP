@@ -1,4 +1,4 @@
-![](https://github.com/brettwooldridge/HikariCP/wiki/Hikari.png) HikariCP <sup><sup>It's Faster.&nbsp;</sup></sup>[![Travis branch](https://img.shields.io/travis/joyent/node/v0.6.svg)](https://travis-ci.org/brettwooldridge/HikariCP)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Issue Stats](http://issuestats.com/github/brettwooldridge/HikariCP/badge/issue)](http://issuestats.com/github/brettwooldridge/HikariCP)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Coverage Status](https://img.shields.io/coveralls/brettwooldridge/HikariCP/dev.svg)](https://coveralls.io/r/brettwooldridge/HikariCP?branch=dev)<br><sub><sub><sup>Hi·ka·ri [hi·ka·'lē] &#40;*Origin: Japanese*): light; ray.</sup></sub></sub>
+![](https://github.com/brettwooldridge/HikariCP/wiki/Hikari.png) HikariCP <sup><sup>It's Faster.&nbsp;</sup></sup>[![Travis branch](https://img.shields.io/travis/joyent/node/v0.6.svg)](https://travis-ci.org/brettwooldridge/HikariCP)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Issue Stats](http://issuestats.com/github/brettwooldridge/HikariCP/badge/issue?style=flat)](http://issuestats.com/github/brettwooldridge/HikariCP)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Coverage Status](https://img.shields.io/coveralls/brettwooldridge/HikariCP/dev.svg)](https://coveralls.io/r/brettwooldridge/HikariCP?branch=dev)<br><sub><sub><sup>Hi·ka·ri [hi·ka·'lē] &#40;*Origin: Japanese*): light; ray.</sup></sub></sub>
 ==========
 
 Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC connection pool.  Coming in at roughly 70Kb, the library is very light.  Read about [how we do it here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).
@@ -13,7 +13,7 @@ _Java 8 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>2.3.1</version>
+        <version>2.3.5</version>
         <scope>compile</scope>
     </dependency>
 ```
@@ -22,7 +22,7 @@ _Java 6 and Java 7 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP-java6</artifactId>
-        <version>2.3.1</version>
+        <version>2.3.5</version>
         <scope>compile</scope>
     </dependency>
 ```
@@ -124,7 +124,7 @@ It is a boolean value.
 &#8986;``connectionTimeout``<br/>
 This property controls the maximum number of milliseconds that a client (that's you) will wait
 for a connection from the pool.  If this time is exceeded without a connection becoming
-available, a SQLException will be thrown.  100ms is the minimum value.
+available, a SQLException will be thrown.  1000ms is the minimum value.
 *Default: 30000 (30 seconds)*
 
 &#8986;``idleTimeout``<br/>

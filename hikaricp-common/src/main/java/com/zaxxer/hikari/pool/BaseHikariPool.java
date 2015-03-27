@@ -57,7 +57,6 @@ import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.IBagStateListener;
-import com.zaxxer.hikari.util.LeakTask;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -67,7 +66,7 @@ import com.zaxxer.hikari.util.LeakTask;
  */
 public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListener
 {
-   protected static final Logger LOGGER = LoggerFactory.getLogger("HikariPool");
+   protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
    private static final long ALIVE_BYPASS_WINDOW = Long.getLong("com.zaxxer.hikari.aliveBypassWindow", 1000L);
 
    protected static final int POOL_RUNNING = 0;
@@ -96,14 +95,15 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    
    private final LeakTask leakTask;
    private final DataSource dataSource;
-   private final MetricsTracker metricsTracker;
    private final GlobalPoolLock suspendResumeLock;
    private final IConnectionCustomizer connectionCustomizer;
    private final AtomicReference<Throwable> lastConnectionFailure;
 
    private final String username;
    private final String password;
-   private final boolean isRecordMetrics;
+
+   private volatile MetricsTracker metricsTracker;
+   private volatile boolean isRecordMetrics;
 
    /**
     * Construct a HikariPool with the specified configuration.
@@ -139,7 +139,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       this.isReadOnly = configuration.isReadOnly();
       this.isAutoCommit = configuration.isAutoCommit();
 
-      this.suspendResumeLock = configuration.isAllowPoolSuspension() ? GlobalPoolLock.SUSPEND_RESUME_LOCK : GlobalPoolLock.FAUX_LOCK;
+      this.suspendResumeLock = configuration.isAllowPoolSuspension() ? new GlobalPoolLock(true) : GlobalPoolLock.FAUX_LOCK;
 
       this.catalog = configuration.getCatalog();
       this.connectionCustomizer = initializeCustomizer();
@@ -147,10 +147,10 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       this.isIsolateInternalQueries = configuration.isIsolateInternalQueries();
       this.isUseJdbc4Validation = configuration.getConnectionTestQuery() == null;
 
-      this.isRecordMetrics = configuration.getMetricRegistry() != null;
-      this.metricsTracker = (isRecordMetrics ? new CodaHaleMetricsTracker(this, (MetricRegistry) configuration.getMetricRegistry()) : new MetricsTracker(this));
+      setMetricRegistry(configuration.getMetricRegistry());
+      setHealthCheckRegistry(configuration.getHealthCheckRegistry());
 
-      this.dataSource = poolUtils.initializeDataSource(configuration.getDataSourceClassName(), configuration.getDataSource(), configuration.getDataSourceProperties(), configuration.getJdbcUrl(), username, password);
+      this.dataSource = poolUtils.initializeDataSource(configuration.getDataSourceClassName(), configuration.getDataSource(), configuration.getDataSourceProperties(), configuration.getDriverClassName(), configuration.getJdbcUrl(), username, password);
 
       this.addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
       this.closeConnectionExecutor = createThreadPoolExecutor(4, "HikariCP connection closer (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
@@ -161,10 +161,6 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       this.houseKeepingExecutorService.scheduleAtFixedRate(getHouseKeeper(), delayPeriod, delayPeriod, TimeUnit.MILLISECONDS);
       this.houseKeepingExecutorService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
       this.leakTask = (configuration.getLeakDetectionThreshold() == 0) ? LeakTask.NO_LEAK : new LeakTask(configuration.getLeakDetectionThreshold(), houseKeepingExecutorService);
-
-      if (configuration.getHealthCheckRegistry() != null) {
-         CodahaleHealthChecker.registerHealthChecks(this, (HealthCheckRegistry) configuration.getHealthCheckRegistry());
-      }
 
       setRemoveOnCancelPolicy(houseKeepingExecutorService);
       poolUtils.setLoginTimeout(dataSource, connectionTimeout);
@@ -212,7 +208,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             else {
                metricsContext.setConnectionLastOpen(bagEntry, now);
                metricsContext.stop();
-               return ProxyFactory.getProxyConnection((HikariPool) this, bagEntry, leakTask.start());
+               return ProxyFactory.getProxyConnection((HikariPool) this, bagEntry, leakTask.start(bagEntry));
             }
          }
          while (timeout > 0L);
@@ -380,6 +376,24 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       }
    }
 
+   public void setMetricRegistry(Object metricRegistry)
+   {
+      this.isRecordMetrics = metricRegistry != null;
+      if (isRecordMetrics) {
+         this.metricsTracker = new CodaHaleMetricsTracker(this, (MetricRegistry) metricRegistry);
+      }
+      else {
+         this.metricsTracker = new MetricsTracker(this);
+      }
+   }
+
+   public void setHealthCheckRegistry(Object healthCheckRegistry)
+   {
+      if (healthCheckRegistry != null) {
+         CodahaleHealthChecker.registerHealthChecks(this, (HealthCheckRegistry) healthCheckRegistry);
+      }
+   }
+
    // ***********************************************************************
    //                           Protected methods
    // ***********************************************************************
@@ -497,7 +511,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             try {
                if (!addConnection()) {
                   shutdown();
-                  throw new RuntimeException("Fail-fast during pool initialization", lastConnectionFailure.getAndSet(null));
+                  throw new PoolInitializationException(lastConnectionFailure.getAndSet(null));
                }
    
                ConnectionProxy connection = (ConnectionProxy) getConnection();
@@ -506,11 +520,11 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             }
             catch (SQLException e) {
                shutdown();
-               throw new RuntimeException("Fail-fast during pool initialization", e);
+               throw new PoolInitializationException(e);
             }
          }
          catch (InterruptedException ie) {
-            throw new RuntimeException("Fail-fast during pool initialization", ie);
+            throw new PoolInitializationException(ie);
          }
       }
 
@@ -529,16 +543,6 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
       }
 
       return configuration.getConnectionCustomizer();
-   }
-
-   /**
-    * @param healthCheckRegistry
-    */
-   private void registerHealthChecks(Object healthCheckRegistry)
-   {
-      if (healthCheckRegistry != null) {
-         
-      }
    }
 
    public final void logPoolState(String... prefix)

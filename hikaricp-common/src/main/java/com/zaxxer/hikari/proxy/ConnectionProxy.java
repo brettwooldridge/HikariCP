@@ -30,9 +30,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.pool.HikariPool;
+import com.zaxxer.hikari.pool.LeakTask;
 import com.zaxxer.hikari.pool.PoolBagEntry;
 import com.zaxxer.hikari.util.FastList;
-import com.zaxxer.hikari.util.LeakTask;
 
 /**
  * This is the proxy class for java.sql.Connection.
@@ -106,10 +106,10 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          boolean isForceClose = sqlState.startsWith("08") | SQL_ERRORS.contains(sqlState);
          if (isForceClose) {
             bagEntry.evicted = true;
-            LOGGER.warn(String.format("Connection %s (%s) marked as broken because of SQLSTATE(%s), ErrorCode(%d).", delegate.toString(),
-                                      parentPool.toString(), sqlState, sqle.getErrorCode()), sqle);
+            LOGGER.warn("Connection {} ({}) marked as broken because of SQLSTATE({}), ErrorCode({}).", delegate.toString(),
+                                      parentPool.toString(), sqlState, sqle.getErrorCode(), sqle);
          }
-         else if (sqle.getNextException() instanceof SQLException) {
+         else if (sqle.getNextException() != null && sqle != sqle.getNextException()) {
             checkException(sqle.getNextException());
          }
       }

@@ -25,9 +25,9 @@ import java.util.concurrent.Semaphore;
  *
  * @author Brett Wooldridge
  */
-public class GlobalPoolLock
+class GlobalPoolLock
 {
-   public static final GlobalPoolLock FAUX_LOCK = new GlobalPoolLock(false) {
+   static final GlobalPoolLock FAUX_LOCK = new GlobalPoolLock(false) {
       @Override
       public void acquire() {}
 
@@ -41,15 +41,13 @@ public class GlobalPoolLock
       public void resume() {}
    };
 
-   public static final GlobalPoolLock SUSPEND_RESUME_LOCK = new GlobalPoolLock(true);
-
    private static final int MAX_PERMITS = 10000;
    private final Semaphore acquisitionSemaphore;
 
    /**
     * Default constructor
     */
-   private GlobalPoolLock(final boolean createSemaphore) {
+   GlobalPoolLock(final boolean createSemaphore) {
       acquisitionSemaphore = (createSemaphore ? new Semaphore(MAX_PERMITS, true) : null);
    }
 
