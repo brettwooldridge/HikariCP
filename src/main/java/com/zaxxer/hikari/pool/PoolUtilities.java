@@ -45,11 +45,12 @@ public final class PoolUtilities
     * Close connection and eat any exception.
     *
     * @param connection the connection to close
+    * @param closureReason the reason the connection was closed (if known)
     */
-   public void quietlyCloseConnection(final Connection connection)
+   public void quietlyCloseConnection(final Connection connection, final String closureReason)
    {
       try {
-         LOGGER.debug("Closing connection {}", connection);
+         LOGGER.debug("Closing connection {} {}", connection, (closureReason != null ? "(" + closureReason + ")" : ""));
          if (connection != null && !connection.isClosed()) {
             setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(30));
             connection.close();

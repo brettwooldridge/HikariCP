@@ -282,7 +282,7 @@ public class ShutdownTest
                   Assert.fail(e.getMessage());
                }
                finally {
-                  new PoolUtilities(config).quietlyCloseConnection(connection);
+                  new PoolUtilities(config).quietlyCloseConnection(connection, "because this is a test");
                   ds.shutdown();
                }
             };
