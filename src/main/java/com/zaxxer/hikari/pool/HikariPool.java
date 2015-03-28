@@ -457,19 +457,20 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
             
             connectionBag.add(new PoolBagEntry(connection, this));
             lastConnectionFailure.set(null);
+            LOGGER.debug("Connection {} added to pool {} ", connection, configuration.getPoolName());
             return true;
          }
          catch (Exception e) {
             totalConnections.decrementAndGet(); // We failed so undo speculative increment of totalConnections
             lastConnectionFailure.set(e);
-            LOGGER.debug("Connection attempt to database {} failed: {}", configuration.getPoolName(), e.getMessage(), e);
+            LOGGER.debug("Connection attempt to database in pool {} failed: {}", configuration.getPoolName(), e.getMessage(), e);
             poolUtils.quietlyCloseConnection(connection, "exception during connection creation");
             return false;
          }
       }
       else {
          totalConnections.decrementAndGet(); // Pool is maxed out, so undo speculative increment of totalConnections
-         lastConnectionFailure.set(new SQLException("HikariCP pool is at maximum capacity"));
+         lastConnectionFailure.set(new SQLException(String.format("HikariCP pool %s is at maximum capacity", configuration.getPoolName())));
          return true;
       }
    }

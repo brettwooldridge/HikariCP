@@ -49,15 +49,16 @@ public final class PoolUtilities
     */
    public void quietlyCloseConnection(final Connection connection, final String closureReason)
    {
+      final String addendum = closureReason != null ? " (" + closureReason + ")" : "";
       try {
-         LOGGER.debug("Closing connection {} {}", connection, (closureReason != null ? "(" + closureReason + ")" : ""));
+         LOGGER.debug("Closing connection {} in pool {}{}", connection, poolName, addendum);
          if (connection != null && !connection.isClosed()) {
             setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(30));
             connection.close();
          }
       }
       catch (Throwable e) {
-         LOGGER.debug("{} - Exception closing connection {}", poolName, connection.toString(), e);
+         LOGGER.debug("Exception closing connection {} in pool {}{}", connection.toString(), poolName, addendum, e);
       }
    }
 
