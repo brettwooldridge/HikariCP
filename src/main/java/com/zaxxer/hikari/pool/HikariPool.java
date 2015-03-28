@@ -106,23 +106,12 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    /**
     * Construct a HikariPool with the specified configuration.
     *
-    * @param configuration a HikariConfig instance
-    */
-   public HikariPool(HikariConfig configuration) {
-      this(configuration, configuration.getUsername(), configuration.getPassword());
-   }
-
-   /**
-    * Construct a HikariPool with the specified configuration.  We cache lots of configuration
-    * items in class-local final members for speed.
-    *
     * @param config a HikariConfig instance
-    * @param username authentication username
-    * @param password authentication password
     */
-   public HikariPool(HikariConfig config, String username, String password) {
-      this.username = username;
-      this.password = password;
+   public HikariPool(HikariConfig config)
+    {
+      this.username = config.getUsername();
+      this.password = config.getPassword();
       this.configuration = config;
 
       this.poolUtils = new PoolUtilities(config);

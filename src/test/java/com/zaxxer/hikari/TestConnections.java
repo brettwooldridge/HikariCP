@@ -20,7 +20,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
@@ -330,39 +329,6 @@ public class TestConnections
          }
 
          Assert.assertEquals(4, StubConnection.count.get());
-      }
-      finally {
-         ds.close();
-      }
-   }
-
-   @SuppressWarnings("deprecation")
-   @Test
-   public void testGetWithUsername() throws Exception
-   {
-      HikariConfig config = new HikariConfig();
-      config.setMinimumIdle(0);
-      config.setMaximumPoolSize(4);
-      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-
-      final HikariDataSource ds = new HikariDataSource(config);
-      try {
-         Connection connection1 = ds.getConnection("foo", "bar");
-         connection1.close();
-
-         Connection connection2 = ds.getConnection("foo", "bar");
-         connection2.close();
-
-         Assert.assertSame(connection1.unwrap(Connection.class), connection2.unwrap(Connection.class));
-
-         Connection connection3 = ds.getConnection("faz", "baf");
-         connection3.close();
-
-         HashMap<Object, HikariPool> multiPool = TestElf.getMultiPool(ds);
-         Assert.assertTrue(multiPool.size() > 1);
-
-         Object[] array = multiPool.keySet().toArray();
-         Assert.assertNotEquals(array[0], array[1]);
       }
       finally {
          ds.close();

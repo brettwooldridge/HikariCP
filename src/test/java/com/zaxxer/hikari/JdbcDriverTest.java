@@ -36,7 +36,6 @@ public class JdbcDriverTest
       }
    }
 
-   @SuppressWarnings("deprecation")
    @Test
    public void driverTest1() throws SQLException
    {
@@ -57,9 +56,6 @@ public class JdbcDriverTest
       Assert.assertNotNull(unwrap);
 
       Connection connection = ds.getConnection();
-      connection.close();
-
-      connection = ds.getConnection("foo", "bar");
       connection.close();
    }
 
