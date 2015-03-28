@@ -22,7 +22,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Wrapper;
-import java.util.HashMap;
 
 import javax.sql.DataSource;
 
@@ -44,9 +43,6 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariDataSource.class);
 
-   // We use a concrete HashMap rather than Map to avoid an invokeinterface callsite
-   private final HashMap<MultiPoolKey, HikariPool> multiPool;
-
    private volatile boolean isShutdown;
 
    private final HikariPool fastPathPool;
@@ -62,7 +58,6 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    {
       super();
       fastPathPool = null;
-      multiPool = new HashMap<MultiPoolKey, HikariPool>();
    }
 
    /**
@@ -74,11 +69,9 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    {
       configuration.validate();
       configuration.copyState(this);
-      multiPool = new HashMap<MultiPoolKey, HikariPool>();
 
       LOGGER.info("HikariCP pool {} is starting.", configuration.getPoolName());
       pool = fastPathPool = new HikariPool(this);
-      multiPool.put(new MultiPoolKey(getUsername(), getPassword()), pool);
    }
 
    /** {@inheritDoc} */
@@ -102,7 +95,6 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
                validate();
                LOGGER.info("HikariCP pool {} is starting.", getPoolName());
                pool = result = new HikariPool(this);
-               multiPool.put(new MultiPoolKey(getUsername(), getPassword()), pool);
             }
          }
       }
@@ -112,25 +104,9 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
 
    /** {@inheritDoc} */
    @Override
-   @Deprecated
    public Connection getConnection(String username, String password) throws SQLException
    {
-      if (isShutdown) {
-         throw new SQLException("Pool has been shutdown");
-      }
-
-      final MultiPoolKey key = new MultiPoolKey(username, password);
-
-      HikariPool hikariPool;
-      synchronized (multiPool) {
-         hikariPool = multiPool.get(key);
-         if (hikariPool == null) {
-            hikariPool = new HikariPool(this, username, password);
-            multiPool.put(key, hikariPool);
-         }
-      }
-
-      return hikariPool.getConnection();
+      throw new SQLFeatureNotSupportedException();
    }
 
    /** {@inheritDoc} */
@@ -153,18 +129,15 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @Override
    public void setLoginTimeout(int seconds) throws SQLException
    {
-      for (HikariPool hikariPool : multiPool.values()) {
-         hikariPool.getDataSource().setLoginTimeout(seconds);
-      }
+      pool.getDataSource().setLoginTimeout(seconds);
    }
 
    /** {@inheritDoc} */
    @Override
    public int getLoginTimeout() throws SQLException
    {
-      HikariPool hikariPool = multiPool.values().iterator().next();
-      if (hikariPool != null) {
-         return hikariPool.getDataSource().getLoginTimeout();
+      if (pool != null) {
+         return pool.getDataSource().getLoginTimeout();
       }
 
       return 0;
@@ -311,9 +284,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
          shutdownHelper(fastPathPool);
       }
 
-      for (HikariPool hikariPool : multiPool.values()) {
-         shutdownHelper(hikariPool);
-      }
+      shutdownHelper(pool);
    }
 
    /** {@inheritDoc} */
@@ -334,44 +305,6 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
 
       if (hPool.getDataSource() instanceof DriverDataSource) {
          ((DriverDataSource) hPool.getDataSource()).shutdown();
-      }
-   }
-
-   private static class MultiPoolKey
-   {
-      private String username;
-      private String password;
-
-      MultiPoolKey(String username, String password)
-      {
-         this.username = username;
-         this.password = password;
-      }
-
-      @Override
-      public int hashCode()
-      {
-         return (password == null ? 0 : password.hashCode());
-      }
-
-      @Override
-      public boolean equals(Object obj)
-      {
-         MultiPoolKey otherKey = ((MultiPoolKey) obj);
-         if (username != null && !username.equals(otherKey.username)) {
-            return false;
-         }
-         else if (username == null && otherKey.username != null) {
-            return false;
-         }
-         else if (password != null && !password.equals(otherKey.password)) {
-            return false;
-         }
-         else if (password == null && otherKey.password != null) {
-            return false;
-         }
-
-         return true;
       }
    }
 }
