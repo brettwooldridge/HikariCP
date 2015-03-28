@@ -7,5 +7,3 @@ install: /bin/true
 script:
   - mvn install -Dskip.unit.tests=true -Dmaven.javadoc.skip=true -V -B
   - mvn clean test coveralls:report -V -pl hikaricp -P coverage 
-  - jdk_switcher use openjdk6
-  - mvn test -V -pl hikaricp-java6
