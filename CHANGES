@@ -1,5 +1,39 @@
 HikariCP Changes
 
+Changes in 2.3.5
+
+ * Fixed regression caused by enhancement #279 that imposed a runtime dependency on
+   Dropwizard metrics.
+
+Changes in 2.3.4
+
+ * Fixed class cast exception when setting the HealthCheckRegistry via JNDI lookup.
+ 
+ * Allow Dropwizard MetricRegistry/HealthCheckRegistry to be set after pool startup --
+   one time only.
+
+ * Make logger in BaseHikariPool non-static and use getClass() to log messages as the
+   implementation class rather than as BaseHikariPool.
+
+ * Removed deprecation from connectionInitSql, it will be allowed.
+
+ * Made suspect/resume lock non-static (should be be shared across pools).
+ 
+ * Improved unwrap() behavior in the Hibernate HikariConnectionProvider.
+
+ * Improved leak detection log
+
+Changes in 2.3.3
+
+ * Fixed bad interaction with PostgeSQL JDBC driver whereby a SQLException thrown by
+   PostgreSQL where the getNextException() call returns the original exception and causes
+   an infinite loop in HikariCP (and eventual stack overflow).
+   
+ * Throw a typed Exception rather than a simple RuntimeException when pool initialization
+   fails.
+
+ * Allow Dropwizard Metrics and HealthChecks to be configured by a JNDI lookup.
+
 Changes in 2.3.2
 
  * Add support for Dropwizard HealthChecks through the introduction of two initial health
