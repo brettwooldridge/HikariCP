@@ -108,8 +108,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     *
     * @param configuration a HikariConfig instance
     */
-   public HikariPool(HikariConfig configuration)
-   {
+   public HikariPool(HikariConfig configuration) {
       this(configuration, configuration.getUsername(), configuration.getPassword());
    }
 
@@ -117,51 +116,50 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     * Construct a HikariPool with the specified configuration.  We cache lots of configuration
     * items in class-local final members for speed.
     *
-    * @param configuration a HikariConfig instance
+    * @param config a HikariConfig instance
     * @param username authentication username
     * @param password authentication password
     */
-   public HikariPool(HikariConfig configuration, String username, String password)
-   {
+   public HikariPool(HikariConfig config, String username, String password) {
       this.username = username;
       this.password = password;
-      this.configuration = configuration;
+      this.configuration = config;
 
-      this.poolUtils = new PoolUtilities(configuration);
+      this.poolUtils = new PoolUtilities(config);
       this.connectionBag = new ConcurrentBag<PoolBagEntry>(this);
       this.totalConnections = new AtomicInteger();
-      this.connectionTimeout = configuration.getConnectionTimeout();
-      this.validationTimeout = configuration.getValidationTimeout();
+      this.connectionTimeout = config.getConnectionTimeout();
+      this.validationTimeout = config.getValidationTimeout();
       this.lastConnectionFailure = new AtomicReference<Throwable>();
 
-      this.isReadOnly = configuration.isReadOnly();
-      this.isAutoCommit = configuration.isAutoCommit();
+      this.isReadOnly = config.isReadOnly();
+      this.isAutoCommit = config.isAutoCommit();
 
-      this.suspendResumeLock = configuration.isAllowPoolSuspension() ? new GlobalPoolLock(true) : GlobalPoolLock.FAUX_LOCK;
+      this.suspendResumeLock = config.isAllowPoolSuspension() ? new GlobalPoolLock(true) : GlobalPoolLock.FAUX_LOCK;
 
-      this.catalog = configuration.getCatalog();
-      this.transactionIsolation = getTransactionIsolation(configuration.getTransactionIsolation());
-      this.isIsolateInternalQueries = configuration.isIsolateInternalQueries();
-      this.isUseJdbc4Validation = configuration.getConnectionTestQuery() == null;
+      this.catalog = config.getCatalog();
+      this.transactionIsolation = getTransactionIsolation(config.getTransactionIsolation());
+      this.isIsolateInternalQueries = config.isIsolateInternalQueries();
+      this.isUseJdbc4Validation = config.getConnectionTestQuery() == null;
 
-      setMetricRegistry(configuration.getMetricRegistry());
-      setHealthCheckRegistry(configuration.getHealthCheckRegistry());
+      setMetricRegistry(config.getMetricRegistry());
+      setHealthCheckRegistry(config.getHealthCheckRegistry());
 
-      this.dataSource = poolUtils.initializeDataSource(configuration.getDataSourceClassName(), configuration.getDataSource(), configuration.getDataSourceProperties(), configuration.getDriverClassName(), configuration.getJdbcUrl(), username, password);
+      this.dataSource = poolUtils.initializeDataSource(config.getDataSourceClassName(), config.getDataSource(), config.getDataSourceProperties(), config.getDriverClassName(), config.getJdbcUrl(), username, password);
 
-      this.addConnectionExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection filler (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
-      this.closeConnectionExecutor = createThreadPoolExecutor(4, "HikariCP connection closer (pool " + configuration.getPoolName() + ")", configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
+      this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "HikariCP connection filler (pool " + config.getPoolName() + ")", config.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
+      this.closeConnectionExecutor = createThreadPoolExecutor(4, "HikariCP connection closer (pool " + config.getPoolName() + ")", config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
 
       long delayPeriod = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30L));
-      ThreadFactory threadFactory = configuration.getThreadFactory() != null ? configuration.getThreadFactory() : new DefaultThreadFactory("Hikari Housekeeping Timer (pool " + configuration.getPoolName() + ")", true);
+      ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari Housekeeping Timer (pool " + config.getPoolName() + ")", true);
       this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
       this.houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), delayPeriod, delayPeriod, TimeUnit.MILLISECONDS);
       this.houseKeepingExecutorService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
       this.houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
-      this.leakTask = (configuration.getLeakDetectionThreshold() == 0) ? LeakTask.NO_LEAK : new LeakTask(configuration.getLeakDetectionThreshold(), houseKeepingExecutorService);
+      this.leakTask = (config.getLeakDetectionThreshold() == 0) ? LeakTask.NO_LEAK : new LeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
       poolUtils.setLoginTimeout(dataSource, connectionTimeout);
-      registerMBeans(configuration, this);
+      registerMBeans(config, this);
       initializeConnections();
    }
 
@@ -220,7 +218,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       logPoolState("Timeout failure ");
       throw new SQLTimeoutException(String.format("Timeout after %dms of waiting for a connection.", elapsedTimeMs(start)), lastConnectionFailure.getAndSet(null));
    }
-
 
    /**
     * Release a connection back to the pool, or permanently close it if it is broken.
@@ -463,14 +460,18 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
             return true;
          }
          catch (Exception e) {
+            totalConnections.decrementAndGet(); // We failed so undo speculative increment of totalConnections
             lastConnectionFailure.set(e);
             LOGGER.debug("Connection attempt to database {} failed: {}", configuration.getPoolName(), e.getMessage(), e);
             poolUtils.quietlyCloseConnection(connection, "exception during connection creation");
+            return false;
          }
       }
-   
-      totalConnections.decrementAndGet(); // We failed or pool is max, so undo speculative increment of totalConnections
-      return false;
+      else {
+         totalConnections.decrementAndGet(); // Pool is maxed out, so undo speculative increment of totalConnections
+         lastConnectionFailure.set(new SQLException("HikariCP pool is at maximum capacity"));
+         return true;
+      }
    }
 
    /**
@@ -644,7 +645,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
                   closeConnection(bagEntry, "connection evicted");
                }
                else if (idleTimeout > 0L && now > bagEntry.lastAccess + idleTimeout) {
-            	  closeConnection(bagEntry, "connection passed idleTimeout");
+                  closeConnection(bagEntry, "connection passed idleTimeout");
                }
                else {
                   connectionBag.unreserve(bagEntry);
