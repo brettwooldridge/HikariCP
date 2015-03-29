@@ -31,7 +31,7 @@ public final class PoolBagEntry implements IConcurrentBagEntry
 {
    public final AtomicInteger state = new AtomicInteger();
 
-   public final Connection connection;
+   public Connection connection;
    public long lastOpenTime;
    public volatile boolean evicted;
    public volatile boolean aborted;
