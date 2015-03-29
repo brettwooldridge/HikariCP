@@ -496,12 +496,14 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          if (tc < 0) {
             LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
          }
+         final Connection connection = bagEntry.connection;
          closeConnectionExecutor.execute(new Runnable() {
             public void run() {
-               poolUtils.quietlyCloseConnection(bagEntry.connection, closureReason);
+               poolUtils.quietlyCloseConnection(connection, closureReason);
             }
          });
       }
+      bagEntry.connection = null;
    }
 
    /**
@@ -564,6 +566,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
             poolUtils.quietlyCloseConnection(bagEntry.connection, "connection aborted during shutdown");
          }
          finally {
+            bagEntry.connection = null;
             if (connectionBag.remove(bagEntry)) {
                totalConnections.decrementAndGet();
             }
