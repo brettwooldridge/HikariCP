@@ -110,8 +110,10 @@ public final class HikariPool extends BaseHikariPool
          if (tc < 0) {
             LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
          }
-         closeConnectionExecutor.execute(() -> { poolUtils.quietlyCloseConnection(bagEntry.connection); });
+         final Connection connection = bagEntry.connection;
+         closeConnectionExecutor.execute(() -> { poolUtils.quietlyCloseConnection(connection); });
       }
+      bagEntry.connection = null;
    }
 
    /**
@@ -169,6 +171,7 @@ public final class HikariPool extends BaseHikariPool
             poolUtils.quietlyCloseConnection(bagEntry.connection);
          }
          finally {
+            bagEntry.connection = null;
             if (connectionBag.remove(bagEntry)) {
                totalConnections.decrementAndGet();
             }
