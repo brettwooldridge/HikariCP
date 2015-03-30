@@ -37,7 +37,7 @@ public class LeakTask implements Runnable
    private ScheduledExecutorService executorService;
    private long leakDetectionThreshold;
    private ScheduledFuture<?> scheduledFuture;
-   private PoolBagEntry bagEntry;
+   private String connectionName;
    private Exception exception;
 
    static
@@ -67,7 +67,7 @@ public class LeakTask implements Runnable
    private LeakTask(final LeakTask parent, final PoolBagEntry bagEntry)
    {
       this.exception = new Exception("Apparent connection leak detected");
-      this.bagEntry = bagEntry;
+      this.connectionName = bagEntry.connection.toString();
       scheduledFuture = parent.executorService.schedule(this, parent.leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
@@ -85,7 +85,7 @@ public class LeakTask implements Runnable
       System.arraycopy(stackTrace, 5, trace, 0, trace.length);
 
       exception.setStackTrace(trace);
-      LOGGER.warn("Connection leak detection triggered for connection {}, stack trace follows", bagEntry.connection.toString(), exception);
+      LOGGER.warn("Connection leak detection triggered for connection {}, stack trace follows", connectionName, exception);
    }
 
    public void cancel()
