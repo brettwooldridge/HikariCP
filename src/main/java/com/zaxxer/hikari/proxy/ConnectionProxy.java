@@ -109,8 +109,11 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             LOGGER.warn("Connection {} ({}) marked as broken because of SQLSTATE({}), ErrorCode({}).", delegate.toString(),
                                       parentPool.toString(), sqlState, sqle.getErrorCode(), sqle);
          }
-         else if (sqle.getNextException() != null && sqle != sqle.getNextException()) {
-            checkException(sqle.getNextException());
+         else {
+            SQLException nse = sqle.getNextException();
+            if (nse != null && nse != sqle) {
+               checkException(nse);
+            }
          }
       }
       return sqle;
