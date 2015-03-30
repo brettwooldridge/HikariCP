@@ -3,10 +3,12 @@ HikariCP Changes
 Changes in 2.4.0
 
  * Consolidated distribution into single JVM target (Java 7).  Java 6 support has
-   entered maintenance mode and bug fixes will continue on the 2.3.x branch.
+   entered maintenance mode, bug fixes will continue on the 2.3.x branch.
 
  * Pool configuration properties and DataSource methods previously marked as
    @Deprecated have been removed.
+
+Changes in 2.3.6
 
  * Allow explicit definition of driverClassName to override DriverManager.getDriver(url)
    located driver.
