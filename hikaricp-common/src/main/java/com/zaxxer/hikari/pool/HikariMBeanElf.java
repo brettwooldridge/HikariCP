@@ -16,6 +16,9 @@
 
 package com.zaxxer.hikari.pool;
 
+import com.codahale.metrics.JmxReporter;
+import com.codahale.metrics.MetricRegistry;
+
 import java.lang.management.ManagementFactory;
 
 import javax.management.MBeanServer;
@@ -74,6 +77,12 @@ public final class HikariMBeanElf
       catch (Exception e) {
          LOGGER.warn("Unable to register management beans.", e);
       }
+
+      final Object metricRegistry = configuration.getMetricRegistry();
+      if (metricRegistry != null) {
+          JmxReporter.forRegistry((MetricRegistry)metricRegistry).build().start();
+      }
+
    }
 
    /**
