@@ -110,11 +110,13 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    public HikariPool(HikariConfig config)
     {
+      this.configuration = config;
       this.username = config.getUsername();
       this.password = config.getPassword();
-      this.configuration = config;
 
       this.poolUtils = new PoolUtilities(config);
+      this.dataSource = poolUtils.initializeDataSource(config.getDataSourceClassName(), config.getDataSource(), config.getDataSourceProperties(), config.getDriverClassName(), config.getJdbcUrl(), username, password);
+
       this.connectionBag = new ConcurrentBag<PoolBagEntry>(this);
       this.totalConnections = new AtomicInteger();
       this.connectionTimeout = config.getConnectionTimeout();
@@ -130,11 +132,9 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       this.transactionIsolation = getTransactionIsolation(config.getTransactionIsolation());
       this.isIsolateInternalQueries = config.isIsolateInternalQueries();
       this.isUseJdbc4Validation = config.getConnectionTestQuery() == null;
-
+      
       setMetricRegistry(config.getMetricRegistry());
       setHealthCheckRegistry(config.getHealthCheckRegistry());
-
-      this.dataSource = poolUtils.initializeDataSource(config.getDataSourceClassName(), config.getDataSource(), config.getDataSourceProperties(), config.getDriverClassName(), config.getJdbcUrl(), username, password);
 
       this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "HikariCP connection filler (pool " + config.getPoolName() + ")", config.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
       this.closeConnectionExecutor = createThreadPoolExecutor(4, "HikariCP connection closer (pool " + config.getPoolName() + ")", config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
@@ -218,7 +218,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       metricsTracker.recordConnectionUsage(bagEntry);
 
       if (bagEntry.evicted) {
-         LOGGER.debug("Connection returned to pool {} is broken or evicted.  Closing connection.", configuration.getPoolName());
          closeConnection(bagEntry, "connection broken or evicted");
       }
       else {
@@ -427,39 +426,38 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    {
       // Speculative increment of totalConnections with expectation of success
       if (totalConnections.incrementAndGet() <= configuration.getMaximumPoolSize()) {
-         Connection connection = null;
-         try {
-            connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
-            
-            if (isUseJdbc4Validation && !poolUtils.isJdbc4ValidationSupported(connection)) {
-               throw new SQLException("JDBC4 Connection.isValid() method not supported, connection test query must be configured");
-            }
-            
-            final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, connectionTimeout);
-            
-            transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
-            
-            poolUtils.setupConnection(connection, isAutoCommit, isReadOnly, transactionIsolation, catalog);
-            poolUtils.executeSql(connection, configuration.getConnectionInitSql(), isAutoCommit);
-            poolUtils.setNetworkTimeout(connection, originalTimeout);
-            
-            connectionBag.add(new PoolBagEntry(connection, this));
-            lastConnectionFailure.set(null);
-            LOGGER.debug("Connection {} added to pool {} ", connection, configuration.getPoolName());
-            return true;
-         }
-         catch (Exception e) {
-            totalConnections.decrementAndGet(); // We failed so undo speculative increment of totalConnections
-            lastConnectionFailure.set(e);
-            LOGGER.debug("Connection attempt to database in pool {} failed: {}", configuration.getPoolName(), e.getMessage(), e);
-            poolUtils.quietlyCloseConnection(connection, "exception during connection creation");
-            return false;
-         }
-      }
-      else {
          totalConnections.decrementAndGet(); // Pool is maxed out, so undo speculative increment of totalConnections
          lastConnectionFailure.set(new SQLException(String.format("HikariCP pool %s is at maximum capacity", configuration.getPoolName())));
          return true;
+      }
+
+      Connection connection = null;
+      try {
+         connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
+         
+         if (isUseJdbc4Validation && !poolUtils.isJdbc4ValidationSupported(connection)) {
+            throw new SQLException("JDBC4 Connection.isValid() method not supported, connection test query must be configured");
+         }
+         
+         final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, connectionTimeout);
+         
+         transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
+         
+         poolUtils.setupConnection(connection, isAutoCommit, isReadOnly, transactionIsolation, catalog);
+         poolUtils.executeSql(connection, configuration.getConnectionInitSql(), isAutoCommit);
+         poolUtils.setNetworkTimeout(connection, originalTimeout);
+         
+         connectionBag.add(new PoolBagEntry(connection, this));
+         lastConnectionFailure.set(null);
+         LOGGER.debug("Connection {} added to pool {} ", connection, configuration.getPoolName());
+         return true;
+      }
+      catch (Exception e) {
+         totalConnections.decrementAndGet(); // We failed so undo speculative increment of totalConnections
+         lastConnectionFailure.set(e);
+         LOGGER.debug("Connection attempt to database in pool {} failed: {}", configuration.getPoolName(), e.getMessage(), e);
+         poolUtils.quietlyCloseConnection(connection, "exception during connection creation");
+         return false;
       }
    }
 
