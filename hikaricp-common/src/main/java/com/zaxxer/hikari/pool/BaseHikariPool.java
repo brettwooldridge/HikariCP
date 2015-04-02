@@ -239,7 +239,6 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
          closeConnection(bagEntry);
       }
       else {
-         bagEntry.lastAccess = System.currentTimeMillis();
          connectionBag.requite(bagEntry);
       }
    }
