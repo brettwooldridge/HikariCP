@@ -46,7 +46,7 @@
       <mockito.version>1.10.19</mockito.version>
       <pax.exam.version>4.4.0</pax.exam.version>
       <pax.url.version>2.4.0</pax.url.version>
-      <slf4j.version>1.7.10</slf4j.version>
+      <slf4j.version>1.7.12</slf4j.version>
       <felix.bundle.plugin.version>2.4.0</felix.bundle.plugin.version>
       <felix.version>4.6.1</felix.version>
    </properties>
