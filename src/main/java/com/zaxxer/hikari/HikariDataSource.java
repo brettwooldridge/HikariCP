@@ -284,7 +284,9 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
          shutdownHelper(fastPathPool);
       }
 
-      shutdownHelper(pool);
+      if (pool != null) {
+         shutdownHelper(pool);
+      }
    }
 
    /** {@inheritDoc} */
@@ -294,17 +296,17 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       return String.format("HikariDataSource (%s)", pool);
    }
 
-   private void shutdownHelper(HikariPool hPool)
+   private void shutdownHelper(HikariPool pool)
    {
       try {
-         hPool.shutdown();
+         pool.shutdown();
       }
       catch (InterruptedException e) {
          LoggerFactory.getLogger(getClass()).warn("Interrupted during shutdown", e);
       }
 
-      if (hPool.getDataSource() instanceof DriverDataSource) {
-         ((DriverDataSource) hPool.getDataSource()).shutdown();
+      if (pool.getDataSource() instanceof DriverDataSource) {
+         ((DriverDataSource) pool.getDataSource()).shutdown();
       }
    }
 }
