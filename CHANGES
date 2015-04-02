@@ -13,6 +13,10 @@ Changes in 2.3.6
  * Allow explicit definition of driverClassName to override DriverManager.getDriver(url)
    located driver.
 
+ * Fixed a rare issue where a Connection held out of the pool past the database's own
+   connection timeout, and never used by the holding thread, when returned to the pool
+   may be mistakenly given to another thread (even though it is disconnected).
+
 Changes in 2.3.5
 
  * Fixed regression caused by enhancement #279 that imposed a runtime dependency on
