@@ -44,7 +44,7 @@
       <hibernate.version>4.3.8.Final</hibernate.version>
       <javassist.version>3.19.0-GA</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>
-      <metrics.version>3.1.0</metrics.version>
+      <metrics.version>3.1.1</metrics.version>
       <mockito.version>1.10.19</mockito.version>
       <pax.exam.version>3.4.0</pax.exam.version>
       <pax.url.version>2.3.0</pax.url.version>
