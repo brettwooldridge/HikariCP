@@ -222,7 +222,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          closeConnection(bagEntry, "connection broken or evicted");
       }
       else {
-         bagEntry.lastAccess = System.currentTimeMillis();
          connectionBag.requite(bagEntry);
       }
    }

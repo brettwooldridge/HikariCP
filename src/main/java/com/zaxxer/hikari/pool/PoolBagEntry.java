@@ -32,11 +32,11 @@ public final class PoolBagEntry implements IConcurrentBagEntry
    public final AtomicInteger state = new AtomicInteger();
 
    public Connection connection;
+   public long lastAccess;
    public long lastOpenTime;
    public volatile boolean evicted;
    public volatile boolean aborted;
    
-   protected long lastAccess;
 
    private volatile ScheduledFuture<?> endOfLife;
 
