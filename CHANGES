@@ -2,20 +2,22 @@ HikariCP Changes
 
 Changes in 2.4.0
 
- * Consolidated distribution into single JVM target (Java 7).  Java 6 support has
+ * Consolidated distribution into single JVM target (Java 7/8).  Java 6 support has
    entered maintenance mode, bug fixes will continue on the 2.3.x branch.
 
  * Pool configuration properties and DataSource methods previously marked as
    @Deprecated have been removed.
+
+ * Deprecated HikariDataSource.shutdown() in favor of close().
 
 Changes in 2.3.6
 
  * Allow explicit definition of driverClassName to override DriverManager.getDriver(url)
    located driver.
 
- * Fixed a rare issue where a Connection held out of the pool past the database's own
-   connection timeout, and never used by the holding thread, when returned to the pool
-   may be mistakenly given to another thread (even though it is disconnected).
+ * Fixed a rare issue where a Connection held out of the pool, and never used by the
+   holding thread, when returned to the pool may be mistakenly given to another thread
+   without testing.
 
 Changes in 2.3.5
 
