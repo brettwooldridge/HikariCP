@@ -79,7 +79,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    public Connection getConnection() throws SQLException
    {
       if (isShutdown) {
-         throw new SQLException("Pool {} has been shutdown", pool.getConfiguration().getPoolName());
+         throw new SQLException(String.format("Pool %s has been shutdown", pool.getConfiguration().getPoolName()));
       }
 
       if (fastPathPool != null) {

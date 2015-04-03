@@ -222,7 +222,7 @@ public class ShutdownTest
            ds.getConnection();
        }
        catch (SQLException e) {
-          Assert.assertTrue(e.getMessage().contains("Pool has been shutdown"));
+          Assert.assertTrue(e.getMessage().contains("has been shutdown"));
        }
    }
 
