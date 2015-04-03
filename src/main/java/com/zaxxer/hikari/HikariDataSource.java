@@ -79,7 +79,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    public Connection getConnection() throws SQLException
    {
       if (isShutdown) {
-         throw new SQLException("Pool has been shutdown");
+         throw new SQLException("Pool {} has been shutdown", pool.getConfiguration().getPoolName());
       }
 
       if (fastPathPool != null) {
@@ -113,14 +113,14 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @Override
    public PrintWriter getLogWriter() throws SQLException
    {
-      return (pool.getDataSource() != null ? pool.getDataSource().getLogWriter() : null);
+      return (pool != null ? pool.getDataSource().getLogWriter() : null);
    }
 
    /** {@inheritDoc} */
    @Override
    public void setLogWriter(PrintWriter out) throws SQLException
    {
-      if (pool.getDataSource() != null) {
+      if (pool != null) {
          pool.getDataSource().setLogWriter(out);
       }
    }
@@ -129,18 +129,16 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @Override
    public void setLoginTimeout(int seconds) throws SQLException
    {
-      pool.getDataSource().setLoginTimeout(seconds);
+      if (pool.getDataSource() != null) {
+         pool.getDataSource().setLoginTimeout(seconds);
+      }
    }
 
    /** {@inheritDoc} */
    @Override
    public int getLoginTimeout() throws SQLException
    {
-      if (pool != null) {
-         return pool.getDataSource().getLoginTimeout();
-      }
-
-      return 0;
+      return (pool.getDataSource() != null ? pool.getDataSource().getLoginTimeout() : 0);
    }
 
    /** {@inheritDoc} */
@@ -199,7 +197,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       boolean isAlreadySet = getMetricRegistry() != null;
       super.setMetricRegistry(metricRegistry);
 
-      if (fastPathPool != null || pool != null) {
+      if (pool != null) {
          if (isAlreadySet) {
             throw new IllegalStateException("MetricRegistry can only be set one time");
          }
@@ -216,7 +214,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       boolean isAlreadySet = getHealthCheckRegistry() != null;
       super.setHealthCheckRegistry(healthCheckRegistry);
 
-      if (fastPathPool != null || pool != null) {
+      if (pool != null) {
          if (isAlreadySet) {
             throw new IllegalStateException("HealthCheckRegistry can only be set one time");
          }
@@ -227,9 +225,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    }
 
    /**
-    * Evict a connection from the pool.  Use caution using this method, if you
-    * evict the same connection more than one time, the internal pool accounting
-    * will become invalid and the pool may stop functioning.
+    * Evict a connection from the pool.
     *
     * @param connection the connection to evict from the pool
     */
@@ -262,17 +258,10 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    }
 
    /**
-    * <code>close()</code> and <code>shutdown()</code> are synonymous.
-    */
-   public void close()
-   {
-      shutdown();
-   }
-
-   /**
     * Shutdown the DataSource and its associated pool.
     */
-   public void shutdown()
+   @Override
+   public void close()
    {
       if (isShutdown) {
          return;
@@ -280,13 +269,30 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
 
       isShutdown = true;
 
-      if (fastPathPool != null) {
-         shutdownHelper(fastPathPool);
-      }
-
       if (pool != null) {
-         shutdownHelper(pool);
+         try {
+            pool.shutdown();
+         }
+         catch (InterruptedException e) {
+            LoggerFactory.getLogger(getClass()).warn("Interrupted during shutdown", e);
+         }
+
+         if (pool.getDataSource() instanceof DriverDataSource) {
+            ((DriverDataSource) pool.getDataSource()).shutdown();
+         }
       }
+   }
+
+   /**
+    * Shutdown the DataSource and its associated pool.
+    *
+    * @deprecated The {@link #shutdown()} method has been deprecated, please use {@link #close()} instead
+    */
+   @Deprecated
+   public void shutdown()
+   {
+      LOGGER.warn("The shutdown() method has been deprecated, please use the close() method instead");
+      close();
    }
 
    /** {@inheritDoc} */
@@ -294,19 +300,5 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    public String toString()
    {
       return String.format("HikariDataSource (%s)", pool);
-   }
-
-   private void shutdownHelper(HikariPool pool)
-   {
-      try {
-         pool.shutdown();
-      }
-      catch (InterruptedException e) {
-         LoggerFactory.getLogger(getClass()).warn("Interrupted during shutdown", e);
-      }
-
-      if (pool.getDataSource() instanceof DriverDataSource) {
-         ((DriverDataSource) pool.getDataSource()).shutdown();
-      }
    }
 }

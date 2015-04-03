@@ -271,7 +271,7 @@ public class ShutdownTest
                }
                finally {
                   new PoolUtilities(config).quietlyCloseConnection(connection, "because this is a test");
-                  ds.shutdown();
+                  ds.close();
                }
             };
          };
@@ -281,7 +281,7 @@ public class ShutdownTest
             public void run() {
                UtilityElf.quietlySleep(100);
                try {
-                  ds.shutdown();
+                  ds.close();
                }
                catch (IllegalStateException e) {
                   Assert.fail(e.getMessage());
