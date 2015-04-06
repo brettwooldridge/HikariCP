@@ -66,7 +66,6 @@ public class HikariConfig implements HikariConfigMBean
    // Properties NOT changeable at runtime
    //
    private String catalog;
-   private String connectionCustomizerClassName;
    private String connectionInitSql;
    private String connectionTestQuery;
    private String dataSourceClassName;
@@ -705,14 +704,8 @@ public class HikariConfig implements HikariConfigMBean
 
       validateNumerics();
 
-      if (connectionCustomizerClassName != null) {
-         try {
-            getClass().getClassLoader().loadClass(connectionCustomizerClassName);
-         }
-         catch (Exception e) {
-            logger.warn("connectionCustomizationClass specified class '" + connectionCustomizerClassName + "' could not be loaded", e);
-            connectionCustomizerClassName = null;
-         }
+      if (poolName.contains(":") && isRegisterMbeans) {
+         throw new IllegalArgumentException("poolName cannot contain ':' when used with JMX");
       }
 
       if (driverClassName != null && jdbcUrl == null) {
