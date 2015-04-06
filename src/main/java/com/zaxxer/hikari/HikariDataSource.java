@@ -284,6 +284,16 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    }
 
    /**
+    * Determine whether the HikariDataSource has been closed.
+    *
+    * @return true if the HikariDataSource has been closed, false otherwise
+    */
+   public boolean isClosed()
+   {
+      return isShutdown;
+   }
+
+   /**
     * Shutdown the DataSource and its associated pool.
     *
     * @deprecated The {@link #shutdown()} method has been deprecated, please use {@link #close()} instead
