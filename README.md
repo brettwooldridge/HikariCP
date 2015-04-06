@@ -87,8 +87,8 @@ Note XA data sources are not supported.  XA requires a real transaction manager 
 &#128288;``jdbcUrl``<br/>
 This property directs HikariCP to use "DriverManager-based" configuration.  We feel that DataSource-based
 configuration (above) is superior for a variety of reasons (see below), but for many deployments there is
-little significant difference.  When using this property with "old" drivers, you may also need to set
-the  ``driverClassName`` property, but try it first without.  Note that if this property is used, you may
+little significant difference.  **When using this property with "old" drivers, you may also need to set
+the  ``driverClassName`` property, but try it first without.**  Note that if this property is used, you may
 still use *DataSource* properties to configure your driver and is in fact recommended over driver parameters
 specified in the URL itself.
 *Default: none*
