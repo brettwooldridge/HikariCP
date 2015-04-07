@@ -9,21 +9,21 @@ Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC con
 
 ----------------------------------------------------
 
-_Java 8 maven artifact:_
+_Java 7 and Java 8 maven artifact:_
 ```xml
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>2.3.5</version>
+        <version>2.4.0-SNAPSHOT</version>
         <scope>compile</scope>
     </dependency>
 ```
-_Java 6 and Java 7 maven artifact:_
+_Java 6 maven artifact (*maintence mode*):_
 ```xml
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP-java6</artifactId>
-        <version>2.3.5</version>
+        <version>2.3.6</version>
         <scope>compile</scope>
     </dependency>
 ```
