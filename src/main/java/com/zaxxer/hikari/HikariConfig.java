@@ -704,6 +704,10 @@ public class HikariConfig implements HikariConfigMBean
 
       validateNumerics();
 
+      if (poolName == null) {
+         poolName = "HikariPool-" + poolNumber++;
+      }
+
       if (poolName.contains(":") && isRegisterMbeans) {
          throw new IllegalArgumentException("poolName cannot contain ':' when used with JMX");
       }
@@ -729,10 +733,6 @@ public class HikariConfig implements HikariConfigMBean
 
       if (transactionIsolationName != null) {
          UtilityElf.getTransactionIsolation(transactionIsolationName);
-      }
-
-      if (poolName == null) {
-         poolName = "HikariPool-" + poolNumber++;
       }
 
       if (LOGGER.isDebugEnabled() || unitTest) {
