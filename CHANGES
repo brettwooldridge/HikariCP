@@ -5,9 +5,9 @@ Changes in 2.3.6
  * Allow explicit definition of driverClassName to override DriverManager.getDriver(url)
    located driver.
 
- * Fixed a rare issue where a Connection held out of the pool past the database's own
-   connection timeout, and never used by the holding thread, when returned to the pool
-   may be mistakenly given to another thread (even though it is disconnected).
+ * Fixed a rare issue where a Connection that is held out of the pool, and never used by
+   the holding thread, upon returning to the pool might be given to another thread without
+   an aliveness test.
 
 Changes in 2.3.5
 
