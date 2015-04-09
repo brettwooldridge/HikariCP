@@ -203,7 +203,12 @@ public class TestConnections
       try {
          Connection connection = ds.getConnection();
          connection.close();
+
+         // should no-op
+         connection.abort(null);
+
          Assert.assertTrue("Connection should have closed", connection.isClosed());
+         Assert.assertFalse("Connection should have closed", connection.isValid(5));
          Assert.assertTrue("Expected to contain ClosedConnection, but was " + connection.toString(), connection.toString().contains("ClosedConnection"));
 
          connection.close();

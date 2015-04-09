@@ -38,10 +38,7 @@ final class ClosedConnection
          public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
          {
             final String methodName = method.getName();
-            if ("isClosed".equals(methodName)) {
-               return Boolean.TRUE;
-            }
-            else if ("close".equals(methodName)) {
+            if ("close".equals(methodName)) {
                return Void.TYPE;
             }
             else if ("abort".equals(methodName)) { 
