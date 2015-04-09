@@ -53,8 +53,13 @@ public final class PoolUtilities
       try {
          LOGGER.debug("Closing connection {} in pool {}{}", connection, poolName, addendum);
          if (connection != null && !connection.isClosed()) {
-            setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(30));
-            connection.close();
+            try {
+               setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(30));
+            }
+            finally {
+               // continue with the close even if setNetworkTimeout() throws (due to driver poorly behaving drivers)
+               connection.close();
+            }
          }
       }
       catch (Throwable e) {
@@ -216,16 +221,12 @@ public final class PoolUtilities
     *
     * @param connection the connection to set the network timeout on
     * @param timeoutMs the number of milliseconds before timeout
+    * @throws SQLException throw if the connection.setNetworkTimeout() call throws
     */
-   public void setNetworkTimeout(final Connection connection, final long timeoutMs)
+   public void setNetworkTimeout(final Connection connection, final long timeoutMs) throws SQLException
    {
       if (isNetworkTimeoutSupported) {
-         try {
-            connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
-         }
-         catch (Throwable e) {
-            LOGGER.debug("Unable to reset network timeout for connection {} in pool {}", connection.toString(), poolName, e);
-         }
+         connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
       }
    }
 
