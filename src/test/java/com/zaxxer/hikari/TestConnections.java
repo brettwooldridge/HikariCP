@@ -203,6 +203,9 @@ public class TestConnections
       try {
          Connection connection = ds.getConnection();
          connection.close();
+         Assert.assertTrue("Connection should have closed", connection.isClosed());
+         Assert.assertTrue("Expected to contain ClosedConnection, but was " + connection.toString(), connection.toString().contains("ClosedConnection"));
+
          connection.close();
       }
       finally {
