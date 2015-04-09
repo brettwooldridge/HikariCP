@@ -302,6 +302,39 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       return configuration;
    }
 
+   public void setMetricRegistry(Object metricRegistry)
+   {
+      this.isRecordMetrics = metricRegistry != null;
+      if (isRecordMetrics) {
+         this.metricsTracker = new CodaHaleMetricsTracker(this, (MetricRegistry) metricRegistry);
+      }
+      else {
+         this.metricsTracker = new MetricsTracker(this);
+      }
+   }
+
+   public void setHealthCheckRegistry(Object healthCheckRegistry)
+   {
+      if (healthCheckRegistry != null) {
+         CodahaleHealthChecker.registerHealthChecks(this, (HealthCheckRegistry) healthCheckRegistry);
+      }
+   }
+
+   /**
+    * Log the current pool state at debug level.
+    *
+    * @param prefix an optional prefix to prepend the log message 
+    */
+   public final void logPoolState(String... prefix)
+   {
+      if (LOGGER.isDebugEnabled()) {
+         LOGGER.debug("{}pool stats {} (total={}, inUse={}, avail={}, waiting={})",
+                      (prefix.length > 0 ? prefix[0] : ""), configuration.getPoolName(),
+                      getTotalConnections(), getActiveConnections(), getIdleConnections(), getThreadsAwaitingConnection());
+      }
+   }
+
+   /** {@inheritDoc} */
    @Override
    public String toString()
    {
@@ -382,7 +415,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
    /** {@inheritDoc} */
    @Override
-   public final void suspendPool()
+   public final synchronized void suspendPool()
    {
       if (suspendResumeLock == GlobalPoolLock.FAUX_LOCK) {
          throw new IllegalStateException("Pool " + configuration.getPoolName() + " is not suspendable");
@@ -395,41 +428,51 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
    /** {@inheritDoc} */
    @Override
-   public final void resumePool()
+   public final synchronized void resumePool()
    {
       if (poolState == POOL_SUSPENDED) {
          poolState = POOL_RUNNING;
-         addBagItem(); // re-populate the pool
+         fillPool();
          suspendResumeLock.resume();
       }
    }
 
-   public void setMetricRegistry(Object metricRegistry)
-   {
-      this.isRecordMetrics = metricRegistry != null;
-      if (isRecordMetrics) {
-         this.metricsTracker = new CodaHaleMetricsTracker(this, (MetricRegistry) metricRegistry);
-      }
-      else {
-         this.metricsTracker = new MetricsTracker(this);
-      }
-   }
+   // ***********************************************************************
+   //                           Package methods
+   // ***********************************************************************
 
-   public void setHealthCheckRegistry(Object healthCheckRegistry)
+   /**
+    * Permanently close the real (underlying) connection (eat any exception).
+    *
+    * @param connectionProxy the connection to actually close
+    */
+   void closeConnection(final PoolBagEntry bagEntry, final String closureReason)
    {
-      if (healthCheckRegistry != null) {
-         CodahaleHealthChecker.registerHealthChecks(this, (HealthCheckRegistry) healthCheckRegistry);
+      final Connection connection = bagEntry.connection;
+      bagEntry.connection = null;
+      bagEntry.cancelMaxLifeTermination();
+      if (connectionBag.remove(bagEntry)) {
+         final int tc = totalConnections.decrementAndGet();
+         if (tc < 0) {
+            LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
+         }
+         
+         closeConnectionExecutor.execute(new Runnable() {
+            public void run() {
+               poolUtils.quietlyCloseConnection(connection, closureReason);
+            }
+         });
       }
    }
 
    // ***********************************************************************
-   //                           Protected methods
+   //                           Private methods
    // ***********************************************************************
 
    /**
     * Create and add a single connection to the pool.
     */
-   protected final boolean addConnection()
+   private final boolean addConnection()
    {
       // Speculative increment of totalConnections with expectation of success
       if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize()) {
@@ -471,7 +514,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    /**
     * Fill pool up from current idle connections (as they are perceived at the point of execution) to minimumIdle connections.
     */
-   protected void fillPool()
+   private void fillPool()
    {
       final int connectionsToAdd = configuration.getMinimumIdle() - getIdleConnections();
       for (int i = 0; i < connectionsToAdd; i++) {
@@ -488,37 +531,13 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    }
 
    /**
-    * Permanently close the real (underlying) connection (eat any exception).
-    *
-    * @param connectionProxy the connection to actually close
-    */
-   protected void closeConnection(final PoolBagEntry bagEntry, final String closureReason)
-   {
-      final Connection connection = bagEntry.connection;
-      bagEntry.connection = null;
-      bagEntry.cancelMaxLifeTermination();
-      if (connectionBag.remove(bagEntry)) {
-         final int tc = totalConnections.decrementAndGet();
-         if (tc < 0) {
-            LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
-         }
-         
-         closeConnectionExecutor.execute(new Runnable() {
-            public void run() {
-               poolUtils.quietlyCloseConnection(connection, closureReason);
-            }
-         });
-      }
-   }
-
-   /**
     * Check whether the connection is alive or not.
     *
     * @param connection the connection to test
     * @param timeoutMs the timeout before we consider the test a failure
     * @return true if the connection is alive, false if it is not alive or we timed out
     */
-   protected boolean isConnectionAlive(final Connection connection)
+   private boolean isConnectionAlive(final Connection connection)
    {
       try {
          int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout);
@@ -547,10 +566,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          return false;
       }
    }
-
-   // ***********************************************************************
-   //                           Private methods
-   // ***********************************************************************
 
    /**
     * Attempt to abort() active connections, or close() them.
@@ -586,12 +601,12 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    {
       if (configuration.isInitializationFailFast()) {
          try {
+            if (!addConnection()) {
+               shutdown();
+               throw new PoolInitializationException(lastConnectionFailure.getAndSet(null));
+            }
+
             try {
-               if (!addConnection()) {
-                  shutdown();
-                  throw new PoolInitializationException(lastConnectionFailure.getAndSet(null));
-               }
-   
                ConnectionProxy connection = (ConnectionProxy) getConnection();
                connection.getPoolBagEntry().evicted = (configuration.getMinimumIdle() == 0);
                connection.close();
@@ -607,15 +622,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       }
 
       fillPool();
-   }
-
-   public final void logPoolState(String... prefix)
-   {
-      if (LOGGER.isDebugEnabled()) {
-         LOGGER.debug("{}pool stats {} (total={}, inUse={}, avail={}, waiting={})",
-                      (prefix.length > 0 ? prefix[0] : ""), configuration.getPoolName(),
-                      getTotalConnections(), getActiveConnections(), getIdleConnections(), getThreadsAwaitingConnection());
-      }
    }
 
    // ***********************************************************************
