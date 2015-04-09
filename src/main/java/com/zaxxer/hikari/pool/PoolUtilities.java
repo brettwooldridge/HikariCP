@@ -155,7 +155,7 @@ public final class PoolUtilities
          }
          catch (Throwable e) {
             isValidSupported = false;
-            LOGGER.debug("{} - JDBC4 Connection.isValid() not supported", poolName);
+            LOGGER.debug("{} - JDBC4 Connection.isValid() not supported ({})", poolName, e.getMessage());
          }
 
          isValidChecked = true;

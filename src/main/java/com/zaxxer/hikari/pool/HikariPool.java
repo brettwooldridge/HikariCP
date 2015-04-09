@@ -231,10 +231,13 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     *
     * @throws InterruptedException thrown if the thread is interrupted during shutdown
     */
-   public final void shutdown() throws InterruptedException
+   public final synchronized void shutdown() throws InterruptedException
    {
-      if (poolState != POOL_SHUTDOWN) {
-         poolState = POOL_SHUTDOWN;
+      if (poolState == POOL_SHUTDOWN) {
+         return;
+      }
+      
+      try {
          LOGGER.info("HikariCP pool {} is shutting down.", configuration.getPoolName());
 
          logPoolState("Before shutdown ");
@@ -258,10 +261,14 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
          closeConnectionExecutor.shutdown();
          closeConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
+      }
+      finally {
          logPoolState("After shutdown ");
 
          unregisterMBeans(configuration, this);
          metricsTracker.close();
+
+         poolState = POOL_SHUTDOWN;
       }
    }
 
