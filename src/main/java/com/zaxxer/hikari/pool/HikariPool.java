@@ -68,7 +68,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
    private static final long ALIVE_BYPASS_WINDOW = Long.getLong("com.zaxxer.hikari.aliveBypassWindow", 1000L);
 
-   protected static final int POOL_RUNNING = 0;
+   protected static final int POOL_NORMAL = 0;
    protected static final int POOL_SUSPENDED = 1;
    protected static final int POOL_SHUTDOWN = 2;
 
@@ -328,7 +328,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    public final void logPoolState(String... prefix)
    {
       if (LOGGER.isDebugEnabled()) {
-         LOGGER.debug("{}pool stats {} (total={}, active={}, idle={}, waiting={})",
+         LOGGER.debug("{}pool {} stats (total={}, active={}, idle={}, waiting={})",
                       (prefix.length > 0 ? prefix[0] : ""), configuration.getPoolName(),
                       getTotalConnections(), getActiveConnections(), getIdleConnections(), getThreadsAwaitingConnection());
       }
@@ -355,7 +355,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          {
             long sleepBackoff = 200L;
             final int maxPoolSize = configuration.getMaximumPoolSize();
-            while (poolState == POOL_RUNNING && totalConnections.get() < maxPoolSize && !addConnection()) {
+            while (poolState == POOL_NORMAL && totalConnections.get() < maxPoolSize && !addConnection()) {
                // If we got into the loop, addConnection() failed, so we sleep and retry
                quietlySleep(sleepBackoff);
                sleepBackoff = Math.min(connectionTimeout / 2, (long) ((double) sleepBackoff * 1.5));
@@ -431,7 +431,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    public final synchronized void resumePool()
    {
       if (poolState == POOL_SUSPENDED) {
-         poolState = POOL_RUNNING;
+         poolState = POOL_NORMAL;
          fillPool();
          suspendResumeLock.resume();
       }

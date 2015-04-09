@@ -151,7 +151,9 @@ public final class PoolUtilities
    {
       if (!isValidChecked) {
          try {
-            connection.isValid(5);  // This will throw various exceptions in the case of a non-JDBC 4.0 compliant driver
+            // We don't care how long the wait actually is here, just whether it returns without exception. This
+            // call will throw various exceptions in the case of a non-JDBC 4.0 compliant driver
+            connection.isValid(1);
          }
          catch (Throwable e) {
             isValidSupported = false;
