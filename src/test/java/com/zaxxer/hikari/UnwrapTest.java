@@ -72,6 +72,9 @@ public class UnwrapTest
           Assert.assertNotNull(unwrap);
           Assert.assertTrue(unwrap instanceof StubDataSource);
 
+          Assert.assertTrue(ds.isWrapperFor(HikariDataSource.class));
+          Assert.assertTrue(ds.unwrap(HikariDataSource.class) instanceof HikariDataSource);
+
           Assert.assertFalse(ds.isWrapperFor(getClass()));
           try {
              ds.unwrap(getClass());

@@ -148,4 +148,74 @@ public class TestMetrics
          ds.close();
       }
    }
+
+   @Test
+   public void testSetters1() throws Exception
+   {
+      HikariDataSource ds = new HikariDataSource();
+      ds.setMaximumPoolSize(1);
+      ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      
+      MetricRegistry metricRegistry = new MetricRegistry();
+      HealthCheckRegistry healthRegistry = new HealthCheckRegistry();
+
+      try {
+         Connection connection = ds.getConnection();
+         connection.close();
+
+         // After the pool as started, we can only set them once...
+         ds.setMetricRegistry(metricRegistry);
+         ds.setHealthCheckRegistry(healthRegistry);
+
+         // and never again...
+         ds.setMetricRegistry(metricRegistry);
+         Assert.fail("Should not have been allowed to set registry after pool started");
+      }
+      catch (IllegalStateException ise) {
+         // pass
+         try {
+            ds.setHealthCheckRegistry(healthRegistry);
+            Assert.fail("Should not have been allowed to set registry after pool started");
+         }
+         catch (IllegalStateException ise2) {
+            // pass
+         }
+      }
+      finally {
+         ds.close();
+      }
+   }
+
+   @Test
+   public void testSetters2() throws Exception
+   {
+      HikariDataSource ds = new HikariDataSource();
+      ds.setMaximumPoolSize(1);
+      ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      
+      MetricRegistry metricRegistry = new MetricRegistry();
+      HealthCheckRegistry healthRegistry = new HealthCheckRegistry();
+
+      ds.setMetricRegistry(metricRegistry);
+      ds.setHealthCheckRegistry(healthRegistry);
+
+      // before the pool is started, we can set it any number of times...
+      ds.setMetricRegistry(metricRegistry);
+      ds.setHealthCheckRegistry(healthRegistry);
+
+      try {
+         Connection connection = ds.getConnection();
+         connection.close();
+
+         // after the pool is started, we cannot set it any more
+         ds.setMetricRegistry(metricRegistry);
+         Assert.fail("Should not have been allowed to set registry after pool started");
+      }
+      catch (IllegalStateException ise) {
+         
+      }
+      finally {
+         ds.close();
+      }
+   }
 }
