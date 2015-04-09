@@ -121,6 +121,7 @@ public class ShutdownTest
       Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
       Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
       Assert.assertSame("Total connection count not as expected", 0, pool.getTotalConnections());
+      Assert.assertTrue(ds.toString().startsWith("HikariDataSource (") && ds.toString().endsWith(")"));
    }
 
    @Test
