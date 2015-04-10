@@ -572,7 +572,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     *
     * @throws InterruptedException 
     */
-   private void abortActiveConnections(final ExecutorService assassinExecutor) throws InterruptedException
+   private void abortActiveConnections(final ExecutorService assassinExecutor)
    {
       for (PoolBagEntry bagEntry : connectionBag.values(STATE_IN_USE)) {
          try {
@@ -580,9 +580,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
             bagEntry.connection.abort(assassinExecutor);
          }
          catch (Throwable e) {
-            if (e instanceof InterruptedException) {
-               throw (InterruptedException) e;
-            }
             poolUtils.quietlyCloseConnection(bagEntry.connection, "connection aborted during shutdown");
          }
          finally {
