@@ -503,7 +503,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          return true;
       }
       catch (Exception e) {
-         totalConnections.decrementAndGet(); // We failed so undo speculative increment of totalConnections
+         totalConnections.decrementAndGet(); // We failed, so undo speculative increment of totalConnections
          lastConnectionFailure.set(e);
          LOGGER.debug("Connection attempt to database in pool {} failed: {}", configuration.getPoolName(), e.getMessage(), e);
          poolUtils.quietlyCloseConnection(connection, "exception during connection creation");
@@ -602,22 +602,21 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       if (configuration.isInitializationFailFast()) {
          try {
             if (!addConnection()) {
-               shutdown();
-               throw new PoolInitializationException(lastConnectionFailure.getAndSet(null));
+               throw lastConnectionFailure.getAndSet(null);
             }
 
-            try {
-               ConnectionProxy connection = (ConnectionProxy) getConnection();
-               connection.getPoolBagEntry().evicted = (configuration.getMinimumIdle() == 0);
-               connection.close();
-            }
-            catch (SQLException e) {
-               shutdown();
-               throw new PoolInitializationException(e);
-            }
+            ConnectionProxy connection = (ConnectionProxy) getConnection();
+            connection.getPoolBagEntry().evicted = (configuration.getMinimumIdle() == 0);
+            connection.close();
          }
-         catch (InterruptedException ie) {
-            throw new PoolInitializationException(ie);
+         catch (Throwable e) {
+            try {
+               shutdown();
+            }
+            catch (InterruptedException ignore) {
+            }
+
+            throw new PoolInitializationException(e);
          }
       }
 
