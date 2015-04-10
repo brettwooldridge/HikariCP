@@ -85,7 +85,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    @Override
    public String toString()
    {
-      return String.format("%s(%s) wrapping %s", this.getClass().getSimpleName(), System.identityHashCode(this), delegate);
+      final StringBuilder sb = new StringBuilder(64);
+      sb.append(this.getClass().getSimpleName()).append('(').append(System.identityHashCode(this)).append(") wrapping ").append(delegate);
+      return sb.toString();
    }
 
    // ***********************************************************************
