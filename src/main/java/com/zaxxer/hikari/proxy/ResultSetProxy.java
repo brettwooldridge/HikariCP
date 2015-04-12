@@ -41,6 +41,16 @@ public abstract class ResultSetProxy implements ResultSet
       return connection.checkException(e);
    }
 
+   /** {@inheritDoc} */
+   @Override
+   public String toString()
+   {
+      return new StringBuilder(64)
+         .append(this.getClass().getSimpleName()).append('@').append(System.identityHashCode(this))
+         .append(" wrapping ")
+         .append(delegate).toString();
+   }
+
    // **********************************************************************
    //                 Overridden java.sql.ResultSet Methods
    // **********************************************************************

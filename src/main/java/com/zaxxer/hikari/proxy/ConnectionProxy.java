@@ -82,12 +82,14 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       this.openStatements = new FastList<Statement>(Statement.class, 16);
    }
 
+   /** {@inheritDoc} */
    @Override
    public String toString()
    {
-      final StringBuilder sb = new StringBuilder(64);
-      sb.append(this.getClass().getSimpleName()).append('(').append(System.identityHashCode(this)).append(") wrapping ").append(delegate);
-      return sb.toString();
+      return new StringBuilder(64)
+         .append(this.getClass().getSimpleName()).append('@').append(System.identityHashCode(this))
+         .append(" wrapping ")
+         .append(delegate).toString();
    }
 
    // ***********************************************************************
