@@ -21,6 +21,7 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Version;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
@@ -65,6 +66,10 @@ public class HikariConnectionProvider implements ConnectionProvider, Configurabl
    {
       this.hcfg = null;
       this.hds = null;
+      if (Version.getVersionString().substring(0, 5).compareTo("4.3.6") >= 1) {
+         LOGGER.warn("com.zaxxer.hikari.hibernate.HikariConnectionProvider has been deprecated for versions of "
+                     + "Hibernate 4.3.6 and newer.  Please switch to org.hibernate.hikaricp.internal.HikariCPConnectionProvider.");
+      }
    }
 
    // *************************************************************************
