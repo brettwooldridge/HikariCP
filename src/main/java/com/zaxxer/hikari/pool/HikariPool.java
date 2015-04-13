@@ -477,7 +477,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       // Speculative increment of totalConnections with expectation of success
       if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize()) {
          totalConnections.decrementAndGet(); // Pool is maxed out, so undo speculative increment of totalConnections
-         lastConnectionFailure.set(new SQLException(String.format("HikariCP pool %s is at maximum capacity", configuration.getPoolName())));
+         lastConnectionFailure.set(new SQLException("HikariCP pool " + configuration.getPoolName() +" is at maximum capacity"));
          return true;
       }
 

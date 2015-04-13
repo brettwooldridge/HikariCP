@@ -49,10 +49,11 @@ public abstract class StatementProxy implements Statement
    @Override
    public String toString()
    {
-      return new StringBuilder(64)
+      final String delegateToString = delegate.toString();
+      return new StringBuilder(64 + delegateToString.length())
          .append(this.getClass().getSimpleName()).append('@').append(System.identityHashCode(this))
          .append(" wrapping ")
-         .append(delegate).toString();
+         .append(delegateToString).toString();
    }
 
    // **********************************************************************

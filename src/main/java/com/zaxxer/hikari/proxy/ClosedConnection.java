@@ -45,7 +45,7 @@ final class ClosedConnection
                return Boolean.FALSE;
             }
             else if ("toString".equals(methodName)) {
-               return String.format("%s(%s) wrapping %s", this.getClass().getSimpleName(), System.identityHashCode(this), "ClosedConnection");
+               return this.getClass().getCanonicalName();
             }
 
             throw new SQLException("Connection is closed");
