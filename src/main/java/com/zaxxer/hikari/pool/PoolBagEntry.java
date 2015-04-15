@@ -47,6 +47,7 @@ public final class PoolBagEntry implements IConcurrentBagEntry
       final long maxLifetime = pool.configuration.getMaxLifetime();
       if (maxLifetime > 0) {
          endOfLife = pool.houseKeepingExecutorService.schedule(new Runnable() {
+            @Override
             public void run()
             {
                // If we can reserve it, close it

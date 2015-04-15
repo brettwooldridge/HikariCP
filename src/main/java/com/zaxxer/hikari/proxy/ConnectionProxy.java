@@ -112,8 +112,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          boolean isForceClose = sqlState.startsWith("08") | SQL_ERRORS.contains(sqlState);
          if (isForceClose) {
             bagEntry.evicted = true;
-            LOGGER.warn("Connection {} ({}) marked as broken because of SQLSTATE({}), ErrorCode({}).", delegate.toString(),
-                                      parentPool.toString(), sqlState, sqle.getErrorCode(), sqle);
+            LOGGER.warn("Connection {} ({}) marked as broken because of SQLSTATE({}), ErrorCode({}).", delegate,
+                                      parentPool, sqlState, sqle.getErrorCode(), sqle);
          }
          else {
             SQLException nse = sqle.getNextException();
@@ -144,7 +144,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    //                        Internal methods
    // ***********************************************************************
 
-   private final <T extends Statement> T trackStatement(final T statement)
+   private <T extends Statement> T trackStatement(final T statement)
    {
       lastAccessNano = System.nanoTime();
       openStatements.add(statement);
@@ -152,7 +152,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       return statement;
    }
 
-   private final void resetConnectionState() throws SQLException
+   private void resetConnectionState() throws SQLException
    {
       if (isReadOnlyDirty) {
          delegate.setReadOnly(parentPool.isReadOnly);

@@ -209,7 +209,7 @@ public class TestConnections
 
          Assert.assertTrue("Connection should have closed", connection.isClosed());
          Assert.assertFalse("Connection should have closed", connection.isValid(5));
-         Assert.assertTrue("Expected to contain ClosedConnection, but was " + connection.toString(), connection.toString().contains("ClosedConnection"));
+         Assert.assertTrue("Expected to contain ClosedConnection, but was " + connection, connection.toString().contains("ClosedConnection"));
 
          connection.close();
       }

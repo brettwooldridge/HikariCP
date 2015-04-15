@@ -352,6 +352,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    {
       class AddConnection implements Runnable
       {
+         @Override
          public void run()
          {
             long sleepBackoff = 200L;
@@ -459,6 +460,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          }
          
          closeConnectionExecutor.execute(new Runnable() {
+            @Override
             public void run() {
                poolUtils.quietlyCloseConnection(connection, closureReason);
             }
@@ -473,7 +475,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    /**
     * Create and add a single connection to the pool.
     */
-   private final boolean addConnection()
+   private boolean addConnection()
    {
       // Speculative increment of totalConnections with expectation of success
       if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize()) {
@@ -524,6 +526,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
       if (connectionsToAdd > 0 && LOGGER.isDebugEnabled()) {
          addConnectionExecutor.execute(new Runnable() {
+            @Override
             public void run() {
                logPoolState("After fill ");
             }
@@ -569,8 +572,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
    /**
     * Attempt to abort() active connections, or close() them.
-    *
-    * @throws InterruptedException 
     */
    private void abortActiveConnections(final ExecutorService assassinExecutor)
    {

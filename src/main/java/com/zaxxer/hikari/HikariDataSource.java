@@ -142,6 +142,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    }
 
    /** {@inheritDoc} */
+   @Override
    public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException
    {
       throw new SQLFeatureNotSupportedException();

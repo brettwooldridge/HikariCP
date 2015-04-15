@@ -44,7 +44,7 @@ public class LeakTask implements Runnable
    {
       NO_LEAK = new LeakTask() {
          @Override
-         public void cancel() {};
+         public void cancel() {}
 
          @Override
          public LeakTask start(final PoolBagEntry bagEntry)

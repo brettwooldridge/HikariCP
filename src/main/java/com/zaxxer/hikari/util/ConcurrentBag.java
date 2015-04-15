@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  *
  * @param <T> the templated type to store in the bag
  */
-public class ConcurrentBag<T extends IConcurrentBagEntry>
+public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseable
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentBag.class);
 
@@ -152,7 +152,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
          synchronizer.releaseShared(sequence.incrementAndGet());
       }
       else {
-         LOGGER.warn("Attempt to remove an object from the bag that does not exist: {}", bagEntry.toString());
+         LOGGER.warn("Attempt to remove an object from the bag that does not exist: {}", bagEntry);
       }
    }
 
@@ -184,13 +184,13 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
    public boolean remove(final T bagEntry)
    {
       if (!bagEntry.state().compareAndSet(STATE_IN_USE, STATE_REMOVED) && !bagEntry.state().compareAndSet(STATE_RESERVED, STATE_REMOVED) && !closed) {
-         LOGGER.warn("Attempt to remove an object from the bag that was not borrowed or reserved: {}", bagEntry.toString());
+         LOGGER.warn("Attempt to remove an object from the bag that was not borrowed or reserved: {}", bagEntry);
          return false;
       }
 
       final boolean removed = sharedList.remove(bagEntry);
       if (!removed && !closed) {
-         LOGGER.warn("Attempt to remove an object from the bag that does not exist: {}", bagEntry.toString());
+         LOGGER.warn("Attempt to remove an object from the bag that does not exist: {}", bagEntry);
       }
       return removed;
    }
@@ -198,6 +198,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
    /**
     * Close the bag to further adds.
     */
+   @Override
    public void close()
    {
       closed = true;
@@ -255,7 +256,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
          synchronizer.releaseShared(checkInSeq);
       }
       else {
-         LOGGER.warn("Attempt to relinquish an object to the bag that was not reserved: {}", bagEntry.toString());
+         LOGGER.warn("Attempt to relinquish an object to the bag that was not reserved: {}", bagEntry);
       }
    }
 

@@ -19,8 +19,8 @@ import java.util.concurrent.ThreadFactory;
 
 public class DefaultThreadFactory implements ThreadFactory {
 
-   private String threadName;
-   private boolean daemon;
+   private final String threadName;
+   private final boolean daemon;
 
    public DefaultThreadFactory(String threadName, boolean daemon) {
       this.threadName = threadName;
