@@ -113,16 +113,20 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
             startSeq = sequence.get();
             for (final T bagEntry : sharedList) {
                if (bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
+                  LOGGER.debug("{} got bag item {}", Thread.currentThread(), startSeq);
                   return bagEntry;
                }
             }
          } while (startSeq < sequence.get());
-         
+
+         LOGGER.debug("{} requesting addBagItem()", Thread.currentThread());
          listener.addBagItem();
 
          if (!synchronizer.tryAcquireSharedNanos(startSeq, timeout)) {
             return null;
          }
+
+         LOGGER.debug("{} woke up to try again", Thread.currentThread());
 
          final long elapsed = (System.nanoTime() - startScan);
          timeout = originTimeout - Math.max(elapsed, 100L);  // don't trust the nanoTime() impl. not to go backwards due to NTP adjustments
@@ -311,18 +315,38 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
       private static final long serialVersionUID = 104753538004341218L;
 
       @Override
-      protected long tryAcquireShared(long seq)
+      protected long tryAcquireShared(final long seq)
       {
-         return getState() > seq && !hasQueuedPredecessors() ? 1L : -1L;
+         if (hasQueuedPredecessors()) {
+            LOGGER.debug("{} had {} queued predecessors ({})", Thread.currentThread(), this.getQueueLength(), seq);
+            return -1L;
+         }
+
+         final long ret = getState() > seq ? 0L : -1L;
+         LOGGER.debug("{} tryAcquireShared({}) returned {}", Thread.currentThread(), seq, ret);
+         return ret;
       }
 
       /** {@inheritDoc} */
       @Override
-      protected boolean tryReleaseShared(long updateSeq)
+      protected boolean tryReleaseShared(final long updateSeq)
       {
-         setState(updateSeq);
+         long currentSeq = getState();
+         while (updateSeq > currentSeq && !compareAndSetState(currentSeq, updateSeq)) {
+            // spin
+         }
+
+         LOGGER.debug("tryReleaseShared({}) succeeded", updateSeq);
 
          return true;
+//         final long currentSeq = getState();
+//         if (updateSeq > currentSeq && compareAndSetState(currentSeq, updateSeq)) {
+//            LOGGER.debug("tryReleaseShared({}) returned 'true'", updateSeq);
+//            return true;
+//         }
+//
+//         LOGGER.debug("tryReleaseShared({}) returned 'false'", updateSeq);
+//         return false;
       }
    }
 }
