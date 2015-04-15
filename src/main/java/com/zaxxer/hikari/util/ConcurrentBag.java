@@ -89,16 +89,19 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
    @SuppressWarnings("unchecked")
    public T borrow(long timeout, final TimeUnit timeUnit) throws InterruptedException
    {
-      // Try the thread-local list first
-      final ArrayList<WeakReference<IConcurrentBagEntry>> list = threadList.get();
-      if (list == null) {
-         threadList.set(new ArrayList<WeakReference<IConcurrentBagEntry>>(16));
-      }
-      else {
-         for (int i = list.size() - 1; i >= 0; i--) {
-            final IConcurrentBagEntry bagEntry = list.remove(i).get();
-            if (bagEntry != null && bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
-               return (T) bagEntry;
+      // Try the thread-local list first if nobody is queued
+      if (!synchronizer.hasQueuedThreads()) {
+         final ArrayList<WeakReference<IConcurrentBagEntry>> list = threadList.get();
+         if (list == null) {
+            threadList.set(new ArrayList<WeakReference<IConcurrentBagEntry>>(16));
+         }
+         else {
+            for (int i = list.size() - 1; i >= 0; i--) {
+               final IConcurrentBagEntry bagEntry = list.remove(i).get();
+               if (bagEntry != null && bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
+                  LOGGER.debug("{} fastpath bag item", Thread.currentThread());
+                  return (T) bagEntry;
+               }
             }
          }
       }
@@ -107,6 +110,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
       timeout = timeUnit.toNanos(timeout);
       final long startScan = System.nanoTime();
       final long originTimeout = timeout;
+      final long claimedSeq = sequence.get();
       do {
          long startSeq;
          do {
@@ -122,7 +126,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
          LOGGER.debug("{} requesting addBagItem()", Thread.currentThread());
          listener.addBagItem();
 
-         if (!synchronizer.tryAcquireSharedNanos(startSeq, timeout)) {
+         if (!synchronizer.tryAcquireSharedNanos(claimedSeq, timeout)) {
             return null;
          }
 
@@ -334,6 +338,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
          long currentSeq = getState();
          while (updateSeq > currentSeq && !compareAndSetState(currentSeq, updateSeq)) {
             // spin
+            currentSeq = getState();
          }
 
          LOGGER.debug("tryReleaseShared({}) succeeded", updateSeq);
