@@ -445,7 +445,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    /**
     * Permanently close the real (underlying) connection (eat any exception).
     *
-    * @param connectionProxy the connection to actually close
+    * @param bagEntry the connection to actually close
     */
    void closeConnection(final PoolBagEntry bagEntry, final String closureReason)
    {
@@ -535,7 +535,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     * Check whether the connection is alive or not.
     *
     * @param connection the connection to test
-    * @param timeoutMs the timeout before we consider the test a failure
     * @return true if the connection is alive, false if it is not alive or we timed out
     */
    private boolean isConnectionAlive(final Connection connection)
