@@ -251,15 +251,17 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
          final ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin",
                                                                      configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
-         final long start = System.nanoTime();
-         do {
-            softEvictConnections();
-            abortActiveConnections(assassinExecutor);
+         try {
+            final long start = System.nanoTime();
+            do {
+               softEvictConnections();
+               abortActiveConnections(assassinExecutor);
+            }
+            while (getTotalConnections() > 0 && elapsedTimeNano(start) < TimeUnit.SECONDS.toNanos(5));
+         } finally {
+            assassinExecutor.shutdown();
+            assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
          }
-         while (getTotalConnections() > 0 && elapsedTimeNano(start) < TimeUnit.SECONDS.toNanos(5));
-
-         assassinExecutor.shutdown();
-         assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
          closeConnectionExecutor.shutdown();
          closeConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
       }
