@@ -19,6 +19,7 @@ import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_IN_USE;
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_NOT_IN_USE;
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_REMOVED;
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_RESERVED;
+import static com.zaxxer.hikari.util.UtilityElf.elapsedTimeNano;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -124,7 +125,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
             return null;
          }
 
-         final long elapsed = (System.nanoTime() - startScan);
+         final long elapsed = elapsedTimeNano(startScan);
          timeout = originTimeout - Math.max(elapsed, 100L);  // don't trust the nanoTime() impl. not to go backwards due to NTP adjustments
       }
       while (timeout > 1000L);  // 1000ns is the minimum resolution on many systems

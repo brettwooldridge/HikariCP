@@ -16,6 +16,9 @@
 
 package com.zaxxer.hikari;
 
+import static com.zaxxer.hikari.util.UtilityElf.elapsedTimeMs;
+import static com.zaxxer.hikari.util.UtilityElf.elapsedTimeNano;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -52,7 +55,7 @@ public class PostgresTest
       config.setUsername("brettw");
 
       try (final HikariDataSource ds = new HikariDataSource(config)) {
-         final long start = System.currentTimeMillis();
+         final long start = System.nanoTime();
          do {
             Thread t = new Thread() {
                public void run() {
@@ -69,7 +72,7 @@ public class PostgresTest
             t.start();
 
             UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis((long)((Math.random() * 20))));
-         } while (UtilityElf.elapsedTimeMs(start) < TimeUnit.MINUTES.toMillis(15));
+         } while (elapsedTimeNano(start) < TimeUnit.MINUTES.toNanos(15));
       }
    }
 
@@ -96,14 +99,14 @@ public class PostgresTest
 
          System.err.println("\nNow attempting another getConnection(), expecting a timeout...");
 
-         long start = System.currentTimeMillis();
+         long start = System.nanoTime();
          try (Connection conn = ds.getConnection()) {
             System.err.println("\nOpps, got a connection.  Did you enable the firewall? " + conn);
             Assert.fail("Opps, got a connection.  Did you enable the firewall?");
          }
          catch (SQLException e)
          {
-            Assert.assertTrue("Timeout less than expected " + (System.currentTimeMillis() - start) + "ms", (System.currentTimeMillis() - start) > 5000);
+            Assert.assertTrue("Timeout less than expected " + elapsedTimeMs(start) + "ms", elapsedTimeMs(start) > 5000);
          }
 
          System.err.println("\nOk, so far so good.  Now, disable the firewall again.  Attempting connection in 5 seconds...");
@@ -175,7 +178,7 @@ public class PostgresTest
             threads.add(new Thread() {
                public void run() {
                   UtilityElf.quietlySleep((long)(Math.random() * 2500L));
-                  final long start = System.currentTimeMillis();
+                  final long start = System.nanoTime();
                   do {
                      try (Connection conn = ds.getConnection(); Statement stmt = conn.createStatement()) {
                         try (ResultSet rs = stmt.executeQuery("SELECT * FROM device")) {
@@ -187,7 +190,7 @@ public class PostgresTest
                         throw new RuntimeException(e);
                      }
    
-                  } while (UtilityElf.elapsedTimeMs(start) < TimeUnit.MINUTES.toMillis(42));
+                  } while (elapsedTimeNano(start) < TimeUnit.MINUTES.toNanos(42));
                };
             });
          }

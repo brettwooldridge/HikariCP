@@ -16,6 +16,8 @@
 
 package com.zaxxer.hikari;
 
+import static com.zaxxer.hikari.util.UtilityElf.elapsedTimeNano;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -170,8 +172,8 @@ public class ShutdownTest
 
       ds.close();
 
-      long start = System.currentTimeMillis();
-      while (UtilityElf.elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5) && threadCount() > 0) {
+      long start = System.nanoTime();
+      while (elapsedTimeNano(start) < TimeUnit.SECONDS.toNanos(5) && threadCount() > 0) {
          UtilityElf.quietlySleep(250);
       }
 

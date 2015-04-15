@@ -51,7 +51,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    private final PoolBagEntry bagEntry;
    private final FastList<Statement> openStatements;
    
-   private long lastAccess;
+   private long lastAccessNano;
    private boolean isCommitStateDirty;
    private boolean isConnectionStateDirty;
    private boolean isAutoCommitDirty;
@@ -77,7 +77,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       this.bagEntry = bagEntry;
       this.delegate = bagEntry.connection;
       this.leakTask = leakTask;
-      this.lastAccess = bagEntry.lastAccess;
+      this.lastAccessNano = bagEntry.lastAccessNano;
 
       this.openStatements = new FastList<Statement>(Statement.class, 16);
    }
@@ -137,7 +137,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    public final void markCommitStateDirty()
    {
       isCommitStateDirty = true;
-      lastAccess = System.currentTimeMillis();
+      lastAccessNano = System.nanoTime();
    }
 
    // ***********************************************************************
@@ -146,7 +146,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    private final <T extends Statement> T trackStatement(final T statement)
    {
-      lastAccess = System.currentTimeMillis();
+      lastAccessNano = System.nanoTime();
       openStatements.add(statement);
 
       return statement;
@@ -213,7 +213,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          }
          finally {
             delegate = ClosedConnection.CLOSED_CONNECTION;
-            bagEntry.lastAccess = lastAccess;
+            bagEntry.lastAccessNano = lastAccessNano;
             parentPool.releaseConnection(bagEntry);
          }
       }

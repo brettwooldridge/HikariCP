@@ -63,12 +63,12 @@ public class MetricsTracker
       }
 
       /**
-       * Set the lastOpenTime on the provided bag entry.
+       * Set the lastOpenNano on the provided bag entry.
        *
        * @param bagEntry the bag entry
-       * @param now the current timestamp
+       * @param nowNano the current timestamp from {@link System#nanoTime()}
        */
-      public void setConnectionLastOpen(final PoolBagEntry bagEntry, final long now)
+      public void setConnectionLastOpen(final PoolBagEntry bagEntry, final long nowNano)
       {
          // do nothing
       }

@@ -1,5 +1,7 @@
 package com.zaxxer.hikari;
 
+import static com.zaxxer.hikari.util.UtilityElf.elapsedTimeMs;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.Executors;
@@ -29,14 +31,14 @@ public class TestConnectionTimeoutRetry
       StubDataSource stubDataSource = ds.unwrap(StubDataSource.class);
       stubDataSource.setThrowException(new SQLException("Connection refused"));
 
-      long start = System.currentTimeMillis();
+      long start = System.nanoTime();
       try {
          Connection connection = ds.getConnection();
          connection.close();
          Assert.fail("Should not have been able to get a connection.");
       }
       catch (SQLException e) {
-         long elapsed = System.currentTimeMillis() - start;
+         long elapsed = elapsedTimeMs(start);
          long timeout = config.getConnectionTimeout();
          Assert.assertTrue("Didn't wait long enough for timeout", (elapsed >= timeout));
       }
@@ -69,12 +71,12 @@ public class TestConnectionTimeoutRetry
          }
       }, 300, TimeUnit.MILLISECONDS);
 
-      long start = System.currentTimeMillis();
+      long start = System.nanoTime();
       try {
          Connection connection = ds.getConnection();
          connection.close();
 
-         long elapsed = System.currentTimeMillis() - start;
+         long elapsed = elapsedTimeMs(start);
          Assert.assertTrue("Connection returned too quickly, something is wrong.", elapsed > 250);
          Assert.assertTrue("Waited too long to get a connection.", elapsed < config.getConnectionTimeout());
       }
@@ -117,12 +119,12 @@ public class TestConnectionTimeoutRetry
          }
       }, 800, TimeUnit.MILLISECONDS);
 
-      long start = System.currentTimeMillis();
+      long start = System.nanoTime();
       try {
          Connection connection3 = ds.getConnection();
          connection3.close();
 
-         long elapsed = System.currentTimeMillis() - start;
+         long elapsed = elapsedTimeMs(start);
          Assert.assertTrue("Waited too long to get a connection.", (elapsed >= 700) && (elapsed < 950));
       }
       catch (SQLException e) {
@@ -149,14 +151,14 @@ public class TestConnectionTimeoutRetry
       StubDataSource stubDataSource = ds.unwrap(StubDataSource.class);
       stubDataSource.setThrowException(new SQLException("Connection refused"));
 
-      long start = System.currentTimeMillis();
+      long start = System.nanoTime();
       try {
          Connection connection = ds.getConnection();
          connection.close();
          Assert.fail("Should not have been able to get a connection.");
       }
       catch (SQLException e) {
-         long elapsed = System.currentTimeMillis() - start;
+         long elapsed = elapsedTimeMs(start);
          Assert.assertTrue("Didn't wait long enough for timeout", (elapsed >= config.getConnectionTimeout()));
       }
       finally {
@@ -178,7 +180,7 @@ public class TestConnectionTimeoutRetry
 
       final Connection connection1 = ds.getConnection();
 
-      long start = System.currentTimeMillis();
+      long start = System.nanoTime();
 
       ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
       scheduler.schedule(new Runnable() {
@@ -200,7 +202,7 @@ public class TestConnectionTimeoutRetry
          Connection connection2 = ds.getConnection();
          connection2.close();
 
-         long elapsed = System.currentTimeMillis() - start;
+         long elapsed = elapsedTimeMs(start);
          Assert.assertTrue("Waited too long to get a connection.", (elapsed >= 250) && (elapsed < config.getConnectionTimeout()));
       }
       catch (SQLException e) {
