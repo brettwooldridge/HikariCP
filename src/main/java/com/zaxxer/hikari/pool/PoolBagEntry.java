@@ -17,6 +17,7 @@ package com.zaxxer.hikari.pool;
 
 import java.sql.Connection;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -44,7 +45,8 @@ public final class PoolBagEntry implements IConcurrentBagEntry
       this.connection = connection;
       this.lastAccess = System.currentTimeMillis();
 
-      final long maxLifetime = pool.configuration.getMaxLifetime();
+      final long variance = pool.configuration.getMaxLifetime() > 300_000 ? ThreadLocalRandom.current().nextLong(100_000) : 0;
+      final long maxLifetime = pool.configuration.getMaxLifetime() - variance;
       if (maxLifetime > 0) {
          endOfLife = pool.houseKeepingExecutorService.schedule(new Runnable() {
             public void run()

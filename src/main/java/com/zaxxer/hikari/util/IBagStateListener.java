@@ -15,6 +15,8 @@
  */
 package com.zaxxer.hikari.util;
 
+import java.util.concurrent.Future;
+
 /**
  * This interface is implemented by a listener to the ConcurrentBag.  The
  * listener will be informed of when the bag has become empty.  The usual
@@ -25,5 +27,5 @@ package com.zaxxer.hikari.util;
  */
 public interface IBagStateListener
 {
-   void addBagItem();
+   Future<Boolean> addBagItem();
 }

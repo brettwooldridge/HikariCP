@@ -31,6 +31,8 @@ import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 import java.sql.Statement;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -347,23 +349,24 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
    /** {@inheritDoc} */
    @Override
-   public void addBagItem()
+   public Future<Boolean> addBagItem()
    {
-      class AddConnection implements Runnable
-      {
+      FutureTask<Boolean> future = new FutureTask<>(new Runnable() {
          public void run()
          {
             long sleepBackoff = 200L;
+            final int minimumIdle = configuration.getMinimumIdle();
             final int maxPoolSize = configuration.getMaximumPoolSize();
-            while (poolState == POOL_NORMAL && totalConnections.get() < maxPoolSize && !addConnection()) {
+            while (poolState == POOL_NORMAL && totalConnections.get() < maxPoolSize && getIdleConnections() <= minimumIdle && !addConnection()) {
                // If we got into the loop, addConnection() failed, so we sleep and retry
                quietlySleep(sleepBackoff);
                sleepBackoff = Math.min(connectionTimeout / 2, (long) ((double) sleepBackoff * 1.5));
             }
          }
-      }
+      }, true);
 
-      addConnectionExecutor.execute(new AddConnection());
+      addConnectionExecutor.execute(future);
+      return future;
    }
 
    // ***********************************************************************

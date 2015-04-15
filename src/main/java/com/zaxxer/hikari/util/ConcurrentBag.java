@@ -24,6 +24,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
@@ -99,7 +100,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
             for (int i = list.size() - 1; i >= 0; i--) {
                final IConcurrentBagEntry bagEntry = list.remove(i).get();
                if (bagEntry != null && bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
-                  LOGGER.debug("{} fastpath bag item", Thread.currentThread());
+                  // LOGGER.debug("{} fastpath bag item", Thread.currentThread());
                   return (T) bagEntry;
                }
             }
@@ -108,9 +109,9 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
 
       // Otherwise, scan the shared list ... for maximum of timeout
       timeout = timeUnit.toNanos(timeout);
+      Future<Boolean> addItemFuture = null; 
       final long startScan = System.nanoTime();
       final long originTimeout = timeout;
-      final long claimedSeq = sequence.get();
       do {
          long startSeq;
          do {
@@ -123,14 +124,16 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
             }
          } while (startSeq < sequence.get());
 
-         LOGGER.debug("{} requesting addBagItem()", Thread.currentThread());
-         listener.addBagItem();
+         if (addItemFuture == null || addItemFuture.isDone()) {
+            // LOGGER.debug("{} requesting addBagItem()", Thread.currentThread());
+            addItemFuture = listener.addBagItem();
+         }
 
-         if (!synchronizer.tryAcquireSharedNanos(claimedSeq, timeout)) {
+         if (!synchronizer.tryAcquireSharedNanos(startSeq, timeout)) {
             return null;
          }
 
-         LOGGER.debug("{} woke up to try again", Thread.currentThread());
+         // LOGGER.debug("{} woke up to try again", Thread.currentThread());
 
          final long elapsed = (System.nanoTime() - startScan);
          timeout = originTimeout - Math.max(elapsed, 100L);  // don't trust the nanoTime() impl. not to go backwards due to NTP adjustments
@@ -321,14 +324,14 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
       @Override
       protected long tryAcquireShared(final long seq)
       {
-         if (hasQueuedPredecessors()) {
-            LOGGER.debug("{} had {} queued predecessors ({})", Thread.currentThread(), this.getQueueLength(), seq);
-            return -1L;
-         }
+         // if (hasQueuedPredecessors()) {
+         //   LOGGER.debug("{} had {} queued predecessors ({})", Thread.currentThread(), this.getQueueLength(), seq);
+         //   return -1L;
+         //}
 
-         final long ret = getState() > seq ? 0L : -1L;
-         LOGGER.debug("{} tryAcquireShared({}) returned {}", Thread.currentThread(), seq, ret);
-         return ret;
+         // final long ret = getState() > seq ? 0L : -1L;
+         // LOGGER.debug("{} tryAcquireShared({}) returned {}", Thread.currentThread(), seq, ret);
+         return getState() <= seq || hasQueuedPredecessors() ? -1L : 0L;
       }
 
       /** {@inheritDoc} */
@@ -341,17 +344,9 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
             currentSeq = getState();
          }
 
-         LOGGER.debug("tryReleaseShared({}) succeeded", updateSeq);
+         // LOGGER.debug("tryReleaseShared({}) succeeded", updateSeq);
 
          return true;
-//         final long currentSeq = getState();
-//         if (updateSeq > currentSeq && compareAndSetState(currentSeq, updateSeq)) {
-//            LOGGER.debug("tryReleaseShared({}) returned 'true'", updateSeq);
-//            return true;
-//         }
-//
-//         LOGGER.debug("tryReleaseShared({}) returned 'false'", updateSeq);
-//         return false;
       }
    }
 }

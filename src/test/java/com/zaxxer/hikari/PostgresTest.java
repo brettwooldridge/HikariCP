@@ -153,15 +153,15 @@ public class PostgresTest
       }
    }
 
-//   @Test
+   // @Test
    public void testCase4() throws Exception
    {
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
-      config.setMaximumPoolSize(15);
+      config.setMaximumPoolSize(50);
       config.setConnectionTimeout(10000);
-      config.setIdleTimeout(TimeUnit.MINUTES.toMillis(2));
-      config.setMaxLifetime(TimeUnit.MINUTES.toMillis(6));
+      config.setIdleTimeout(TimeUnit.MINUTES.toMillis(1));
+      config.setMaxLifetime(TimeUnit.MINUTES.toMillis(2));
       config.setRegisterMbeans(true);
 
       config.setJdbcUrl("jdbc:postgresql://localhost:5432/netld");
@@ -178,16 +178,16 @@ public class PostgresTest
                   final long start = System.currentTimeMillis();
                   do {
                      try (Connection conn = ds.getConnection(); Statement stmt = conn.createStatement()) {
-                        try (ResultSet rs = stmt.executeQuery("SELECT * FROM device")) {
+                        final double sleep = Math.random() * 1.0;
+                        try (ResultSet rs = stmt.executeQuery("SELECT pg_sleep(" + sleep + ")")) {
                            rs.next();
                         }
-                        UtilityElf.quietlySleep(Math.max(200L, (long)(Math.random() * 2500L)));
                      }
                      catch (SQLException e) {
-                        throw new RuntimeException(e);
+                        e.printStackTrace();
                      }
-   
-                  } while (UtilityElf.elapsedTimeMs(start) < TimeUnit.MINUTES.toMillis(42));
+                     // UtilityElf.quietlySleep((long)(Math.random() * 500L));
+                  } while (UtilityElf.elapsedTimeMs(start) < TimeUnit.MINUTES.toMillis(4));
                };
             });
          }
