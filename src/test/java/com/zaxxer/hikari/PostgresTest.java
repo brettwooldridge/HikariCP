@@ -17,11 +17,16 @@
 package com.zaxxer.hikari;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
 
 import com.zaxxer.hikari.util.UtilityElf;
 
@@ -148,9 +153,68 @@ public class PostgresTest
       }
    }
 
+//   @Test
+   public void testCase4() throws Exception
+   {
+      HikariConfig config = new HikariConfig();
+      config.setMinimumIdle(0);
+      config.setMaximumPoolSize(15);
+      config.setConnectionTimeout(10000);
+      config.setIdleTimeout(TimeUnit.MINUTES.toMillis(2));
+      config.setMaxLifetime(TimeUnit.MINUTES.toMillis(6));
+      config.setRegisterMbeans(true);
+
+      config.setJdbcUrl("jdbc:postgresql://localhost:5432/netld");
+      config.setUsername("brettw");
+
+      try (final HikariDataSource ds = new HikariDataSource(config)) {
+
+         countdown(30);
+         List<Thread> threads = new ArrayList<>();
+         for (int i = 0; i < 20; i++) {
+            threads.add(new Thread() {
+               public void run() {
+                  UtilityElf.quietlySleep((long)(Math.random() * 2500L));
+                  final long start = System.currentTimeMillis();
+                  do {
+                     try (Connection conn = ds.getConnection(); Statement stmt = conn.createStatement()) {
+                        try (ResultSet rs = stmt.executeQuery("SELECT * FROM device")) {
+                           rs.next();
+                        }
+                        UtilityElf.quietlySleep(Math.max(200L, (long)(Math.random() * 2500L)));
+                     }
+                     catch (SQLException e) {
+                        throw new RuntimeException(e);
+                     }
+   
+                  } while (UtilityElf.elapsedTimeMs(start) < TimeUnit.MINUTES.toMillis(42));
+               };
+            });
+         }
+
+//         threads.forEach(t -> t.start());
+//         threads.forEach(t -> { try { t.join(); } catch (InterruptedException e) {} });
+      }
+   }
+
    @Before
    public void before()
    {
       System.err.println("\n");
+   }
+
+   private void countdown(int seconds)
+   {
+      do {
+         System.out.printf("Starting in %d seconds...\n", seconds);
+         if (seconds > 10) {
+            UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(10));
+            seconds -= 10;
+         }
+         else {
+            UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(1));
+            seconds -= 1;
+         }
+      } while (seconds > 0);
    }
 }
