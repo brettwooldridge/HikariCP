@@ -25,6 +25,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.osjava.sj.jndi.AbstractContext;
 
+import com.zaxxer.hikari.mocks.StubDataSource;
+
 public class TestJNDI
 {
    @Test
@@ -61,7 +63,7 @@ public class TestJNDI
       ref.add(new BogusRef("maxLifetime", "20000"));
       ref.add(new BogusRef("maximumPoolSize", "10"));
       ref.add(new BogusRef("dataSource.loginTimeout", "10"));
-      Context nameCtx = new BogusContext();
+      Context nameCtx = new BogusContext2();
 
       HikariDataSource ds = (HikariDataSource) jndi.getObjectInstance(ref, null, nameCtx, null);
       Assert.assertNotNull(ds);
@@ -96,6 +98,21 @@ public class TestJNDI
       public Object lookup(String name) throws NamingException
       {
          return new HikariDataSource();
+      }
+   }
+
+   private class BogusContext2 extends AbstractContext
+   {
+      @Override
+      public Context createSubcontext(Name name) throws NamingException
+      {
+         return null;
+      }
+
+      @Override
+      public Object lookup(String name) throws NamingException
+      {
+         return new StubDataSource();
       }
    }
 
