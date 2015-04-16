@@ -98,23 +98,19 @@ public final class PoolUtilities
     */
    public DataSource initializeDataSource(final String dsClassName, DataSource dataSource, final Properties dataSourceProperties, final String driverClassName, final String jdbcUrl, final String username, final String password)
    {
-      try {
-         if (dataSource == null && dsClassName != null) {
-            dataSource = createInstance(dsClassName, DataSource.class);
-            PropertyBeanSetter.setTargetFromProperties(dataSource, dataSourceProperties);
-            return dataSource;
-         }
-         else if (jdbcUrl != null) {
-            return new DriverDataSource(jdbcUrl, driverClassName, dataSourceProperties, username, password);
-         }
-   
-         return dataSource;
+      if (dsClassName != null && dataSource == null) {
+         dataSource = createInstance(dsClassName, DataSource.class);
+         PropertyBeanSetter.setTargetFromProperties(dataSource, dataSourceProperties);
       }
-      finally {
-         if (dataSource != null) {
-            createNetworkTimeoutExecutor(dataSource, dsClassName, jdbcUrl);
-         }
+      else if (jdbcUrl != null && dataSource == null) {
+         dataSource = new DriverDataSource(jdbcUrl, driverClassName, dataSourceProperties, username, password);
       }
+
+      if (dataSource != null) {
+         createNetworkTimeoutExecutor(dataSource, dsClassName, jdbcUrl);
+      }
+
+      return dataSource;
    }
 
    /**
