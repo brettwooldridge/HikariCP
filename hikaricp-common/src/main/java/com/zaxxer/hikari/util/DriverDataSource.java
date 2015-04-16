@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 public final class DriverDataSource implements DataSource
 {
-   private final Logger LOGGER = LoggerFactory.getLogger(ConcurrentBag.class);
+   private final Logger LOGGER = LoggerFactory.getLogger(DriverDataSource.class);
 
    private final String jdbcUrl;
    private final Properties driverProperties;
@@ -60,6 +60,7 @@ public final class DriverDataSource implements DataSource
             Driver d = drivers.nextElement();
             if (d.getClass().getName().equals(driverClassName)) {
                this.driver = d;
+               break;
             }
          }
 
