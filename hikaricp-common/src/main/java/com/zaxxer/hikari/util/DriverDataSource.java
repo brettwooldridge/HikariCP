@@ -27,53 +27,61 @@ import java.util.Properties;
 
 import javax.sql.DataSource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public final class DriverDataSource implements DataSource
 {
+   private final Logger LOGGER = LoggerFactory.getLogger(ConcurrentBag.class);
+
    private final String jdbcUrl;
    private final Properties driverProperties;
-   private final Driver driver;
+   private Driver driver;
 
    public DriverDataSource(String jdbcUrl, String driverClassName, Properties properties, String username, String password)
    {
-      try {
-         this.jdbcUrl = jdbcUrl;
-         this.driverProperties = new Properties();
+      this.jdbcUrl = jdbcUrl;
+      this.driverProperties = new Properties();
 
-         for (Entry<Object, Object> entry : properties.entrySet()) {
-            driverProperties.setProperty(entry.getKey().toString(), entry.getValue().toString());
-         }
+      for (Entry<Object, Object> entry : properties.entrySet()) {
+         driverProperties.setProperty(entry.getKey().toString(), entry.getValue().toString());
+      }
 
-         if (username != null) {
-            driverProperties.put("user", driverProperties.getProperty("user", username));
-         }
-         if (password != null) {
-            driverProperties.put("password", driverProperties.getProperty("password", password));
-         }
+      if (username != null) {
+         driverProperties.put("user", driverProperties.getProperty("user", username));
+      }
+      if (password != null) {
+         driverProperties.put("password", driverProperties.getProperty("password", password));
+      }
 
-         if (driverClassName != null) {
-            Driver matched = null;
-            Enumeration<Driver> drivers = DriverManager.getDrivers();
-            while (drivers.hasMoreElements()) {
-               Driver d = drivers.nextElement();
-               if (d.getClass().getName().equals(driverClassName)) {
-                  matched = d;
-                  break;
-               }
-            }
-
-            if (matched != null) {
-               driver = matched;
-            }
-            else {
-               throw new IllegalArgumentException("Driver with class name " + driverClassName + " was not found among registered drivers");
+      if (driverClassName != null) {
+         Enumeration<Driver> drivers = DriverManager.getDrivers();
+         while (drivers.hasMoreElements()) {
+            Driver d = drivers.nextElement();
+            if (d.getClass().getName().equals(driverClassName)) {
+               this.driver = d;
             }
          }
-         else {
-            driver = DriverManager.getDriver(jdbcUrl);
+
+         if (driver == null) {
+            LOGGER.warn("Registered driver with driverClassName={} was not found, trying direct instantiation.", driverClassName);
+            try {
+               Class<?> driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
+               this.driver = (Driver) driverClass.newInstance();
+            }
+            catch (Exception e) {
+               LOGGER.warn("Could not instantiate instance of driver class {}, trying JDBC URL resolution", driverClassName, e);
+            }
          }
       }
-      catch (SQLException e) {
-         throw new RuntimeException("Unable to get driver for JDBC URL " + jdbcUrl, e);
+
+      if (driver == null) {
+         try {
+            driver = DriverManager.getDriver(jdbcUrl);
+         }
+         catch (SQLException e) {
+            throw new RuntimeException("Unable to get driver instance for jdbcUrl=" + jdbcUrl, e);
+         }
       }
    }
 
