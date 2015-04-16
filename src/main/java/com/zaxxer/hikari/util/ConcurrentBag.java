@@ -331,7 +331,8 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
 
          // final long ret = getState() > seq ? 0L : -1L;
          // LOGGER.debug("{} tryAcquireShared({}) returned {}", Thread.currentThread(), seq, ret);
-         return getState() <= seq || hasQueuedPredecessors() ? -1L : 0L;
+         final long delta = getState() - (seq + 1);
+         return hasQueuedPredecessors() ? -1L : delta;
       }
 
       /** {@inheritDoc} */
@@ -339,14 +340,19 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
       protected boolean tryReleaseShared(final long updateSeq)
       {
          long currentSeq = getState();
-         while (updateSeq > currentSeq && !compareAndSetState(currentSeq, updateSeq)) {
+         while (updateSeq > currentSeq) {
+            if (compareAndSetState(currentSeq, updateSeq)) {
+               return true;
+            }
+
             // spin
+            Thread.yield();
             currentSeq = getState();
          }
 
          // LOGGER.debug("tryReleaseShared({}) succeeded", updateSeq);
 
-         return true;
+         return false;
       }
    }
 }
