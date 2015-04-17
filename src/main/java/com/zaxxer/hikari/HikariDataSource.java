@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Wrapper;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.sql.DataSource;
 
@@ -43,7 +44,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariDataSource.class);
 
-   private volatile boolean isShutdown;
+   private final AtomicBoolean isShutdown = new AtomicBoolean();
 
    private final HikariPool fastPathPool;
    private volatile HikariPool pool;
@@ -78,7 +79,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @Override
    public Connection getConnection() throws SQLException
    {
-      if (isShutdown) {
+      if (isShutdown.get()) {
          throw new SQLException("Pool " + pool.getConfiguration().getPoolName() + " has been shutdown");
       }
 
@@ -142,6 +143,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    }
 
    /** {@inheritDoc} */
+   @Override
    public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException
    {
       throw new SQLFeatureNotSupportedException();
@@ -231,7 +233,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
     */
    public void evictConnection(Connection connection)
    {
-      if (!isShutdown && pool != null && connection instanceof IHikariConnectionProxy) {
+      if (!isClosed() && pool != null && connection instanceof IHikariConnectionProxy) {
          pool.evictConnection((IHikariConnectionProxy) connection);
       }
    }
@@ -242,7 +244,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
     */
    public void suspendPool()
    {
-      if (!isShutdown && pool != null) {
+      if (!isClosed() && pool != null) {
          pool.suspendPool();
       }
    }
@@ -252,7 +254,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
     */
    public void resumePool()
    {
-      if (!isShutdown && pool != null) {
+      if (!isClosed() && pool != null) {
          pool.resumePool();
       }
    }
@@ -263,11 +265,9 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @Override
    public void close()
    {
-      if (isShutdown) {
+      if (isShutdown.getAndSet(true)) {
          return;
       }
-
-      isShutdown = true;
 
       if (pool != null) {
          try {
@@ -290,7 +290,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
     */
    public boolean isClosed()
    {
-      return isShutdown;
+      return isShutdown.get();
    }
 
    /**

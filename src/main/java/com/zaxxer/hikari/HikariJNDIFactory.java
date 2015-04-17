@@ -85,7 +85,7 @@ public class HikariJNDIFactory implements ObjectFactory
       String jndiName = properties.getProperty("dataSourceJNDI");
       DataSource jndiDS = (DataSource) context.lookup(jndiName);
       if (jndiDS == null) {
-         context = (Context) (new InitialContext());
+         context = new InitialContext();
          jndiDS = (DataSource) context.lookup(jndiName);
       }
 

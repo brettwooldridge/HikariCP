@@ -27,7 +27,7 @@ public final class PoolUtilities
 
    private Executor netTimeoutExecutor;
 
-   private String poolName;
+   private final String poolName;
    private volatile boolean isValidChecked; 
    private volatile boolean isValidSupported;
    private boolean isNetworkTimeoutSupported;
@@ -63,7 +63,7 @@ public final class PoolUtilities
          }
       }
       catch (Throwable e) {
-         LOGGER.debug("Exception closing connection {} in pool {}{}", connection.toString(), poolName, addendum, e);
+         LOGGER.debug("Exception closing connection {} in pool {}{}", connection, poolName, addendum, e);
       }
    }
 
@@ -78,15 +78,11 @@ public final class PoolUtilities
    public void executeSql(final Connection connection, final String sql, final boolean isAutoCommit) throws SQLException
    {
       if (sql != null) {
-         Statement statement = connection.createStatement();
-         try {
+         try (Statement statement = connection.createStatement()) {
             statement.execute(sql);
             if (!isAutoCommit) {
                connection.commit();
             }
-         }
-         finally {
-            statement.close();
          }
       }
    }
@@ -268,7 +264,7 @@ public final class PoolUtilities
             command.run();
          }
          catch (Throwable t) {
-            LOGGER.debug("Exception executing {}", command.toString(), t);
+            LOGGER.debug("Exception executing {}", command, t);
          }
       }
    }

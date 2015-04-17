@@ -47,7 +47,7 @@ import com.zaxxer.hikari.util.ClassLoaderUtils;
  */
 public final class JavassistProxyFactory
 {
-   private ClassPool classPool;
+   private final ClassPool classPool;
 
    static {
       ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
@@ -224,7 +224,7 @@ public final class JavassistProxyFactory
          paramTypes.add(toJavaClass(pt));
       }
 
-      return intf.getDeclaredMethod(intfMethod.getName(), paramTypes.toArray(new Class[0])).toString().contains("default ");
+      return intf.getDeclaredMethod(intfMethod.getName(), paramTypes.toArray(new Class[paramTypes.size()])).toString().contains("default ");
    }
 
    private Class<?> toJavaClass(CtClass cls) throws Exception
