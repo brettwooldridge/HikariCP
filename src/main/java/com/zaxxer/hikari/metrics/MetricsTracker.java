@@ -24,7 +24,7 @@ import com.zaxxer.hikari.pool.PoolBagEntry;
  *
  * @author Brett Wooldridge
  */
-public class MetricsTracker
+public class MetricsTracker implements AutoCloseable
 {
    public static final MetricsContext NO_CONTEXT = new MetricsContext();
 
@@ -44,6 +44,7 @@ public class MetricsTracker
    {
    }
 
+   @Override
    public void close()
    {
    }

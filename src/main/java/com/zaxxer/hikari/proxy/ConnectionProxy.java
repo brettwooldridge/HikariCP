@@ -112,8 +112,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          boolean isForceClose = sqlState.startsWith("08") | SQL_ERRORS.contains(sqlState);
          if (isForceClose) {
             bagEntry.evicted = true;
-            LOGGER.warn("Connection {} ({}) marked as broken because of SQLSTATE({}), ErrorCode({}).", delegate.toString(),
-                                      parentPool.toString(), sqlState, sqle.getErrorCode(), sqle);
+            LOGGER.warn("Connection {} ({}) marked as broken because of SQLSTATE({}), ErrorCode({}).", delegate,
+                                      parentPool, sqlState, sqle.getErrorCode(), sqle);
          }
          else {
             SQLException nse = sqle.getNextException();

@@ -37,10 +37,11 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
       super(pool);
 
       this.registry = registry;
-      this.connectionObtainTimer = registry.timer(MetricRegistry.name(pool.getConfiguration().getPoolName(), "pool", "Wait"));
-      this.connectionUsage = registry.histogram(MetricRegistry.name(pool.getConfiguration().getPoolName(), "pool", "Usage"));
+      final String poolName = pool.getConfiguration().getPoolName();
+      this.connectionObtainTimer = registry.timer(MetricRegistry.name(poolName, "pool", "Wait"));
+      this.connectionUsage = registry.histogram(MetricRegistry.name(poolName, "pool", "Usage"));
 
-      registry.register(MetricRegistry.name(pool.getConfiguration().getPoolName(), "pool", "TotalConnections"),
+      registry.register(MetricRegistry.name(poolName, "pool", "TotalConnections"),
                         new CachedGauge<Integer>(10, TimeUnit.SECONDS) {
                            @Override
                            protected Integer loadValue()
@@ -49,7 +50,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
                            }
                         });
 
-      registry.register(MetricRegistry.name(pool.getConfiguration().getPoolName(), "pool", "IdleConnections"),
+      registry.register(MetricRegistry.name(poolName, "pool", "IdleConnections"),
                         new CachedGauge<Integer>(10, TimeUnit.SECONDS) {
                            @Override
                            protected Integer loadValue()
@@ -58,7 +59,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
                            }
                         });
 
-      registry.register(MetricRegistry.name(pool.getConfiguration().getPoolName(), "pool", "ActiveConnections"),
+      registry.register(MetricRegistry.name(poolName, "pool", "ActiveConnections"),
                         new CachedGauge<Integer>(10, TimeUnit.SECONDS) {
                            @Override
                            protected Integer loadValue()
@@ -67,7 +68,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
                            }
                         });
 
-      registry.register(MetricRegistry.name(pool.getConfiguration().getPoolName(), "pool", "PendingConnections"),
+      registry.register(MetricRegistry.name(poolName, "pool", "PendingConnections"),
                         new CachedGauge<Integer>(10, TimeUnit.SECONDS) {
                            @Override
                            protected Integer loadValue()
@@ -81,12 +82,13 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    @Override
    public void close()
    {
-      registry.remove(MetricRegistry.name(pool.getConfiguration().getPoolName(), "pool", "Wait"));
-      registry.remove(MetricRegistry.name(pool.getConfiguration().getPoolName(), "pool", "Usage"));
-      registry.remove(MetricRegistry.name(pool.getConfiguration().getPoolName(), "pool", "TotalConnections"));
-      registry.remove(MetricRegistry.name(pool.getConfiguration().getPoolName(), "pool", "IdleConnections"));
-      registry.remove(MetricRegistry.name(pool.getConfiguration().getPoolName(), "pool", "ActiveConnections"));
-      registry.remove(MetricRegistry.name(pool.getConfiguration().getPoolName(), "pool", "PendingConnections"));
+      final String poolName = pool.getConfiguration().getPoolName();
+      registry.remove(MetricRegistry.name(poolName, "pool", "Wait"));
+      registry.remove(MetricRegistry.name(poolName, "pool", "Usage"));
+      registry.remove(MetricRegistry.name(poolName, "pool", "TotalConnections"));
+      registry.remove(MetricRegistry.name(poolName, "pool", "IdleConnections"));
+      registry.remove(MetricRegistry.name(poolName, "pool", "ActiveConnections"));
+      registry.remove(MetricRegistry.name(poolName, "pool", "PendingConnections"));
    }
 
    /** {@inheritDoc} */

@@ -79,7 +79,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @Override
    public Connection getConnection() throws SQLException
    {
-      if (isShutdown.get()) {
+      if (isClosed()) {
          throw new SQLException("Pool " + pool.getConfiguration().getPoolName() + " has been shutdown");
       }
 

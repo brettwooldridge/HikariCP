@@ -251,16 +251,19 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          addConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
 
          final ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin",
-                                                                     configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
-         final long start = System.currentTimeMillis();
-         do {
-            softEvictConnections();
-            abortActiveConnections(assassinExecutor);
+                                                                           configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
+         try {
+            final long start = System.currentTimeMillis();
+            do {
+               softEvictConnections();
+               abortActiveConnections(assassinExecutor);
+            }
+            while (getTotalConnections() > 0 && elapsedTimeMs(start) < TimeUnit.SECONDS.toNanos(5));
+         } finally {
+            assassinExecutor.shutdown();
+            assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
          }
-         while (getTotalConnections() > 0 && elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5));
 
-         assassinExecutor.shutdown();
-         assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
          closeConnectionExecutor.shutdown();
          closeConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
       }
@@ -352,6 +355,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    public Future<Boolean> addBagItem()
    {
       FutureTask<Boolean> future = new FutureTask<Boolean>(new Runnable() {
+         @Override
          public void run()
          {
             long sleepBackoff = 200L;
@@ -447,7 +451,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    /**
     * Permanently close the real (underlying) connection (eat any exception).
     *
-    * @param connectionProxy the connection to actually close
+    * @param bagEntry the connection to actually close
     */
    void closeConnection(final PoolBagEntry bagEntry, final String closureReason)
    {
@@ -461,6 +465,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          }
          
          closeConnectionExecutor.execute(new Runnable() {
+            @Override
             public void run() {
                poolUtils.quietlyCloseConnection(connection, closureReason);
             }
@@ -475,7 +480,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    /**
     * Create and add a single connection to the pool.
     */
-   private final boolean addConnection()
+   private boolean addConnection()
    {
       // Speculative increment of totalConnections with expectation of success
       if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize()) {
@@ -526,6 +531,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
       if (connectionsToAdd > 0 && LOGGER.isDebugEnabled()) {
          addConnectionExecutor.execute(new Runnable() {
+            @Override
             public void run() {
                logPoolState("After fill ");
             }
@@ -537,7 +543,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     * Check whether the connection is alive or not.
     *
     * @param connection the connection to test
-    * @param timeoutMs the timeout before we consider the test a failure
     * @return true if the connection is alive, false if it is not alive or we timed out
     */
    private boolean isConnectionAlive(final Connection connection)
@@ -572,8 +577,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
    /**
     * Attempt to abort() active connections, or close() them.
-    *
-    * @throws InterruptedException 
     */
    private void abortActiveConnections(final ExecutorService assassinExecutor)
    {
