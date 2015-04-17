@@ -25,12 +25,15 @@ import static com.zaxxer.hikari.util.UtilityElf.createInstance;
 import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
 import static com.zaxxer.hikari.util.UtilityElf.elapsedTimeMs;
 import static com.zaxxer.hikari.util.UtilityElf.getTransactionIsolation;
+import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static com.zaxxer.hikari.util.UtilityElf.setRemoveOnCancelPolicy;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -394,6 +397,32 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
    }
 
    // ***********************************************************************
+   //                        IBagStateListener callback
+   // ***********************************************************************
+
+   /** {@inheritDoc} */
+   @Override
+   public Future<Boolean> addBagItem()
+   {
+      FutureTask<Boolean> future = new FutureTask<Boolean>(new Runnable() {
+         public void run()
+         {
+            long sleepBackoff = 200L;
+            final int minimumIdle = configuration.getMinimumIdle();
+            final int maxPoolSize = configuration.getMaximumPoolSize();
+            while (poolState == POOL_RUNNING && totalConnections.get() < maxPoolSize && getIdleConnections() <= minimumIdle && !addConnection()) {
+               // If we got into the loop, addConnection() failed, so we sleep and retry
+               quietlySleep(sleepBackoff);
+               sleepBackoff = Math.min(connectionTimeout / 2, (long) ((double) sleepBackoff * 1.5));
+            }
+         }
+      }, true);
+
+      addConnectionExecutor.execute(future);
+      return future;
+   }
+
+   // ***********************************************************************
    //                           Protected methods
    // ***********************************************************************
 
@@ -535,6 +564,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
     *
     * @return an IConnectionCustomizer instance
     */
+   @SuppressWarnings("deprecation")
    private IConnectionCustomizer initializeCustomizer()
    {
       if (configuration.getConnectionCustomizerClassName() != null) {

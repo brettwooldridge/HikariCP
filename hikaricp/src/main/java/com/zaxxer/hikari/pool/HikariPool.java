@@ -18,7 +18,6 @@ package com.zaxxer.hikari.pool;
 
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_IN_USE;
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_NOT_IN_USE;
-import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -59,25 +58,6 @@ public final class HikariPool extends BaseHikariPool
    public HikariPool(HikariConfig configuration, String username, String password)
    {
       super(configuration, username, password);
-   }
-
-   // ***********************************************************************
-   //                        IBagStateListener callback
-   // ***********************************************************************
-
-   /** {@inheritDoc} */
-   @Override
-   public void addBagItem()
-   {
-      addConnectionExecutor.execute( () -> {
-         long sleepBackoff = 200L;
-         final int maxPoolSize = configuration.getMaximumPoolSize();
-         while (poolState == POOL_RUNNING && totalConnections.get() < maxPoolSize && !addConnection()) {
-            // If we got into the loop, addConnection() failed, so we sleep and retry
-            quietlySleep(sleepBackoff);
-            sleepBackoff = Math.min(connectionTimeout / 2, (long) ((double) sleepBackoff * 1.5));
-         }
-      });
    }
 
    // ***********************************************************************

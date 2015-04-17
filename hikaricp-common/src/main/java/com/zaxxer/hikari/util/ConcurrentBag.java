@@ -24,6 +24,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
@@ -57,9 +58,9 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
 
    protected final AbstractQueuedLongSynchronizer synchronizer;
    protected final CopyOnWriteArrayList<T> sharedList;
+   protected final AtomicLong sequence;
 
    private final ThreadLocal<ArrayList<WeakReference<IConcurrentBagEntry>>> threadList;
-   private final AtomicLong sequence;
    private final IBagStateListener listener;
    private volatile boolean closed;
 
@@ -110,6 +111,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
 
       // Otherwise, scan the shared list ... for maximum of timeout
       timeout = timeUnit.toNanos(timeout);
+      Future<Boolean> addItemFuture = null;
       final long startScan = System.nanoTime();
       final long originTimeout = timeout;
       do {
@@ -122,8 +124,10 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
                }
             }
          } while (startSeq < sequence.get());
-         
-         listener.addBagItem();
+
+         if (addItemFuture == null || addItemFuture.isDone()) {
+            addItemFuture = listener.addBagItem();
+         }
 
          if (!synchronizer.tryAcquireSharedNanos(startSeq, timeout)) {
             return null;
