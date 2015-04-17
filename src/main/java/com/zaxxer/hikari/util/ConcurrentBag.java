@@ -58,9 +58,9 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
 
    protected final AbstractQueuedLongSynchronizer synchronizer;
    protected final CopyOnWriteArrayList<T> sharedList;
-   protected final AtomicLong sequence;
 
    private final ThreadLocal<ArrayList<WeakReference<IConcurrentBagEntry>>> threadList;
+   private final AtomicLong sequence;
    private final IBagStateListener listener;
    private volatile boolean closed;
 
@@ -310,22 +310,21 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
    /**
     * Our private synchronizer that handles notify/wait type semantics.
     */
-   private static final class Synchronizer extends AbstractQueuedLongSynchronizer
+   private final class Synchronizer extends AbstractQueuedLongSynchronizer
    {
       private static final long serialVersionUID = 104753538004341218L;
 
       @Override
-      protected long tryAcquireShared(long seq)
+      protected long tryAcquireShared(final long seq)
       {
-         return getState() > seq && !hasQueuedPredecessors() ? 1L : -1L;
+         return hasQueuedPredecessors() ? -1L : getState() - (seq + 1);
       }
 
       /** {@inheritDoc} */
       @Override
-      protected boolean tryReleaseShared(long updateSeq)
+      protected boolean tryReleaseShared(final long unreliableSequence)
       {
-         setState(updateSeq);
-
+         setState(sequence.get());
          return true;
       }
    }
