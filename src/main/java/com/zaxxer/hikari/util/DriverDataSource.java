@@ -27,11 +27,16 @@ import java.util.Properties;
 
 import javax.sql.DataSource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public final class DriverDataSource implements DataSource
 {
+   private final Logger LOGGER = LoggerFactory.getLogger(DriverDataSource.class);
+
    private final String jdbcUrl;
    private final Properties driverProperties;
-   private final Driver driver;
+   private Driver driver;
 
    public DriverDataSource(String jdbcUrl, String driverClassName, Properties properties, String username, String password)
    {
@@ -50,29 +55,33 @@ public final class DriverDataSource implements DataSource
       }
 
       if (driverClassName != null) {
-         Driver matched = null;
          Enumeration<Driver> drivers = DriverManager.getDrivers();
          while (drivers.hasMoreElements()) {
             Driver d = drivers.nextElement();
             if (d.getClass().getName().equals(driverClassName)) {
-               matched = d;
+               this.driver = d;
                break;
             }
          }
 
-         if (matched != null) {
-            driver = matched;
-         }
-         else {
-            throw new IllegalArgumentException("Driver with class name " + driverClassName + " was not found among registered drivers");
+         if (driver == null) {
+            LOGGER.warn("Registered driver with driverClassName={} was not found, trying direct instantiation.", driverClassName);
+            try {
+               Class<?> driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
+               this.driver = (Driver) driverClass.newInstance();
+            }
+            catch (Exception e) {
+               LOGGER.warn("Could not instantiate instance of driver class {}, trying JDBC URL resolution", driverClassName, e);
+            }
          }
       }
-      else {
+
+      if (driver == null) {
          try {
             driver = DriverManager.getDriver(jdbcUrl);
          }
          catch (SQLException e) {
-            throw new RuntimeException("Unable to get driver for JDBC URL " + jdbcUrl, e);
+            throw new RuntimeException("Unable to get driver instance for jdbcUrl=" + jdbcUrl, e);
          }
       }
    }
