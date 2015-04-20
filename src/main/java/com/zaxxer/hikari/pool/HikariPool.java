@@ -258,7 +258,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
                softEvictConnections();
                abortActiveConnections(assassinExecutor);
             }
-            while (getTotalConnections() > 0 && elapsedTimeMs(start) < TimeUnit.SECONDS.toNanos(5));
+            while (getTotalConnections() > 0 && elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5));
          } finally {
             assassinExecutor.shutdown();
             assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
