@@ -95,16 +95,18 @@ public class ConcurrentBag<T extends IConcurrentBagEntry>
    @SuppressWarnings("unchecked")
    public T borrow(long timeout, final TimeUnit timeUnit) throws InterruptedException
    {
-      // Try the thread-local list first
-      final ArrayList<WeakReference<IConcurrentBagEntry>> list = threadList.get();
-      if (list == null) {
-         threadList.set(new ArrayList<WeakReference<IConcurrentBagEntry>>(16));
-      }
-      else {
-         for (int i = list.size() - 1; i >= 0; i--) {
-            final IConcurrentBagEntry bagEntry = list.remove(i).get();
-            if (bagEntry != null && bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
-               return (T) bagEntry;
+      if (!synchronizer.hasQueuedThreads()) {
+         // Try the thread-local list first
+         final ArrayList<WeakReference<IConcurrentBagEntry>> list = threadList.get();
+         if (list == null) {
+            threadList.set(new ArrayList<WeakReference<IConcurrentBagEntry>>(16));
+         }
+         else {
+            for (int i = list.size() - 1; i >= 0; i--) {
+               final IConcurrentBagEntry bagEntry = list.remove(i).get();
+               if (bagEntry != null && bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
+                  return (T) bagEntry;
+               }
             }
          }
       }
