@@ -10,6 +10,21 @@ Changes in 2.4.0
 
  * Deprecated HikariDataSource.shutdown() in favor of close().
 
+Changes in 2.3.7
+
+ * Try harder at resolving the driver by various means when both driverClassName and jdbcUrl
+   have been specified.
+
+ * Allow a specifically set DataSource instance to override other settings such as jdbcUrl,
+   dataSourceClassName, or driverClassName.
+ 
+ * Fixed issue where, in the case of a driver-based configuration (jdbcUrl), we were not
+   initialising the network timeout Executor.
+
+ * Fixed race condition uncovered during load-testing in which the connections in the pool
+   can spike to the maximum pool size when many connections reach their maxLifetime at the
+   same time.
+
 Changes in 2.3.6
 
  * Allow explicit definition of driverClassName to override DriverManager.getDriver(url)
