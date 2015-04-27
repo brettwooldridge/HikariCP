@@ -153,15 +153,15 @@ public class PostgresTest
       }
    }
 
-//   @Test
+   // @Test
    public void testCase4() throws Exception
    {
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(15);
       config.setConnectionTimeout(10000);
-      config.setIdleTimeout(TimeUnit.MINUTES.toMillis(2));
-      config.setMaxLifetime(TimeUnit.MINUTES.toMillis(6));
+      config.setIdleTimeout(TimeUnit.MINUTES.toMillis(1));
+      config.setMaxLifetime(TimeUnit.MINUTES.toMillis(2));
       config.setRegisterMbeans(true);
 
       config.setJdbcUrl("jdbc:postgresql://localhost:5432/netld");
@@ -169,7 +169,7 @@ public class PostgresTest
 
       try (final HikariDataSource ds = new HikariDataSource(config)) {
 
-         countdown(30);
+         countdown(20);
          List<Thread> threads = new ArrayList<>();
          for (int i = 0; i < 20; i++) {
             threads.add(new Thread() {
@@ -178,16 +178,18 @@ public class PostgresTest
                   final long start = System.currentTimeMillis();
                   do {
                      try (Connection conn = ds.getConnection(); Statement stmt = conn.createStatement()) {
-                        try (ResultSet rs = stmt.executeQuery("SELECT * FROM device")) {
+                        try (ResultSet rs = stmt.executeQuery("SELECT * FROM device WHERE device_id=0 ORDER BY device_id LIMIT 1 OFFSET 0")) {
                            rs.next();
                         }
-                        UtilityElf.quietlySleep(Math.max(200L, (long)(Math.random() * 2500L)));
+                        UtilityElf.quietlySleep(100L); //Math.max(50L, (long)(Math.random() * 250L)));
                      }
                      catch (SQLException e) {
-                        throw new RuntimeException(e);
+                        e.printStackTrace();
+                        // throw new RuntimeException(e);
                      }
    
-                  } while (UtilityElf.elapsedTimeMs(start) < TimeUnit.MINUTES.toMillis(42));
+                     // UtilityElf.quietlySleep(10L); //Math.max(50L, (long)(Math.random() * 250L)));
+                  } while (UtilityElf.elapsedTimeMs(start) < TimeUnit.MINUTES.toMillis(5));
                };
             });
          }
