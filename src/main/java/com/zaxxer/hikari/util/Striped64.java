@@ -414,7 +414,10 @@ abstract class Striped64 extends Number
    private static final long PROBE;
    static {
       try {
-         UNSAFE = sun.misc.Unsafe.getUnsafe();
+         Field f = Unsafe.class.getDeclaredField("theUnsafe");
+         f.setAccessible(true);
+         UNSAFE = (Unsafe) f.get(null);
+
          Class<?> sk = Striped64.class;
          BASE = UNSAFE.objectFieldOffset(sk.getDeclaredField("base"));
          CELLSBUSY = UNSAFE.objectFieldOffset(sk.getDeclaredField("cellsBusy"));
