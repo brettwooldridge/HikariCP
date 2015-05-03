@@ -90,8 +90,8 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    @SuppressWarnings("unchecked")
    public T borrow(long timeout, final TimeUnit timeUnit) throws InterruptedException
    {
+      // Try the thread-local list first, if there are no blocked threads waiting already
       if (!synchronizer.hasQueuedThreads()) {
-         // Try the thread-local list first
          final ArrayList<WeakReference<IConcurrentBagEntry>> list = threadList.get();
          if (list == null) {
             threadList.set(new ArrayList<WeakReference<IConcurrentBagEntry>>(16));
@@ -111,13 +111,9 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       Future<Boolean> addItemFuture = null;
       final long startScan = System.nanoTime();
       final long originTimeout = timeout;
-      long startSeq = 0;
+      long startSeq = 0;  // 0 intentionally causes tryAcquireSharedNanos() to fall-thru in the first iteration
       try {
-         do {
-            if (!synchronizer.tryAcquireSharedNanos(startSeq, timeout)) {
-               break;
-            }
-   
+         while (timeout > 1000L && synchronizer.tryAcquireSharedNanos(startSeq, timeout)) {
             do {
                startSeq = sequence.sum();
                for (final T bagEntry : sharedList) {
@@ -133,7 +129,6 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    
             timeout = originTimeout - (System.nanoTime() - startScan);
          }
-         while (timeout > 1000L);  // 1000ns is the minimum resolution on many systems
       }
       finally {
          synchronizer.releaseShared(1);
