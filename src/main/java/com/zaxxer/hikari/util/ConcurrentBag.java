@@ -74,6 +74,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       this.sharedList = new CopyOnWriteArrayList<T>();
       this.synchronizer = new Synchronizer();
       this.sequence = new LongAdder();
+      this.sequence.increment();
       this.listener = listener;
       this.threadList = new ThreadLocal<ArrayList<WeakReference<IConcurrentBagEntry>>>();
    }
@@ -111,28 +112,33 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       Future<Boolean> addItemFuture = null;
       final long startScan = System.nanoTime();
       final long originTimeout = timeout;
-      do {
-         long startSeq;
+      long startSeq = 0;
+      try {
          do {
-            startSeq = sequence.sum();
-            for (final T bagEntry : sharedList) {
-               if (bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
-                  return bagEntry;
-               }
+            if (!synchronizer.tryAcquireSharedNanos(startSeq, timeout)) {
+               break;
             }
-         } while (startSeq < sequence.sum());
+   
+            do {
+               startSeq = sequence.sum();
+               for (final T bagEntry : sharedList) {
+                  if (bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
+                     return bagEntry;
+                  }
+               }
+            } while (startSeq < sequence.sum());
 
-         if (addItemFuture == null || addItemFuture.isDone()) {
-            addItemFuture = listener.addBagItem();
+            if (addItemFuture == null || addItemFuture.isDone()) {
+               addItemFuture = listener.addBagItem();
+            }
+   
+            timeout = originTimeout - (System.nanoTime() - startScan);
          }
-
-         if (!synchronizer.tryAcquireSharedNanos(startSeq, timeout)) {
-            break;
-         }
-
-         timeout = originTimeout - (System.nanoTime() - startScan);
+         while (timeout > 1000L);  // 1000ns is the minimum resolution on many systems
       }
-      while (timeout > 1000L);  // 1000ns is the minimum resolution on many systems
+      finally {
+         synchronizer.releaseShared(1);
+      }
 
       return null;
    }
@@ -322,7 +328,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       @Override
       protected long tryAcquireShared(final long seq)
       {
-         return hasQueuedPredecessors() ? -1L : sequence.sum() - (seq + 1);
+         return sequence.sum() - (seq + 1) < 0 ? -1L : 0L;
       }
 
       /** {@inheritDoc} */

@@ -94,6 +94,7 @@ public class TestConnections
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(1);
       config.setConnectionTestQuery("VALUES 1");
+      config.setInitializationFailFast(false);
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "100");
@@ -230,6 +231,9 @@ public class TestConnections
       HikariDataSource ds = new HikariDataSource(config);
       try {
          Connection connection = ds.getConnection();
+
+         UtilityElf.quietlySleep(1000L);
+
          Assert.assertEquals(1, TestElf.getPool(ds).getTotalConnections());
          ds.evictConnection(connection);
          Assert.assertEquals(0, TestElf.getPool(ds).getTotalConnections());
@@ -261,6 +265,8 @@ public class TestConnections
          Connection connection = ds.getConnection();
          Assert.assertNotNull(connection);
 
+         UtilityElf.quietlySleep(500L);
+
          Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
 
@@ -280,6 +286,8 @@ public class TestConnections
 
          // The connection will be ejected from the pool here
          connection.close();
+
+         UtilityElf.quietlySleep(500L);
 
          Assert.assertSame("Totals connections not as expected", 0, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());

@@ -18,6 +18,8 @@ package com.zaxxer.hikari;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.AfterClass;
@@ -28,6 +30,7 @@ import org.junit.Test;
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.pool.PoolBagEntry;
 import com.zaxxer.hikari.util.ConcurrentBag;
+import com.zaxxer.hikari.util.IBagStateListener;
 
 /**
  *
@@ -59,7 +62,13 @@ public class TestConcurrentBag
    @Test
    public void testConcurrentBag() throws InterruptedException
    {
-      ConcurrentBag<PoolBagEntry> bag = new ConcurrentBag<PoolBagEntry>(null);
+      ConcurrentBag<PoolBagEntry> bag = new ConcurrentBag<PoolBagEntry>(new IBagStateListener() {
+         @Override
+         public Future<Boolean> addBagItem()
+         {
+            return CompletableFuture.completedFuture(true);
+         }
+      });
       Assert.assertEquals(0, bag.values(8).size());
 
       HikariPool pool = TestElf.getPool(ds);
