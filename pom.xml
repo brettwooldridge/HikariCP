@@ -179,6 +179,8 @@
                         <exclude>**/com/zaxxer/hikari/proxy/CallableStatementProxy</exclude>
                         <exclude>**/com/zaxxer/hikari/proxy/PreparedStatementProxy</exclude>
                         <exclude>**/com/zaxxer/hikari/pool/PoolInitializationException</exclude>
+                        <exclude>**/com/zaxxer/hikari/util/LongAdder</exclude>
+                        <exclude>**/com/zaxxer/hikari/util/Striped64</exclude>
                         <exclude>**/com/zaxxer/hikari/metrics/**</exclude>
                      </excludes>
                   </configuration>
@@ -202,6 +204,8 @@
                         <exclude>**/com/zaxxer/hikari/proxy/CallableStatementProxy.class</exclude>
                         <exclude>**/com/zaxxer/hikari/proxy/PreparedStatementProxy.class</exclude>
                         <exclude>**/com/zaxxer/hikari/pool/PoolInitializationException.class</exclude>
+                        <exclude>**/com/zaxxer/hikari/util/LongAdder.class</exclude>
+                        <exclude>**/com/zaxxer/hikari/util/Striped64.class</exclude>
                         <exclude>**/com/zaxxer/hikari/metrics/**</exclude>
                      </excludes>
                   </configuration>
