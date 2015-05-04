@@ -72,7 +72,7 @@ public class ShutdownTest
             {
                try {
                   if (ds.getConnection() != null) {
-                     UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(1));
+                     UtilityElf.quietlySleepMs(TimeUnit.SECONDS.toMillis(1));
                   }
                }
                catch (SQLException e) {
@@ -83,7 +83,7 @@ public class ShutdownTest
          threads[i].start();
       }
 
-      UtilityElf.quietlySleep(1200L);
+      UtilityElf.quietlySleepMs(1200L);
 
       Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() > 0);
 
@@ -112,7 +112,7 @@ public class ShutdownTest
       HikariDataSource ds = new HikariDataSource(config);
       HikariPool pool = TestElf.getPool(ds);
 
-      UtilityElf.quietlySleep(1200L);
+      UtilityElf.quietlySleepMs(1200L);
 
       Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() > 0);
 
@@ -141,7 +141,7 @@ public class ShutdownTest
       HikariDataSource ds = new HikariDataSource(config);
       HikariPool pool = TestElf.getPool(ds);
 
-      UtilityElf.quietlySleep(1200L);
+      UtilityElf.quietlySleepMs(1200L);
 
       Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() == 5);
 
@@ -166,13 +166,13 @@ public class ShutdownTest
 
       HikariDataSource ds = new HikariDataSource(config);
 
-      UtilityElf.quietlySleep(500L);
+      UtilityElf.quietlySleepMs(500L);
 
       ds.close();
 
-      long start = System.currentTimeMillis();
-      while (UtilityElf.elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5) && threadCount() > 0) {
-         UtilityElf.quietlySleep(250);
+      long startNanos = System.nanoTime();
+      while (UtilityElf.elapsedTimeMs(startNanos) < TimeUnit.SECONDS.toMillis(5) && threadCount() > 0) {
+         UtilityElf.quietlySleepMs(250);
       }
 
       Assert.assertSame("Unreleased connections after shutdown", 0, TestElf.getPool(ds).getTotalConnections());
@@ -251,7 +251,7 @@ public class ShutdownTest
                      try {
                         connection2 = ds.getConnection();
                         PreparedStatement stmt = connection2.prepareStatement("SOMETHING");
-                        UtilityElf.quietlySleep(20);
+                        UtilityElf.quietlySleepMs(20);
                         stmt.getMaxFieldSize();
                      }
                      catch (SQLException e) {
@@ -281,7 +281,7 @@ public class ShutdownTest
    
          Thread t2 = new Thread() {
             public void run() {
-               UtilityElf.quietlySleep(100);
+               UtilityElf.quietlySleepMs(100);
                try {
                   ds.close();
                }

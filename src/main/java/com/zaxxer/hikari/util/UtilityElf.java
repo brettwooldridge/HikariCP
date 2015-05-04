@@ -32,14 +32,25 @@ import java.util.concurrent.TimeUnit;
 public final class UtilityElf
 {
    /**
-    * Get the elapsed time in millisecond between the specified start time and now.
+    * Get the elapsed time in nanoseconds between the specified start time and now.
     *
-    * @param start the start time
+    * @param startNanos the start time
     * @return the elapsed milliseconds
     */
-   public static long elapsedTimeMs(final long start)
+   public static long elapsedNanos(final long startNanos)
    {
-      return System.currentTimeMillis() - start;
+      return System.nanoTime() - startNanos;
+   }
+
+   /**
+    * Get the elapsed time in millisecond between the specified start time and now.
+    *
+    * @param startNano the start time
+    * @return the elapsed milliseconds
+    */
+   public static long elapsedTimeMs(final long startNano)
+   {
+      return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNano);
    }
 
    /**
@@ -47,14 +58,24 @@ public final class UtilityElf
     *
     * @param millis the number of milliseconds to sleep
     */
-   public static void quietlySleep(final long millis)
+   public static void quietlySleep(final long ticks, final TimeUnit unit)
    {
       try {
-         Thread.sleep(millis);
+         unit.sleep(ticks);
       }
       catch (InterruptedException e) {
          // I said be quiet!
       }
+   }
+
+   /**
+    * Sleep and transform an InterruptedException into a RuntimeException.
+    *
+    * @param millis the number of milliseconds to sleep
+    */
+   public static void quietlySleepMs(final long millis)
+   {
+      quietlySleep(millis, TimeUnit.MILLISECONDS);
    }
 
    /**

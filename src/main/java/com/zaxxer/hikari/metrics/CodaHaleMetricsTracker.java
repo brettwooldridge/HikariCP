@@ -102,7 +102,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    @Override
    public void recordConnectionUsage(final PoolBagEntry bagEntry)
    {
-      connectionUsage.update(elapsedTimeMs(bagEntry.lastOpenTime));
+      connectionUsage.update(elapsedTimeMs(bagEntry.lastOpenNano));
    }
 
    public Timer getConnectionAcquisitionTimer()
@@ -132,9 +132,9 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
 
       /** {@inheritDoc} */
       @Override
-      public void setConnectionLastOpen(final PoolBagEntry bagEntry, final long now)
+      public void setConnectionLastOpen(final PoolBagEntry bagEntry, final long nowNanos)
       {
-         bagEntry.lastOpenTime = now;
+         bagEntry.lastOpenNano = nowNanos;
       }
    }
 }

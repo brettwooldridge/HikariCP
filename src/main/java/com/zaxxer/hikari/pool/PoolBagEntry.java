@@ -33,8 +33,8 @@ public final class PoolBagEntry implements IConcurrentBagEntry
    public final AtomicInteger state = new AtomicInteger();
 
    public Connection connection;
-   public long lastAccess;
-   public long lastOpenTime;
+   public long lastAccessNano;
+   public long lastOpenNano;
    public volatile boolean evicted;
    public volatile boolean aborted;
    
@@ -43,7 +43,7 @@ public final class PoolBagEntry implements IConcurrentBagEntry
 
    public PoolBagEntry(final Connection connection, final HikariPool pool) {
       this.connection = connection;
-      this.lastAccess = System.currentTimeMillis();
+      this.lastAccessNano = System.nanoTime();
 
       final long variance = pool.configuration.getMaxLifetime() > 300_000 ? ThreadLocalRandom.current().nextLong(100_000) : 0;
       final long maxLifetime = pool.configuration.getMaxLifetime() - variance;
@@ -84,8 +84,8 @@ public final class PoolBagEntry implements IConcurrentBagEntry
    public String toString()
    {
       return "Connection......" + connection + "\n"
-           + "  Last  access.." + lastAccess + "\n"
-           + "  Last open....." + lastOpenTime + "\n"
+           + "  Last  access.." + lastAccessNano + "\n"
+           + "  Last open....." + lastOpenNano + "\n"
            + "  State........." + stateToString();
    }
 

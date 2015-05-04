@@ -29,6 +29,7 @@ import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.mocks.StubStatement;
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.util.UtilityElf;
+import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 
 /**
  * System property testProxy can be one of:
@@ -115,6 +116,7 @@ public class TestConnections
 
          Assert.assertSame("Second total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Second idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
+         System.err.println("Closing " + connection);
          connection.close();
 
          Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
@@ -124,9 +126,12 @@ public class TestConnections
          Assert.assertSame(unwrap, unwrap2);
          Assert.assertSame("Second total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Second idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
+         System.err.println("Closing " + connection2);
          connection2.close();
 
-         Thread.sleep(2000);
+         quietlySleep(2, TimeUnit.SECONDS);
+
+         System.err.println(">>>>>>>>>>>>>> getConnection() ");
 
          connection2 = ds.getConnection();
          Assert.assertNotSame("Expected a different connection", connection, connection2);
@@ -176,7 +181,7 @@ public class TestConnections
          Assert.assertSame("Second idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
          connection2.close();
 
-         Thread.sleep(800);
+         quietlySleep(800, TimeUnit.MILLISECONDS);
 
          connection2 = ds.getConnection();
          Assert.assertNotSame("Expected a different connection", connection, connection2);
@@ -232,7 +237,7 @@ public class TestConnections
       try {
          Connection connection = ds.getConnection();
 
-         UtilityElf.quietlySleep(1000L);
+         quietlySleep(1, TimeUnit.SECONDS);
 
          Assert.assertEquals(1, TestElf.getPool(ds).getTotalConnections());
          ds.evictConnection(connection);
@@ -256,7 +261,7 @@ public class TestConnections
 
       HikariDataSource ds = new HikariDataSource(config);
       try {
-         UtilityElf.quietlySleep(1200L);
+         UtilityElf.quietlySleepMs(1200L);
 
          Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
@@ -265,7 +270,7 @@ public class TestConnections
          Connection connection = ds.getConnection();
          Assert.assertNotNull(connection);
 
-         UtilityElf.quietlySleep(500L);
+         quietlySleep(500, TimeUnit.MILLISECONDS);
 
          Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
@@ -287,7 +292,7 @@ public class TestConnections
          // The connection will be ejected from the pool here
          connection.close();
 
-         UtilityElf.quietlySleep(500L);
+         quietlySleep(500, TimeUnit.MILLISECONDS);
 
          Assert.assertSame("Totals connections not as expected", 0, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
@@ -326,7 +331,7 @@ public class TestConnections
                {
                   try {
                      Connection connection = ds.getConnection();
-                     Thread.sleep(500);
+                     quietlySleep(500, TimeUnit.MILLISECONDS);
                      connection.close();
                   }
                   catch (Exception e) {
@@ -364,12 +369,12 @@ public class TestConnections
       StubStatement.oldDriver = true;
       HikariDataSource ds = new HikariDataSource(config);
       try {
-         UtilityElf.quietlySleep(1001L);
+         quietlySleep(1001, TimeUnit.MILLISECONDS);
 
          Connection connection = ds.getConnection();
          connection.close();
 
-         UtilityElf.quietlySleep(1001L);
+         quietlySleep(1001, TimeUnit.MILLISECONDS);
          connection = ds.getConnection();
       }
       finally {
@@ -393,7 +398,7 @@ public class TestConnections
       try {
          HikariPool pool = TestElf.getPool(ds);
          while (pool.getTotalConnections() < 3) {
-            UtilityElf.quietlySleep(50);
+            quietlySleep(50, TimeUnit.MILLISECONDS);
          }
 
          Thread t = new Thread(new Runnable() {
@@ -415,12 +420,12 @@ public class TestConnections
          pool.suspendPool();
          t.start();
 
-         UtilityElf.quietlySleep(500);
+         quietlySleep(500, TimeUnit.MILLISECONDS);
          Assert.assertEquals(2, pool.getIdleConnections());
          c3.close();
          Assert.assertEquals(3, pool.getIdleConnections());
          pool.resumePool();
-         UtilityElf.quietlySleep(500);
+         quietlySleep(500, TimeUnit.MILLISECONDS);
          Assert.assertEquals(1, pool.getIdleConnections());
       }
       finally {

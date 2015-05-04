@@ -108,9 +108,9 @@ public class MiscTest
          TestElf.getPool(ds).logPoolState();
 
          Connection connection = ds.getConnection();
-         UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(4));
+         UtilityElf.quietlySleepMs(TimeUnit.SECONDS.toMillis(4));
          connection.close();
-         UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(1));
+         UtilityElf.quietlySleepMs(TimeUnit.SECONDS.toMillis(1));
          ps.close();
          String s = new String(baos.toByteArray());
          Assert.assertNotNull("Exception string was null", s);

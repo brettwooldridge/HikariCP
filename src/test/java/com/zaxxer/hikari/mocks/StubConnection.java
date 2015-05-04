@@ -61,7 +61,7 @@ public class StubConnection extends StubBaseConnection implements Connection
    public StubConnection() {
       count.incrementAndGet();
       if (slowCreate) {
-         UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(1));
+         UtilityElf.quietlySleep(1, TimeUnit.SECONDS);
       }
    }
 
