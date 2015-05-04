@@ -58,7 +58,7 @@ public class PostgresTest
                public void run() {
                   try (Connection connection = ds.getConnection()) {
                      System.err.println("Obtained connection " + connection);
-                     UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis((long)(10 + (Math.random() * 20))));
+                     UtilityElf.quietlySleepMs(TimeUnit.SECONDS.toMillis((long)(10 + (Math.random() * 20))));
                   }
                   catch (SQLException e) {
                      e.printStackTrace();
@@ -68,7 +68,7 @@ public class PostgresTest
             t.setDaemon(true);
             t.start();
 
-            UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis((long)((Math.random() * 20))));
+            UtilityElf.quietlySleepMs(TimeUnit.SECONDS.toMillis((long)((Math.random() * 20))));
          } while (UtilityElf.elapsedTimeMs(start) < TimeUnit.MINUTES.toMillis(15));
       }
    }
@@ -92,7 +92,7 @@ public class PostgresTest
          }
          
          TestElf.getPool(ds).logPoolState();
-         UtilityElf.quietlySleep(5000L);
+         UtilityElf.quietlySleepMs(5000L);
 
          System.err.println("\nNow attempting another getConnection(), expecting a timeout...");
 
@@ -107,7 +107,7 @@ public class PostgresTest
          }
 
          System.err.println("\nOk, so far so good.  Now, disable the firewall again.  Attempting connection in 5 seconds...");
-         UtilityElf.quietlySleep(5000L);
+         UtilityElf.quietlySleepMs(5000L);
          TestElf.getPool(ds).logPoolState();
 
          try (Connection conn = ds.getConnection()) {
@@ -144,10 +144,10 @@ public class PostgresTest
             }.start();
          }
 
-         UtilityElf.quietlySleep(5000L);
+         UtilityElf.quietlySleepMs(5000L);
 
          System.err.println("Now, bring the DB online.  Checking pool in 15 seconds.");
-         UtilityElf.quietlySleep(15000L);
+         UtilityElf.quietlySleepMs(15000L);
 
          TestElf.getPool(ds).logPoolState();
       }
@@ -174,21 +174,21 @@ public class PostgresTest
          for (int i = 0; i < 20; i++) {
             threads.add(new Thread() {
                public void run() {
-                  UtilityElf.quietlySleep((long)(Math.random() * 2500L));
+                  UtilityElf.quietlySleepMs((long)(Math.random() * 2500L));
                   final long start = System.currentTimeMillis();
                   do {
                      try (Connection conn = ds.getConnection(); Statement stmt = conn.createStatement()) {
                         try (ResultSet rs = stmt.executeQuery("SELECT * FROM device WHERE device_id=0 ORDER BY device_id LIMIT 1 OFFSET 0")) {
                            rs.next();
                         }
-                        UtilityElf.quietlySleep(100L); //Math.max(50L, (long)(Math.random() * 250L)));
+                        UtilityElf.quietlySleepMs(100L); //Math.max(50L, (long)(Math.random() * 250L)));
                      }
                      catch (SQLException e) {
                         e.printStackTrace();
                         // throw new RuntimeException(e);
                      }
    
-                     // UtilityElf.quietlySleep(10L); //Math.max(50L, (long)(Math.random() * 250L)));
+                     // UtilityElf.quietlySleepMs(10L); //Math.max(50L, (long)(Math.random() * 250L)));
                   } while (UtilityElf.elapsedTimeMs(start) < TimeUnit.MINUTES.toMillis(5));
                };
             });
@@ -210,11 +210,11 @@ public class PostgresTest
       do {
          System.out.printf("Starting in %d seconds...\n", seconds);
          if (seconds > 10) {
-            UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(10));
+            UtilityElf.quietlySleepMs(TimeUnit.SECONDS.toMillis(10));
             seconds -= 10;
          }
          else {
-            UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(1));
+            UtilityElf.quietlySleepMs(TimeUnit.SECONDS.toMillis(1));
             seconds -= 1;
          }
       } while (seconds > 0);
