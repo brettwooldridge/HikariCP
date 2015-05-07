@@ -77,8 +77,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       this.bagEntry = bagEntry;
       this.delegate = bagEntry.connection;
       this.leakTask = leakTask;
-      this.lastAccess = bagEntry.lastAccess;
 
+      this.lastAccess = bagEntry.lastAccess;
       this.openStatements = new FastList<Statement>(Statement.class, 16);
    }
 
@@ -137,7 +137,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    public final void markCommitStateDirty()
    {
       isCommitStateDirty = true;
-      lastAccess = System.currentTimeMillis();
    }
 
    // ***********************************************************************
@@ -146,7 +145,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    private final <T extends Statement> T trackStatement(final T statement)
    {
-      lastAccess = System.currentTimeMillis();
       openStatements.add(statement);
 
       return statement;
@@ -169,6 +167,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       if (isCatalogDirty && parentPool.catalog != null) {
          delegate.setCatalog(parentPool.catalog);
       }
+
+      lastAccess = System.currentTimeMillis();
    }
 
    // **********************************************************************
@@ -195,8 +195,12 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          }
 
          try {
-            if (isCommitStateDirty && !delegate.getAutoCommit()) {
-               delegate.rollback();
+            if (isCommitStateDirty) {
+               lastAccess = System.currentTimeMillis();
+
+               if (!delegate.getAutoCommit()) {
+                  delegate.rollback();
+               }
             }
 
             if (isConnectionStateDirty) {
@@ -213,7 +217,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          }
          finally {
             delegate = ClosedConnection.CLOSED_CONNECTION;
-            bagEntry.lastAccess = lastAccess;
+            bagEntry.lastAccess = this.lastAccess;
             parentPool.releaseConnection(bagEntry);
          }
       }
@@ -316,6 +320,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       delegate.commit();
       isCommitStateDirty = false;
+      lastAccess = System.currentTimeMillis();
    }
 
    /** {@inheritDoc} */
@@ -324,6 +329,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       delegate.rollback();
       isCommitStateDirty = false;
+      lastAccess = System.currentTimeMillis();
    }
 
    /** {@inheritDoc} */
@@ -332,6 +338,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       delegate.rollback(savepoint);
       isCommitStateDirty = false;
+      lastAccess = System.currentTimeMillis();
    }
 
    /** {@inheritDoc} */

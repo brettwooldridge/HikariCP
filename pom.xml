@@ -39,16 +39,16 @@
 
    <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-      <hibernate.version>4.3.8.Final</hibernate.version>
+      <hibernate.version>4.3.9.Final</hibernate.version>
       <javassist.version>3.19.0-GA</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>
-      <metrics.version>3.1.1</metrics.version>
+      <metrics.version>3.1.2</metrics.version>
       <mockito.version>1.10.19</mockito.version>
-      <pax.exam.version>4.4.0</pax.exam.version>
-      <pax.url.version>2.4.0</pax.url.version>
+      <pax.exam.version>4.5.0</pax.exam.version>
+      <pax.url.version>2.4.1</pax.url.version>
       <slf4j.version>1.7.12</slf4j.version>
       <felix.bundle.plugin.version>2.5.3</felix.bundle.plugin.version>
-      <felix.version>4.6.1</felix.version>
+      <felix.version>5.0.0</felix.version>
    </properties>
 
    <parent>
@@ -179,6 +179,8 @@
                         <exclude>**/com/zaxxer/hikari/proxy/CallableStatementProxy</exclude>
                         <exclude>**/com/zaxxer/hikari/proxy/PreparedStatementProxy</exclude>
                         <exclude>**/com/zaxxer/hikari/pool/PoolInitializationException</exclude>
+                        <exclude>**/com/zaxxer/hikari/util/LongAdder</exclude>
+                        <exclude>**/com/zaxxer/hikari/util/Striped64</exclude>
                         <exclude>**/com/zaxxer/hikari/metrics/**</exclude>
                      </excludes>
                   </configuration>
@@ -202,6 +204,8 @@
                         <exclude>**/com/zaxxer/hikari/proxy/CallableStatementProxy.class</exclude>
                         <exclude>**/com/zaxxer/hikari/proxy/PreparedStatementProxy.class</exclude>
                         <exclude>**/com/zaxxer/hikari/pool/PoolInitializationException.class</exclude>
+                        <exclude>**/com/zaxxer/hikari/util/LongAdder.class</exclude>
+                        <exclude>**/com/zaxxer/hikari/util/Striped64.class</exclude>
                         <exclude>**/com/zaxxer/hikari/metrics/**</exclude>
                      </excludes>
                   </configuration>
@@ -265,7 +269,7 @@
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-compiler-plugin</artifactId>
-               <version>3.1</version>
+               <version>3.3</version>
                <extensions>true</extensions>
                <configuration>
                   <source>1.7</source>
@@ -276,7 +280,7 @@
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-release-plugin</artifactId>
-               <version>2.5</version>
+               <version>3.0-r1585899</version>
                <configuration>
                   <autoVersionSubmodules>true</autoVersionSubmodules>
                   <tagNameFormat>HikariCP-@{project.version}</tagNameFormat>
@@ -286,7 +290,7 @@
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-surefire-plugin</artifactId>
-               <version>2.15</version>
+               <version>2.18.1</version>
                <configuration>
 		  <!-- Sets the VM argument line used when unit tests are run. -->
                   <argLine>${surefireArgLine}</argLine>
@@ -298,7 +302,7 @@
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-source-plugin</artifactId>
-               <version>2.2.1</version>
+               <version>2.4</version>
                <configuration>
 	  	  <!-- outputDirectory>/absolute/path/to/the/output/directory</outputDirectory> 
 	 	  <finalName>filename-of-generated-jar-file</finalName -->
@@ -317,7 +321,7 @@
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-javadoc-plugin</artifactId>
-               <version>2.9.1</version>
+               <version>2.10.3</version>
                <configuration>
                   <show>public</show>
 		  <!-- excludePackageNames>com.zaxxer.hikari.*</excludePackageNames -->
@@ -376,7 +380,7 @@
                <plugin>
                   <groupId>org.apache.maven.plugins</groupId>
                   <artifactId>maven-gpg-plugin</artifactId>
-                  <version>1.4</version>
+                  <version>1.6</version>
                   <executions>
                      <execution>
                         <id>sign-artifacts</id>
