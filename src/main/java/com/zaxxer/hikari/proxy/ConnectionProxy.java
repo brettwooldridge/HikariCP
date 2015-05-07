@@ -72,13 +72,13 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       SQL_ERRORS.add("JZ0C1"); // Sybase disconnect error
    }
 
-   protected ConnectionProxy(final HikariPool pool, final PoolBagEntry bagEntry, final LeakTask leakTask) {
+   protected ConnectionProxy(final HikariPool pool, final PoolBagEntry bagEntry, final LeakTask leakTask, final long now) {
       this.parentPool = pool;
       this.bagEntry = bagEntry;
       this.delegate = bagEntry.connection;
       this.leakTask = leakTask;
 
-      this.lastAccess = bagEntry.lastAccess;
+      this.lastAccess = now;
       this.openStatements = new FastList<Statement>(Statement.class, 16);
    }
 
