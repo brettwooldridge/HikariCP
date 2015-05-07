@@ -22,7 +22,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.pool.LeakTask;
 import com.zaxxer.hikari.pool.PoolBagEntry;
 
@@ -42,12 +41,12 @@ public final class ProxyFactory
    /**
     * Create a proxy for the specified {@link Connection} instance.
     *
-    * @param pool the {@link HikariPool} that will own this proxy
     * @param bagEntry the PoolBagEntry entry for this proxy
     * @param leakTask a leak detetection task
+    * @param now current timestamp in milliseconds
     * @return a proxy that wraps the specified {@link Connection}
     */
-   public static IHikariConnectionProxy getProxyConnection(final HikariPool pool, final PoolBagEntry bagEntry, final LeakTask leakTask, final long now)
+   public static IHikariConnectionProxy getProxyConnection(final PoolBagEntry bagEntry, final LeakTask leakTask, final long now)
    {
       // Body is injected by JavassistProxyFactory
       return null;
