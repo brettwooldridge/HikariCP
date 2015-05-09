@@ -49,6 +49,10 @@ public final class PoolUtilities
     */
    public void quietlyCloseConnection(final Connection connection, final String closureReason)
    {
+      if (connection == null) {
+         return;
+      }
+
       final String addendum = closureReason != null ? " (" + closureReason + ")" : "";
       try {
          LOGGER.debug("Closing connection {} in pool {}{}", connection, poolName, addendum);
