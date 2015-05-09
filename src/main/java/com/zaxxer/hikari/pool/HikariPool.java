@@ -68,7 +68,8 @@ import com.zaxxer.hikari.util.IBagStateListener;
 public class HikariPool implements HikariPoolMBean, IBagStateListener
 {
    protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
-   private static final long ALIVE_BYPASS_WINDOW = Long.getLong("com.zaxxer.hikari.aliveBypassWindow", 1000L);
+   private final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindow", TimeUnit.SECONDS.toMillis(1));
+   private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30));
 
    protected static final int POOL_NORMAL = 0;
    protected static final int POOL_SUSPENDED = 1;
@@ -141,10 +142,9 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "HikariCP connection filler (pool " + config.getPoolName() + ")", config.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
       this.closeConnectionExecutor = createThreadPoolExecutor(4, "HikariCP connection closer (pool " + config.getPoolName() + ")", config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
 
-      long delayPeriod = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30L));
       ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari Housekeeping Timer (pool " + config.getPoolName() + ")", true);
       this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
-      this.houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), delayPeriod, delayPeriod, TimeUnit.MILLISECONDS);
+      this.houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), HOUSEKEEPING_PERIOD_MS, HOUSEKEEPING_PERIOD_MS, TimeUnit.MILLISECONDS);
       this.houseKeepingExecutorService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
       this.houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
       this.leakTask = (config.getLeakDetectionThreshold() == 0) ? LeakTask.NO_LEAK : new LeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
@@ -187,7 +187,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
             }
 
             final long now = System.currentTimeMillis();
-            if (bagEntry.evicted || (now - bagEntry.lastAccess > ALIVE_BYPASS_WINDOW && !isConnectionAlive(bagEntry.connection))) {
+            if (bagEntry.evicted || (now - bagEntry.lastAccess > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(bagEntry.connection))) {
                closeConnection(bagEntry, "connection evicted or dead"); // Throw away the dead connection and try again
                timeout = hardTimeout - elapsedTimeMs(start);
             }
@@ -635,22 +635,33 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    private class HouseKeeper implements Runnable
    {
+      private volatile long previous = System.currentTimeMillis();
+
       @Override
       public void run()
       {
-         logPoolState("Before cleanup ");
-
          connectionTimeout = configuration.getConnectionTimeout(); // refresh member in case it changed
 
          final long now = System.currentTimeMillis();
          final long idleTimeout = configuration.getIdleTimeout();
 
+         // Detect retrograde time as well as forward leaps of unacceptable duration
+         if (now < previous || now > previous + (2 * HOUSEKEEPING_PERIOD_MS)) {
+            LOGGER.warn("Unusual system clock change detected, soft-evicting connections from pool.");
+            softEvictConnections();
+            fillPool();
+            return;
+         }
+
+         previous = now;
+
+         logPoolState("Before cleanup ");
          for (PoolBagEntry bagEntry : connectionBag.values(STATE_NOT_IN_USE)) {
             if (connectionBag.reserve(bagEntry)) {
                if (bagEntry.evicted) {
                   closeConnection(bagEntry, "connection evicted");
                }
-               else if (idleTimeout > 0L && now > bagEntry.lastAccess + idleTimeout) {
+               else if (idleTimeout > 0L && now - bagEntry.lastAccess > idleTimeout) {
                   closeConnection(bagEntry, "connection passed idleTimeout");
                }
                else {
