@@ -61,7 +61,7 @@ public final class CodahaleHealthChecker
       final MetricRegistry metricRegistry = (MetricRegistry) hikariConfig.getMetricRegistry();
 
       final long checkTimeoutMs = Long.parseLong(healthCheckProperties.getProperty("connectivityCheckTimeoutMs", String.valueOf(hikariConfig.getConnectionTimeout())));
-      registry.register(MetricRegistry.name(hikariConfig.getPoolName(), "pool", "ConnectivityCheck"), new ConnectivityHealthCheck(pool, TimeUnit.MILLISECONDS.toNanos(checkTimeoutMs)));
+      registry.register(MetricRegistry.name(hikariConfig.getPoolName(), "pool", "ConnectivityCheck"), new ConnectivityHealthCheck(pool, checkTimeoutMs));
 
       final long expected99thPercentile = Long.parseLong(healthCheckProperties.getProperty("expected99thPercentileMs", "0"));
       if (metricRegistry != null && expected99thPercentile > 0) {
@@ -88,12 +88,12 @@ public final class CodahaleHealthChecker
    private static class ConnectivityHealthCheck extends HealthCheck
    {
       private final HikariPool pool;
-      private final long checkTimeoutNano;
+      private final long checkTimeoutMs;
 
       ConnectivityHealthCheck(final HikariPool pool, final long checkTimeoutMs)
       {
          this.pool = pool;
-         this.checkTimeoutNano = (checkTimeoutMs > 0 && checkTimeoutMs != Integer.MAX_VALUE ? checkTimeoutMs : TimeUnit.SECONDS.toNanos(10));
+         this.checkTimeoutMs = (checkTimeoutMs > 0 && checkTimeoutMs != Integer.MAX_VALUE ? checkTimeoutMs : TimeUnit.SECONDS.toMillis(10));
       }
 
       /** {@inheritDoc} */
@@ -102,7 +102,7 @@ public final class CodahaleHealthChecker
       {
          Connection connection = null;
          try {
-            connection = pool.getConnection(checkTimeoutNano);
+            connection = pool.getConnection(checkTimeoutMs);
             return Result.healthy();
          }
          catch (SQLException e) {
