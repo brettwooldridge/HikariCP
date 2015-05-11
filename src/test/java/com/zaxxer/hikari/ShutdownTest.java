@@ -171,7 +171,7 @@ public class ShutdownTest
       ds.close();
 
       long startNanos = System.nanoTime();
-      while (UtilityElf.elapsedTimeMs(startNanos) < TimeUnit.SECONDS.toMillis(5) && threadCount() > 0) {
+      while (UtilityElf.elapsedNanos(startNanos) < TimeUnit.SECONDS.toMillis(5) && threadCount() > 0) {
          UtilityElf.quietlySleep(250);
       }
 

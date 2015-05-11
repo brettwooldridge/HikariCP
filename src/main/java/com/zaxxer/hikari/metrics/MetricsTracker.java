@@ -35,7 +35,7 @@ public class MetricsTracker implements AutoCloseable
       this.pool = pool;
    }
 
-   public MetricsContext recordConnectionRequest(long requestTimeNano)
+   public MetricsContext recordConnectionRequest(long requestTimeMillis)
    {
       return NO_CONTEXT;
    }
@@ -67,9 +67,9 @@ public class MetricsTracker implements AutoCloseable
        * Set the lastOpenTime on the provided bag entry.
        *
        * @param bagEntry the bag entry
-       * @param nowNanos the last open timestamp from {@link System#nanoTime()}
+       * @param nowMillis the last open timestamp from {@link System#currentTimeMillis()}
        */
-      public void setConnectionLastOpen(final PoolBagEntry bagEntry, final long nowNanos)
+      public void setConnectionLastOpen(final PoolBagEntry bagEntry, final long nowMillis)
       {
          // do nothing
       }

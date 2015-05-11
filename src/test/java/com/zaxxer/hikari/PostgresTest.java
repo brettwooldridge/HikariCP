@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 
 import com.zaxxer.hikari.util.UtilityElf;
 

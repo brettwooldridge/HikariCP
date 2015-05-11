@@ -45,12 +45,12 @@ public final class UtilityElf
    /**
     * Get the elapsed time in millisecond between the specified start time and now.
     *
-    * @param startNano the start time
+    * @param startMillis the start time
     * @return the elapsed milliseconds
     */
-   public static long elapsedTimeMs(final long startNano)
+   public static long elapsedTimeMs(final long startMillis)
    {
-      return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNano);
+      return System.currentTimeMillis() - startMillis;
    }
 
    /**

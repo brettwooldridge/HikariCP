@@ -48,10 +48,10 @@ public class TestConnectionCloseBlocking {
          startNanos = System.nanoTime();
          connection = ds.getConnection(); // on physical connection close we sleep 2 seconds
          Assert.assertTrue("Waited longer than timeout",
-               (UtilityElf.elapsedTimeMs(startNanos) < config.getConnectionTimeout()));
+               (UtilityElf.elapsedNanos(startNanos) < config.getConnectionTimeout()));
       } catch (SQLException e) {
          Assert.assertTrue("getConnection failed because close connection took longer than timeout",
-               (UtilityElf.elapsedTimeMs(startNanos) < config.getConnectionTimeout()));
+               (UtilityElf.elapsedNanos(startNanos) < config.getConnectionTimeout()));
       } finally {
          shouldSleep = false;
          ds.close();
