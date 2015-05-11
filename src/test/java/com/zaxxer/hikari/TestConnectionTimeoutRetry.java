@@ -21,27 +21,24 @@ public class TestConnectionTimeoutRetry
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(1);
       config.setConnectionTimeout(2800);
+      config.setValidationTimeout(2800);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      HikariDataSource ds = new HikariDataSource(config);
-
-      StubDataSource stubDataSource = ds.unwrap(StubDataSource.class);
-      stubDataSource.setThrowException(new SQLException("Connection refused"));
-
-      long start = System.currentTimeMillis();
-      try {
-         Connection connection = ds.getConnection();
-         connection.close();
-         Assert.fail("Should not have been able to get a connection.");
-      }
-      catch (SQLException e) {
-         long elapsed = System.currentTimeMillis() - start;
-         long timeout = config.getConnectionTimeout();
-         Assert.assertTrue("Didn't wait long enough for timeout", (elapsed >= timeout));
-      }
-      finally {
-         ds.close();
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         StubDataSource stubDataSource = ds.unwrap(StubDataSource.class);
+         stubDataSource.setThrowException(new SQLException("Connection refused"));
+   
+         long start = System.currentTimeMillis();
+         try (Connection connection = ds.getConnection()) {
+            connection.close();
+            Assert.fail("Should not have been able to get a connection.");
+         }
+         catch (SQLException e) {
+            long elapsed = System.currentTimeMillis() - start;
+            long timeout = config.getConnectionTimeout();
+            Assert.assertTrue("Didn't wait long enough for timeout", (elapsed >= timeout));
+         }
       }
    }
 
@@ -52,38 +49,38 @@ public class TestConnectionTimeoutRetry
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(1);
       config.setConnectionTimeout(2800);
+      config.setValidationTimeout(2800);
       config.setInitializationFailFast(true);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      HikariDataSource ds = new HikariDataSource(config);
-
-      final StubDataSource stubDataSource = ds.unwrap(StubDataSource.class);
-      stubDataSource.setThrowException(new SQLException("Connection refused"));
-
-      ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-      scheduler.schedule(new Runnable() {
-         public void run()
-         {
-            stubDataSource.setThrowException(null);
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         final StubDataSource stubDataSource = ds.unwrap(StubDataSource.class);
+         stubDataSource.setThrowException(new SQLException("Connection refused"));
+   
+         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+         scheduler.schedule(new Runnable() {
+            public void run()
+            {
+               stubDataSource.setThrowException(null);
+            }
+         }, 300, TimeUnit.MILLISECONDS);
+   
+         long start = System.currentTimeMillis();
+         try {
+            Connection connection = ds.getConnection();
+            connection.close();
+   
+            long elapsed = System.currentTimeMillis() - start;
+            Assert.assertTrue("Connection returned too quickly, something is wrong.", elapsed > 250);
+            Assert.assertTrue("Waited too long to get a connection.", elapsed < config.getConnectionTimeout());
          }
-      }, 300, TimeUnit.MILLISECONDS);
-
-      long start = System.currentTimeMillis();
-      try {
-         Connection connection = ds.getConnection();
-         connection.close();
-
-         long elapsed = System.currentTimeMillis() - start;
-         Assert.assertTrue("Connection returned too quickly, something is wrong.", elapsed > 250);
-         Assert.assertTrue("Waited too long to get a connection.", elapsed < config.getConnectionTimeout());
-      }
-      catch (SQLException e) {
-         Assert.fail("Should not have timed out: " + e.getMessage());
-      }
-      finally {
-         scheduler.shutdownNow();
-         ds.close();
+         catch (SQLException e) {
+            Assert.fail("Should not have timed out: " + e.getMessage());
+         }
+         finally {
+            scheduler.shutdownNow();
+         }
       }
    }
 
@@ -94,43 +91,43 @@ public class TestConnectionTimeoutRetry
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(2);
       config.setConnectionTimeout(2800);
+      config.setValidationTimeout(2800);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      HikariDataSource ds = new HikariDataSource(config);
-
-      final Connection connection1 = ds.getConnection();
-      final Connection connection2 = ds.getConnection();
-      Assert.assertNotNull(connection1);
-      Assert.assertNotNull(connection2);
-
-      ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
-      scheduler.schedule(new Runnable() {
-         public void run()
-         {
-            try {
-               connection1.close();
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         final Connection connection1 = ds.getConnection();
+         final Connection connection2 = ds.getConnection();
+         Assert.assertNotNull(connection1);
+         Assert.assertNotNull(connection2);
+   
+         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+         scheduler.schedule(new Runnable() {
+            public void run()
+            {
+               try {
+                  connection1.close();
+               }
+               catch (Exception e) {
+                  e.printStackTrace(System.err);
+               }
             }
-            catch (Exception e) {
-               e.printStackTrace(System.err);
-            }
+         }, 800, TimeUnit.MILLISECONDS);
+   
+         long start = System.currentTimeMillis();
+         try {
+            Connection connection3 = ds.getConnection();
+            connection3.close();
+   
+            long elapsed = System.currentTimeMillis() - start;
+            Assert.assertTrue("Waited too long to get a connection.", (elapsed >= 700) && (elapsed < 950));
          }
-      }, 800, TimeUnit.MILLISECONDS);
-
-      long start = System.currentTimeMillis();
-      try {
-         Connection connection3 = ds.getConnection();
-         connection3.close();
-
-         long elapsed = System.currentTimeMillis() - start;
-         Assert.assertTrue("Waited too long to get a connection.", (elapsed >= 700) && (elapsed < 950));
-      }
-      catch (SQLException e) {
-         Assert.fail("Should not have timed out.");
-      }
-      finally {
-         scheduler.shutdownNow();
-         ds.close();
+         catch (SQLException e) {
+            Assert.fail("Should not have timed out.");
+         }
+         finally {
+            scheduler.shutdownNow();
+         }
       }
    }
 
@@ -141,26 +138,24 @@ public class TestConnectionTimeoutRetry
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(1);
       config.setConnectionTimeout(1000);
+      config.setValidationTimeout(1000);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      HikariDataSource ds = new HikariDataSource(config);
-
-      StubDataSource stubDataSource = ds.unwrap(StubDataSource.class);
-      stubDataSource.setThrowException(new SQLException("Connection refused"));
-
-      long start = System.currentTimeMillis();
-      try {
-         Connection connection = ds.getConnection();
-         connection.close();
-         Assert.fail("Should not have been able to get a connection.");
-      }
-      catch (SQLException e) {
-         long elapsed = System.currentTimeMillis() - start;
-         Assert.assertTrue("Didn't wait long enough for timeout", (elapsed >= config.getConnectionTimeout()));
-      }
-      finally {
-         ds.close();
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         StubDataSource stubDataSource = ds.unwrap(StubDataSource.class);
+         stubDataSource.setThrowException(new SQLException("Connection refused"));
+   
+         long start = System.currentTimeMillis();
+         try {
+            Connection connection = ds.getConnection();
+            connection.close();
+            Assert.fail("Should not have been able to get a connection.");
+         }
+         catch (SQLException e) {
+            long elapsed = System.currentTimeMillis() - start;
+            Assert.assertTrue("Didn't wait long enough for timeout", (elapsed >= config.getConnectionTimeout()));
+         }
       }
    }
 
@@ -171,44 +166,44 @@ public class TestConnectionTimeoutRetry
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(2);
       config.setConnectionTimeout(1000);
+      config.setValidationTimeout(1000);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      HikariDataSource ds = new HikariDataSource(config);
-
-      final Connection connection1 = ds.getConnection();
-
-      long start = System.currentTimeMillis();
-
-      ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
-      scheduler.schedule(new Runnable() {
-         public void run()
-         {
-            try {
-               connection1.close();
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         final Connection connection1 = ds.getConnection();
+   
+         long start = System.currentTimeMillis();
+   
+         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+         scheduler.schedule(new Runnable() {
+            public void run()
+            {
+               try {
+                  connection1.close();
+               }
+               catch (Exception e) {
+                  e.printStackTrace(System.err);
+               }
             }
-            catch (Exception e) {
-               e.printStackTrace(System.err);
-            }
+         }, 250, TimeUnit.MILLISECONDS);
+   
+         StubDataSource stubDataSource = ds.unwrap(StubDataSource.class);
+         stubDataSource.setThrowException(new SQLException("Connection refused"));
+   
+         try {
+            Connection connection2 = ds.getConnection();
+            connection2.close();
+   
+            long elapsed = System.currentTimeMillis() - start;
+            Assert.assertTrue("Waited too long to get a connection.", (elapsed >= 250) && (elapsed < config.getConnectionTimeout()));
          }
-      }, 250, TimeUnit.MILLISECONDS);
-
-      StubDataSource stubDataSource = ds.unwrap(StubDataSource.class);
-      stubDataSource.setThrowException(new SQLException("Connection refused"));
-
-      try {
-         Connection connection2 = ds.getConnection();
-         connection2.close();
-
-         long elapsed = System.currentTimeMillis() - start;
-         Assert.assertTrue("Waited too long to get a connection.", (elapsed >= 250) && (elapsed < config.getConnectionTimeout()));
-      }
-      catch (SQLException e) {
-         Assert.fail("Should not have timed out.");
-      }
-      finally {
-         scheduler.shutdownNow();
-         ds.close();
+         catch (SQLException e) {
+            Assert.fail("Should not have timed out.");
+         }
+         finally {
+            scheduler.shutdownNow();
+         }
       }
    }
 
@@ -221,14 +216,13 @@ public class TestConnectionTimeoutRetry
       config.setMinimumIdle(5);
       config.setMaximumPoolSize(10);
       config.setConnectionTimeout(1000);
+      config.setValidationTimeout(1000);
       config.setConnectionTestQuery("VALUES 2");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "500");
 
-      HikariDataSource ds = new HikariDataSource(config);
-
-      try {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
          Connection connection1 = ds.getConnection();
          Connection connection2 = ds.getConnection();
          Connection connection3 = ds.getConnection();
@@ -255,7 +249,6 @@ public class TestConnectionTimeoutRetry
       }
       finally {
          System.getProperties().remove("com.zaxxer.hikari.housekeeping.periodMs");
-         ds.close();
       }
    }
 }

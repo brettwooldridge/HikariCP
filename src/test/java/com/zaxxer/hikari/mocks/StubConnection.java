@@ -34,7 +34,6 @@ import java.sql.Struct;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.zaxxer.hikari.util.UtilityElf;
@@ -61,7 +60,7 @@ public class StubConnection extends StubBaseConnection implements Connection
    public StubConnection() {
       count.incrementAndGet();
       if (slowCreate) {
-         UtilityElf.quietlySleep(1, TimeUnit.SECONDS);
+         UtilityElf.quietlySleep(1000);
       }
    }
 

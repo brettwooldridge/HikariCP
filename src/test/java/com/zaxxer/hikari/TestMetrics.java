@@ -90,7 +90,7 @@ public class TestMetrics
       HikariDataSource ds = new HikariDataSource(config);
       try {
          Connection connection = ds.getConnection();
-         UtilityElf.quietlySleepMs(250L);
+         UtilityElf.quietlySleep(250L);
          connection.close();
 
          Histogram histo = metricRegistry.getHistograms(new MetricFilter() {
@@ -128,7 +128,7 @@ public class TestMetrics
 
       HikariDataSource ds = new HikariDataSource(config);
       try {
-         UtilityElf.quietlySleepMs(TimeUnit.SECONDS.toMillis(2));
+         UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(2));
 
          Connection connection = ds.getConnection();
          connection.close();

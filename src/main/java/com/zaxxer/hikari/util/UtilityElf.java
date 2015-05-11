@@ -58,24 +58,14 @@ public final class UtilityElf
     *
     * @param millis the number of milliseconds to sleep
     */
-   public static void quietlySleep(final long ticks, final TimeUnit unit)
+   public static void quietlySleep(final long ticks)
    {
       try {
-         unit.sleep(ticks);
+         Thread.sleep(ticks);
       }
       catch (InterruptedException e) {
          // I said be quiet!
       }
-   }
-
-   /**
-    * Sleep and transform an InterruptedException into a RuntimeException.
-    *
-    * @param millis the number of milliseconds to sleep
-    */
-   public static void quietlySleepMs(final long millis)
-   {
-      quietlySleep(millis, TimeUnit.MILLISECONDS);
    }
 
    /**

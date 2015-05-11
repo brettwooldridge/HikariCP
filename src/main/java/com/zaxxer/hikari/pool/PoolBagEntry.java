@@ -16,11 +16,13 @@
 package com.zaxxer.hikari.pool;
 
 import java.sql.Connection;
+import java.sql.Statement;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.zaxxer.hikari.util.FastList;
 import com.zaxxer.hikari.util.IConcurrentBagEntry;
 
 /**
@@ -31,10 +33,12 @@ import com.zaxxer.hikari.util.IConcurrentBagEntry;
 public final class PoolBagEntry implements IConcurrentBagEntry
 {
    public final AtomicInteger state = new AtomicInteger();
+   public final FastList<Statement> openStatements;
+   public final HikariPool parentPool;
 
    public Connection connection;
-   public long lastAccessNano;
-   public long lastOpenNano;
+   public long lastAccess;
+   public long lastOpenTime;
    public volatile boolean evicted;
    public volatile boolean aborted;
    
@@ -43,9 +47,11 @@ public final class PoolBagEntry implements IConcurrentBagEntry
 
    public PoolBagEntry(final Connection connection, final HikariPool pool) {
       this.connection = connection;
-      this.lastAccessNano = System.nanoTime();
+      this.parentPool = pool;
+      this.lastAccess = System.currentTimeMillis();
+      this.openStatements = new FastList<Statement>(Statement.class, 16);
 
-      final long variance = pool.configuration.getMaxLifetime() > 300_000 ? ThreadLocalRandom.current().nextLong(100_000) : 0;
+      final long variance = pool.configuration.getMaxLifetime() > 60_000 ? ThreadLocalRandom.current().nextLong(10_000) : 0;
       final long maxLifetime = pool.configuration.getMaxLifetime() - variance;
       if (maxLifetime > 0) {
          endOfLife = pool.houseKeepingExecutorService.schedule(new Runnable() {
@@ -84,8 +90,8 @@ public final class PoolBagEntry implements IConcurrentBagEntry
    public String toString()
    {
       return "Connection......" + connection + "\n"
-           + "  Last  access.." + lastAccessNano + "\n"
-           + "  Last open....." + lastOpenNano + "\n"
+           + "  Last  access.." + lastAccess + "\n"
+           + "  Last open....." + lastOpenTime + "\n"
            + "  State........." + stateToString();
    }
 
