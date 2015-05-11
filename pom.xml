@@ -47,7 +47,7 @@
       <pax.exam.version>4.5.0</pax.exam.version>
       <pax.url.version>2.4.1</pax.url.version>
       <slf4j.version>1.7.12</slf4j.version>
-      <felix.bundle.plugin.version>2.5.3</felix.bundle.plugin.version>
+      <felix.bundle.plugin.version>2.5.4</felix.bundle.plugin.version>
       <felix.version>5.0.0</felix.version>
    </properties>
 
