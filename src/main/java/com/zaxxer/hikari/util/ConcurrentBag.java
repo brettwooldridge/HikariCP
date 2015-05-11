@@ -70,12 +70,12 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     */
    public ConcurrentBag(IBagStateListener listener)
    {
-      this.sharedList = new CopyOnWriteArrayList<T>();
+      this.sharedList = new CopyOnWriteArrayList<>();
       this.synchronizer = new Synchronizer();
       this.sequence = new LongAdder();
       this.sequence.increment();
       this.listener = listener;
-      this.threadList = new ThreadLocal<ArrayList<WeakReference<IConcurrentBagEntry>>>();
+      this.threadList = new ThreadLocal<>();
    }
 
    /**
@@ -222,7 +222,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     */
    public List<T> values(final int state)
    {
-      final ArrayList<T> list = new ArrayList<T>(sharedList.size());
+      final ArrayList<T> list = new ArrayList<>(sharedList.size());
       if (state == STATE_IN_USE || state == STATE_NOT_IN_USE) {
          for (final T reference : sharedList) {
             if (reference.state().get() == state) {

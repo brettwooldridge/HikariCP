@@ -120,11 +120,11 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       this.poolUtils = new PoolUtilities(config);
       this.dataSource = poolUtils.initializeDataSource(config.getDataSourceClassName(), config.getDataSource(), config.getDataSourceProperties(), config.getDriverClassName(), config.getJdbcUrl(), username, password);
 
-      this.connectionBag = new ConcurrentBag<PoolBagEntry>(this);
+      this.connectionBag = new ConcurrentBag<>(this);
       this.totalConnections = new AtomicInteger();
       this.connectionTimeout = config.getConnectionTimeout();
       this.validationTimeout = config.getValidationTimeout();
-      this.lastConnectionFailure = new AtomicReference<Throwable>();
+      this.lastConnectionFailure = new AtomicReference<>();
 
       this.isReadOnly = config.isReadOnly();
       this.isAutoCommit = config.isAutoCommit();
@@ -354,7 +354,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    @Override
    public Future<Boolean> addBagItem()
    {
-      FutureTask<Boolean> future = new FutureTask<Boolean>(new Runnable() {
+      FutureTask<Boolean> future = new FutureTask<>(new Runnable() {
          @Override
          public void run()
          {
