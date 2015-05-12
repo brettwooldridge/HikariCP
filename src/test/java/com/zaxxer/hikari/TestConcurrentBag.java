@@ -18,9 +18,10 @@ package com.zaxxer.hikari;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -49,6 +50,7 @@ public class TestConcurrentBag
       config.setInitializationFailFast(true);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      config.setWeakThreadLocals(true);
 
       ds = new HikariDataSource(config);      
    }
@@ -66,9 +68,39 @@ public class TestConcurrentBag
          @Override
          public Future<Boolean> addBagItem()
          {
-            return CompletableFuture.completedFuture(true);
+            return new Future<Boolean>() {
+               @Override
+               public boolean isDone()
+               {
+                  return true;
+               }
+               
+               @Override
+               public boolean isCancelled()
+               {
+                  return false;
+               }
+               
+               @Override
+               public Boolean get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException
+               {
+                  return null;
+               }
+               
+               @Override
+               public Boolean get() throws InterruptedException, ExecutionException
+               {
+                  return true;
+               }
+               
+               @Override
+               public boolean cancel(boolean mayInterruptIfRunning)
+               {
+                  return false;
+               }
+            };
          }
-      });
+      }, false);
       Assert.assertEquals(0, bag.values(8).size());
 
       HikariPool pool = TestElf.getPool(ds);

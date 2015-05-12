@@ -120,7 +120,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       this.poolUtils = new PoolUtilities(config);
       this.dataSource = poolUtils.initializeDataSource(config.getDataSourceClassName(), config.getDataSource(), config.getDataSourceProperties(), config.getDriverClassName(), config.getJdbcUrl(), username, password);
 
-      this.connectionBag = new ConcurrentBag<>(this);
+      this.connectionBag = new ConcurrentBag<>(this, config.isWeakThreadLocals());
       this.totalConnections = new AtomicInteger();
       this.connectionTimeout = config.getConnectionTimeout();
       this.validationTimeout = config.getValidationTimeout();

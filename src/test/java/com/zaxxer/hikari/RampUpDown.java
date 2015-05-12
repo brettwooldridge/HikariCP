@@ -14,6 +14,7 @@ public class RampUpDown
         HikariConfig config = new HikariConfig();
         config.setMinimumIdle(5);
         config.setMaximumPoolSize(60);
+        config.setWeakThreadLocals(true);
         config.setInitializationFailFast(true);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");

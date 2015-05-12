@@ -83,12 +83,13 @@ public class HikariConfig implements HikariConfigMBean
    private boolean isIsolateInternalQueries;
    private boolean isRegisterMbeans;
    private boolean isAllowPoolSuspension;
+   private boolean isWeakThreadLocals;
    private DataSource dataSource;
    private Properties dataSourceProperties;
    private ThreadFactory threadFactory;
    private Object metricRegistry;
    private Object healthCheckRegistry;
-   private Properties healthCheckProperties; 
+   private Properties healthCheckProperties;
 
    static
    {
@@ -391,6 +392,28 @@ public class HikariConfig implements HikariConfigMBean
    public void setAllowPoolSuspension(boolean isAllowPoolSuspension)
    {
       this.isAllowPoolSuspension = isAllowPoolSuspension;
+   }
+
+   /**
+    * Get the pool ThreadLocal behavior, weak or strong references.
+    *
+    * @return true if weak reference ThreadLocals should be used
+    */
+   public boolean isWeakThreadLocals()
+   {
+      return isWeakThreadLocals;
+   }
+
+   /**
+    * Set whether or not the pool should use weak reference ThreadLocals
+    * to avoid possible memory leaks in containers that undeploy/redeploy
+    * pool instances.
+    *
+    * @param weakThreadLocals true if weak reference ThreadLocals should be used
+    */
+   public void setWeakThreadLocals(boolean weakThreadLocals)
+   {
+      this.isWeakThreadLocals = weakThreadLocals;
    }
 
    /**

@@ -20,6 +20,7 @@ import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_NOT_IN_USE;
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_REMOVED;
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_RESERVED;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -50,37 +51,47 @@ import org.slf4j.LoggerFactory;
  *
  * @param <T> the templated type to store in the bag
  */
+@SuppressWarnings("rawtypes")
 public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseable
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentBag.class);
 
-   protected final AbstractQueuedLongSynchronizer synchronizer;
-   protected final CopyOnWriteArrayList<T> sharedList;
+   private final AbstractQueuedLongSynchronizer synchronizer;
+   private final CopyOnWriteArrayList<T> sharedList;
+   private final boolean weakThreadLocal;
 
-   private final ThreadLocal<FastList<T>> threadList;
+   private final ThreadLocal<List> threadList;
    private final LongAdder sequence;
    private final IBagStateListener listener;
    private volatile boolean closed;
+
 
    /**
     * Construct a ConcurrentBag with the specified listener.
     *
     * @param listener the IBagStateListener to attach to this bag
     */
-   public ConcurrentBag(IBagStateListener listener)
+   public ConcurrentBag(IBagStateListener listener, boolean weakThreadLocal)
    {
+      this.listener = listener;
+      this.weakThreadLocal = weakThreadLocal;
+
       this.sharedList = new CopyOnWriteArrayList<>();
       this.synchronizer = new Synchronizer();
       this.sequence = new LongAdder();
       this.sequence.increment();
-      this.listener = listener;
-      this.threadList = new ThreadLocal<FastList<T>>() {
-         @Override
-         protected FastList<T> initialValue()
-         {
-            return new FastList<>(IConcurrentBagEntry.class, 16);
-         }
-      };
+      if (weakThreadLocal) {
+         this.threadList = new ThreadLocal<>(); 
+      }
+      else {
+         this.threadList = new ThreadLocal<List>() {
+            @Override
+            protected List initialValue()
+            {
+               return new FastList<>(IConcurrentBagEntry.class, 16);
+            }
+         };
+      }
    }
 
    /**
@@ -92,14 +103,29 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     * @return a borrowed instance from the bag or null if a timeout occurs
     * @throws InterruptedException if interrupted while waiting
     */
+   @SuppressWarnings("unchecked")
    public T borrow(long timeout, final TimeUnit timeUnit) throws InterruptedException
    {
       // Try the thread-local list first, if there are no blocked threads waiting already
       if (!synchronizer.hasQueuedThreads()) {
-         final FastList<T> list = threadList.get();
-         final int size = list.size();
-         for (int i = 0; i < size; i++) {
-            final T bagEntry = list.removeLast();
+         List<?> list = threadList.get();
+         if (weakThreadLocal && list == null) {
+            list = new ArrayList<>(16);
+            threadList.set(list);
+         }
+
+         for (int i = list.size() - 1; i >= 0; i--) {
+            final T bagEntry;
+            if (weakThreadLocal) {
+               bagEntry = (T) ((WeakReference) list.remove(i)).get(); 
+               if (bagEntry == null) {
+                  continue;
+               }
+            }
+            else {
+               bagEntry = (T) list.remove(i);
+            }
+
             if (bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
                return bagEntry;
             }
@@ -146,10 +172,14 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     * @throws NullPointerException if value is null
     * @throws IllegalStateException if the requited value was not borrowed from the bag
     */
+   @SuppressWarnings("unchecked")
    public void requite(final T bagEntry)
    {
       if (bagEntry.state().compareAndSet(STATE_IN_USE, STATE_NOT_IN_USE)) {
-         threadList.get().add(bagEntry);
+         final List threadLocalList = threadList.get();
+         if (threadLocalList != null) {
+            threadLocalList.add((weakThreadLocal ? new WeakReference<>(bagEntry) : bagEntry));
+         }
 
          sequence.increment();
          synchronizer.releaseShared(1);

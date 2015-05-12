@@ -17,14 +17,26 @@
 package com.zaxxer.hikari.util;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Spliterator;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 /**
  * Fast list without range checking.
  *
  * @author Brett Wooldridge
  */
-public final class FastList<T>
+public final class FastList<T> extends ArrayList<T>
 {
+   private static final long serialVersionUID = -4598088075242913858L;
+
    private final Class<?> clazz;
    private T[] elementData;
    private int size;
@@ -57,7 +69,8 @@ public final class FastList<T>
     *
     * @param element the element to add
     */
-   public void add(T element)
+   @Override
+   public boolean add(T element)
    {
       try {
          elementData[size++] = element;
@@ -72,6 +85,8 @@ public final class FastList<T>
          newElementData[size - 1] = element;
          elementData = newElementData;
       }
+
+      return true;
    }
 
    /**
@@ -80,6 +95,7 @@ public final class FastList<T>
     * @param index the index of the element to get
     * @return the element, or ArrayIndexOutOfBounds is thrown if the index is invalid
     */
+   @Override
    public T get(int index)
    {
       return elementData[index];
@@ -106,7 +122,8 @@ public final class FastList<T>
     *
     * @param element the element to remove
     */
-   public void remove(T element)
+   @Override
+   public boolean remove(Object element)
    {
       for (int index = size - 1; index >= 0; index--) {
          if (element == elementData[index]) {
@@ -115,14 +132,17 @@ public final class FastList<T>
                System.arraycopy(elementData, index + 1, elementData, index, numMoved);
             }
             elementData[--size] = null;
-            break;
+            return true;
          }
       }
+
+      return false;
    }
 
    /**
     * Clear the FastList.
     */
+   @Override
    public void clear()
    {
       for (int i = 0; i < size; i++) {
@@ -137,8 +157,204 @@ public final class FastList<T>
     *
     * @return the number of current elements
     */
+   @Override
    public int size()
    {
       return size;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public boolean isEmpty()
+   {
+      return size == 0;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public T set(int index, T element)
+   {
+      T old = elementData[index];
+      elementData[index] = element;
+      return old;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public T remove(int index)
+   {
+      final T old = elementData[index];
+
+      final int numMoved = size - index - 1;
+      if (numMoved > 0) {
+         System.arraycopy(elementData, index + 1, elementData, index, numMoved);
+      }
+
+      elementData[--size] = null;
+
+      return old;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public boolean contains(Object o)
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public Iterator<T> iterator()
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public Object[] toArray()
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public <E> E[] toArray(E[] a)
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public boolean containsAll(Collection<?> c)
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public boolean addAll(Collection<? extends T> c)
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public boolean addAll(int index, Collection<? extends T> c)
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public boolean removeAll(Collection<?> c)
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public boolean retainAll(Collection<?> c)
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public void add(int index, T element)
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public int indexOf(Object o)
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public int lastIndexOf(Object o)
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public ListIterator<T> listIterator()
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public ListIterator<T> listIterator(int index)
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public List<T> subList(int fromIndex, int toIndex)
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public void trimToSize()
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public void ensureCapacity(int minCapacity)
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public Object clone()
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   protected void removeRange(int fromIndex, int toIndex)
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   public void forEach(Consumer<? super T> action)
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   public Spliterator<T> spliterator()
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   public boolean removeIf(Predicate<? super T> filter)
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   public void replaceAll(UnaryOperator<T> operator)
+   {
+      throw new UnsupportedOperationException();
+   }
+
+   /** {@inheritDoc} */
+   public void sort(Comparator<? super T> c)
+   {
+      throw new UnsupportedOperationException();
    }
 }
