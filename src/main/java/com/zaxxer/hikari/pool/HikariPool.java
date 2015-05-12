@@ -238,15 +238,17 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       if (poolState == POOL_SHUTDOWN) {
          return;
       }
-      
+
       try {
+         poolState = POOL_SHUTDOWN;
+
          LOGGER.info("HikariCP pool {} is shutting down.", configuration.getPoolName());
 
          logPoolState("Before shutdown ");
          connectionBag.close();
          softEvictConnections();
          houseKeepingExecutorService.shutdown();
-         addConnectionExecutor.shutdown();
+         addConnectionExecutor.shutdownNow();
          houseKeepingExecutorService.awaitTermination(5L, TimeUnit.SECONDS);
          addConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
 
@@ -272,8 +274,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
          unregisterMBeans(configuration, this);
          metricsTracker.close();
-
-         poolState = POOL_SHUTDOWN;
       }
    }
 
