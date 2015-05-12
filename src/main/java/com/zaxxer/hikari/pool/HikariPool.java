@@ -513,7 +513,9 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       catch (Exception e) {
          totalConnections.decrementAndGet(); // We failed, so undo speculative increment of totalConnections
          lastConnectionFailure.set(e);
-         LOGGER.debug("Connection attempt to database in pool {} failed: {}", configuration.getPoolName(), e.getMessage(), e);
+         if (poolState == POOL_NORMAL) {
+            LOGGER.debug("Connection attempt to database in pool {} failed: {}", configuration.getPoolName(), e.getMessage(), e);
+         }
          poolUtils.quietlyCloseConnection(connection, "exception during connection creation");
          return false;
       }
