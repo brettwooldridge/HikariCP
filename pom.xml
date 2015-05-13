@@ -42,7 +42,7 @@
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <felix.version>4.6.0</felix.version>
       <hibernate.version>4.3.8.Final</hibernate.version>
-      <javassist.version>3.19.0-GA</javassist.version>
+      <javassist.version>3.18.2-GA</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>
       <metrics.version>3.1.1</metrics.version>
       <mockito.version>1.10.19</mockito.version>
