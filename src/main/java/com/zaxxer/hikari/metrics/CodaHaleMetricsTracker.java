@@ -16,8 +16,6 @@
 
 package com.zaxxer.hikari.metrics;
 
-import static com.zaxxer.hikari.util.UtilityElf.elapsedTimeMs;
-
 import java.util.concurrent.TimeUnit;
 
 import com.codahale.metrics.CachedGauge;
@@ -26,9 +24,12 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.pool.PoolBagEntry;
+import com.zaxxer.hikari.util.ClockSource;
 
 public final class CodaHaleMetricsTracker extends MetricsTracker
 {
+   private static final ClockSource clockSource = ClockSource.INSTANCE;
+
    private final Timer connectionObtainTimer;
    private final Histogram connectionUsage;
    private final MetricRegistry registry;
@@ -93,7 +94,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
 
    /** {@inheritDoc} */
    @Override
-   public Context recordConnectionRequest(final long requestTime)
+   public Context recordConnectionRequest()
    {
       return new Context(connectionObtainTimer);
    }
@@ -102,7 +103,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    @Override
    public void recordConnectionUsage(final PoolBagEntry bagEntry)
    {
-      connectionUsage.update(elapsedTimeMs(bagEntry.lastOpenTime));
+      connectionUsage.update(clockSource.elapsedTimeMs(bagEntry.lastOpenTime));
    }
 
    public Timer getConnectionAcquisitionTimer()
@@ -132,9 +133,9 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
 
       /** {@inheritDoc} */
       @Override
-      public void setConnectionLastOpen(final PoolBagEntry bagEntry, final long nowMillis)
+      public void setConnectionLastOpen(final PoolBagEntry bagEntry, final long now)
       {
-         bagEntry.lastOpenTime = nowMillis;
+         bagEntry.lastOpenTime = now;
       }
    }
 }

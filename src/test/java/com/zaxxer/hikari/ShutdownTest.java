@@ -29,6 +29,7 @@ import org.junit.Test;
 import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.pool.PoolUtilities;
+import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.UtilityElf;
 
 /**
@@ -170,8 +171,8 @@ public class ShutdownTest
 
       ds.close();
 
-      long startNanos = System.nanoTime();
-      while (UtilityElf.elapsedNanos(startNanos) < TimeUnit.SECONDS.toMillis(5) && threadCount() > 0) {
+      long startTime = ClockSource.INSTANCE.currentTime();
+      while (ClockSource.INSTANCE.elapsedTimeMs(startTime) < TimeUnit.SECONDS.toMillis(5) && threadCount() > 0) {
          UtilityElf.quietlySleep(250);
       }
 

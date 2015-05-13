@@ -22,7 +22,6 @@ import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_IN_USE;
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_NOT_IN_USE;
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_REMOVED;
 import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
-import static com.zaxxer.hikari.util.UtilityElf.elapsedTimeMs;
 import static com.zaxxer.hikari.util.UtilityElf.getTransactionIsolation;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 
@@ -55,6 +54,7 @@ import com.zaxxer.hikari.metrics.MetricsTracker.MetricsContext;
 import com.zaxxer.hikari.proxy.ConnectionProxy;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.ProxyFactory;
+import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.IBagStateListener;
@@ -68,6 +68,9 @@ import com.zaxxer.hikari.util.IBagStateListener;
 public class HikariPool implements HikariPoolMBean, IBagStateListener
 {
    protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
+
+   private static final ClockSource clockSource = ClockSource.INSTANCE;
+
    private final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindow", TimeUnit.SECONDS.toMillis(1));
    private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30));
 
@@ -176,8 +179,8 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    {
       suspendResumeLock.acquire();
       long timeout = hardTimeout;
-      final long start = System.currentTimeMillis();
-      final MetricsContext metricsContext = (isRecordMetrics ? metricsTracker.recordConnectionRequest(start) : MetricsTracker.NO_CONTEXT);
+      final long startTime = clockSource.currentTime();
+      final MetricsContext metricsContext = (isRecordMetrics ? metricsTracker.recordConnectionRequest() : MetricsTracker.NO_CONTEXT);
 
       try {
          do {
@@ -186,10 +189,10 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
                break; // We timed out... break and throw exception
             }
 
-            final long now = System.currentTimeMillis();
-            if (bagEntry.evicted || (now - bagEntry.lastAccess > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(bagEntry.connection))) {
+            final long now = clockSource.currentTime();
+            if (bagEntry.evicted || (clockSource.toMillis(now - bagEntry.lastAccess) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(bagEntry.connection))) {
                closeConnection(bagEntry, "connection evicted or dead"); // Throw away the dead connection and try again
-               timeout = hardTimeout - elapsedTimeMs(start);
+               timeout = hardTimeout - clockSource.elapsedTimeMs(startTime);
             }
             else {
                metricsContext.setConnectionLastOpen(bagEntry, now);
@@ -207,7 +210,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       }
 
       logPoolState("Timeout failure ");
-      throw new SQLTimeoutException(String.format("Timeout after %dms of waiting for a connection.", elapsedTimeMs(start)), lastConnectionFailure.getAndSet(null));
+      throw new SQLTimeoutException(String.format("Timeout after %dms of waiting for a connection.", clockSource.elapsedTimeMs(startTime), lastConnectionFailure.getAndSet(null)));
    }
 
    /**
@@ -255,12 +258,12 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          final ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin",
                                                                            configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
          try {
-            final long start = System.currentTimeMillis();
+            final long start = clockSource.currentTime();
             do {
                softEvictConnections();
                abortActiveConnections(assassinExecutor);
             }
-            while (getTotalConnections() > 0 && elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5));
+            while (getTotalConnections() > 0 && clockSource.elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5));
          } finally {
             assassinExecutor.shutdown();
             assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
@@ -663,7 +666,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
                if (bagEntry.evicted) {
                   closeConnection(bagEntry, "connection evicted");
                }
-               else if (idleTimeout > 0L && now - bagEntry.lastAccess > idleTimeout) {
+               else if (idleTimeout > 0L && clockSource.elapsedTimeMs(bagEntry.lastAccess) > idleTimeout) {
                   closeConnection(bagEntry, "connection passed idleTimeout");
                }
                else {

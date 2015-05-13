@@ -22,6 +22,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.FastList;
 import com.zaxxer.hikari.util.IConcurrentBagEntry;
 
@@ -48,7 +49,7 @@ public final class PoolBagEntry implements IConcurrentBagEntry
    public PoolBagEntry(final Connection connection, final HikariPool pool) {
       this.connection = connection;
       this.parentPool = pool;
-      this.lastAccess = System.currentTimeMillis();
+      this.lastAccess = ClockSource.INSTANCE.currentTime();
       this.openStatements = new FastList<Statement>(Statement.class, 16);
 
       final long variance = pool.configuration.getMaxLifetime() > 60_000 ? ThreadLocalRandom.current().nextLong(10_000) : 0;

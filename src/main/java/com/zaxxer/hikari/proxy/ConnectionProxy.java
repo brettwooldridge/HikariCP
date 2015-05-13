@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.pool.LeakTask;
 import com.zaxxer.hikari.pool.PoolBagEntry;
+import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.FastList;
 
 /**
@@ -42,6 +43,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 {
    private static final Logger LOGGER;
    private static final Set<String> SQL_ERRORS;
+   private static final ClockSource clockSource = ClockSource.INSTANCE;
 
    protected Connection delegate;
 
@@ -165,7 +167,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          delegate.setCatalog(bagEntry.parentPool.catalog);
       }
 
-      lastAccess = System.currentTimeMillis();
+      lastAccess = clockSource.currentTime();
    }
 
    // **********************************************************************
@@ -193,7 +195,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
          try {
             if (isCommitStateDirty) {
-               lastAccess = System.currentTimeMillis();
+               lastAccess = clockSource.currentTime();
 
                if (!delegate.getAutoCommit()) {
                   delegate.rollback();
@@ -317,7 +319,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       delegate.commit();
       isCommitStateDirty = false;
-      lastAccess = System.currentTimeMillis();
+      lastAccess = clockSource.currentTime();
    }
 
    /** {@inheritDoc} */
@@ -326,7 +328,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       delegate.rollback();
       isCommitStateDirty = false;
-      lastAccess = System.currentTimeMillis();
+      lastAccess = clockSource.currentTime();
    }
 
    /** {@inheritDoc} */
@@ -335,7 +337,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       delegate.rollback(savepoint);
       isCommitStateDirty = false;
-      lastAccess = System.currentTimeMillis();
+      lastAccess = clockSource.currentTime();
    }
 
    /** {@inheritDoc} */
