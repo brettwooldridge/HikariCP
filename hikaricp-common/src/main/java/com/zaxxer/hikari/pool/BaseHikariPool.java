@@ -262,7 +262,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
          connectionBag.close();
          softEvictConnections();
          houseKeepingExecutorService.shutdown();
-         addConnectionExecutor.shutdown();
+         addConnectionExecutor.shutdownNow();
          houseKeepingExecutorService.awaitTermination(5L, TimeUnit.SECONDS);
          addConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
 
@@ -456,11 +456,13 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
          }
          catch (Exception e) {
             lastConnectionFailure.set(e);
+            if (poolState == POOL_RUNNING) {
+               LOGGER.debug("Connection attempt to database {} failed: {}", configuration.getPoolName(), e.getMessage(), e);
+            }
             poolUtils.quietlyCloseConnection(connection);
-            LOGGER.debug("Connection attempt to database {} failed: {}", configuration.getPoolName(), e.getMessage(), e);
          }
       }
-   
+
       totalConnections.decrementAndGet(); // We failed or pool is max, so undo speculative increment of totalConnections
       return false;
    }

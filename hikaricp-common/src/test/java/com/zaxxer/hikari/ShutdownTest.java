@@ -239,12 +239,35 @@ public class ShutdownTest
    }
 
    @Test
+   public void testShutdownDuringInit() throws Exception
+   {
+      final HikariConfig config = new HikariConfig();
+      config.setMinimumIdle(5);
+      config.setMaximumPoolSize(5);
+      config.setConnectionTimeout(1000);
+      config.setValidationTimeout(1000);
+      config.setInitializationFailFast(true);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      HikariDataSource ds = new HikariDataSource(config);
+      try {
+         StubConnection.slowCreate = true;
+         UtilityElf.quietlySleep(3000L);
+      }
+      finally {
+         ds.close();
+      }
+   }
+
+   @Test
    public void testThreadedShutdown() throws Exception
    {
       final HikariConfig config = new HikariConfig();
       config.setMinimumIdle(5);
       config.setMaximumPoolSize(5);
       config.setConnectionTimeout(1000);
+      config.setValidationTimeout(1000);
       config.setInitializationFailFast(true);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
