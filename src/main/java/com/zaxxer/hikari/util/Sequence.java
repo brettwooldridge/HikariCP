@@ -49,6 +49,10 @@ public interface Sequence
       public static Sequence create()
       {
          class Java7Sequence extends AtomicLong implements Sequence {
+            Java7Sequence() {
+               super(1);
+            }
+
             @Override
             public void increment() {
                this.incrementAndGet();
@@ -56,6 +60,10 @@ public interface Sequence
          }
 
          class Java8Sequence extends LongAdder implements Sequence {
+            public Java8Sequence() {
+               this.increment();
+            }
+
             @Override
             public long get() {
                return this.sum();
