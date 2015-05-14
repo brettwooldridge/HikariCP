@@ -86,6 +86,7 @@ public class TestJNDI
       }
    }
 
+   @SuppressWarnings("unchecked")
    private class BogusContext extends AbstractContext
    {
       @Override
