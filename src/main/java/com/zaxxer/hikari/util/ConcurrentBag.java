@@ -61,7 +61,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    private final boolean weakThreadLocal;
 
    private final ThreadLocal<List> threadList;
-   private final LongAdder sequence;
+   private final Sequence sequence;
    private final IBagStateListener listener;
    private volatile boolean closed;
 
@@ -78,8 +78,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
 
       this.sharedList = new CopyOnWriteArrayList<>();
       this.synchronizer = new Synchronizer();
-      this.sequence = new LongAdder();
-      this.sequence.increment();
+      this.sequence = Sequence.Factory.create();
       if (weakThreadLocal) {
          this.threadList = new ThreadLocal<>(); 
       }
@@ -141,13 +140,13 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       try {
          while (timeout > 1000L && synchronizer.tryAcquireSharedNanos(startSeq, timeout)) {
             do {
-               startSeq = sequence.sum();
+               startSeq = sequence.get();
                for (final T bagEntry : sharedList) {
                   if (bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
                      return bagEntry;
                   }
                }
-            } while (startSeq < sequence.sum());
+            } while (startSeq < sequence.get());
 
             if (addItemFuture == null || addItemFuture.isDone()) {
                addItemFuture = listener.addBagItem();
@@ -349,7 +348,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       @Override
       protected long tryAcquireShared(final long seq)
       {
-         return sequence.sum() - (seq + 1) < 0 ? -1L : 0L;
+         return sequence.get() - (seq + 1) < 0 ? -1L : 0L;
       }
 
       /** {@inheritDoc} */
