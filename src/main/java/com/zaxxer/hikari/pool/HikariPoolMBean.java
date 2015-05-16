@@ -17,7 +17,7 @@
 package com.zaxxer.hikari.pool;
 
 /**
- * The javax.management MBean for a Hikiri pool instance.
+ * The javax.management MBean for a Hikari pool instance.
  *
  * @author Brett Wooldridge
  */
