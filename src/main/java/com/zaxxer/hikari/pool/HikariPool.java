@@ -210,7 +210,13 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       }
 
       logPoolState("Timeout failure ");
-      throw new SQLTimeoutException(String.format("Timeout after %dms of waiting for a connection.", clockSource.elapsedTimeMs(startTime), lastConnectionFailure.getAndSet(null)));
+      final Throwable cause = lastConnectionFailure.getAndSet(null);
+      final SQLTimeoutException exception = new SQLTimeoutException(String.format("Timeout after %dms of waiting for a connection.", clockSource.elapsedTimeMs(startTime)));
+
+      if (cause != null) {
+         exception.initCause(cause);
+      }
+      throw exception;
    }
 
    /**
