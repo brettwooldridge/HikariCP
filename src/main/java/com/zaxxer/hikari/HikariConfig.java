@@ -805,7 +805,7 @@ public class HikariConfig implements HikariConfigMBean
    private void logConfiguration()
    {
       LOGGER.debug("HikariCP pool {} configuration:", poolName);
-      final Set<String> propertyNames = new TreeSet<String>(PropertyBeanSetter.getPropertyNames(HikariConfig.class));
+      final Set<String> propertyNames = new TreeSet<>(PropertyBeanSetter.getPropertyNames(HikariConfig.class));
       for (String prop : propertyNames) {
          try {
             Object value = PropertyBeanSetter.getProperty(prop, this);

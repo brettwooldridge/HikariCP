@@ -132,14 +132,14 @@ public final class JavassistProxyFactory
       targetCt.setModifiers(Modifier.FINAL);
 
       // Make a set of method signatures we inherit implementation for, so we don't generate delegates for these
-      Set<String> superSigs = new HashSet<String>();
+      Set<String> superSigs = new HashSet<>();
       for (CtMethod method : superClassCt.getMethods()) {
          if ((method.getModifiers() & Modifier.FINAL) == Modifier.FINAL) {
             superSigs.add(method.getName() + method.getSignature());
          }
       }
 
-      Set<String> methods = new HashSet<String>();
+      Set<String> methods = new HashSet<>();
       Set<Class<?>> interfaces = ClassLoaderUtils.getAllInterfaces(primaryInterface);
       for (Class<?> intf : interfaces) {
          CtClass intfCt = classPool.getCtClass(intf.getName());
@@ -218,7 +218,7 @@ public final class JavassistProxyFactory
 
    private boolean isDefaultMethod(Class<?> intf, CtClass intfCt, CtMethod intfMethod) throws Exception
    {
-      List<Class<?>> paramTypes = new ArrayList<Class<?>>();
+      List<Class<?>> paramTypes = new ArrayList<>();
 
       for (CtClass pt : intfMethod.getParameterTypes()) {
          paramTypes.add(toJavaClass(pt));

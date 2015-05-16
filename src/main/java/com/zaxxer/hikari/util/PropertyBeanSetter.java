@@ -74,7 +74,7 @@ public final class PropertyBeanSetter
     */
    public static Set<String> getPropertyNames(Class<?> targetClass)
    {
-      HashSet<String> set = new HashSet<String>();
+      HashSet<String> set = new HashSet<>();
       try {
          BeanInfo info = Introspector.getBeanInfo(targetClass);
          for (PropertyDescriptor descr : info.getPropertyDescriptors()) {

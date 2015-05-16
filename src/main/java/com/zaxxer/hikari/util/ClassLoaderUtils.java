@@ -29,7 +29,7 @@ public final class ClassLoaderUtils
 {
    public static Set<Class<?>> getAllInterfaces(Class<?> clazz)
    {
-      Set<Class<?>> interfaces = new HashSet<Class<?>>();
+      Set<Class<?>> interfaces = new HashSet<>();
       for (Class<?> intf : Arrays.asList(clazz.getInterfaces())) {
          if (intf.getInterfaces().length > 0) {
             interfaces.addAll(getAllInterfaces(intf));

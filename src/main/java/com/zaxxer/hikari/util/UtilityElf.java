@@ -98,7 +98,7 @@ public final class UtilityElf
          threadFactory = new DefaultThreadFactory(threadName, true);
       }
 
-      LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>(queueSize);
+      LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<>(queueSize);
       ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 5, TimeUnit.SECONDS, queue, threadFactory, policy);
       executor.allowCoreThreadTimeOut(true);
       return executor;
