@@ -163,7 +163,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
             return (T) dataSource;
          }
 
-         return (T) dataSource.unwrap(iface);
+         return dataSource.unwrap(iface);
       }
 
       throw new SQLException("Wrapped DataSource is not an instance of " + iface);
@@ -197,7 +197,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
             throw new IllegalStateException("MetricRegistry can only be set one time");
          }
          else {
-            pool.setMetricRegistry((MetricRegistry) super.getMetricRegistry());
+            pool.setMetricRegistry(super.getMetricRegistry());
          }
       }
    }
@@ -214,7 +214,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
             throw new IllegalStateException("HealthCheckRegistry can only be set one time");
          }
          else {
-            pool.setHealthCheckRegistry((HealthCheckRegistry) super.getHealthCheckRegistry());
+            pool.setHealthCheckRegistry(super.getHealthCheckRegistry());
          }
       }
    }

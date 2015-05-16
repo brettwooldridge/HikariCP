@@ -221,6 +221,6 @@ public abstract class StatementProxy implements Statement
    @SuppressWarnings("unchecked")
    public final <T> T unwrap(Class<T> iface) throws SQLException
    {
-      return iface.isInstance(delegate) ? (T) delegate : (T) delegate.unwrap(iface);
+      return iface.isInstance(delegate) ? (T) delegate : delegate.unwrap(iface);
    }
 }
