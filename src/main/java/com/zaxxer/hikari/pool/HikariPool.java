@@ -26,6 +26,7 @@ import static com.zaxxer.hikari.util.UtilityElf.getTransactionIsolation;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 import java.sql.Statement;
@@ -569,7 +570,8 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
          try (Statement statement = connection.createStatement()) {
             poolUtils.setQueryTimeout(statement, timeoutSec);
-            statement.executeQuery(configuration.getConnectionTestQuery());
+            ResultSet rs = statement.executeQuery(configuration.getConnectionTestQuery());
+            rs.close();
          }
 
          if (isIsolateInternalQueries && !isAutoCommit) {

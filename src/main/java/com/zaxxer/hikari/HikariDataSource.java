@@ -21,7 +21,6 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.sql.Wrapper;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.sql.DataSource;
@@ -159,13 +158,12 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       }
 
       if (pool != null) {
-         if (iface.isInstance(pool.getDataSource())) {
-            return (T) pool.getDataSource();
+         final DataSource dataSource = pool.getDataSource();
+         if (iface.isInstance(dataSource)) {
+            return (T) dataSource;
          }
 
-         if (pool.getDataSource() instanceof Wrapper) {
-            return (T) pool.getDataSource().unwrap(iface);
-         }
+         return (T) dataSource.unwrap(iface);
       }
 
       throw new SQLException("Wrapped DataSource is not an instance of " + iface);
@@ -180,13 +178,8 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       }
       
       if (pool != null) {
-         if (iface.isInstance(pool.getDataSource())) {
-            return true;
-         }
-
-         if (pool.getDataSource() instanceof Wrapper) {
-            return pool.getDataSource().isWrapperFor(iface);
-         }
+         final DataSource dataSource = pool.getDataSource();
+         return iface.isInstance(dataSource) || dataSource.isWrapperFor(iface);
       }
 
       return false;
@@ -296,7 +289,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    /**
     * Shutdown the DataSource and its associated pool.
     *
-    * @deprecated The {@link #shutdown()} method has been deprecated, please use {@link #close()} instead
+    * @deprecated This method has been deprecated, please use {@link #close()} instead
     */
    @Deprecated
    public void shutdown()

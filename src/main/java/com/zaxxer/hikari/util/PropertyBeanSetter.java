@@ -23,6 +23,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -111,8 +112,8 @@ public final class PropertyBeanSetter
    public static Properties copyProperties(Properties props)
    {
       Properties copy = new Properties();
-      for (Object key : props.keySet()) {
-         copy.setProperty(key.toString(), props.get(key).toString());
+      for (Map.Entry<Object, Object> entry : props.entrySet()) {
+         copy.setProperty(entry.getKey().toString(), entry.getValue().toString());
       }
       return copy;
    }

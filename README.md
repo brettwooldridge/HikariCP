@@ -18,7 +18,7 @@ _Java 7 and Java 8 maven artifact:_
         <scope>compile</scope>
     </dependency>
 ```
-_Java 6 maven artifact (*maintence mode*):_
+_Java 6 maven artifact (*maintenance mode*):_
 ```xml
     <dependency>
         <groupId>com.zaxxer</groupId>

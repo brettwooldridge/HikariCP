@@ -169,7 +169,7 @@ Changes in 2.2.4
  * Improved connection timeout handling by using Connection.setNetworkTimeout()
    if available (JDBC 4.1).
 
- * drvierClassName is no longer a required property when jdbcUrl is specified.
+ * driverClassName is no longer a required property when jdbcUrl is specified.
    Omitting this property only works for compliant drivers.
 
  * Add auto-detection of support for Statement.setQueryTimeout() used in the
@@ -287,7 +287,7 @@ Changes in 1.3.6
  *) Include connection failure cause in calls to getConnection() that
     timeout (due to connection failure).  Removed chatty logging.
 
- *) Java8 Compatability fixes.
+ *) Java8 Compatibility fixes.
 
  *) Include pool name in logging messages.  Thanks for the contribution
     @jaredstehler.

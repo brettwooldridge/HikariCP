@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -51,7 +52,7 @@ public class HikariConfig implements HikariConfigMBean
    private static final long IDLE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
    private static final long MAX_LIFETIME = TimeUnit.MINUTES.toMillis(30);
 
-   private static int poolNumber;
+   private static final AtomicInteger POOL_NUMBER = new AtomicInteger();
    private static boolean unitTest;
 
    // Properties changeable at runtime through the MBean
@@ -85,11 +86,11 @@ public class HikariConfig implements HikariConfigMBean
    private boolean isAllowPoolSuspension;
    private boolean isWeakThreadLocals;
    private DataSource dataSource;
-   private Properties dataSourceProperties;
+   private final Properties dataSourceProperties;
    private ThreadFactory threadFactory;
    private Object metricRegistry;
    private Object healthCheckRegistry;
-   private Properties healthCheckProperties;
+   private final Properties healthCheckProperties;
 
    static
    {
@@ -729,7 +730,7 @@ public class HikariConfig implements HikariConfigMBean
       validateNumerics();
 
       if (poolName == null) {
-         poolName = "HikariPool-" + poolNumber++;
+         poolName = "HikariPool-" + POOL_NUMBER.getAndIncrement();
       }
 
       if (poolName.contains(":") && isRegisterMbeans) {
@@ -825,7 +826,7 @@ public class HikariConfig implements HikariConfigMBean
    protected void loadProperties(String propertyFileName)
    {
       final Path propFile = Paths.get(propertyFileName);
-      try (final InputStream is = Files.isRegularFile(propFile) ? Files.newInputStream(propFile) : this.getClass().getResourceAsStream(propertyFileName)) {
+      try (final InputStream is = Files.isRegularFile(propFile) ? Files.newInputStream(propFile) : HikariConfig.class.getResourceAsStream(propertyFileName)) {
          if (is != null) {
             Properties props = new Properties();
             props.load(is);
