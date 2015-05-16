@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 public final class DriverDataSource implements DataSource
 {
-   private final Logger LOGGER = LoggerFactory.getLogger(DriverDataSource.class);
+   private static final Logger LOGGER = LoggerFactory.getLogger(DriverDataSource.class);
 
    private final String jdbcUrl;
    private final Properties driverProperties;
