@@ -627,7 +627,8 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
             try {
                shutdown();
             }
-            catch (InterruptedException ignore) {
+            catch (Throwable ex) {
+               e.addSuppressed(ex);
             }
 
             throw new PoolInitializationException(e);
