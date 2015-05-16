@@ -73,10 +73,10 @@ public final class UtilityElf
 
          if (args.length > 0) {
             Constructor<?> constructor = loaded.getConstructor(argClasses);
-            return (T) constructor.newInstance(args);
+            return clazz.cast(constructor.newInstance(args));
          }
 
-         return (T) loaded.newInstance();
+         return clazz.cast(loaded.newInstance());
       }
       catch (Exception e) {
          throw new RuntimeException(e);
