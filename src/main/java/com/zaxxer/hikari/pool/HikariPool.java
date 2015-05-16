@@ -192,7 +192,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
             final long now = clockSource.currentTime();
             if (bagEntry.evicted || (clockSource.toMillis(now - bagEntry.lastAccess) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(bagEntry.connection))) {
                closeConnection(bagEntry, "connection evicted or dead"); // Throw away the dead connection and try again
-               timeout = hardTimeout - clockSource.elapsedTimeMs(startTime);
+               timeout = hardTimeout - clockSource.toMillis(now - startTime);
             }
             else {
                metricsContext.setConnectionLastOpen(bagEntry, now);
