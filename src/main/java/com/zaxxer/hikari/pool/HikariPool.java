@@ -178,11 +178,11 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    public final Connection getConnection(final long hardTimeout) throws SQLException
    {
       suspendResumeLock.acquire();
-      long timeout = hardTimeout;
       final long startTime = clockSource.currentTime();
-      final MetricsContext metricsContext = (isRecordMetrics ? metricsTracker.recordConnectionRequest() : MetricsTracker.NO_CONTEXT);
 
       try {
+         long timeout = hardTimeout;
+         final MetricsContext metricsContext = (isRecordMetrics ? metricsTracker.recordConnectionRequest() : MetricsTracker.NO_CONTEXT);
          do {
             final PoolBagEntry bagEntry = connectionBag.borrow(timeout, TimeUnit.MILLISECONDS);
             if (bagEntry == null) {
