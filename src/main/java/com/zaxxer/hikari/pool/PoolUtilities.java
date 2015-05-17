@@ -56,7 +56,7 @@ public final class PoolUtilities
       final String addendum = closureReason != null ? " (" + closureReason + ")" : "";
       try {
          LOGGER.debug("Closing connection {} in pool {}{}", connection, poolName, addendum);
-         if (connection != null && !connection.isClosed()) {
+         if (!connection.isClosed()) {
             try {
                setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(30));
             }

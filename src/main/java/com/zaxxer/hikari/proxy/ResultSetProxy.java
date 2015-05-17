@@ -18,7 +18,6 @@ package com.zaxxer.hikari.proxy;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Wrapper;
 
 /**
  * This is the proxy class for java.sql.ResultSet.
@@ -84,13 +83,6 @@ public abstract class ResultSetProxy implements ResultSet
    @SuppressWarnings("unchecked")
    public final <T> T unwrap(Class<T> iface) throws SQLException
    {
-      if (iface.isInstance(delegate)) {
-         return (T) delegate;
-      }
-      else if (delegate instanceof Wrapper) {
-          return (T) delegate.unwrap(iface);
-      }
-
-      throw new SQLException("Wrapped ResultSet is not an instance of " + iface);
-   }   
+      return iface.isInstance(delegate) ? (T) delegate : delegate.unwrap(iface);
+   }
 }

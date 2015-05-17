@@ -22,7 +22,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.sql.Statement;
-import java.sql.Wrapper;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -380,7 +379,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    @Override
    public final boolean isWrapperFor(Class<?> iface) throws SQLException
    {
-      return iface.isInstance(delegate) || (delegate instanceof Wrapper && delegate.isWrapperFor(iface));
+      return iface.isInstance(delegate) || delegate.isWrapperFor(iface);
    }
 
    /** {@inheritDoc} */
@@ -388,13 +387,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    @SuppressWarnings("unchecked")
    public final <T> T unwrap(Class<T> iface) throws SQLException
    {
-      if (iface.isInstance(delegate)) {
-         return (T) delegate;
-      }
-      else if (delegate instanceof Wrapper) {
-          return (T) delegate.unwrap(iface);
-      }
-
-      throw new SQLException("Wrapped connection is not an instance of " + iface);
+      return iface.isInstance(delegate) ? (T) delegate : delegate.unwrap(iface);
    }
 }

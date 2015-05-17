@@ -86,11 +86,11 @@ public class HikariConfig implements HikariConfigMBean
    private boolean isAllowPoolSuspension;
    private boolean isWeakThreadLocals;
    private DataSource dataSource;
-   private Properties dataSourceProperties;
+   private final Properties dataSourceProperties;
    private ThreadFactory threadFactory;
    private Object metricRegistry;
    private Object healthCheckRegistry;
-   private Properties healthCheckProperties;
+   private final Properties healthCheckProperties;
 
    static
    {
@@ -482,7 +482,7 @@ public class HikariConfig implements HikariConfigMBean
          if (metricRegistry instanceof String) {
             try {
                InitialContext initCtx = new InitialContext();
-               metricRegistry = (MetricRegistry) initCtx.lookup((String) metricRegistry);
+               metricRegistry = initCtx.lookup((String) metricRegistry);
             }
             catch (NamingException e) {
                throw new IllegalArgumentException(e);
@@ -518,7 +518,7 @@ public class HikariConfig implements HikariConfigMBean
          if (healthCheckRegistry instanceof String) {
             try {
                InitialContext initCtx = new InitialContext();
-               healthCheckRegistry = (HealthCheckRegistry) initCtx.lookup((String) healthCheckRegistry);
+               healthCheckRegistry = initCtx.lookup((String) healthCheckRegistry);
             }
             catch (NamingException e) {
                throw new IllegalArgumentException(e);
