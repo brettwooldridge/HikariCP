@@ -86,11 +86,11 @@ public class HikariConfig implements HikariConfigMBean
    private boolean isAllowPoolSuspension;
    private boolean isWeakThreadLocals;
    private DataSource dataSource;
-   private final Properties dataSourceProperties;
+   private Properties dataSourceProperties;
    private ThreadFactory threadFactory;
    private Object metricRegistry;
    private Object healthCheckRegistry;
-   private final Properties healthCheckProperties;
+   private Properties healthCheckProperties;
 
    static
    {
