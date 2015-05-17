@@ -63,7 +63,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    static {
       LOGGER = LoggerFactory.getLogger(ConnectionProxy.class);
 
-      SQL_ERRORS = new HashSet<String>();
+      SQL_ERRORS = new HashSet<>();
       SQL_ERRORS.add("57P01"); // ADMIN SHUTDOWN
       SQL_ERRORS.add("57P02"); // CRASH SHUTDOWN
       SQL_ERRORS.add("57P03"); // CANNOT CONNECT NOW

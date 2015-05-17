@@ -36,10 +36,10 @@ public final class UtilityElf
     *
     * @param millis the number of milliseconds to sleep
     */
-   public static void quietlySleep(final long ticks)
+   public static void quietlySleep(final long millis)
    {
       try {
-         Thread.sleep(ticks);
+         Thread.sleep(millis);
       }
       catch (InterruptedException e) {
          // I said be quiet!
@@ -51,7 +51,7 @@ public final class UtilityElf
     * arguments.
     *
     * @param <T> the class type
-    * @param className the name of the classto instantiate
+    * @param className the name of the class to instantiate
     * @param clazz a class to cast the result as
     * @param args arguments to a constructor
     * @return an instance of the specified class
@@ -73,10 +73,10 @@ public final class UtilityElf
 
          if (args.length > 0) {
             Constructor<?> constructor = loaded.getConstructor(argClasses);
-            return (T) constructor.newInstance(args);
+            return clazz.cast(constructor.newInstance(args));
          }
 
-         return (T) loaded.newInstance();
+         return clazz.cast(loaded.newInstance());
       }
       catch (Exception e) {
          throw new RuntimeException(e);
@@ -98,7 +98,7 @@ public final class UtilityElf
          threadFactory = new DefaultThreadFactory(threadName, true);
       }
 
-      LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>(queueSize);
+      LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<>(queueSize);
       ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 5, TimeUnit.SECONDS, queue, threadFactory, policy);
       executor.allowCoreThreadTimeOut(true);
       return executor;

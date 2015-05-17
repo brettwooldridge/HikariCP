@@ -18,6 +18,7 @@ package com.zaxxer.hikari.metrics;
 
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.pool.PoolBagEntry;
+import com.zaxxer.hikari.util.ClockSource;
 
 /**
  * This class only supports realtime, not historical metrics.
@@ -51,7 +52,7 @@ public class MetricsTracker implements AutoCloseable
 
    /**
     * A base instance of a MetricsContext.  Classes extending this class should exhibit the
-    * behavior of "starting" a timer upon contruction, and "stopping" the timer when the
+    * behavior of "starting" a timer upon construction, and "stopping" the timer when the
     * {@link MetricsContext#stop()} method is called.
     *
     * @author Brett Wooldridge

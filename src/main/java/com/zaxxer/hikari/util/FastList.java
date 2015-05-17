@@ -53,7 +53,7 @@ public final class FastList<T> extends ArrayList<T>
    }
 
    /**
-    * Construct a FastList with a specfied size.
+    * Construct a FastList with a specified size.
     * @param clazz the Class stored in the collection
     * @param capacity the initial size of the FastList
     */

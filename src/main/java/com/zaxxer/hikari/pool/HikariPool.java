@@ -26,6 +26,7 @@ import static com.zaxxer.hikari.util.UtilityElf.getTransactionIsolation;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 import java.sql.Statement;
@@ -178,11 +179,11 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    public final Connection getConnection(final long hardTimeout) throws SQLException
    {
       suspendResumeLock.acquire();
-      long timeout = hardTimeout;
       final long startTime = clockSource.currentTime();
-      final MetricsContext metricsContext = (isRecordMetrics ? metricsTracker.recordConnectionRequest() : MetricsTracker.NO_CONTEXT);
 
       try {
+         long timeout = hardTimeout;
+         final MetricsContext metricsContext = (isRecordMetrics ? metricsTracker.recordConnectionRequest() : MetricsTracker.NO_CONTEXT);
          do {
             final PoolBagEntry bagEntry = connectionBag.borrow(timeout, TimeUnit.MILLISECONDS);
             if (bagEntry == null) {
@@ -563,7 +564,8 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
          try (Statement statement = connection.createStatement()) {
             poolUtils.setQueryTimeout(statement, timeoutSec);
-            statement.executeQuery(configuration.getConnectionTestQuery());
+            ResultSet rs = statement.executeQuery(configuration.getConnectionTestQuery());
+            rs.close();
          }
 
          if (isIsolateInternalQueries && !isAutoCommit) {
@@ -621,7 +623,8 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
             try {
                shutdown();
             }
-            catch (InterruptedException ignore) {
+            catch (Throwable ex) {
+               e.addSuppressed(ex);
             }
 
             throw new PoolInitializationException(e);

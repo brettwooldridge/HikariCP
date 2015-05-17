@@ -121,7 +121,7 @@ public final class PoolUtilities
    }
 
    /**
-    * Setup a connection intial state.
+    * Setup a connection initial state.
     *
     * @param connection a Connection
     * @param isAutoCommit auto-commit state

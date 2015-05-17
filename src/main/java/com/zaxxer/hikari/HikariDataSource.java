@@ -204,7 +204,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
             throw new IllegalStateException("MetricRegistry can only be set one time");
          }
          else {
-            pool.setMetricRegistry((MetricRegistry) super.getMetricRegistry());
+            pool.setMetricRegistry(super.getMetricRegistry());
          }
       }
    }
@@ -221,7 +221,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
             throw new IllegalStateException("HealthCheckRegistry can only be set one time");
          }
          else {
-            pool.setHealthCheckRegistry((HealthCheckRegistry) super.getHealthCheckRegistry());
+            pool.setHealthCheckRegistry(super.getHealthCheckRegistry());
          }
       }
    }
@@ -296,7 +296,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    /**
     * Shutdown the DataSource and its associated pool.
     *
-    * @deprecated The {@link #shutdown()} method has been deprecated, please use {@link #close()} instead
+    * @deprecated This method has been deprecated, please use {@link #close()} instead
     */
    @Deprecated
    public void shutdown()
