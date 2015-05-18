@@ -59,6 +59,7 @@ import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.IBagStateListener;
+import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -124,7 +125,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       this.poolUtils = new PoolUtilities(config);
       this.dataSource = poolUtils.initializeDataSource(config.getDataSourceClassName(), config.getDataSource(), config.getDataSourceProperties(), config.getDriverClassName(), config.getJdbcUrl(), username, password);
 
-      this.connectionBag = new ConcurrentBag<>(this, config.isWeakThreadLocals());
+      this.connectionBag = new ConcurrentBag<>(this);
       this.totalConnections = new AtomicInteger();
       this.connectionTimeout = config.getConnectionTimeout();
       this.validationTimeout = config.getValidationTimeout();
@@ -155,6 +156,9 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
       poolUtils.setLoginTimeout(dataSource, connectionTimeout);
       registerMBeans(config, this);
+
+      PropertyBeanSetter.flushCaches();  // prevent classloader leak
+
       initializeConnections();
    }
 

@@ -56,7 +56,6 @@ public final class UtilityElf
     * @param args arguments to a constructor
     * @return an instance of the specified class
     */
-   @SuppressWarnings("unchecked")
    public static <T> T createInstance(final String className, final Class<T> clazz, final Object... args)
    {
       if (className == null) {

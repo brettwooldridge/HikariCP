@@ -118,6 +118,11 @@ public final class PropertyBeanSetter
       return copy;
    }
 
+   public static void flushCaches()
+   {
+      Introspector.flushCaches();
+   }
+
    private static void setProperty(Object target, String propName, Object propValue)
    {
       String capitalized = "set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);

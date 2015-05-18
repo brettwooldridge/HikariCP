@@ -50,7 +50,6 @@ public class TestConcurrentBag
       config.setInitializationFailFast(true);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-      config.setWeakThreadLocals(true);
 
       ds = new HikariDataSource(config);      
    }
@@ -100,7 +99,7 @@ public class TestConcurrentBag
                }
             };
          }
-      }, false);
+      });
       Assert.assertEquals(0, bag.values(8).size());
 
       HikariPool pool = TestElf.getPool(ds);
