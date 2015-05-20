@@ -338,7 +338,11 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    private boolean useWeakThreadLocals()
    {
       try {
-         return !(this.getClass().getClassLoader().toString().startsWith("sun.misc") || ClassLoader.getSystemClassLoader() == this.getClass().getClassLoader());
+         if (System.getProperty("com.zaxxer.hikari.useWeakReferences") != null) {   // undocumented manual override of WeakReference behavior
+            return Boolean.getBoolean("com.zaxxer.hikari.useWeakReferences");
+         }
+
+         return getClass().getClassLoader() != ClassLoader.getSystemClassLoader();
       }
       catch (SecurityException se) {
          return true;
