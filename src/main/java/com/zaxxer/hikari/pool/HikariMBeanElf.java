@@ -84,6 +84,10 @@ public final class HikariMBeanElf
     */
    public static void unregisterMBeans(final HikariConfig configuration, final HikariPool pool)
    {
+      if (!configuration.isRegisterMbeans()) {
+         return;
+      }
+
       try {
          final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
 
