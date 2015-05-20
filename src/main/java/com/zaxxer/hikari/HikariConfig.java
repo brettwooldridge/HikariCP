@@ -26,6 +26,7 @@ import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -87,6 +88,7 @@ public class HikariConfig implements HikariConfigMBean
    private DataSource dataSource;
    private Properties dataSourceProperties;
    private ThreadFactory threadFactory;
+   private ScheduledThreadPoolExecutor scheduledExecutor;
    private Object metricRegistry;
    private Object healthCheckRegistry;
    private Properties healthCheckProperties;
@@ -641,6 +643,26 @@ public class HikariConfig implements HikariConfigMBean
    public void setPoolName(String poolName)
    {
       this.poolName = poolName;
+   }
+
+   /**
+    * Get the ScheduledExecutorService used for housekeeping.
+    *
+    * @return the executor
+    */
+   public ScheduledThreadPoolExecutor getScheduledExecutorService()
+   {
+      return scheduledExecutor;
+   }
+
+   /**
+    * Set the ScheduledExecutorService used for housekeeping.
+    *
+    * @param executor the ScheduledExecutorService
+    */
+   public void setScheduledExecutorService(ScheduledThreadPoolExecutor executor)
+   {
+      this.scheduledExecutor = executor;
    }
 
    public String getTransactionIsolation()
