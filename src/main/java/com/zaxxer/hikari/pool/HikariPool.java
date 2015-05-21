@@ -51,6 +51,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.metrics.CodaHaleMetricsTracker;
 import com.zaxxer.hikari.metrics.CodahaleHealthChecker;
 import com.zaxxer.hikari.metrics.MetricsTracker;
+import com.zaxxer.hikari.metrics.PoolStats;
 import com.zaxxer.hikari.metrics.MetricsTracker.MetricsContext;
 import com.zaxxer.hikari.proxy.ConnectionProxy;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
@@ -324,10 +325,10 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    {
       this.isRecordMetrics = metricRegistry != null;
       if (isRecordMetrics) {
-         this.metricsTracker = new CodaHaleMetricsTracker(this, (MetricRegistry) metricRegistry);
+         this.metricsTracker = new CodaHaleMetricsTracker(configuration.getPoolName(), getPoolStats(), (MetricRegistry) metricRegistry);
       }
       else {
-         this.metricsTracker = new MetricsTracker(this);
+         this.metricsTracker = new MetricsTracker();
       }
    }
 
@@ -641,6 +642,19 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       }
 
       fillPool();
+   }
+
+   private PoolStats getPoolStats()
+   {
+      return new PoolStats(TimeUnit.SECONDS.toMillis(1)) {
+         @Override
+         protected void update() {
+            this.pendingThreads = HikariPool.this.getThreadsAwaitingConnection();
+            this.idleConnections = HikariPool.this.getIdleConnections();
+            this.totalConnections = HikariPool.this.getTotalConnections();
+            this.activeConnections = HikariPool.this.getActiveConnections();
+         }
+      };
    }
 
    // ***********************************************************************

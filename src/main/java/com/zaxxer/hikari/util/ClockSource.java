@@ -52,6 +52,15 @@ public interface ClockSource
    long elapsedTimeMs(long startTime);
 
    /**
+    * Return the specified opaque time-stamp plus the specified number of milliseconds.
+    *
+    * @param time an opaque time-stamp 
+    * @param millis milliseconds to add
+    * @return a new opaque time-stamp
+    */
+   long plusMillis(long time, long millis);
+
+   /**
     * Factory class used to create a platform-specific ClockSource. 
     */
    class Factory

@@ -39,10 +39,9 @@ public final class PoolBagEntry implements IConcurrentBagEntry
 
    public Connection connection;
    public long lastAccess;
-   public long lastOpenTime;
+   public volatile long lastOpenTime;
    public volatile boolean evicted;
    public volatile boolean aborted;
-   
 
    private volatile ScheduledFuture<?> endOfLife;
 

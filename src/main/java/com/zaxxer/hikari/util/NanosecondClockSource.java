@@ -46,4 +46,11 @@ class NanosecondClockSource implements ClockSource
    {
       return TimeUnit.NANOSECONDS.toMillis(time);
    }
+
+   /** {@inheritDoc} */
+   @Override
+   public long plusMillis(final long time, final long millis)
+   {
+      return time + TimeUnit.MILLISECONDS.toNanos(millis);
+   }
 }

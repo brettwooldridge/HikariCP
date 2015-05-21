@@ -45,4 +45,11 @@ class MillisecondClockSource implements ClockSource
    {
       return time;
    }
+
+   /** {@inheritDoc} */
+   @Override
+   public long plusMillis(long time, long millis)
+   {
+      return time + millis;
+   }
 }

@@ -16,13 +16,10 @@
 
 package com.zaxxer.hikari.metrics;
 
-import java.util.concurrent.TimeUnit;
-
-import com.codahale.metrics.CachedGauge;
+import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.pool.PoolBagEntry;
 import com.zaxxer.hikari.util.ClockSource;
 
@@ -30,51 +27,46 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
 {
    private static final ClockSource clockSource = ClockSource.INSTANCE;
 
+   private final String poolName;
    private final Timer connectionObtainTimer;
    private final Histogram connectionUsage;
    private final MetricRegistry registry;
 
-   public CodaHaleMetricsTracker(final HikariPool pool, final MetricRegistry registry) {
-      super(pool);
-
+   public CodaHaleMetricsTracker(final String poolName, final PoolStats poolStats, final MetricRegistry registry) {
+      this.poolName = poolName;
       this.registry = registry;
-      final String poolName = pool.getConfiguration().getPoolName();
       this.connectionObtainTimer = registry.timer(MetricRegistry.name(poolName, "pool", "Wait"));
       this.connectionUsage = registry.histogram(MetricRegistry.name(poolName, "pool", "Usage"));
 
       registry.register(MetricRegistry.name(poolName, "pool", "TotalConnections"),
-                        new CachedGauge<Integer>(10, TimeUnit.SECONDS) {
+                        new Gauge<Integer>() {
                            @Override
-                           protected Integer loadValue()
-                           {
-                              return pool.getTotalConnections();
+                           public Integer getValue() {
+                              return poolStats.getTotalConnections();
                            }
                         });
 
       registry.register(MetricRegistry.name(poolName, "pool", "IdleConnections"),
-                        new CachedGauge<Integer>(10, TimeUnit.SECONDS) {
+                        new Gauge<Integer>() {
                            @Override
-                           protected Integer loadValue()
-                           {
-                              return pool.getIdleConnections();
+                           public Integer getValue() {
+                              return poolStats.getIdleConnections();
                            }
                         });
 
       registry.register(MetricRegistry.name(poolName, "pool", "ActiveConnections"),
-                        new CachedGauge<Integer>(10, TimeUnit.SECONDS) {
+                        new Gauge<Integer>() {
                            @Override
-                           protected Integer loadValue()
-                           {
-                              return pool.getActiveConnections();
+                           public Integer getValue() {
+                              return poolStats.getActiveConnections();
                            }
                         });
 
       registry.register(MetricRegistry.name(poolName, "pool", "PendingConnections"),
-                        new CachedGauge<Integer>(10, TimeUnit.SECONDS) {
+                        new Gauge<Integer>() {
                            @Override
-                           protected Integer loadValue()
-                           {
-                              return pool.getThreadsAwaitingConnection();
+                           public Integer getValue() {
+                              return poolStats.getPendingThreads();
                            }
                         });
    }
@@ -83,7 +75,6 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    @Override
    public void close()
    {
-      final String poolName = pool.getConfiguration().getPoolName();
       registry.remove(MetricRegistry.name(poolName, "pool", "Wait"));
       registry.remove(MetricRegistry.name(poolName, "pool", "Usage"));
       registry.remove(MetricRegistry.name(poolName, "pool", "TotalConnections"));

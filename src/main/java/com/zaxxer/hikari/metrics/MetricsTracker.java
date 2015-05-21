@@ -16,7 +16,6 @@
 
 package com.zaxxer.hikari.metrics;
 
-import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.pool.PoolBagEntry;
 import com.zaxxer.hikari.util.ClockSource;
 
@@ -29,11 +28,8 @@ public class MetricsTracker implements AutoCloseable
 {
    public static final MetricsContext NO_CONTEXT = new MetricsContext();
 
-   protected final HikariPool pool;
-
-   public MetricsTracker(final HikariPool pool)
+   public MetricsTracker()
    {
-      this.pool = pool;
    }
 
    public MetricsContext recordConnectionRequest()
