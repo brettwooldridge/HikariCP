@@ -79,7 +79,7 @@
          <groupId>org.javassist</groupId>
          <artifactId>javassist</artifactId>
          <version>${javassist.version}</version>
-         <scope>compile</scope>
+         <optional>true</optional>
       </dependency>
       <dependency>
          <groupId>org.hibernate</groupId>
@@ -109,7 +109,7 @@
          <scope>test</scope>
       </dependency>
 
-		<!-- OSGi test -->
+      <!-- OSGi test -->
       <dependency>
          <groupId>javax.inject</groupId>
          <artifactId>javax.inject</artifactId>
@@ -157,6 +157,25 @@
    <build>
       <plugins>
          <plugin>
+            <!-- Generate proxies -->
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>1.4.0</version>
+            <executions>
+               <execution>
+                  <phase>compile</phase>
+                  <!-- phase>generate-test-sources</phase -->
+                  <goals>
+                     <goal>java</goal>
+                  </goals>
+               </execution>
+            </executions>
+            <configuration>
+               <mainClass>com.zaxxer.hikari.proxy.JavassistProxyFactory</mainClass>
+            </configuration>
+         </plugin>
+
+         <plugin>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
             <version>0.7.4.201502262128</version>
@@ -174,10 +193,10 @@
                      <propertyName>surefireArgLine</propertyName>
                      <excludes>
                         <exclude>**/com/zaxxer/hikari/proxy/ProxyFactory</exclude>
-                        <exclude>**/com/zaxxer/hikari/proxy/ResultSetProxy</exclude>
-                        <exclude>**/com/zaxxer/hikari/proxy/StatementProxy</exclude>
-                        <exclude>**/com/zaxxer/hikari/proxy/CallableStatementProxy</exclude>
-                        <exclude>**/com/zaxxer/hikari/proxy/PreparedStatementProxy</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/*ResultSetProxy</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/*StatementProxy</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/*CallableStatementProxy</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/*PreparedStatementProxy</exclude>
                         <exclude>**/com/zaxxer/hikari/pool/PoolInitializationException</exclude>
                         <exclude>**/com/zaxxer/hikari/metrics/**</exclude>
                      </excludes>
@@ -196,11 +215,11 @@
                      <!-- Sets the output directory for the code coverage report. -->
                      <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
                      <excludes>
-                        <exclude>**/com/zaxxer/hikari/proxy/ProxyFactory.class</exclude>
-                        <exclude>**/com/zaxxer/hikari/proxy/ResultSetProxy.class</exclude>
-                        <exclude>**/com/zaxxer/hikari/proxy/StatementProxy.class</exclude>
-                        <exclude>**/com/zaxxer/hikari/proxy/CallableStatementProxy.class</exclude>
-                        <exclude>**/com/zaxxer/hikari/proxy/PreparedStatementProxy.class</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/*ProxyFactory.class</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/*ResultSetProxy.class</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/*StatementProxy.class</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/*CallableStatementProxy.class</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/*PreparedStatementProxy.class</exclude>
                         <exclude>**/com/zaxxer/hikari/pool/PoolInitializationException.class</exclude>
                         <exclude>**/com/zaxxer/hikari/metrics/**</exclude>
                      </excludes>
@@ -228,7 +247,6 @@
                      com.zaxxer.hikari.proxy
                   </_exportcontents>
                   <Import-Package>
-                     javassist.*,
                      javax.management,
                      javax.naming,
                      javax.naming.spi,
@@ -288,9 +306,9 @@
                <artifactId>maven-surefire-plugin</artifactId>
                <version>2.18.1</version>
                <configuration>
-		  <!-- Sets the VM argument line used when unit tests are run. -->
+                  <!-- Sets the VM argument line used when unit tests are run. -->
                   <argLine>${surefireArgLine}</argLine>
-		  <!-- Skips unit tests if the value of skip.unit.tests property is true -->
+                  <!-- Skips unit tests if the value of skip.unit.tests property is true -->
                   <skipTests>${skip.unit.tests}</skipTests>
                </configuration>
             </plugin>
@@ -300,8 +318,8 @@
                <artifactId>maven-source-plugin</artifactId>
                <version>2.4</version>
                <configuration>
-	  	  <!-- outputDirectory>/absolute/path/to/the/output/directory</outputDirectory> 
-	 	  <finalName>filename-of-generated-jar-file</finalName -->
+                  <!-- outputDirectory>/absolute/path/to/the/output/directory</outputDirectory>
+                     <finalName>filename-of-generated-jar-file</finalName -->
                   <attach>true</attach>
                </configuration>
                <executions>
@@ -320,7 +338,7 @@
                <version>2.10.3</version>
                <configuration>
                   <show>public</show>
-		  <!-- excludePackageNames>com.zaxxer.hikari.*</excludePackageNames -->
+                  <!-- excludePackageNames>com.zaxxer.hikari.*</excludePackageNames -->
                   <attach>true</attach>
                   <maxmemory>1024m</maxmemory>
                </configuration>
@@ -335,6 +353,31 @@
                </executions>
             </plugin>
 
+            <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
+            <plugin>
+               <groupId>org.eclipse.m2e</groupId>
+               <artifactId>lifecycle-mapping</artifactId>
+               <version>1.0.0</version>
+               <configuration>
+                  <lifecycleMappingMetadata>
+                     <pluginExecutions>
+                        <pluginExecution>
+                           <pluginExecutionFilter>
+                              <groupId>org.codehaus.mojo</groupId>
+                              <artifactId>exec-maven-plugin</artifactId>
+                              <versionRange>[1.4.0,)</versionRange>
+                              <goals>
+                                 <goal>java</goal>
+                              </goals>
+                           </pluginExecutionFilter>
+                           <action>
+                              <ignore></ignore>
+                           </action>
+                        </pluginExecution>
+                     </pluginExecutions>
+                  </lifecycleMappingMetadata>
+               </configuration>
+            </plugin>
          </plugins>
       </pluginManagement>
    </build>

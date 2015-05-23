@@ -47,7 +47,7 @@ public abstract class StatementProxy implements Statement
 
    /** {@inheritDoc} */
    @Override
-   public String toString()
+   public final String toString()
    {
       final String delegateToString = delegate.toString();
       return new StringBuilder(64 + delegateToString.length())

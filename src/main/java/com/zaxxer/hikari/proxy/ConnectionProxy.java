@@ -83,7 +83,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    /** {@inheritDoc} */
    @Override
-   public String toString()
+   public final String toString()
    {
       return new StringBuilder(64)
          .append(this.getClass().getSimpleName()).append('@').append(System.identityHashCode(this))

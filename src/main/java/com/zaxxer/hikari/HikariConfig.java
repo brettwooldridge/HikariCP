@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
-import com.zaxxer.hikari.proxy.JavassistProxyFactory;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 import com.zaxxer.hikari.util.UtilityElf;
 
@@ -92,11 +91,6 @@ public class HikariConfig implements HikariConfigMBean
    private Object metricRegistry;
    private Object healthCheckRegistry;
    private Properties healthCheckProperties;
-
-   static
-   {
-	   JavassistProxyFactory.initialize();
-   }
 
    /**
     * Default constructor
