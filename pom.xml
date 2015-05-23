@@ -192,12 +192,7 @@
                      <!-- Sets the name of the property containing the settings for JaCoCo runtime agent. -->
                      <propertyName>surefireArgLine</propertyName>
                      <excludes>
-                        <exclude>**/com/zaxxer/hikari/proxy/ProxyFactory</exclude>
-                        <exclude>**/com/zaxxer/hikari/proxy/*ResultSetProxy</exclude>
-                        <exclude>**/com/zaxxer/hikari/proxy/*StatementProxy</exclude>
-                        <exclude>**/com/zaxxer/hikari/proxy/*CallableStatementProxy</exclude>
-                        <exclude>**/com/zaxxer/hikari/proxy/*PreparedStatementProxy</exclude>
-                        <exclude>**/com/zaxxer/hikari/pool/PoolInitializationException</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/**</exclude>
                         <exclude>**/com/zaxxer/hikari/metrics/**</exclude>
                      </excludes>
                   </configuration>
@@ -215,12 +210,7 @@
                      <!-- Sets the output directory for the code coverage report. -->
                      <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
                      <excludes>
-                        <exclude>**/com/zaxxer/hikari/proxy/*ProxyFactory.class</exclude>
-                        <exclude>**/com/zaxxer/hikari/proxy/*ResultSetProxy.class</exclude>
-                        <exclude>**/com/zaxxer/hikari/proxy/*StatementProxy.class</exclude>
-                        <exclude>**/com/zaxxer/hikari/proxy/*CallableStatementProxy.class</exclude>
-                        <exclude>**/com/zaxxer/hikari/proxy/*PreparedStatementProxy.class</exclude>
-                        <exclude>**/com/zaxxer/hikari/pool/PoolInitializationException.class</exclude>
+                        <exclude>**/com/zaxxer/hikari/proxy/**</exclude>
                         <exclude>**/com/zaxxer/hikari/metrics/**</exclude>
                      </excludes>
                   </configuration>

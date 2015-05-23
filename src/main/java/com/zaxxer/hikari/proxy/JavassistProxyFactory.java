@@ -58,14 +58,14 @@ public final class JavassistProxyFactory
       try {
          // Cast is not needed for these
          String methodBody = "{ try { return delegate.method($$); } catch (SQLException e) { throw checkException(e); } }";
-         generateProxyClass(Connection.class, "com.zaxxer.hikari.proxy.ConnectionProxy", methodBody);
-         generateProxyClass(Statement.class, "com.zaxxer.hikari.proxy.StatementProxy", methodBody);
-         generateProxyClass(ResultSet.class, "com.zaxxer.hikari.proxy.ResultSetProxy", methodBody);
+         generateProxyClass(Connection.class, ConnectionProxy.class.getName(), methodBody);
+         generateProxyClass(Statement.class, StatementProxy.class.getName(), methodBody);
+         generateProxyClass(ResultSet.class, ResultSetProxy.class.getName(), methodBody);
          
          // For these we have to cast the delegate
          methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { throw checkException(e); } }";
-         generateProxyClass(PreparedStatement.class, "com.zaxxer.hikari.proxy.PreparedStatementProxy", methodBody);
-         generateProxyClass(CallableStatement.class, "com.zaxxer.hikari.proxy.CallableStatementProxy", methodBody);
+         generateProxyClass(PreparedStatement.class, PreparedStatementProxy.class.getName(), methodBody);
+         generateProxyClass(CallableStatement.class, CallableStatementProxy.class.getName(), methodBody);
 
          modifyProxyFactory();
       }
