@@ -249,10 +249,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    public final synchronized void shutdown() throws InterruptedException
    {
-      if (poolState == POOL_SHUTDOWN) {
-         return;
-      }
-
       try {
          poolState = POOL_SHUTDOWN;
 
