@@ -5,6 +5,10 @@ Changes in 2.4.0
  * Consolidated distribution into single JVM target (Java 7/8).  Java 6 support has
    entered maintenance mode, bug fixes will continue on the 2.3.x branch.
 
+ * Removed runtime dependency on Javassist by pre-generating proxy classes at build-time.
+
+ * Significantly reduced overhead, and increased reliabilty, of ConcurrentBag.
+
  * Pool configuration properties and DataSource methods previously marked as
    @Deprecated have been removed.
 
