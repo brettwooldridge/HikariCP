@@ -24,11 +24,15 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.spi.LocationAwareLogger;
 
 import com.zaxxer.hikari.mocks.StubConnection;
+import com.zaxxer.hikari.mocks.StubDataSource;
 import com.zaxxer.hikari.mocks.StubStatement;
 import com.zaxxer.hikari.pool.HikariPool;
+import com.zaxxer.hikari.pool.PoolInitializationException;
 import com.zaxxer.hikari.util.UtilityElf;
+
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 
 /**
@@ -390,6 +394,8 @@ public class TestConnections
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
+      TestElf.setSlf4jLogLevel(HikariPool.class, LocationAwareLogger.DEBUG_INT);
+
       final HikariDataSource ds = new HikariDataSource(config);
       try {
          HikariPool pool = TestElf.getPool(ds);
@@ -423,6 +429,30 @@ public class TestConnections
          pool.resumePool();
          quietlySleep(500);
          Assert.assertEquals(1, pool.getIdleConnections());
+      }
+      finally {
+         ds.close();
+      }
+   }
+
+   @Test
+   public void testInitializationFailure() throws SQLException
+   {
+      StubDataSource stubDataSource = new StubDataSource();
+      stubDataSource.setThrowException(new SQLException("Connection refused"));
+
+      HikariDataSource ds = new HikariDataSource();
+      ds.setMinimumIdle(3);
+      ds.setMaximumPoolSize(3);
+      ds.setAllowPoolSuspension(true);
+      ds.setConnectionTestQuery("VALUES 1");
+      ds.setDataSource(stubDataSource);
+
+      try (Connection c = ds.getConnection()) {
+         Assert.fail("Initialization should have failed");
+      }
+      catch (PoolInitializationException e) {
+         // passed
       }
       finally {
          ds.close();
