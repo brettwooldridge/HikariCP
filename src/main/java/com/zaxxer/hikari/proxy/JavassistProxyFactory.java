@@ -23,6 +23,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -34,8 +35,6 @@ import javassist.CtNewMethod;
 import javassist.LoaderClassPath;
 import javassist.Modifier;
 import javassist.NotFoundException;
-
-import com.zaxxer.hikari.util.ClassLoaderUtils;
 
 /**
  * This class generates the proxy objects for {@link Connection}, {@link Statement},
@@ -127,7 +126,7 @@ public final class JavassistProxyFactory
       }
 
       Set<String> methods = new HashSet<>();
-      Set<Class<?>> interfaces = ClassLoaderUtils.getAllInterfaces(primaryInterface);
+      Set<Class<?>> interfaces = getAllInterfaces(primaryInterface);
       for (Class<?> intf : interfaces) {
          CtClass intfCt = classPool.getCtClass(intf.getName());
          targetCt.addInterface(intfCt);
@@ -212,6 +211,26 @@ public final class JavassistProxyFactory
       }
 
       return intf.getDeclaredMethod(intfMethod.getName(), paramTypes.toArray(new Class[paramTypes.size()])).toString().contains("default ");
+   }
+
+   private static Set<Class<?>> getAllInterfaces(Class<?> clazz)
+   {
+      Set<Class<?>> interfaces = new HashSet<Class<?>>();
+      for (Class<?> intf : Arrays.asList(clazz.getInterfaces())) {
+         if (intf.getInterfaces().length > 0) {
+            interfaces.addAll(getAllInterfaces(intf));
+         }
+         interfaces.add(intf);
+      }
+      if (clazz.getSuperclass() != null) {
+         interfaces.addAll(getAllInterfaces(clazz.getSuperclass()));
+      }
+
+      if (clazz.isInterface()) {
+         interfaces.add(clazz);
+      }
+
+      return interfaces;
    }
 
    private static Class<?> toJavaClass(CtClass cls) throws Exception
