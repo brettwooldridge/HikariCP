@@ -149,14 +149,14 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       this.closeConnectionExecutor = createThreadPoolExecutor(4, "HikariCP connection closer (pool " + config.getPoolName() + ")", config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
 
       ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari Housekeeping Timer (pool " + config.getPoolName() + ")", true);
-      if (config.getScheduledExecutorService() != null) {
-         this.houseKeepingExecutorService = config.getScheduledExecutorService();
-      }
-      else {
+      if (config.getScheduledExecutorService() == null) {
          this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
          this.houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), HOUSEKEEPING_PERIOD_MS, HOUSEKEEPING_PERIOD_MS, TimeUnit.MILLISECONDS);
          this.houseKeepingExecutorService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
          this.houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
+      }
+      else {
+         this.houseKeepingExecutorService = config.getScheduledExecutorService();
       }
       this.leakTask = (config.getLeakDetectionThreshold() == 0) ? LeakTask.NO_LEAK : new LeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
@@ -570,8 +570,9 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
          try (Statement statement = connection.createStatement()) {
             poolUtils.setQueryTimeout(statement, timeoutSec);
-            ResultSet rs = statement.executeQuery(configuration.getConnectionTestQuery());
-            rs.close();
+            try (ResultSet rs = statement.executeQuery(configuration.getConnectionTestQuery())) { 
+               /* auto close */
+            }
          }
 
          if (isIsolateInternalQueries && !isAutoCommit) {
