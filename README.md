@@ -60,7 +60,7 @@ In their own words, *"HikariCP is supposed to be the fastest connection pool in 
 ![](https://github.com/brettwooldridge/HikariCP/wiki/HikariVsBone.png)
 
 ----------------------------------------------------
-#### WIX Review
+#### WIX Engineering Analysis (+100 million users)
 We'd like to thank the guys over at WIX for the unsolicited and deep write-up about HikariCP on their [engineering blog](http://engineering.wix.com/2015/04/28/how-does-hikaricp-compare-to-other-connection-pools/).  Take a look if you have time.
 
 #### Failure: Pools behaving badly
