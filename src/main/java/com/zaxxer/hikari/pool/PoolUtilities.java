@@ -49,21 +49,19 @@ public final class PoolUtilities
     */
    public void quietlyCloseConnection(final Connection connection, final String closureReason)
    {
-      if (connection == null) {
-         return;
-      }
-
       final String addendum = closureReason != null ? " (" + closureReason + ")" : "";
       try {
+         if (connection == null || connection.isClosed()) {
+            return;
+         }
+
          LOGGER.debug("Closing connection {} in pool {}{}", connection, poolName, addendum);
-         if (connection != null && !connection.isClosed()) {
-            try {
-               setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(30));
-            }
-            finally {
-               // continue with the close even if setNetworkTimeout() throws (due to driver poorly behaving drivers)
-               connection.close();
-            }
+         try {
+            setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(30));
+         }
+         finally {
+            // continue with the close even if setNetworkTimeout() throws (due to driver poorly behaving drivers)
+            connection.close();
          }
       }
       catch (Throwable e) {
