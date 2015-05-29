@@ -145,10 +145,10 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       setMetricRegistry(config.getMetricRegistry());
       setHealthCheckRegistry(config.getHealthCheckRegistry());
 
-      this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "HikariCP connection filler (pool " + config.getPoolName() + ")", config.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
-      this.closeConnectionExecutor = createThreadPoolExecutor(4, "HikariCP connection closer (pool " + config.getPoolName() + ")", config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
+      this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection filler (pool " + config.getPoolName() + ")", config.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
+      this.closeConnectionExecutor = createThreadPoolExecutor(4, "Hikari connection closer (pool " + config.getPoolName() + ")", config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
 
-      ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari Housekeeping Timer (pool " + config.getPoolName() + ")", true);
+      ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari housekeeper (pool " + config.getPoolName() + ")", true);
       if (config.getScheduledExecutorService() == null) {
          this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
          this.houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), HOUSEKEEPING_PERIOD_MS, HOUSEKEEPING_PERIOD_MS, TimeUnit.MILLISECONDS);
@@ -201,9 +201,9 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
             }
 
             final long now = clockSource.currentTime();
-            if (bagEntry.evicted || (clockSource.toMillis(now - bagEntry.lastAccess) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(bagEntry.connection))) {
+            if (bagEntry.evicted || (clockSource.elapsedMillis(bagEntry.lastAccess, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(bagEntry.connection))) {
                closeConnection(bagEntry, "connection evicted or dead"); // Throw away the dead connection and try again
-               timeout = hardTimeout - clockSource.elapsedTimeMs(startTime);
+               timeout = hardTimeout - clockSource.elapsedMillis(startTime, now);
             }
             else {
                metricsContext.setConnectionLastOpen(bagEntry, now);
@@ -221,7 +221,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       }
 
       logPoolState("Timeout failure ");
-      throw new SQLTimeoutException(String.format("Timeout after %dms of waiting for a connection.", clockSource.elapsedTimeMs(startTime), lastConnectionFailure.getAndSet(null)));
+      throw new SQLTimeoutException(String.format("Timeout after %dms of waiting for a connection.", clockSource.elapsedMillis(startTime), lastConnectionFailure.getAndSet(null)));
    }
 
    /**
@@ -270,7 +270,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
                softEvictConnections();
                abortActiveConnections(assassinExecutor);
             }
-            while (getTotalConnections() > 0 && clockSource.elapsedTimeMs(start) < TimeUnit.SECONDS.toMillis(5));
+            while (getTotalConnections() > 0 && clockSource.elapsedMillis(start) < TimeUnit.SECONDS.toMillis(5));
          } finally {
             assassinExecutor.shutdown();
             assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
@@ -689,7 +689,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
                if (bagEntry.evicted) {
                   closeConnection(bagEntry, "connection evicted");
                }
-               else if (idleTimeout > 0L && clockSource.elapsedTimeMs(bagEntry.lastAccess) > idleTimeout) {
+               else if (idleTimeout > 0L && clockSource.elapsedMillis(bagEntry.lastAccess, now) > idleTimeout) {
                   closeConnection(bagEntry, "connection passed idleTimeout");
                }
                else {

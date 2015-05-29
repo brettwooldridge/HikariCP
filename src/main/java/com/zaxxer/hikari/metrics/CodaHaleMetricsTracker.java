@@ -94,7 +94,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    @Override
    public void recordConnectionUsage(final PoolBagEntry bagEntry)
    {
-      connectionUsage.update(clockSource.elapsedTimeMs(bagEntry.lastOpenTime));
+      connectionUsage.update(clockSource.elapsedMillis(bagEntry.lastOpenTime));
    }
 
    public Timer getConnectionAcquisitionTimer()

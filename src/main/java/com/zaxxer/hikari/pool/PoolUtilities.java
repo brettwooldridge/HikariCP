@@ -253,7 +253,7 @@ public final class PoolUtilities
          netTimeoutExecutor = new SynchronousExecutor();
       }
       else {
-         netTimeoutExecutor = Executors.newCachedThreadPool(new DefaultThreadFactory("Hikari JDBC Timeout Executor", true));
+         netTimeoutExecutor = Executors.newCachedThreadPool(new DefaultThreadFactory("Hikari JDBC-timeout executor", true));
          ((ThreadPoolExecutor) netTimeoutExecutor).allowCoreThreadTimeOut(true);
       }
    }

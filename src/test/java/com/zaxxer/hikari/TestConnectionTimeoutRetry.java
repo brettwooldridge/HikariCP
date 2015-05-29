@@ -36,7 +36,7 @@ public class TestConnectionTimeoutRetry
             Assert.fail("Should not have been able to get a connection.");
          }
          catch (SQLException e) {
-            long elapsed = ClockSource.INSTANCE.elapsedTimeMs(start);
+            long elapsed = ClockSource.INSTANCE.elapsedMillis(start);
             long timeout = config.getConnectionTimeout();
             Assert.assertTrue("Didn't wait long enough for timeout", (elapsed >= timeout));
          }
@@ -72,7 +72,7 @@ public class TestConnectionTimeoutRetry
             Connection connection = ds.getConnection();
             connection.close();
    
-            long elapsed = ClockSource.INSTANCE.elapsedTimeMs(start);
+            long elapsed = ClockSource.INSTANCE.elapsedMillis(start);
             Assert.assertTrue("Connection returned too quickly, something is wrong.", elapsed > 250);
             Assert.assertTrue("Waited too long to get a connection.", elapsed < config.getConnectionTimeout());
          }
@@ -120,7 +120,7 @@ public class TestConnectionTimeoutRetry
             Connection connection3 = ds.getConnection();
             connection3.close();
    
-            long elapsed = ClockSource.INSTANCE.elapsedTimeMs(start);
+            long elapsed = ClockSource.INSTANCE.elapsedMillis(start);
             Assert.assertTrue("Waited too long to get a connection.", (elapsed >= 700) && (elapsed < 950));
          }
          catch (SQLException e) {
@@ -154,7 +154,7 @@ public class TestConnectionTimeoutRetry
             Assert.fail("Should not have been able to get a connection.");
          }
          catch (SQLException e) {
-            long elapsed = ClockSource.INSTANCE.elapsedTimeMs(start);
+            long elapsed = ClockSource.INSTANCE.elapsedMillis(start);
             Assert.assertTrue("Didn't wait long enough for timeout", (elapsed >= config.getConnectionTimeout()));
          }
       }
@@ -196,7 +196,7 @@ public class TestConnectionTimeoutRetry
             Connection connection2 = ds.getConnection();
             connection2.close();
    
-            long elapsed = ClockSource.INSTANCE.elapsedTimeMs(start);
+            long elapsed = ClockSource.INSTANCE.elapsedMillis(start);
             Assert.assertTrue("Waited too long to get a connection.", (elapsed >= 250) && (elapsed < config.getConnectionTimeout()));
          }
          catch (SQLException e) {

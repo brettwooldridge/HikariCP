@@ -34,9 +34,16 @@ class MillisecondClockSource implements ClockSource
 
    /** {@inheritDoc} */
    @Override
-   public long elapsedTimeMs(final long startTime)
+   public long elapsedMillis(final long startTime)
    {
       return System.currentTimeMillis() - startTime;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public long elapsedMillis(final long startTime, final long endTime)
+   {
+      return endTime - startTime;
    }
 
    /** {@inheritDoc} */

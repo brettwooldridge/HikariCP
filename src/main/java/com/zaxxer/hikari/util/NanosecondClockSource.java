@@ -35,16 +35,23 @@ class NanosecondClockSource implements ClockSource
 
    /** {@inheritDoc} */
    @Override
-   public long elapsedTimeMs(final long startTime)
+   public final long toMillis(final long time)
+   {
+      return TimeUnit.NANOSECONDS.toMillis(time);
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public long elapsedMillis(final long startTime)
    {
       return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
    }
 
    /** {@inheritDoc} */
    @Override
-   public final long toMillis(final long time)
+   public long elapsedMillis(final long startTime, final long endTime)
    {
-      return TimeUnit.NANOSECONDS.toMillis(time);
+      return TimeUnit.NANOSECONDS.toMillis(endTime - startTime);
    }
 
    /** {@inheritDoc} */

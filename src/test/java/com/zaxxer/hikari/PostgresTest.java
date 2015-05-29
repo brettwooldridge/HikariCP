@@ -69,7 +69,7 @@ public class PostgresTest
             t.start();
 
             UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis((long)((Math.random() * 20))));
-         } while (ClockSource.INSTANCE.elapsedTimeMs(start) < TimeUnit.MINUTES.toMillis(15));
+         } while (ClockSource.INSTANCE.elapsedMillis(start) < TimeUnit.MINUTES.toMillis(15));
       }
    }
 
@@ -103,7 +103,7 @@ public class PostgresTest
          }
          catch (SQLException e)
          {
-            Assert.assertTrue("Timeout less than expected " + ClockSource.INSTANCE.elapsedTimeMs(start) + "ms", ClockSource.INSTANCE.elapsedTimeMs(start) > 5000);
+            Assert.assertTrue("Timeout less than expected " + ClockSource.INSTANCE.elapsedMillis(start) + "ms", ClockSource.INSTANCE.elapsedMillis(start) > 5000);
          }
 
          System.err.println("\nOk, so far so good.  Now, disable the firewall again.  Attempting connection in 5 seconds...");
@@ -189,7 +189,7 @@ public class PostgresTest
                      }
    
                      // UtilityElf.quietlySleep(10L); //Math.max(50L, (long)(Math.random() * 250L)));
-                  } while (ClockSource.INSTANCE.elapsedTimeMs(start) < TimeUnit.MINUTES.toMillis(5));
+                  } while (ClockSource.INSTANCE.elapsedMillis(start) < TimeUnit.MINUTES.toMillis(5));
                };
             });
          }

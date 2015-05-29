@@ -49,10 +49,10 @@ public class TestConnectionCloseBlocking {
          start = ClockSource.INSTANCE.currentTime();
          connection = ds.getConnection(); // on physical connection close we sleep 2 seconds
          Assert.assertTrue("Waited longer than timeout",
-               (ClockSource.INSTANCE.elapsedTimeMs(start) < config.getConnectionTimeout()));
+               (ClockSource.INSTANCE.elapsedMillis(start) < config.getConnectionTimeout()));
       } catch (SQLException e) {
          Assert.assertTrue("getConnection failed because close connection took longer than timeout",
-               (ClockSource.INSTANCE.elapsedTimeMs(start) < config.getConnectionTimeout()));
+               (ClockSource.INSTANCE.elapsedMillis(start) < config.getConnectionTimeout()));
       } finally {
          shouldSleep = false;
          ds.close();

@@ -49,7 +49,17 @@ public interface ClockSource
     * @param startTime an opaque time-stamp returned by an instance of this class
     * @return the elapsed time between startTime and now in milliseconds
     */
-   long elapsedTimeMs(long startTime);
+   long elapsedMillis(long startTime);
+
+   /**
+    * Get the difference in milliseconds between two opaque time-stamps returned
+    * by currentTime().
+    *
+    * @param startTime an opaque time-stamp returned by an instance of this class
+    * @param endTime an opaque time-stamp returned by an instance of this class
+    * @return the elapsed time between startTime and endTime in milliseconds
+    */
+   long elapsedMillis(long startTime, long endTime);
 
    /**
     * Return the specified opaque time-stamp plus the specified number of milliseconds.

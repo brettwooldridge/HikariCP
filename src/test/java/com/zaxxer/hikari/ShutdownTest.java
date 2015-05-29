@@ -172,7 +172,7 @@ public class ShutdownTest
       ds.close();
 
       long startTime = ClockSource.INSTANCE.currentTime();
-      while (ClockSource.INSTANCE.elapsedTimeMs(startTime) < TimeUnit.SECONDS.toMillis(5) && threadCount() > 0) {
+      while (ClockSource.INSTANCE.elapsedMillis(startTime) < TimeUnit.SECONDS.toMillis(5) && threadCount() > 0) {
          UtilityElf.quietlySleep(250);
       }
 
