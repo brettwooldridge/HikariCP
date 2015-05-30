@@ -370,7 +370,7 @@ Here is a list of JDBC *DataSource* classes for popular databases:
 
 ### Play Framework Plugin
 
-A new plugin has come up for the the Play framework; [play-hikaricp](http://edulify.github.io/play-hikaricp.edulify.com/).  If you're using the excellent Play framework,  your application deserves HikariCP.  Thanks Edulify Team!
+Note Play 2.4 now uses HikariCP by default.  A new plugin has come up for the the Play framework; [play-hikaricp](http://edulify.github.io/play-hikaricp.edulify.com/).  If you're using the excellent Play framework,  your application deserves HikariCP.  Thanks Edulify Team!
 
 ### Clojure Wrapper
 
