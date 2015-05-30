@@ -1,4 +1,4 @@
-<h1>![](https://github.com/brettwooldridge/HikariCP/wiki/Hikari.png) HikariCP<sup><sup>&nbsp;It's Faster.</sup></sup><sub><sub><sup>Hi·ka·ri [hi·ka·'lē] &#40;*Origin: Japanese*): light; ray.</sup></sub></sub><br>
+<h1>![](https://github.com/brettwooldridge/HikariCP/wiki/Hikari.png) HikariCP<sup><sup>&nbsp;It's Faster.</sup></sup><sub><sub><sup>Hi·ka·ri [hi·ka·'lē] &#40;*Origin: Japanese*): light; ray.</sup></sub></sub></h1><br>
 
 [![Build Status](https://travis-ci.org/brettwooldridge/HikariCP.svg?branch=dev)](https://travis-ci.org/brettwooldridge/HikariCP)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Issue Stats](http://issuestats.com/github/brettwooldridge/HikariCP/badge/issue?style=flat&concise=true)](http://issuestats.com/github/brettwooldridge/HikariCP)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Issue Stats](http://issuestats.com/github/brettwooldridge/HikariCP/badge/pr?style=flat&concise=true)](http://issuestats.com/github/brettwooldridge/HikariCP)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Coverage Status](https://img.shields.io/coveralls/brettwooldridge/HikariCP/master.svg)](https://coveralls.io/r/brettwooldridge/HikariCP?branch=dev)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Dependency Status](https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0/badge.svg?style=flat)](https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0)
 
@@ -404,5 +404,3 @@ YourKit supports open source projects with its full-featured Java Profiler.  Cli
 
 ### Contributions
 Please perform changes and submit pull requests from the ``dev`` branch instead of ``master``.  Please set your editor to use spaces instead of tabs, and adhere to the apparent style of the code you are editing.  The ``dev`` branch is always more "current" than the ``master`` if you are looking to live life on the edge.
-
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/63472d76ad0d494e3c4d8fc4a13ea4ce "githalytics.com")](http://githalytics.com/brettwooldridge/HikariCP)
