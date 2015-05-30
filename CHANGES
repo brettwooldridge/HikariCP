@@ -9,10 +9,22 @@ Changes in 2.4.0
 
  * Significantly reduced overhead, and increased reliabilty, of ConcurrentBag.
 
+ * Reduced garbage generation by 2-3x.
+
+ * Add connection soft-eviction and replacement if backward system clock motion or
+   significant forward jumps (greater than 1 minute) are detected.
+
  * Pool configuration properties and DataSource methods previously marked as
    @Deprecated have been removed.
 
  * Deprecated HikariDataSource.shutdown() in favor of close().
+ 
+ * Improve shutdown performance.
+
+ * Allow user specified ScheduledThreadPoolExecutor for housekeeping timer.  Useful
+   in applications with dozens or hundreds of pools in the same JVM.
+
+ * Reduce overhead and accuracy of Dropwizard gauges.
 
 Changes in 2.3.7
 
