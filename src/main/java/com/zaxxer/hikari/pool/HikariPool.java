@@ -103,7 +103,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    
    private final LeakTask leakTask;
    private final DataSource dataSource;
-   private final GlobalPoolLock suspendResumeLock;
+   private final SuspendResumeLock suspendResumeLock;
    private final AtomicReference<Throwable> lastConnectionFailure;
 
    private final String username;
@@ -124,7 +124,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       this.password = config.getPassword();
 
       this.poolUtils = new PoolUtilities(config);
-      this.dataSource = poolUtils.initializeDataSource(config.getDataSourceClassName(), config.getDataSource(), config.getDataSourceProperties(), config.getDriverClassName(), config.getJdbcUrl(), username, password);
+      this.dataSource = poolUtils.initializeDataSource();
 
       this.connectionBag = new ConcurrentBag<>(this);
       this.totalConnections = new AtomicInteger();
@@ -132,16 +132,15 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       this.validationTimeout = config.getValidationTimeout();
       this.lastConnectionFailure = new AtomicReference<>();
 
+      this.catalog = config.getCatalog();
       this.isReadOnly = config.isReadOnly();
       this.isAutoCommit = config.isAutoCommit();
-
-      this.suspendResumeLock = config.isAllowPoolSuspension() ? new GlobalPoolLock(true) : GlobalPoolLock.FAUX_LOCK;
-
-      this.catalog = config.getCatalog();
-      this.transactionIsolation = getTransactionIsolation(config.getTransactionIsolation());
-      this.isIsolateInternalQueries = config.isIsolateInternalQueries();
       this.isUseJdbc4Validation = config.getConnectionTestQuery() == null;
-      
+      this.isIsolateInternalQueries = config.isIsolateInternalQueries();
+      this.transactionIsolation = getTransactionIsolation(config.getTransactionIsolation());
+
+      this.suspendResumeLock = config.isAllowPoolSuspension() ? new SuspendResumeLock(true) : SuspendResumeLock.FAUX_LOCK;
+
       setMetricRegistry(config.getMetricRegistry());
       setHealthCheckRegistry(config.getHealthCheckRegistry());
 
@@ -160,7 +159,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       }
       this.leakTask = (config.getLeakDetectionThreshold() == 0) ? LeakTask.NO_LEAK : new LeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
-      poolUtils.setLoginTimeout(dataSource, connectionTimeout);
       registerMBeans(config, this);
 
       PropertyBeanSetter.flushCaches();  // prevent classloader leak
@@ -434,7 +432,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    @Override
    public final synchronized void suspendPool()
    {
-      if (suspendResumeLock == GlobalPoolLock.FAUX_LOCK) {
+      if (suspendResumeLock == SuspendResumeLock.FAUX_LOCK) {
          throw new IllegalStateException("Pool " + configuration.getPoolName() + " is not suspendable");
       }
       else if (poolState != POOL_SUSPENDED) {

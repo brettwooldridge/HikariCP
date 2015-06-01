@@ -27,14 +27,18 @@ public final class PoolUtilities
 
    private Executor netTimeoutExecutor;
 
+   private final HikariConfig config;
    private final String poolName;
    private volatile boolean isValidChecked; 
    private volatile boolean isValidSupported;
    private boolean isNetworkTimeoutSupported;
    private boolean isQueryTimeoutSupported;
 
+
+
    public PoolUtilities(final HikariConfig configuration)
    {
+      this.config = configuration;
       this.poolName = configuration.getPoolName();
       this.isValidSupported = true;
       this.isNetworkTimeoutSupported = true;
@@ -92,17 +96,18 @@ public final class PoolUtilities
    /**
     * Create/initialize the underlying DataSource.
     *
-    * @param dsClassName a DataSource class name (optional)
-    * @param dataSource a DataSource instance (optional)
-    * @param dataSourceProperties a Properties instance of DataSource properties
-    * @param driverClassName the JDBC driver class name (optional)
-    * @param jdbcUrl a JDBC connection URL (optional)
-    * @param username a username (optional)
-    * @param password a password (optional)
     * @return a DataSource instance
     */
-   public DataSource initializeDataSource(final String dsClassName, DataSource dataSource, final Properties dataSourceProperties, final String driverClassName, final String jdbcUrl, final String username, final String password)
+   public DataSource initializeDataSource()
    {
+      final String jdbcUrl = config.getJdbcUrl();
+      final String username = config.getUsername();
+      final String password = config.getPassword();
+      final String dsClassName = config.getDataSourceClassName();
+      final String driverClassName = config.getDriverClassName();
+      final Properties dataSourceProperties = config.getDataSourceProperties();
+
+      DataSource dataSource = config.getDataSource();
       if (dsClassName != null && dataSource == null) {
          dataSource = createInstance(dsClassName, DataSource.class);
          PropertyBeanSetter.setTargetFromProperties(dataSource, dataSourceProperties);
@@ -112,6 +117,7 @@ public final class PoolUtilities
       }
 
       if (dataSource != null) {
+         setLoginTimeout(dataSource, config.getConnectionTimeout());
          createNetworkTimeoutExecutor(dataSource, dsClassName, jdbcUrl);
       }
 
@@ -224,24 +230,6 @@ public final class PoolUtilities
       }
    }
 
-   /**
-    * Set the loginTimeout on the specified DataSource.
-    *
-    * @param dataSource the DataSource
-    * @param connectionTimeout the timeout in milliseconds
-    */
-   public void setLoginTimeout(final DataSource dataSource, final long connectionTimeout)
-   {
-      if (connectionTimeout != Integer.MAX_VALUE) {
-         try {
-            dataSource.setLoginTimeout((int) TimeUnit.MILLISECONDS.toSeconds(Math.max(1000L, connectionTimeout)));
-         }
-         catch (SQLException e) {
-            LOGGER.warn("Unable to set DataSource login timeout", e);
-         }
-      }
-   }
-
    // Temporary hack for MySQL issue: http://bugs.mysql.com/bug.php?id=75615
    private void createNetworkTimeoutExecutor(final DataSource dataSource, final String dsClassName, final String jdbcUrl)
    {
@@ -267,6 +255,24 @@ public final class PoolUtilities
          }
          catch (Throwable t) {
             LOGGER.debug("Exception executing {}", command, t);
+         }
+      }
+   }
+
+   /**
+    * Set the loginTimeout on the specified DataSource.
+    *
+    * @param dataSource the DataSource
+    * @param connectionTimeout the timeout in milliseconds
+    */
+   private void setLoginTimeout(final DataSource dataSource, final long connectionTimeout)
+   {
+      if (connectionTimeout != Integer.MAX_VALUE) {
+         try {
+            dataSource.setLoginTimeout((int) TimeUnit.MILLISECONDS.toSeconds(Math.max(1000L, connectionTimeout)));
+         }
+         catch (SQLException e) {
+            LOGGER.warn("Unable to set DataSource login timeout", e);
          }
       }
    }
