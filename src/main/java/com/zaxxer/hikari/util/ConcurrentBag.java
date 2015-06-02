@@ -115,7 +115,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
 
          for (int i = list.size() - 1; i >= 0; i--) {
             final T bagEntry = (T) (weakThreadLocals ? ((WeakReference) list.remove(i)).get() : list.remove(i));
-            if (bagEntry != null & bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
+            if (bagEntry != null && bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
                return bagEntry;
             }
          }
