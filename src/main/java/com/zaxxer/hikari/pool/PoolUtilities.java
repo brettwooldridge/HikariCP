@@ -74,26 +74,6 @@ public final class PoolUtilities
    }
 
    /**
-    * Execute the user-specified init SQL.
-    *
-    * @param connection the connection to initialize
-    * @param sql the SQL to execute
-    * @param isAutoCommit whether to commit the SQL after execution or not
-    * @throws SQLException throws if the init SQL execution fails
-    */
-   public void executeSql(final Connection connection, final String sql, final boolean isAutoCommit) throws SQLException
-   {
-      if (sql != null) {
-         try (Statement statement = connection.createStatement()) {
-            statement.execute(sql);
-            if (!isAutoCommit) {
-               connection.commit();
-            }
-         }
-      }
-   }
-
-   /**
     * Create/initialize the underlying DataSource.
     *
     * @return a DataSource instance
@@ -128,13 +108,14 @@ public final class PoolUtilities
     * Setup a connection initial state.
     *
     * @param connection a Connection
+    * @param initSql 
     * @param isAutoCommit auto-commit state
     * @param isReadOnly read-only state
     * @param transactionIsolation transaction isolation
     * @param catalog default catalog
     * @throws SQLException thrown from driver
     */
-   public void setupConnection(final Connection connection, final boolean isAutoCommit, final boolean isReadOnly, final int transactionIsolation, final String catalog) throws SQLException
+   public void setupConnection(final Connection connection, final String initSql, final boolean isAutoCommit, final boolean isReadOnly, final int transactionIsolation, final String catalog) throws SQLException
    {
       connection.setAutoCommit(isAutoCommit);
       connection.setReadOnly(isReadOnly);
@@ -144,6 +125,8 @@ public final class PoolUtilities
       if (catalog != null) {
          connection.setCatalog(catalog);
       }
+
+      executeSql(connection, initSql, isAutoCommit);
    }
 
    /**
@@ -227,6 +210,26 @@ public final class PoolUtilities
    {
       if (isNetworkTimeoutSupported) {
          connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
+      }
+   }
+
+   /**
+    * Execute the user-specified init SQL.
+    *
+    * @param connection the connection to initialize
+    * @param sql the SQL to execute
+    * @param isAutoCommit whether to commit the SQL after execution or not
+    * @throws SQLException throws if the init SQL execution fails
+    */
+   private void executeSql(final Connection connection, final String sql, final boolean isAutoCommit) throws SQLException
+   {
+      if (sql != null) {
+         try (Statement statement = connection.createStatement()) {
+            statement.execute(sql);
+            if (!isAutoCommit) {
+               connection.commit();
+            }
+         }
       }
    }
 

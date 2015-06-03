@@ -250,7 +250,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       try {
          poolState = POOL_SHUTDOWN;
 
-         LOGGER.info("HikariCP pool {} is shutting down.", configuration.getPoolName());
+         LOGGER.info("Hikari pool {} is shutting down.", configuration.getPoolName());
 
          logPoolState("Before shutdown ");
          connectionBag.close();
@@ -260,7 +260,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          houseKeepingExecutorService.awaitTermination(5L, TimeUnit.SECONDS);
          addConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
 
-         final ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "HikariCP connection assassin",
+         final ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "Hikari connection assassin",
                                                                            configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
          try {
             final long start = clockSource.currentTime();
@@ -509,8 +509,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          
          transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
          
-         poolUtils.setupConnection(connection, isAutoCommit, isReadOnly, transactionIsolation, catalog);
-         poolUtils.executeSql(connection, configuration.getConnectionInitSql(), isAutoCommit);
+         poolUtils.setupConnection(connection, configuration.getConnectionInitSql(), isAutoCommit, isReadOnly, transactionIsolation, catalog);
          poolUtils.setNetworkTimeout(connection, originalTimeout);
          
          connectionBag.add(new PoolBagEntry(connection, this));

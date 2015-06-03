@@ -317,7 +317,7 @@ public class HikariConfig implements HikariConfigMBean
          this.driverClassName = driverClassName;
       }
       catch (Exception e) {
-         throw new RuntimeException("driverClassName specified class '" + driverClassName + "' could not be loaded", e);
+         throw new RuntimeException("Could not load class of driverClassName " + driverClassName, e);
       }
    }
 
@@ -731,22 +731,22 @@ public class HikariConfig implements HikariConfigMBean
       }
 
       if (driverClassName != null && jdbcUrl == null) {
-         logger.error("when specifying driverClassName, jdbcUrl must also be specified");
-         throw new IllegalStateException("when specifying driverClassName, jdbcUrl must also be specified");
+         logger.error("jdbcUrl is required with driverClassName");
+         throw new IllegalStateException("jdbcUrl is required with driverClassName");
       }
       else if (driverClassName != null && dataSourceClassName != null) {
-         logger.error("both driverClassName and dataSourceClassName are specified, one or the other should be used");
-         throw new IllegalStateException("both driverClassName and dataSourceClassName are specified, one or the other should be used");
+         logger.error("cannot use driverClassName and dataSourceClassName together");
+         throw new IllegalStateException("cannot use driverClassName and dataSourceClassName together");
       }
       else if (jdbcUrl != null) {
          // OK
       }
       else if (dataSource == null && dataSourceClassName == null) {
-         logger.error("one of either dataSource, dataSourceClassName, or jdbcUrl and driverClassName must be specified");
-         throw new IllegalArgumentException("one of either dataSource or dataSourceClassName must be specified");
+         logger.error("either dataSource or dataSourceClassName is required");
+         throw new IllegalArgumentException("either dataSource or dataSourceClassName is required");
       }
       else if (dataSource != null && dataSourceClassName != null) {
-         logger.warn("both dataSource and dataSourceClassName are specified, ignoring dataSourceClassName");
+         logger.warn("using dataSource and ignoring dataSourceClassName");
       }
 
       if (transactionIsolationName != null) {
@@ -763,7 +763,7 @@ public class HikariConfig implements HikariConfigMBean
       Logger logger = LoggerFactory.getLogger(getClass());
 
       if (validationTimeout > connectionTimeout && connectionTimeout != 0) {
-         logger.warn("validationTimeout is greater than connectionTimeout, setting validationTimeout to connectionTimeout.");
+         logger.warn("validationTimeout is greater than connectionTimeout, setting to connectionTimeout.");
          validationTimeout = connectionTimeout;
       }
 
@@ -776,12 +776,12 @@ public class HikariConfig implements HikariConfigMBean
          throw new IllegalArgumentException("maxLifetime cannot be negative.");
       }
       else if (maxLifetime > 0 && maxLifetime < TimeUnit.SECONDS.toMillis(30)) {
-         logger.warn("maxLifetime is less than 30000ms, using default {}ms.", MAX_LIFETIME);
+         logger.warn("maxLifetime is less than 30000ms, setting to default {}ms.", MAX_LIFETIME);
          maxLifetime = MAX_LIFETIME;
       }
 
       if (idleTimeout != 0 && idleTimeout < TimeUnit.SECONDS.toMillis(10)) {
-         logger.warn("idleTimeout is less than 10000ms, using default {}ms.", IDLE_TIMEOUT);
+         logger.warn("idleTimeout is less than 10000ms, setting to default {}ms.", IDLE_TIMEOUT);
          idleTimeout = IDLE_TIMEOUT;
       }
       else if (idleTimeout > maxLifetime && maxLifetime > 0) {

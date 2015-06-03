@@ -74,7 +74,7 @@ public class TestValidation
          Assert.fail();
       }
       catch (RuntimeException ise) {
-         Assert.assertTrue(ise.getMessage().contains("driverClassName specified class"));
+         Assert.assertTrue(ise.getMessage().contains("class of driverClassName "));
       }
    }
 
@@ -87,7 +87,7 @@ public class TestValidation
          Assert.fail();
       }
       catch (IllegalArgumentException ise) {
-         Assert.assertTrue(ise.getMessage().contains("one of either dataSource"));
+         Assert.assertTrue(ise.getMessage().contains("either dataSource"));
       }
    }
 
@@ -184,7 +184,7 @@ public class TestValidation
          Assert.fail();
       }
       catch (IllegalStateException ise) {
-         Assert.assertTrue(ise.getMessage().contains("both driverClassName"));
+         Assert.assertTrue(ise.getMessage().contains("cannot use"));
       }
    }
 
@@ -201,10 +201,10 @@ public class TestValidation
          config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
          config.setDataSource(new StubDataSource());
          config.validate();
-         Assert.assertTrue(new String(baos.toByteArray()).contains("both dataSource"));
+         Assert.assertTrue(new String(baos.toByteArray()).contains("using dataSource"));
       }
       catch (IllegalStateException ise) {
-         Assert.assertTrue(ise.getMessage().contains("both dataSource"));
+         Assert.fail();
       }
    }
 

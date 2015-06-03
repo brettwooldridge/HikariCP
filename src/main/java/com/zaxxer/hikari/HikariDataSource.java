@@ -69,7 +69,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       configuration.validate();
       configuration.copyState(this);
 
-      LOGGER.info("HikariCP pool {} is starting.", configuration.getPoolName());
+      LOGGER.info("Hikari pool {} is starting.", configuration.getPoolName());
       pool = fastPathPool = new HikariPool(this);
    }
 
@@ -92,7 +92,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
             result = pool;
             if (result == null) {
                validate();
-               LOGGER.info("HikariCP pool {} is starting.", getPoolName());
+               LOGGER.info("Hikari pool {} is starting.", getPoolName());
                pool = result = new HikariPool(this);
             }
          }
