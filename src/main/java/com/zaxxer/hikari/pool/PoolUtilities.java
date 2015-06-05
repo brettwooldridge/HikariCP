@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -98,7 +99,7 @@ public final class PoolUtilities
 
       if (dataSource != null) {
          setLoginTimeout(dataSource, config.getConnectionTimeout());
-         createNetworkTimeoutExecutor(dataSource, dsClassName, jdbcUrl);
+         createNetworkTimeoutExecutor(dataSource, dsClassName, jdbcUrl, Math.min(config.getValidationTimeout(), TimeUnit.SECONDS.toMillis(5)));
       }
 
       return dataSource;
@@ -234,7 +235,7 @@ public final class PoolUtilities
    }
 
    // Temporary hack for MySQL issue: http://bugs.mysql.com/bug.php?id=75615
-   private void createNetworkTimeoutExecutor(final DataSource dataSource, final String dsClassName, final String jdbcUrl)
+   private void createNetworkTimeoutExecutor(final DataSource dataSource, final String dsClassName, final String jdbcUrl, final long keepAliveMs)
    {
       if ((dsClassName != null && dsClassName.contains("Mysql")) ||
           (jdbcUrl != null && jdbcUrl.contains("mysql")) ||
@@ -242,8 +243,11 @@ public final class PoolUtilities
          netTimeoutExecutor = new SynchronousExecutor();
       }
       else {
-         netTimeoutExecutor = Executors.newCachedThreadPool(new DefaultThreadFactory("Hikari JDBC-timeout executor", true));
-         ((ThreadPoolExecutor) netTimeoutExecutor).allowCoreThreadTimeOut(true);
+         ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari JDBC-timeout executor", true);
+         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool(threadFactory);
+         executor.allowCoreThreadTimeOut(true);
+         executor.setKeepAliveTime(keepAliveMs, TimeUnit.MILLISECONDS);
+         netTimeoutExecutor = executor; 
       }
    }
 

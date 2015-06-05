@@ -106,9 +106,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    private final SuspendResumeLock suspendResumeLock;
    private final AtomicReference<Throwable> lastConnectionFailure;
 
-   private final String username;
-   private final String password;
-
    private volatile MetricsTracker metricsTracker;
    private volatile boolean isRecordMetrics;
 
@@ -120,8 +117,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    public HikariPool(HikariConfig config)
     {
       this.configuration = config;
-      this.username = config.getUsername();
-      this.password = config.getPassword();
 
       this.poolUtils = new PoolUtilities(config);
       this.dataSource = poolUtils.initializeDataSource();
@@ -147,8 +142,8 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection filler (pool " + config.getPoolName() + ")", config.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
       this.closeConnectionExecutor = createThreadPoolExecutor(4, "Hikari connection closer (pool " + config.getPoolName() + ")", config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
 
-      ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari housekeeper (pool " + config.getPoolName() + ")", true);
       if (config.getScheduledExecutorService() == null) {
+         ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari housekeeper (pool " + config.getPoolName() + ")", true);
          this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
          this.houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), HOUSEKEEPING_PERIOD_MS, HOUSEKEEPING_PERIOD_MS, TimeUnit.MILLISECONDS);
          this.houseKeepingExecutorService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
@@ -490,38 +485,43 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    private boolean addConnection()
    {
+      final HikariConfig config = configuration;
+
       // Speculative increment of totalConnections with expectation of success
-      if (totalConnections.incrementAndGet() > configuration.getMaximumPoolSize()) {
+      if (totalConnections.incrementAndGet() > config.getMaximumPoolSize()) {
          totalConnections.decrementAndGet(); // Pool is maxed out, so undo speculative increment of totalConnections
-         lastConnectionFailure.set(new SQLException("HikariCP pool " + configuration.getPoolName() +" is at maximum capacity"));
+         lastConnectionFailure.set(new SQLException("Hikari pool " + config.getPoolName() +" is at maximum capacity"));
          return true;
       }
 
       Connection connection = null;
       try {
+         String username = config.getUsername();
+         String password = config.getPassword();
+
          connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
          
          if (isUseJdbc4Validation && !poolUtils.isJdbc4ValidationSupported(connection)) {
             throw new SQLException("JDBC4 Connection.isValid() method not supported, connection test query must be configured");
          }
-         
+
          final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, connectionTimeout);
-         
+
          transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
-         
-         poolUtils.setupConnection(connection, configuration.getConnectionInitSql(), isAutoCommit, isReadOnly, transactionIsolation, catalog);
+         poolUtils.setupConnection(connection, config.getConnectionInitSql(), isAutoCommit, isReadOnly, transactionIsolation, catalog);
+
          poolUtils.setNetworkTimeout(connection, originalTimeout);
          
          connectionBag.add(new PoolBagEntry(connection, this));
          lastConnectionFailure.set(null);
-         LOGGER.debug("Connection {} added to pool {} ", connection, configuration.getPoolName());
+         LOGGER.debug("Connection {} added to pool {} ", connection, config.getPoolName());
          return true;
       }
       catch (Exception e) {
          totalConnections.decrementAndGet(); // We failed, so undo speculative increment of totalConnections
          lastConnectionFailure.set(e);
          if (poolState == POOL_NORMAL) {
-            LOGGER.debug("Connection attempt to database in pool {} failed: {}", configuration.getPoolName(), e.getMessage(), e);
+            LOGGER.debug("Connection attempt to database in pool {} failed: {}", config.getPoolName(), e.getMessage(), e);
          }
          poolUtils.quietlyCloseConnection(connection, "exception during connection creation");
          return false;
