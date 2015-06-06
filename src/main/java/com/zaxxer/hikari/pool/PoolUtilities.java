@@ -62,7 +62,7 @@ public final class PoolUtilities
 
          LOGGER.debug("Closing connection {} in pool {}{}", connection, poolName, addendum);
          try {
-            setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(30));
+            setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(15));
          }
          finally {
             // continue with the close even if setNetworkTimeout() throws (due to driver poorly behaving drivers)
