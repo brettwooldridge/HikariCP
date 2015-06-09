@@ -99,7 +99,7 @@ public final class PoolUtilities
 
       if (dataSource != null) {
          setLoginTimeout(dataSource, config.getConnectionTimeout());
-         createNetworkTimeoutExecutor(dataSource, dsClassName, jdbcUrl, Math.min(config.getValidationTimeout(), TimeUnit.SECONDS.toMillis(5)));
+         createNetworkTimeoutExecutor(dataSource, dsClassName, jdbcUrl);
       }
 
       return dataSource;
@@ -291,9 +291,9 @@ public final class PoolUtilities
       }
    }
 
-   // Temporary hack for MySQL issue: http://bugs.mysql.com/bug.php?id=75615
-   private void createNetworkTimeoutExecutor(final DataSource dataSource, final String dsClassName, final String jdbcUrl, final long keepAliveMs)
+   private void createNetworkTimeoutExecutor(final DataSource dataSource, final String dsClassName, final String jdbcUrl)
    {
+      // Temporary hack for MySQL issue: http://bugs.mysql.com/bug.php?id=75615
       if ((dsClassName != null && dsClassName.contains("Mysql")) ||
           (jdbcUrl != null && jdbcUrl.contains("mysql")) ||
           (dataSource != null && dataSource.getClass().getName().contains("Mysql"))) {
@@ -303,7 +303,7 @@ public final class PoolUtilities
          ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari JDBC-timeout executor", true);
          ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool(threadFactory);
          executor.allowCoreThreadTimeOut(true);
-         executor.setKeepAliveTime(keepAliveMs, TimeUnit.MILLISECONDS);
+         executor.setKeepAliveTime(15, TimeUnit.SECONDS);
          netTimeoutExecutor = executor; 
       }
    }
