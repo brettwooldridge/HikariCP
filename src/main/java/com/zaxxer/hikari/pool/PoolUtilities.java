@@ -2,6 +2,7 @@ package com.zaxxer.hikari.pool;
 
 import static com.zaxxer.hikari.util.UtilityElf.createInstance;
 
+import java.lang.management.ManagementFactory;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -12,6 +13,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 import javax.sql.DataSource;
 
 import org.slf4j.Logger;
@@ -34,8 +37,6 @@ public final class PoolUtilities
    private volatile boolean isValidSupported;
    private boolean isNetworkTimeoutSupported;
    private boolean isQueryTimeoutSupported;
-
-
 
    public PoolUtilities(final HikariConfig configuration)
    {
@@ -211,6 +212,63 @@ public final class PoolUtilities
    {
       if (isNetworkTimeoutSupported) {
          connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
+      }
+   }
+
+   /**
+    * Register MBeans for HikariConfig and HikariPool.
+    *
+    * @param configuration a HikariConfig instance
+    * @param pool a HikariPool instance
+    */
+   void registerMBeans(final HikariPool pool)
+   {
+      if (!config.isRegisterMbeans()) {
+         return;
+      }
+
+      try {
+         final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+
+         final ObjectName beanConfigName = new ObjectName("com.zaxxer.hikari:type=PoolConfig (" + poolName + ")");
+         final ObjectName beanPoolName = new ObjectName("com.zaxxer.hikari:type=Pool (" + poolName + ")");
+         if (!mBeanServer.isRegistered(beanConfigName)) {
+            mBeanServer.registerMBean(config, beanConfigName);
+            mBeanServer.registerMBean(pool, beanPoolName);
+         }
+         else {
+            LOGGER.error("You cannot use the same pool name for separate pool instances.");
+         }
+      }
+      catch (Exception e) {
+         LOGGER.warn("Unable to register management beans.", e);
+      }
+   }
+
+   /**
+    * Unregister MBeans for HikariConfig and HikariPool.
+    *
+    * @param configuration a HikariConfig instance
+    * @param pool a HikariPool instance
+    */
+   void unregisterMBeans(final HikariPool pool)
+   {
+      if (!config.isRegisterMbeans()) {
+         return;
+      }
+
+      try {
+         final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+
+         final ObjectName beanConfigName = new ObjectName("com.zaxxer.hikari:type=PoolConfig (" + poolName + ")");
+         final ObjectName beanPoolName = new ObjectName("com.zaxxer.hikari:type=Pool (" + poolName + ")");
+         if (mBeanServer.isRegistered(beanConfigName)) {
+            mBeanServer.unregisterMBean(beanConfigName);
+            mBeanServer.unregisterMBean(beanPoolName);
+         }
+      }
+      catch (Exception e) {
+         LOGGER.warn("Unable to unregister management beans.", e);
       }
    }
 

@@ -16,8 +16,6 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.pool.HikariMBeanElf.registerMBeans;
-import static com.zaxxer.hikari.pool.HikariMBeanElf.unregisterMBeans;
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_IN_USE;
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_NOT_IN_USE;
 import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_REMOVED;
@@ -154,7 +152,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       }
       this.leakTask = (config.getLeakDetectionThreshold() == 0) ? LeakTask.NO_LEAK : new LeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
-      registerMBeans(config, this);
+      poolUtils.registerMBeans(this);
 
       PropertyBeanSetter.flushCaches();  // prevent classloader leak
 
@@ -275,7 +273,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       finally {
          logPoolState("After shutdown ");
 
-         unregisterMBeans(configuration, this);
+         poolUtils.unregisterMBeans(this);
          metricsTracker.close();
       }
    }
