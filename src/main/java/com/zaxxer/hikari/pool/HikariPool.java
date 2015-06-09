@@ -412,7 +412,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    @Override
    public void softEvictConnections()
    {
-      for (PoolBagEntry bagEntry : connectionBag.values(STATE_IN_USE)) {
+      for (PoolBagEntry bagEntry : connectionBag.values()) {
          bagEntry.evicted = true;
       }
 
@@ -581,7 +581,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          return true;
       }
       catch (SQLException e) {
-         LOGGER.warn("Exception during keep alive check, that means the connection ({}) must be dead.", connection, e);
+         LOGGER.warn("Exception during alive check, Connection ({}) declared dead.", connection, e);
          return false;
       }
    }

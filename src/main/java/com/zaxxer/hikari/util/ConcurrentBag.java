@@ -233,20 +233,33 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     * or reserve items in any way.  Call <code>reserve(T)</code>
     * on items in list before performing any action on them.
     *
-    * @param state one of STATE_NOT_IN_USE or STATE_IN_USE
+    * @param state one of the {@link IConcurrentBagEntry} states
     * @return a possibly empty list of objects having the state specified
     */
    public List<T> values(final int state)
    {
       final ArrayList<T> list = new ArrayList<>(sharedList.size());
-      if (state == STATE_IN_USE || state == STATE_NOT_IN_USE) {
-         for (final T reference : sharedList) {
-            if (reference.state().get() == state) {
-               list.add(reference);
-            }
+      for (final T reference : sharedList) {
+         if (reference.state().get() == state) {
+            list.add(reference);
          }
       }
+
       return list;
+   }
+
+   /**
+    * This method provides a "snapshot" in time of the bag items.  It
+    * does not "lock" or reserve items in any way.  Call <code>reserve(T)</code>
+    * on items in the list, or understand the concurrency implications of
+    * modifying items, before performing any action on them.
+    *
+    * @return a possibly empty list of (all) bag items
+    */
+   @SuppressWarnings("unchecked")
+   public List<T> values()
+   {
+      return (List<T>) sharedList.clone();
    }
 
    /**
