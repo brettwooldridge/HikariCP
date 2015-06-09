@@ -249,9 +249,8 @@ public final class PoolUtilities
     * Unregister MBeans for HikariConfig and HikariPool.
     *
     * @param configuration a HikariConfig instance
-    * @param pool a HikariPool instance
     */
-   void unregisterMBeans(final HikariPool pool)
+   void unregisterMBeans()
    {
       if (!config.isRegisterMbeans()) {
          return;
