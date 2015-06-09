@@ -658,18 +658,18 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    private class HouseKeeper implements Runnable
    {
-      private volatile long previous = System.currentTimeMillis();
+      private volatile long previous = clockSource.currentTime();
 
       @Override
       public void run()
       {
          connectionTimeout = configuration.getConnectionTimeout(); // refresh member in case it changed
 
-         final long now = System.currentTimeMillis();
+         final long now = clockSource.currentTime();
          final long idleTimeout = configuration.getIdleTimeout();
 
          // Detect retrograde time as well as forward leaps of unacceptable duration
-         if (now < previous || now > previous + (2 * HOUSEKEEPING_PERIOD_MS)) {
+         if (now < previous || now > clockSource.plusMillis(previous, (2 * HOUSEKEEPING_PERIOD_MS))) {
             LOGGER.warn("Unusual system clock change detected, soft-evicting connections from pool.");
             softEvictConnections();
             fillPool();
