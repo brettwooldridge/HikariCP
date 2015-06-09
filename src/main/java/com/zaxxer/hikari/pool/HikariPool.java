@@ -192,7 +192,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
             }
 
             final long now = clockSource.currentTime();
-            if (bagEntry.evicted || (clockSource.elapsedMillis(bagEntry.lastAccess, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(bagEntry.connection))) {
+            if (bagEntry.evicted || (clockSource.elapsedMillis(bagEntry.lastAccess, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(bagEntry))) {
                closeConnection(bagEntry, "connection evicted or dead"); // Throw away the dead connection and try again
                timeout = hardTimeout - clockSource.elapsedMillis(startTime, now);
             }
@@ -508,7 +508,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
          poolUtils.setupConnection(connection, config.getConnectionInitSql(), isAutoCommit, isReadOnly, transactionIsolation, catalog);
 
-         poolUtils.setNetworkTimeout(connection, originalTimeout);
+         poolUtils.setNetworkTimeout(connection, originalTimeout, null);
          
          connectionBag.add(new PoolBagEntry(connection, this));
          lastConnectionFailure.set(null);
@@ -549,14 +549,14 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    /**
     * Check whether the connection is alive or not.
     *
-    * @param connection the connection to test
+    * @param bagEntry a PoolBagEntry containing a connection to test
     * @return true if the connection is alive, false if it is not alive or we timed out
     */
-   private boolean isConnectionAlive(final Connection connection)
+   private boolean isConnectionAlive(final PoolBagEntry bagEntry)
    {
+      final Connection connection = bagEntry.connection;
+      final int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout);
       try {
-         int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout);
-
          if (isUseJdbc4Validation) {
             return connection.isValid(timeoutSec);
          }
@@ -574,7 +574,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
             connection.rollback();
          }
 
-         poolUtils.setNetworkTimeout(connection, originalTimeout);
+         poolUtils.setNetworkTimeout(connection, originalTimeout, bagEntry.clientExecutor);
 
          return true;
       }

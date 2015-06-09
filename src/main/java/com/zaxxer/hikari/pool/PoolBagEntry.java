@@ -17,6 +17,7 @@ package com.zaxxer.hikari.pool;
 
 import java.sql.Connection;
 import java.sql.Statement;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +43,7 @@ public final class PoolBagEntry implements IConcurrentBagEntry
    public volatile long lastOpenTime;
    public volatile boolean evicted;
    public volatile boolean aborted;
+   public volatile Executor clientExecutor;
 
    private volatile ScheduledFuture<?> endOfLife;
 

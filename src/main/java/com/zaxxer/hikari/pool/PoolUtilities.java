@@ -30,13 +30,12 @@ public final class PoolUtilities
    private static final Logger LOGGER = LoggerFactory.getLogger(PoolUtilities.class);
 
    private Executor netTimeoutExecutor;
-
    private final HikariConfig config;
    private final String poolName;
-   private volatile boolean isValidChecked; 
-   private volatile boolean isValidSupported;
    private boolean isNetworkTimeoutSupported;
    private boolean isQueryTimeoutSupported;
+   private volatile boolean isValidChecked; 
+   private volatile boolean isValidSupported;
 
    public PoolUtilities(final HikariConfig configuration)
    {
@@ -63,7 +62,7 @@ public final class PoolUtilities
 
          LOGGER.debug("Closing connection {} in pool {}{}", connection, poolName, addendum);
          try {
-            setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(15));
+            setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(15), netTimeoutExecutor);
          }
          finally {
             // continue with the close even if setNetworkTimeout() throws (due to driver poorly behaving drivers)
@@ -206,12 +205,13 @@ public final class PoolUtilities
     *
     * @param connection the connection to set the network timeout on
     * @param timeoutMs the number of milliseconds before timeout
+    * @param executor a specified Executor to use, or null for the pool-defined Executor
     * @throws SQLException throw if the connection.setNetworkTimeout() call throws
     */
-   public void setNetworkTimeout(final Connection connection, final long timeoutMs) throws SQLException
+   public void setNetworkTimeout(final Connection connection, final long timeoutMs, final Executor executor) throws SQLException
    {
       if (isNetworkTimeoutSupported) {
-         connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
+         connection.setNetworkTimeout((executor == null) ? netTimeoutExecutor : executor, (int) timeoutMs);
       }
    }
 
