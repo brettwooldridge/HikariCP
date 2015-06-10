@@ -79,12 +79,12 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    protected static final int POOL_SUSPENDED = 1;
    protected static final int POOL_SHUTDOWN = 2;
 
+   public int transactionIsolation;
    public final String catalog;
    public final boolean isReadOnly;
    public final boolean isAutoCommit;
-   public int transactionIsolation;
+   public final PoolUtilities poolUtils;
 
-   protected final PoolUtilities poolUtils;
    protected final HikariConfig configuration;
    protected final AtomicInteger totalConnections;
    protected final ConcurrentBag<PoolBagEntry> connectionBag;
@@ -510,7 +510,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
          poolUtils.setNetworkTimeout(connection, originalTimeout);
          
-         connectionBag.add(new PoolBagEntry(connection, this));
+         connectionBag.add(new PoolBagEntry(connection, originalTimeout, this));
          lastConnectionFailure.set(null);
          LOGGER.debug("Connection {} added to pool {} ", connection, config.getPoolName());
          return true;

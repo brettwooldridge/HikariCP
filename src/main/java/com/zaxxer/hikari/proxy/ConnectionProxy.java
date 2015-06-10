@@ -25,6 +25,7 @@ import java.sql.Statement;
 import java.sql.Wrapper;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    private final PoolBagEntry bagEntry;
    private final FastList<Statement> openStatements;
    
+   private int networkTimeout;
    private long lastAccess;
    private boolean isCommitStateDirty;
    private boolean isConnectionStateDirty;
@@ -165,6 +167,10 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
       if (isCatalogDirty && bagEntry.parentPool.catalog != null) {
          delegate.setCatalog(bagEntry.parentPool.catalog);
+      }
+
+      if (networkTimeout != bagEntry.networkTimeout) {
+         bagEntry.parentPool.poolUtils.setNetworkTimeout(delegate, bagEntry.networkTimeout);
       }
 
       lastAccess = clockSource.currentTime();
@@ -374,6 +380,15 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       delegate.setCatalog(catalog);
       isConnectionStateDirty = true;
       isCatalogDirty = (catalog != null && !catalog.equals(bagEntry.parentPool.catalog)) || (catalog == null && bagEntry.parentPool.catalog != null);
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException
+   {
+      delegate.setNetworkTimeout(executor, milliseconds);
+      networkTimeout = milliseconds;
+      isConnectionStateDirty = true;
    }
 
    /** {@inheritDoc} */

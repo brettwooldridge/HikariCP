@@ -38,6 +38,7 @@ public final class PoolBagEntry implements IConcurrentBagEntry
    public final HikariPool parentPool;
 
    public Connection connection;
+   public int networkTimeout;
    public long lastAccess;
    public volatile long lastOpenTime;
    public volatile boolean evicted;
@@ -45,8 +46,9 @@ public final class PoolBagEntry implements IConcurrentBagEntry
 
    private volatile ScheduledFuture<?> endOfLife;
 
-   public PoolBagEntry(final Connection connection, final HikariPool pool) {
+   public PoolBagEntry(final Connection connection, final int networkTimeout, final HikariPool pool) {
       this.connection = connection;
+      this.networkTimeout = networkTimeout;
       this.parentPool = pool;
       this.lastAccess = ClockSource.INSTANCE.currentTime();
       this.openStatements = new FastList<>(Statement.class, 16);
