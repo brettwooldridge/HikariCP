@@ -25,7 +25,6 @@ import java.sql.Statement;
 import java.sql.Wrapper;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.Executor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -375,14 +374,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       delegate.setCatalog(catalog);
       isConnectionStateDirty = true;
       isCatalogDirty = (catalog != null && !catalog.equals(bagEntry.parentPool.catalog)) || (catalog == null && bagEntry.parentPool.catalog != null);
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException
-   {
-      delegate.setNetworkTimeout(executor, milliseconds);
-      bagEntry.clientExecutor = executor;
    }
 
    /** {@inheritDoc} */
