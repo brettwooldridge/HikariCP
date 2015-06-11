@@ -19,7 +19,6 @@ package com.zaxxer.hikari.util;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
-
 /**
  * A monotonically increasing long sequence.
  *
@@ -28,13 +27,15 @@ import java.util.concurrent.atomic.LongAdder;
 public interface Sequence
 {
    /**
-    * Increment the sequence.
+    * Adds the given value to the current sequence.  If delta is negative,
+    * the Sequential Consistency of this Sequence cannot be guarenteed.
+    *
+    * @param delta the value to add
     */
    void increment();
 
    /**
-    * Get the current sequence (imprecise on Java 8, but it doesn't matter for
-    * our purposes).
+    * Get the current sequence.
     *
     * @return the current sequence.
     */
@@ -50,10 +51,8 @@ public interface Sequence
       {
          class Java7Sequence extends AtomicLong implements Sequence {
             Java7Sequence() {
-               super(1);
             }
 
-            @Override
             public void increment() {
                this.incrementAndGet();
             }
@@ -61,7 +60,6 @@ public interface Sequence
 
          class Java8Sequence extends LongAdder implements Sequence {
             public Java8Sequence() {
-               this.increment();
             }
 
             @Override

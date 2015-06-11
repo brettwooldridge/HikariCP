@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,12 +55,11 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentBag.class);
 
-   private final AbstractQueuedLongSynchronizer synchronizer;
+   private final QueuedSequenceSynchronizer synchronizer;
    private final CopyOnWriteArrayList<T> sharedList;
    private final boolean weakThreadLocals;
 
    private final ThreadLocal<List> threadList;
-   private final Sequence sequence;
    private final IBagStateListener listener;
    private volatile boolean closed;
 
@@ -77,8 +75,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       this.weakThreadLocals = useWeakThreadLocals();
 
       this.sharedList = new CopyOnWriteArrayList<>();
-      this.synchronizer = new Synchronizer();
-      this.sequence = Sequence.Factory.create();
+      this.synchronizer = new QueuedSequenceSynchronizer();
       if (weakThreadLocals) {
          this.threadList = new ThreadLocal<>(); 
       }
@@ -126,27 +123,27 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       Future<Boolean> addItemFuture = null;
       final long startScan = System.nanoTime();
       final long originTimeout = timeout;
-      long startSeq = 0;  // 0 intentionally causes tryAcquireSharedNanos() to fall-thru in the first iteration
+      long startSeq;
       try {
-         while (timeout > 1000L && synchronizer.tryAcquireSharedNanos(startSeq, timeout)) {
+         do {
             do {
-               startSeq = sequence.get();
+               startSeq = synchronizer.getSequence();
                for (final T bagEntry : sharedList) {
                   if (bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
                      return bagEntry;
                   }
                }
-            } while (startSeq < sequence.get());
+            } while (startSeq < synchronizer.getSequence());
 
             if (addItemFuture == null || addItemFuture.isDone()) {
                addItemFuture = listener.addBagItem();
             }
    
             timeout = originTimeout - (System.nanoTime() - startScan);
-         }
+         } while (timeout > 1000L && synchronizer.waitUntilThresholdExceeded(startSeq, timeout));
       }
       finally {
-         synchronizer.releaseShared(1);
+         synchronizer.increment();
       }
 
       return null;
@@ -170,8 +167,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
             threadLocalList.add((weakThreadLocals ? new WeakReference<>(bagEntry) : bagEntry));
          }
 
-         sequence.increment();
-         synchronizer.releaseShared(1);
+         synchronizer.increment();
       }
       else {
          LOGGER.warn("Attempt to remove an object from the bag that does not exist: {}", bagEntry);
@@ -191,8 +187,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       }
 
       sharedList.add(bagEntry);
-      sequence.increment();
-      synchronizer.releaseShared(1);
+      synchronizer.increment();
    }
 
    /**
@@ -287,9 +282,8 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     */
    public void unreserve(final T bagEntry)
    {
-      sequence.increment();
       if (bagEntry.state().compareAndSet(STATE_RESERVED, STATE_NOT_IN_USE)) {
-         synchronizer.releaseShared(1);
+         synchronizer.increment();
       }
       else {
          LOGGER.warn("Attempt to relinquish an object to the bag that was not reserved: {}", bagEntry);
@@ -358,27 +352,6 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
          return getClass().getClassLoader() != ClassLoader.getSystemClassLoader();
       }
       catch (SecurityException se) {
-         return true;
-      }
-   }
-
-   /**
-    * Our private synchronizer that handles notify/wait type semantics.
-    */
-   private final class Synchronizer extends AbstractQueuedLongSynchronizer
-   {
-      private static final long serialVersionUID = 104753538004341218L;
-
-      @Override
-      protected long tryAcquireShared(final long seq)
-      {
-         return sequence.get() - (seq + 1) < 0 ? -1L : 0L;
-      }
-
-      /** {@inheritDoc} */
-      @Override
-      protected boolean tryReleaseShared(final long unreliableSequence)
-      {
          return true;
       }
    }
