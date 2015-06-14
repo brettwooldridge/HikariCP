@@ -143,7 +143,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
          } while (timeout > 1000L && synchronizer.waitUntilThresholdExceeded(startSeq, timeout));
       }
       finally {
-         synchronizer.increment();
+         synchronizer.signal();
       }
 
       return null;
@@ -167,7 +167,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
             threadLocalList.add((weakThreadLocals ? new WeakReference<>(bagEntry) : bagEntry));
          }
 
-         synchronizer.increment();
+         synchronizer.signal();
       }
       else {
          LOGGER.warn("Attempt to remove an object from the bag that does not exist: {}", bagEntry);
@@ -187,7 +187,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       }
 
       sharedList.add(bagEntry);
-      synchronizer.increment();
+      synchronizer.signal();
    }
 
    /**
@@ -283,7 +283,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    public void unreserve(final T bagEntry)
    {
       if (bagEntry.state().compareAndSet(STATE_RESERVED, STATE_NOT_IN_USE)) {
-         synchronizer.increment();
+         synchronizer.signal();
       }
       else {
          LOGGER.warn("Attempt to relinquish an object to the bag that was not reserved: {}", bagEntry);

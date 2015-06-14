@@ -22,7 +22,7 @@ import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
 /**
  * A specialized "lock" class that permits resource tracking through the
  * use of a monotonically-increasing long sequence.  When a shared resource
- * becomes available the {@link #increment()} method should be called.
+ * becomes available the {@link #signal()} method should be called.
  * <p>
  * A thread wishing to acquire a resource should obtain the current sequence
  * from the {@link #getSequence()} method before calling {@link #waitUntilThresholdExceeded(long, long)}
@@ -55,11 +55,10 @@ public final class QueuedSequenceSynchronizer
    }
 
    /**
-    * Increment the sequence by the specified number, which must be greater than zero.
+    * Signal any waiting threads.
     *
-    * @param delta the number to increase the sequence by, greater than 0
     */
-   public void increment()
+   public void signal()
    {
       synchronizer.releaseShared(1);
    }
