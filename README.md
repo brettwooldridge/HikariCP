@@ -365,7 +365,7 @@ Here is a list of JDBC *DataSource* classes for popular databases:
 | Oracle           | Oracle       | oracle.jdbc.pool.OracleDataSource |
 | PostgreSQL       | pgjdbc-ng    | com.impossibl.postgres.jdbc.PGDataSource |
 | PostgreSQL       | PostgreSQL   | org.postgresql.ds.PGSimpleDataSource |
-| SyBase           | jConnect     | com.sybase.jdbcx.SybDataSource |
+| SyBase           | jConnect     | com.sybase.jdbc4.jdbc.SybDataSource |
 
 ### Play Framework Plugin
 
