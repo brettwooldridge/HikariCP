@@ -193,7 +193,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
             final long now = clockSource.currentTime();
             if (bagEntry.evicted || (clockSource.elapsedMillis(bagEntry.lastAccess, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(bagEntry.connection))) {
-               closeConnection(bagEntry, "connection evicted or dead"); // Throw away the dead connection and try again
+               closeConnection(bagEntry, "(connection evicted or dead)"); // Throw away the dead connection and try again
                timeout = hardTimeout - clockSource.elapsedMillis(startTime, now);
             }
             else {
@@ -225,7 +225,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       metricsTracker.recordConnectionUsage(bagEntry);
 
       if (bagEntry.evicted) {
-         closeConnection(bagEntry, "connection broken or evicted");
+         closeConnection(bagEntry, "(connection broken or evicted)");
       }
       else {
          connectionBag.requite(bagEntry);
@@ -285,7 +285,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    public final void evictConnection(IHikariConnectionProxy proxyConnection)
    {
-      closeConnection(proxyConnection.getPoolBagEntry(), "connection evicted by user");
+      closeConnection(proxyConnection.getPoolBagEntry(), "(connection evicted by user)");
    }
 
    /**
@@ -416,7 +416,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
       for (PoolBagEntry bagEntry : connectionBag.values(STATE_NOT_IN_USE)) {
          if (connectionBag.reserve(bagEntry)) {
-            closeConnection(bagEntry, "connection evicted by user");
+            closeConnection(bagEntry, "(connection evicted by user)");
          }
       }
    }
@@ -521,7 +521,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          if (poolState == POOL_NORMAL) {
             LOGGER.debug("Connection attempt to database in pool {} failed: {}", config.getPoolName(), e.getMessage(), e);
          }
-         poolUtils.quietlyCloseConnection(connection, "exception during connection creation");
+         poolUtils.quietlyCloseConnection(connection, "(exception during connection creation)");
          return false;
       }
    }
@@ -595,7 +595,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
             bagEntry.connection.abort(assassinExecutor);
          }
          catch (Throwable e) {
-            poolUtils.quietlyCloseConnection(bagEntry.connection, "connection aborted during shutdown");
+            poolUtils.quietlyCloseConnection(bagEntry.connection, "(connection aborted during shutdown)");
          }
          finally {
             bagEntry.connection = null;
@@ -682,10 +682,10 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          for (PoolBagEntry bagEntry : connectionBag.values(STATE_NOT_IN_USE)) {
             if (connectionBag.reserve(bagEntry)) {
                if (bagEntry.evicted) {
-                  closeConnection(bagEntry, "connection evicted");
+                  closeConnection(bagEntry, "(connection evicted)");
                }
                else if (idleTimeout > 0L && clockSource.elapsedMillis(bagEntry.lastAccess, now) > idleTimeout) {
-                  closeConnection(bagEntry, "connection passed idleTimeout");
+                  closeConnection(bagEntry, "(connection passed idleTimeout)");
                }
                else {
                   connectionBag.unreserve(bagEntry);

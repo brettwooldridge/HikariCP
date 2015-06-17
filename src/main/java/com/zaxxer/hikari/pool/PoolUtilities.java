@@ -55,13 +55,12 @@ public final class PoolUtilities
     */
    public void quietlyCloseConnection(final Connection connection, final String closureReason)
    {
-      final String addendum = closureReason != null ? " (" + closureReason + ")" : "";
       try {
          if (connection == null || connection.isClosed()) {
             return;
          }
 
-         LOGGER.debug("Closing connection {} in pool {}{}", connection, poolName, addendum);
+         LOGGER.debug("Closing connection {} in pool {} {}", connection, poolName, closureReason);
          try {
             setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(15));
          }
@@ -71,7 +70,7 @@ public final class PoolUtilities
          }
       }
       catch (Throwable e) {
-         LOGGER.debug("Exception closing connection {} in pool {}{}", connection, poolName, addendum, e);
+         LOGGER.debug("Exception closing connection {} in pool {} {}", connection, poolName, closureReason, e);
       }
    }
 
