@@ -68,16 +68,16 @@ import com.zaxxer.hikari.util.PropertyBeanSetter;
  */
 public class HikariPool implements HikariPoolMBean, IBagStateListener
 {
-   protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
+   private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
    private static final ClockSource clockSource = ClockSource.INSTANCE;
 
    private final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindow", TimeUnit.SECONDS.toMillis(1));
    private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30));
 
-   protected static final int POOL_NORMAL = 0;
-   protected static final int POOL_SUSPENDED = 1;
-   protected static final int POOL_SHUTDOWN = 2;
+   private static final int POOL_NORMAL = 0;
+   private static final int POOL_SUSPENDED = 1;
+   private static final int POOL_SHUTDOWN = 2;
 
    public int transactionIsolation;
    public final String catalog;
@@ -85,19 +85,19 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    public final boolean isAutoCommit;
    public final PoolUtilities poolUtils;
 
-   protected final HikariConfig configuration;
-   protected final AtomicInteger totalConnections;
-   protected final ConcurrentBag<PoolBagEntry> connectionBag;
-   protected final ThreadPoolExecutor addConnectionExecutor;
-   protected final ThreadPoolExecutor closeConnectionExecutor;
-   protected final ScheduledThreadPoolExecutor houseKeepingExecutorService;
+   final HikariConfig configuration;
+   final ConcurrentBag<PoolBagEntry> connectionBag;
+   final ScheduledThreadPoolExecutor houseKeepingExecutorService;
 
-   protected final boolean isUseJdbc4Validation;
-   protected final boolean isIsolateInternalQueries;
+   private final AtomicInteger totalConnections;
+   private final ThreadPoolExecutor addConnectionExecutor;
+   private final ThreadPoolExecutor closeConnectionExecutor;
 
-   protected volatile int poolState;
-   protected volatile long connectionTimeout;
-   protected volatile long validationTimeout;
+   private final boolean isUseJdbc4Validation;
+   private final boolean isIsolateInternalQueries;
+
+   private volatile int poolState;
+   private long connectionTimeout;
    
    private final LeakTask leakTask;
    private final DataSource dataSource;
@@ -105,7 +105,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    private final AtomicReference<Throwable> lastConnectionFailure;
 
    private volatile MetricsTracker metricsTracker;
-   private volatile boolean isRecordMetrics;
+   private boolean isRecordMetrics;
 
    /**
     * Construct a HikariPool with the specified configuration.
@@ -122,7 +122,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       this.connectionBag = new ConcurrentBag<>(this);
       this.totalConnections = new AtomicInteger();
       this.connectionTimeout = config.getConnectionTimeout();
-      this.validationTimeout = config.getValidationTimeout();
       this.lastConnectionFailure = new AtomicReference<>();
 
       this.catalog = config.getCatalog();
@@ -555,13 +554,13 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    private boolean isConnectionAlive(final Connection connection)
    {
       try {
-         int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout);
+         int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(configuration.getValidationTimeout());
 
          if (isUseJdbc4Validation) {
             return connection.isValid(timeoutSec);
          }
 
-         final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, validationTimeout);
+         final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, configuration.getValidationTimeout());
 
          try (Statement statement = connection.createStatement()) {
             poolUtils.setQueryTimeout(statement, timeoutSec);
