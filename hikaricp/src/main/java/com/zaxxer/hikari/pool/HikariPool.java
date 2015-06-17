@@ -69,7 +69,7 @@ public final class HikariPool extends BaseHikariPool
    public void softEvictConnections()
    {
       connectionBag.values(STATE_IN_USE).forEach(bagEntry -> bagEntry.evicted = true);
-      connectionBag.values(STATE_NOT_IN_USE).stream().filter(p -> connectionBag.reserve(p)).forEach(bagEntry -> closeConnection(bagEntry));
+      connectionBag.values(STATE_NOT_IN_USE).stream().filter(p -> connectionBag.reserve(p)).forEach(bagEntry -> closeConnection(bagEntry, "(connection evicted by user)"));
    }
 
    // ***********************************************************************
@@ -82,7 +82,7 @@ public final class HikariPool extends BaseHikariPool
     * @param connectionProxy the connection to actually close
     */
    @Override
-   protected void closeConnection(final PoolBagEntry bagEntry)
+   protected void closeConnection(final PoolBagEntry bagEntry, final String closureReason)
    {
       bagEntry.cancelMaxLifeTermination();
       if (connectionBag.remove(bagEntry)) {
@@ -91,7 +91,7 @@ public final class HikariPool extends BaseHikariPool
             LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
          }
          final Connection connection = bagEntry.connection;
-         closeConnectionExecutor.execute(() -> { poolUtils.quietlyCloseConnection(connection); });
+         closeConnectionExecutor.execute(() -> { poolUtils.quietlyCloseConnection(connection, closureReason); });
       }
       bagEntry.connection = null;
    }
@@ -148,7 +148,7 @@ public final class HikariPool extends BaseHikariPool
             bagEntry.connection.abort(assassinExecutor);
          }
          catch (SQLException | NoSuchMethodError | AbstractMethodError e) {
-            poolUtils.quietlyCloseConnection(bagEntry.connection);
+            poolUtils.quietlyCloseConnection(bagEntry.connection, "(connection aborted during shutdown)");
          }
          finally {
             bagEntry.connection = null;
@@ -194,8 +194,11 @@ public final class HikariPool extends BaseHikariPool
          final long idleTimeout = configuration.getIdleTimeout();
 
          connectionBag.values(STATE_NOT_IN_USE).stream().filter(p -> connectionBag.reserve(p)).forEach(bagEntry -> {
-            if (bagEntry.evicted || (idleTimeout > 0L && now > bagEntry.lastAccess + idleTimeout)) {
-               closeConnection(bagEntry);
+            if (bagEntry.evicted) {
+               closeConnection(bagEntry, "(connection evicted)");                  
+            }
+            else if (idleTimeout > 0L && now > bagEntry.lastAccess + idleTimeout) {
+               closeConnection(bagEntry, "(connection passed idleTimeout)");
             }
             else {
                connectionBag.unreserve(bagEntry);

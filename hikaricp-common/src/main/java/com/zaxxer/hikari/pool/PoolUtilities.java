@@ -46,17 +46,24 @@ public final class PoolUtilities
     *
     * @param connection the connection to close
     */
-   public void quietlyCloseConnection(final Connection connection)
+   public void quietlyCloseConnection(final Connection connection, final String closureReason)
    {
       try {
-         LOGGER.debug("Closing connection {}", connection);
-         if (connection != null && !connection.isClosed()) {
-            setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(30));
+         if (connection == null || connection.isClosed()) {
+            return;
+         }
+
+         LOGGER.debug("Closing connection {} in pool {} {}", connection, poolName, closureReason);
+         try {
+            setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(15));
+         }
+         finally {
+            // continue with the close even if setNetworkTimeout() throws (due to driver poorly behaving drivers)
             connection.close();
          }
       }
       catch (Throwable e) {
-         LOGGER.debug("{} - Exception closing connection {}", poolName, connection.toString(), e);
+         LOGGER.debug("Exception closing connection {} in pool {} {}", connection, poolName, closureReason, e);
       }
    }
 

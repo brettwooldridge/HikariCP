@@ -51,7 +51,7 @@ public final class PoolBagEntry implements IConcurrentBagEntry
             {
                // If we can reserve it, close it
                if (pool.connectionBag.reserve(PoolBagEntry.this)) {
-                  pool.closeConnection(PoolBagEntry.this);
+                  pool.closeConnection(PoolBagEntry.this, "(connection reached maxLifetime)");
                }
                else {
                   // else the connection is "in-use" and we mark it for eviction by pool.releaseConnection() or the housekeeper

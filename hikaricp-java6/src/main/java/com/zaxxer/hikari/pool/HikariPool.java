@@ -74,7 +74,7 @@ public final class HikariPool extends BaseHikariPool
 
       for (PoolBagEntry bagEntry : connectionBag.values(STATE_NOT_IN_USE)) {
          if (connectionBag.reserve(bagEntry)) {
-            closeConnection(bagEntry);
+            closeConnection(bagEntry, "(connection evicted by user)");
          }
       }
    }
@@ -89,7 +89,7 @@ public final class HikariPool extends BaseHikariPool
     * @param connectionProxy the connection to actually close
     */
    @Override
-   protected void closeConnection(final PoolBagEntry bagEntry)
+   protected void closeConnection(final PoolBagEntry bagEntry, final String closureReason)
    {
       bagEntry.cancelMaxLifeTermination();
       if (connectionBag.remove(bagEntry)) {
@@ -100,7 +100,7 @@ public final class HikariPool extends BaseHikariPool
          final Connection connection = bagEntry.connection;
          closeConnectionExecutor.execute(new Runnable() {
             public void run() {
-               poolUtils.quietlyCloseConnection(connection);
+               poolUtils.quietlyCloseConnection(connection, closureReason);
             }
          });
       }
@@ -166,7 +166,7 @@ public final class HikariPool extends BaseHikariPool
             if (e instanceof InterruptedException) {
                throw (InterruptedException) e;
             }
-            poolUtils.quietlyCloseConnection(bagEntry.connection);
+            poolUtils.quietlyCloseConnection(bagEntry.connection, "(connection aborted during shutdown)");
          }
          finally {
             bagEntry.connection = null;
@@ -212,8 +212,11 @@ public final class HikariPool extends BaseHikariPool
 
          for (PoolBagEntry bagEntry : connectionBag.values(STATE_NOT_IN_USE)) {
             if (connectionBag.reserve(bagEntry)) {
-               if (bagEntry.evicted || (idleTimeout > 0L && now > bagEntry.lastAccess + idleTimeout)) {
-                  closeConnection(bagEntry);
+               if (bagEntry.evicted) {
+                  closeConnection(bagEntry, "(connection evicted)");                  
+               }
+               else if (idleTimeout > 0L && now > bagEntry.lastAccess + idleTimeout) {
+                  closeConnection(bagEntry, "(connection passed idleTimeout)");
                }
                else {
                   connectionBag.unreserve(bagEntry);

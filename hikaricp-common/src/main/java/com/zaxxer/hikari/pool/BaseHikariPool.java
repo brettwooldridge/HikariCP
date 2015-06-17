@@ -205,7 +205,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
 
             final long now = System.currentTimeMillis();
             if (bagEntry.evicted || (now - bagEntry.lastAccess > ALIVE_BYPASS_WINDOW && !isConnectionAlive(bagEntry.connection))) {
-               closeConnection(bagEntry); // Throw away the dead connection and try again
+               closeConnection(bagEntry, "(connection evicted or dead)"); // Throw away the dead connection and try again
                timeout = hardTimeout - elapsedTimeMs(start);
             }
             else {
@@ -239,7 +239,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
 
       if (bagEntry.evicted) {
          LOGGER.debug("Connection returned to pool {} is broken or evicted.  Closing connection.", configuration.getPoolName());
-         closeConnection(bagEntry);
+         closeConnection(bagEntry, "(connection broken or evicted)");
       }
       else {
          connectionBag.requite(bagEntry);
@@ -293,7 +293,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
     */
    public final void evictConnection(IHikariConnectionProxy proxyConnection)
    {
-      closeConnection(proxyConnection.getPoolBagEntry());
+      closeConnection(proxyConnection.getPoolBagEntry(), "(connection evicted by user)");
    }
 
    /**
@@ -459,7 +459,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
             if (poolState == POOL_RUNNING) {
                LOGGER.debug("Connection attempt to database {} failed: {}", configuration.getPoolName(), e.getMessage(), e);
             }
-            poolUtils.quietlyCloseConnection(connection);
+            poolUtils.quietlyCloseConnection(connection, "(exception during connection creation)");
          }
       }
 
@@ -495,7 +495,7 @@ public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListen
     *
     * @param connectionProxy the connection to actually close
     */
-   protected abstract void closeConnection(final PoolBagEntry bagEntry);
+   protected abstract void closeConnection(final PoolBagEntry bagEntry, final String closureReason);
 
    /**
     * Check whether the connection is alive or not.
