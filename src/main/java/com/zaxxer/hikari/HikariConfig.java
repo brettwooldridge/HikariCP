@@ -226,6 +226,10 @@ public class HikariConfig implements HikariConfigMBean
       else {
          this.connectionTimeout = connectionTimeoutMs;
       }
+
+      if (validationTimeout > connectionTimeoutMs && connectionTimeoutMs > 0) {
+         this.validationTimeout = connectionTimeoutMs;
+      }
    }
 
    /** {@inheritDoc} */
@@ -245,7 +249,11 @@ public class HikariConfig implements HikariConfigMBean
       else {
          this.validationTimeout = validationTimeoutMs;
       }
-   }
+
+      if (validationTimeout > connectionTimeout) {
+         this.validationTimeout = connectionTimeout;
+      }
+}
 
    /**
     * Get the {@link DataSource} that has been explicitly specified to be wrapped by the
@@ -762,8 +770,7 @@ public class HikariConfig implements HikariConfigMBean
    {
       Logger logger = LoggerFactory.getLogger(getClass());
 
-      if (validationTimeout > connectionTimeout && connectionTimeout != 0) {
-         logger.warn("validationTimeout is greater than connectionTimeout, setting to connectionTimeout.");
+      if (validationTimeout > connectionTimeout && connectionTimeout != Integer.MAX_VALUE) {
          validationTimeout = connectionTimeout;
       }
 
