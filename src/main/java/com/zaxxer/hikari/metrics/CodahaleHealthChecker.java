@@ -54,9 +54,8 @@ public final class CodahaleHealthChecker
     * @param pool the pool to register health checks for
     * @param registry the HealthCheckRegistry into which checks will be registered
     */
-   public static void registerHealthChecks(final HikariPool pool, final HealthCheckRegistry registry)
+   public static void registerHealthChecks(final HikariPool pool, final HikariConfig hikariConfig, final HealthCheckRegistry registry)
    {
-      final HikariConfig hikariConfig = pool.getConfiguration();
       final Properties healthCheckProperties = hikariConfig.getHealthCheckProperties();
       final MetricRegistry metricRegistry = (MetricRegistry) hikariConfig.getMetricRegistry();
 

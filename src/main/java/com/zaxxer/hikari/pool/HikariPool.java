@@ -297,16 +297,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       return dataSource;
    }
 
-   /**
-    * Get the pool configuration object.
-    *
-    * @return the {@link HikariConfig} for this pool
-    */
-   public final HikariConfig getConfiguration()
-   {
-      return config;
-   }
-
    public void setMetricRegistry(Object metricRegistry)
    {
       this.isRecordMetrics = metricRegistry != null;
@@ -321,7 +311,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    public void setHealthCheckRegistry(Object healthCheckRegistry)
    {
       if (healthCheckRegistry != null) {
-         CodahaleHealthChecker.registerHealthChecks(this, (HealthCheckRegistry) healthCheckRegistry);
+         CodahaleHealthChecker.registerHealthChecks(this, config, (HealthCheckRegistry) healthCheckRegistry);
       }
    }
 
