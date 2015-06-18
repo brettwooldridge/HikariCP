@@ -359,13 +359,16 @@ Here is a list of JDBC *DataSource* classes for popular databases:
 | IBM DB2          | DB2          | com.ibm.db2.jcc.DB2SimpleDataSource |
 | H2               | H2           | org.h2.jdbcx.JdbcDataSource |
 | HSQLDB           | HSQLDB       | org.hsqldb.jdbc.JDBCDataSource |
+| IBM AS400        | IBM          | com.ibm.as400.access.AS400JDBCDriver |
 | MariaDB & MySQL  | MariaDB      | org.mariadb.jdbc.MySQLDataSource |
 | MySQL            | Connector/J  | com.mysql.jdbc.jdbc2.optional.MysqlDataSource |
 | MS SQL Server    | Microsoft    | com.microsoft.sqlserver.jdbc.SQLServerDataSource |
 | Oracle           | Oracle       | oracle.jdbc.pool.OracleDataSource |
 | PostgreSQL       | pgjdbc-ng    | com.impossibl.postgres.jdbc.PGDataSource |
 | PostgreSQL       | PostgreSQL   | org.postgresql.ds.PGSimpleDataSource |
+| SAP MaxDB        | SAP          | com.sap.dbtech.jdbc.DriverSapDB |
 | SyBase           | jConnect     | com.sybase.jdbc4.jdbc.SybDataSource |
+
 
 ### Play Framework Plugin
 
