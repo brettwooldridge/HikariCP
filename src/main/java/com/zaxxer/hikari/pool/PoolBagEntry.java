@@ -53,8 +53,8 @@ public final class PoolBagEntry implements IConcurrentBagEntry
       this.lastAccess = ClockSource.INSTANCE.currentTime();
       this.openStatements = new FastList<>(Statement.class, 16);
 
-      final long variance = pool.configuration.getMaxLifetime() > 60_000 ? ThreadLocalRandom.current().nextLong(10_000) : 0;
-      final long maxLifetime = pool.configuration.getMaxLifetime() - variance;
+      final long variance = pool.config.getMaxLifetime() > 60_000 ? ThreadLocalRandom.current().nextLong(10_000) : 0;
+      final long maxLifetime = pool.config.getMaxLifetime() - variance;
       if (maxLifetime > 0) {
          endOfLife = pool.houseKeepingExecutorService.schedule(new Runnable() {
             @Override
