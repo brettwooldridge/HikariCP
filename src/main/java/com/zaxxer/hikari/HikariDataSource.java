@@ -29,6 +29,7 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.util.DriverDataSource;
@@ -192,17 +193,17 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
 
    /** {@inheritDoc} */
    @Override
-   public void setMetricRegistry(Object metricRegistry)
+   public void setMetricsTrackerFactory(MetricsTrackerFactory metricsTrackerFactory)
    {
-      boolean isAlreadySet = getMetricRegistry() != null;
-      super.setMetricRegistry(metricRegistry);
+      boolean isAlreadySet = getMetricsTrackerFactory() != null;
+      super.setMetricsTrackerFactory(metricsTrackerFactory);
 
       if (pool != null) {
          if (isAlreadySet) {
-            throw new IllegalStateException("MetricRegistry can only be set one time");
+            throw new IllegalStateException("MetricsTrackerFactory can only be set one time");
          }
          else {
-            pool.setMetricRegistry(super.getMetricRegistry());
+            pool.setMetricsTrackerFactory(super.getMetricsTrackerFactory());
          }
       }
    }

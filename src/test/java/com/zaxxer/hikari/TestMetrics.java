@@ -31,6 +31,8 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.health.HealthCheck.Result;
 import com.codahale.metrics.health.HealthCheckRegistry;
+import com.zaxxer.hikari.metrics.CodahaleMetricsTrackerFactory;
+import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.util.UtilityElf;
 
 /**
@@ -213,6 +215,81 @@ public class TestMetrics
       }
       catch (IllegalStateException ise) {
          
+      }
+      finally {
+         ds.close();
+      }
+   }
+
+   @Test
+   public void testSetters3() throws Exception
+   {
+      HikariDataSource ds = new HikariDataSource();
+      ds.setMaximumPoolSize(1);
+      ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      MetricRegistry metricRegistry = new MetricRegistry();
+      MetricsTrackerFactory metricsTrackerFactory = new CodahaleMetricsTrackerFactory(metricRegistry);
+
+      try {
+         Connection connection = ds.getConnection();
+         connection.close();
+
+         // After the pool as started, we can only set them once...
+         ds.setMetricsTrackerFactory(metricsTrackerFactory);
+
+         // and never again...
+         ds.setMetricsTrackerFactory(metricsTrackerFactory);
+         Assert.fail("Should not have been allowed to set metricsTrackerFactory after pool started");
+      }
+      catch (IllegalStateException ise) {
+         // pass
+         try {
+            // and never again... (even when calling another method)
+            ds.setMetricRegistry(metricRegistry);
+            Assert.fail("Should not have been allowed to set registry after pool started");
+         }
+         catch (IllegalStateException ise2) {
+            // pass
+         }
+      }
+      finally {
+         ds.close();
+      }
+   }
+
+   @Test
+   public void testSetters4() throws Exception
+   {
+      HikariDataSource ds = new HikariDataSource();
+      ds.setMaximumPoolSize(1);
+      ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      MetricRegistry metricRegistry = new MetricRegistry();
+      MetricsTrackerFactory metricsTrackerFactory = new CodahaleMetricsTrackerFactory(metricRegistry);
+
+      // before the pool is started, we can set it any number of times using either setter
+      ds.setMetricRegistry(metricRegistry);
+      ds.setMetricsTrackerFactory(metricsTrackerFactory);
+
+      try {
+         Connection connection = ds.getConnection();
+         connection.close();
+
+         // after the pool is started, we cannot set it any more
+         ds.setMetricRegistry(metricRegistry);
+         Assert.fail("Should not have been allowed to set registry after pool started");
+      }
+      catch (IllegalStateException ise) {
+         // pass
+         try {
+            // after the pool is started, we cannot set it any more
+            ds.setMetricsTrackerFactory(metricsTrackerFactory);
+            Assert.fail("Should not have been allowed to set metricsTrackerFactory after pool started");
+         }
+         catch (IllegalStateException ise2) {
+            // pass
+         }
       }
       finally {
          ds.close();
