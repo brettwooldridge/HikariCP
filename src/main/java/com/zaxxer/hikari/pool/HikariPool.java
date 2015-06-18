@@ -85,7 +85,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    public final boolean isAutoCommit;
    public final PoolUtilities poolUtils;
 
-   final HikariConfig configuration;
+   final HikariConfig config;
    final ConcurrentBag<PoolBagEntry> connectionBag;
    final ScheduledThreadPoolExecutor houseKeepingExecutorService;
 
@@ -114,7 +114,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    public HikariPool(HikariConfig config)
     {
-      this.configuration = config;
+      this.config = config;
 
       this.poolUtils = new PoolUtilities(config);
       this.dataSource = poolUtils.initializeDataSource();
@@ -242,7 +242,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       try {
          poolState = POOL_SHUTDOWN;
 
-         LOGGER.info("Hikari pool {} is shutting down.", configuration.getPoolName());
+         LOGGER.info("Hikari pool {} is shutting down.", config.getPoolName());
 
          logPoolState("Before shutdown ");
          connectionBag.close();
@@ -252,8 +252,8 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          houseKeepingExecutorService.awaitTermination(5L, TimeUnit.SECONDS);
          addConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
 
-         final ExecutorService assassinExecutor = createThreadPoolExecutor(configuration.getMaximumPoolSize(), "Hikari connection assassin",
-                                                                           configuration.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
+         final ExecutorService assassinExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection assassin",
+                                                                           config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
          try {
             final long start = clockSource.currentTime();
             do {
@@ -304,14 +304,14 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    public final HikariConfig getConfiguration()
    {
-      return configuration;
+      return config;
    }
 
    public void setMetricRegistry(Object metricRegistry)
    {
       this.isRecordMetrics = metricRegistry != null;
       if (isRecordMetrics) {
-         this.metricsTracker = new CodaHaleMetricsTracker(configuration.getPoolName(), getPoolStats(), (MetricRegistry) metricRegistry);
+         this.metricsTracker = new CodaHaleMetricsTracker(config.getPoolName(), getPoolStats(), (MetricRegistry) metricRegistry);
       }
       else {
          this.metricsTracker = new MetricsTracker();
@@ -334,7 +334,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    {
       if (LOGGER.isDebugEnabled()) {
          LOGGER.debug("{}pool {} stats (total={}, active={}, idle={}, waiting={})",
-                      (prefix.length > 0 ? prefix[0] : ""), configuration.getPoolName(),
+                      (prefix.length > 0 ? prefix[0] : ""), config.getPoolName(),
                       getTotalConnections(), getActiveConnections(), getIdleConnections(), getThreadsAwaitingConnection());
       }
    }
@@ -343,7 +343,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    @Override
    public String toString()
    {
-      return configuration.getPoolName();
+      return config.getPoolName();
    }
 
    // ***********************************************************************
@@ -359,8 +359,8 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          public void run()
          {
             long sleepBackoff = 200L;
-            final int minimumIdle = configuration.getMinimumIdle();
-            final int maxPoolSize = configuration.getMaximumPoolSize();
+            final int minimumIdle = config.getMinimumIdle();
+            final int maxPoolSize = config.getMaximumPoolSize();
             while (poolState == POOL_NORMAL && totalConnections.get() < maxPoolSize && getIdleConnections() <= minimumIdle && !addConnection()) {
                // If we got into the loop, addConnection() failed, so we sleep and retry
                quietlySleep(sleepBackoff);
@@ -425,7 +425,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    public final synchronized void suspendPool()
    {
       if (suspendResumeLock == SuspendResumeLock.FAUX_LOCK) {
-         throw new IllegalStateException("Pool " + configuration.getPoolName() + " is not suspendable");
+         throw new IllegalStateException("Pool " + config.getPoolName() + " is not suspendable");
       }
       else if (poolState != POOL_SUSPENDED) {
          suspendResumeLock.suspend();
@@ -482,8 +482,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    private boolean addConnection()
    {
-      final HikariConfig config = configuration;
-
       // Speculative increment of totalConnections with expectation of success
       if (totalConnections.incrementAndGet() > config.getMaximumPoolSize()) {
          totalConnections.decrementAndGet(); // Pool is maxed out, so undo speculative increment of totalConnections
@@ -530,7 +528,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    private void fillPool()
    {
-      final int connectionsToAdd = configuration.getMinimumIdle() - getIdleConnections();
+      final int connectionsToAdd = Math.min(config.getMaximumPoolSize() - totalConnections.get(), config.getMinimumIdle() - getIdleConnections());
       for (int i = 0; i < connectionsToAdd; i++) {
          addBagItem();
       }
@@ -554,17 +552,17 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    private boolean isConnectionAlive(final Connection connection)
    {
       try {
-         int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(configuration.getValidationTimeout());
+         int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(config.getValidationTimeout());
 
          if (isUseJdbc4Validation) {
             return connection.isValid(timeoutSec);
          }
 
-         final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, configuration.getValidationTimeout());
+         final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, config.getValidationTimeout());
 
          try (Statement statement = connection.createStatement()) {
             poolUtils.setQueryTimeout(statement, timeoutSec);
-            try (ResultSet rs = statement.executeQuery(configuration.getConnectionTestQuery())) { 
+            try (ResultSet rs = statement.executeQuery(config.getConnectionTestQuery())) { 
                /* auto close */
             }
          }
@@ -610,14 +608,14 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     */
    private void initializeConnections()
    {
-      if (configuration.isInitializationFailFast()) {
+      if (config.isInitializationFailFast()) {
          try {
             if (!addConnection()) {
                throw lastConnectionFailure.getAndSet(null);
             }
 
             ConnectionProxy connection = (ConnectionProxy) getConnection();
-            connection.getPoolBagEntry().evicted = (configuration.getMinimumIdle() == 0);
+            connection.getPoolBagEntry().evicted = (config.getMinimumIdle() == 0);
             connection.close();
          }
          catch (Throwable e) {
@@ -662,10 +660,10 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       @Override
       public void run()
       {
-         connectionTimeout = configuration.getConnectionTimeout(); // refresh member in case it changed
+         connectionTimeout = config.getConnectionTimeout(); // refresh member in case it changed
 
          final long now = clockSource.currentTime();
-         final long idleTimeout = configuration.getIdleTimeout();
+         final long idleTimeout = config.getIdleTimeout();
 
          // Detect retrograde time as well as forward leaps of unacceptable duration
          if (now < previous || now > clockSource.plusMillis(previous, (2 * HOUSEKEEPING_PERIOD_MS))) {
