@@ -27,6 +27,11 @@ em {
 	font-style: italic;
 }
 
+sup {
+	vertical-align: super;
+	font-size: small;
+}
+
 /* HTML5 display-role reset for older browsers */
 article, aside, details, figcaption, figure,
 footer, header, hgroup, menu, nav, section {
@@ -166,7 +171,7 @@ code, pre {
   font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
   color: #222;
   margin-bottom: 30px;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 code {
@@ -231,7 +236,7 @@ form {
 
 #main-content h1 {
   font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif;
-  font-size: 2.8em;
+  font-size: 2.5em;
   letter-spacing: -1px;
   color: #474747;
 }
@@ -324,10 +329,11 @@ p a {
 }
 
 blockquote {
-  font-size: 1.6em;
+  font-size: 1.0em;
   border-left: 10px solid #e9e9e9;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   padding: 0 0 0 30px;
+	background-color: #e9e9e9;
 }
 
 ul li {
