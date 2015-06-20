@@ -123,7 +123,7 @@ public final class QueuedSequenceSynchronizer
       @Override
       protected long tryAcquireShared(final long seq)
       {
-         return sequence.get() - (seq + 1) < 0 ? -1L : 0L;
+         return sequence.get() - (seq + 1);
       }
 
       /** {@inheritDoc} */
