@@ -11,7 +11,7 @@ import javax.sql.DataSource;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.zaxxer.hikari.util.PropertyBeanSetter;
+import com.zaxxer.hikari.util.PropertyElf;
 
 public class TestPropertySetter
 {
@@ -35,7 +35,7 @@ public class TestPropertySetter
 
       Class<?> clazz = this.getClass().getClassLoader().loadClass(config.getDataSourceClassName());
       DataSource dataSource = (DataSource) clazz.newInstance();
-      PropertyBeanSetter.setTargetFromProperties(dataSource, config.getDataSourceProperties());
+      PropertyElf.setTargetFromProperties(dataSource, config.getDataSourceProperties());
    }
 
    @Test
@@ -48,7 +48,7 @@ public class TestPropertySetter
 
       Class<?> clazz = this.getClass().getClassLoader().loadClass(config.getDataSourceClassName());
       DataSource dataSource = (DataSource) clazz.newInstance();
-      PropertyBeanSetter.setTargetFromProperties(dataSource, config.getDataSourceProperties());
+      PropertyElf.setTargetFromProperties(dataSource, config.getDataSourceProperties());
 
       Assert.assertSame(PrintWriter.class, dataSource.getLogWriter().getClass());
    }
@@ -62,13 +62,13 @@ public class TestPropertySetter
 
       Class<?> clazz = this.getClass().getClassLoader().loadClass(config.getDataSourceClassName());
       DataSource dataSource = (DataSource) clazz.newInstance();
-      PropertyBeanSetter.setTargetFromProperties(dataSource, config.getDataSourceProperties());
+      PropertyElf.setTargetFromProperties(dataSource, config.getDataSourceProperties());
    }
 
    @Test
    public void testGetPropertyNames() throws Exception
    {
-      Set<String> propertyNames = PropertyBeanSetter.getPropertyNames(HikariConfig.class);
+      Set<String> propertyNames = PropertyElf.getPropertyNames(HikariConfig.class);
       Assert.assertTrue(propertyNames.contains("dataSourceClassName"));
    }
 
@@ -78,7 +78,7 @@ public class TestPropertySetter
       try {
          Properties props = new Properties();
          props.put("what", "happened");
-         PropertyBeanSetter.setTargetFromProperties(new HikariConfig(), props);
+         PropertyElf.setTargetFromProperties(new HikariConfig(), props);
          Assert.fail();
       }
       catch (RuntimeException e) {

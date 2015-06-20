@@ -37,9 +37,9 @@ import com.zaxxer.hikari.HikariConfig;
  *
  * @author Brett Wooldridge
  */
-public final class PropertyBeanSetter
+public final class PropertyElf
 {
-   private static final Logger LOGGER = LoggerFactory.getLogger(PropertyBeanSetter.class);
+   private static final Logger LOGGER = LoggerFactory.getLogger(PropertyElf.class);
 
    public static void setTargetFromProperties(Object target, Properties properties)
    {

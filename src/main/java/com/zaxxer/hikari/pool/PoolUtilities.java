@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.DriverDataSource;
-import com.zaxxer.hikari.util.PropertyBeanSetter;
+import com.zaxxer.hikari.util.PropertyElf;
 
 public final class PoolUtilities
 {
@@ -91,7 +91,7 @@ public final class PoolUtilities
       DataSource dataSource = config.getDataSource();
       if (dsClassName != null && dataSource == null) {
          dataSource = createInstance(dsClassName, DataSource.class);
-         PropertyBeanSetter.setTargetFromProperties(dataSource, dataSourceProperties);
+         PropertyElf.setTargetFromProperties(dataSource, dataSourceProperties);
       }
       else if (jdbcUrl != null && dataSource == null) {
          dataSource = new DriverDataSource(jdbcUrl, driverClassName, dataSourceProperties, username, password);

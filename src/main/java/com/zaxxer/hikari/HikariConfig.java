@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
-import com.zaxxer.hikari.util.PropertyBeanSetter;
+import com.zaxxer.hikari.util.PropertyElf;
 import com.zaxxer.hikari.util.UtilityElf;
 
 public class HikariConfig implements HikariConfigMBean
@@ -123,7 +123,7 @@ public class HikariConfig implements HikariConfigMBean
    public HikariConfig(Properties properties)
    {
       this();
-      PropertyBeanSetter.setTargetFromProperties(this, properties);
+      PropertyElf.setTargetFromProperties(this, properties);
    }
 
    /**
@@ -805,12 +805,12 @@ public class HikariConfig implements HikariConfigMBean
    private void logConfiguration()
    {
       LOGGER.debug("HikariCP pool {} configuration:", poolName);
-      final Set<String> propertyNames = new TreeSet<>(PropertyBeanSetter.getPropertyNames(HikariConfig.class));
+      final Set<String> propertyNames = new TreeSet<>(PropertyElf.getPropertyNames(HikariConfig.class));
       for (String prop : propertyNames) {
          try {
-            Object value = PropertyBeanSetter.getProperty(prop, this);
+            Object value = PropertyElf.getProperty(prop, this);
             if ("dataSourceProperties".equals(prop)) {
-               Properties dsProps = PropertyBeanSetter.copyProperties(dataSourceProperties);
+               Properties dsProps = PropertyElf.copyProperties(dataSourceProperties);
                dsProps.setProperty("password", "<masked>");
                value = dsProps;
             }
@@ -830,7 +830,7 @@ public class HikariConfig implements HikariConfigMBean
          if (is != null) {
             Properties props = new Properties();
             props.load(is);
-            PropertyBeanSetter.setTargetFromProperties(this, props);
+            PropertyElf.setTargetFromProperties(this, props);
          }
          else {
             throw new IllegalArgumentException("Property file " + propertyFileName + " was not found.");

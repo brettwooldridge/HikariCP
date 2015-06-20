@@ -58,7 +58,7 @@ import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.IBagStateListener;
-import com.zaxxer.hikari.util.PropertyBeanSetter;
+import com.zaxxer.hikari.util.PropertyElf;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -153,7 +153,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
       poolUtils.registerMBeans(this);
 
-      PropertyBeanSetter.flushCaches();  // prevent classloader leak
+      PropertyElf.flushCaches();  // prevent classloader leak
 
       initializeConnections();
    }

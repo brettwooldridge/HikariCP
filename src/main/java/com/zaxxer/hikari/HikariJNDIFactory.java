@@ -30,7 +30,7 @@ import javax.naming.Reference;
 import javax.naming.spi.ObjectFactory;
 import javax.sql.DataSource;
 
-import com.zaxxer.hikari.util.PropertyBeanSetter;
+import com.zaxxer.hikari.util.PropertyElf;
 
 /**
  * A JNDI factory that produces HikariDataSource instances.
@@ -52,7 +52,7 @@ public class HikariJNDIFactory implements ObjectFactory
          throw new NamingException(ref.getClassName() + " is not a valid class name/type for this JNDI factory.");
       }
 
-      Set<String> hikariPropSet = PropertyBeanSetter.getPropertyNames(HikariConfig.class);
+      Set<String> hikariPropSet = PropertyElf.getPropertyNames(HikariConfig.class);
 
       Properties properties = new Properties();
       Enumeration<RefAddr> enumeration = ref.getAll();
