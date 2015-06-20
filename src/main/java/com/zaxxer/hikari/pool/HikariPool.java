@@ -83,7 +83,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    public final String catalog;
    public final boolean isReadOnly;
    public final boolean isAutoCommit;
-   public final PoolUtilities poolUtils;
+   public final PoolElf poolUtils;
 
    final HikariConfig config;
    final ConcurrentBag<PoolBagEntry> connectionBag;
@@ -116,7 +116,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     {
       this.config = config;
 
-      this.poolUtils = new PoolUtilities(config);
+      this.poolUtils = new PoolElf(config);
       this.dataSource = poolUtils.initializeDataSource();
 
       this.connectionBag = new ConcurrentBag<>(this);

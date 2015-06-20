@@ -25,9 +25,9 @@ import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyElf;
 
-public final class PoolUtilities
+public final class PoolElf
 {
-   private static final Logger LOGGER = LoggerFactory.getLogger(PoolUtilities.class);
+   private static final Logger LOGGER = LoggerFactory.getLogger(PoolElf.class);
 
    private Executor netTimeoutExecutor;
 
@@ -38,7 +38,7 @@ public final class PoolUtilities
    private boolean isNetworkTimeoutSupported;
    private boolean isQueryTimeoutSupported;
 
-   public PoolUtilities(final HikariConfig configuration)
+   public PoolElf(final HikariConfig configuration)
    {
       this.config = configuration;
       this.poolName = configuration.getPoolName();
