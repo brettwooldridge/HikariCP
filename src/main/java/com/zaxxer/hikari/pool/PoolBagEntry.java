@@ -53,9 +53,10 @@ public final class PoolBagEntry implements IConcurrentBagEntry
       this.lastAccess = ClockSource.INSTANCE.currentTime();
       this.openStatements = new FastList<>(Statement.class, 16);
 
-      final long variance = pool.config.getMaxLifetime() > 60_000 ? ThreadLocalRandom.current().nextLong(10_000) : 0;
-      final long maxLifetime = pool.config.getMaxLifetime() - variance;
-      if (maxLifetime > 0) {
+      final long maxLifetime = pool.config.getMaxLifetime();
+      final long variance = maxLifetime > 60_000 ? ThreadLocalRandom.current().nextLong(10_000) : 0;
+      final long lifetime = maxLifetime - variance;
+      if (lifetime > 0) {
          endOfLife = pool.houseKeepingExecutorService.schedule(new Runnable() {
             @Override
             public void run()
@@ -69,7 +70,7 @@ public final class PoolBagEntry implements IConcurrentBagEntry
                   PoolBagEntry.this.evicted = true;
                }
             }
-         }, maxLifetime, TimeUnit.MILLISECONDS);
+         }, lifetime, TimeUnit.MILLISECONDS);
       }
    }
 
@@ -91,10 +92,10 @@ public final class PoolBagEntry implements IConcurrentBagEntry
    @Override
    public String toString()
    {
-      return "Connection......" + connection + "\n"
-           + "  Last  access.." + lastAccess + "\n"
-           + "  Last open....." + lastOpenTime + "\n"
-           + "  State........." + stateToString();
+      return "Connection......" + connection
+           + "\n  Last  access.." + lastAccess
+           + "\n  Last open....." + lastOpenTime
+           + "\n  State........." + stateToString();
    }
 
    private String stateToString()
