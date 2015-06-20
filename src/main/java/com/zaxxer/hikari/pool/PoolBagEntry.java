@@ -23,8 +23,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.zaxxer.hikari.util.ClockSource;
+import com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry;
 import com.zaxxer.hikari.util.FastList;
-import com.zaxxer.hikari.util.IConcurrentBagEntry;
 
 /**
  * Entry used in the ConcurrentBag to track Connection instances.

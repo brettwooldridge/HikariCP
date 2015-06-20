@@ -31,7 +31,7 @@ import org.junit.Test;
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.pool.PoolBagEntry;
 import com.zaxxer.hikari.util.ConcurrentBag;
-import com.zaxxer.hikari.util.IBagStateListener;
+import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 
 /**
  *

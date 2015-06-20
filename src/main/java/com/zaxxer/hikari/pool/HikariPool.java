@@ -16,9 +16,9 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_IN_USE;
-import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_NOT_IN_USE;
-import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_REMOVED;
+import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_USE;
+import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
+import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_REMOVED;
 import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
 import static com.zaxxer.hikari.util.UtilityElf.getTransactionIsolation;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
@@ -49,15 +49,15 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.metrics.CodaHaleMetricsTracker;
 import com.zaxxer.hikari.metrics.CodahaleHealthChecker;
 import com.zaxxer.hikari.metrics.MetricsTracker;
-import com.zaxxer.hikari.metrics.PoolStats;
 import com.zaxxer.hikari.metrics.MetricsTracker.MetricsContext;
+import com.zaxxer.hikari.metrics.PoolStats;
 import com.zaxxer.hikari.proxy.ConnectionProxy;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.ConcurrentBag;
+import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
-import com.zaxxer.hikari.util.IBagStateListener;
 import com.zaxxer.hikari.util.PropertyElf;
 
 /**

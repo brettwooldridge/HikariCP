@@ -15,20 +15,23 @@
  */
 package com.zaxxer.hikari.util;
 
-import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_IN_USE;
-import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_NOT_IN_USE;
-import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_REMOVED;
-import static com.zaxxer.hikari.util.IConcurrentBagEntry.STATE_RESERVED;
-
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry;
+
+import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
+import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_USE;
+import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_REMOVED;
+import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_RESERVED;
 
 /**
  * This is a specialized concurrent bag that achieves superior performance
@@ -63,6 +66,20 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    private final IBagStateListener listener;
    private volatile boolean closed;
 
+   public interface IConcurrentBagEntry
+   {
+      int STATE_NOT_IN_USE = 0;
+      int STATE_IN_USE = 1;
+      int STATE_REMOVED = -1;
+      int STATE_RESERVED = -2;
+
+      AtomicInteger state();
+   }
+
+   public interface IBagStateListener
+   {
+      Future<Boolean> addBagItem();
+   }
 
    /**
     * Construct a ConcurrentBag with the specified listener.
