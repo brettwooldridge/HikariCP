@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariPoolMBean;
 import com.zaxxer.hikari.metrics.CodaHaleMetricsTracker;
 import com.zaxxer.hikari.metrics.CodahaleHealthChecker;
 import com.zaxxer.hikari.metrics.MetricsTracker;
