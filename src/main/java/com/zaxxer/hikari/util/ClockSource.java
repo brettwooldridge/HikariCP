@@ -16,6 +16,8 @@
 
 package com.zaxxer.hikari.util;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * A resolution-independent provider of current time-stamps and elapsed time
  * calculations.
@@ -83,6 +85,82 @@ public interface ClockSource
          }
 
          return new NanosecondClockSource();
+      }
+   }
+
+   final class MillisecondClockSource implements ClockSource
+   {
+      /** {@inheritDoc} */
+      @Override
+      public long currentTime()
+      {
+         return System.currentTimeMillis();
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public long elapsedMillis(final long startTime)
+      {
+         return System.currentTimeMillis() - startTime;
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public long elapsedMillis(final long startTime, final long endTime)
+      {
+         return endTime - startTime;
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public long toMillis(long time)
+      {
+         return time;
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public long plusMillis(long time, long millis)
+      {
+         return time + millis;
+      }
+   }
+
+   final class NanosecondClockSource implements ClockSource
+   {
+      /** {@inheritDoc} */
+      @Override
+      public long currentTime()
+      {
+         return System.nanoTime();
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public final long toMillis(final long time)
+      {
+         return TimeUnit.NANOSECONDS.toMillis(time);
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public long elapsedMillis(final long startTime)
+      {
+         return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public long elapsedMillis(final long startTime, final long endTime)
+      {
+         return TimeUnit.NANOSECONDS.toMillis(endTime - startTime);
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public long plusMillis(final long time, final long millis)
+      {
+         return time + TimeUnit.MILLISECONDS.toNanos(millis);
       }
    }
 }
