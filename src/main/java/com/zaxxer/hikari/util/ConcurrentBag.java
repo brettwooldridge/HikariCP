@@ -127,20 +127,20 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       try {
          do {
             do {
-               startSeq = synchronizer.getSequence();
+               startSeq = synchronizer.currentSequence();
                for (final T bagEntry : sharedList) {
                   if (bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
                      return bagEntry;
                   }
                }
-            } while (startSeq < synchronizer.getSequence());
+            } while (startSeq < synchronizer.currentSequence());
 
             if (addItemFuture == null || addItemFuture.isDone()) {
                addItemFuture = listener.addBagItem();
             }
    
             timeout = originTimeout - (System.nanoTime() - startScan);
-         } while (timeout > 1000L && synchronizer.waitUntilThresholdExceeded(startSeq, timeout));
+         } while (timeout > 1000L && synchronizer.waitUntilSequenceExceeded(startSeq, timeout));
       }
       finally {
          synchronizer.signal();

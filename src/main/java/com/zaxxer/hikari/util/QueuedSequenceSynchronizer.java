@@ -20,18 +20,24 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
 
 /**
- * A specialized "lock" class that permits resource tracking through the
- * use of a monotonically-increasing long sequence.  When a shared resource
- * becomes available the {@link #signal()} method should be called.
+ * A specialized wait/notify class useful for resource tracking through the
+ * use of a monotonically-increasing long sequence.
  * <p>
- * A thread wishing to acquire a resource should obtain the current sequence
- * from the {@link #getSequence()} method before calling {@link #waitUntilThresholdExceeded(long, long)}
- * with that sequence.  Upon receiving a <code>true</code> result from
- * {@link #waitUntilThresholdExceeded(long, long)}, the current sequence
- * should again be obtained from the {@link #getSequence()} method, and an
- * attempt to acquire the resource should be made.  If the shared resource cannot
- * be acquired, the thread should again call {@link #waitUntilThresholdExceeded(long, long)}
- * with the previously obtained sequence.
+ * When a shared resource becomes available the {@link #signal()} method should
+ * be called unconditionally.
+ * <p>
+ * A thread wishing to acquire a shared resource should: <br>
+ * <ul>
+ *   <li>Obtain the current sequence from the {@link #currentSequence()} method </li>
+ *   <li>Call {@link #waitUntilSequenceExceeded(long, long)} with that sequence.  </li>
+ *   <li>Upon receiving a <code>true</code> result from {@link #waitUntilSequenceExceeded(long, long)},
+ *       the current sequence should again be obtained from the {@link #currentSequence()} method,
+ *       and an attempt to acquire the resource should be made. </li>
+ *   <li>If the shared resource cannot be acquired, the thread should again call 
+ *       {@link #waitUntilSequenceExceeded(long, long)} with the previously obtained sequence. </li>
+ *   <li>If <code>false</code> is received from {@link #waitUntilSequenceExceeded(long, long)}
+ *       then a timeout has occurred. </li>
+ * </ul>
  * <p>
  * When running on Java 8 and above, this class leverages the fact that when {@link LongAdder}
  * is monotonically increasing, and only {@link LongAdder#increment()} and {@link LongAdder#sum()}
@@ -56,7 +62,6 @@ public final class QueuedSequenceSynchronizer
 
    /**
     * Signal any waiting threads.
-    *
     */
    public void signal()
    {
@@ -68,7 +73,7 @@ public final class QueuedSequenceSynchronizer
     *
     * @return the current sequence
     */
-   public long getSequence()
+   public long currentSequence()
    {
       return sequence.get();
    }
@@ -77,14 +82,14 @@ public final class QueuedSequenceSynchronizer
     * Block the current thread until the current sequence exceeds the specified threshold, or
     * until the specified timeout is reached.
     * 
-    * @param threshold the threshold the sequence must reach before this thread becomes unblocked
+    * @param sequence the threshold the sequence must reach before this thread becomes unblocked
     * @param nanosTimeout a nanosecond timeout specifying the maximum time to wait
     * @return true if the threshold was reached, false if the wait timed out
     * @throws InterruptedException if the thread is interrupted while waiting
     */
-   public boolean waitUntilThresholdExceeded(long threshold, long nanosTimeout) throws InterruptedException
+   public boolean waitUntilSequenceExceeded(long sequence, long nanosTimeout) throws InterruptedException
    {
-      return synchronizer.tryAcquireSharedNanos(threshold, nanosTimeout);
+      return synchronizer.tryAcquireSharedNanos(sequence, nanosTimeout);
    }
 
    /**
