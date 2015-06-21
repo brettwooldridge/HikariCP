@@ -37,6 +37,6 @@ It now seemed possible to create new ``LongAdder``-based wait/notify mechanism t
 
 ## Do you have a nanosecond? ##
 
-This is normally where the lights in the auditorium would go down, techno-music would start, and on the stage spotlights would focus as the covers were ripped off, revealing the new HikariCP 2.4.0...
+This is normally where the lights in the auditorium would go down, techno-music would start, and up on the stage spotlights would focus as the tarps were ripped away, revealing the new HikariCP 2.4.0...
 
 Instead, what with a picture being worth a thousand words and all, I'll just stick with a simple before/after.
