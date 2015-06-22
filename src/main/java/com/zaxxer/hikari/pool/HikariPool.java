@@ -84,7 +84,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    public final String catalog;
    public final boolean isReadOnly;
    public final boolean isAutoCommit;
-   public final PoolElf poolUtils;
+   public final PoolElf poolElf;
 
    final HikariConfig config;
    final ConcurrentBag<PoolBagEntry> connectionBag;
@@ -113,12 +113,12 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
     *
     * @param config a HikariConfig instance
     */
-   public HikariPool(HikariConfig config)
+   public HikariPool(final HikariConfig config)
     {
       this.config = config;
 
-      this.poolUtils = new PoolElf(config);
-      this.dataSource = poolUtils.initializeDataSource();
+      this.poolElf = new PoolElf(config);
+      this.dataSource = poolElf.initializeDataSource();
 
       this.connectionBag = new ConcurrentBag<>(this);
       this.totalConnections = new AtomicInteger();
@@ -134,9 +134,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
       this.suspendResumeLock = config.isAllowPoolSuspension() ? new SuspendResumeLock(true) : SuspendResumeLock.FAUX_LOCK;
 
-      setMetricRegistry(config.getMetricRegistry());
-      setHealthCheckRegistry(config.getHealthCheckRegistry());
-
       this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection filler (pool " + config.getPoolName() + ")", config.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
       this.closeConnectionExecutor = createThreadPoolExecutor(4, "Hikari connection closer (pool " + config.getPoolName() + ")", config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
 
@@ -150,11 +147,15 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       else {
          this.houseKeepingExecutorService = config.getScheduledExecutorService();
       }
+
       this.leakTask = (config.getLeakDetectionThreshold() == 0) ? LeakTask.NO_LEAK : new LeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
+      
+      setMetricRegistry(config.getMetricRegistry());
+      setHealthCheckRegistry(config.getHealthCheckRegistry());
 
-      poolUtils.registerMBeans(this);
+      poolElf.registerMBeans(this);
 
-      PropertyElf.flushCaches();  // prevent classloader leak
+      PropertyElf.flushCaches();
 
       initializeConnections();
    }
@@ -273,7 +274,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       finally {
          logPoolState("After shutdown ");
 
-         poolUtils.unregisterMBeans();
+         poolElf.unregisterMBeans();
          metricsTracker.close();
       }
    }
@@ -458,7 +459,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          closeConnectionExecutor.execute(new Runnable() {
             @Override
             public void run() {
-               poolUtils.quietlyCloseConnection(connection, closureReason);
+               poolElf.quietlyCloseConnection(connection, closureReason);
             }
          });
       }
@@ -487,16 +488,16 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
 
          connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
          
-         if (isUseJdbc4Validation && !poolUtils.isJdbc4ValidationSupported(connection)) {
+         if (isUseJdbc4Validation && !poolElf.isJdbc4ValidationSupported(connection)) {
             throw new SQLException("JDBC4 Connection.isValid() method not supported, connection test query must be configured");
          }
 
-         final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, connectionTimeout);
+         final int originalTimeout = poolElf.getAndSetNetworkTimeout(connection, connectionTimeout);
 
          transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
-         poolUtils.setupConnection(connection, config.getConnectionInitSql(), isAutoCommit, isReadOnly, transactionIsolation, catalog);
+         poolElf.setupConnection(connection, config.getConnectionInitSql(), isAutoCommit, isReadOnly, transactionIsolation, catalog);
 
-         poolUtils.setNetworkTimeout(connection, originalTimeout);
+         poolElf.setNetworkTimeout(connection, originalTimeout);
          
          connectionBag.add(new PoolBagEntry(connection, originalTimeout, this));
          lastConnectionFailure.set(null);
@@ -509,7 +510,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          if (poolState == POOL_NORMAL) {
             LOGGER.debug("Connection attempt to database in pool {} failed: {}", config.getPoolName(), e.getMessage(), e);
          }
-         poolUtils.quietlyCloseConnection(connection, "(exception during connection creation)");
+         poolElf.quietlyCloseConnection(connection, "(exception during connection creation)");
          return false;
       }
    }
@@ -549,10 +550,10 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
             return connection.isValid(timeoutSec);
          }
 
-         final int originalTimeout = poolUtils.getAndSetNetworkTimeout(connection, config.getValidationTimeout());
+         final int originalTimeout = poolElf.getAndSetNetworkTimeout(connection, config.getValidationTimeout());
 
          try (Statement statement = connection.createStatement()) {
-            poolUtils.setQueryTimeout(statement, timeoutSec);
+            poolElf.setQueryTimeout(statement, timeoutSec);
             try (ResultSet rs = statement.executeQuery(config.getConnectionTestQuery())) { 
                /* auto close */
             }
@@ -562,7 +563,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
             connection.rollback();
          }
 
-         poolUtils.setNetworkTimeout(connection, originalTimeout);
+         poolElf.setNetworkTimeout(connection, originalTimeout);
 
          return true;
       }
@@ -583,7 +584,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
             bagEntry.connection.abort(assassinExecutor);
          }
          catch (Throwable e) {
-            poolUtils.quietlyCloseConnection(bagEntry.connection, "(connection aborted during shutdown)");
+            poolElf.quietlyCloseConnection(bagEntry.connection, "(connection aborted during shutdown)");
          }
          finally {
             bagEntry.connection = null;

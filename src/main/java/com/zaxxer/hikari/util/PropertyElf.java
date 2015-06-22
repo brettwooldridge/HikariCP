@@ -120,6 +120,7 @@ public final class PropertyElf
 
    public static void flushCaches()
    {
+      // prevent classloader leaks
       Introspector.flushCaches();
    }
 
