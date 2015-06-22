@@ -14,7 +14,7 @@ HikariCP utilises a specialized collection called a ``ConcurrentBag``<sup>[code]
 
 ``AbstractQueuedLongSynchronizer`` provides useful features like efficient FIFO thread queueing and parking/unparking.  Subclasses generally rely on the provided ``setState()``, ``getState()``, and ``compareAndSetState()`` methods, which are merely wrappers around an ``AtomicLong``, to implement their synchronization semantic.
 
-The performance of HikariCP's ``AbstractQueuedLongSynchronizer`` implementation was fine, but the fact that ``AtomicLong`` [performs poorly under contention](https://issues.apache.org/jira/browse/HADOOP-5318) periodically surfaced in my brain, usually as I drifted off to sleep.
+The performance of HikariCP's ``AbstractQueuedLongSynchronizer`` implementation was fine, but the fact that ``AtomicLong`` [performs poorly under contention](https://issues.apache.org/jira/browse/HADOOP-5318) periodically surfaced in my brain. I'm talking about memory contention here, not pool contention.
 
 I kept thinking "there must be some way to take advantage of Java 8's ``LongAdder``<sup>[doc](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/atomic/LongAdder.html)</sup>". It's well known that ``LongAdder`` has much higher performance under contention, that is its *raison d'être*.  I won't bore you with [all of the particulars](http://psy-lob-saw.blogspot.jp/2013/06/java-concurrent-counters-by-numbers.html).
 
@@ -39,4 +39,8 @@ It now seemed possible to create new ``LongAdder``-based wait/notify mechanism t
 
 This is normally where the lights in the auditorium would go down, techno-music would start, and up on the stage spotlights would focus as the tarps were ripped away, revealing the new HikariCP 2.4.0...
 
-Instead, what with a picture being worth a thousand words and all, I'll just stick with a simple before/after.
+...or just stick with a simple before/after on my Core i7 (3770) 3.4GHz "Ivy Bridge" iMac.
+<br>
+<p align="center">
+  <a href="images/Hikari-2.4-vs-2.3.png"><img src="images/Hikari-2.4-vs-2.3.png"/></a>
+</p>
