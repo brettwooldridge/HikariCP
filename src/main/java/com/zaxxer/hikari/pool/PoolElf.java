@@ -3,7 +3,9 @@ package com.zaxxer.hikari.pool;
 import static com.zaxxer.hikari.util.UtilityElf.createInstance;
 
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Field;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
@@ -29,22 +31,41 @@ public final class PoolElf
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(PoolElf.class);
 
+   private int networkTimeout;
+   private int transactionIsolation;
+   private long validationTimeout;
+   private boolean isNetworkTimeoutSupported;
+   private boolean isQueryTimeoutSupported;
    private Executor netTimeoutExecutor;
 
    private final HikariConfig config;
    private final String poolName;
+   private final String catalog;
+   private final boolean isReadOnly;
+   private final boolean isAutoCommit;
+   private final boolean isUseJdbc4Validation;
+   private final boolean isIsolateInternalQueries;
+
    private volatile boolean isValidChecked; 
    private volatile boolean isValidSupported;
-   private boolean isNetworkTimeoutSupported;
-   private boolean isQueryTimeoutSupported;
 
    public PoolElf(final HikariConfig configuration)
    {
       this.config = configuration;
-      this.poolName = configuration.getPoolName();
+
+      this.networkTimeout = -1;
+      this.catalog = config.getCatalog();
+      this.isReadOnly = config.isReadOnly();
+      this.isAutoCommit = config.isAutoCommit();
+      this.validationTimeout = config.getValidationTimeout();
+      this.transactionIsolation = getTransactionIsolation(config.getTransactionIsolation());
+
       this.isValidSupported = true;
-      this.isNetworkTimeoutSupported = true;
       this.isQueryTimeoutSupported = true;
+      this.isNetworkTimeoutSupported = true;
+      this.isUseJdbc4Validation = config.getConnectionTestQuery() == null;
+      this.isIsolateInternalQueries = config.isIsolateInternalQueries();
+      this.poolName = config.getPoolName();
    }
 
    /**
@@ -75,11 +96,32 @@ public final class PoolElf
    }
 
    /**
+    * Get the int value of a transaction isolation level by name.
+    *
+    * @param transactionIsolationName the name of the transaction isolation level
+    * @return the int value of the isolation level or -1
+    */
+   public static int getTransactionIsolation(final String transactionIsolationName)
+   {
+      if (transactionIsolationName != null) {
+         try {
+            Field field = Connection.class.getField(transactionIsolationName);
+            return field.getInt(null);
+         }
+         catch (Exception e) {
+            throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
+         }
+      }
+
+      return -1;
+   }
+
+   /**
     * Create/initialize the underlying DataSource.
     *
     * @return a DataSource instance
     */
-   public DataSource initializeDataSource()
+   DataSource initializeDataSource()
    {
       final String jdbcUrl = config.getJdbcUrl();
       final String username = config.getUsername();
@@ -109,6 +151,7 @@ public final class PoolElf
     * Setup a connection initial state.
     *
     * @param connection a Connection
+    * @param connectionTimeout 
     * @param initSql 
     * @param isAutoCommit auto-commit state
     * @param isReadOnly read-only state
@@ -116,102 +159,105 @@ public final class PoolElf
     * @param catalog default catalog
     * @throws SQLException thrown from driver
     */
-   public void setupConnection(final Connection connection, final String initSql, final boolean isAutoCommit, final boolean isReadOnly, final int transactionIsolation, final String catalog) throws SQLException
+   void setupConnection(final Connection connection, final long connectionTimeout) throws SQLException
    {
+      if (isUseJdbc4Validation && !isJdbc4ValidationSupported(connection)) {
+         throw new SQLException("JDBC4 Connection.isValid() method not supported, connection test query must be configured");
+      }
+
+      networkTimeout = (networkTimeout < 0 ? getAndSetNetworkTimeout(connection, connectionTimeout) : networkTimeout);
+      transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
+
       connection.setAutoCommit(isAutoCommit);
       connection.setReadOnly(isReadOnly);
+
       if (transactionIsolation != connection.getTransactionIsolation()) {
          connection.setTransactionIsolation(transactionIsolation);
       }
+
       if (catalog != null) {
          connection.setCatalog(catalog);
       }
 
-      executeSql(connection, initSql, isAutoCommit);
+      executeSql(connection, config.getConnectionInitSql(), isAutoCommit);
+
+      setNetworkTimeout(connection, networkTimeout);
    }
 
    /**
-    * Return true if the driver appears to be JDBC 4.0 compliant.
+    * Check whether the connection is alive or not.
     *
-    * @param connection a Connection to check
-    * @return true if JDBC 4.1 compliance, false otherwise
+    * @param connection the connection to test
+    * @return true if the connection is alive, false if it is not alive or we timed out
     */
-   public boolean isJdbc4ValidationSupported(final Connection connection)
+   boolean isConnectionAlive(final Connection connection)
    {
-      if (!isValidChecked) {
-         try {
-            // We don't care how long the wait actually is here, just whether it returns without exception. This
-            // call will throw various exceptions in the case of a non-JDBC 4.0 compliant driver
-            connection.isValid(1);
+      try {
+         int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout);
+   
+         if (isUseJdbc4Validation) {
+            return connection.isValid(timeoutSec);
          }
-         catch (Throwable e) {
-            isValidSupported = false;
-            LOGGER.debug("{} - JDBC4 Connection.isValid() not supported ({})", poolName, e.getMessage());
+   
+         networkTimeout = getAndSetNetworkTimeout(connection, validationTimeout);
+   
+         try (Statement statement = connection.createStatement()) {
+            setQueryTimeout(statement, timeoutSec);
+            try (ResultSet rs = statement.executeQuery(config.getConnectionTestQuery())) { 
+               /* auto close */
+            }
          }
-
-         isValidChecked = true;
+   
+         if (isIsolateInternalQueries && !isAutoCommit) {
+            connection.rollback();
+         }
+   
+         setNetworkTimeout(connection, networkTimeout);
+   
+         return true;
       }
-      
-      return isValidSupported;
-   }
-
-   /**
-    * Set the query timeout, if it is supported by the driver.
-    *
-    * @param statement a statement to set the query timeout on
-    * @param timeoutSec the number of seconds before timeout
-    */
-   public void setQueryTimeout(final Statement statement, final int timeoutSec)
-   {
-      if (isQueryTimeoutSupported) {
-         try {
-            statement.setQueryTimeout(timeoutSec);
-         }
-         catch (Throwable e) {
-            isQueryTimeoutSupported = false;
-            LOGGER.debug("{} - Statement.setQueryTimeout() not supported", poolName);
-         }
+      catch (SQLException e) {
+         LOGGER.warn("Exception during alive check, Connection ({}) declared dead.", connection, e);
+         return false;
       }
    }
 
-   /**
-    * Set the network timeout, if <code>isUseNetworkTimeout</code> is <code>true</code> and the
-    * driver supports it.  Return the pre-existing value of the network timeout.
-    *
-    * @param connection the connection to set the network timeout on
-    * @param timeoutMs the number of milliseconds before timeout
-    * @return the pre-existing network timeout value
-    */
-   public int getAndSetNetworkTimeout(final Connection connection, final long timeoutMs)
+   void resetConnectionState(final PoolBagEntry poolEntry) throws SQLException
    {
-      if (isNetworkTimeoutSupported) {
-         try {
-            final int networkTimeout = connection.getNetworkTimeout();
-            connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
-            return networkTimeout;
-         }
-         catch (Throwable e) {
-            isNetworkTimeoutSupported = false;
-            LOGGER.debug("{} - Connection.setNetworkTimeout() not supported", poolName);
-         }
+      if (poolEntry.isReadOnly != isReadOnly) {
+         poolEntry.connection.setReadOnly(isReadOnly);
       }
 
-      return 0;
+      if (poolEntry.isAutoCommit != isAutoCommit) {
+         poolEntry.connection.setAutoCommit(isAutoCommit);
+      }
+
+      if (poolEntry.transactionIsolation != transactionIsolation) {
+         poolEntry.connection.setTransactionIsolation(transactionIsolation);
+      }
+
+      final String currentCatalog = poolEntry.catalog;
+      if ((currentCatalog != null && !currentCatalog.equals(catalog)) || (currentCatalog == null && catalog != null)) {
+         poolEntry.connection.setCatalog(catalog);
+      }
+
+      if (poolEntry.networkTimeout != networkTimeout) {
+         setNetworkTimeout(poolEntry.connection, networkTimeout);
+      }
    }
 
-   /**
-    * Set the network timeout, if <code>isUseNetworkTimeout</code> is <code>true</code> and the
-    * driver supports it.
-    *
-    * @param connection the connection to set the network timeout on
-    * @param timeoutMs the number of milliseconds before timeout
-    * @throws SQLException throw if the connection.setNetworkTimeout() call throws
-    */
-   public void setNetworkTimeout(final Connection connection, final long timeoutMs) throws SQLException
+   void resetPoolEntry(final PoolBagEntry poolEntry)
    {
-      if (isNetworkTimeoutSupported) {
-         connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
-      }
+      poolEntry.setCatalog(catalog);
+      poolEntry.setReadOnly(isReadOnly);
+      poolEntry.setAutoCommit(isAutoCommit);
+      poolEntry.setNetworkTimeout(networkTimeout);
+      poolEntry.setTransactionIsolation(transactionIsolation);
+   }
+
+   void setValidationTimeout(final long validationTimeout)
+   {
+      this.validationTimeout = validationTimeout;
    }
 
    /**
@@ -267,6 +313,90 @@ public final class PoolElf
       }
       catch (Exception e) {
          LOGGER.warn("Unable to unregister management beans.", e);
+      }
+   }
+
+   /**
+    * Return true if the driver appears to be JDBC 4.0 compliant.
+    *
+    * @param connection a Connection to check
+    * @return true if JDBC 4.1 compliance, false otherwise
+    */
+   private boolean isJdbc4ValidationSupported(final Connection connection)
+   {
+      if (!isValidChecked) {
+         try {
+            // We don't care how long the wait actually is here, just whether it returns without exception. This
+            // call will throw various exceptions in the case of a non-JDBC 4.0 compliant driver
+            connection.isValid(1);
+         }
+         catch (Throwable e) {
+            isValidSupported = false;
+            LOGGER.debug("{} - JDBC4 Connection.isValid() not supported ({})", poolName, e.getMessage());
+         }
+
+         isValidChecked = true;
+      }
+      
+      return isValidSupported;
+   }
+
+   /**
+    * Set the query timeout, if it is supported by the driver.
+    *
+    * @param statement a statement to set the query timeout on
+    * @param timeoutSec the number of seconds before timeout
+    */
+   private void setQueryTimeout(final Statement statement, final int timeoutSec)
+   {
+      if (isQueryTimeoutSupported) {
+         try {
+            statement.setQueryTimeout(timeoutSec);
+         }
+         catch (Throwable e) {
+            isQueryTimeoutSupported = false;
+            LOGGER.debug("{} - Statement.setQueryTimeout() not supported", poolName);
+         }
+      }
+   }
+
+   /**
+    * Set the network timeout, if <code>isUseNetworkTimeout</code> is <code>true</code> and the
+    * driver supports it.  Return the pre-existing value of the network timeout.
+    *
+    * @param connection the connection to set the network timeout on
+    * @param timeoutMs the number of milliseconds before timeout
+    * @return the pre-existing network timeout value
+    */
+   private int getAndSetNetworkTimeout(final Connection connection, final long timeoutMs)
+   {
+      if (isNetworkTimeoutSupported) {
+         try {
+            final int networkTimeout = connection.getNetworkTimeout();
+            connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
+            return networkTimeout;
+         }
+         catch (Throwable e) {
+            isNetworkTimeoutSupported = false;
+            LOGGER.debug("{} - Connection.setNetworkTimeout() not supported", poolName);
+         }
+      }
+
+      return 0;
+   }
+
+   /**
+    * Set the network timeout, if <code>isUseNetworkTimeout</code> is <code>true</code> and the
+    * driver supports it.
+    *
+    * @param connection the connection to set the network timeout on
+    * @param timeoutMs the number of milliseconds before timeout
+    * @throws SQLException throw if the connection.setNetworkTimeout() call throws
+    */
+   private void setNetworkTimeout(final Connection connection, final long timeoutMs) throws SQLException
+   {
+      if (isNetworkTimeoutSupported) {
+         connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
       }
    }
 

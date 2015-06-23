@@ -30,6 +30,7 @@ import org.slf4j.spi.LocationAwareLogger;
 
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.pool.LeakTask;
+import com.zaxxer.hikari.pool.PoolElf;
 import com.zaxxer.hikari.util.UtilityElf;
 
 /**
@@ -65,7 +66,7 @@ public class MiscTest
    public void testInvalidIsolation()
    {
       try {
-         UtilityElf.getTransactionIsolation("INVALID");
+         PoolElf.getTransactionIsolation("INVALID");
          Assert.fail();
       }
       catch (Exception e) {

@@ -17,8 +17,6 @@
 package com.zaxxer.hikari.util;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.sql.Connection;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
@@ -101,26 +99,5 @@ public final class UtilityElf
       ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 5, TimeUnit.SECONDS, queue, threadFactory, policy);
       executor.allowCoreThreadTimeOut(true);
       return executor;
-   }
-
-   /**
-    * Get the int value of a transaction isolation level by name.
-    *
-    * @param transactionIsolationName the name of the transaction isolation level
-    * @return the int value of the isolation level or -1
-    */
-   public static int getTransactionIsolation(final String transactionIsolationName)
-   {
-      if (transactionIsolationName != null) {
-         try {
-            Field field = Connection.class.getField(transactionIsolationName);
-            return field.getInt(null);
-         }
-         catch (Exception e) {
-            throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
-         }
-      }
-
-      return -1;
    }
 }

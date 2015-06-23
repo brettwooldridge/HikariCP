@@ -40,8 +40,8 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
+import com.zaxxer.hikari.pool.PoolElf;
 import com.zaxxer.hikari.util.PropertyElf;
-import com.zaxxer.hikari.util.UtilityElf;
 
 public class HikariConfig implements HikariConfigMBean
 {
@@ -439,7 +439,7 @@ public class HikariConfig implements HikariConfigMBean
    @Deprecated
    public void setJdbc4ConnectionTest(boolean useIsValid)
    {
-      throw new IllegalArgumentException("The jdbcConnectionTest property is now deprecated, see the documentation for connectionTestQuery");
+      LOGGER.warn("The jdbcConnectionTest property is now deprecated, see the documentation for connectionTestQuery");
    }
 
    /**
@@ -758,7 +758,7 @@ public class HikariConfig implements HikariConfigMBean
       }
 
       if (transactionIsolationName != null) {
-         UtilityElf.getTransactionIsolation(transactionIsolationName);
+         PoolElf.getTransactionIsolation(transactionIsolationName);
       }
 
       if (LOGGER.isDebugEnabled() || unitTest) {

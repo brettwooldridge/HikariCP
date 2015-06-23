@@ -16,6 +16,7 @@
 package com.zaxxer.hikari.pool;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
@@ -33,25 +34,35 @@ import com.zaxxer.hikari.util.FastList;
  */
 public final class PoolBagEntry implements IConcurrentBagEntry
 {
-   public final AtomicInteger state = new AtomicInteger();
    public final FastList<Statement> openStatements;
    public final HikariPool parentPool;
 
    public Connection connection;
-   public int networkTimeout;
    public long lastAccess;
+
    public volatile long lastOpenTime;
    public volatile boolean evicted;
    public volatile boolean aborted;
 
+   int networkTimeout;
+   int transactionIsolation;
+   String catalog;
+   boolean isAutoCommit;
+   boolean isReadOnly;
+   
+   private final PoolElf poolElf;
+   private final AtomicInteger state = new AtomicInteger();
+
    private volatile ScheduledFuture<?> endOfLife;
 
-   public PoolBagEntry(final Connection connection, final int networkTimeout, final HikariPool pool) {
+   public PoolBagEntry(final Connection connection, final HikariPool pool) {
       this.connection = connection;
-      this.networkTimeout = networkTimeout;
       this.parentPool = pool;
+      this.poolElf = pool.poolElf;
       this.lastAccess = ClockSource.INSTANCE.currentTime();
       this.openStatements = new FastList<>(Statement.class, 16);
+
+      poolElf.resetPoolEntry(this);
 
       final long maxLifetime = pool.config.getMaxLifetime();
       final long variance = maxLifetime > 60_000 ? ThreadLocalRandom.current().nextLong(10_000) : 0;
@@ -72,6 +83,68 @@ public final class PoolBagEntry implements IConcurrentBagEntry
             }
          }, lifetime, TimeUnit.MILLISECONDS);
       }
+   }
+
+   /**
+    * Release this entry back to the pool.
+    *
+    * @param lastAccess last access time-stamp
+    */
+   public void releaseConnection(final long lastAccess)
+   {
+      this.lastAccess = lastAccess;
+      parentPool.releaseConnection(this);
+   }
+
+
+   /**
+    * Reset the connection to its original state.
+    * @throws SQLException thrown if there is an error resetting the connection state
+    */
+   public void resetConnectionState() throws SQLException
+   {
+      poolElf.resetConnectionState(this);
+      poolElf.resetPoolEntry(this);
+   }
+
+   /**
+    * @param networkTimeout the networkTimeout to set
+    */
+   public void setNetworkTimeout(int networkTimeout)
+   {
+      this.networkTimeout = networkTimeout;
+   }
+
+   /**
+    * @param transactionIsolation the transactionIsolation to set
+    */
+   public void setTransactionIsolation(int transactionIsolation)
+   {
+      this.transactionIsolation = transactionIsolation;
+   }
+
+   /**
+    * @param catalog the catalog to set
+    */
+   public void setCatalog(String catalog)
+   {
+      this.catalog = catalog;
+   }
+
+   /**
+    * @param isAutoCommit the isAutoCommit to set
+    */
+   public void setAutoCommit(boolean isAutoCommit)
+   {
+      this.isAutoCommit = isAutoCommit;
+   }
+
+   /**
+    * @param isReadOnly the isReadOnly to set
+    */
+   public void setReadOnly(boolean isReadOnly)
+   {
+      this.isReadOnly = isReadOnly;
    }
 
    void cancelMaxLifeTermination()

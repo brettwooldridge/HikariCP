@@ -20,14 +20,11 @@ import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_REMOVED;
 import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
-import static com.zaxxer.hikari.util.UtilityElf.getTransactionIsolation;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
-import java.sql.Statement;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
@@ -69,7 +66,7 @@ import com.zaxxer.hikari.util.PropertyElf;
  */
 public class HikariPool implements HikariPoolMBean, IBagStateListener
 {
-   private final Logger LOGGER = LoggerFactory.getLogger(getClass());
+   final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
    private static final ClockSource clockSource = ClockSource.INSTANCE;
 
@@ -80,12 +77,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    private static final int POOL_SUSPENDED = 1;
    private static final int POOL_SHUTDOWN = 2;
 
-   public int transactionIsolation;
-   public final String catalog;
-   public final boolean isReadOnly;
-   public final boolean isAutoCommit;
-   public final PoolElf poolElf;
-
+   final PoolElf poolElf;
    final HikariConfig config;
    final ConcurrentBag<PoolBagEntry> connectionBag;
    final ScheduledThreadPoolExecutor houseKeepingExecutorService;
@@ -93,9 +85,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    private final AtomicInteger totalConnections;
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
-
-   private final boolean isUseJdbc4Validation;
-   private final boolean isIsolateInternalQueries;
 
    private volatile int poolState;
    private long connectionTimeout;
@@ -124,14 +113,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       this.totalConnections = new AtomicInteger();
       this.connectionTimeout = config.getConnectionTimeout();
       this.lastConnectionFailure = new AtomicReference<>();
-
-      this.catalog = config.getCatalog();
-      this.isReadOnly = config.isReadOnly();
-      this.isAutoCommit = config.isAutoCommit();
-      this.isUseJdbc4Validation = config.getConnectionTestQuery() == null;
-      this.isIsolateInternalQueries = config.isIsolateInternalQueries();
-      this.transactionIsolation = getTransactionIsolation(config.getTransactionIsolation());
-
       this.suspendResumeLock = config.isAllowPoolSuspension() ? new SuspendResumeLock(true) : SuspendResumeLock.FAUX_LOCK;
 
       this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection filler (pool " + config.getPoolName() + ")", config.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
@@ -193,7 +174,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
             }
 
             final long now = clockSource.currentTime();
-            if (bagEntry.evicted || (clockSource.elapsedMillis(bagEntry.lastAccess, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(bagEntry.connection))) {
+            if (bagEntry.evicted || (clockSource.elapsedMillis(bagEntry.lastAccess, now) > ALIVE_BYPASS_WINDOW_MS && !poolElf.isConnectionAlive(bagEntry.connection))) {
                closeConnection(bagEntry, "(connection evicted or dead)"); // Throw away the dead connection and try again
                timeout = hardTimeout - clockSource.elapsedMillis(startTime, now);
             }
@@ -487,21 +468,12 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          String password = config.getPassword();
 
          connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
-         
-         if (isUseJdbc4Validation && !poolElf.isJdbc4ValidationSupported(connection)) {
-            throw new SQLException("JDBC4 Connection.isValid() method not supported, connection test query must be configured");
-         }
+         poolElf.setupConnection(connection, connectionTimeout);
 
-         final int originalTimeout = poolElf.getAndSetNetworkTimeout(connection, connectionTimeout);
-
-         transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
-         poolElf.setupConnection(connection, config.getConnectionInitSql(), isAutoCommit, isReadOnly, transactionIsolation, catalog);
-
-         poolElf.setNetworkTimeout(connection, originalTimeout);
-         
-         connectionBag.add(new PoolBagEntry(connection, originalTimeout, this));
+         connectionBag.add(new PoolBagEntry(connection, this));
          lastConnectionFailure.set(null);
          LOGGER.debug("Connection {} added to pool {} ", connection, config.getPoolName());
+
          return true;
       }
       catch (Exception e) {
@@ -532,44 +504,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
                logPoolState("After fill ");
             }
          });
-      }
-   }
-
-   /**
-    * Check whether the connection is alive or not.
-    *
-    * @param connection the connection to test
-    * @return true if the connection is alive, false if it is not alive or we timed out
-    */
-   private boolean isConnectionAlive(final Connection connection)
-   {
-      try {
-         int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(config.getValidationTimeout());
-
-         if (isUseJdbc4Validation) {
-            return connection.isValid(timeoutSec);
-         }
-
-         final int originalTimeout = poolElf.getAndSetNetworkTimeout(connection, config.getValidationTimeout());
-
-         try (Statement statement = connection.createStatement()) {
-            poolElf.setQueryTimeout(statement, timeoutSec);
-            try (ResultSet rs = statement.executeQuery(config.getConnectionTestQuery())) { 
-               /* auto close */
-            }
-         }
-
-         if (isIsolateInternalQueries && !isAutoCommit) {
-            connection.rollback();
-         }
-
-         poolElf.setNetworkTimeout(connection, originalTimeout);
-
-         return true;
-      }
-      catch (SQLException e) {
-         LOGGER.warn("Exception during alive check, Connection ({}) declared dead.", connection, e);
-         return false;
       }
    }
 
@@ -652,7 +586,9 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
       @Override
       public void run()
       {
-         connectionTimeout = config.getConnectionTimeout(); // refresh member in case it changed
+         // refresh timeouts in case they changed via MBean
+         connectionTimeout = config.getConnectionTimeout();
+         poolElf.setValidationTimeout(config.getValidationTimeout());
 
          final long now = clockSource.currentTime();
          final long idleTimeout = config.getIdleTimeout();

@@ -103,15 +103,15 @@ public class TestConcurrentBag
       Assert.assertEquals(0, bag.values(8).size());
 
       HikariPool pool = TestElf.getPool(ds);
-      PoolBagEntry reserved = new PoolBagEntry(null, 0, TestElf.getPool(ds));
+      PoolBagEntry reserved = new PoolBagEntry(null, TestElf.getPool(ds));
       bag.add(reserved);
       bag.reserve(reserved);      // reserved
 
-      PoolBagEntry inuse = new PoolBagEntry(null, 0, pool);
+      PoolBagEntry inuse = new PoolBagEntry(null, pool);
       bag.add(inuse);
       bag.borrow(2, TimeUnit.MILLISECONDS); // in use
       
-      PoolBagEntry notinuse = new PoolBagEntry(null, 0, pool);
+      PoolBagEntry notinuse = new PoolBagEntry(null, pool);
       bag.add(notinuse); // not in use
 
       bag.dumpState();
@@ -135,7 +135,7 @@ public class TestConcurrentBag
 
       bag.close();
       try {
-         PoolBagEntry bagEntry = new PoolBagEntry(null, 0, pool);
+         PoolBagEntry bagEntry = new PoolBagEntry(null, pool);
          bag.add(bagEntry);
          Assert.assertNotEquals(bagEntry, bag.borrow(100, TimeUnit.MILLISECONDS));
       }
