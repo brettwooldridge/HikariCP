@@ -384,9 +384,6 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
    {
       for (PoolBagEntry bagEntry : connectionBag.values()) {
          bagEntry.evicted = true;
-      }
-
-      for (PoolBagEntry bagEntry : connectionBag.values(STATE_NOT_IN_USE)) {
          if (connectionBag.reserve(bagEntry)) {
             closeConnection(bagEntry, "(connection evicted by user)");
          }

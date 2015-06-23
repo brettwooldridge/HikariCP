@@ -30,12 +30,15 @@ import com.zaxxer.hikari.util.PropertyElf;
 public final class PoolElf
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(PoolElf.class);
+   private static final int UNINITIALIZED = -1;
+   private static final int TRUE = 1;
+   private static final int FALSE = 0;
 
    private int networkTimeout;
    private int transactionIsolation;
    private long validationTimeout;
-   private boolean isNetworkTimeoutSupported;
-   private boolean isQueryTimeoutSupported;
+   private int isNetworkTimeoutSupported;
+   private int isQueryTimeoutSupported;
    private Executor netTimeoutExecutor;
 
    private final HikariConfig config;
@@ -61,8 +64,8 @@ public final class PoolElf
       this.transactionIsolation = getTransactionIsolation(config.getTransactionIsolation());
 
       this.isValidSupported = true;
-      this.isQueryTimeoutSupported = true;
-      this.isNetworkTimeoutSupported = true;
+      this.isQueryTimeoutSupported = UNINITIALIZED;
+      this.isNetworkTimeoutSupported = UNINITIALIZED;
       this.isUseJdbc4Validation = config.getConnectionTestQuery() == null;
       this.isIsolateInternalQueries = config.isIsolateInternalQueries();
       this.poolName = config.getPoolName();
@@ -349,12 +352,13 @@ public final class PoolElf
     */
    private void setQueryTimeout(final Statement statement, final int timeoutSec)
    {
-      if (isQueryTimeoutSupported) {
+      if (isQueryTimeoutSupported != FALSE) {
          try {
             statement.setQueryTimeout(timeoutSec);
+            isQueryTimeoutSupported = TRUE;
          }
          catch (Throwable e) {
-            isQueryTimeoutSupported = false;
+            isQueryTimeoutSupported = FALSE;
             LOGGER.debug("{} - Statement.setQueryTimeout() not supported", poolName);
          }
       }
@@ -370,14 +374,15 @@ public final class PoolElf
     */
    private int getAndSetNetworkTimeout(final Connection connection, final long timeoutMs)
    {
-      if (isNetworkTimeoutSupported) {
+      if (isNetworkTimeoutSupported != FALSE) {
          try {
             final int networkTimeout = connection.getNetworkTimeout();
             connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
+            isNetworkTimeoutSupported = TRUE;
             return networkTimeout;
          }
          catch (Throwable e) {
-            isNetworkTimeoutSupported = false;
+            isNetworkTimeoutSupported = FALSE;
             LOGGER.debug("{} - Connection.setNetworkTimeout() not supported", poolName);
          }
       }
@@ -395,7 +400,7 @@ public final class PoolElf
     */
    private void setNetworkTimeout(final Connection connection, final long timeoutMs) throws SQLException
    {
-      if (isNetworkTimeoutSupported) {
+      if (isNetworkTimeoutSupported == TRUE) {
          connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
       }
    }
