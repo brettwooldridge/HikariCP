@@ -3,7 +3,7 @@
 
    <groupId>com.zaxxer</groupId>
    <artifactId>HikariCP</artifactId>
-   <version>2.4.0-rc3-SNAPSHOT</version>
+   <version>2.4.0-rc4-SNAPSHOT</version>
    <packaging>bundle</packaging>
 
    <name>HikariCP</name>
