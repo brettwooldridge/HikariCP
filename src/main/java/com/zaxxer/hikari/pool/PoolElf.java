@@ -40,6 +40,7 @@ public final class PoolElf
    private int isNetworkTimeoutSupported;
    private int isQueryTimeoutSupported;
    private Executor netTimeoutExecutor;
+   private DataSource dataSource;
 
    private final HikariConfig config;
    private final String poolName;
@@ -133,7 +134,7 @@ public final class PoolElf
       final String driverClassName = config.getDriverClassName();
       final Properties dataSourceProperties = config.getDataSourceProperties();
 
-      DataSource dataSource = config.getDataSource();
+      dataSource = config.getDataSource();
       if (dsClassName != null && dataSource == null) {
          dataSource = createInstance(dsClassName, DataSource.class);
          PropertyElf.setTargetFromProperties(dataSource, dataSourceProperties);
@@ -144,7 +145,6 @@ public final class PoolElf
 
       if (dataSource != null) {
          setLoginTimeout(dataSource, config.getConnectionTimeout());
-         createNetworkTimeoutExecutor(dataSource, dsClassName, jdbcUrl);
       }
 
       return dataSource;
@@ -358,8 +358,10 @@ public final class PoolElf
             isQueryTimeoutSupported = TRUE;
          }
          catch (Throwable e) {
-            isQueryTimeoutSupported = FALSE;
-            LOGGER.debug("{} - Statement.setQueryTimeout() not supported", poolName);
+            if (isQueryTimeoutSupported == UNINITIALIZED) {
+               isQueryTimeoutSupported = FALSE;
+               LOGGER.debug("{} - Statement.setQueryTimeout() not supported", poolName);
+            }
          }
       }
    }
@@ -371,15 +373,21 @@ public final class PoolElf
     * @param connection the connection to set the network timeout on
     * @param timeoutMs the number of milliseconds before timeout
     * @return the pre-existing network timeout value
+    * @throws SQLException thrown if an exception is encountered and network timeout is supported
     */
-   private int getAndSetNetworkTimeout(final Connection connection, final long timeoutMs)
+   private int getAndSetNetworkTimeout(final Connection connection, final long timeoutMs) throws SQLException
    {
-      if (isNetworkTimeoutSupported != FALSE) {
+      int originalTimeout = 0;
+      if (isNetworkTimeoutSupported == TRUE) {
+         originalTimeout = connection.getNetworkTimeout();
+         connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
+      }
+      else if (isNetworkTimeoutSupported == UNINITIALIZED) {
          try {
-            final int networkTimeout = connection.getNetworkTimeout();
+            originalTimeout = connection.getNetworkTimeout();
             connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
+            createNetworkTimeoutExecutor(dataSource);
             isNetworkTimeoutSupported = TRUE;
-            return networkTimeout;
          }
          catch (Throwable e) {
             isNetworkTimeoutSupported = FALSE;
@@ -387,7 +395,7 @@ public final class PoolElf
          }
       }
 
-      return 0;
+      return originalTimeout;
    }
 
    /**
@@ -396,7 +404,7 @@ public final class PoolElf
     *
     * @param connection the connection to set the network timeout on
     * @param timeoutMs the number of milliseconds before timeout
-    * @throws SQLException throw if the connection.setNetworkTimeout() call throws
+    * @throws SQLException thrown if the connection.setNetworkTimeout() call throws
     */
    private void setNetworkTimeout(final Connection connection, final long timeoutMs) throws SQLException
    {
@@ -425,8 +433,11 @@ public final class PoolElf
       }
    }
 
-   private void createNetworkTimeoutExecutor(final DataSource dataSource, final String dsClassName, final String jdbcUrl)
+   private void createNetworkTimeoutExecutor(final DataSource dataSource)
    {
+      final String dsClassName = config.getDataSourceClassName();
+      final String jdbcUrl = config.getJdbcUrl();
+
       // Temporary hack for MySQL issue: http://bugs.mysql.com/bug.php?id=75615
       if ((dsClassName != null && dsClassName.contains("Mysql")) ||
           (jdbcUrl != null && jdbcUrl.contains("mysql")) ||
