@@ -28,7 +28,9 @@ _Java 6 maven artifact (*maintenance mode*):_
 Or [download from here](http://search.maven.org/#search%7Cga%7C1%7Ccom.zaxxer.hikaricp).
 
 ----------------------------------------------------
-***JMH Benchmarks***<br/>
+
+##### JMH Benchmarks
+
 Microbenchmarks were created to isolate and measure the overhead of pools using the [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team. You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
 
 ![](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks.png)
@@ -44,7 +46,7 @@ Microbenchmarks were created to isolate and measure the overhead of pools using 
 </sup>
 
 ----------------------------------------------------
-***User Testimonials***<br/>
+##### User Testimonials
 
 [![](https://github.com/brettwooldridge/HikariCP/wiki/tweet3.png)](https://twitter.com/jkuipers)<br/>
 [![](https://github.com/brettwooldridge/HikariCP/wiki/tweet1.png)](https://twitter.com/steve_objectify)<br/>
@@ -273,19 +275,22 @@ for creating all threads used by the pool. It is needed in some restricted execu
 where threads can only be created through a ``ThreadFactory`` provided by the application container.
 *Default: none*
 
-***Missing Knobs***<br/>
+#### Missing Knobs
+
 HikariCP has plenty of "knobs" to turn as you can see above, but comparatively less than some other pools.
 This is a design philosophy.  The HikariCP design asthetic is Minimalism.  In keeping with the
 *simple is better* or *less is more* design philosophy, some knobs are intentionally left out.  Here are two,
 and the rationale.
 
-**Statement Cache**<br/>
+#### Statement Cache
+
 Most major database JDBC drivers already have a Statement cache that can be configured
 ([MySQL](https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration), PostgreSQL, Derby, etc).
 A statement cache in the pool would add unneeded weight and no additional functionality.  It is simply
 unnecessary with modern database drivers to implement a cache at the pool level.
 
-**Log Statement Text / Slow Query Logging**<br/>
+#### Log Statement Text / Slow Query Logging
+
 Like Statement caching, most major database vendors support statement logging through
 properties of their own driver.  This includes Oracle, MySQL, Derby, MSSQL, and others.  Some
 even support slow query logging. We consider this a "development-time" feature.  For those few
@@ -347,6 +352,7 @@ location of a properties file.  If you intend to use this option, construct a ``
 instance using the default constructor and the properties file will be loaded.
 
 ### Popular DataSource Class Names
+
 We recommended using ``dataSourceClassName`` instead of ``jdbcUrl``, but both are acceptable.  We'll say that again, *both are acceptable*.  *Note: Spring Boot auto-configuration users, you need to use ``jdbcUrl``-based configuration.*
 
 Here is a list of JDBC *DataSource* classes for popular databases:
@@ -377,11 +383,13 @@ A new Clojure wrapper has been created by [tomekw](https://github.com/tomekw) an
 ----------------------------------------------------
 
 ### Support <sup><sup>&#128172;</sup></sup>
+
 Google discussion group [HikariCP here](https://groups.google.com/d/forum/hikari-cp), growing [FAQ](https://github.com/brettwooldridge/HikariCP/wiki/FAQ).
 
 [![](https://raw.github.com/wiki/brettwooldridge/HikariCP/twitter.png)](https://twitter.com/share?text=Interesting%20JDBC%20Connection%20Pool&hashtags=HikariCP&url=https%3A%2F%2Fgithub.com%2Fbrettwooldridge%2FHikariCP)&nbsp;[![](https://raw.github.com/wiki/brettwooldridge/HikariCP/facebook.png)](http://www.facebook.com/plugins/like.php?href=https%3A%2F%2Fgithub.com%2Fbrettwooldridge%2FHikariCP&width&layout=standard&action=recommend&show_faces=true&share=false&height=80)
 
 ### Wiki
+
 Don't forget the [Wiki](https://github.com/brettwooldridge/HikariCP/wiki) for additional information such as:
  * [FAQ](https://github.com/brettwooldridge/HikariCP/wiki/FAQ)
  * [Hibernate 4.x Configuration](https://github.com/brettwooldridge/HikariCP/wiki/Hibernate4)
@@ -391,6 +399,7 @@ Don't forget the [Wiki](https://github.com/brettwooldridge/HikariCP/wiki) for ad
 ----------------------------------------------------
 
 ### Requirements
+
  &#8658; Java 6 and above<br/>
  &#8658; Javassist 3.18.1+ library<br/>
  &#8658; slf4j library<br/>
@@ -401,4 +410,5 @@ YourKit supports open source projects with its full-featured Java Profiler.  Cli
 [![](https://github.com/brettwooldridge/HikariCP/wiki/yklogo.png)](http://www.yourkit.com/java/profiler/index.jsp)<br/>
 
 ### Contributions
+
 Please perform changes and submit pull requests from the ``dev`` branch instead of ``master``.  Please set your editor to use spaces instead of tabs, and adhere to the apparent style of the code you are editing.  The ``dev`` branch is always more "current" than the ``master`` if you are looking to live life on the edge.
