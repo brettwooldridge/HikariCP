@@ -41,6 +41,5 @@ This is normally where the lights in the auditorium would go down, techno-music 
 
 ...or just stick with a simple before/after on my Core i7 (3770) 3.4GHz "Ivy Bridge" iMac.
 <br>
-<p align="center">
+
   <a href="images/Hikari-2.4-vs-2.3.png"><img src="images/Hikari-2.4-vs-2.3.png"/></a>
-</p>
