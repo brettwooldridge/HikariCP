@@ -319,6 +319,13 @@ public final class PoolElf
       }
    }
 
+   void shutdownTimeoutExecutor()
+   {
+      if (netTimeoutExecutor != null && netTimeoutExecutor instanceof ThreadPoolExecutor) {
+         ((ThreadPoolExecutor) netTimeoutExecutor).shutdownNow();
+      }
+   }
+
    /**
     * Return true if the driver appears to be JDBC 4.0 compliant.
     *
@@ -385,13 +392,14 @@ public final class PoolElf
       else if (isNetworkTimeoutSupported == UNINITIALIZED) {
          try {
             originalTimeout = connection.getNetworkTimeout();
-            connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
             createNetworkTimeoutExecutor(dataSource);
+            connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
             isNetworkTimeoutSupported = TRUE;
          }
          catch (Throwable e) {
             isNetworkTimeoutSupported = FALSE;
             LOGGER.debug("{} - Connection.setNetworkTimeout() not supported", poolName);
+            shutdownTimeoutExecutor();
          }
       }
 

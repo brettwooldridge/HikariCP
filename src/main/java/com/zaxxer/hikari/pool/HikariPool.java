@@ -249,6 +249,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
             assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
          }
 
+         poolElf.shutdownTimeoutExecutor();
          closeConnectionExecutor.shutdown();
          closeConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
       }
