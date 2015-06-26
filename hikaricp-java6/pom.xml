@@ -20,7 +20,6 @@
       <connection>scm:git:git@github.com:brettwooldridge/HikariCP.git</connection>
       <developerConnection>scm:git:git@github.com:brettwooldridge/HikariCP.git</developerConnection>
       <url>git@github.com:brettwooldridge/HikariCP.git</url>
-     <tag>HikariCP-2.3.2</tag>
   </scm>
 
    <licenses>

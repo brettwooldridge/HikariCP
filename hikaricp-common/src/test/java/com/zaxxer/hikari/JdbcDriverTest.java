@@ -78,7 +78,7 @@ public class JdbcDriverTest
          ds = new HikariDataSource(config);
       }
       catch (RuntimeException e) {
-         Assert.assertTrue(e.getMessage().contains("Unable to get driver"));
+         Assert.assertTrue(e.getMessage().contains("claims to not accept"));
       }
    }
 }
