@@ -202,7 +202,7 @@ public final class PoolElf
             return connection.isValid(timeoutSec);
          }
    
-         networkTimeout = getAndSetNetworkTimeout(connection, validationTimeout);
+         final int originalTimeout = getAndSetNetworkTimeout(connection, validationTimeout);
    
          try (Statement statement = connection.createStatement()) {
             setQueryTimeout(statement, timeoutSec);
@@ -215,7 +215,7 @@ public final class PoolElf
             connection.rollback();
          }
    
-         setNetworkTimeout(connection, networkTimeout);
+         setNetworkTimeout(connection, originalTimeout);
    
          return true;
       }
