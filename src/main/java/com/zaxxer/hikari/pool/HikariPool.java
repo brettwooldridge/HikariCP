@@ -587,6 +587,7 @@ public class HikariPool implements HikariPoolMBean, IBagStateListener
          // refresh timeouts in case they changed via MBean
          connectionTimeout = config.getConnectionTimeout();
          poolElf.setValidationTimeout(config.getValidationTimeout());
+         leakTask.updateLeakDetectionThreshold(config.getLeakDetectionThreshold());
 
          final long now = clockSource.currentTime();
          final long idleTimeout = config.getIdleTimeout();

@@ -47,6 +47,9 @@ public class LeakTask implements Runnable
          public void cancel() {}
 
          @Override
+         void updateLeakDetectionThreshold(long leakDetectionThreshold) {}
+
+         @Override
          public LeakTask start(final PoolBagEntry bagEntry)
          {
             return this;
@@ -54,7 +57,7 @@ public class LeakTask implements Runnable
       };
    }
 
-   public LeakTask(final long leakDetectionThreshold, final ScheduledExecutorService executorService)
+   LeakTask(final long leakDetectionThreshold, final ScheduledExecutorService executorService)
    {
       this.executorService = executorService;
       this.leakDetectionThreshold = leakDetectionThreshold;
@@ -71,9 +74,14 @@ public class LeakTask implements Runnable
       scheduledFuture = parent.executorService.schedule(this, parent.leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
-   public LeakTask start(final PoolBagEntry bagEntry)
+   LeakTask start(final PoolBagEntry bagEntry)
    {
       return new LeakTask(this, bagEntry);
+   }
+
+   void updateLeakDetectionThreshold(final long leakDetectionThreshold)
+   {
+      this.leakDetectionThreshold = leakDetectionThreshold;
    }
 
    /** {@inheritDoc} */
