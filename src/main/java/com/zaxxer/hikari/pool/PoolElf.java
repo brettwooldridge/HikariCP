@@ -40,7 +40,6 @@ public final class PoolElf
    private int isNetworkTimeoutSupported;
    private int isQueryTimeoutSupported;
    private Executor netTimeoutExecutor;
-   private DataSource dataSource;
 
    private final HikariConfig config;
    private final String poolName;
@@ -134,7 +133,7 @@ public final class PoolElf
       final String driverClassName = config.getDriverClassName();
       final Properties dataSourceProperties = config.getDataSourceProperties();
 
-      dataSource = config.getDataSource();
+      DataSource dataSource = config.getDataSource();
       if (dsClassName != null && dataSource == null) {
          dataSource = createInstance(dsClassName, DataSource.class);
          PropertyElf.setTargetFromProperties(dataSource, dataSourceProperties);
@@ -145,6 +144,7 @@ public final class PoolElf
 
       if (dataSource != null) {
          setLoginTimeout(dataSource, config.getConnectionTimeout());
+         createNetworkTimeoutExecutor(dataSource, dsClassName, jdbcUrl);
       }
 
       return dataSource;
@@ -380,30 +380,25 @@ public final class PoolElf
     * @param connection the connection to set the network timeout on
     * @param timeoutMs the number of milliseconds before timeout
     * @return the pre-existing network timeout value
-    * @throws SQLException thrown if an exception is encountered and network timeout is supported
     */
-   private int getAndSetNetworkTimeout(final Connection connection, final long timeoutMs) throws SQLException
+   private int getAndSetNetworkTimeout(final Connection connection, final long timeoutMs)
    {
-      int originalTimeout = 0;
-      if (isNetworkTimeoutSupported == TRUE) {
-         originalTimeout = connection.getNetworkTimeout();
-         connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
-      }
-      else if (isNetworkTimeoutSupported == UNINITIALIZED) {
+      if (isNetworkTimeoutSupported != FALSE) {
          try {
-            originalTimeout = connection.getNetworkTimeout();
-            createNetworkTimeoutExecutor(dataSource);
+            final int originalTimeout = connection.getNetworkTimeout();
             connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
             isNetworkTimeoutSupported = TRUE;
+            return originalTimeout;
          }
          catch (Throwable e) {
-            isNetworkTimeoutSupported = FALSE;
+            if (isNetworkTimeoutSupported == UNINITIALIZED) {
+               isNetworkTimeoutSupported = FALSE;
+            }
             LOGGER.debug("{} - Connection.setNetworkTimeout() not supported", poolName);
-            shutdownTimeoutExecutor();
          }
       }
 
-      return originalTimeout;
+      return 0;
    }
 
    /**
@@ -412,7 +407,7 @@ public final class PoolElf
     *
     * @param connection the connection to set the network timeout on
     * @param timeoutMs the number of milliseconds before timeout
-    * @throws SQLException thrown if the connection.setNetworkTimeout() call throws
+    * @throws SQLException throw if the connection.setNetworkTimeout() call throws
     */
    private void setNetworkTimeout(final Connection connection, final long timeoutMs) throws SQLException
    {
@@ -441,11 +436,8 @@ public final class PoolElf
       }
    }
 
-   private void createNetworkTimeoutExecutor(final DataSource dataSource)
+   private void createNetworkTimeoutExecutor(final DataSource dataSource, final String dsClassName, final String jdbcUrl)
    {
-      final String dsClassName = config.getDataSourceClassName();
-      final String jdbcUrl = config.getJdbcUrl();
-
       // Temporary hack for MySQL issue: http://bugs.mysql.com/bug.php?id=75615
       if ((dsClassName != null && dsClassName.contains("Mysql")) ||
           (jdbcUrl != null && jdbcUrl.contains("mysql")) ||
