@@ -59,7 +59,7 @@ public final class DriverDataSource implements DataSource
          while (drivers.hasMoreElements()) {
             Driver d = drivers.nextElement();
             if (d.getClass().getName().equals(driverClassName)) {
-               this.driver = d;
+               driver = d;
                break;
             }
          }
@@ -68,7 +68,7 @@ public final class DriverDataSource implements DataSource
             LOGGER.warn("Registered driver with driverClassName={} was not found, trying direct instantiation.", driverClassName);
             try {
                Class<?> driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
-               this.driver = (Driver) driverClass.newInstance();
+               driver = (Driver) driverClass.newInstance();
             }
             catch (Exception e) {
                LOGGER.warn("Could not instantiate instance of driver class {}, trying JDBC URL resolution", driverClassName, e);
@@ -76,13 +76,16 @@ public final class DriverDataSource implements DataSource
          }
       }
 
-      if (driver == null) {
-         try {
+      try {
+         if (driver == null) {
             driver = DriverManager.getDriver(jdbcUrl);
          }
-         catch (SQLException e) {
-            throw new RuntimeException("Unable to get driver instance for jdbcUrl=" + jdbcUrl, e);
+         else if (!driver.acceptsURL(jdbcUrl)) {
+            throw new RuntimeException("Driver " + driverClassName + " claims to not accept JDBC URL " + jdbcUrl);
          }
+      }
+      catch (SQLException e) {
+         throw new RuntimeException("Unable to get driver instance for jdbcUrl=" + jdbcUrl, e);
       }
    }
 
