@@ -43,7 +43,7 @@ import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.pool.PoolElf;
 import com.zaxxer.hikari.util.PropertyElf;
 
-public class HikariConfig implements HikariConfigMBean
+public class HikariConfig implements HikariConfigMXBean
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariConfig.class);
 

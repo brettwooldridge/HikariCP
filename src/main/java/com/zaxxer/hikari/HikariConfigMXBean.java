@@ -21,7 +21,7 @@ package com.zaxxer.hikari;
  *
  * @author Brett Wooldridge
  */
-public interface HikariConfigMBean
+public interface HikariConfigMXBean
 {
    /**
     * Get the maximum number of milliseconds that a client will wait for a connection from the pool. If this 
