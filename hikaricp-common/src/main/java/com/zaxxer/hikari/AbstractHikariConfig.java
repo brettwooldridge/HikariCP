@@ -38,7 +38,7 @@ import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 import com.zaxxer.hikari.util.UtilityElf;
 
-public abstract class AbstractHikariConfig implements HikariConfigMBean
+public abstract class AbstractHikariConfig implements HikariConfigMXBean
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariConfig.class);
 

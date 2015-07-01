@@ -67,7 +67,7 @@ import com.zaxxer.hikari.util.IBagStateListener;
  *
  * @author Brett Wooldridge
  */
-public abstract class BaseHikariPool implements HikariPoolMBean, IBagStateListener
+public abstract class BaseHikariPool implements HikariPoolMXBean, IBagStateListener
 {
    protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
    private static final long ALIVE_BYPASS_WINDOW = Long.getLong("com.zaxxer.hikari.aliveBypassWindow", 1000L);
