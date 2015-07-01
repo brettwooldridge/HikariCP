@@ -21,7 +21,7 @@ package com.zaxxer.hikari;
  *
  * @author Brett Wooldridge
  */
-public interface HikariPoolMBean
+public interface HikariPoolMXBean 
 {
    int getIdleConnections();
 

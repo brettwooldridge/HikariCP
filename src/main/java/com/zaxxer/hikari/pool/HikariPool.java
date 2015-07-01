@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariPoolMBean;
+import com.zaxxer.hikari.HikariPoolMXBean;
 import com.zaxxer.hikari.metrics.CodaHaleMetricsTracker;
 import com.zaxxer.hikari.metrics.CodahaleHealthChecker;
 import com.zaxxer.hikari.metrics.MetricsTracker;
@@ -64,7 +64,7 @@ import com.zaxxer.hikari.util.PropertyElf;
  *
  * @author Brett Wooldridge
  */
-public class HikariPool implements HikariPoolMBean, IBagStateListener
+public class HikariPool implements HikariPoolMXBean, IBagStateListener
 {
    final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
