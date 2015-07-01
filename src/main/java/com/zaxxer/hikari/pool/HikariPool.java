@@ -129,7 +129,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          this.houseKeepingExecutorService = config.getScheduledExecutorService();
       }
 
-      this.leakTask = (config.getLeakDetectionThreshold() == 0) ? LeakTask.NO_LEAK : new LeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
+      this.leakTask = new LeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
       
       setMetricRegistry(config.getMetricRegistry());
       setHealthCheckRegistry(config.getHealthCheckRegistry());

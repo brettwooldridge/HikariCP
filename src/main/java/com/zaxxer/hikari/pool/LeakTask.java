@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
  */
 public class LeakTask implements Runnable
 {
-   public static final LeakTask NO_LEAK;
    private static final Logger LOGGER = LoggerFactory.getLogger(LeakTask.class);
+   private static final LeakTask NO_LEAK;
 
    private ScheduledExecutorService executorService;
    private long leakDetectionThreshold;
@@ -45,15 +45,6 @@ public class LeakTask implements Runnable
       NO_LEAK = new LeakTask() {
          @Override
          public void cancel() {}
-
-         @Override
-         void updateLeakDetectionThreshold(long leakDetectionThreshold) {}
-
-         @Override
-         public LeakTask start(final PoolBagEntry bagEntry)
-         {
-            return this;
-         }
       };
    }
 
@@ -63,10 +54,6 @@ public class LeakTask implements Runnable
       this.leakDetectionThreshold = leakDetectionThreshold;
    }
 
-   private LeakTask()
-   {
-   }
-   
    private LeakTask(final LeakTask parent, final PoolBagEntry bagEntry)
    {
       this.exception = new Exception("Apparent connection leak detected");
@@ -74,9 +61,13 @@ public class LeakTask implements Runnable
       scheduledFuture = parent.executorService.schedule(this, parent.leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
+   private LeakTask()
+   {
+   }
+   
    LeakTask start(final PoolBagEntry bagEntry)
    {
-      return new LeakTask(this, bagEntry);
+      return (leakDetectionThreshold == 0) ? NO_LEAK : new LeakTask(this, bagEntry);
    }
 
    void updateLeakDetectionThreshold(final long leakDetectionThreshold)
