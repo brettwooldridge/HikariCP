@@ -4,6 +4,7 @@ import static com.zaxxer.hikari.util.UtilityElf.createInstance;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.Properties;
 import java.util.concurrent.Executor;
@@ -133,7 +134,12 @@ public final class PoolUtilities
    public void setupConnection(final Connection connection, final boolean isAutoCommit, final boolean isReadOnly, final int transactionIsolation, final String catalog) throws SQLException
    {
       connection.setAutoCommit(isAutoCommit);
-      connection.setReadOnly(isReadOnly);
+      try {
+         connection.setReadOnly(isReadOnly);
+      }
+      catch (SQLFeatureNotSupportedException e) {
+         // ignore
+      }
       if (transactionIsolation != connection.getTransactionIsolation()) {
          connection.setTransactionIsolation(transactionIsolation);
       }
