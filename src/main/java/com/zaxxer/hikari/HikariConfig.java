@@ -79,7 +79,7 @@ public class HikariConfig implements HikariConfigMXBean
    private String transactionIsolationName;
    private String username;
    private boolean isAutoCommit;
-   private boolean isReadOnly;
+   private Boolean isReadOnly;
    private boolean isInitializationFailFast;
    private boolean isIsolateInternalQueries;
    private boolean isRegisterMbeans;
@@ -529,12 +529,12 @@ public class HikariConfig implements HikariConfigMXBean
       healthCheckProperties.setProperty(key, value);
    }
 
-   public boolean isReadOnly()
+   public Boolean isReadOnly()
    {
       return isReadOnly;
    }
 
-   public void setReadOnly(boolean readOnly)
+   public void setReadOnly(Boolean readOnly)
    {
       this.isReadOnly = readOnly;
    }

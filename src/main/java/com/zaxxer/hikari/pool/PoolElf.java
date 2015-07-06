@@ -14,6 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -44,7 +45,7 @@ public final class PoolElf
    private final HikariConfig config;
    private final String poolName;
    private final String catalog;
-   private final boolean isReadOnly;
+   private final Boolean isReadOnly;
    private final boolean isAutoCommit;
    private final boolean isUseJdbc4Validation;
    private final boolean isIsolateInternalQueries;
@@ -154,12 +155,7 @@ public final class PoolElf
     * Setup a connection initial state.
     *
     * @param connection a Connection
-    * @param connectionTimeout 
-    * @param initSql 
-    * @param isAutoCommit auto-commit state
-    * @param isReadOnly read-only state
-    * @param transactionIsolation transaction isolation
-    * @param catalog default catalog
+    * @param connectionTimeout the connection timeout
     * @throws SQLException thrown from driver
     */
    void setupConnection(final Connection connection, final long connectionTimeout) throws SQLException
@@ -172,7 +168,9 @@ public final class PoolElf
       transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
 
       connection.setAutoCommit(isAutoCommit);
-      connection.setReadOnly(isReadOnly);
+      if (isReadOnly != null) {
+         connection.setReadOnly(isReadOnly);
+      }
 
       if (transactionIsolation != connection.getTransactionIsolation()) {
          connection.setTransactionIsolation(transactionIsolation);
@@ -191,9 +189,10 @@ public final class PoolElf
     * Check whether the connection is alive or not.
     *
     * @param connection the connection to test
+    * @param lastConnectionFailure last connection failure
     * @return true if the connection is alive, false if it is not alive or we timed out
     */
-   boolean isConnectionAlive(final Connection connection)
+   boolean isConnectionAlive(final Connection connection, AtomicReference<Throwable> lastConnectionFailure)
    {
       try {
          int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout);
@@ -220,6 +219,7 @@ public final class PoolElf
          return true;
       }
       catch (SQLException e) {
+         lastConnectionFailure.set(e);
          LOGGER.warn("Exception during alive check, Connection ({}) declared dead.", connection, e);
          return false;
       }
@@ -227,7 +227,7 @@ public final class PoolElf
 
    void resetConnectionState(final PoolBagEntry poolEntry) throws SQLException
    {
-      if (poolEntry.isReadOnly != isReadOnly) {
+      if (isReadOnly != null && poolEntry.isReadOnly != isReadOnly) {
          poolEntry.connection.setReadOnly(isReadOnly);
       }
 
@@ -251,8 +251,10 @@ public final class PoolElf
 
    void resetPoolEntry(final PoolBagEntry poolEntry)
    {
+      if (isReadOnly != null) {
+         poolEntry.setReadOnly(isReadOnly);
+      }
       poolEntry.setCatalog(catalog);
-      poolEntry.setReadOnly(isReadOnly);
       poolEntry.setAutoCommit(isAutoCommit);
       poolEntry.setNetworkTimeout(networkTimeout);
       poolEntry.setTransactionIsolation(transactionIsolation);
