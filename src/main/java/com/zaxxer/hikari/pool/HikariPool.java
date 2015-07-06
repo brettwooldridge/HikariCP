@@ -46,7 +46,9 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariPoolMXBean;
 import com.zaxxer.hikari.metrics.CodaHaleMetricsTracker;
 import com.zaxxer.hikari.metrics.CodahaleHealthChecker;
+import com.zaxxer.hikari.metrics.CodahaleMetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.MetricsTracker;
+import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.MetricsTracker.MetricsContext;
 import com.zaxxer.hikari.metrics.PoolStats;
 import com.zaxxer.hikari.proxy.ConnectionProxy;
@@ -285,9 +287,19 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
 
    public void setMetricRegistry(Object metricRegistry)
    {
-      this.isRecordMetrics = metricRegistry != null;
+      if (metricRegistry != null) {
+         setMetricsTrackerFactory(new CodahaleMetricsTrackerFactory((MetricRegistry) metricRegistry));
+      }
+      else {
+         setMetricsTrackerFactory(null);
+      }
+   }
+
+   public void setMetricsTrackerFactory(MetricsTrackerFactory metricsTrackerFactory)
+   {
+      this.isRecordMetrics = metricsTrackerFactory != null;
       if (isRecordMetrics) {
-         this.metricsTracker = new CodaHaleMetricsTracker(poolName, getPoolStats(), (MetricRegistry) metricRegistry);
+         this.metricsTracker = metricsTrackerFactory.create(config.getPoolName(), getPoolStats());
       }
       else {
          this.metricsTracker = new MetricsTracker();
