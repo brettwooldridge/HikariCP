@@ -32,7 +32,8 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    private final Histogram connectionUsage;
    private final MetricRegistry registry;
 
-   public CodaHaleMetricsTracker(final String poolName, final PoolStats poolStats, final MetricRegistry registry) {
+   public CodaHaleMetricsTracker(final String poolName, final PoolStats poolStats, final MetricRegistry registry)
+   {
       this.poolName = poolName;
       this.registry = registry;
       this.connectionObtainTimer = registry.timer(MetricRegistry.name(poolName, "pool", "Wait"));

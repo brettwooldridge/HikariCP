@@ -22,7 +22,8 @@ public final class CodahaleMetricsTrackerFactory implements MetricsTrackerFactor
 {
    private final MetricRegistry registry;
 
-   public CodahaleMetricsTrackerFactory(MetricRegistry registry) {
+   public CodahaleMetricsTrackerFactory(MetricRegistry registry)
+   {
       this.registry = registry;
    }
 
