@@ -341,7 +341,7 @@ props.setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource")
 props.setProperty("dataSource.user", "test");
 props.setProperty("dataSource.password", "test");
 props.setProperty("dataSource.databaseName", "mydb");
-props.setProperty("dataSource.logWriter", new PrintWriter(System.out));
+props.put("dataSource.logWriter", new PrintWriter(System.out));
 
 HikariConfig config = new HikariConfig(props);
 HikariDataSource ds = new HikariDataSource(config);
