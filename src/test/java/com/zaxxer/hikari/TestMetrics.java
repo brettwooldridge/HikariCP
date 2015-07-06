@@ -266,11 +266,11 @@ public class TestMetrics
       ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       MetricRegistry metricRegistry = new MetricRegistry();
-      MetricsTrackerFactory metricsTrackerFactory = new CodahaleMetricsTrackerFactory(metricRegistry);
 
       // before the pool is started, we can set it any number of times using either setter
       ds.setMetricRegistry(metricRegistry);
-      ds.setMetricsTrackerFactory(metricsTrackerFactory);
+      ds.setMetricRegistry(metricRegistry);
+      ds.setMetricRegistry(metricRegistry);
 
       try {
          Connection connection = ds.getConnection();
@@ -282,14 +282,37 @@ public class TestMetrics
       }
       catch (IllegalStateException ise) {
          // pass
-         try {
-            // after the pool is started, we cannot set it any more
-            ds.setMetricsTrackerFactory(metricsTrackerFactory);
-            Assert.fail("Should not have been allowed to set metricsTrackerFactory after pool started");
-         }
-         catch (IllegalStateException ise2) {
-            // pass
-         }
+      }
+      finally {
+         ds.close();
+      }
+   }
+
+   @Test
+   public void testSetters5() throws Exception
+   {
+      HikariDataSource ds = new HikariDataSource();
+      ds.setMaximumPoolSize(1);
+      ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      MetricRegistry metricRegistry = new MetricRegistry();
+      MetricsTrackerFactory metricsTrackerFactory = new CodahaleMetricsTrackerFactory(metricRegistry);
+
+      // before the pool is started, we can set it any number of times using either setter
+      ds.setMetricsTrackerFactory(metricsTrackerFactory);
+      ds.setMetricsTrackerFactory(metricsTrackerFactory);
+      ds.setMetricsTrackerFactory(metricsTrackerFactory);
+
+      try {
+         Connection connection = ds.getConnection();
+         connection.close();
+
+         // after the pool is started, we cannot set it any more
+         ds.setMetricsTrackerFactory(metricsTrackerFactory);
+         Assert.fail("Should not have been allowed to set registry factory after pool started");
+      }
+      catch (IllegalStateException ise) {
+         // pass
       }
       finally {
          ds.close();

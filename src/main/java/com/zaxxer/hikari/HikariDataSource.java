@@ -193,6 +193,23 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
 
    /** {@inheritDoc} */
    @Override
+   public void setMetricRegistry(Object metricRegistry)
+   {
+      boolean isAlreadySet = getMetricRegistry() != null;
+      super.setMetricRegistry(metricRegistry);
+
+      if (pool != null) {
+         if (isAlreadySet) {
+            throw new IllegalStateException("MetricRegistry can only be set one time");
+         }
+         else {
+            pool.setMetricRegistry(super.getMetricRegistry());
+         }
+      }
+   }
+
+   /** {@inheritDoc} */
+   @Override
    public void setMetricsTrackerFactory(MetricsTrackerFactory metricsTrackerFactory)
    {
       boolean isAlreadySet = getMetricsTrackerFactory() != null;

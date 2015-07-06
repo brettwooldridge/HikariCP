@@ -40,10 +40,9 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
+import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.pool.PoolElf;
 import com.zaxxer.hikari.util.PropertyElf;
-import com.zaxxer.hikari.metrics.CodahaleMetricsTrackerFactory;
-import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 
 public class HikariConfig implements HikariConfigMXBean
 {
@@ -91,6 +90,7 @@ public class HikariConfig implements HikariConfigMXBean
    private ThreadFactory threadFactory;
    private ScheduledThreadPoolExecutor scheduledExecutor;
    private MetricsTrackerFactory metricsTrackerFactory;
+   private Object metricRegistry;
    private Object healthCheckRegistry;
    private Properties healthCheckProperties;
 
@@ -451,6 +451,10 @@ public class HikariConfig implements HikariConfigMXBean
 
    public void setMetricsTrackerFactory(MetricsTrackerFactory metricsTrackerFactory)
    {
+      if (metricRegistry != null) {
+         throw new IllegalStateException("setMetricsTrackerFactory() cannot used in combination with setMetricRegistry()");
+      }
+
       this.metricsTrackerFactory = metricsTrackerFactory;
    }
 
@@ -461,12 +465,7 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public Object getMetricRegistry()
    {
-      if (metricsTrackerFactory instanceof CodahaleMetricsTrackerFactory) {
-         return ((CodahaleMetricsTrackerFactory) metricsTrackerFactory).getRegistry();
-      }
-      else {
-         return null;
-      }
+      return metricRegistry;
    }
 
    /**
@@ -476,7 +475,10 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setMetricRegistry(Object metricRegistry)
    {
-      MetricsTrackerFactory metricsTrackerFactory;
+      if (metricsTrackerFactory != null) {
+         throw new IllegalStateException("setMetricRegistry() cannot used in combination with setMetricsTrackerFactory()");
+      }
+
       if (metricRegistry != null) {
          if (metricRegistry instanceof String) {
             try {
@@ -491,13 +493,9 @@ public class HikariConfig implements HikariConfigMXBean
          if (!(metricRegistry instanceof MetricRegistry)) {
             throw new IllegalArgumentException("Class must be an instance of com.codahale.metrics.MetricRegistry");
          }
-         metricsTrackerFactory = new CodahaleMetricsTrackerFactory((MetricRegistry) metricRegistry);
       }
-      else {
-         metricsTrackerFactory = null;
-      }
-      // use setter to allow HikariDataSource to alter the behavior of both setters in a single override
-      setMetricsTrackerFactory(metricsTrackerFactory);
+
+      this.metricRegistry = metricRegistry;
    }
 
    /**

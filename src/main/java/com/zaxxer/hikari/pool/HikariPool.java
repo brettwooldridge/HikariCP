@@ -44,12 +44,11 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariPoolMXBean;
-import com.zaxxer.hikari.metrics.CodaHaleMetricsTracker;
 import com.zaxxer.hikari.metrics.CodahaleHealthChecker;
 import com.zaxxer.hikari.metrics.CodahaleMetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.MetricsTracker;
-import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.MetricsTracker.MetricsContext;
+import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.PoolStats;
 import com.zaxxer.hikari.proxy.ConnectionProxy;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
@@ -135,7 +134,13 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
 
       this.leakTask = new LeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
       
-      setMetricRegistry(config.getMetricRegistry());
+      if (config.getMetricsTrackerFactory() != null) {
+         setMetricsTrackerFactory(config.getMetricsTrackerFactory());
+      }
+      else {
+         setMetricRegistry(config.getMetricRegistry());
+      }
+
       setHealthCheckRegistry(config.getHealthCheckRegistry());
 
       poolElf.registerMBeans(this);
@@ -287,7 +292,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
 
    public void setMetricRegistry(Object metricRegistry)
    {
-      if (metricRegistry != null) {
+      if (isRecordMetrics) {
          setMetricsTrackerFactory(new CodahaleMetricsTrackerFactory((MetricRegistry) metricRegistry));
       }
       else {
