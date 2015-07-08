@@ -28,6 +28,7 @@ import static com.zaxxer.hikari.util.UtilityElf.getTransactionIsolation;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static com.zaxxer.hikari.util.UtilityElf.setRemoveOnCancelPolicy;
 
+import java.lang.Throwable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
@@ -224,7 +225,12 @@ public abstract class BaseHikariPool implements HikariPoolMXBean, IBagStateListe
       }
 
       logPoolState("Timeout failure ");
-      throw new SQLTimeoutException(String.format("Timeout after %dms of waiting for a connection.", elapsedTimeMs(start)), lastConnectionFailure.getAndSet(null));
+      String sqlState = null;
+      final Throwable originalException = lastConnectionFailure.getAndSet(null);
+      if (originalException instanceof SQLException) {
+         sqlState = ((SQLException) originalException).getSQLState();
+      }
+      throw new SQLTimeoutException(String.format("Timeout after %dms of waiting for a connection.", elapsedTimeMs(start)), sqlState, originalException);
    }
 
 
