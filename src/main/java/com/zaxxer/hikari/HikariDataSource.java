@@ -21,7 +21,6 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.sql.Wrapper;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.sql.DataSource;
@@ -162,7 +161,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
             return (T) pool.getDataSource();
          }
 
-         if (pool.getDataSource() instanceof Wrapper) {
+         if (pool.getDataSource() != null) {
             return (T) pool.getDataSource().unwrap(iface);
          }
       }
@@ -183,7 +182,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
             return true;
          }
 
-         if (pool.getDataSource() instanceof Wrapper) {
+         if (pool.getDataSource() != null) {
             return pool.getDataSource().isWrapperFor(iface);
          }
       }

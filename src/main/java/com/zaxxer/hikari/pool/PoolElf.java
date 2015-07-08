@@ -164,7 +164,7 @@ public final class PoolElf
          throw new SQLException("JDBC4 Connection.isValid() method not supported, connection test query must be configured");
       }
 
-      networkTimeout = (networkTimeout < 0 ? getAndSetNetworkTimeout(connection, connectionTimeout) : networkTimeout);
+      networkTimeout = getAndSetNetworkTimeout(connection, connectionTimeout);
       transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
 
       connection.setAutoCommit(isAutoCommit);
@@ -268,7 +268,6 @@ public final class PoolElf
    /**
     * Register MBeans for HikariConfig and HikariPool.
     *
-    * @param configuration a HikariConfig instance
     * @param pool a HikariPool instance
     */
    void registerMBeans(final HikariPool pool)
@@ -297,8 +296,6 @@ public final class PoolElf
 
    /**
     * Unregister MBeans for HikariConfig and HikariPool.
-    *
-    * @param configuration a HikariConfig instance
     */
    void unregisterMBeans()
    {
@@ -369,8 +366,8 @@ public final class PoolElf
          catch (Throwable e) {
             if (isQueryTimeoutSupported == UNINITIALIZED) {
                isQueryTimeoutSupported = FALSE;
-               LOGGER.debug("{} - Statement.setQueryTimeout() not supported", poolName);
             }
+            LOGGER.debug("{} - Statement.setQueryTimeout() failed or is not supported", poolName);
          }
       }
    }

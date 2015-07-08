@@ -203,7 +203,12 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       }
 
       logPoolState("Timeout failure ");
-      throw new SQLTimeoutException(String.format("Timeout after %dms of waiting for a connection.", clockSource.elapsedMillis(startTime), lastConnectionFailure.getAndSet(null)));
+      String sqlState = null;
+      final Throwable originalException = lastConnectionFailure.getAndSet(null);
+      if (originalException instanceof SQLException) {
+         sqlState = ((SQLException) originalException).getSQLState();
+      }
+      throw new SQLTimeoutException(String.format("Timeout after %dms of waiting for a connection.", clockSource.elapsedMillis(startTime)), sqlState, originalException);
    }
 
    /**
@@ -292,6 +297,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
 
    public void setMetricRegistry(Object metricRegistry)
    {
+      this.isRecordMetrics = metricRegistry != null;
       if (isRecordMetrics) {
          setMetricsTrackerFactory(new CodahaleMetricsTrackerFactory((MetricRegistry) metricRegistry));
       }
