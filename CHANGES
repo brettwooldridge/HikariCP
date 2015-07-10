@@ -1,11 +1,26 @@
 HikariCP Changes
 
+Changes in 2.3.9
+
+ * Fixed regression in JMX MBean registration.
+
+ * Propagate/pass-thru SQLState code, if available, when throwing our own SQLTimeoutException
+   from getConnection().
+
+ * Validate DriverManager-based connections via a call to driver.acceptsUrl().
+
+ * Ignore exceptions thrown from setReadOnly() during connection setup for databases that
+   throw SQLFeatureUnsupported exceptions.
+
+ * Improved debug logging for connection closing, providing a reason that the pool decided
+   to close the connection.
+
 Changes in 2.3.8
 
  * Rollback Javassist to version 3.18.2-GA due to reported Java 8 compatibility issues.
 
  * Suppress chatty debug logs during shutdown.
- 
+
 Changes in 2.3.7
 
  * Try harder at resolving the driver by various means when both driverClassName and jdbcUrl
@@ -13,7 +28,7 @@ Changes in 2.3.7
 
  * Allow a specifically set DataSource instance to override other settings such as jdbcUrl,
    dataSourceClassName, or driverClassName.
- 
+
  * Fixed issue where, in the case of a driver-based configuration (jdbcUrl), we were not
    initialising the network timeout Executor.
 
