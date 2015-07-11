@@ -108,8 +108,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          boolean isForceClose = sqlState.startsWith("08") | SQL_ERRORS.contains(sqlState);
          if (isForceClose) {
             bagEntry.evicted = true;
-            LOGGER.warn("Connection {} ({}) marked as broken because of SQLSTATE({}), ErrorCode({}).", delegate.toString(),
-                                      parentPool.toString(), sqlState, sqle.getErrorCode(), sqle);
+            LOGGER.warn("Connection {} ({}) marked as broken because of SQLSTATE({}), ErrorCode({}).", delegate,
+                                      parentPool, sqlState, sqle.getErrorCode(), sqle);
          }
          else if (sqle.getNextException() != null && sqle != sqle.getNextException()) {
             checkException(sqle.getNextException());
@@ -147,6 +147,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    private final void resetConnectionState() throws SQLException
    {
+      LOGGER.debug("{} Resetting dirty on {} (readOnlyDirty={},autoCommitDirty={},isolationDirty={},catalogDirty={})",
+                   parentPool, delegate, isReadOnlyDirty, isAutoCommitDirty, isTransactionIsolationDirty, isCatalogDirty);
+
       if (isReadOnlyDirty) {
          delegate.setReadOnly(parentPool.isReadOnly);
       }
@@ -189,6 +192,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
          try {
             if (isCommitStateDirty && !delegate.getAutoCommit()) {
+               LOGGER.debug("{} Performing rollback on {} due to dirty commit state.", parentPool, delegate);
                delegate.rollback();
             }
 
