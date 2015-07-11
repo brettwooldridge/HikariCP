@@ -107,6 +107,7 @@ public final class HikariPool extends BaseHikariPool
    protected boolean isConnectionAlive(final Connection connection)
    {
       try {
+         LOGGER.debug("Performing alive check for connection {}", connection);
          int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout);
 
          if (isUseJdbc4Validation) {
