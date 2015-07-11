@@ -146,13 +146,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       return statement;
    }
 
-   private final void resetConnectionState() throws SQLException
-   {
-      poolEntry.resetConnectionState();
-
-      lastAccess = clockSource.currentTime();
-   }
-
    // **********************************************************************
    //                   "Overridden" java.sql.Connection Methods
    // **********************************************************************
@@ -180,13 +173,14 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             if (isCommitStateDirty) {
                lastAccess = clockSource.currentTime();
 
-               if (!delegate.getAutoCommit()) {
+               if (!poolEntry.isAutoCommit) {
                   delegate.rollback();
                }
             }
 
             if (isConnectionStateDirty) {
-               resetConnectionState();
+               poolEntry.resetConnectionState();
+               lastAccess = clockSource.currentTime();
             }
 
             delegate.clearWarnings();

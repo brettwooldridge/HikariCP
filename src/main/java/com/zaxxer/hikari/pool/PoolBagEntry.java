@@ -44,10 +44,10 @@ public final class PoolBagEntry implements IConcurrentBagEntry
    public volatile boolean evicted;
    public volatile boolean aborted;
 
+   public boolean isAutoCommit;
    int networkTimeout;
    int transactionIsolation;
    String catalog;
-   boolean isAutoCommit;
    boolean isReadOnly;
    
    private final PoolElf poolElf;
