@@ -161,7 +161,7 @@ public final class PoolElf
    void setupConnection(final Connection connection, final long connectionTimeout) throws SQLException
    {
       if (isUseJdbc4Validation && !isJdbc4ValidationSupported(connection)) {
-         throw new SQLException("JDBC4 Connection.isValid() method not supported, connection test query must be configured");
+         throw new SQLException("Connection.isValid() method not supported, connection test query must be configured");
       }
 
       networkTimeout = getAndSetNetworkTimeout(connection, connectionTimeout);
@@ -220,7 +220,7 @@ public final class PoolElf
       }
       catch (SQLException e) {
          lastConnectionFailure.set(e);
-         LOGGER.warn("Exception during alive check, Connection ({}) declared dead.", connection, e);
+         LOGGER.warn("{} Exception '{}' during alive check, Connection ({}) declared dead.", poolName, connection, e.getMessage());
          return false;
       }
    }
@@ -286,11 +286,11 @@ public final class PoolElf
             mBeanServer.registerMBean(pool, beanPoolName);
          }
          else {
-            LOGGER.error("You cannot use the same pool name for separate pool instances.");
+            LOGGER.error("{} You cannot use the same pool name for separate pool instances.", poolName);
          }
       }
       catch (Exception e) {
-         LOGGER.warn("Unable to register management beans.", e);
+         LOGGER.warn("{} Unable to register management beans.", poolName, e);
       }
    }
 
@@ -314,7 +314,7 @@ public final class PoolElf
          }
       }
       catch (Exception e) {
-         LOGGER.warn("Unable to unregister management beans.", e);
+         LOGGER.warn("{} Unable to unregister management beans.", poolName, e);
       }
    }
 
@@ -341,7 +341,7 @@ public final class PoolElf
          }
          catch (Throwable e) {
             isValidSupported = false;
-            LOGGER.debug("{} - JDBC4 Connection.isValid() not supported ({})", poolName, e.getMessage());
+            LOGGER.debug("{} - Connection.isValid() not supported ({})", poolName, e.getMessage());
          }
 
          isValidChecked = true;
@@ -366,8 +366,8 @@ public final class PoolElf
          catch (Throwable e) {
             if (isQueryTimeoutSupported == UNINITIALIZED) {
                isQueryTimeoutSupported = FALSE;
+               LOGGER.debug("{} - Statement.setQueryTimeout() failed or is not supported ({})", poolName, e.getMessage());
             }
-            LOGGER.debug("{} - Statement.setQueryTimeout() failed or is not supported", poolName);
          }
       }
    }
@@ -391,9 +391,9 @@ public final class PoolElf
          }
          catch (Throwable e) {
             if (isNetworkTimeoutSupported == UNINITIALIZED) {
+               LOGGER.debug("{} Connection.setNetworkTimeout() not supported", poolName);
                isNetworkTimeoutSupported = FALSE;
             }
-            LOGGER.debug("{} - Connection.setNetworkTimeout() not supported", poolName);
          }
       }
 
@@ -480,7 +480,7 @@ public final class PoolElf
             dataSource.setLoginTimeout((int) TimeUnit.MILLISECONDS.toSeconds(Math.max(1000L, connectionTimeout)));
          }
          catch (SQLException e) {
-            LOGGER.warn("Unable to set DataSource login timeout", e);
+            LOGGER.warn("{} Unable to set DataSource login timeout", poolName, e);
          }
       }
    }
