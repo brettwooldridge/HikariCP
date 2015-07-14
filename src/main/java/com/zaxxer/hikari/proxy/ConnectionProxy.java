@@ -167,6 +167,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
                   checkException(e);
                }
             }
+
+            openStatements.clear();
          }
 
          try {
