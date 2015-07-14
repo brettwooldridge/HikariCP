@@ -366,7 +366,7 @@ public final class PoolElf
          catch (Throwable e) {
             if (isQueryTimeoutSupported == UNINITIALIZED) {
                isQueryTimeoutSupported = FALSE;
-               LOGGER.debug("{} - Statement.setQueryTimeout() failed or is not supported ({})", poolName, e.getMessage());
+               LOGGER.debug("{} - Statement.setQueryTimeout() is not supported ({})", poolName, e.getMessage());
             }
          }
       }
@@ -391,8 +391,8 @@ public final class PoolElf
          }
          catch (Throwable e) {
             if (isNetworkTimeoutSupported == UNINITIALIZED) {
-               LOGGER.debug("{} Connection.setNetworkTimeout() not supported", poolName);
                isNetworkTimeoutSupported = FALSE;
+               LOGGER.debug("{} Connection.setNetworkTimeout() not supported ({})", poolName, e.getMessage());
             }
          }
       }
