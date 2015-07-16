@@ -459,7 +459,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       if (connectionBag.remove(bagEntry)) {
          final int tc = totalConnections.decrementAndGet();
          if (tc < 0) {
-            LOGGER.warn("Internal accounting inconsistency, totalConnections={}", tc, new Exception());
+            LOGGER.warn("{} - Internal accounting inconsistency, totalConnections={}", poolName, tc, new Exception());
          }
          
          closeConnectionExecutor.execute(new Runnable() {
@@ -497,7 +497,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
 
          connectionBag.add(new PoolBagEntry(connection, this));
          lastConnectionFailure.set(null);
-         LOGGER.debug("Connection {} added to pool {} ", connection, poolName);
+         LOGGER.debug("{} - Connection {} added to pool", poolName, connection);
 
          return true;
       }
@@ -505,7 +505,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          totalConnections.decrementAndGet(); // We failed, so undo speculative increment of totalConnections
          lastConnectionFailure.set(e);
          if (poolState == POOL_NORMAL) {
-            LOGGER.debug("Connection attempt to database in pool {} failed: {}", poolName, e.getMessage(), e);
+            LOGGER.debug("{} - Connection attempt to database failed", poolName, e);
          }
          poolElf.quietlyCloseConnection(connection, "(exception during connection creation)");
          return false;
@@ -621,7 +621,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
 
          // Detect retrograde time as well as forward leaps of unacceptable duration
          if (now < previous || now > clockSource.plusMillis(previous, (2 * HOUSEKEEPING_PERIOD_MS))) {
-            LOGGER.warn("Unusual system clock change detected, soft-evicting connections from pool.");
+            LOGGER.warn("{} - Unusual system clock change detected, soft-evicting connections from pool.", poolName);
             softEvictConnections();
             fillPool();
             return;

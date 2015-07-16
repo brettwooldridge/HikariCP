@@ -85,7 +85,7 @@ public final class PoolElf
             return;
          }
 
-         LOGGER.debug("Closing connection {} in pool {} {}", connection, poolName, closureReason);
+         LOGGER.debug("{} - Closing connection {}: {}", poolName, connection, closureReason);
          try {
             setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(15));
          }
@@ -161,7 +161,7 @@ public final class PoolElf
    void setupConnection(final Connection connection, final long connectionTimeout) throws SQLException
    {
       if (isUseJdbc4Validation && !isJdbc4ValidationSupported(connection)) {
-         throw new SQLException("Connection.isValid() method not supported, connection test query must be configured");
+         throw new SQLException("Connection.isValid() method is not supported, connection test query must be configured");
       }
 
       networkTimeout = getAndSetNetworkTimeout(connection, connectionTimeout);
@@ -341,7 +341,7 @@ public final class PoolElf
          }
          catch (Throwable e) {
             isValidSupported = false;
-            LOGGER.debug("{} - Connection.isValid() not supported ({})", poolName, e.getMessage());
+            LOGGER.debug("{} - Connection.isValid() not is supported ({})", poolName, e.getMessage());
          }
 
          isValidChecked = true;
@@ -392,7 +392,7 @@ public final class PoolElf
          catch (Throwable e) {
             if (isNetworkTimeoutSupported == UNINITIALIZED) {
                isNetworkTimeoutSupported = FALSE;
-               LOGGER.debug("{} - Connection.setNetworkTimeout() not supported ({})", poolName, e.getMessage());
+               LOGGER.debug("{} - Connection.setNetworkTimeout() is not supported ({})", poolName, e.getMessage());
             }
          }
       }
