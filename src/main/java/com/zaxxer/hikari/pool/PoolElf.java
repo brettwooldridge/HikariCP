@@ -5,7 +5,6 @@ import static com.zaxxer.hikari.util.UtilityElf.createInstance;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
@@ -205,9 +204,7 @@ public final class PoolElf
    
          try (Statement statement = connection.createStatement()) {
             setQueryTimeout(statement, timeoutSec);
-            try (ResultSet rs = statement.executeQuery(config.getConnectionTestQuery())) { 
-               /* auto close */
-            }
+            statement.execute(config.getConnectionTestQuery());
          }
    
          if (isIsolateInternalQueries && !isAutoCommit) {
