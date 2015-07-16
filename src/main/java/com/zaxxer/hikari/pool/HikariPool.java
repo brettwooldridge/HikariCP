@@ -240,14 +240,16 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          poolState = POOL_SHUTDOWN;
 
          LOGGER.info("Hikari pool {} is shutting down.", poolName);
-
          logPoolState("Before shutdown ");
+
          connectionBag.close();
          softEvictConnections();
-         houseKeepingExecutorService.shutdown();
          addConnectionExecutor.shutdownNow();
-         houseKeepingExecutorService.awaitTermination(5L, TimeUnit.SECONDS);
          addConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
+         if (config.getScheduledExecutorService() == null) {
+            houseKeepingExecutorService.shutdown();
+            houseKeepingExecutorService.awaitTermination(5L, TimeUnit.SECONDS);
+         }
 
          final ExecutorService assassinExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection assassin",
                                                                            config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
