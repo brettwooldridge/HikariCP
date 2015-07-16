@@ -220,7 +220,7 @@ public final class PoolElf
       }
       catch (SQLException e) {
          lastConnectionFailure.set(e);
-         LOGGER.warn("{} Exception '{}' during alive check, Connection ({}) declared dead.", poolName, connection, e.getMessage());
+         LOGGER.warn("{} - Connection {} failed alive test with exception {}", poolName, connection, e.getMessage());
          return false;
       }
    }
@@ -286,11 +286,11 @@ public final class PoolElf
             mBeanServer.registerMBean(pool, beanPoolName);
          }
          else {
-            LOGGER.error("{} You cannot use the same pool name for separate pool instances.", poolName);
+            LOGGER.error("{} - You cannot use the same pool name for separate pool instances.", poolName);
          }
       }
       catch (Exception e) {
-         LOGGER.warn("{} Unable to register management beans.", poolName, e);
+         LOGGER.warn("{} - Unable to register management beans.", poolName, e);
       }
    }
 
@@ -314,7 +314,7 @@ public final class PoolElf
          }
       }
       catch (Exception e) {
-         LOGGER.warn("{} Unable to unregister management beans.", poolName, e);
+         LOGGER.warn("{} - Unable to unregister management beans.", poolName, e);
       }
    }
 
@@ -392,7 +392,7 @@ public final class PoolElf
          catch (Throwable e) {
             if (isNetworkTimeoutSupported == UNINITIALIZED) {
                isNetworkTimeoutSupported = FALSE;
-               LOGGER.debug("{} Connection.setNetworkTimeout() not supported ({})", poolName, e.getMessage());
+               LOGGER.debug("{} - Connection.setNetworkTimeout() not supported ({})", poolName, e.getMessage());
             }
          }
       }
@@ -480,7 +480,7 @@ public final class PoolElf
             dataSource.setLoginTimeout((int) TimeUnit.MILLISECONDS.toSeconds(Math.max(1000L, connectionTimeout)));
          }
          catch (SQLException e) {
-            LOGGER.warn("{} Unable to set DataSource login timeout", poolName, e);
+            LOGGER.warn("{} - Unable to set DataSource login timeout", poolName, e);
          }
       }
    }
