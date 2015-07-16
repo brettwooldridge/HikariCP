@@ -1,7 +1,6 @@
 package com.zaxxer.hikari;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.PrintWriter;
 import java.util.Properties;
 import java.util.Set;
@@ -16,10 +15,11 @@ import com.zaxxer.hikari.util.PropertyElf;
 public class TestPropertySetter
 {
    @Test
-   public void testProperty1()
+   public void testProperty1() throws Exception
    {
-      File file = new File("/propfile1.properties");
-      HikariConfig config = new HikariConfig(file.getPath());
+      Properties propfile1 = new Properties();
+      propfile1.load(TestPropertySetter.class.getResourceAsStream("/propfile1.properties"));
+      HikariConfig config = new HikariConfig(propfile1);
       config.validate();
 
       Assert.assertEquals(5, config.getMinimumIdle());
@@ -29,8 +29,9 @@ public class TestPropertySetter
    @Test
    public void testProperty2() throws Exception
    {
-      File file = new File("/propfile2.properties");
-      HikariConfig config = new HikariConfig(file.getPath());
+      Properties propfile2 = new Properties();
+      propfile2.load(TestPropertySetter.class.getResourceAsStream("/propfile2.properties"));
+      HikariConfig config = new HikariConfig(propfile2);
       config.validate();
 
       Class<?> clazz = this.getClass().getClassLoader().loadClass(config.getDataSourceClassName());
@@ -56,8 +57,9 @@ public class TestPropertySetter
    @Test
    public void testPropertyUpperCase() throws Exception
    {
-      File file = new File("/propfile3.properties");
-      HikariConfig config = new HikariConfig(file.getPath());
+      Properties propfile3 = new Properties();
+      propfile3.load(TestPropertySetter.class.getResourceAsStream("/propfile3.properties"));
+      HikariConfig config = new HikariConfig(propfile3);
       config.validate();
 
       Class<?> clazz = this.getClass().getClassLoader().loadClass(config.getDataSourceClassName());
