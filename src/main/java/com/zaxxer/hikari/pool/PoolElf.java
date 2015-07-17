@@ -95,7 +95,7 @@ public final class PoolElf
          }
       }
       catch (Throwable e) {
-         LOGGER.debug("Exception closing connection {} in pool {} {}", connection, poolName, closureReason, e);
+         LOGGER.debug("{} - Closing connection {} failed", poolName, connection, e);
       }
    }
 
@@ -341,7 +341,7 @@ public final class PoolElf
          }
          catch (Throwable e) {
             isValidSupported = false;
-            LOGGER.debug("{} - Connection.isValid() not is supported ({})", poolName, e.getMessage());
+            LOGGER.debug("{} - Connection.isValid() is not supported ({})", poolName, e.getMessage());
          }
 
          isValidChecked = true;
