@@ -205,8 +205,8 @@ public final class PoolElf
    
          try (Statement statement = connection.createStatement()) {
             setQueryTimeout(statement, timeoutSec);
-            try (ResultSet rs = statement.executeQuery(config.getConnectionTestQuery())) { 
-               /* auto close */
+            if (statement.execute(config.getConnectionTestQuery())) {
+               statement.getResultSet().close();
             }
          }
    
