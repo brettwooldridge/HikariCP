@@ -5,7 +5,6 @@ import static com.zaxxer.hikari.util.UtilityElf.createInstance;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
@@ -31,6 +30,7 @@ import com.zaxxer.hikari.util.PropertyElf;
 public final class PoolElf
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(PoolElf.class);
+   private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout"};
    private static final int UNINITIALIZED = -1;
    private static final int TRUE = 1;
    private static final int FALSE = 0;
@@ -227,25 +227,36 @@ public final class PoolElf
 
    void resetConnectionState(final PoolBagEntry poolEntry) throws SQLException
    {
+      int resetBits = 0;
+
       if (isReadOnly != null && poolEntry.isReadOnly != isReadOnly) {
          poolEntry.connection.setReadOnly(isReadOnly);
+         resetBits |= 0b00001;
       }
 
       if (poolEntry.isAutoCommit != isAutoCommit) {
          poolEntry.connection.setAutoCommit(isAutoCommit);
+         resetBits |= 0b00010;
       }
 
       if (poolEntry.transactionIsolation != transactionIsolation) {
          poolEntry.connection.setTransactionIsolation(transactionIsolation);
+         resetBits |= 0b00100;
       }
 
       final String currentCatalog = poolEntry.catalog;
       if ((currentCatalog != null && !currentCatalog.equals(catalog)) || (currentCatalog == null && catalog != null)) {
          poolEntry.connection.setCatalog(catalog);
+         resetBits |= 0b01000;
       }
 
       if (poolEntry.networkTimeout != networkTimeout) {
          setNetworkTimeout(poolEntry.connection, networkTimeout);
+         resetBits |= 0b10000;
+      }
+      
+      if (LOGGER.isDebugEnabled()) {
+         LOGGER.debug("{} - Reset {} on connection {}", resetBits != 0 ? stringFromResetBits(resetBits) : "nothing", poolEntry.connection);
       }
    }
 
@@ -483,5 +494,28 @@ public final class PoolElf
             LOGGER.warn("{} - Unable to set DataSource login timeout", poolName, e);
          }
       }
+   }
+
+   /**
+    * This will create a string for debug logging. Given a set of "reset bits", this
+    * method will return a concatenated string, for example:
+    * 
+    * Input : 0b00110
+    * Output: "autoCommit, isolation"  
+    *
+    * @param bits a set of "reset bits"
+    * @return a string of which states were reset
+    */
+   private String stringFromResetBits(final int bits)
+   {
+      final StringBuilder sb = new StringBuilder();
+      for (int ndx = 0; ndx < RESET_STATES.length; ndx++) { 
+         if ( (bits & (0b1 << ndx)) != 0) {
+            sb.append(RESET_STATES[ndx]).append(", ");
+         }
+      }
+
+      sb.setLength(sb.length() - 2);  // trim trailing comma
+      return sb.toString();
    }
 }
