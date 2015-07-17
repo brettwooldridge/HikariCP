@@ -438,7 +438,10 @@ public final class PoolElf
    {
       if (sql != null) {
          try (Statement statement = connection.createStatement()) {
-            statement.execute(sql);
+            if (statement.execute(sql)) {
+               statement.getResultSet().close();
+            }
+
             if (!isAutoCommit) {
                connection.commit();
             }

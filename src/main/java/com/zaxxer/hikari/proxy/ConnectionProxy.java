@@ -105,7 +105,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       String sqlState = sqle.getSQLState();
       if (sqlState != null) {
-         boolean isForceClose = sqlState.startsWith("08") | SQL_ERRORS.contains(sqlState);
+         boolean isForceClose = sqlState.startsWith("08") || SQL_ERRORS.contains(sqlState);
          if (isForceClose) {
             poolEntry.evicted = true;
             LOGGER.warn("Connection {} ({}) marked as broken because of SQLSTATE({}), ErrorCode({}).",
