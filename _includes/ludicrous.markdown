@@ -33,9 +33,9 @@ It turns out that ``LongAdder`` *is* Sequentially Consistent *if* you stick to o
 
 It now seemed possible to create new ``LongAdder``-based wait/notify mechanism that substantially outperforms the previous, as long as we adhere to the SC constraints above.
 
-``QueuedSequenceSynchronizer``<sup>[code](https://github.com/brettwooldridge/HikariCP/blob/dev/src/main/java/com/zaxxer/hikari/util/QueuedSequenceSynchronizer.java)</sup> is a mash-up of ``LongAdder`` and ``AbstractQueuedLongSynchronizer``, taking advantage of the performance of the former and the infrastructure of the later.  On Java 7 it falls back to ``AtomicLong``<sup>2</sup>, but on Java 8 ... *it's ludicrously fast.*
+``QueuedSequenceSynchronizer``<sup>[code](https://github.com/brettwooldridge/HikariCP/blob/dev/src/main/java/com/zaxxer/hikari/util/QueuedSequenceSynchronizer.java)</sup> is a mash-up of ``LongAdder`` and ``AbstractQueuedLongSynchronizer``, taking advantage of the performance of the former and the infrastructure of the later.  On Java 7 it falls back to ``AtomicLong``<sup>1</sup>, but on Java 8 ... *it's ludicrously fast.*
 
-<sup><sup>2 </sup>*Unless DropWizard is present, in which case we use thier ``LongAdder`` backport.*</sup>
+<sup><sup>1 </sup>*Unless DropWizard is present, in which case we use their ``LongAdder`` backport.*</sup>
 
 ## Do you have a nanosecond? ##
 
@@ -60,6 +60,6 @@ Stacking HikariCP 2.4.0 up against the usual pools in the benchmark suite...
 * One *Statement Cycle* is defined as single ``Connection.prepareStatement()``, ``Statement.execute()``, ``Statement.close()``.
 
 <sup>
-<sup>1</sup> Versions: HikariCP 2.4.0, DBCP2 2.1, Tomcat 8.0.23, Vibur 3.0, C3P0 0.9.5.1, Java 8u45 <br/>
-<sup>2</sup> Java options: -server -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -Xmx1096m <br/>
+<sup>&#42;</sup> Versions: HikariCP 2.4.0, commons-dbcp2 2.1, Tomcat 8.0.23, Vibur 3.0, c3p0 0.9.5.1, Java 8u45 <br/>
+<sup>&#42;</sup> Java options: -server -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -Xmx1096m <br/>
 </sup>
