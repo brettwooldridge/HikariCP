@@ -113,7 +113,7 @@ public final class PoolElf
             return field.getInt(null);
          }
          catch (Exception e) {
-            throw new IllegalArgumentException(poolName + " - Invalid transaction isolation value: " + transactionIsolationName);
+            throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
          }
       }
 
@@ -161,7 +161,7 @@ public final class PoolElf
    void setupConnection(final Connection connection, final long connectionTimeout) throws SQLException
    {
       if (isUseJdbc4Validation && !isJdbc4ValidationSupported(connection)) {
-         throw new SQLException("Connection.isValid() is not supported, connection test query must be configured");
+         throw new SQLException("Connection.isValid() method is not supported, connection test query must be configured");
       }
 
       networkTimeout = getAndSetNetworkTimeout(connection, connectionTimeout);

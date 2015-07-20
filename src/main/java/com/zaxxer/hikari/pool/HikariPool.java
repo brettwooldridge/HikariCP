@@ -239,7 +239,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       try {
          poolState = POOL_SHUTDOWN;
 
-         LOGGER.info("{} - is closing down.", poolName);
+         LOGGER.info("{} - is shutting down.", poolName);
          logPoolState("Before closing ");
 
          connectionBag.close();
@@ -483,7 +483,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       // Speculative increment of totalConnections with expectation of success
       if (totalConnections.incrementAndGet() > config.getMaximumPoolSize()) {
          totalConnections.decrementAndGet(); // Pool is maxed out, so undo speculative increment of totalConnections
-         lastConnectionFailure.set(new SQLException(poolName +" - is at maximum capacity"));
+         lastConnectionFailure.set(new SQLException(poolName + " - is at maximum capacity"));
          return true;
       }
 
@@ -505,7 +505,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          totalConnections.decrementAndGet(); // We failed, so undo speculative increment of totalConnections
          lastConnectionFailure.set(e);
          if (poolState == POOL_NORMAL) {
-        	 LOGGER.debug("{} - Cannot acquire connection from data source", poolName, e);
+            LOGGER.debug("{} - Cannot acquire connection from data source", poolName, e);
          }
          poolElf.quietlyCloseConnection(connection, "(exception during connection creation)");
          return false;
