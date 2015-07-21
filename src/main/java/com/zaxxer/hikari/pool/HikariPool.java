@@ -24,7 +24,7 @@ import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.SQLTimeoutException;
+import java.sql.SQLTransientConnectionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
@@ -208,7 +208,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       if (originalException instanceof SQLException) {
          sqlState = ((SQLException) originalException).getSQLState();
       }
-      throw new SQLTimeoutException(poolName + " - Cannot acquire connection, Timeout after " + clockSource.elapsedMillis(startTime) + "ms.", sqlState, originalException);
+      throw new SQLTransientConnectionException(poolName + " - Connection not available, timeout after " + clockSource.elapsedMillis(startTime) + "ms.", sqlState, originalException);
    }
 
    /**
