@@ -18,6 +18,8 @@ package com.zaxxer.hikari.pool;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +28,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry;
 import com.zaxxer.hikari.util.FastList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Entry used in the ConcurrentBag to track Connection instances.
@@ -34,8 +38,12 @@ import com.zaxxer.hikari.util.FastList;
  */
 public final class PoolBagEntry implements IConcurrentBagEntry
 {
+   private static final Logger LOGGER;
+   private static final SimpleDateFormat DATE_FORMAT;
+
    public final FastList<Statement> openStatements;
    public final HikariPool parentPool;
+   public final long creationTime;
 
    public Connection connection;
    public long lastAccess;
@@ -51,14 +59,23 @@ public final class PoolBagEntry implements IConcurrentBagEntry
    boolean isReadOnly;
    
    private final PoolElf poolElf;
-   private final AtomicInteger state = new AtomicInteger();
+   private final AtomicInteger state;
 
    private volatile ScheduledFuture<?> endOfLife;
 
-   public PoolBagEntry(final Connection connection, final HikariPool pool) {
+   static
+   {
+      LOGGER = LoggerFactory.getLogger(PoolBagEntry.class);
+      DATE_FORMAT = new SimpleDateFormat("MMM dd, HH:mm:ss.SSS");
+   }
+
+   public PoolBagEntry(final Connection connection, final HikariPool pool)
+   {
       this.connection = connection;
       this.parentPool = pool;
+      this.creationTime = System.currentTimeMillis();
       this.poolElf = pool.poolElf;
+      this.state = new AtomicInteger(STATE_NOT_IN_USE);
       this.lastAccess = ClockSource.INSTANCE.currentTime();
       this.openStatements = new FastList<>(Statement.class, 16);
 
@@ -147,14 +164,6 @@ public final class PoolBagEntry implements IConcurrentBagEntry
       this.isReadOnly = isReadOnly;
    }
 
-   void cancelMaxLifeTermination()
-   {
-      if (endOfLife != null) {
-         endOfLife.cancel(false);
-      }
-   }
-
-
    /** {@inheritDoc} */
    @Override
    public AtomicInteger state()
@@ -162,13 +171,27 @@ public final class PoolBagEntry implements IConcurrentBagEntry
       return state;
    }
 
+   /** {@inheritDoc} */
    @Override
    public String toString()
    {
-      return "Connection......" + connection
-           + "\n  Last  access.." + lastAccess
-           + "\n  Last open....." + lastOpenTime
-           + "\n  State........." + stateToString();
+      return String.format("%s (created %s, last release %dms ago, %s)",
+                           connection, formatDateTime(creationTime), ClockSource.INSTANCE.elapsedMillis(lastAccess), stateToString());
+   }
+
+   void cancelMaxLifeTermination()
+   {
+      if (endOfLife != null && !endOfLife.isDone() && !endOfLife.cancel(false)) {
+         LOGGER.warn("{} - maxLifeTime expiration task cancellation unexpectedly returned false for connection {}", parentPool.config.getPoolName(), connection);
+      }
+
+      endOfLife = null;
+      parentPool.houseKeepingExecutorService.purge();
+   }
+
+   private static synchronized String formatDateTime(final long timestamp)
+   {
+      return DATE_FORMAT.format(new Date(timestamp));
    }
 
    private String stateToString()

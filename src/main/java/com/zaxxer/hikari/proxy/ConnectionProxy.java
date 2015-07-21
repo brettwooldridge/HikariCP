@@ -44,7 +44,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 {
    private static final Logger LOGGER;
    private static final Set<String> SQL_ERRORS;
-   private static final ClockSource clockSource = ClockSource.INSTANCE;
+   private static final ClockSource clockSource;
 
    protected Connection delegate;
 
@@ -59,6 +59,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    // static initializer
    static {
       LOGGER = LoggerFactory.getLogger(ConnectionProxy.class);
+      clockSource = ClockSource.INSTANCE;
 
       SQL_ERRORS = new HashSet<>();
       SQL_ERRORS.add("57P01"); // ADMIN SHUTDOWN
@@ -108,8 +109,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          boolean isForceClose = sqlState.startsWith("08") || SQL_ERRORS.contains(sqlState);
          if (isForceClose) {
             poolEntry.evicted = true;
-            LOGGER.warn("Connection {} ({}) marked as broken because of SQLSTATE({}), ErrorCode({}).",
-                        delegate, poolEntry.parentPool, sqlState, sqle.getErrorCode(), sqle);
+            LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
+                        poolEntry.parentPool, poolEntry, sqlState, sqle.getErrorCode(), sqle);
          }
          else {
             SQLException nse = sqle.getNextException();
