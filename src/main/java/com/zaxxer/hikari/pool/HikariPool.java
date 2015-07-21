@@ -208,7 +208,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       if (originalException instanceof SQLException) {
          sqlState = ((SQLException) originalException).getSQLState();
       }
-      throw new SQLTransientConnectionException(poolName + " - Connection not available, timeout after " + clockSource.elapsedMillis(startTime) + "ms.", sqlState, originalException);
+      throw new SQLTransientConnectionException(poolName + " - Connection is not available, request timed out after " + clockSource.elapsedMillis(startTime) + "ms.", sqlState, originalException);
    }
 
    /**
