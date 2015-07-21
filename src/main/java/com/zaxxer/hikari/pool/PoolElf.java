@@ -180,14 +180,15 @@ public final class PoolElf
       }
 
       networkTimeout = getAndSetNetworkTimeout(connection, connectionTimeout);
-      transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
 
       connection.setAutoCommit(isAutoCommit);
       if (isReadOnly != null) {
          connection.setReadOnly(isReadOnly);
       }
 
-      if (transactionIsolation != connection.getTransactionIsolation()) {
+      int defaultLevel = connection.getTransactionIsolation();
+      transactionIsolation = (transactionIsolation < 0 ? defaultLevel : transactionIsolation);
+      if (transactionIsolation != defaultLevel) {
          connection.setTransactionIsolation(transactionIsolation);
       }
 
