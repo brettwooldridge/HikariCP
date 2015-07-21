@@ -109,6 +109,21 @@ public final class PoolElf
    {
       if (transactionIsolationName != null) {
          try {
+            int level = Integer.parseInt(transactionIsolationName);
+            //its number
+            switch (level) {
+               case Connection.TRANSACTION_READ_UNCOMMITTED:
+               case Connection.TRANSACTION_READ_COMMITTED:
+               case Connection.TRANSACTION_REPEATABLE_READ:
+               case Connection.TRANSACTION_SERIALIZABLE:
+                  return level;
+            }
+            throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
+         }
+         catch (Exception e) {
+            //its name
+         }
+    	 try {
             Field field = Connection.class.getField(transactionIsolationName);
             return field.getInt(null);
          }
