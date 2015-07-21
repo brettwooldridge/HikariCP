@@ -239,7 +239,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       try {
          poolState = POOL_SHUTDOWN;
 
-         LOGGER.info("{} - is shutting down.", poolName);
+         LOGGER.info("{} - is closing down.", poolName);
          logPoolState("Before closing ");
 
          connectionBag.close();
