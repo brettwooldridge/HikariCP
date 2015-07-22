@@ -109,26 +109,25 @@ public final class PoolElf
    {
       if (transactionIsolationName != null) {
          try {
- 	   		String upperName = transactionIsolationName.toUpperCase();
- 			if (upperName.startsWith("TRANSACTION_")) {
- 				Field field = Connection.class.getField(transactionIsolationName);
- 				return field.getInt(null);
- 			}
- 			else {
- 	            int level = Integer.parseInt(transactionIsolationName);
- 	            //its number
- 	            switch (level) {
- 	               case Connection.TRANSACTION_READ_UNCOMMITTED:
- 	               case Connection.TRANSACTION_READ_COMMITTED:
- 	               case Connection.TRANSACTION_REPEATABLE_READ:
- 	               case Connection.TRANSACTION_SERIALIZABLE:
- 	                  return level;
- 	            }
- 	            //invalid level
- 	            throw new IllegalArgumentException();
- 			}
-         }
-         catch (Exception e) {
+            final String upperName = transactionIsolationName.toUpperCase();
+            if (upperName.startsWith("TRANSACTION_")) {
+               Field field = Connection.class.getField(upperName);
+               return field.getInt(null);
+            } else {
+               final int level = Integer.parseInt(transactionIsolationName);
+               // its number
+               switch (level) {
+                  case Connection.TRANSACTION_READ_UNCOMMITTED:
+                  case Connection.TRANSACTION_READ_COMMITTED:
+                  case Connection.TRANSACTION_REPEATABLE_READ:
+                  case Connection.TRANSACTION_SERIALIZABLE:
+                  case Connection.TRANSACTION_NONE:
+                     return level;
+                  default:
+                     throw new IllegalArgumentException();
+               }
+            }
+         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
          }
       }
