@@ -474,6 +474,7 @@ public class HikariConfig implements HikariConfigMXBean
     * @param metricRegistry the Codahale MetricRegistry to set
     */
    public void setMetricRegistry(Object metricRegistry)
+   {
       if (metricsTrackerFactory != null) {
          throw new IllegalStateException("cannot use setMetricRegistry() and setMetricsTrackerFactory() together");
       }
