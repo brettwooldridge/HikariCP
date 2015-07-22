@@ -184,7 +184,7 @@ public class TestValidation
          Assert.fail();
       }
       catch (IllegalStateException ise) {
-         Assert.assertTrue(ise.getMessage().contains("cannot use"));
+         Assert.assertTrue(ise.getMessage().contains("together"));
       }
    }
 
