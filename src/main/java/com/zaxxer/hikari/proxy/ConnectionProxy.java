@@ -178,6 +178,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
                if (!poolEntry.isAutoCommit) {
                   delegate.rollback();
+                  LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.parentPool, delegate);
                }
             }
 

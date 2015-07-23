@@ -256,7 +256,7 @@ public final class PoolElf
       }
       
       if (LOGGER.isDebugEnabled()) {
-         LOGGER.debug("{} - Reset {} on connection {}", resetBits != 0 ? stringFromResetBits(resetBits) : "nothing", poolEntry.connection);
+         LOGGER.debug("{} - Reset ({}) on connection {}", resetBits != 0 ? stringFromResetBits(resetBits) : "nothing", poolEntry.connection);
       }
    }
 
