@@ -824,7 +824,7 @@ public class HikariConfig implements HikariConfigMXBean
 
    private void logConfiguration()
    {
-      LOGGER.debug("HikariCP pool {} configuration:", poolName);
+      LOGGER.debug("{} - configuration:", poolName);
       final Set<String> propertyNames = new TreeSet<>(PropertyElf.getPropertyNames(HikariConfig.class));
       for (String prop : propertyNames) {
          try {
