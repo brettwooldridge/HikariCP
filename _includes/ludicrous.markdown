@@ -1,6 +1,6 @@
 # Ludicrous speed, GO! #
 
-What I truly enjoy as a software engineer is the benchmark/think/tweak cycle. Figuring out where a bottleneck is and trying to eliminate it. Hitting a performance wall that makes you revisit assumptions, re-architect a component, or research alternate algorithms.
+One of the things I truly enjoy as a software engineer is the benchmark/think/tweak cycle. Figuring out where a bottleneck is and trying to eliminate it. Hitting a performance wall that makes you revisit assumptions, re-architect a component, or research alternate algorithms.
 
 But more important to HikariCP than performance, is *reliability* and *simplicity*.
 
@@ -14,7 +14,7 @@ HikariCP utilises a specialized collection called a ``ConcurrentBag``<sup>[code]
 
 ``AbstractQueuedLongSynchronizer`` provides useful features like efficient FIFO thread queueing and parking/unparking.  Subclasses generally rely on the provided ``setState()``, ``getState()``, and ``compareAndSetState()`` methods, which are merely wrappers around an ``AtomicLong``, to implement their synchronization semantic.
 
-The performance of HikariCP's ``AbstractQueuedLongSynchronizer`` implementation was fine, very good even, but the fact that ``AtomicLong`` [performs poorly under contention](https://issues.apache.org/jira/browse/HADOOP-5318) periodically surfaced in my brain. I'm talking about memory contention here, not pool contention.
+The performance of HikariCP's ``AbstractQueuedLongSynchronizer`` implementation was fine, very good even, but the fact that ``AtomicLong`` [performs poorly under contention](https://issues.apache.org/jira/browse/HADOOP-5318) periodically surfaced in my brain.
 
 I kept thinking "there must be some way to take advantage of Java 8's ``LongAdder``<sup>[doc](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/atomic/LongAdder.html)</sup>". It's well known that ``LongAdder`` has much higher performance under contention, that is its *raison d'être*.  I won't bore you with [all of the particulars](http://psy-lob-saw.blogspot.jp/2013/06/java-concurrent-counters-by-numbers.html).
 
@@ -35,7 +35,7 @@ It now seemed possible to create new ``LongAdder``-based wait/notify mechanism t
 
 ``QueuedSequenceSynchronizer``<sup>[code](https://github.com/brettwooldridge/HikariCP/blob/dev/src/main/java/com/zaxxer/hikari/util/QueuedSequenceSynchronizer.java)</sup> is a mash-up of ``LongAdder`` and ``AbstractQueuedLongSynchronizer``, taking advantage of the performance of the former and the infrastructure of the later.  On Java 7 it falls back to ``AtomicLong``<sup>1</sup>, but on Java 8 ... *it's ludicrously fast.*
 
-<sup><sup>1 </sup>*Unless DropWizard is present, in which case we use their ``LongAdder`` backport.*</sup>
+<sup><sup>1 </sup>*Unless DropWizard is present, in which case we use their ``LongAdder`` Java 7 backport.*</sup>
 
 ## Do you have a nanosecond? ##
 
@@ -46,7 +46,7 @@ Without much fanfare, I'll cut to the chase and stick with a simple before/after
 
 As usual in our benchmarks, *"Unconstrained"* means that there are more available connections than threads.  And *"Constrained"* means that the number of threads outnumber connections 2:1.
 
-Of course, the benchmark is designed to provoke maximum contention (~20-50k calls *per millisecond*), so in production environments we would expect L2 cache contention/invalidation to be less frequent (to put it mildly).
+Of course, the benchmark basically creates maximum contention (~20-50k calls *per millisecond*), so in production environments we would expect L2 cache-line invalidation to be less frequent (to put it mildly).
 
 ## Standard comps
 
