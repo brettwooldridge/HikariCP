@@ -59,7 +59,7 @@ public class TestValidation
          config.validate();
          Assert.fail();
       }
-      catch (IllegalStateException ise) {
+      catch (IllegalArgumentException ise) {
          // pass
       }
    }
@@ -183,7 +183,7 @@ public class TestValidation
          config.validate();
          Assert.fail();
       }
-      catch (IllegalStateException ise) {
+      catch (IllegalArgumentException ise) {
          Assert.assertTrue(ise.getMessage().contains("together"));
       }
    }
