@@ -44,6 +44,8 @@ Without much fanfare, I'll cut to the chase and stick with a simple before/after
 
   <a href="images/Hikari-2.4-vs-2.3.png"><img src="images/Hikari-2.4-vs-2.3.png"/></a>
 
+Put another way, roundtrip times (``getConnection()``/``close()``) are now between 150-250 nanoseconds on commodity hardware.
+
 As usual in our benchmarks, *"Unconstrained"* means that there are more available connections than threads.  And *"Constrained"* means that the number of threads outnumber connections 2:1.
 
 Of course, the benchmark basically creates maximum contention (~20-50k calls *per millisecond*), so in production environments we would expect L2 cache-line invalidation to be less frequent (to put it mildly).
@@ -69,8 +71,6 @@ Stacking HikariCP 2.4.0 up against the usual pools in the benchmark suite...
 <sup>&#42;</sup> Versions: HikariCP 2.4.0, commons-dbcp2 2.1, Tomcat 8.0.23, Vibur 3.0, c3p0 0.9.5.1, Java 8u45 <br/>
 <sup>&#42;</sup> Java options: -server -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -Xmx1096m <br/>
 </sup>
-
-Put another way, roundtrip times (``getConnection()``/``close()``) are now between 150-250 nanoseconds on commodity hardware.
 
 ## Scratching an itch
 
