@@ -39,7 +39,7 @@ It now seemed possible to create new ``LongAdder``-based wait/notify mechanism t
 
 ## Do you have a nanosecond? ##
 
-Without much fanfare, I'll cut to the chase and stick with a simple before/afters on my Core i7 (3770) 3.4GHz "Ivy Bridge" iMac.
+Without much fanfare, I'll cut to the chase and stick with a simple before/after on my Core i7 (3770) 3.4GHz "Ivy Bridge" iMac.
 <br>
 
   <a href="images/Hikari-2.4-vs-2.3.png"><img src="images/Hikari-2.4-vs-2.3.png"/></a>
@@ -48,7 +48,13 @@ As usual in our benchmarks, *"Unconstrained"* means that there are more availabl
 
 Of course, the benchmark basically creates maximum contention (~20-50k calls *per millisecond*), so in production environments we would expect L2 cache-line invalidation to be less frequent (to put it mildly).
 
-## Standard comps
+In the case of *unconstrained* access, the ``QueuedSequenceSynchronizer`` doesn't really come into play much.  The big win comes from the fact that released connections are merely incrementing a ``LongAdder`` in v2.4.0, compared to incrementing an ``AtomicLong`` in v2.3.x.
+
+In the case of *constrained* access, the ``QueuedSequenceSynchronizer`` sees quite a bit more action.  My concern was that the necessity of calling ``LongAdder.sum()``, which is generally much slower than ``AtomicLong.get()``, would result in worse performance than v2.3.x instead of better.
+
+However, this fear proved unfounded.  While the *constrained* performance is roughly half of the *unconstrained* in v2.4.0, it still amazingly beats the *unconstrained* performance of v2.3.x.
+
+## Standard comparables
 
 Stacking HikariCP 2.4.0 up against the usual pools in the benchmark suite...
 
@@ -63,3 +69,11 @@ Stacking HikariCP 2.4.0 up against the usual pools in the benchmark suite...
 <sup>&#42;</sup> Versions: HikariCP 2.4.0, commons-dbcp2 2.1, Tomcat 8.0.23, Vibur 3.0, c3p0 0.9.5.1, Java 8u45 <br/>
 <sup>&#42;</sup> Java options: -server -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -Xmx1096m <br/>
 </sup>
+
+Put another way, roundtrip times (``getConnection()``/``close()``) are now between 150-250 nanoseconds on commodity hardware.
+
+## Scratching an itch
+
+Having scratched my performance itch, at least for a while, I'll be turning my attention back to equally important tasks such as improving metrics reporting and performance bottleneck troubleshooting ability.
+
+Thanks for reading.
