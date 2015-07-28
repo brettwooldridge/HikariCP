@@ -33,8 +33,6 @@ public interface Sequence
    /**
     * Adds the given value to the current sequence.  If delta is negative,
     * the Sequential Consistency of this Sequence cannot be guarenteed.
-    *
-    * @param delta the value to add
     */
    void increment();
 
@@ -46,7 +44,7 @@ public interface Sequence
    long get();
 
    /**
-    * Factory class used to create a platform-specific ClockSource. 
+    * Factory class used to create a platform-specific ClockSource.
     */
    public final class Factory
    {
@@ -74,7 +72,7 @@ public interface Sequence
    final class Java7Sequence extends AtomicLong implements Sequence {
       Java7Sequence() {
       }
-      
+
       @Override
       public void increment() {
          this.incrementAndGet();
@@ -95,7 +93,7 @@ public interface Sequence
       private final Object longAdder;
       private final Method increment;
       private final Method sum;
-      
+
       public DropwizardSequence(Class<?> longAdderClass) throws Exception {
          Constructor<?> constructor = longAdderClass.getDeclaredConstructors()[0];
          constructor.setAccessible(true);
@@ -105,7 +103,7 @@ public interface Sequence
          sum.setAccessible(true);
          longAdder = constructor.newInstance();
       }
-      
+
       @Override
       public void increment()
       {
@@ -116,7 +114,7 @@ public interface Sequence
             throw new RuntimeException(e);
          }
       }
-      
+
       @Override
       public long get()
       {

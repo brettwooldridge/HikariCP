@@ -52,6 +52,7 @@ public final class CodahaleHealthChecker
     * Register Dropwizard health checks.
     *
     * @param pool the pool to register health checks for
+    * @param hikariConfig the pool configuration
     * @param registry the HealthCheckRegistry into which checks will be registered
     */
    public static void registerHealthChecks(final HikariPool pool, final HikariConfig hikariConfig, final HealthCheckRegistry registry)
