@@ -3,7 +3,7 @@
 Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC connection pool.  At roughly 90Kb, the library is very light.  Read about [how we do it here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).
 
 &nbsp;&nbsp;&nbsp;<sup>**"Simplicity is prerequisite for reliability."**<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- *Edsger Dijkstra*</sup>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- *Edsger Djikstra*</sup>
 
 ----------------------------------------------------
 
@@ -12,7 +12,7 @@ _Java 7 and Java 8 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>2.4.0-rc1</version>
+        <version>2.4.0</version>
         <scope>compile</scope>
     </dependency>
 ```
@@ -21,7 +21,7 @@ _Java 6 maven artifact (*maintenance mode*):_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP-java6</artifactId>
-        <version>2.3.8</version>
+        <version>2.3.9</version>
         <scope>compile</scope>
     </dependency>
 ```
@@ -33,7 +33,7 @@ Or [download from here](http://search.maven.org/#search%7Cga%7C1%7Ccom.zaxxer.hi
 
 Microbenchmarks were created to isolate and measure the overhead of pools using the [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team. You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
 
-![](https://github.com/brettwooldridge/HikariCP/wiki/Benchmarks.png)
+![](https://github.com/brettwooldridge/HikariCP/wiki/HikariCP-bench-2.4.0.png)
 
  * One *Connection Cycle* is defined as single ``DataSource.getConnection()``/``Connection.close()``.
    * In *Unconstrained* benchmark, connections > threads.
@@ -41,7 +41,7 @@ Microbenchmarks were created to isolate and measure the overhead of pools using 
  * One *Statement Cycle* is defined as single ``Connection.prepareStatement()``, ``Statement.execute()``, ``Statement.close()``.
 
 <sup>
-<sup>1</sup> Versions: HikariCP 2.1.0, BoneCP 0.8.0, Tomcat 8.0.9, Vibur 1.2.0, C3P0 0.9.5-pre8, Java 8u20 <br/>
+<sup>1</sup> Versions: HikariCP 2.4.0, commons-dbcp2 2.1, Tomcat 8.0.23, Vibur 3.0, c3p0 0.9.5.1, Java 8u45 <br/>
 <sup>2</sup> Java options: -server -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -Xmx512m <br/>
 </sup>
 
