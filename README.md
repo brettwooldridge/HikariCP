@@ -28,6 +28,7 @@ _Java 6 maven artifact (*maintenance mode*):_
 Or [download from here](http://search.maven.org/#search%7Cga%7C1%7Ccom.zaxxer.hikaricp).
 
 ----------------------------------------------------
+[![](https://github.com/brettwooldridge/HikariCP/wiki/LudicrousBlog.png)](http://brettwooldridge.github.io/HikariCP/ludicrous.html)
 
 ##### JMH Benchmarks
 
