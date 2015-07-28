@@ -58,7 +58,7 @@ table {
 
 /* LAYOUT STYLES */
 body {
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.5;
   background: #fafafa url(../images/body-bg.jpg) 0 0 repeat;
   font-family: 'Helvetica Neue', Helvetica, Arial, serif;
@@ -236,7 +236,7 @@ form {
 
 #main-content h1 {
   font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif;
-  font-size: 2.5em;
+  font-size: 2.2em;
   letter-spacing: -1px;
   color: #474747;
 }
