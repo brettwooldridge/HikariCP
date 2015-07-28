@@ -35,7 +35,7 @@ It now seemed possible to create new ``LongAdder``-based wait/notify mechanism t
 
 ``QueuedSequenceSynchronizer``<sup>[code](https://github.com/brettwooldridge/HikariCP/blob/dev/src/main/java/com/zaxxer/hikari/util/QueuedSequenceSynchronizer.java)</sup> is a mash-up of ``LongAdder`` and ``AbstractQueuedLongSynchronizer``, taking advantage of the performance of the former and the infrastructure of the later.  On Java 7 it falls back to ``AtomicLong``<sup>1</sup>, but on Java 8 ... *it's ludicrously fast.*
 
-<sup><sup>1 </sup>*Unless DropWizard is present, in which case we use their ``LongAdder`` Java 7 backport.*</sup>
+<sup><sup>1 </sup>*Unless DropWizard Metrics is present, in which case we use their ``LongAdder`` Java 7 backport.*</sup>
 
 ## Do you have a nanosecond? ##
 
