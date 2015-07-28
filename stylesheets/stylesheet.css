@@ -83,7 +83,7 @@ header {
 
 header h1 {
   letter-spacing: -1px;
-  font-size: 72px;
+  font-size: 64px;
   color: #fff;
   line-height: 1;
   margin-bottom: 0.2em;
@@ -236,7 +236,7 @@ form {
 
 #main-content h1 {
   font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif;
-  font-size: 2.2em;
+  font-size: 2.0em;
   letter-spacing: -1px;
   color: #474747;
 }
