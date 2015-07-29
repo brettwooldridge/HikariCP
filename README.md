@@ -13,7 +13,6 @@ _Java 7 and Java 8 maven artifact:_
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
         <version>2.4.0</version>
-        <scope>compile</scope>
     </dependency>
 ```
 _Java 6 maven artifact (*maintenance mode*):_
@@ -22,7 +21,6 @@ _Java 6 maven artifact (*maintenance mode*):_
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP-java6</artifactId>
         <version>2.3.9</version>
-        <scope>compile</scope>
     </dependency>
 ```
 Or [download from here](http://search.maven.org/#search%7Cga%7C1%7Ccom.zaxxer.hikaricp).
@@ -401,8 +399,7 @@ Don't forget the [Wiki](https://github.com/brettwooldridge/HikariCP/wiki) for ad
 
 ### Requirements
 
- &#8658; Java 6 and above<br/>
- &#8658; Javassist 3.18.1+ library<br/>
+ &#8658; Java 7 and above<br/>
  &#8658; slf4j library<br/>
 
 ### Sponsors
