@@ -31,8 +31,7 @@ import java.util.concurrent.atomic.LongAdder;
 public interface Sequence
 {
    /**
-    * Adds the given value to the current sequence.  If delta is negative,
-    * the Sequential Consistency of this Sequence cannot be guarenteed.
+    * Increments the current sequence by one.
     */
    void increment();
 
@@ -70,9 +69,6 @@ public interface Sequence
    }
 
    final class Java7Sequence extends AtomicLong implements Sequence {
-      Java7Sequence() {
-      }
-
       @Override
       public void increment() {
          this.incrementAndGet();
@@ -80,9 +76,6 @@ public interface Sequence
    }
 
    final class Java8Sequence extends LongAdder implements Sequence {
-      public Java8Sequence() {
-      }
-
       @Override
       public long get() {
          return this.sum();
