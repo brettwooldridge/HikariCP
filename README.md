@@ -1,4 +1,4 @@
-<h1>![](https://github.com/brettwooldridge/HikariCP/wiki/Hikari.png) HikariCP<sup><sup>&nbsp;It's Faster.</sup></sup><sub><sub><sup>Hi·ka·ri [hi·ka·'lē] &#40;*Origin: Japanese*): light; ray.</sup></sub></sub></h1><br>[![Build Status](https://travis-ci.org/brettwooldridge/HikariCP.svg?branch=dev)](https://travis-ci.org/brettwooldridge/HikariCP)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Issue Stats](http://issuestats.com/github/brettwooldridge/HikariCP/badge/issue?style=flat&concise=true)](http://issuestats.com/github/brettwooldridge/HikariCP)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Issue Stats](http://issuestats.com/github/brettwooldridge/HikariCP/badge/pr?style=flat&concise=true)](http://issuestats.com/github/brettwooldridge/HikariCP)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Coverage Status](https://coveralls.io/repos/brettwooldridge/HikariCP/badge.svg?branch=dev)](https://coveralls.io/r/brettwooldridge/HikariCP?branch=dev)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Dependency Status](https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0/badge.svg?style=flat)](https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0)
+<h1>![](https://github.com/brettwooldridge/HikariCP/wiki/Hikari.png) HikariCP<sup><sup>&nbsp;It's Faster.</sup></sup><sub><sub><sup>Hi·ka·ri [hi·ka·'lē] &#40;*Origin: Japanese*): light; ray.</sup></sub></sub></h1><br>[![Build Status](https://travis-ci.org/brettwooldridge/HikariCP.svg?branch=master)](https://travis-ci.org/brettwooldridge/HikariCP)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Issue Stats](http://issuestats.com/github/brettwooldridge/HikariCP/badge/issue?style=flat&concise=true)](http://issuestats.com/github/brettwooldridge/HikariCP)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Issue Stats](http://issuestats.com/github/brettwooldridge/HikariCP/badge/pr?style=flat&concise=true)](http://issuestats.com/github/brettwooldridge/HikariCP)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Coverage Status](https://coveralls.io/repos/brettwooldridge/HikariCP/badge.svg?branch=master)](https://coveralls.io/r/brettwooldridge/HikariCP?branch=master)<img src='https://raw.github.com/wiki/brettwooldridge/HikariCP/space60x1.gif' width='3px'>[![Dependency Status](https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0/badge.svg?style=flat)](https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0)
 
 Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC connection pool.  At roughly 90Kb, the library is very light.  Read about [how we do it here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).
 
@@ -329,6 +329,7 @@ dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
 dataSource.user=test
 dataSource.password=test
 dataSource.databaseName=mydb
+dataSource.portNumber=5432
 dataSource.serverName=localhost
 ```
 or ``java.util.Properties`` based:
@@ -360,6 +361,7 @@ Here is a list of JDBC *DataSource* classes for popular databases:
 | Firebird         | Jaybird      | org.firebirdsql.pool.FBSimpleDataSource |
 | IBM DB2          | DB2          | com.ibm.db2.jcc.DB2SimpleDataSource |
 | H2               | H2           | org.h2.jdbcx.JdbcDataSource |
+| IBM AS400        | IBM          | com.ibm.as400.access.AS400JDBCDriver |
 | HSQLDB           | HSQLDB       | org.hsqldb.jdbc.JDBCDataSource |
 | MariaDB & MySQL  | MariaDB      | org.mariadb.jdbc.MySQLDataSource |
 | MySQL            | Connector/J  | com.mysql.jdbc.jdbc2.optional.MysqlDataSource |
@@ -367,7 +369,8 @@ Here is a list of JDBC *DataSource* classes for popular databases:
 | Oracle           | Oracle       | oracle.jdbc.pool.OracleDataSource |
 | PostgreSQL       | pgjdbc-ng    | com.impossibl.postgres.jdbc.PGDataSource |
 | PostgreSQL       | PostgreSQL   | org.postgresql.ds.PGSimpleDataSource |
-| SyBase           | jConnect     | com.sybase.jdbcx.SybDataSource |
+| SAP MaxDB        | SAP          | com.sap.dbtech.jdbc.DriverSapDB |
+| SyBase           | jConnect     | com.sybase.jdbc4.jdbc.SybDataSource |
 
 ### Play Framework Plugin
 
