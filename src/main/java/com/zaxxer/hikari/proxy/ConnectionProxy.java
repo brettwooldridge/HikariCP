@@ -158,21 +158,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       if (delegate != ClosedConnection.CLOSED_CONNECTION) {
          leakTask.cancel();
 
-         final int size = openStatements.size();
-         if (size > 0) {
-            for (int i = 0; i < size; i++) {
-               try {
-                  openStatements.get(i).close();
-               }
-               catch (SQLException e) {
-                  checkException(e);
-               }
-            }
-
-            openStatements.clear();
-         }
-
          try {
+            closeOpenStatements();
+
             if (isCommitStateDirty) {
                lastAccess = clockSource.currentTime();
 
@@ -199,6 +187,26 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             delegate = ClosedConnection.CLOSED_CONNECTION;
             poolEntry.releaseConnection(lastAccess);
          }
+      }
+   }
+
+   private void closeOpenStatements()
+   {
+      final int size = openStatements.size();
+      if (size > 0) {
+         for (int i = 0; i < size; i++) {
+            try {
+               Statement statement = openStatements.get(i);
+               if (statement != null) {
+                  statement.close();
+               }
+            }
+            catch (SQLException e) {
+               checkException(e);
+            }
+         }
+
+         openStatements.clear();
       }
    }
 
