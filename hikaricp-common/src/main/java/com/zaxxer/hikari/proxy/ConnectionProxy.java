@@ -178,19 +178,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       if (delegate != ClosedConnection.CLOSED_CONNECTION) {
          leakTask.cancel();
 
-         final int size = openStatements.size();
-         if (size > 0) {
-            for (int i = 0; i < size; i++) {
-               try {
-                  openStatements.get(i).close();
-               }
-               catch (SQLException e) {
-                  checkException(e);
-               }
-            }
-         }
-
          try {
+            closeOpenStatements();
+
             if (isCommitStateDirty && !delegate.getAutoCommit()) {
                LOGGER.debug("{} Performing rollback on {} due to dirty commit state.", parentPool, delegate);
                delegate.rollback();
@@ -213,6 +203,26 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             bagEntry.lastAccess = lastAccess;
             parentPool.releaseConnection(bagEntry);
          }
+      }
+   }
+
+   private void closeOpenStatements()
+   {
+      final int size = openStatements.size();
+      if (size > 0) {
+         for (int i = 0; i < size; i++) {
+            try {
+               Statement statement = openStatements.get(i);
+               if (statement != null) {
+                  statement.close();
+               }
+            }
+            catch (SQLException e) {
+               checkException(e);
+            }
+         }
+
+         openStatements.clear();
       }
    }
 
