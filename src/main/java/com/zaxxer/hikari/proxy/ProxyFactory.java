@@ -70,7 +70,7 @@ public final class ProxyFactory
       return null;
    }
 
-   static ResultSet getProxyResultSet(final ConnectionProxy connection, final ResultSet resultSet)
+   static ResultSet getProxyResultSet(final ConnectionProxy connection, final StatementProxy statement, final ResultSet resultSet)
    {
       // Body is injected by JavassistProxyFactory
       return null;

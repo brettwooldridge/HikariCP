@@ -108,7 +108,7 @@ public abstract class StatementProxy implements Statement
    {
       connection.markCommitStateDirty();
       ResultSet resultSet = delegate.executeQuery(sql);
-      return ProxyFactory.getProxyResultSet(connection, resultSet); 
+      return ProxyFactory.getProxyResultSet(connection, this, resultSet); 
    }
 
    /** {@inheritDoc} */
@@ -212,7 +212,7 @@ public abstract class StatementProxy implements Statement
    public ResultSet getResultSet() throws SQLException {
       final ResultSet resultSet = delegate.getResultSet();
       if (resultSet != null) {
-         return ProxyFactory.getProxyResultSet(connection, resultSet);
+         return ProxyFactory.getProxyResultSet(connection, this, resultSet);
       }
       return null;
    }
