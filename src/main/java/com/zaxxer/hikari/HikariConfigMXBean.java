@@ -153,6 +153,25 @@ public interface HikariConfigMXBean
    void setMaximumPoolSize(int maxPoolSize);
 
    /**
+    * Set the password used for authentication. Changing this at runtime will apply to new connections only.
+    * Altering this at runtime only works for DataSource-based connections, not Driver-class or JDBC URL-based
+    * connections.
+    *
+    * @param username the database password
+    */
+   void setPassword(String password);
+
+   /**
+    * Set the username used for authentication. Changing this at runtime will apply to new connections only.
+    * Altering this at runtime only works for DataSource-based connections, not Driver-class or JDBC URL-based
+    * connections.
+    *
+    * @param username the database username
+    */
+   void setUsername(String username);
+
+  
+   /**
     * The name of the connection pool.
     *
     * @return the name of the connection pool

@@ -24,7 +24,7 @@ import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.SQLTimeoutException;
+import java.sql.SQLTransientConnectionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
@@ -196,7 +196,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          while (timeout > 0L);
       }
       catch (InterruptedException e) {
-         throw new SQLException("Interrupted during connection acquisition", e);
+         throw new SQLException(poolName + " - Interrupted during connection acquisition", e);
       }
       finally {
          suspendResumeLock.release();
@@ -208,7 +208,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       if (originalException instanceof SQLException) {
          sqlState = ((SQLException) originalException).getSQLState();
       }
-      throw new SQLTimeoutException(String.format("Timeout after %dms of waiting for a connection.", clockSource.elapsedMillis(startTime)), sqlState, originalException);
+      throw new SQLTransientConnectionException(poolName + " - Connection is not available, request timed out after " + clockSource.elapsedMillis(startTime) + "ms.", sqlState, originalException);
    }
 
    /**
@@ -239,8 +239,8 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       try {
          poolState = POOL_SHUTDOWN;
 
-         LOGGER.info("Hikari pool {} is shutting down.", poolName);
-         logPoolState("Before shutdown ");
+         LOGGER.info("{} - is closing down.", poolName);
+         logPoolState("Before closing ");
 
          connectionBag.close();
          softEvictConnections();
@@ -270,7 +270,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          closeConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
       }
       finally {
-         logPoolState("After shutdown ");
+         logPoolState("After closing ");
 
          poolElf.unregisterMBeans();
          metricsTracker.close();
@@ -423,7 +423,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
    public final synchronized void suspendPool()
    {
       if (suspendResumeLock == SuspendResumeLock.FAUX_LOCK) {
-         throw new IllegalStateException("Pool " + poolName + " is not suspendable");
+         throw new IllegalStateException(poolName + " - is not suspendable");
       }
       else if (poolState != POOL_SUSPENDED) {
          suspendResumeLock.suspend();
@@ -483,7 +483,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       // Speculative increment of totalConnections with expectation of success
       if (totalConnections.incrementAndGet() > config.getMaximumPoolSize()) {
          totalConnections.decrementAndGet(); // Pool is maxed out, so undo speculative increment of totalConnections
-         lastConnectionFailure.set(new SQLException("Hikari pool " + poolName +" is at maximum capacity"));
+         lastConnectionFailure.set(new SQLException(poolName + " - is at maximum capacity"));
          return true;
       }
 
@@ -497,7 +497,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
 
          connectionBag.add(new PoolBagEntry(connection, this));
          lastConnectionFailure.set(null);
-         LOGGER.debug("{} - Connection {} added to pool", poolName, connection);
+         LOGGER.debug("{} - Added connection {}", poolName, connection);
 
          return true;
       }
@@ -505,7 +505,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          totalConnections.decrementAndGet(); // We failed, so undo speculative increment of totalConnections
          lastConnectionFailure.set(e);
          if (poolState == POOL_NORMAL) {
-            LOGGER.debug("{} - Connection attempt to database failed", poolName, e);
+            LOGGER.debug("{} - Cannot acquire connection from data source", poolName, e);
          }
          poolElf.quietlyCloseConnection(connection, "(exception during connection creation)");
          return false;

@@ -109,8 +109,22 @@ public final class PoolElf
    {
       if (transactionIsolationName != null) {
          try {
-            Field field = Connection.class.getField(transactionIsolationName);
-            return field.getInt(null);
+            final String upperName = transactionIsolationName.toUpperCase();
+            if (upperName.startsWith("TRANSACTION_")) {
+               Field field = Connection.class.getField(upperName);
+               return field.getInt(null);
+            }
+            final int level = Integer.parseInt(transactionIsolationName);
+            switch (level) {
+               case Connection.TRANSACTION_READ_UNCOMMITTED:
+               case Connection.TRANSACTION_READ_COMMITTED:
+               case Connection.TRANSACTION_REPEATABLE_READ:
+               case Connection.TRANSACTION_SERIALIZABLE:
+               case Connection.TRANSACTION_NONE:
+                  return level;
+               default:
+                  throw new IllegalArgumentException();
+             }
          }
          catch (Exception e) {
             throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
@@ -161,18 +175,19 @@ public final class PoolElf
    void setupConnection(final Connection connection, final long connectionTimeout) throws SQLException
    {
       if (isUseJdbc4Validation && !isJdbc4ValidationSupported(connection)) {
-         throw new SQLException("Connection.isValid() method is not supported, connection test query must be configured");
+         throw new SQLException("Connection.isValid() is not supported, configure connection test query.");
       }
 
       networkTimeout = getAndSetNetworkTimeout(connection, connectionTimeout);
-      transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
 
       connection.setAutoCommit(isAutoCommit);
       if (isReadOnly != null) {
          connection.setReadOnly(isReadOnly);
       }
 
-      if (transactionIsolation != connection.getTransactionIsolation()) {
+      final int defaultLevel = connection.getTransactionIsolation();
+      transactionIsolation = (transactionIsolation < 0 ? defaultLevel : transactionIsolation);
+      if (transactionIsolation != defaultLevel) {
          connection.setTransactionIsolation(transactionIsolation);
       }
 
@@ -205,9 +220,7 @@ public final class PoolElf
    
          try (Statement statement = connection.createStatement()) {
             setQueryTimeout(statement, timeoutSec);
-            if (statement.execute(config.getConnectionTestQuery())) {
-               statement.getResultSet().close();
-            }
+            statement.execute(config.getConnectionTestQuery());
          }
    
          if (isIsolateInternalQueries && !isAutoCommit) {
@@ -256,7 +269,7 @@ public final class PoolElf
       }
       
       if (LOGGER.isDebugEnabled()) {
-         LOGGER.debug("{} - Reset ({}) on connection {}", resetBits != 0 ? stringFromResetBits(resetBits) : "nothing", poolEntry.connection);
+         LOGGER.debug("{} - Reset ({}) on connection {}", poolName, resetBits != 0 ? stringFromResetBits(resetBits) : "nothing", poolEntry.connection);
       }
    }
 
@@ -438,9 +451,7 @@ public final class PoolElf
    {
       if (sql != null) {
          try (Statement statement = connection.createStatement()) {
-            if (statement.execute(sql)) {
-               statement.getResultSet().close();
-            }
+            statement.execute(sql);
 
             if (!isAutoCommit) {
                connection.commit();
