@@ -811,9 +811,13 @@ public class HikariConfig implements HikariConfigMXBean
          logger.warn("idleTimeout is less than 10000ms, setting to default {}ms.", IDLE_TIMEOUT);
          idleTimeout = IDLE_TIMEOUT;
       }
-      else if (idleTimeout > maxLifetime && maxLifetime > 0) {
-         logger.warn("idleTimeout is greater than maxLifetime, setting to maxLifetime.");
-         idleTimeout = maxLifetime;
+      if (idleTimeout > maxLifetime && maxLifetime > 0) {
+         logger.warn("idleTimeout is greater than maxLifetime, , disabling it.");
+         idleTimeout = 0;
+      }
+      if (maxLifetime == 0 && idleTimeout == 0) {
+          logger.warn("setting idleTimeout to {}ms.", IDLE_TIMEOUT);
+          idleTimeout = IDLE_TIMEOUT;
       }
 
       if (leakDetectionThreshold != 0 && leakDetectionThreshold < TimeUnit.SECONDS.toMillis(2) && !unitTest) {
