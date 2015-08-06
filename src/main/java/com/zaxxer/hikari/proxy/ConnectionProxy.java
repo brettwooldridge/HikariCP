@@ -176,16 +176,18 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    public final void close() throws SQLException
    {
       if (delegate != ClosedConnection.CLOSED_CONNECTION) {
-         leakTask.cancel();
-
+         Connection con = delegate;
+         delegate = ClosedConnection.CLOSED_CONNECTION;
+         
          try {
+            leakTask.cancel();
             closeOpenStatements();
 
             if (isCommitStateDirty) {
                lastAccess = clockSource.currentTime();
 
                if (!poolEntry.isAutoCommit) {
-                  delegate.rollback();
+                  con.rollback();
                   LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.parentPool, delegate);
                }
             }
@@ -195,7 +197,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
                lastAccess = clockSource.currentTime();
             }
 
-            delegate.clearWarnings();
+            con.clearWarnings();
          }
          catch (SQLException e) {
             // when connections are aborted, exceptions are often thrown that should not reach the application
@@ -204,7 +206,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             }
          }
          finally {
-            delegate = ClosedConnection.CLOSED_CONNECTION;
             poolEntry.releaseConnection(lastAccess);
          }
       }
