@@ -454,8 +454,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
    void closeConnection(final PoolBagEntry bagEntry, final String closureReason)
    {
       final Connection connection = bagEntry.connection;
-      bagEntry.connection = null;
-      bagEntry.cancelMaxLifeTermination();
+      bagEntry.close();
       if (connectionBag.remove(bagEntry)) {
          final int tc = totalConnections.decrementAndGet();
          if (tc < 0) {
@@ -546,7 +545,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
             poolElf.quietlyCloseConnection(bagEntry.connection, "(connection aborted during shutdown)");
          }
          finally {
-            bagEntry.connection = null;
+            bagEntry.close();
             if (connectionBag.remove(bagEntry)) {
                totalConnections.decrementAndGet();
             }

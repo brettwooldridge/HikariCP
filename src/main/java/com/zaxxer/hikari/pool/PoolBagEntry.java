@@ -166,9 +166,16 @@ public final class PoolBagEntry implements IConcurrentBagEntry
 
    /** {@inheritDoc} */
    @Override
-   public AtomicInteger state()
+   public int getState()
    {
-      return state;
+      return state.get();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public boolean compareAndSet(int expect, int update)
+   {
+      return state.compareAndSet(expect, update);
    }
 
    /** {@inheritDoc} */
@@ -179,13 +186,14 @@ public final class PoolBagEntry implements IConcurrentBagEntry
                            connection, formatDateTime(creationTime), ClockSource.INSTANCE.elapsedMillis(lastAccess), stateToString());
    }
 
-   void cancelMaxLifeTermination()
+   void close()
    {
       if (endOfLife != null && !endOfLife.isDone() && !endOfLife.cancel(false)) {
          LOGGER.warn("{} - maxLifeTime expiration task cancellation unexpectedly returned false for connection {}", parentPool.config.getPoolName(), connection);
       }
 
       endOfLife = null;
+      connection = null;
       parentPool.houseKeepingExecutorService.purge();
    }
 
