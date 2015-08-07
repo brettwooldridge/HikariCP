@@ -42,7 +42,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.pool.PoolElf;
-import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.PropertyElf;
 
 public class HikariConfig implements HikariConfigMXBean
@@ -812,7 +811,7 @@ public class HikariConfig implements HikariConfigMXBean
          logger.warn("idleTimeout is less than 10000ms, setting to default {}ms.", IDLE_TIMEOUT);
          idleTimeout = IDLE_TIMEOUT;
       }
-      if (ClockSource.INSTANCE.plusMillis(idleTimeout, 1000) > maxLifetime && maxLifetime > 0) {
+      if (idleTimeout + TimeUnit.SECONDS.toMillis(1) > maxLifetime && maxLifetime > 0) {
          logger.warn("idleTimeout is close to or greater than maxLifetime, disabling it.");
          idleTimeout = 0;
       }
