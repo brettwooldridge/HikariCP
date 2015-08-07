@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +72,8 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       int STATE_REMOVED = -1;
       int STATE_RESERVED = -2;
 
-      AtomicInteger state();
+      boolean compareAndSet(int from, int to);
+      int getState();
    }
 
    public interface IBagStateListener
@@ -129,7 +129,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
 
          for (int i = list.size() - 1; i >= 0; i--) {
             final T bagEntry = (T) (weakThreadLocals ? ((WeakReference) list.remove(i)).get() : list.remove(i));
-            if (bagEntry != null && bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
+            if (bagEntry != null && bagEntry.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
                return bagEntry;
             }
          }
@@ -145,7 +145,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
          do {
             startSeq = synchronizer.currentSequence();
             for (final T bagEntry : sharedList) {
-               if (bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
+               if (bagEntry.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
                   return bagEntry;
                }
             }
@@ -173,7 +173,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    @SuppressWarnings("unchecked")
    public void requite(final T bagEntry)
    {
-      if (bagEntry.state().compareAndSet(STATE_IN_USE, STATE_NOT_IN_USE)) {
+      if (bagEntry.compareAndSet(STATE_IN_USE, STATE_NOT_IN_USE)) {
          final List threadLocalList = threadList.get();
          if (threadLocalList != null) {
             threadLocalList.add((weakThreadLocals ? new WeakReference<>(bagEntry) : bagEntry));
@@ -213,7 +213,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     */
    public boolean remove(final T bagEntry)
    {
-      if (!bagEntry.state().compareAndSet(STATE_IN_USE, STATE_REMOVED) && !bagEntry.state().compareAndSet(STATE_RESERVED, STATE_REMOVED) && !closed) {
+      if (!bagEntry.compareAndSet(STATE_IN_USE, STATE_REMOVED) && !bagEntry.compareAndSet(STATE_RESERVED, STATE_REMOVED) && !closed) {
          LOGGER.warn("Attempt to remove an object from the bag that was not borrowed or reserved: {}", bagEntry);
          return false;
       }
@@ -247,7 +247,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    {
       final ArrayList<T> list = new ArrayList<>(sharedList.size());
       for (final T reference : sharedList) {
-         if (reference.state().get() == state) {
+         if (reference.getState() == state) {
             list.add(reference);
          }
       }
@@ -283,7 +283,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     */
    public boolean reserve(final T bagEntry)
    {
-      return bagEntry.state().compareAndSet(STATE_NOT_IN_USE, STATE_RESERVED);
+      return bagEntry.compareAndSet(STATE_NOT_IN_USE, STATE_RESERVED);
    }
 
    /**
@@ -294,7 +294,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     */
    public void unreserve(final T bagEntry)
    {
-      if (bagEntry.state().compareAndSet(STATE_RESERVED, STATE_NOT_IN_USE)) {
+      if (bagEntry.compareAndSet(STATE_RESERVED, STATE_NOT_IN_USE)) {
          synchronizer.signal();
       }
       else {
@@ -323,7 +323,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    {
       int count = 0;
       for (final T reference : sharedList) {
-         if (reference.state().get() == state) {
+         if (reference.getState() == state) {
             count++;
          }
       }
