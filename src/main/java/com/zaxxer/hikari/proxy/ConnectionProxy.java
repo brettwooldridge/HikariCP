@@ -177,11 +177,13 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       if (delegate != ClosedConnection.CLOSED_CONNECTION) {
          leakTask.cancel();
-         closeOpenStatements();
 
          try {
+            closeOpenStatements();
+
             if (isCommitStateDirty) {
                lastAccess = clockSource.currentTime();
+
                if (!poolEntry.isAutoCommit) {
                   delegate.rollback();
                   LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.parentPool, delegate);
