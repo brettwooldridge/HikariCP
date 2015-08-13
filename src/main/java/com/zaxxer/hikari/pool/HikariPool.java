@@ -25,6 +25,7 @@ import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
@@ -490,7 +491,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          String username = config.getUsername();
          String password = config.getPassword();
 
-         connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
+         connection = (username == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
          poolElf.setupConnection(connection, connectionTimeout);
 
          connectionBag.add(new PoolBagEntry(connection, this));
@@ -630,13 +631,18 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          }
 
          logPoolState("Before cleanup ");
-         for (PoolBagEntry bagEntry : connectionBag.values(STATE_NOT_IN_USE)) {
+         final int minIdle = config.getMinimumIdle();
+         final List<PoolBagEntry> bag = connectionBag.values(STATE_NOT_IN_USE);
+         int totIdle = bag.size();
+         for (PoolBagEntry bagEntry : bag) {
             if (connectionBag.reserve(bagEntry)) {
                if (bagEntry.evicted) {
                   closeConnection(bagEntry, "(connection evicted)");
+                  totIdle --;
                }
-               else if (idleTimeout > 0L && clockSource.elapsedMillis(bagEntry.lastAccess, now) > idleTimeout) {
+               else if (totIdle > minIdle && idleTimeout > 0L && clockSource.elapsedMillis(bagEntry.lastAccess, now) > idleTimeout) {
                   closeConnection(bagEntry, "(connection passed idleTimeout)");
+                  totIdle --;
                }
                else {
                   connectionBag.unreserve(bagEntry);

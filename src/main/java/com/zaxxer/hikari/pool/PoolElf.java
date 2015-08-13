@@ -217,11 +217,12 @@ public final class PoolElf
          }
    
          final int originalTimeout = getAndSetNetworkTimeout(connection, validationTimeout);
-   
+
          try (Statement statement = connection.createStatement()) {
-        	if (isNetworkTimeoutSupported != TRUE) {
+            if (isNetworkTimeoutSupported != TRUE) {
                setQueryTimeout(statement, timeoutSec);
-        	}
+            }
+        	
             statement.execute(config.getConnectionTestQuery());
          }
    
