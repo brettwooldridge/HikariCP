@@ -631,18 +631,17 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          }
 
          logPoolState("Before cleanup ");
-         final int minIdle = config.getMinimumIdle();
          final List<PoolBagEntry> bag = connectionBag.values(STATE_NOT_IN_USE);
-         int totIdle = bag.size();
+         int removable = bag.size() - config.getMinimumIdle();
          for (PoolBagEntry bagEntry : bag) {
             if (connectionBag.reserve(bagEntry)) {
                if (bagEntry.evicted) {
                   closeConnection(bagEntry, "(connection evicted)");
-                  totIdle --;
+                  removable--;
                }
-               else if (totIdle > minIdle && idleTimeout > 0L && clockSource.elapsedMillis(bagEntry.lastAccess, now) > idleTimeout) {
+               else if (removable > 0 && idleTimeout > 0L && clockSource.elapsedMillis(bagEntry.lastAccess, now) > idleTimeout) {
                   closeConnection(bagEntry, "(connection passed idleTimeout)");
-                  totIdle --;
+                  removable--;
                }
                else {
                   connectionBag.unreserve(bagEntry);
