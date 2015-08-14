@@ -243,6 +243,8 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          LOGGER.info("{} - is closing down.", poolName);
          logPoolState("Before closing ");
 
+         connectionBag.close();
+         softEvictConnections();
          addConnectionExecutor.shutdown();
          addConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
          if (config.getScheduledExecutorService() == null) {
@@ -252,7 +254,6 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
 
          final ExecutorService assassinExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection assassin",
                                                                            config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
-         connectionBag.close();
          try {
             final long start = clockSource.currentTime();
             do {
@@ -365,7 +366,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
             while (poolState == POOL_NORMAL && totalConnections.get() < maxPoolSize && getIdleConnections() <= minimumIdle && !addConnection()) {
                // If we got into the loop, addConnection() failed, so we sleep and retry
                quietlySleep(sleepBackoff);
-               sleepBackoff = Math.min((long) (connectionTimeout / 2), (long) (sleepBackoff * 1.5));
+               sleepBackoff = Math.min(connectionTimeout / 2, (long) (sleepBackoff * 1.5));
             }
          }
       }, true);
