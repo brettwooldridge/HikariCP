@@ -203,7 +203,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          suspendResumeLock.release();
       }
 
-      logPoolState("Timeout failure ");
+      logPoolState("Timeout failure\t");
       String sqlState = null;
       final Throwable originalException = lastConnectionFailure.getAndSet(null);
       if (originalException instanceof SQLException) {
@@ -241,7 +241,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          poolState = POOL_SHUTDOWN;
 
          LOGGER.info("{} - is closing down.", poolName);
-         logPoolState("Before closing ");
+         logPoolState("Before closing\t");
 
          connectionBag.close();
          softEvictConnections();
@@ -271,7 +271,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          closeConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
       }
       finally {
-         logPoolState("After closing ");
+         logPoolState("After closing\t");
 
          poolElf.unregisterMBeans();
          metricsTracker.close();
@@ -526,7 +526,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          addConnectionExecutor.execute(new Runnable() {
             @Override
             public void run() {
-               logPoolState("After fill ");
+               logPoolState("After fill\t");
             }
          });
       }
@@ -631,14 +631,11 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
             previous = now;
          }
 
-         logPoolState("Before cleanup ");
+         logPoolState("Before cleanup\t");
          final List<PoolBagEntry> bag = connectionBag.values(STATE_NOT_IN_USE);
          int removable = bag.size() - config.getMinimumIdle();
          for (PoolBagEntry bagEntry : bag) {
-            if (removable <= 0) {
-               break;
-            }
-            if (connectionBag.reserve(bagEntry)) {
+            if (removable > 0 && connectionBag.reserve(bagEntry)) {
                if (idleTimeout > 0L && clockSource.elapsedMillis(bagEntry.lastAccess, now) > idleTimeout) {
                   closeConnection(bagEntry, "(connection passed idleTimeout)");
                   removable--;
@@ -649,7 +646,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
             }
          }
          
-         logPoolState("After cleanup ");
+         logPoolState("After cleanup\t");
 
          fillPool(); // Try to maintain minimum connections
       }
