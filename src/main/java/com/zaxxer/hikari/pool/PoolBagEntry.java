@@ -182,8 +182,10 @@ public final class PoolBagEntry implements IConcurrentBagEntry
    @Override
    public String toString()
    {
-      return String.format("%s (created %s, last release %dms ago, %s)",
-                           connection, formatDateTime(creationTime), ClockSource.INSTANCE.elapsedMillis(lastAccess), stateToString());
+      return connection
+         + ", created " + formatDateTime(creationTime)
+         + ", last release " + ClockSource.INSTANCE.elapsedMillis(lastAccess) + "ms ago, "
+         + stateToString();
    }
 
    void close()

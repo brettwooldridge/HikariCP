@@ -1,5 +1,14 @@
 HikariCP Changes
 
+ * issue 379: stop closing idle connections, to keep minIdle connections in pool
+ * issue 375: fixed InvalidPathException in HikariConfig
+ * issue 362: fixed NullPointerException in closing connection (closing statements)
+ * issue 357: allow altering the username & password through JMX at runtime
+ * issue 349: handle integer Transaction isolation level
+ * Throw SQLTransientConnectionException instead of SQLTimeoutException
+ * for validating connection, if network time out is set, do not set query timeout too
+ * ResultSet.getStatement() should return StatementProxy
+
 Changes in 2.4.0
 
  * Consolidated distribution into single JVM target (Java 7/8).  Java 6 support has
@@ -7,7 +16,7 @@ Changes in 2.4.0
 
  * Removed runtime dependency on Javassist by pre-generating proxy classes at build-time.
 
- * Significantly reduced overhead, and increased reliabilty, of ConcurrentBag.
+ * Significantly reduced overhead, and increased reliability, of ConcurrentBag.
 
  * Reduced garbage generation by 2-3x.
 

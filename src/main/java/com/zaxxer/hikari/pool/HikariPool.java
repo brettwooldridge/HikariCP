@@ -25,6 +25,7 @@ import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
@@ -244,7 +245,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
 
          connectionBag.close();
          softEvictConnections();
-         addConnectionExecutor.shutdownNow();
+         addConnectionExecutor.shutdown();
          addConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
          if (config.getScheduledExecutorService() == null) {
             houseKeepingExecutorService.shutdown();
@@ -365,7 +366,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
             while (poolState == POOL_NORMAL && totalConnections.get() < maxPoolSize && getIdleConnections() <= minimumIdle && !addConnection()) {
                // If we got into the loop, addConnection() failed, so we sleep and retry
                quietlySleep(sleepBackoff);
-               sleepBackoff = Math.min(connectionTimeout / 2, (long) ((double) sleepBackoff * 1.5));
+               sleepBackoff = Math.min(connectionTimeout / 2, (long) (sleepBackoff * 1.5));
             }
          }
       }, true);
@@ -491,7 +492,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          String username = config.getUsername();
          String password = config.getPassword();
 
-         connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
+         connection = (username == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
          poolElf.setupConnection(connection, connectionTimeout);
 
          connectionBag.add(new PoolBagEntry(connection, this));
@@ -631,13 +632,13 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          }
 
          logPoolState("Before cleanup ");
-         for (PoolBagEntry bagEntry : connectionBag.values(STATE_NOT_IN_USE)) {
+         final List<PoolBagEntry> bag = connectionBag.values(STATE_NOT_IN_USE);
+         int removable = bag.size() - config.getMinimumIdle();
+         for (PoolBagEntry bagEntry : bag) {
             if (connectionBag.reserve(bagEntry)) {
-               if (bagEntry.evicted) {
-                  closeConnection(bagEntry, "(connection evicted)");
-               }
-               else if (idleTimeout > 0L && clockSource.elapsedMillis(bagEntry.lastAccess, now) > idleTimeout) {
+               if (removable > 0 && idleTimeout > 0L && clockSource.elapsedMillis(bagEntry.lastAccess, now) > idleTimeout) {
                   closeConnection(bagEntry, "(connection passed idleTimeout)");
+                  removable--;
                }
                else {
                   connectionBag.unreserve(bagEntry);
