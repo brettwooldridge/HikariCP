@@ -639,9 +639,6 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
                   closeConnection(bagEntry, "(connection passed idleTimeout)");
                   removable--;
                }
-               else {
-            	   bagEntry.evicted = true;
-               }
             }
          }
          
