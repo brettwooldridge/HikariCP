@@ -68,7 +68,7 @@ import com.zaxxer.hikari.util.PropertyElf;
  */
 public class HikariPool implements HikariPoolMXBean, IBagStateListener
 {
-   final Logger LOGGER = LoggerFactory.getLogger(getClass());
+   private static final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
 
    private static final ClockSource clockSource = ClockSource.INSTANCE;
 

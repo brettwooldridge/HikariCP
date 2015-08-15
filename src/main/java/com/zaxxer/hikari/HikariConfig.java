@@ -745,8 +745,6 @@ public class HikariConfig implements HikariConfigMXBean
 
    public void validate()
    {
-      Logger logger = LoggerFactory.getLogger(getClass());
-
       validateNumerics();
 
       if (poolName == null) {
@@ -758,22 +756,22 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       if (driverClassName != null && jdbcUrl == null) {
-         logger.error("jdbcUrl is required with driverClassName");
+         LOGGER.error("jdbcUrl is required with driverClassName");
          throw new IllegalArgumentException("jdbcUrl is required with driverClassName");
       }
       else if (driverClassName != null && dataSourceClassName != null) {
-         logger.error("cannot use driverClassName and dataSourceClassName together");
+         LOGGER.error("cannot use driverClassName and dataSourceClassName together");
          throw new IllegalArgumentException("cannot use driverClassName and dataSourceClassName together");
       }
       else if (jdbcUrl != null) {
          // OK
       }
       else if (dataSource == null && dataSourceClassName == null) {
-         logger.error("either dataSource or dataSourceClassName is required");
+         LOGGER.error("either dataSource or dataSourceClassName is required");
          throw new IllegalArgumentException("either dataSource or dataSourceClassName is required");
       }
       else if (dataSource != null && dataSourceClassName != null) {
-         logger.warn("using dataSource and ignoring dataSourceClassName");
+         LOGGER.warn("using dataSource and ignoring dataSourceClassName");
       }
 
       if (transactionIsolationName != null) {
@@ -787,8 +785,6 @@ public class HikariConfig implements HikariConfigMXBean
 
    private void validateNumerics()
    {
-      Logger logger = LoggerFactory.getLogger(getClass());
-
       if (validationTimeout > connectionTimeout && connectionTimeout != Integer.MAX_VALUE) {
          validationTimeout = connectionTimeout;
       }
@@ -798,29 +794,29 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       if (maxLifetime < 0) {
-         logger.error("maxLifetime cannot be negative.");
+         LOGGER.error("maxLifetime cannot be negative.");
          throw new IllegalArgumentException("maxLifetime cannot be negative.");
       }
       else if (maxLifetime > 0 && maxLifetime < TimeUnit.SECONDS.toMillis(30)) {
-         logger.warn("maxLifetime is less than 30000ms, setting to default {}ms.", MAX_LIFETIME);
+         LOGGER.warn("maxLifetime is less than 30000ms, setting to default {}ms.", MAX_LIFETIME);
          maxLifetime = MAX_LIFETIME;
       }
 
       if (idleTimeout != 0 && idleTimeout < TimeUnit.SECONDS.toMillis(10)) {
-         logger.warn("idleTimeout is less than 10000ms, setting to default {}ms.", IDLE_TIMEOUT);
+         LOGGER.warn("idleTimeout is less than 10000ms, setting to default {}ms.", IDLE_TIMEOUT);
          idleTimeout = IDLE_TIMEOUT;
       }
       if (idleTimeout + TimeUnit.SECONDS.toMillis(1) > maxLifetime && maxLifetime > 0) {
-         logger.warn("idleTimeout is close to or greater than maxLifetime, disabling it.");
+         LOGGER.warn("idleTimeout is close to or greater than maxLifetime, disabling it.");
          idleTimeout = 0;
       }
       if (maxLifetime == 0 && idleTimeout == 0) {
-          logger.warn("setting idleTimeout to {}ms.", IDLE_TIMEOUT);
-          idleTimeout = IDLE_TIMEOUT;
+         LOGGER.warn("setting idleTimeout to {}ms.", IDLE_TIMEOUT);
+         idleTimeout = IDLE_TIMEOUT;
       }
 
       if (leakDetectionThreshold != 0 && leakDetectionThreshold < TimeUnit.SECONDS.toMillis(2) && !unitTest) {
-         logger.warn("leakDetectionThreshold is less than 2000ms, setting to minimum 2000ms.");
+         LOGGER.warn("leakDetectionThreshold is less than 2000ms, setting to minimum 2000ms.");
          leakDetectionThreshold = 2000L;
       }
    }

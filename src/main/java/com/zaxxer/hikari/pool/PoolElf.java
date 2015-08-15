@@ -207,7 +207,7 @@ public final class PoolElf
     * @param lastConnectionFailure last connection failure
     * @return true if the connection is alive, false if it is not alive or we timed out
     */
-   boolean isConnectionAlive(final Connection connection, AtomicReference<Throwable> lastConnectionFailure)
+   boolean isConnectionAlive(final Connection connection, final AtomicReference<Throwable> lastConnectionFailure)
    {
       try {
          int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout);
