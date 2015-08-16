@@ -68,7 +68,7 @@ import com.zaxxer.hikari.util.PropertyElf;
  */
 public class HikariPool implements HikariPoolMXBean, IBagStateListener
 {
-   final Logger LOGGER = LoggerFactory.getLogger(getClass());
+   private static final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
 
    private static final ClockSource clockSource = ClockSource.INSTANCE;
 
@@ -203,7 +203,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          suspendResumeLock.release();
       }
 
-      logPoolState("Timeout failure ");
+      logPoolState("Timeout failure\t");
       String sqlState = null;
       final Throwable originalException = lastConnectionFailure.getAndSet(null);
       if (originalException instanceof SQLException) {
@@ -241,7 +241,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          poolState = POOL_SHUTDOWN;
 
          LOGGER.info("{} - is closing down.", poolName);
-         logPoolState("Before closing ");
+         logPoolState("Before closing\t");
 
          connectionBag.close();
          softEvictConnections();
@@ -271,7 +271,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          closeConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
       }
       finally {
-         logPoolState("After closing ");
+         logPoolState("After closing\t");
 
          poolElf.unregisterMBeans();
          metricsTracker.close();
@@ -526,7 +526,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          addConnectionExecutor.execute(new Runnable() {
             @Override
             public void run() {
-               logPoolState("After fill ");
+               logPoolState("After fill\t");
             }
          });
       }
@@ -627,26 +627,22 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
             fillPool();
             return;
          }
-         else {
-            previous = now;
-         }
 
-         logPoolState("Before cleanup ");
+         previous = now;
+
+         logPoolState("Before cleanup\t");
          final List<PoolBagEntry> bag = connectionBag.values(STATE_NOT_IN_USE);
          int removable = bag.size() - config.getMinimumIdle();
          for (PoolBagEntry bagEntry : bag) {
-            if (connectionBag.reserve(bagEntry)) {
-               if (removable > 0 && idleTimeout > 0L && clockSource.elapsedMillis(bagEntry.lastAccess, now) > idleTimeout) {
+            if (removable > 0 && idleTimeout > 0L && clockSource.elapsedMillis(bagEntry.lastAccess, now) > idleTimeout) {
+               if (connectionBag.reserve(bagEntry)) {
                   closeConnection(bagEntry, "(connection passed idleTimeout)");
                   removable--;
-               }
-               else {
-                  connectionBag.unreserve(bagEntry);
                }
             }
          }
          
-         logPoolState("After cleanup ");
+         logPoolState("After cleanup\t");
 
          fillPool(); // Try to maintain minimum connections
       }
