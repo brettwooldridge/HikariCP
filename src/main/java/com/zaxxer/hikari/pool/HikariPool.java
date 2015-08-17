@@ -125,13 +125,14 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       if (config.getScheduledExecutorService() == null) {
          ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari housekeeper (pool " + poolName + ")", true);
          this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
-         this.houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), HOUSEKEEPING_PERIOD_MS, HOUSEKEEPING_PERIOD_MS, TimeUnit.MILLISECONDS);
          this.houseKeepingExecutorService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
          this.houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
       }
       else {
          this.houseKeepingExecutorService = config.getScheduledExecutorService();
       }
+
+      this.houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), HOUSEKEEPING_PERIOD_MS, HOUSEKEEPING_PERIOD_MS, TimeUnit.MILLISECONDS);
 
       this.leakTask = new LeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
       
