@@ -635,7 +635,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
             final List<PoolBagEntry> bag = connectionBag.values(STATE_NOT_IN_USE);
             int removable = bag.size() - config.getMinimumIdle();
             for (PoolBagEntry bagEntry : bag) {
-               if (removable == 0) {
+               if (removable <= 0) {
                   break;
                }
                if (clockSource.elapsedMillis(bagEntry.lastAccess, now) > idleTimeout) {
