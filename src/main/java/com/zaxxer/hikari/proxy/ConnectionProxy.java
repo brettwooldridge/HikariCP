@@ -108,7 +108,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       if (sqlState != null) {
          boolean isForceClose = sqlState.startsWith("08") || SQL_ERRORS.contains(sqlState);
          if (isForceClose) {
-            poolEntry.evicted = true;
+            poolEntry.evict = true;
             LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
                         poolEntry.parentPool, poolEntry, sqlState, sqle.getErrorCode(), sqle);
          }
@@ -161,7 +161,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             }
             catch (SQLException e) {
                checkException(e);
-               success = success ?  !poolEntry.evicted : false;
+               success = success ?  !poolEntry.evict : false;
             }
          }
 
@@ -202,7 +202,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          }
          catch (SQLException e) {
             // when connections are aborted, exceptions are often thrown that should not reach the application
-            if (!poolEntry.aborted) {
+            if (!poolEntry.evict) {
                throw checkException(e);
             }
          }
