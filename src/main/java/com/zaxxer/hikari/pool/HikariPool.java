@@ -185,7 +185,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
             }
 
             final long now = clockSource.currentTime();
-            if (bagEntry.evicted || (clockSource.elapsedMillis(bagEntry.lastAccess, now) > ALIVE_BYPASS_WINDOW_MS && !poolElf.isConnectionAlive(bagEntry.connection, lastConnectionFailure))) {
+            if (bagEntry.evict || (clockSource.elapsedMillis(bagEntry.lastAccess, now) > ALIVE_BYPASS_WINDOW_MS && !poolElf.isConnectionAlive(bagEntry.connection, lastConnectionFailure))) {
                closeConnection(bagEntry, "(connection evicted or dead)"); // Throw away the dead connection and try again
                timeout = hardTimeout - clockSource.elapsedMillis(startTime, now);
             }
@@ -222,7 +222,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
    {
       metricsTracker.recordConnectionUsage(bagEntry);
 
-      if (bagEntry.evicted) {
+      if (bagEntry.evict) {
          closeConnection(bagEntry, "(connection broken or evicted)");
       }
       else {
@@ -413,7 +413,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
    public void softEvictConnections()
    {
       for (PoolBagEntry bagEntry : connectionBag.values()) {
-         bagEntry.evicted = true;
+         bagEntry.evict = true;
          if (connectionBag.reserve(bagEntry)) {
             closeConnection(bagEntry, "(connection evicted by user)");
          }
@@ -540,7 +540,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
    {
       for (PoolBagEntry bagEntry : connectionBag.values(STATE_IN_USE)) {
          try {
-            bagEntry.aborted = bagEntry.evicted = true;
+            bagEntry.evict = true;
             bagEntry.connection.abort(assassinExecutor);
          }
          catch (Throwable e) {
@@ -567,7 +567,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
             }
 
             ConnectionProxy connection = (ConnectionProxy) getConnection();
-            connection.getPoolBagEntry().evicted = (config.getMinimumIdle() == 0);
+            connection.getPoolBagEntry().evict = (config.getMinimumIdle() == 0);
             connection.close();
          }
          catch (Throwable e) {

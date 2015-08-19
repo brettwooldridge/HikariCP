@@ -49,8 +49,7 @@ public final class PoolBagEntry implements IConcurrentBagEntry
    public long lastAccess;
 
    public volatile long lastOpenTime;
-   public volatile boolean evicted;
-   public volatile boolean aborted;
+   public volatile boolean evict;
 
    public boolean isAutoCommit;
    int networkTimeout;
@@ -95,7 +94,7 @@ public final class PoolBagEntry implements IConcurrentBagEntry
                }
                else {
                   // else the connection is "in-use" and we mark it for eviction by pool.releaseConnection()
-                  PoolBagEntry.this.evicted = true;
+                  PoolBagEntry.this.evict = true;
                }
             }
          }, lifetime, TimeUnit.MILLISECONDS);
