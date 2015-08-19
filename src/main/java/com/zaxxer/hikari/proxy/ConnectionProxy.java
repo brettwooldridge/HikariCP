@@ -150,7 +150,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    private final boolean closeOpenStatements()
    {
       final int size = openStatements.size();
-      if (size <= 0) {
+      if (size > 0) {
          boolean success = true;
          for (int i = 0; i < size; i++) {
             try {
