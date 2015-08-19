@@ -147,8 +147,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       return statement;
    }
 
-   private final void closeOpenStatements()
+   private final boolean closeOpenStatements()
    {
+      boolean success = true;
       final int size = openStatements.size();
       if (size > 0) {
          for (int i = 0; i < size; i++) {
@@ -160,11 +161,13 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             }
             catch (SQLException e) {
                checkException(e);
+               success = success ?  !poolEntry.evicted : false;
             }
          }
 
          openStatements.clear();
       }
+      return success;
    }
 
    // **********************************************************************
@@ -179,23 +182,23 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          leakTask.cancel();
 
          try {
-            closeOpenStatements();
+            if (closeOpenStatements()) {
+               if (isCommitStateDirty) {
+                  lastAccess = clockSource.currentTime();
 
-            if (isCommitStateDirty) {
-               lastAccess = clockSource.currentTime();
-
-               if (!poolEntry.isAutoCommit) {
-                  delegate.rollback();
-                  LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.parentPool, delegate);
+                  if (!poolEntry.isAutoCommit) {
+                     delegate.rollback();
+                     LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.parentPool, delegate);
+                  }
                }
-            }
 
-            if (isConnectionStateDirty) {
-               poolEntry.resetConnectionState();
-               lastAccess = clockSource.currentTime();
-            }
+               if (isConnectionStateDirty) {
+                  poolEntry.resetConnectionState();
+                  lastAccess = clockSource.currentTime();
+               }
 
-            delegate.clearWarnings();
+               delegate.clearWarnings();
+            }
          }
          catch (SQLException e) {
             // when connections are aborted, exceptions are often thrown that should not reach the application
