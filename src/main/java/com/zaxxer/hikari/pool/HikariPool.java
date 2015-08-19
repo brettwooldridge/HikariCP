@@ -630,8 +630,8 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
 
          previous = now;
 
-         logPoolState("Before cleanup\t");
          if (idleTimeout > 0L) {
+            logPoolState("Before cleanup\t");
             final List<PoolBagEntry> bag = connectionBag.values(STATE_NOT_IN_USE);
             int removable = bag.size() - config.getMinimumIdle();
             for (PoolBagEntry bagEntry : bag) {
@@ -645,8 +645,8 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
                   }
                }
             }
+            logPoolState("After cleanup\t");
          }
-         logPoolState("After cleanup\t");
 
          fillPool(); // Try to maintain minimum connections
       }
