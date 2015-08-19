@@ -129,8 +129,8 @@ public class HikariConfig implements HikariConfigMXBean
 
    /**
     * Construct a HikariConfig from the specified property file name.  <code>propertyFileName</code>
-    * will first be treated as a path in the file-system, and if that fails the 
-    * ClassLoader.getResourceAsStream(propertyFileName) will be tried.
+    * will first be treated as a path in the file-system, and if that fails the
+    * Class.getResourceAsStream(propertyFileName) will be tried.
     *
     * @param propertyFileName the name of the property file
     */
