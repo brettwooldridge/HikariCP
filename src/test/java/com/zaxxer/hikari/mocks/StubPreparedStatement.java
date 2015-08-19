@@ -439,6 +439,7 @@ public class StubPreparedStatement extends StubStatement implements PreparedStat
 
     /** {@inheritDoc} */
     @Override
+    @SuppressWarnings("deprecation")
     public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException
     {
     }

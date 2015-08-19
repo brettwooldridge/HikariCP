@@ -141,6 +141,7 @@ public class StubResultSet implements ResultSet
 
     /** {@inheritDoc} */
     @Override
+    @SuppressWarnings("deprecation")
     public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException
     {
         return null;
@@ -183,6 +184,7 @@ public class StubResultSet implements ResultSet
 
     /** {@inheritDoc} */
     @Override
+    @SuppressWarnings("deprecation")
     public InputStream getUnicodeStream(int columnIndex) throws SQLException
     {
         return null;
@@ -253,6 +255,7 @@ public class StubResultSet implements ResultSet
 
     /** {@inheritDoc} */
     @Override
+    @SuppressWarnings("deprecation")
     public BigDecimal getBigDecimal(String columnLabel, int scale) throws SQLException
     {
         return null;
@@ -295,6 +298,7 @@ public class StubResultSet implements ResultSet
 
     /** {@inheritDoc} */
     @Override
+    @SuppressWarnings("deprecation")
     public InputStream getUnicodeStream(String columnLabel) throws SQLException
     {
         return null;

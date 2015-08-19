@@ -45,7 +45,7 @@ public final class PoolElf
    private final HikariConfig config;
    private final String poolName;
    private final String catalog;
-   private final Boolean isReadOnly;
+   private final boolean isReadOnly;
    private final boolean isAutoCommit;
    private final boolean isUseJdbc4Validation;
    private final boolean isIsolateInternalQueries;
@@ -181,9 +181,7 @@ public final class PoolElf
       networkTimeout = getAndSetNetworkTimeout(connection, connectionTimeout);
 
       connection.setAutoCommit(isAutoCommit);
-      if (isReadOnly != null) {
-         connection.setReadOnly(isReadOnly);
-      }
+      connection.setReadOnly(isReadOnly);
 
       final int defaultLevel = connection.getTransactionIsolation();
       transactionIsolation = (transactionIsolation < 0 ? defaultLevel : transactionIsolation);
@@ -245,7 +243,7 @@ public final class PoolElf
    {
       int resetBits = 0;
 
-      if (isReadOnly != null && poolEntry.isReadOnly != isReadOnly) {
+      if (poolEntry.isReadOnly != isReadOnly) {
          poolEntry.connection.setReadOnly(isReadOnly);
          resetBits |= 0b00001;
       }
@@ -278,9 +276,7 @@ public final class PoolElf
 
    void resetPoolEntry(final PoolBagEntry poolEntry)
    {
-      if (isReadOnly != null) {
-         poolEntry.setReadOnly(isReadOnly);
-      }
+      poolEntry.setReadOnly(isReadOnly);
       poolEntry.setCatalog(catalog);
       poolEntry.setAutoCommit(isAutoCommit);
       poolEntry.setNetworkTimeout(networkTimeout);
