@@ -147,11 +147,10 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       return statement;
    }
 
-   private final boolean closeOpenStatements()
+   private final void closeOpenStatements()
    {
       final int size = openStatements.size();
       if (size > 0) {
-         boolean success = true;
          for (int i = 0; i < size; i++) {
             try {
                final Statement statement = openStatements.get(i);
@@ -161,14 +160,11 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             }
             catch (SQLException e) {
                checkException(e);
-               success &= !poolEntry.evict;
             }
          }
 
          openStatements.clear();
-         return success;
       }
-      return true;
    }
 
    // **********************************************************************
@@ -183,7 +179,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          leakTask.cancel();
 
          try {
-            if (closeOpenStatements()) {
+            closeOpenStatements();
+            if (!poolEntry.evict) {
                if (isCommitStateDirty) {
                   lastAccess = clockSource.currentTime();
 
