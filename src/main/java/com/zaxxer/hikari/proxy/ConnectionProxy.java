@@ -104,18 +104,20 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    @Override
    public final SQLException checkException(final SQLException sqle)
    {
-      String sqlState = sqle.getSQLState();
-      if (sqlState != null) {
-         boolean isForceClose = sqlState.startsWith("08") || SQL_ERRORS.contains(sqlState);
-         if (isForceClose) {
-            poolEntry.evict = true;
-            LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
-                        poolEntry.parentPool, poolEntry, sqlState, sqle.getErrorCode(), sqle);
-         }
-         else {
-            SQLException nse = sqle.getNextException();
-            if (nse != null && nse != sqle) {
-               checkException(nse);
+      if (!poolEntry.evict) {
+         String sqlState = sqle.getSQLState();
+         if (sqlState != null) {
+            boolean isForceClose = sqlState.startsWith("08") || SQL_ERRORS.contains(sqlState);
+            if (isForceClose) {
+               poolEntry.evict = true;
+               LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
+                           poolEntry.parentPool, poolEntry, sqlState, sqle.getErrorCode(), sqle);
+            }
+            else {
+               SQLException nse = sqle.getNextException();
+               if (nse != null && nse != sqle) {
+                  checkException(nse);
+               }
             }
          }
       }
@@ -147,11 +149,10 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       return statement;
    }
 
-   private final boolean closeOpenStatements()
+   private final void closeOpenStatements()
    {
       final int size = openStatements.size();
       if (size > 0) {
-         boolean success = true;
          for (int i = 0; i < size; i++) {
             try {
                final Statement statement = openStatements.get(i);
@@ -161,14 +162,11 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             }
             catch (SQLException e) {
                checkException(e);
-               success &= !poolEntry.evict;
             }
          }
 
          openStatements.clear();
-         return success;
       }
-      return true;
    }
 
    // **********************************************************************
@@ -183,7 +181,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          leakTask.cancel();
 
          try {
-            if (closeOpenStatements()) {
+            closeOpenStatements();
+            if (!poolEntry.evict) {
                if (isCommitStateDirty) {
                   lastAccess = clockSource.currentTime();
 
