@@ -104,18 +104,20 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    @Override
    public final SQLException checkException(final SQLException sqle)
    {
-      String sqlState = sqle.getSQLState();
-      if (sqlState != null) {
-         boolean isForceClose = sqlState.startsWith("08") || SQL_ERRORS.contains(sqlState);
-         if (isForceClose) {
-            poolEntry.evict = true;
-            LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
-                        poolEntry.parentPool, poolEntry, sqlState, sqle.getErrorCode(), sqle);
-         }
-         else {
-            SQLException nse = sqle.getNextException();
-            if (nse != null && nse != sqle) {
-               checkException(nse);
+      if (!poolEntry.evict) {
+         String sqlState = sqle.getSQLState();
+         if (sqlState != null) {
+            boolean isForceClose = sqlState.startsWith("08") || SQL_ERRORS.contains(sqlState);
+            if (isForceClose) {
+               poolEntry.evict = true;
+               LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
+                           poolEntry.parentPool, poolEntry, sqlState, sqle.getErrorCode(), sqle);
+            }
+            else {
+               SQLException nse = sqle.getNextException();
+               if (nse != null && nse != sqle) {
+                  checkException(nse);
+               }
             }
          }
       }
