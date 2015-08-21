@@ -18,6 +18,7 @@ package com.zaxxer.hikari.proxy;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Wrapper;
 
 /**
@@ -28,11 +29,13 @@ import java.sql.Wrapper;
 public abstract class ResultSetProxy implements ResultSet
 {
    protected final ConnectionProxy connection;
+   protected final StatementProxy statement;
    protected final ResultSet delegate;
 
-   protected ResultSetProxy(ConnectionProxy connection, ResultSet resultSet)
+   protected ResultSetProxy(ConnectionProxy connection, StatementProxy statement, ResultSet resultSet)
    {
       this.connection = connection;
+      this.statement = statement;
       this.delegate = resultSet;
    }
 
@@ -54,6 +57,13 @@ public abstract class ResultSetProxy implements ResultSet
    // **********************************************************************
    //                 Overridden java.sql.ResultSet Methods
    // **********************************************************************
+
+   /** {@inheritDoc} */
+   @Override
+   public final Statement getStatement() throws SQLException
+   {
+      return statement;
+   }
 
    /** {@inheritDoc} */
    @Override

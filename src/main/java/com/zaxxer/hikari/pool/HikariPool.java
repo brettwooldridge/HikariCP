@@ -24,7 +24,8 @@ import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.SQLTimeoutException;
+import java.sql.SQLTransientConnectionException;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
@@ -67,7 +68,7 @@ import com.zaxxer.hikari.util.PropertyElf;
  */
 public class HikariPool implements HikariPoolMXBean, IBagStateListener
 {
-   final Logger LOGGER = LoggerFactory.getLogger(getClass());
+   private static final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
 
    private static final ClockSource clockSource = ClockSource.INSTANCE;
 
@@ -124,13 +125,14 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       if (config.getScheduledExecutorService() == null) {
          ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari housekeeper (pool " + poolName + ")", true);
          this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
-         this.houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), HOUSEKEEPING_PERIOD_MS, HOUSEKEEPING_PERIOD_MS, TimeUnit.MILLISECONDS);
          this.houseKeepingExecutorService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
          this.houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
       }
       else {
          this.houseKeepingExecutorService = config.getScheduledExecutorService();
       }
+
+      this.houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), HOUSEKEEPING_PERIOD_MS, HOUSEKEEPING_PERIOD_MS, TimeUnit.MILLISECONDS);
 
       this.leakTask = new LeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
       
@@ -183,7 +185,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
             }
 
             final long now = clockSource.currentTime();
-            if (bagEntry.evicted || (clockSource.elapsedMillis(bagEntry.lastAccess, now) > ALIVE_BYPASS_WINDOW_MS && !poolElf.isConnectionAlive(bagEntry.connection, lastConnectionFailure))) {
+            if (bagEntry.evict || (clockSource.elapsedMillis(bagEntry.lastAccess, now) > ALIVE_BYPASS_WINDOW_MS && !poolElf.isConnectionAlive(bagEntry.connection, lastConnectionFailure))) {
                closeConnection(bagEntry, "(connection evicted or dead)"); // Throw away the dead connection and try again
                timeout = hardTimeout - clockSource.elapsedMillis(startTime, now);
             }
@@ -196,19 +198,19 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          while (timeout > 0L);
       }
       catch (InterruptedException e) {
-         throw new SQLException("Interrupted during connection acquisition", e);
+         throw new SQLException(poolName + " - Interrupted during connection acquisition", e);
       }
       finally {
          suspendResumeLock.release();
       }
 
-      logPoolState("Timeout failure ");
+      logPoolState("Timeout failure\t");
       String sqlState = null;
       final Throwable originalException = lastConnectionFailure.getAndSet(null);
       if (originalException instanceof SQLException) {
          sqlState = ((SQLException) originalException).getSQLState();
       }
-      throw new SQLTimeoutException(String.format("Timeout after %dms of waiting for a connection.", clockSource.elapsedMillis(startTime)), sqlState, originalException);
+      throw new SQLTransientConnectionException(poolName + " - Connection is not available, request timed out after " + clockSource.elapsedMillis(startTime) + "ms.", sqlState, originalException);
    }
 
    /**
@@ -220,7 +222,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
    {
       metricsTracker.recordConnectionUsage(bagEntry);
 
-      if (bagEntry.evicted) {
+      if (bagEntry.evict) {
          closeConnection(bagEntry, "(connection broken or evicted)");
       }
       else {
@@ -239,12 +241,12 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       try {
          poolState = POOL_SHUTDOWN;
 
-         LOGGER.info("Hikari pool {} is shutting down.", poolName);
-         logPoolState("Before shutdown ");
+         LOGGER.info("{} - is closing down.", poolName);
+         logPoolState("Before closing\t");
 
          connectionBag.close();
          softEvictConnections();
-         addConnectionExecutor.shutdownNow();
+         addConnectionExecutor.shutdown();
          addConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
          if (config.getScheduledExecutorService() == null) {
             houseKeepingExecutorService.shutdown();
@@ -270,7 +272,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          closeConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
       }
       finally {
-         logPoolState("After shutdown ");
+         logPoolState("After closing\t");
 
          poolElf.unregisterMBeans();
          metricsTracker.close();
@@ -365,7 +367,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
             while (poolState == POOL_NORMAL && totalConnections.get() < maxPoolSize && getIdleConnections() <= minimumIdle && !addConnection()) {
                // If we got into the loop, addConnection() failed, so we sleep and retry
                quietlySleep(sleepBackoff);
-               sleepBackoff = Math.min(connectionTimeout / 2, (long) ((double) sleepBackoff * 1.5));
+               sleepBackoff = Math.min(connectionTimeout / 2, (long) (sleepBackoff * 1.5));
             }
          }
       }, true);
@@ -411,7 +413,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
    public void softEvictConnections()
    {
       for (PoolBagEntry bagEntry : connectionBag.values()) {
-         bagEntry.evicted = true;
+         bagEntry.evict = true;
          if (connectionBag.reserve(bagEntry)) {
             closeConnection(bagEntry, "(connection evicted by user)");
          }
@@ -423,7 +425,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
    public final synchronized void suspendPool()
    {
       if (suspendResumeLock == SuspendResumeLock.FAUX_LOCK) {
-         throw new IllegalStateException("Pool " + poolName + " is not suspendable");
+         throw new IllegalStateException(poolName + " - is not suspendable");
       }
       else if (poolState != POOL_SUSPENDED) {
          suspendResumeLock.suspend();
@@ -454,8 +456,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
    void closeConnection(final PoolBagEntry bagEntry, final String closureReason)
    {
       final Connection connection = bagEntry.connection;
-      bagEntry.connection = null;
-      bagEntry.cancelMaxLifeTermination();
+      bagEntry.close();
       if (connectionBag.remove(bagEntry)) {
          final int tc = totalConnections.decrementAndGet();
          if (tc < 0) {
@@ -483,7 +484,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       // Speculative increment of totalConnections with expectation of success
       if (totalConnections.incrementAndGet() > config.getMaximumPoolSize()) {
          totalConnections.decrementAndGet(); // Pool is maxed out, so undo speculative increment of totalConnections
-         lastConnectionFailure.set(new SQLException("Hikari pool " + poolName +" is at maximum capacity"));
+         lastConnectionFailure.set(new SQLException(poolName + " - is at maximum capacity"));
          return true;
       }
 
@@ -492,12 +493,12 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          String username = config.getUsername();
          String password = config.getPassword();
 
-         connection = (username == null && password == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
+         connection = (username == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
          poolElf.setupConnection(connection, connectionTimeout);
 
          connectionBag.add(new PoolBagEntry(connection, this));
          lastConnectionFailure.set(null);
-         LOGGER.debug("{} - Connection {} added to pool", poolName, connection);
+         LOGGER.debug("{} - Added connection {}", poolName, connection);
 
          return true;
       }
@@ -505,7 +506,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          totalConnections.decrementAndGet(); // We failed, so undo speculative increment of totalConnections
          lastConnectionFailure.set(e);
          if (poolState == POOL_NORMAL) {
-            LOGGER.debug("{} - Connection attempt to database failed", poolName, e);
+            LOGGER.debug("{} - Cannot acquire connection from data source", poolName, e);
          }
          poolElf.quietlyCloseConnection(connection, "(exception during connection creation)");
          return false;
@@ -526,7 +527,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          addConnectionExecutor.execute(new Runnable() {
             @Override
             public void run() {
-               logPoolState("After fill ");
+               logPoolState("After fill\t");
             }
          });
       }
@@ -539,14 +540,14 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
    {
       for (PoolBagEntry bagEntry : connectionBag.values(STATE_IN_USE)) {
          try {
-            bagEntry.aborted = bagEntry.evicted = true;
+            bagEntry.evict = true;
             bagEntry.connection.abort(assassinExecutor);
          }
          catch (Throwable e) {
             poolElf.quietlyCloseConnection(bagEntry.connection, "(connection aborted during shutdown)");
          }
          finally {
-            bagEntry.connection = null;
+            bagEntry.close();
             if (connectionBag.remove(bagEntry)) {
                totalConnections.decrementAndGet();
             }
@@ -566,7 +567,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
             }
 
             ConnectionProxy connection = (ConnectionProxy) getConnection();
-            connection.getPoolBagEntry().evicted = (config.getMinimumIdle() == 0);
+            connection.getPoolBagEntry().evict = (config.getMinimumIdle() == 0);
             connection.close();
          }
          catch (Throwable e) {
@@ -627,26 +628,26 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
             fillPool();
             return;
          }
-         else {
-            previous = now;
-         }
 
-         logPoolState("Before cleanup ");
-         for (PoolBagEntry bagEntry : connectionBag.values(STATE_NOT_IN_USE)) {
-            if (connectionBag.reserve(bagEntry)) {
-               if (bagEntry.evicted) {
-                  closeConnection(bagEntry, "(connection evicted)");
+         previous = now;
+
+         if (idleTimeout > 0L) {
+            logPoolState("Before cleanup\t");
+            final List<PoolBagEntry> bag = connectionBag.values(STATE_NOT_IN_USE);
+            int removable = bag.size() - config.getMinimumIdle();
+            for (PoolBagEntry bagEntry : bag) {
+               if (removable <= 0) {
+                  break;
                }
-               else if (idleTimeout > 0L && clockSource.elapsedMillis(bagEntry.lastAccess, now) > idleTimeout) {
-                  closeConnection(bagEntry, "(connection passed idleTimeout)");
-               }
-               else {
-                  connectionBag.unreserve(bagEntry);
+               if (clockSource.elapsedMillis(bagEntry.lastAccess, now) > idleTimeout) {
+                  if (connectionBag.reserve(bagEntry)) {
+                     closeConnection(bagEntry, "(connection passed idleTimeout)");
+                     removable--;
+                  }
                }
             }
+            logPoolState("After cleanup\t");
          }
-         
-         logPoolState("After cleanup ");
 
          fillPool(); // Try to maintain minimum connections
       }

@@ -16,13 +16,12 @@
 
 package com.zaxxer.hikari;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
@@ -80,7 +79,7 @@ public class HikariConfig implements HikariConfigMXBean
    private String transactionIsolationName;
    private String username;
    private boolean isAutoCommit;
-   private Boolean isReadOnly;
+   private boolean isReadOnly;
    private boolean isInitializationFailFast;
    private boolean isIsolateInternalQueries;
    private boolean isRegisterMbeans;
@@ -130,8 +129,8 @@ public class HikariConfig implements HikariConfigMXBean
 
    /**
     * Construct a HikariConfig from the specified property file name.  <code>propertyFileName</code>
-    * will first be treated as a path in the file-system, and if that fails the 
-    * ClassLoader.getResourceAsStream(propertyFileName) will be tried.
+    * will first be treated as a path in the file-system, and if that fails the
+    * Class.getResourceAsStream(propertyFileName) will be tried.
     *
     * @param propertyFileName the name of the property file
     */
@@ -452,7 +451,7 @@ public class HikariConfig implements HikariConfigMXBean
    public void setMetricsTrackerFactory(MetricsTrackerFactory metricsTrackerFactory)
    {
       if (metricRegistry != null) {
-         throw new IllegalStateException("setMetricsTrackerFactory() cannot used in combination with setMetricRegistry()");
+         throw new IllegalStateException("cannot use setMetricsTrackerFactory() and setMetricRegistry() together");
       }
 
       this.metricsTrackerFactory = metricsTrackerFactory;
@@ -476,7 +475,7 @@ public class HikariConfig implements HikariConfigMXBean
    public void setMetricRegistry(Object metricRegistry)
    {
       if (metricsTrackerFactory != null) {
-         throw new IllegalStateException("setMetricRegistry() cannot used in combination with setMetricsTrackerFactory()");
+         throw new IllegalStateException("cannot use setMetricRegistry() and setMetricsTrackerFactory() together");
       }
 
       if (metricRegistry != null) {
@@ -549,12 +548,12 @@ public class HikariConfig implements HikariConfigMXBean
       healthCheckProperties.setProperty(key, value);
    }
 
-   public Boolean isReadOnly()
+   public boolean isReadOnly()
    {
       return isReadOnly;
    }
 
-   public void setReadOnly(Boolean readOnly)
+   public void setReadOnly(boolean readOnly)
    {
       this.isReadOnly = readOnly;
    }
@@ -746,8 +745,6 @@ public class HikariConfig implements HikariConfigMXBean
 
    public void validate()
    {
-      Logger logger = LoggerFactory.getLogger(getClass());
-
       validateNumerics();
 
       if (poolName == null) {
@@ -759,22 +756,22 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       if (driverClassName != null && jdbcUrl == null) {
-         logger.error("jdbcUrl is required with driverClassName");
-         throw new IllegalStateException("jdbcUrl is required with driverClassName");
+         LOGGER.error("jdbcUrl is required with driverClassName");
+         throw new IllegalArgumentException("jdbcUrl is required with driverClassName");
       }
       else if (driverClassName != null && dataSourceClassName != null) {
-         logger.error("cannot use driverClassName and dataSourceClassName together");
-         throw new IllegalStateException("cannot use driverClassName and dataSourceClassName together");
+         LOGGER.error("cannot use driverClassName and dataSourceClassName together");
+         throw new IllegalArgumentException("cannot use driverClassName and dataSourceClassName together");
       }
       else if (jdbcUrl != null) {
          // OK
       }
       else if (dataSource == null && dataSourceClassName == null) {
-         logger.error("either dataSource or dataSourceClassName is required");
+         LOGGER.error("either dataSource or dataSourceClassName is required");
          throw new IllegalArgumentException("either dataSource or dataSourceClassName is required");
       }
       else if (dataSource != null && dataSourceClassName != null) {
-         logger.warn("using dataSource and ignoring dataSourceClassName");
+         LOGGER.warn("using dataSource and ignoring dataSourceClassName");
       }
 
       if (transactionIsolationName != null) {
@@ -788,8 +785,6 @@ public class HikariConfig implements HikariConfigMXBean
 
    private void validateNumerics()
    {
-      Logger logger = LoggerFactory.getLogger(getClass());
-
       if (validationTimeout > connectionTimeout && connectionTimeout != Integer.MAX_VALUE) {
          validationTimeout = connectionTimeout;
       }
@@ -799,32 +794,36 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       if (maxLifetime < 0) {
-         logger.error("maxLifetime cannot be negative.");
+         LOGGER.error("maxLifetime cannot be negative.");
          throw new IllegalArgumentException("maxLifetime cannot be negative.");
       }
       else if (maxLifetime > 0 && maxLifetime < TimeUnit.SECONDS.toMillis(30)) {
-         logger.warn("maxLifetime is less than 30000ms, setting to default {}ms.", MAX_LIFETIME);
+         LOGGER.warn("maxLifetime is less than 30000ms, setting to default {}ms.", MAX_LIFETIME);
          maxLifetime = MAX_LIFETIME;
       }
 
       if (idleTimeout != 0 && idleTimeout < TimeUnit.SECONDS.toMillis(10)) {
-         logger.warn("idleTimeout is less than 10000ms, setting to default {}ms.", IDLE_TIMEOUT);
+         LOGGER.warn("idleTimeout is less than 10000ms, setting to default {}ms.", IDLE_TIMEOUT);
          idleTimeout = IDLE_TIMEOUT;
       }
-      else if (idleTimeout > maxLifetime && maxLifetime > 0) {
-         logger.warn("idleTimeout is greater than maxLifetime, setting to maxLifetime.");
-         idleTimeout = maxLifetime;
+      if (idleTimeout + TimeUnit.SECONDS.toMillis(1) > maxLifetime && maxLifetime > 0) {
+         LOGGER.warn("idleTimeout is close to or greater than maxLifetime, disabling it.");
+         idleTimeout = 0;
+      }
+      if (maxLifetime == 0 && idleTimeout == 0) {
+         LOGGER.warn("setting idleTimeout to {}ms.", IDLE_TIMEOUT);
+         idleTimeout = IDLE_TIMEOUT;
       }
 
       if (leakDetectionThreshold != 0 && leakDetectionThreshold < TimeUnit.SECONDS.toMillis(2) && !unitTest) {
-         logger.warn("leakDetectionThreshold is less than 2000ms, setting to minimum 2000ms.");
+         LOGGER.warn("leakDetectionThreshold is less than 2000ms, setting to minimum 2000ms.");
          leakDetectionThreshold = 2000L;
       }
    }
 
    private void logConfiguration()
    {
-      LOGGER.debug("HikariCP pool {} configuration:", poolName);
+      LOGGER.debug("{} - configuration:", poolName);
       final Set<String> propertyNames = new TreeSet<>(PropertyElf.getPropertyNames(HikariConfig.class));
       for (String prop : propertyNames) {
          try {
@@ -845,8 +844,8 @@ public class HikariConfig implements HikariConfigMXBean
 
    protected void loadProperties(String propertyFileName)
    {
-      final Path propFile = Paths.get(propertyFileName);
-      try (final InputStream is = Files.isRegularFile(propFile) ? Files.newInputStream(propFile) : HikariConfig.class.getResourceAsStream(propertyFileName)) {
+      final File propFile = new File(propertyFileName);
+      try (final InputStream is = propFile.isFile() ? new FileInputStream(propFile) : this.getClass().getResourceAsStream(propertyFileName)) {
          if (is != null) {
             Properties props = new Properties();
             props.load(is);

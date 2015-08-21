@@ -49,8 +49,7 @@ public final class PoolBagEntry implements IConcurrentBagEntry
    public long lastAccess;
 
    public volatile long lastOpenTime;
-   public volatile boolean evicted;
-   public volatile boolean aborted;
+   public volatile boolean evict;
 
    public boolean isAutoCommit;
    int networkTimeout;
@@ -94,8 +93,8 @@ public final class PoolBagEntry implements IConcurrentBagEntry
                   pool.closeConnection(PoolBagEntry.this, "(connection reached maxLifetime)");
                }
                else {
-                  // else the connection is "in-use" and we mark it for eviction by pool.releaseConnection() or the housekeeper
-                  PoolBagEntry.this.evicted = true;
+                  // else the connection is "in-use" and we mark it for eviction by pool.releaseConnection()
+                  PoolBagEntry.this.evict = true;
                }
             }
          }, lifetime, TimeUnit.MILLISECONDS);
@@ -166,26 +165,36 @@ public final class PoolBagEntry implements IConcurrentBagEntry
 
    /** {@inheritDoc} */
    @Override
-   public AtomicInteger state()
+   public int getState()
    {
-      return state;
+      return state.get();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public boolean compareAndSet(int expect, int update)
+   {
+      return state.compareAndSet(expect, update);
    }
 
    /** {@inheritDoc} */
    @Override
    public String toString()
    {
-      return String.format("%s (created %s, last release %dms ago, %s)",
-                           connection, formatDateTime(creationTime), ClockSource.INSTANCE.elapsedMillis(lastAccess), stateToString());
+      return connection
+         + ", created " + formatDateTime(creationTime)
+         + ", last release " + ClockSource.INSTANCE.elapsedMillis(lastAccess) + "ms ago, "
+         + stateToString();
    }
 
-   void cancelMaxLifeTermination()
+   void close()
    {
       if (endOfLife != null && !endOfLife.isDone() && !endOfLife.cancel(false)) {
          LOGGER.warn("{} - maxLifeTime expiration task cancellation unexpectedly returned false for connection {}", parentPool.config.getPoolName(), connection);
       }
 
       endOfLife = null;
+      connection = null;
       parentPool.houseKeepingExecutorService.purge();
    }
 

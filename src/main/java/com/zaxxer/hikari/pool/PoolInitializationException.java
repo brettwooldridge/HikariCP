@@ -31,6 +31,6 @@ public class PoolInitializationException extends RuntimeException
     */
    public PoolInitializationException(Throwable t)
    {
-      super("Exception during pool initialization", t);
+      super("Exception during pool initialization: " + t.getMessage(), t);
    }
 }

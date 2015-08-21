@@ -228,7 +228,8 @@
                   <Bundle-Name>HikariCP</Bundle-Name>
                   <Export-Package>
                      com.zaxxer.hikari,
-                     com.zaxxer.hikari.hibernate
+                     com.zaxxer.hikari.hibernate,
+                     com.zaxxer.hikari.metrics
                   </Export-Package>
                   <Private-Package>com.zaxxer.hikari.*</Private-Package>
                   <_exportcontents>

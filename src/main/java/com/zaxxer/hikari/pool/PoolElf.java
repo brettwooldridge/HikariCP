@@ -45,7 +45,7 @@ public final class PoolElf
    private final HikariConfig config;
    private final String poolName;
    private final String catalog;
-   private final Boolean isReadOnly;
+   private final boolean isReadOnly;
    private final boolean isAutoCommit;
    private final boolean isUseJdbc4Validation;
    private final boolean isIsolateInternalQueries;
@@ -109,8 +109,22 @@ public final class PoolElf
    {
       if (transactionIsolationName != null) {
          try {
-            Field field = Connection.class.getField(transactionIsolationName);
-            return field.getInt(null);
+            final String upperName = transactionIsolationName.toUpperCase();
+            if (upperName.startsWith("TRANSACTION_")) {
+               Field field = Connection.class.getField(upperName);
+               return field.getInt(null);
+            }
+            final int level = Integer.parseInt(transactionIsolationName);
+            switch (level) {
+               case Connection.TRANSACTION_READ_UNCOMMITTED:
+               case Connection.TRANSACTION_READ_COMMITTED:
+               case Connection.TRANSACTION_REPEATABLE_READ:
+               case Connection.TRANSACTION_SERIALIZABLE:
+               case Connection.TRANSACTION_NONE:
+                  return level;
+               default:
+                  throw new IllegalArgumentException();
+             }
          }
          catch (Exception e) {
             throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
@@ -161,18 +175,17 @@ public final class PoolElf
    void setupConnection(final Connection connection, final long connectionTimeout) throws SQLException
    {
       if (isUseJdbc4Validation && !isJdbc4ValidationSupported(connection)) {
-         throw new SQLException("Connection.isValid() method is not supported, connection test query must be configured");
+         throw new SQLException("Connection.isValid() is not supported, configure connection test query.");
       }
 
       networkTimeout = getAndSetNetworkTimeout(connection, connectionTimeout);
-      transactionIsolation = (transactionIsolation < 0 ? connection.getTransactionIsolation() : transactionIsolation);
 
       connection.setAutoCommit(isAutoCommit);
-      if (isReadOnly != null) {
-         connection.setReadOnly(isReadOnly);
-      }
+      connection.setReadOnly(isReadOnly);
 
-      if (transactionIsolation != connection.getTransactionIsolation()) {
+      final int defaultLevel = connection.getTransactionIsolation();
+      transactionIsolation = (transactionIsolation < 0 ? defaultLevel : transactionIsolation);
+      if (transactionIsolation != defaultLevel) {
          connection.setTransactionIsolation(transactionIsolation);
       }
 
@@ -192,7 +205,7 @@ public final class PoolElf
     * @param lastConnectionFailure last connection failure
     * @return true if the connection is alive, false if it is not alive or we timed out
     */
-   boolean isConnectionAlive(final Connection connection, AtomicReference<Throwable> lastConnectionFailure)
+   boolean isConnectionAlive(final Connection connection, final AtomicReference<Throwable> lastConnectionFailure)
    {
       try {
          int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout);
@@ -202,12 +215,13 @@ public final class PoolElf
          }
    
          final int originalTimeout = getAndSetNetworkTimeout(connection, validationTimeout);
-   
+
          try (Statement statement = connection.createStatement()) {
-            setQueryTimeout(statement, timeoutSec);
-            if (statement.execute(config.getConnectionTestQuery())) {
-               statement.getResultSet().close();
+            if (isNetworkTimeoutSupported != TRUE) {
+               setQueryTimeout(statement, timeoutSec);
             }
+        	
+            statement.execute(config.getConnectionTestQuery());
          }
    
          if (isIsolateInternalQueries && !isAutoCommit) {
@@ -229,7 +243,7 @@ public final class PoolElf
    {
       int resetBits = 0;
 
-      if (isReadOnly != null && poolEntry.isReadOnly != isReadOnly) {
+      if (poolEntry.isReadOnly != isReadOnly) {
          poolEntry.connection.setReadOnly(isReadOnly);
          resetBits |= 0b00001;
       }
@@ -256,15 +270,13 @@ public final class PoolElf
       }
       
       if (LOGGER.isDebugEnabled()) {
-         LOGGER.debug("{} - Reset ({}) on connection {}", resetBits != 0 ? stringFromResetBits(resetBits) : "nothing", poolEntry.connection);
+         LOGGER.debug("{} - Reset ({}) on connection {}", poolName, resetBits != 0 ? stringFromResetBits(resetBits) : "nothing", poolEntry.connection);
       }
    }
 
    void resetPoolEntry(final PoolBagEntry poolEntry)
    {
-      if (isReadOnly != null) {
-         poolEntry.setReadOnly(isReadOnly);
-      }
+      poolEntry.setReadOnly(isReadOnly);
       poolEntry.setCatalog(catalog);
       poolEntry.setAutoCommit(isAutoCommit);
       poolEntry.setNetworkTimeout(networkTimeout);
@@ -438,9 +450,7 @@ public final class PoolElf
    {
       if (sql != null) {
          try (Statement statement = connection.createStatement()) {
-            if (statement.execute(sql)) {
-               statement.getResultSet().close();
-            }
+            statement.execute(sql);
 
             if (!isAutoCommit) {
                connection.commit();
