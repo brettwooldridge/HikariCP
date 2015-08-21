@@ -157,7 +157,7 @@ public interface HikariConfigMXBean
     * Altering this at runtime only works for DataSource-based connections, not Driver-class or JDBC URL-based
     * connections.
     *
-    * @param username the database password
+    * @param password the database password
     */
    void setPassword(String password);
 
