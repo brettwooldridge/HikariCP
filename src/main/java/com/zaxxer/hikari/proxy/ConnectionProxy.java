@@ -177,9 +177,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       if (delegate != ClosedConnection.CLOSED_CONNECTION) {
          leakTask.cancel();
-         closeStatements();
 
          try {
+            closeStatements();
             if (isCommitStateDirty) {
                if (!poolEntry.isAutoCommit) {
                   delegate.rollback();
