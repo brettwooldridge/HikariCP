@@ -110,7 +110,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          if (isForceClose) {
             poolEntry.evict = true;
             LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
-                        poolEntry.parentPool, poolEntry, sqlState, sqle.getErrorCode(), sqle);
+                        poolEntry.parentPool, poolEntry.connection, sqlState, sqle.getErrorCode(), sqle);
          }
          else {
             SQLException nse = sqle.getNextException();
