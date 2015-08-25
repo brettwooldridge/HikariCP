@@ -120,7 +120,6 @@ public final class PoolBagEntry implements IConcurrentBagEntry
    public void resetConnectionState() throws SQLException
    {
       poolElf.resetConnectionState(this);
-      poolElf.resetPoolEntry(this);
    }
 
    /**
