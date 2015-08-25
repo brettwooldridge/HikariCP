@@ -112,7 +112,6 @@ public final class PoolBagEntry implements IConcurrentBagEntry
       parentPool.releaseConnection(this);
    }
 
-
    /**
     * Reset the connection to its original state.
     * @throws SQLException thrown if there is an error resetting the connection state
@@ -120,7 +119,6 @@ public final class PoolBagEntry implements IConcurrentBagEntry
    public void resetConnectionState() throws SQLException
    {
       poolElf.resetConnectionState(this);
-      poolElf.resetPoolEntry(this);
    }
 
    /**

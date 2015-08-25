@@ -245,27 +245,32 @@ public final class PoolElf
 
       if (poolEntry.isReadOnly != isReadOnly) {
          poolEntry.connection.setReadOnly(isReadOnly);
+         poolEntry.setReadOnly(isReadOnly);
          resetBits |= 0b00001;
       }
 
       if (poolEntry.isAutoCommit != isAutoCommit) {
          poolEntry.connection.setAutoCommit(isAutoCommit);
+         poolEntry.setAutoCommit(isAutoCommit);
          resetBits |= 0b00010;
       }
 
       if (poolEntry.transactionIsolation != transactionIsolation) {
          poolEntry.connection.setTransactionIsolation(transactionIsolation);
+         poolEntry.setTransactionIsolation(transactionIsolation);
          resetBits |= 0b00100;
       }
 
       final String currentCatalog = poolEntry.catalog;
       if ((currentCatalog != null && !currentCatalog.equals(catalog)) || (currentCatalog == null && catalog != null)) {
          poolEntry.connection.setCatalog(catalog);
+         poolEntry.setCatalog(catalog);
          resetBits |= 0b01000;
       }
 
       if (poolEntry.networkTimeout != networkTimeout) {
          setNetworkTimeout(poolEntry.connection, networkTimeout);
+         poolEntry.setNetworkTimeout(networkTimeout);
          resetBits |= 0b10000;
       }
       
