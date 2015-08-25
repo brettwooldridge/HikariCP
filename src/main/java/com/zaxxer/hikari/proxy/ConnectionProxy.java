@@ -50,7 +50,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    private final LeakTask leakTask;
    private final PoolBagEntry poolEntry;
-   private final FastList<Statement> openStatements;
+   private final FastList<Statement> statements;
    
    private long lastAccess;
    private boolean isCommitStateDirty;
@@ -76,7 +76,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       this.lastAccess = now;
 
       this.delegate = bagEntry.connection;
-      this.openStatements = bagEntry.openStatements;
+      this.statements = bagEntry.openStatements;
    }
 
    /** {@inheritDoc} */
@@ -126,7 +126,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    @Override
    public final void untrackStatement(final Statement statement)
    {
-      openStatements.remove(statement);
+      statements.remove(statement);
    }
 
    /** {@inheritDoc} */
@@ -142,18 +142,18 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    private final <T extends Statement> T trackStatement(final T statement)
    {
-      openStatements.add(statement);
+      statements.add(statement);
 
       return statement;
    }
 
-   private final void closeOpenStatements()
+   private final void closeStatements()
    {
-      final int size = openStatements.size();
+      final int size = statements.size();
       if (size > 0) {
          for (int i = 0; i < size; i++) {
             try {
-               final Statement statement = openStatements.get(i);
+               final Statement statement = statements.get(i);
                if (statement != null) {
                   statement.close();
                }
@@ -163,7 +163,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             }
          }
 
-         openStatements.clear();
+         statements.clear();
       }
    }
 
@@ -177,14 +177,13 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       if (delegate != ClosedConnection.CLOSED_CONNECTION) {
          leakTask.cancel();
+         closeStatements();
 
          try {
-            closeOpenStatements();
             if (isCommitStateDirty) {
-               lastAccess = clockSource.currentTime();
-
                if (!poolEntry.isAutoCommit) {
                   delegate.rollback();
+                  lastAccess = clockSource.currentTime();
                   LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.parentPool, delegate);
                }
             }
