@@ -270,6 +270,7 @@ public final class PoolElf
 
       if (poolEntry.networkTimeout != networkTimeout) {
          setNetworkTimeout(poolEntry.connection, networkTimeout);
+         poolEntry.setNetworkTimeout(networkTimeout);
          resetBits |= 0b10000;
       }
       
