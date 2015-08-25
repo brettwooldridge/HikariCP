@@ -133,7 +133,12 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    @Override
    public final void markCommitStateDirty()
    {
-      isCommitStateDirty = true;
+      if (poolEntry.isAutoCommit) {
+         lastAccess = clockSource.currentTime();         
+      }
+      else {
+         isCommitStateDirty = true;
+      }
    }
 
    // ***********************************************************************
@@ -180,12 +185,10 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
          try {
             closeStatements();
-            if (isCommitStateDirty) {
-               if (!poolEntry.isAutoCommit) {
-                  delegate.rollback();
-                  lastAccess = clockSource.currentTime();
-                  LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.parentPool, delegate);
-               }
+            if (isCommitStateDirty && !poolEntry.isAutoCommit) {
+               delegate.rollback();
+               lastAccess = clockSource.currentTime();
+               LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.parentPool, delegate);
             }
 
             if (isConnectionStateDirty) {
