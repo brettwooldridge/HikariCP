@@ -186,8 +186,14 @@ public final class PoolElf
       if (transactionIsolation == -1) {
          transactionIsolation = connection.getTransactionIsolation();
       }
-      else if (transactionIsolation != Connection.TRANSACTION_NONE) {
-         connection.setTransactionIsolation(transactionIsolation);
+      else {
+         int defaultTILevel = connection.getTransactionIsolation();
+         if (transactionIsolation != defaultTILevel) {
+            transactionIsolation = defaultTILevel;
+         }
+         if (transactionIsolation != Connection.TRANSACTION_NONE) {
+            connection.setTransactionIsolation(transactionIsolation);
+         }
       }
 
       if (catalog != null) {
