@@ -184,7 +184,9 @@ public final class PoolElf
       connection.setReadOnly(isReadOnly);
 
       final int defaultLevel = connection.getTransactionIsolation();
-      transactionIsolation = (transactionIsolation < 0 ? defaultLevel : transactionIsolation);
+      transactionIsolation = (transactionIsolation < 0 || defaultLevel == Connection.TRANSACTION_NONE)
+                           ? defaultLevel
+                           : transactionIsolation;
       if (transactionIsolation != defaultLevel) {
          connection.setTransactionIsolation(transactionIsolation);
       }
