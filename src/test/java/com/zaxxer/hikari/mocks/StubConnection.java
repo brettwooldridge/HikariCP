@@ -50,7 +50,7 @@ public class StubConnection extends StubBaseConnection implements Connection
 
    private static long foo;
    private boolean autoCommit;
-   private int isolation;
+   private int isolation = Connection.TRANSACTION_READ_COMMITTED;
    private String catalog;
 
    static {
