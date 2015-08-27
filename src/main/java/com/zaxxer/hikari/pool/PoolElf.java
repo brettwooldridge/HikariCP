@@ -183,17 +183,12 @@ public final class PoolElf
       connection.setAutoCommit(isAutoCommit);
       connection.setReadOnly(isReadOnly);
 
-      if (transactionIsolation == -1) {
-         transactionIsolation = connection.getTransactionIsolation();
-      }
-      else {
-         int defaultTILevel = connection.getTransactionIsolation();
-         if (transactionIsolation != defaultTILevel) {
-            transactionIsolation = defaultTILevel;
-         }
-         if (transactionIsolation != Connection.TRANSACTION_NONE) {
-            connection.setTransactionIsolation(transactionIsolation);
-         }
+      final int defaultLevel = connection.getTransactionIsolation();
+      transactionIsolation = (transactionIsolation < 0 || defaultLevel == Connection.TRANSACTION_NONE)
+                           ? defaultLevel
+                           : transactionIsolation;
+      if (transactionIsolation != defaultLevel) {
+         connection.setTransactionIsolation(transactionIsolation);
       }
 
       if (catalog != null) {
