@@ -42,7 +42,7 @@ public abstract class PoolStats
       this.clock = ClockSource.INSTANCE;
    }
    
-   protected int getTotalConnections()
+   public int getTotalConnections()
    {
       if (shouldLoad()) {
          update();
@@ -51,7 +51,7 @@ public abstract class PoolStats
       return totalConnections;
    }
 
-   protected int getIdleConnections()
+   public int getIdleConnections()
    {
       if (shouldLoad()) {
          update();
@@ -60,7 +60,7 @@ public abstract class PoolStats
       return idleConnections;
    }
 
-   protected int getActiveConnections()
+   public int getActiveConnections()
    {
       if (shouldLoad()) {
          update();
@@ -69,7 +69,7 @@ public abstract class PoolStats
       return activeConnections;
    }
 
-   protected int getPendingThreads()
+   public int getPendingThreads()
    {
       if (shouldLoad()) {
          update();
