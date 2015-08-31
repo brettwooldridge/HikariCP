@@ -494,9 +494,9 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          String password = config.getPassword();
 
          connection = (username == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
-         poolElf.setupConnection(connection, connectionTimeout);
+         PoolBagEntry pbe = poolElf.createBagEntry(connection, connectionTimeout, this);
 
-         connectionBag.add(new PoolBagEntry(connection, this));
+         connectionBag.add(pbe);
          lastConnectionFailure.set(null);
          LOGGER.debug("{} - Added connection {}", poolName, connection);
 

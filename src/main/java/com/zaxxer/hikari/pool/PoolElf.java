@@ -171,8 +171,9 @@ public final class PoolElf
     * @param connection a Connection
     * @param connectionTimeout the connection timeout
     * @throws SQLException thrown from driver
+    * @return PoolBagEntry
     */
-   void setupConnection(final Connection connection, final long connectionTimeout) throws SQLException
+   PoolBagEntry createBagEntry(final Connection connection, final long connectionTimeout, HikariPool pool) throws SQLException
    {
       if (isUseJdbc4Validation && !isJdbc4ValidationSupported(connection)) {
          throw new SQLException("Connection.isValid() is not supported, configure connection test query.");
@@ -198,6 +199,8 @@ public final class PoolElf
       executeSql(connection, config.getConnectionInitSql(), isAutoCommit);
 
       setNetworkTimeout(connection, networkTimeout);
+      
+      return new PoolBagEntry(connection, pool, isReadOnly, catalog, isAutoCommit, networkTimeout, transactionIsolation);
    }
 
    /**
@@ -279,15 +282,6 @@ public final class PoolElf
       if (LOGGER.isDebugEnabled()) {
          LOGGER.debug("{} - Reset ({}) on connection {}", poolName, resetBits != 0 ? stringFromResetBits(resetBits) : "nothing", poolEntry.connection);
       }
-   }
-
-   void resetPoolEntry(final PoolBagEntry poolEntry)
-   {
-      poolEntry.setReadOnly(isReadOnly);
-      poolEntry.setCatalog(catalog);
-      poolEntry.setAutoCommit(isAutoCommit);
-      poolEntry.setNetworkTimeout(networkTimeout);
-      poolEntry.setTransactionIsolation(transactionIsolation);
    }
 
    void setValidationTimeout(final long validationTimeout)
