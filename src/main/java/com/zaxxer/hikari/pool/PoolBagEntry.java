@@ -68,17 +68,21 @@ public final class PoolBagEntry implements IConcurrentBagEntry
       DATE_FORMAT = new SimpleDateFormat("MMM dd, HH:mm:ss.SSS");
    }
 
-   public PoolBagEntry(final Connection connection, final HikariPool pool)
+   public PoolBagEntry(final Connection connection, final HikariPool pool, final boolean isReadOnly, final String catalog, final boolean isAutoCommit, final int networkTimeout, final int transactionIsolation)
    {
       this.connection = connection;
       this.parentPool = pool;
+      this.isReadOnly = isReadOnly;
+      this.catalog = catalog;
+      this.isAutoCommit = isAutoCommit;
+      this.networkTimeout = networkTimeout;
+      this.transactionIsolation = transactionIsolation;
+
       this.creationTime = System.currentTimeMillis();
       this.poolElf = pool.poolElf;
       this.state = new AtomicInteger(STATE_NOT_IN_USE);
       this.lastAccess = ClockSource.INSTANCE.currentTime();
       this.openStatements = new FastList<>(Statement.class, 16);
-
-      poolElf.resetPoolEntry(this);
 
       final long maxLifetime = pool.config.getMaxLifetime();
       final long variance = maxLifetime > 60_000 ? ThreadLocalRandom.current().nextLong(10_000) : 0;
