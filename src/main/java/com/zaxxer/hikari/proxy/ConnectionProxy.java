@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.pool.LeakTask;
-import com.zaxxer.hikari.pool.PoolBagEntry;
+import com.zaxxer.hikari.pool.PoolEntry;
 import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.FastList;
 
@@ -40,7 +40,7 @@ import com.zaxxer.hikari.util.FastList;
  *
  * @author Brett Wooldridge
  */
-public abstract class ConnectionProxy implements IHikariConnectionProxy
+public abstract class ConnectionProxy implements IHikariConnectionProxy, ConnectionState
 {
    private static final Logger LOGGER;
    private static final Set<String> SQL_ERRORS;
@@ -49,12 +49,18 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    protected Connection delegate;
 
    private final LeakTask leakTask;
-   private final PoolBagEntry poolEntry;
-   private final FastList<Statement> statements;
+   private final PoolEntry poolEntry;
+   private final FastList<Statement> openStatements;
    
+   private int dirtyBits;
    private long lastAccess;
    private boolean isCommitStateDirty;
-   private boolean isConnectionStateDirty;
+
+   public boolean isAutoCommit;
+   public int networkTimeout;
+   public int transactionIsolation;
+   public String dbcatalog;
+   public boolean isReadOnly;
 
    // static initializer
    static {
@@ -70,13 +76,12 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       SQL_ERRORS.add("JZ0C1"); // Sybase disconnect error
    }
 
-   protected ConnectionProxy(final PoolBagEntry bagEntry, final LeakTask leakTask, final long now) {
-      this.poolEntry = bagEntry;
+   protected ConnectionProxy(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final LeakTask leakTask, final long now) {
+      this.poolEntry = poolEntry;
+      this.delegate = connection;
+      this.openStatements = openStatements;
       this.leakTask = leakTask;
       this.lastAccess = now;
-
-      this.delegate = bagEntry.connection;
-      this.statements = bagEntry.openStatements;
    }
 
    /** {@inheritDoc} */
@@ -89,13 +94,41 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          .append(delegate).toString();
    }
 
+   /** {@inheritDoc} */
+   @Override
+   public final boolean getAutoCommitState()
+   {
+      return isAutoCommit;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public final String getCatalogState()
+   {
+      return dbcatalog;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public final int getTransactionIsolationState()
+   {
+      return transactionIsolation;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public final boolean getReadOnlyState()
+   {
+      return isReadOnly;
+   }
+
    // ***********************************************************************
    //                      IHikariConnectionProxy methods
    // ***********************************************************************
 
    /** {@inheritDoc} */
    @Override
-   public final PoolBagEntry getPoolBagEntry()
+   public final PoolEntry getPoolEntry()
    {
       return poolEntry;
    }
@@ -108,9 +141,9 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       if (sqlState != null) {
          boolean isForceClose = sqlState.startsWith("08") || SQL_ERRORS.contains(sqlState);
          if (isForceClose) {
-            poolEntry.evict = true;
+            poolEntry.evict();
             LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
-                        poolEntry.parentPool, poolEntry.connection, sqlState, sqle.getErrorCode(), sqle);
+                        poolEntry.getPoolName(), delegate, sqlState, sqle.getErrorCode(), sqle);
          }
          else {
             SQLException nse = sqle.getNextException();
@@ -126,14 +159,14 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    @Override
    public final void untrackStatement(final Statement statement)
    {
-      statements.remove(statement);
+      openStatements.remove(statement);
    }
 
    /** {@inheritDoc} */
    @Override
    public final void markCommitStateDirty()
    {
-      if (poolEntry.isAutoCommit) {
+      if (isAutoCommit) {
          lastAccess = clockSource.currentTime();         
       }
       else {
@@ -147,18 +180,18 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
    private final <T extends Statement> T trackStatement(final T statement)
    {
-      statements.add(statement);
+      openStatements.add(statement);
 
       return statement;
    }
 
    private final void closeStatements()
    {
-      final int size = statements.size();
+      final int size = openStatements.size();
       if (size > 0) {
          for (int i = 0; i < size; i++) {
             try {
-               final Statement statement = statements.get(i);
+               final Statement statement = openStatements.get(i);
                if (statement != null) {
                   statement.close();
                }
@@ -168,7 +201,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
             }
          }
 
-         statements.clear();
+         openStatements.clear();
       }
    }
 
@@ -185,14 +218,14 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
 
          try {
             closeStatements();
-            if (isCommitStateDirty && !poolEntry.isAutoCommit) {
+            if (isCommitStateDirty && !isAutoCommit) {
                delegate.rollback();
                lastAccess = clockSource.currentTime();
-               LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.parentPool, delegate);
+               LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.getPoolName(), delegate);
             }
 
-            if (isConnectionStateDirty) {
-               poolEntry.resetConnectionState();
+            if (dirtyBits != 0) {
+               poolEntry.resetConnectionState(this, dirtyBits);
                lastAccess = clockSource.currentTime();
             }
 
@@ -200,13 +233,13 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          }
          catch (SQLException e) {
             // when connections are aborted, exceptions are often thrown that should not reach the application
-            if (!poolEntry.evict) {
+            if (!poolEntry.isEvicted()) {
                throw checkException(e);
             }
          }
          finally {
             delegate = ClosedConnection.CLOSED_CONNECTION;
-            poolEntry.releaseConnection(lastAccess);
+            poolEntry.returnPoolEntry(lastAccess);
          }
       }
    }
@@ -334,8 +367,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    public void setAutoCommit(boolean autoCommit) throws SQLException
    {
       delegate.setAutoCommit(autoCommit);
-      poolEntry.setAutoCommit(autoCommit);
-      isConnectionStateDirty = true;
+      isAutoCommit = autoCommit;
+      dirtyBits |= 0b00010;
    }
 
    /** {@inheritDoc} */
@@ -343,8 +376,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    public void setReadOnly(boolean readOnly) throws SQLException
    {
       delegate.setReadOnly(readOnly);
-      poolEntry.setReadOnly(readOnly);
-      isConnectionStateDirty = true;
+      isReadOnly = readOnly;
+      dirtyBits |= 0b00001;
    }
 
    /** {@inheritDoc} */
@@ -352,8 +385,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    public void setTransactionIsolation(int level) throws SQLException
    {
       delegate.setTransactionIsolation(level);
-      poolEntry.setTransactionIsolation(level);
-      isConnectionStateDirty = true;
+      transactionIsolation = level;
+      dirtyBits |= 0b00100;
    }
 
    /** {@inheritDoc} */
@@ -361,8 +394,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    public void setCatalog(String catalog) throws SQLException
    {
       delegate.setCatalog(catalog);
-      poolEntry.setCatalog(catalog);
-      isConnectionStateDirty = true;
+      dbcatalog = catalog;
+      dirtyBits |= 0b01000;
    }
 
    /** {@inheritDoc} */
@@ -370,8 +403,8 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException
    {
       delegate.setNetworkTimeout(executor, milliseconds);
-      poolEntry.setNetworkTimeout(milliseconds);
-      isConnectionStateDirty = true;
+      networkTimeout = milliseconds;
+      dirtyBits |= 0b10000;
    }
 
    /** {@inheritDoc} */

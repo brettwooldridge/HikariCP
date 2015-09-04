@@ -28,8 +28,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zaxxer.hikari.pool.HikariPool;
-import com.zaxxer.hikari.pool.PoolBagEntry;
+import com.zaxxer.hikari.pool.Mediator;
+import com.zaxxer.hikari.pool.PoolEntry;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 
@@ -40,6 +40,7 @@ import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 public class TestConcurrentBag
 {
    private static HikariDataSource ds;
+   private static Mediator mediator;
 
    @BeforeClass
    public static void setup()
@@ -52,6 +53,7 @@ public class TestConcurrentBag
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       ds = new HikariDataSource(config);      
+      mediator = new Mediator(TestElf.getPool(ds));
    }
 
    @AfterClass
@@ -61,9 +63,9 @@ public class TestConcurrentBag
    }
 
    @Test
-   public void testConcurrentBag() throws InterruptedException
+   public void testConcurrentBag() throws Exception
    {
-      ConcurrentBag<PoolBagEntry> bag = new ConcurrentBag<PoolBagEntry>(new IBagStateListener() {
+      ConcurrentBag<PoolEntry> bag = new ConcurrentBag<PoolEntry>(new IBagStateListener() {
          @Override
          public Future<Boolean> addBagItem()
          {
@@ -102,16 +104,15 @@ public class TestConcurrentBag
       });
       Assert.assertEquals(0, bag.values(8).size());
 
-      HikariPool pool = TestElf.getPool(ds);
-      PoolBagEntry reserved = new PoolBagEntry(null, TestElf.getPool(ds));
+      PoolEntry reserved = mediator.newPoolEntry();
       bag.add(reserved);
       bag.reserve(reserved);      // reserved
 
-      PoolBagEntry inuse = new PoolBagEntry(null, pool);
+      PoolEntry inuse = mediator.newPoolEntry();
       bag.add(inuse);
       bag.borrow(2, TimeUnit.MILLISECONDS); // in use
       
-      PoolBagEntry notinuse = new PoolBagEntry(null, pool);
+      PoolEntry notinuse = mediator.newPoolEntry();
       bag.add(notinuse); // not in use
 
       bag.dumpState();
@@ -135,7 +136,7 @@ public class TestConcurrentBag
 
       bag.close();
       try {
-         PoolBagEntry bagEntry = new PoolBagEntry(null, pool);
+         PoolEntry bagEntry = mediator.newPoolEntry();
          bag.add(bagEntry);
          Assert.assertNotEquals(bagEntry, bag.borrow(100, TimeUnit.MILLISECONDS));
       }

@@ -8,7 +8,7 @@ import java.sql.Statement;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.zaxxer.hikari.pool.PoolElf;
+import com.zaxxer.hikari.pool.Mediator;
 
 public class ConnectionStateTest
 {
@@ -70,7 +70,7 @@ public class ConnectionStateTest
       config.setTransactionIsolation("TRANSACTION_REPEATABLE_READ");
       config.validate();
 
-      int transactionIsolation = PoolElf.getTransactionIsolation(config.getTransactionIsolation());
+      int transactionIsolation = Mediator.getTransactionIsolation(config.getTransactionIsolation());
       Assert.assertSame(Connection.TRANSACTION_REPEATABLE_READ, transactionIsolation);
    }
 

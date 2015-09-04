@@ -20,7 +20,7 @@ import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.zaxxer.hikari.pool.PoolBagEntry;
+import com.zaxxer.hikari.pool.PoolEntry;
 import com.zaxxer.hikari.util.ClockSource;
 
 public final class CodaHaleMetricsTracker extends MetricsTracker
@@ -93,7 +93,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
 
    /** {@inheritDoc} */
    @Override
-   public void recordConnectionUsage(final PoolBagEntry bagEntry)
+   public void recordConnectionUsage(final PoolEntry bagEntry)
    {
       connectionUsage.update(clockSource.elapsedMillis(bagEntry.lastOpenTime));
    }
@@ -125,7 +125,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
 
       /** {@inheritDoc} */
       @Override
-      public void setConnectionLastOpen(final PoolBagEntry bagEntry, final long now)
+      public void setConnectionLastOpen(final PoolEntry bagEntry, final long now)
       {
          bagEntry.lastOpenTime = now;
       }

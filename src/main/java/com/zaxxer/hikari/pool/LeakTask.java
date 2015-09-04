@@ -54,10 +54,10 @@ public class LeakTask implements Runnable
       this.leakDetectionThreshold = leakDetectionThreshold;
    }
 
-   private LeakTask(final LeakTask parent, final PoolBagEntry bagEntry)
+   private LeakTask(final LeakTask parent, final PoolEntry poolEntry)
    {
       this.exception = new Exception("Apparent connection leak detected");
-      this.connectionName = bagEntry.connection.toString();
+      this.connectionName = poolEntry.connection.toString();
       scheduledFuture = parent.executorService.schedule(this, parent.leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
@@ -65,7 +65,7 @@ public class LeakTask implements Runnable
    {
    }
    
-   LeakTask start(final PoolBagEntry bagEntry)
+   LeakTask start(final PoolEntry bagEntry)
    {
       return (leakDetectionThreshold == 0) ? NO_LEAK : new LeakTask(this, bagEntry);
    }

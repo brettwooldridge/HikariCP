@@ -16,7 +16,7 @@
 
 package com.zaxxer.hikari.metrics;
 
-import com.zaxxer.hikari.pool.PoolBagEntry;
+import com.zaxxer.hikari.pool.PoolEntry;
 import com.zaxxer.hikari.util.ClockSource;
 
 /**
@@ -37,7 +37,7 @@ public class MetricsTracker implements AutoCloseable
       return NO_CONTEXT;
    }
 
-   public void recordConnectionUsage(final PoolBagEntry bagEntry)
+   public void recordConnectionUsage(final PoolEntry bagEntry)
    {
    }
 
@@ -66,7 +66,7 @@ public class MetricsTracker implements AutoCloseable
        * @param bagEntry the bag entry
        * @param now the last open timestamp from {@link ClockSource#currentTime()}
        */
-      public void setConnectionLastOpen(final PoolBagEntry bagEntry, final long now)
+      public void setConnectionLastOpen(final PoolEntry bagEntry, final long now)
       {
          // do nothing
       }
