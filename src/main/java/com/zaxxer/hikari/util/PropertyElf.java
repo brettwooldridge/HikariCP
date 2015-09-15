@@ -16,13 +16,11 @@
 
 package com.zaxxer.hikari.util;
 
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -75,19 +73,23 @@ public final class PropertyElf
    public static Set<String> getPropertyNames(Class<?> targetClass)
    {
       HashSet<String> set = new HashSet<>();
-      try {
-         BeanInfo info = Introspector.getBeanInfo(targetClass);
-         for (PropertyDescriptor descr : info.getPropertyDescriptors()) {
-            if (!"class".equals(descr.getName())) {
-               set.add(descr.getName());
+      for (Method method : targetClass.getMethods()) {
+         String name = method.getName();
+         if (name.matches("(get|is)[A-Z].+") && method.getParameterCount() == 0) {
+            name = name.replaceFirst("(get|is)", "");
+            try {
+               if (targetClass.getMethod("set" + name, method.getReturnType()) != null) {
+                  name = Character.toLowerCase(name.charAt(0)) + name.substring(1);
+                  set.add(name);
+               }
+            }
+            catch (Exception e) {
+               continue;
             }
          }
+      }
 
-         return set;
-      }
-      catch (IntrospectionException e) {
-         throw new RuntimeException(e);
-      }
+      return set;
    }
 
    public static Object getProperty(String propName, Object target)
@@ -118,32 +120,35 @@ public final class PropertyElf
       return copy;
    }
 
-   public static void flushCaches()
-   {
-      // prevent classloader leaks
-      Introspector.flushCaches();
-   }
-
    private static void setProperty(Object target, String propName, Object propValue)
    {
-      String capitalized = "set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
-      PropertyDescriptor propertyDescriptor;
-      try {
-         propertyDescriptor = new PropertyDescriptor(propName, target.getClass(), null, capitalized);
-      }
-      catch (IntrospectionException e) {
-         capitalized = "set" + propName.toUpperCase();
-         try {
-            propertyDescriptor = new PropertyDescriptor(propName, target.getClass(), null, capitalized);
-         }
-         catch (IntrospectionException e1) {
-            LOGGER.error("Property {} does not exist on target {}", propName, target.getClass());
-            throw new RuntimeException(e);
+      Method writeMethod = null;
+      String methodName = "set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+
+      List<Method> methods = Arrays.asList(target.getClass().getMethods());
+      for (Method method : methods) {
+         if (method.getName().equals(methodName) && method.getParameterCount() == 1) {
+            writeMethod = method;
+            break;
          }
       }
 
+      if (writeMethod == null) {
+         methodName = "set" + propName.toUpperCase();
+         for (Method method : methods) {
+            if (method.getName().equals(methodName) && method.getParameterCount() == 1) {
+               writeMethod = method;
+               break;
+            }
+         }            
+      }
+
+      if (writeMethod == null) {
+         LOGGER.error("Property {} does not exist on target {}", propName, target.getClass());
+         throw new RuntimeException(String.format("Property %s does not exist on target %s", propName, target.getClass()));
+      }
+
       try {
-         Method writeMethod = propertyDescriptor.getWriteMethod();
          Class<?> paramClass = writeMethod.getParameterTypes()[0];
          if (paramClass == int.class) {
             writeMethod.invoke(target, Integer.parseInt(propValue.toString()));
