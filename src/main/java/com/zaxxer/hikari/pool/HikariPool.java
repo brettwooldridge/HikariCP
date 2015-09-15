@@ -137,7 +137,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       this.houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), HOUSEKEEPING_PERIOD_MS, HOUSEKEEPING_PERIOD_MS, TimeUnit.MILLISECONDS);
 
       this.leakTask = new LeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
-      
+
       if (config.getMetricsTrackerFactory() != null) {
          setMetricsTrackerFactory(config.getMetricsTrackerFactory());
       }
@@ -148,8 +148,6 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       setHealthCheckRegistry(config.getHealthCheckRegistry());
 
       poolMediator.registerMBeans();
-
-      PropertyElf.flushCaches();
 
       initializeConnections();
    }
@@ -338,7 +336,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
    /**
     * Log the current pool state at debug level.
     *
-    * @param prefix an optional prefix to prepend the log message 
+    * @param prefix an optional prefix to prepend the log message
     */
    public final void logPoolState(String... prefix)
    {
@@ -466,7 +464,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          if (tc < 0) {
             LOGGER.warn("{} - Internal accounting inconsistency, totalConnections={}", poolName, tc, new Exception());
          }
-         
+
          closeConnectionExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -506,7 +504,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
                }
             }, lifetime, TimeUnit.MILLISECONDS));
          }
-         
+
          LOGGER.debug("{} - Added connection {}", poolName, poolEntry.connection);
          return true;
       }
@@ -560,7 +558,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          }
       }
    }
-   
+
    /**
     * Fill the pool up to the minimum size.
     */
