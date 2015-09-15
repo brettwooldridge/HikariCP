@@ -127,7 +127,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @Override
    public void setLoginTimeout(int seconds) throws SQLException
    {
-      if (pool.getDataSource() != null) {
+      if (pool != null) {
          pool.getDataSource().setLoginTimeout(seconds);
       }
    }
@@ -136,7 +136,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @Override
    public int getLoginTimeout() throws SQLException
    {
-      return (pool.getDataSource() != null ? pool.getDataSource().getLoginTimeout() : 0);
+      return (pool != null ? pool.getDataSource().getLoginTimeout() : 0);
    }
 
    /** {@inheritDoc} */
