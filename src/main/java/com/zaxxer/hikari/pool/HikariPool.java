@@ -59,7 +59,6 @@ import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
-import com.zaxxer.hikari.util.PropertyElf;
 
 /**
  * This is the primary connection pool class that provides the basic
