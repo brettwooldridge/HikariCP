@@ -157,6 +157,13 @@ public final class PoolEntry implements IConcurrentBagEntry
 
    /** {@inheritDoc} */
    @Override
+   public void lazySet(int update)
+   {
+      state.lazySet(update);
+   }
+
+   /** {@inheritDoc} */
+   @Override
    public String toString()
    {
       return connection

@@ -72,7 +72,8 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       int STATE_REMOVED = -1;
       int STATE_RESERVED = -2;
 
-      boolean compareAndSet(int from, int to);
+      boolean compareAndSet(int expectState, int newState);
+      void lazySet(int newState);
       int getState();
    }
 
@@ -173,17 +174,14 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    @SuppressWarnings("unchecked")
    public void requite(final T bagEntry)
    {
-      if (bagEntry.compareAndSet(STATE_IN_USE, STATE_NOT_IN_USE)) {
-         final List threadLocalList = threadList.get();
-         if (threadLocalList != null) {
-            threadLocalList.add((weakThreadLocals ? new WeakReference<>(bagEntry) : bagEntry));
-         }
+      bagEntry.lazySet(STATE_NOT_IN_USE);
 
-         synchronizer.signal();
+      final List threadLocalList = threadList.get();
+      if (threadLocalList != null) {
+         threadLocalList.add((weakThreadLocals ? new WeakReference<>(bagEntry) : bagEntry));
       }
-      else {
-         LOGGER.warn("Attempt to remove an object from the bag that does not exist: {}", bagEntry);
-      }
+
+      synchronizer.signal();
    }
 
    /**
