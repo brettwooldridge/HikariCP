@@ -142,8 +142,4 @@ public final class DriverDataSource implements DataSource
    {
       return false;
    }
-
-   public void shutdown()
-   {
-   }
 }

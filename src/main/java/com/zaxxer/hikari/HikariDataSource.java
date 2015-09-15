@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
-import com.zaxxer.hikari.util.DriverDataSource;
 
 /**
  * The HikariCP pooled DataSource.
@@ -290,10 +289,6 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
          }
          catch (InterruptedException e) {
         	 LOGGER.warn("Interrupted during closing", e);
-         }
-
-         if (pool.getDataSource() instanceof DriverDataSource) {
-            ((DriverDataSource) pool.getDataSource()).shutdown();
          }
       }
    }

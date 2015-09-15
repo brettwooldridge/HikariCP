@@ -28,7 +28,7 @@ import org.junit.Test;
 
 import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.pool.HikariPool;
-import com.zaxxer.hikari.pool.PoolElf;
+import com.zaxxer.hikari.pool.Mediator;
 import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.UtilityElf;
 
@@ -292,7 +292,7 @@ public class ShutdownTest
                   Assert.fail(e.getMessage());
                }
                finally {
-                  new PoolElf(config).quietlyCloseConnection(connection, "(because this is a test)");
+                  new Mediator(TestElf.getPool(ds)).quietlyCloseConnection(connection, "(because this is a test)");
                   ds.close();
                }
             };

@@ -23,13 +23,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.pool.Mediators.PoolEntryMediator;
+import com.zaxxer.hikari.pool.Mediators.JdbcMediator;
+import com.zaxxer.hikari.pool.Mediators.PoolMediator;
+import com.zaxxer.hikari.proxy.ConnectionState;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyElf;
 
-public final class PoolElf
+public final class Mediator implements Mediators, JdbcMediator, PoolMediator, PoolEntryMediator
 {
-   private static final Logger LOGGER = LoggerFactory.getLogger(PoolElf.class);
+   private static final Logger LOGGER = LoggerFactory.getLogger(Mediator.class);
    private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout"};
    private static final int UNINITIALIZED = -1;
    private static final int TRUE = 1;
@@ -37,11 +41,12 @@ public final class PoolElf
 
    private int networkTimeout;
    private int transactionIsolation;
-   private long validationTimeout;
    private int isNetworkTimeoutSupported;
    private int isQueryTimeoutSupported;
    private Executor netTimeoutExecutor;
+   private DataSource dataSource;
 
+   private final HikariPool hikariPool;
    private final HikariConfig config;
    private final String poolName;
    private final String catalog;
@@ -49,19 +54,20 @@ public final class PoolElf
    private final boolean isAutoCommit;
    private final boolean isUseJdbc4Validation;
    private final boolean isIsolateInternalQueries;
+   private final AtomicReference<Throwable> lastConnectionFailure;
 
    private volatile boolean isValidChecked; 
    private volatile boolean isValidSupported;
 
-   public PoolElf(final HikariConfig configuration)
+   public Mediator(final HikariPool pool)
    {
-      this.config = configuration;
+      this.hikariPool = pool;
+      this.config = pool.config;
 
       this.networkTimeout = -1;
       this.catalog = config.getCatalog();
       this.isReadOnly = config.isReadOnly();
       this.isAutoCommit = config.isAutoCommit();
-      this.validationTimeout = config.getValidationTimeout();
       this.transactionIsolation = getTransactionIsolation(config.getTransactionIsolation());
 
       this.isValidSupported = true;
@@ -69,15 +75,19 @@ public final class PoolElf
       this.isNetworkTimeoutSupported = UNINITIALIZED;
       this.isUseJdbc4Validation = config.getConnectionTestQuery() == null;
       this.isIsolateInternalQueries = config.isIsolateInternalQueries();
+
       this.poolName = config.getPoolName();
+      this.lastConnectionFailure = new AtomicReference<>();
+
+      initializeDataSource();
    }
 
-   /**
-    * Close connection and eat any exception.
-    *
-    * @param connection the connection to close
-    * @param closureReason the reason the connection was closed (if known)
-    */
+   // ***********************************************************************
+   //                        JdbcMediator methods
+   // ***********************************************************************
+
+   /** {@inheritDoc} */
+   @Override
    public void quietlyCloseConnection(final Connection connection, final String closureReason)
    {
       try {
@@ -98,6 +108,201 @@ public final class PoolElf
          LOGGER.debug("{} - Closing connection {} failed", poolName, connection, e);
       }
    }
+
+   /** {@inheritDoc} */
+   @Override
+   public boolean isConnectionAlive(final Connection connection)
+   {
+      try {
+         final long validationTimeout = config.getValidationTimeout();
+   
+         if (isUseJdbc4Validation) {
+            return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout));
+         }
+   
+         final int originalTimeout = getAndSetNetworkTimeout(connection, validationTimeout);
+
+         try (Statement statement = connection.createStatement()) {
+            if (isNetworkTimeoutSupported != TRUE) {
+               setQueryTimeout(statement, (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout));
+            }
+         
+            statement.execute(config.getConnectionTestQuery());
+         }
+   
+         if (isIsolateInternalQueries && !isAutoCommit) {
+            connection.rollback();
+         }
+   
+         setNetworkTimeout(connection, originalTimeout);
+   
+         return true;
+      }
+      catch (SQLException e) {
+         lastConnectionFailure.set(e);
+         LOGGER.warn("{} - Connection {} failed alive test with exception {}", poolName, connection, e.getMessage());
+         return false;
+      }
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public DataSource getUnwrappedDataSource()
+   {
+      return dataSource;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public Throwable getLastConnectionFailure()
+   {
+      return lastConnectionFailure.getAndSet(null);
+   }
+
+
+   // ***********************************************************************
+   //                     ConnectionStateMediator methods
+   // ***********************************************************************
+
+   /** {@inheritDoc} */
+   @Override
+   public PoolEntry newPoolEntry() throws Exception
+   {
+      return new PoolEntry(newConnection(), hikariPool, this);
+   }
+
+   public void resetConnectionState(final Connection connection, final ConnectionState liveState, final int dirtyBits) throws SQLException
+   {
+      int resetBits = 0;
+
+      if ((dirtyBits & 0b00001) != 0 && liveState.getReadOnlyState() != isReadOnly) {
+         connection.setReadOnly(isReadOnly);
+         resetBits |= 0b00001;
+      }
+
+      if ((dirtyBits & 0b00010) != 0 && liveState.getAutoCommitState() != isAutoCommit) {
+         connection.setAutoCommit(isAutoCommit);
+         resetBits |= 0b00010;
+      }
+
+      if ((dirtyBits & 0b00100) != 0 && liveState.getTransactionIsolationState() != transactionIsolation) {
+         connection.setTransactionIsolation(transactionIsolation);
+         resetBits |= 0b00100;
+      }
+
+      if ((dirtyBits & 0b01000) != 0) {
+         final String currentCatalog = liveState.getCatalogState();
+         if ((currentCatalog != null && !currentCatalog.equals(catalog)) || (currentCatalog == null && catalog != null)) {
+            connection.setCatalog(catalog);
+            resetBits |= 0b01000;
+         }
+      }
+
+      if ((dirtyBits & 0b10000) != 0 && liveState.getNetworkTimeoutState() != networkTimeout) {
+         setNetworkTimeout(connection, networkTimeout);
+         resetBits |= 0b10000;
+      }
+      
+      if (LOGGER.isDebugEnabled()) {
+         LOGGER.debug("{} - Reset ({}) on connection {}", poolName, resetBits != 0 ? stringFromResetBits(resetBits) : "nothing", connection);
+      }
+   }
+   
+
+   // ***********************************************************************
+   //                       PoolMediator methods
+   // ***********************************************************************
+
+   /**
+    * Register MBeans for HikariConfig and HikariPool.
+    *
+    * @param pool a HikariPool instance
+    */
+   public void registerMBeans()
+   {
+      if (!config.isRegisterMbeans()) {
+         return;
+      }
+
+      try {
+         final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+
+         final ObjectName beanConfigName = new ObjectName("com.zaxxer.hikari:type=PoolConfig (" + poolName + ")");
+         final ObjectName beanPoolName = new ObjectName("com.zaxxer.hikari:type=Pool (" + poolName + ")");
+         if (!mBeanServer.isRegistered(beanConfigName)) {
+            mBeanServer.registerMBean(config, beanConfigName);
+            mBeanServer.registerMBean(hikariPool, beanPoolName);
+         }
+         else {
+            LOGGER.error("{} - You cannot use the same pool name for separate pool instances.", poolName);
+         }
+      }
+      catch (Exception e) {
+         LOGGER.warn("{} - Unable to register management beans.", poolName, e);
+      }
+   }
+
+   /**
+    * Unregister MBeans for HikariConfig and HikariPool.
+    */
+   public void unregisterMBeans()
+   {
+      if (!config.isRegisterMbeans()) {
+         return;
+      }
+
+      try {
+         final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+
+         final ObjectName beanConfigName = new ObjectName("com.zaxxer.hikari:type=PoolConfig (" + poolName + ")");
+         final ObjectName beanPoolName = new ObjectName("com.zaxxer.hikari:type=Pool (" + poolName + ")");
+         if (mBeanServer.isRegistered(beanConfigName)) {
+            mBeanServer.unregisterMBean(beanConfigName);
+            mBeanServer.unregisterMBean(beanPoolName);
+         }
+      }
+      catch (Exception e) {
+         LOGGER.warn("{} - Unable to unregister management beans.", poolName, e);
+      }
+   }
+
+   public void shutdownTimeoutExecutor()
+   {
+      if (netTimeoutExecutor != null && netTimeoutExecutor instanceof ThreadPoolExecutor) {
+         ((ThreadPoolExecutor) netTimeoutExecutor).shutdownNow();
+      }
+   }
+
+   // ***********************************************************************
+   //                        Mediators accessors
+   // ***********************************************************************
+
+   /** {@inheritDoc} */
+   @Override
+   public JdbcMediator getJdbcMediator()
+   {
+      return this;
+   }
+
+
+   /** {@inheritDoc} */
+   @Override
+   public PoolEntryMediator getConnectionStateMediator()
+   {
+      return this;
+   }
+
+
+   /** {@inheritDoc} */
+   @Override
+   public PoolMediator getPoolMediator()
+   {
+      return this;
+   }
+
+   // ***********************************************************************
+   //                       Misc. public methods
+   // ***********************************************************************
 
    /**
     * Get the int value of a transaction isolation level by name.
@@ -134,12 +339,16 @@ public final class PoolElf
       return -1;
    }
 
+   // ***********************************************************************
+   //                          Private methods
+   // ***********************************************************************
+
    /**
     * Create/initialize the underlying DataSource.
     *
     * @return a DataSource instance
     */
-   DataSource initializeDataSource()
+   private void initializeDataSource()
    {
       final String jdbcUrl = config.getJdbcUrl();
       final String username = config.getUsername();
@@ -162,7 +371,25 @@ public final class PoolElf
          createNetworkTimeoutExecutor(dataSource, dsClassName, jdbcUrl);
       }
 
-      return dataSource;
+      this.dataSource = dataSource;
+   }
+
+   private Connection newConnection() throws Exception
+   {
+      Connection connection = null;
+      try {
+         String username = config.getUsername();
+         String password = config.getPassword();
+
+         connection = (username == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
+         setupConnection(connection, config.getConnectionTimeout());
+         lastConnectionFailure.set(null);
+         return connection;
+      }
+      catch (Exception e) {
+         quietlyCloseConnection(connection, "(exception during connection creation)");
+         throw e;
+      }
    }
 
    /**
@@ -172,7 +399,7 @@ public final class PoolElf
     * @param connectionTimeout the connection timeout
     * @throws SQLException thrown from driver
     */
-   void setupConnection(final Connection connection, final long connectionTimeout) throws SQLException
+   private void setupConnection(final Connection connection, final long connectionTimeout) throws SQLException
    {
       if (isUseJdbc4Validation && !isJdbc4ValidationSupported(connection)) {
          throw new SQLException("Connection.isValid() is not supported, configure connection test query.");
@@ -198,161 +425,6 @@ public final class PoolElf
       executeSql(connection, config.getConnectionInitSql(), isAutoCommit);
 
       setNetworkTimeout(connection, networkTimeout);
-   }
-
-   /**
-    * Check whether the connection is alive or not.
-    *
-    * @param connection the connection to test
-    * @param lastConnectionFailure last connection failure
-    * @return true if the connection is alive, false if it is not alive or we timed out
-    */
-   boolean isConnectionAlive(final Connection connection, final AtomicReference<Throwable> lastConnectionFailure)
-   {
-      try {
-         int timeoutSec = (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout);
-   
-         if (isUseJdbc4Validation) {
-            return connection.isValid(timeoutSec);
-         }
-   
-         final int originalTimeout = getAndSetNetworkTimeout(connection, validationTimeout);
-
-         try (Statement statement = connection.createStatement()) {
-            if (isNetworkTimeoutSupported != TRUE) {
-               setQueryTimeout(statement, timeoutSec);
-            }
-        	
-            statement.execute(config.getConnectionTestQuery());
-         }
-   
-         if (isIsolateInternalQueries && !isAutoCommit) {
-            connection.rollback();
-         }
-   
-         setNetworkTimeout(connection, originalTimeout);
-   
-         return true;
-      }
-      catch (SQLException e) {
-         lastConnectionFailure.set(e);
-         LOGGER.warn("{} - Connection {} failed alive test with exception {}", poolName, connection, e.getMessage());
-         return false;
-      }
-   }
-
-   void resetConnectionState(final PoolBagEntry poolEntry) throws SQLException
-   {
-      int resetBits = 0;
-
-      if (poolEntry.isReadOnly != isReadOnly) {
-         poolEntry.connection.setReadOnly(isReadOnly);
-         poolEntry.setReadOnly(isReadOnly);
-         resetBits |= 0b00001;
-      }
-
-      if (poolEntry.isAutoCommit != isAutoCommit) {
-         poolEntry.connection.setAutoCommit(isAutoCommit);
-         poolEntry.setAutoCommit(isAutoCommit);
-         resetBits |= 0b00010;
-      }
-
-      if (poolEntry.transactionIsolation != transactionIsolation) {
-         poolEntry.connection.setTransactionIsolation(transactionIsolation);
-         poolEntry.setTransactionIsolation(transactionIsolation);
-         resetBits |= 0b00100;
-      }
-
-      final String currentCatalog = poolEntry.catalog;
-      if ((currentCatalog != null && !currentCatalog.equals(catalog)) || (currentCatalog == null && catalog != null)) {
-         poolEntry.connection.setCatalog(catalog);
-         poolEntry.setCatalog(catalog);
-         resetBits |= 0b01000;
-      }
-
-      if (poolEntry.networkTimeout != networkTimeout) {
-         setNetworkTimeout(poolEntry.connection, networkTimeout);
-         poolEntry.setNetworkTimeout(networkTimeout);
-         resetBits |= 0b10000;
-      }
-      
-      if (LOGGER.isDebugEnabled()) {
-         LOGGER.debug("{} - Reset ({}) on connection {}", poolName, resetBits != 0 ? stringFromResetBits(resetBits) : "nothing", poolEntry.connection);
-      }
-   }
-
-   void resetPoolEntry(final PoolBagEntry poolEntry)
-   {
-      poolEntry.setReadOnly(isReadOnly);
-      poolEntry.setCatalog(catalog);
-      poolEntry.setAutoCommit(isAutoCommit);
-      poolEntry.setNetworkTimeout(networkTimeout);
-      poolEntry.setTransactionIsolation(transactionIsolation);
-   }
-
-   void setValidationTimeout(final long validationTimeout)
-   {
-      this.validationTimeout = validationTimeout;
-   }
-
-   /**
-    * Register MBeans for HikariConfig and HikariPool.
-    *
-    * @param pool a HikariPool instance
-    */
-   void registerMBeans(final HikariPool pool)
-   {
-      if (!config.isRegisterMbeans()) {
-         return;
-      }
-
-      try {
-         final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-
-         final ObjectName beanConfigName = new ObjectName("com.zaxxer.hikari:type=PoolConfig (" + poolName + ")");
-         final ObjectName beanPoolName = new ObjectName("com.zaxxer.hikari:type=Pool (" + poolName + ")");
-         if (!mBeanServer.isRegistered(beanConfigName)) {
-            mBeanServer.registerMBean(config, beanConfigName);
-            mBeanServer.registerMBean(pool, beanPoolName);
-         }
-         else {
-            LOGGER.error("{} - You cannot use the same pool name for separate pool instances.", poolName);
-         }
-      }
-      catch (Exception e) {
-         LOGGER.warn("{} - Unable to register management beans.", poolName, e);
-      }
-   }
-
-   /**
-    * Unregister MBeans for HikariConfig and HikariPool.
-    */
-   void unregisterMBeans()
-   {
-      if (!config.isRegisterMbeans()) {
-         return;
-      }
-
-      try {
-         final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-
-         final ObjectName beanConfigName = new ObjectName("com.zaxxer.hikari:type=PoolConfig (" + poolName + ")");
-         final ObjectName beanPoolName = new ObjectName("com.zaxxer.hikari:type=Pool (" + poolName + ")");
-         if (mBeanServer.isRegistered(beanConfigName)) {
-            mBeanServer.unregisterMBean(beanConfigName);
-            mBeanServer.unregisterMBean(beanPoolName);
-         }
-      }
-      catch (Exception e) {
-         LOGGER.warn("{} - Unable to unregister management beans.", poolName, e);
-      }
-   }
-
-   void shutdownTimeoutExecutor()
-   {
-      if (netTimeoutExecutor != null && netTimeoutExecutor instanceof ThreadPoolExecutor) {
-         ((ThreadPoolExecutor) netTimeoutExecutor).shutdownNow();
-      }
    }
 
    /**
