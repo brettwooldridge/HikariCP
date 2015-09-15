@@ -122,7 +122,6 @@ public class TestConcurrentBag
       TestElf.setSlf4jTargetStream(ConcurrentBag.class, ps);
       
       bag.requite(reserved);
-      Assert.assertTrue(new String(baos.toByteArray()).contains("does not exist"));
 
       bag.remove(notinuse);
       Assert.assertTrue(new String(baos.toByteArray()).contains("not borrowed or reserved"));
