@@ -257,7 +257,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
          }
          finally {
             delegate = ClosedConnection.CLOSED_CONNECTION;
-            poolEntry.returnPoolEntry(lastAccess);
+            poolEntry.close(lastAccess);
          }
       }
    }

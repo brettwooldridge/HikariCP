@@ -85,8 +85,9 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
 
    private final JdbcMediator jdbcMediator;
    private final PoolMediator poolMediator;
-   private final AtomicInteger totalConnections;
    private final PoolEntryMediator entryMediator;
+
+   private final AtomicInteger totalConnections;
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
 

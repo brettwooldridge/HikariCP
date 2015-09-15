@@ -80,7 +80,7 @@ public final class PoolEntry implements IConcurrentBagEntry
     *
     * @param lastAccess last access time-stamp
     */
-   public void returnPoolEntry(final long lastAccess)
+   public void close(final long lastAccess)
    {
       this.lastAccess = lastAccess;
       hikariPool.releaseConnection(this);
@@ -98,9 +98,6 @@ public final class PoolEntry implements IConcurrentBagEntry
    {
       return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, now);
    }
-   // ***********************************************************************
-   //                      ConnectionState methods
-   // ***********************************************************************
 
    public void resetConnectionState(final ConnectionState connectionState, final int dirtyBits) throws SQLException
    {
