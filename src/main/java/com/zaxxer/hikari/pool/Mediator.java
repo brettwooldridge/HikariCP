@@ -56,6 +56,7 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
    private final boolean isIsolateInternalQueries;
    private final AtomicReference<Throwable> lastConnectionFailure;
 
+   private volatile boolean isValidationQueryValid;
    private volatile boolean isValidChecked; 
    private volatile boolean isValidSupported;
 
@@ -387,6 +388,7 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
          return connection;
       }
       catch (Exception e) {
+         lastConnectionFailure.set(e);
          quietlyCloseConnection(connection, "(exception during connection creation)");
          throw e;
       }
@@ -423,6 +425,11 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
       }
 
       executeSql(connection, config.getConnectionInitSql(), isAutoCommit);
+
+      if (!isUseJdbc4Validation && !isValidationQueryValid) {
+         executeSql(connection, config.getConnectionTestQuery(), isAutoCommit);
+         isValidationQueryValid = true;
+      }
 
       setNetworkTimeout(connection, networkTimeout);
    }

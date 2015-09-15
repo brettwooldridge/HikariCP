@@ -20,6 +20,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
@@ -456,6 +457,43 @@ public class TestConnections
       }
       finally {
          ds.close();
+      }
+   }
+
+   @Test
+   public void testInvalidConnectionTestQuery()
+   {
+      class BadConnection extends StubConnection {
+         /** {@inheritDoc} */
+         @Override
+         public Statement createStatement() throws SQLException
+         {
+            throw new SQLException("Bad query or something.");
+         }
+      }
+
+      StubDataSource stubDataSource = new StubDataSource() {
+         /** {@inheritDoc} */
+         @Override
+         public Connection getConnection() throws SQLException
+         {
+            return new BadConnection();
+         }
+      };
+
+      HikariConfig config = new HikariConfig();
+      config.setMinimumIdle(1);
+      config.setMaximumPoolSize(2);
+      config.setConnectionTimeout(TimeUnit.SECONDS.toMillis(3));
+      config.setConnectionTestQuery("VALUES 1");
+      config.setInitializationFailFast(false);
+      config.setDataSource(stubDataSource);
+
+      try (HikariDataSource ds = new HikariDataSource(config); Connection c = ds.getConnection()) {
+         Assert.fail("getConnection() should have failed");
+      }
+      catch (SQLException e) {
+         Assert.assertSame("Bad query or something.", e.getNextException().getMessage());
       }
    }
 }

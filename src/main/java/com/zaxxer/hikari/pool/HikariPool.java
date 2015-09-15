@@ -207,12 +207,17 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       }
 
       logPoolState("Timeout failure\t");
+
       String sqlState = null;
       final Throwable originalException = jdbcMediator.getLastConnectionFailure();
       if (originalException instanceof SQLException) {
          sqlState = ((SQLException) originalException).getSQLState();
       }
-      throw new SQLTransientConnectionException(poolName + " - Connection is not available, request timed out after " + clockSource.elapsedMillis(startTime) + "ms.", sqlState, originalException);
+      final SQLException connectionException = new SQLTransientConnectionException(poolName + " - Connection is not available, request timed out after " + clockSource.elapsedMillis(startTime) + "ms.", sqlState, originalException);
+      if (originalException instanceof SQLException) {
+         connectionException.setNextException((SQLException) originalException);
+      }
+      throw connectionException;
    }
 
    /**
