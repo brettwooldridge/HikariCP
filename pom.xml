@@ -192,7 +192,7 @@
                      <!-- Sets the name of the property containing the settings for JaCoCo runtime agent. -->
                      <propertyName>surefireArgLine</propertyName>
                      <excludes>
-                        <exclude>**/com/zaxxer/hikari/pool/Proxy*</exclude>
+                        <exclude>**/com/zaxxer/hikari/pool/HikariProxy*</exclude>
                         <exclude>**/com/zaxxer/hikari/metrics/**</exclude>
                      </excludes>
                   </configuration>
@@ -210,7 +210,7 @@
                      <!-- Sets the output directory for the code coverage report. -->
                      <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
                      <excludes>
-                        <exclude>**/com/zaxxer/hikari/pool/Proxy*</exclude>
+                        <exclude>**/com/zaxxer/hikari/pool/HikariProxy*</exclude>
                         <exclude>**/com/zaxxer/hikari/metrics/**</exclude>
                      </excludes>
                   </configuration>
@@ -234,8 +234,7 @@
                   <Private-Package>com.zaxxer.hikari.*</Private-Package>
                   <_exportcontents>
                      com.zaxxer.hikari.pool,
-                     com.zaxxer.hikari.util,
-                     com.zaxxer.hikari.proxy
+                     com.zaxxer.hikari.util
                   </_exportcontents>
                   <Import-Package>
                      javax.management,
