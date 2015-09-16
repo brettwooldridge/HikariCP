@@ -75,7 +75,7 @@ public final class PropertyElf
       HashSet<String> set = new HashSet<>();
       for (Method method : targetClass.getMethods()) {
          String name = method.getName();
-         if (name.matches("(get|is)[A-Z].+") && method.getParameterCount() == 0) {
+         if (name.matches("(get|is)[A-Z].+") && method.getParameterTypes().length == 0) {
             name = name.replaceFirst("(get|is)", "");
             try {
                if (targetClass.getMethod("set" + name, method.getReturnType()) != null) {
@@ -127,7 +127,7 @@ public final class PropertyElf
 
       List<Method> methods = Arrays.asList(target.getClass().getMethods());
       for (Method method : methods) {
-         if (method.getName().equals(methodName) && method.getParameterCount() == 1) {
+         if (method.getName().equals(methodName) && method.getParameterTypes().length == 1) {
             writeMethod = method;
             break;
          }
@@ -136,7 +136,7 @@ public final class PropertyElf
       if (writeMethod == null) {
          methodName = "set" + propName.toUpperCase();
          for (Method method : methods) {
-            if (method.getName().equals(methodName) && method.getParameterCount() == 1) {
+            if (method.getName().equals(methodName) && method.getParameterTypes().length == 1) {
                writeMethod = method;
                break;
             }
