@@ -164,34 +164,34 @@ abstract class PoolBase
       return new PoolEntry(newConnection(), this);
    }
 
-   public void resetConnectionState(final Connection connection, final ProxyConnection liveState, final int dirtyBits) throws SQLException
+   public void resetConnectionState(final Connection connection, final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
    {
       int resetBits = 0;
 
-      if ((dirtyBits & 0b00001) != 0 && liveState.getReadOnlyState() != isReadOnly) {
+      if ((dirtyBits & 0b00001) != 0 && proxyConnection.getReadOnlyState() != isReadOnly) {
          connection.setReadOnly(isReadOnly);
          resetBits |= 0b00001;
       }
 
-      if ((dirtyBits & 0b00010) != 0 && liveState.getAutoCommitState() != isAutoCommit) {
+      if ((dirtyBits & 0b00010) != 0 && proxyConnection.getAutoCommitState() != isAutoCommit) {
          connection.setAutoCommit(isAutoCommit);
          resetBits |= 0b00010;
       }
 
-      if ((dirtyBits & 0b00100) != 0 && liveState.getTransactionIsolationState() != transactionIsolation) {
+      if ((dirtyBits & 0b00100) != 0 && proxyConnection.getTransactionIsolationState() != transactionIsolation) {
          connection.setTransactionIsolation(transactionIsolation);
          resetBits |= 0b00100;
       }
 
       if ((dirtyBits & 0b01000) != 0) {
-         final String currentCatalog = liveState.getCatalogState();
+         final String currentCatalog = proxyConnection.getCatalogState();
          if ((currentCatalog != null && !currentCatalog.equals(catalog)) || (currentCatalog == null && catalog != null)) {
             connection.setCatalog(catalog);
             resetBits |= 0b01000;
          }
       }
 
-      if ((dirtyBits & 0b10000) != 0 && liveState.getNetworkTimeoutState() != networkTimeout) {
+      if ((dirtyBits & 0b10000) != 0 && proxyConnection.getNetworkTimeoutState() != networkTimeout) {
          setNetworkTimeout(connection, networkTimeout);
          resetBits |= 0b10000;
       }

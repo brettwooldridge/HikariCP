@@ -94,9 +94,9 @@ public final class PoolEntry implements IConcurrentBagEntry
       return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, now);
    }
 
-   public void resetConnectionState(final ProxyConnection liveState, final int dirtyBits) throws SQLException
+   public void resetConnectionState(final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
    {
-      poolBase.resetConnectionState(connection, liveState, dirtyBits);
+      poolBase.resetConnectionState(connection, proxyConnection, dirtyBits);
    }
 
    public String getPoolName()
