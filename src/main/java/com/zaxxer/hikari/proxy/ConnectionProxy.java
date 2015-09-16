@@ -56,11 +56,11 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
    private long lastAccess;
    private boolean isCommitStateDirty;
 
-   public boolean isAutoCommit;
-   public int networkTimeout;
-   public int transactionIsolation;
-   public String dbcatalog;
-   public boolean isReadOnly;
+   private boolean isAutoCommit;
+   private int networkTimeout;
+   private int transactionIsolation;
+   private String dbcatalog;
+   private boolean isReadOnly;
 
    // static initializer
    static {
@@ -94,6 +94,10 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
          .append(delegate).toString();
    }
 
+   // ***********************************************************************
+   //                      ConnectionState methods
+   // ***********************************************************************
+
    /** {@inheritDoc} */
    @Override
    public final boolean getAutoCommitState()
@@ -120,6 +124,13 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
    public final boolean getReadOnlyState()
    {
       return isReadOnly;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public final int getNetworkTimeoutState()
+   {
+      return networkTimeout;
    }
 
    // ***********************************************************************
@@ -239,7 +250,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
          }
          finally {
             delegate = ClosedConnection.CLOSED_CONNECTION;
-            poolEntry.returnPoolEntry(lastAccess);
+            poolEntry.recycle(lastAccess);
          }
       }
    }

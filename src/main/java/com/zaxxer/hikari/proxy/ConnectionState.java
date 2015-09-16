@@ -31,6 +31,4 @@ public interface ConnectionState
    boolean getAutoCommitState();
 
    boolean getReadOnlyState();
-
-   long getLastAccess();
 }

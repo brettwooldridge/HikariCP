@@ -59,7 +59,6 @@ import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
-import com.zaxxer.hikari.util.PropertyElf;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -86,8 +85,9 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
 
    private final JdbcMediator jdbcMediator;
    private final PoolMediator poolMediator;
-   private final AtomicInteger totalConnections;
    private final PoolEntryMediator entryMediator;
+
+   private final AtomicInteger totalConnections;
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
 

@@ -56,9 +56,7 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
    private final boolean isIsolateInternalQueries;
    private final AtomicReference<Throwable> lastConnectionFailure;
 
-   private volatile boolean isValidationQueryValid;
    private volatile boolean isValidChecked; 
-   private volatile boolean isValidSupported;
 
    public Mediator(final HikariPool pool)
    {
@@ -71,7 +69,6 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
       this.isAutoCommit = config.isAutoCommit();
       this.transactionIsolation = getTransactionIsolation(config.getTransactionIsolation());
 
-      this.isValidSupported = true;
       this.isQueryTimeoutSupported = UNINITIALIZED;
       this.isNetworkTimeoutSupported = UNINITIALIZED;
       this.isUseJdbc4Validation = config.getConnectionTestQuery() == null;
@@ -116,11 +113,11 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
    {
       try {
          final long validationTimeout = config.getValidationTimeout();
-   
+
          if (isUseJdbc4Validation) {
             return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout));
          }
-   
+
          final int originalTimeout = getAndSetNetworkTimeout(connection, validationTimeout);
 
          try (Statement statement = connection.createStatement()) {
@@ -134,9 +131,9 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
          if (isIsolateInternalQueries && !isAutoCommit) {
             connection.rollback();
          }
-   
+
          setNetworkTimeout(connection, originalTimeout);
-   
+
          return true;
       }
       catch (SQLException e) {
@@ -403,11 +400,9 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
     */
    private void setupConnection(final Connection connection, final long connectionTimeout) throws SQLException
    {
-      if (isUseJdbc4Validation && !isJdbc4ValidationSupported(connection)) {
-         throw new SQLException("Connection.isValid() is not supported, configure connection test query.");
-      }
-
       networkTimeout = getAndSetNetworkTimeout(connection, connectionTimeout);
+
+      checkValidationMode(connection);
 
       connection.setAutoCommit(isAutoCommit);
       connection.setReadOnly(isReadOnly);
@@ -424,39 +419,39 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
          connection.setCatalog(catalog);
       }
 
-      executeSql(connection, config.getConnectionInitSql(), isAutoCommit);
-
-      if (!isUseJdbc4Validation && !isValidationQueryValid) {
-         executeSql(connection, config.getConnectionTestQuery(), isAutoCommit);
-         isValidationQueryValid = true;
-      }
+      executeSql(connection, config.getConnectionInitSql(), !isAutoCommit, false);
 
       setNetworkTimeout(connection, networkTimeout);
    }
 
    /**
-    * Return true if the driver appears to be JDBC 4.0 compliant.
+    * Execute isValid() or connection test query.
     *
     * @param connection a Connection to check
-    * @return true if JDBC 4.1 compliance, false otherwise
     */
-   private boolean isJdbc4ValidationSupported(final Connection connection)
+   private void checkValidationMode(final Connection connection) throws SQLException
    {
       if (!isValidChecked) {
-         try {
-            // We don't care how long the wait actually is here, just whether it returns without exception. This
-            // call will throw various exceptions in the case of a non-JDBC 4.0 compliant driver
-            connection.isValid(1);
+         if (isUseJdbc4Validation) {
+            try {
+               connection.isValid(1);
+            }
+            catch (Throwable e) {
+               LOGGER.debug("{} - Connection.isValid() is not supported, configure connection test query. ({})", poolName, e.getMessage());
+               throw e;
+            }
          }
-         catch (Throwable e) {
-            isValidSupported = false;
-            LOGGER.debug("{} - Connection.isValid() is not supported ({})", poolName, e.getMessage());
+         else {
+            try {
+               executeSql(connection, config.getConnectionTestQuery(), false, isIsolateInternalQueries && !isAutoCommit);
+            }
+            catch (Throwable e) {
+               LOGGER.debug("{} - Exception during executing connection test query. ({})", poolName, e.getMessage());
+               throw e;
+            }
          }
-
          isValidChecked = true;
       }
-      
-      return isValidSupported;
    }
 
    /**
@@ -532,14 +527,18 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
     * @param isAutoCommit whether to commit the SQL after execution or not
     * @throws SQLException throws if the init SQL execution fails
     */
-   private void executeSql(final Connection connection, final String sql, final boolean isAutoCommit) throws SQLException
+   private void executeSql(final Connection connection, final String sql, final boolean isCommit, final boolean isRollback) throws SQLException
    {
       if (sql != null) {
          try (Statement statement = connection.createStatement()) {
+
             statement.execute(sql);
 
-            if (!isAutoCommit) {
+            if (isCommit) {
                connection.commit();
+            }
+            else if (isRollback) {
+               connection.rollback();
             }
          }
       }
