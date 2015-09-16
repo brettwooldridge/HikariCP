@@ -75,7 +75,7 @@ public final class PropertyElf
       HashSet<String> set = new HashSet<>();
       for (Method method : targetClass.getMethods()) {
          String name = method.getName();
-         if (name.matches("(get|is)[A-Z].+") && method.getParameterCount() == 0) {
+         if (name.matches("(get|is)[A-Z].+") && method.getParameterTypes().length == 0) {
             name = name.replaceFirst("(get|is)", "");
             try {
                if (targetClass.getMethod("set" + name, method.getReturnType()) != null) {
