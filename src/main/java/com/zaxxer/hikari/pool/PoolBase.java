@@ -31,6 +31,7 @@ abstract class PoolBase
 {
    protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
    protected final HikariConfig config;
+   protected long connectionTimeout;
 
    private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout"};
    private static final int UNINITIALIZED = -1;
@@ -71,6 +72,7 @@ abstract class PoolBase
       this.isIsolateInternalQueries = config.isIsolateInternalQueries();
 
       this.poolName = config.getPoolName();
+      this.connectionTimeout = config.getConnectionTimeout();
       this.lastConnectionFailure = new AtomicReference<>();
 
       initializeDataSource();
@@ -292,7 +294,7 @@ abstract class PoolBase
       }
 
       if (dataSource != null) {
-         setLoginTimeout(dataSource, config.getConnectionTimeout());
+         setLoginTimeout(dataSource, connectionTimeout);
          createNetworkTimeoutExecutor(dataSource, dsClassName, jdbcUrl);
       }
 
@@ -307,7 +309,7 @@ abstract class PoolBase
          String password = config.getPassword();
 
          connection = (username == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
-         setupConnection(connection, config.getConnectionTimeout());
+         setupConnection(connection);
          lastConnectionFailure.set(null);
          return connection;
       }
@@ -322,10 +324,9 @@ abstract class PoolBase
     * Setup a connection initial state.
     *
     * @param connection a Connection
-    * @param connectionTimeout the connection timeout
     * @throws SQLException thrown from driver
     */
-   private void setupConnection(final Connection connection, final long connectionTimeout) throws SQLException
+   private void setupConnection(final Connection connection) throws SQLException
    {
       networkTimeout = getAndSetNetworkTimeout(connection, connectionTimeout);
 

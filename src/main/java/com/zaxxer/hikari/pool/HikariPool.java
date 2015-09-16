@@ -77,16 +77,11 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    final ConcurrentBag<PoolEntry> connectionBag;
    final ScheduledThreadPoolExecutor houseKeepingExecutorService;
 
-//   private final JdbcMediator jdbcMediator;
-//   private final PoolMediator poolMediator;
-//   private final PoolEntryMediator entryMediator;
-
    private final AtomicInteger totalConnections;
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
 
    private volatile int poolState;
-   private long connectionTimeout;
 
    private final String poolName;
    private final ProxyLeakTask leakTask;
@@ -104,14 +99,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
     {
       super(config);
 
-//      this.jdbcMediator = mediators.getJdbcMediator();
-//      this.poolMediator = mediators.getPoolMediator();
-//      this.entryMediator = mediators.getConnectionStateMediator();
-
       this.poolName = config.getPoolName();
       this.connectionBag = new ConcurrentBag<>(this);
       this.totalConnections = new AtomicInteger();
-      this.connectionTimeout = config.getConnectionTimeout();
       this.suspendResumeLock = config.isAllowPoolSuspension() ? new SuspendResumeLock() : SuspendResumeLock.FAUX_LOCK;
 
       this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection filler (pool " + poolName + ")", config.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
