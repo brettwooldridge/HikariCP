@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.proxy;
+package com.zaxxer.hikari.pool;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -27,14 +27,14 @@ import java.sql.Wrapper;
  *
  * @author Brett Wooldridge
  */
-public abstract class StatementProxy implements Statement
+public abstract class ProxyStatement implements Statement
 {
-   protected final ConnectionProxy connection;
+   protected final ProxyConnection connection;
    protected final Statement delegate;
 
    private boolean isClosed;
 
-   protected StatementProxy(ConnectionProxy connection, Statement statement)
+   protected ProxyStatement(ProxyConnection connection, Statement statement)
    {
       this.connection = connection;
       this.delegate = statement;

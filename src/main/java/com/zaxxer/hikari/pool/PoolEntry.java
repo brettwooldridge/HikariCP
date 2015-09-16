@@ -26,9 +26,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.zaxxer.hikari.pool.Mediators.PoolEntryMediator;
-import com.zaxxer.hikari.proxy.ConnectionState;
-import com.zaxxer.hikari.proxy.ProxyFactory;
 import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry;
 import com.zaxxer.hikari.util.FastList;
@@ -52,8 +49,7 @@ public final class PoolEntry implements IConcurrentBagEntry
    public volatile boolean evict;
 
    private final FastList<Statement> openStatements;
-   private final HikariPool hikariPool;
-   private final PoolEntryMediator stateMediator;
+   private final PoolBase poolBase;
    private final AtomicInteger state;
 
    private volatile ScheduledFuture<?> endOfLife;
@@ -64,15 +60,14 @@ public final class PoolEntry implements IConcurrentBagEntry
       DATE_FORMAT = new SimpleDateFormat("MMM dd, HH:mm:ss.SSS");
    }
 
-   PoolEntry(final Connection connection, final HikariPool pool, final PoolEntryMediator stateMediator)
+   PoolEntry(final Connection connection, final PoolBase pool)
    {
       this.connection = connection;
-      this.hikariPool = pool;
+      this.poolBase = pool;
       this.creationTime = System.currentTimeMillis();
       this.state = new AtomicInteger(STATE_NOT_IN_USE);
       this.lastAccess = ClockSource.INSTANCE.currentTime();
       this.openStatements = new FastList<>(Statement.class, 16);
-      this.stateMediator = stateMediator;
    }
 
    /**
@@ -83,7 +78,7 @@ public final class PoolEntry implements IConcurrentBagEntry
    public void recycle(final long lastAccess)
    {
       this.lastAccess = lastAccess;
-      hikariPool.releaseConnection(this);
+      poolBase.releaseConnection(this);
    }
 
    /**
@@ -94,19 +89,19 @@ public final class PoolEntry implements IConcurrentBagEntry
       this.endOfLife = endOfLife;
    }
 
-   Connection createProxyConnection(final LeakTask leakTask, final long now)
+   Connection createProxyConnection(final ProxyLeakTask leakTask, final long now)
    {
       return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, now);
    }
 
-   public void resetConnectionState(final ConnectionState connectionState, final int dirtyBits) throws SQLException
+   public void resetConnectionState(final ProxyConnection liveState, final int dirtyBits) throws SQLException
    {
-      stateMediator.resetConnectionState(connection, connectionState, dirtyBits);
+      poolBase.resetConnectionState(connection, liveState, dirtyBits);
    }
 
    public String getPoolName()
    {
-      return hikariPool.config.getPoolName();
+      return poolBase.getPoolName();
    }
 
    public Connection getConnection()

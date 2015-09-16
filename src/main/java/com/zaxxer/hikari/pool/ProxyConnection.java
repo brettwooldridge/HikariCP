@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.proxy;
+package com.zaxxer.hikari.pool;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -30,8 +33,6 @@ import java.util.concurrent.Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.zaxxer.hikari.pool.LeakTask;
-import com.zaxxer.hikari.pool.PoolEntry;
 import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.FastList;
 
@@ -40,7 +41,7 @@ import com.zaxxer.hikari.util.FastList;
  *
  * @author Brett Wooldridge
  */
-public abstract class ConnectionProxy implements IHikariConnectionProxy, ConnectionState
+public abstract class ProxyConnection implements Connection
 {
    private static final Logger LOGGER;
    private static final Set<String> SQL_ERRORS;
@@ -48,7 +49,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
 
    protected Connection delegate;
 
-   private final LeakTask leakTask;
+   private final ProxyLeakTask leakTask;
    private final PoolEntry poolEntry;
    private final FastList<Statement> openStatements;
    
@@ -64,7 +65,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
 
    // static initializer
    static {
-      LOGGER = LoggerFactory.getLogger(ConnectionProxy.class);
+      LOGGER = LoggerFactory.getLogger(ProxyConnection.class);
       clockSource = ClockSource.INSTANCE;
 
       SQL_ERRORS = new HashSet<>();
@@ -76,7 +77,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
       SQL_ERRORS.add("JZ0C1"); // Sybase disconnect error
    }
 
-   protected ConnectionProxy(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final LeakTask leakTask, final long now) {
+   protected ProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final long now) {
       this.poolEntry = poolEntry;
       this.delegate = connection;
       this.openStatements = openStatements;
@@ -95,39 +96,29 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
    }
 
    // ***********************************************************************
-   //                      ConnectionState methods
+   //                     Live Connection State accessors
    // ***********************************************************************
 
-   /** {@inheritDoc} */
-   @Override
    public final boolean getAutoCommitState()
    {
       return isAutoCommit;
    }
 
-   /** {@inheritDoc} */
-   @Override
    public final String getCatalogState()
    {
       return dbcatalog;
    }
 
-   /** {@inheritDoc} */
-   @Override
    public final int getTransactionIsolationState()
    {
       return transactionIsolation;
    }
 
-   /** {@inheritDoc} */
-   @Override
    public final boolean getReadOnlyState()
    {
       return isReadOnly;
    }
 
-   /** {@inheritDoc} */
-   @Override
    public final int getNetworkTimeoutState()
    {
       return networkTimeout;
@@ -138,14 +129,12 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
    // ***********************************************************************
 
    /** {@inheritDoc} */
-   @Override
    public final PoolEntry getPoolEntry()
    {
       return poolEntry;
    }
 
    /** {@inheritDoc} */
-   @Override
    public final SQLException checkException(final SQLException sqle)
    {
       String sqlState = sqle.getSQLState();
@@ -167,14 +156,12 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
    }
 
    /** {@inheritDoc} */
-   @Override
    public final void untrackStatement(final Statement statement)
    {
       openStatements.remove(statement);
    }
 
    /** {@inheritDoc} */
-   @Override
    public final void markCommitStateDirty()
    {
       if (isAutoCommit) {
@@ -217,7 +204,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
    }
 
    // **********************************************************************
-   //                   "Overridden" java.sql.Connection Methods
+   //              "Overridden" java.sql.Connection Methods
    // **********************************************************************
 
    /** {@inheritDoc} */
@@ -438,5 +425,39 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
       }
 
       throw new SQLException("Wrapped connection is not an instance of " + iface);
+   }
+
+   // **********************************************************************
+   //                         Private classes
+   // **********************************************************************
+
+   private static final class ClosedConnection
+   {
+      static final Connection CLOSED_CONNECTION = getClosedConnection();
+
+      private static Connection getClosedConnection()
+      {
+         InvocationHandler handler = new InvocationHandler() {
+            
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
+            {
+               final String methodName = method.getName();
+               if ("abort".equals(methodName)) { 
+                  return Void.TYPE;
+               }
+               else if ("isValid".equals(methodName)) {
+                  return Boolean.FALSE;
+               }
+               else if ("toString".equals(methodName)) {
+                  return ClosedConnection.class.getCanonicalName();
+               }
+
+               throw new SQLException("Connection is closed");
+            }
+         };
+
+         return (Connection) Proxy.newProxyInstance(Connection.class.getClassLoader(), new Class[] { Connection.class }, handler);
+      }
    }
 }

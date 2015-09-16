@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.proxy;
+package com.zaxxer.hikari.pool;
 
 import java.sql.CallableStatement;
 
@@ -23,9 +23,9 @@ import java.sql.CallableStatement;
  *
  * @author Brett Wooldridge
  */
-public abstract class CallableStatementProxy extends PreparedStatementProxy implements CallableStatement
+public abstract class ProxyCallableStatement extends ProxyPreparedStatement implements CallableStatement
 {
-   protected CallableStatementProxy(ConnectionProxy connection, CallableStatement statement)
+   protected ProxyCallableStatement(ProxyConnection connection, CallableStatement statement)
    {
       super(connection, statement);
    }

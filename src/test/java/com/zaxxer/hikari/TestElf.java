@@ -24,8 +24,8 @@ import java.util.HashMap;
 import org.slf4j.LoggerFactory;
 import org.slf4j.impl.SimpleLogger;
 
+import com.zaxxer.hikari.pool.ProxyConnection;
 import com.zaxxer.hikari.pool.HikariPool;
-import com.zaxxer.hikari.proxy.ConnectionProxy;
 
 /**
  * Utility methods for testing.
@@ -66,7 +66,7 @@ public final class TestElf
    public static boolean getConnectionCommitDirtyState(Connection connection)
    {
       try {
-         Field field = ConnectionProxy.class.getDeclaredField("isCommitStateDirty");
+         Field field = ProxyConnection.class.getDeclaredField("isCommitStateDirty");
          field.setAccessible(true);
          return field.getBoolean(connection);
       }

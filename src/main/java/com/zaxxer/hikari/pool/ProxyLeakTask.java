@@ -29,10 +29,10 @@ import org.slf4j.LoggerFactory;
  *
  * @author Brett Wooldridge
  */
-public class LeakTask implements Runnable
+class ProxyLeakTask implements Runnable
 {
-   private static final Logger LOGGER = LoggerFactory.getLogger(LeakTask.class);
-   private static final LeakTask NO_LEAK;
+   private static final Logger LOGGER = LoggerFactory.getLogger(ProxyLeakTask.class);
+   private static final ProxyLeakTask NO_LEAK;
 
    private ScheduledExecutorService executorService;
    private long leakDetectionThreshold;
@@ -42,32 +42,32 @@ public class LeakTask implements Runnable
 
    static
    {
-      NO_LEAK = new LeakTask() {
+      NO_LEAK = new ProxyLeakTask() {
          @Override
          public void cancel() {}
       };
    }
 
-   LeakTask(final long leakDetectionThreshold, final ScheduledExecutorService executorService)
+   ProxyLeakTask(final long leakDetectionThreshold, final ScheduledExecutorService executorService)
    {
       this.executorService = executorService;
       this.leakDetectionThreshold = leakDetectionThreshold;
    }
 
-   private LeakTask(final LeakTask parent, final PoolEntry poolEntry)
+   private ProxyLeakTask(final ProxyLeakTask parent, final PoolEntry poolEntry)
    {
       this.exception = new Exception("Apparent connection leak detected");
       this.connectionName = poolEntry.connection.toString();
       scheduledFuture = parent.executorService.schedule(this, parent.leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
-   private LeakTask()
+   private ProxyLeakTask()
    {
    }
    
-   LeakTask start(final PoolEntry bagEntry)
+   ProxyLeakTask start(final PoolEntry bagEntry)
    {
-      return (leakDetectionThreshold == 0) ? NO_LEAK : new LeakTask(this, bagEntry);
+      return (leakDetectionThreshold == 0) ? NO_LEAK : new ProxyLeakTask(this, bagEntry);
    }
 
    void updateLeakDetectionThreshold(final long leakDetectionThreshold)

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.pool;
+package com.zaxxer.hikari.util;
 
 import java.util.concurrent.Semaphore;
 
@@ -25,9 +25,9 @@ import java.util.concurrent.Semaphore;
  *
  * @author Brett Wooldridge
  */
-class SuspendResumeLock
+public class SuspendResumeLock
 {
-   static final SuspendResumeLock FAUX_LOCK = new SuspendResumeLock(false) {
+   public static final SuspendResumeLock FAUX_LOCK = new SuspendResumeLock(false) {
       @Override
       public void acquire() {}
 
@@ -47,7 +47,13 @@ class SuspendResumeLock
    /**
     * Default constructor
     */
-   SuspendResumeLock(final boolean createSemaphore) {
+   public SuspendResumeLock()
+   {
+      this(true);
+   }
+
+   private SuspendResumeLock(final boolean createSemaphore)
+   {
       acquisitionSemaphore = (createSemaphore ? new Semaphore(MAX_PERMITS, true) : null);
    }
 

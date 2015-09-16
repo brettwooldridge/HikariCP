@@ -171,7 +171,7 @@
                </execution>
             </executions>
             <configuration>
-               <mainClass>com.zaxxer.hikari.proxy.JavassistProxyFactory</mainClass>
+               <mainClass>com.zaxxer.hikari.util.JavassistProxyFactory</mainClass>
             </configuration>
          </plugin>
 

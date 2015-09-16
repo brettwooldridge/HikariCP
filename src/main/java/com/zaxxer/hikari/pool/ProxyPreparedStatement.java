@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.proxy;
+package com.zaxxer.hikari.pool;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -25,9 +25,9 @@ import java.sql.SQLException;
  *
  * @author Brett Wooldridge
  */
-public abstract class PreparedStatementProxy extends StatementProxy implements PreparedStatement
+public abstract class ProxyPreparedStatement extends ProxyStatement implements PreparedStatement
 {
-   protected PreparedStatementProxy(ConnectionProxy connection, PreparedStatement statement)
+   protected ProxyPreparedStatement(ProxyConnection connection, PreparedStatement statement)
    {
       super(connection, statement);
    }

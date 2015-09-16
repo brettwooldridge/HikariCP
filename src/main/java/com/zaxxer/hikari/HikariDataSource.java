@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.pool.HikariPool;
-import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 
 /**
  * The HikariCP pooled DataSource.
@@ -111,7 +110,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @Override
    public PrintWriter getLogWriter() throws SQLException
    {
-      return (pool != null ? pool.getDataSource().getLogWriter() : null);
+      return (pool != null ? pool.getUnwrappedDataSource().getLogWriter() : null);
    }
 
    /** {@inheritDoc} */
@@ -119,7 +118,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    public void setLogWriter(PrintWriter out) throws SQLException
    {
       if (pool != null) {
-         pool.getDataSource().setLogWriter(out);
+         pool.getUnwrappedDataSource().setLogWriter(out);
       }
    }
 
@@ -128,7 +127,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    public void setLoginTimeout(int seconds) throws SQLException
    {
       if (pool != null) {
-         pool.getDataSource().setLoginTimeout(seconds);
+         pool.getUnwrappedDataSource().setLoginTimeout(seconds);
       }
    }
 
@@ -136,7 +135,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @Override
    public int getLoginTimeout() throws SQLException
    {
-      return (pool != null ? pool.getDataSource().getLoginTimeout() : 0);
+      return (pool != null ? pool.getUnwrappedDataSource().getLoginTimeout() : 0);
    }
 
    /** {@inheritDoc} */
@@ -156,12 +155,12 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       }
 
       if (pool != null) {
-         if (iface.isInstance(pool.getDataSource())) {
-            return (T) pool.getDataSource();
+         if (iface.isInstance(pool.getUnwrappedDataSource())) {
+            return (T) pool.getUnwrappedDataSource();
          }
 
-         if (pool.getDataSource() != null) {
-            return (T) pool.getDataSource().unwrap(iface);
+         if (pool.getUnwrappedDataSource() != null) {
+            return (T) pool.getUnwrappedDataSource().unwrap(iface);
          }
       }
 
@@ -177,12 +176,12 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       }
       
       if (pool != null) {
-         if (iface.isInstance(pool.getDataSource())) {
+         if (iface.isInstance(pool.getUnwrappedDataSource())) {
             return true;
          }
 
-         if (pool.getDataSource() != null) {
-            return pool.getDataSource().isWrapperFor(iface);
+         if (pool.getUnwrappedDataSource() != null) {
+            return pool.getUnwrappedDataSource().isWrapperFor(iface);
          }
       }
 
@@ -247,8 +246,8 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
     */
    public void evictConnection(Connection connection)
    {
-      if (!isClosed() && pool != null && connection instanceof IHikariConnectionProxy) {
-         pool.evictConnection((IHikariConnectionProxy) connection);
+      if (!isClosed() && pool != null && connection.getClass().getName().startsWith("com.zaxxer.hikari")) {
+         pool.evictConnection(connection);
       }
    }
 

@@ -3,7 +3,6 @@ package com.zaxxer.hikari.pool;
 import static com.zaxxer.hikari.util.UtilityElf.createInstance;
 
 import java.lang.management.ManagementFactory;
-import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -23,17 +22,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.pool.Mediators.PoolEntryMediator;
-import com.zaxxer.hikari.pool.Mediators.JdbcMediator;
-import com.zaxxer.hikari.pool.Mediators.PoolMediator;
-import com.zaxxer.hikari.proxy.ConnectionState;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyElf;
+import com.zaxxer.hikari.util.UtilityElf;
 
-public final class Mediator implements Mediators, JdbcMediator, PoolMediator, PoolEntryMediator
+abstract class PoolBase
 {
-   private static final Logger LOGGER = LoggerFactory.getLogger(Mediator.class);
+   protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
+   protected final HikariConfig config;
+
    private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout"};
    private static final int UNINITIALIZED = -1;
    private static final int TRUE = 1;
@@ -46,8 +44,7 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
    private Executor netTimeoutExecutor;
    private DataSource dataSource;
 
-   private final HikariPool hikariPool;
-   private final HikariConfig config;
+   // private final HikariPool hikariPool;
    private final String poolName;
    private final String catalog;
    private final boolean isReadOnly;
@@ -58,16 +55,15 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
 
    private volatile boolean isValidChecked; 
 
-   public Mediator(final HikariPool pool)
+   public PoolBase(final HikariConfig config)
    {
-      this.hikariPool = pool;
-      this.config = pool.config;
+      this.config = config;
 
       this.networkTimeout = -1;
       this.catalog = config.getCatalog();
       this.isReadOnly = config.isReadOnly();
       this.isAutoCommit = config.isAutoCommit();
-      this.transactionIsolation = getTransactionIsolation(config.getTransactionIsolation());
+      this.transactionIsolation = UtilityElf.getTransactionIsolation(config.getTransactionIsolation());
 
       this.isQueryTimeoutSupported = UNINITIALIZED;
       this.isNetworkTimeoutSupported = UNINITIALIZED;
@@ -80,12 +76,17 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
       initializeDataSource();
    }
 
+   public String getPoolName()
+   {
+      return poolName;
+   }
+
+   abstract void releaseConnection(final PoolEntry poolEntry);
+
    // ***********************************************************************
-   //                        JdbcMediator methods
+   //                           JDBC methods
    // ***********************************************************************
 
-   /** {@inheritDoc} */
-   @Override
    public void quietlyCloseConnection(final Connection connection, final String closureReason)
    {
       try {
@@ -107,8 +108,6 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
       }
    }
 
-   /** {@inheritDoc} */
-   @Override
    public boolean isConnectionAlive(final Connection connection)
    {
       try {
@@ -143,15 +142,11 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
       }
    }
 
-   /** {@inheritDoc} */
-   @Override
    public DataSource getUnwrappedDataSource()
    {
       return dataSource;
    }
 
-   /** {@inheritDoc} */
-   @Override
    public Throwable getLastConnectionFailure()
    {
       return lastConnectionFailure.getAndSet(null);
@@ -159,17 +154,15 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
 
 
    // ***********************************************************************
-   //                     ConnectionStateMediator methods
+   //                         PoolEntry methods
    // ***********************************************************************
 
-   /** {@inheritDoc} */
-   @Override
    public PoolEntry newPoolEntry() throws Exception
    {
-      return new PoolEntry(newConnection(), hikariPool, this);
+      return new PoolEntry(newConnection(), this);
    }
 
-   public void resetConnectionState(final Connection connection, final ConnectionState liveState, final int dirtyBits) throws SQLException
+   public void resetConnectionState(final Connection connection, final ProxyConnection liveState, final int dirtyBits) throws SQLException
    {
       int resetBits = 0;
 
@@ -216,7 +209,7 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
     *
     * @param pool a HikariPool instance
     */
-   public void registerMBeans()
+   public void registerMBeans(final HikariPool hikariPool)
    {
       if (!config.isRegisterMbeans()) {
          return;
@@ -264,77 +257,11 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
       }
    }
 
-   public void shutdownTimeoutExecutor()
+   public void shutdownNetworkTimeoutExecutor()
    {
       if (netTimeoutExecutor != null && netTimeoutExecutor instanceof ThreadPoolExecutor) {
          ((ThreadPoolExecutor) netTimeoutExecutor).shutdownNow();
       }
-   }
-
-   // ***********************************************************************
-   //                        Mediators accessors
-   // ***********************************************************************
-
-   /** {@inheritDoc} */
-   @Override
-   public JdbcMediator getJdbcMediator()
-   {
-      return this;
-   }
-
-
-   /** {@inheritDoc} */
-   @Override
-   public PoolEntryMediator getConnectionStateMediator()
-   {
-      return this;
-   }
-
-
-   /** {@inheritDoc} */
-   @Override
-   public PoolMediator getPoolMediator()
-   {
-      return this;
-   }
-
-   // ***********************************************************************
-   //                       Misc. public methods
-   // ***********************************************************************
-
-   /**
-    * Get the int value of a transaction isolation level by name.
-    *
-    * @param transactionIsolationName the name of the transaction isolation level
-    * @return the int value of the isolation level or -1
-    */
-   public static int getTransactionIsolation(final String transactionIsolationName)
-   {
-      if (transactionIsolationName != null) {
-         try {
-            final String upperName = transactionIsolationName.toUpperCase();
-            if (upperName.startsWith("TRANSACTION_")) {
-               Field field = Connection.class.getField(upperName);
-               return field.getInt(null);
-            }
-            final int level = Integer.parseInt(transactionIsolationName);
-            switch (level) {
-               case Connection.TRANSACTION_READ_UNCOMMITTED:
-               case Connection.TRANSACTION_READ_COMMITTED:
-               case Connection.TRANSACTION_REPEATABLE_READ:
-               case Connection.TRANSACTION_SERIALIZABLE:
-               case Connection.TRANSACTION_NONE:
-                  return level;
-               default:
-                  throw new IllegalArgumentException();
-             }
-         }
-         catch (Exception e) {
-            throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
-         }
-      }
-
-      return -1;
    }
 
    // ***********************************************************************
@@ -571,7 +498,7 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
             command.run();
          }
          catch (Throwable t) {
-            LOGGER.debug("Exception executing {}", command, t);
+            LoggerFactory.getLogger(PoolBase.class).debug("Exception executing {}", command, t);
          }
       }
    }

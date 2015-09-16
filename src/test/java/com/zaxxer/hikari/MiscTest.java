@@ -29,8 +29,6 @@ import org.junit.Test;
 import org.slf4j.spi.LocationAwareLogger;
 
 import com.zaxxer.hikari.pool.HikariPool;
-import com.zaxxer.hikari.pool.LeakTask;
-import com.zaxxer.hikari.pool.Mediator;
 import com.zaxxer.hikari.util.UtilityElf;
 
 /**
@@ -66,7 +64,7 @@ public class MiscTest
    public void testInvalidIsolation()
    {
       try {
-         Mediator.getTransactionIsolation("INVALID");
+         UtilityElf.getTransactionIsolation("INVALID");
          Assert.fail();
       }
       catch (Exception e) {
@@ -87,11 +85,11 @@ public class MiscTest
    }
 
    @Test
-   public void testLeakDetection() throws SQLException
+   public void testLeakDetection() throws Exception
    {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       PrintStream ps = new PrintStream(baos, true);
-      TestElf.setSlf4jTargetStream(LeakTask.class, ps);
+      TestElf.setSlf4jTargetStream(Class.forName("com.zaxxer.hikari.pool.ProxyLeakTask"), ps);
 
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);

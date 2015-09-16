@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.proxy;
+package com.zaxxer.hikari.pool;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -26,13 +26,13 @@ import java.sql.Wrapper;
  *
  * @author Brett Wooldridge
  */
-public abstract class ResultSetProxy implements ResultSet
+public abstract class ProxyResultSet implements ResultSet
 {
-   protected final ConnectionProxy connection;
-   protected final StatementProxy statement;
+   protected final ProxyConnection connection;
+   protected final ProxyStatement statement;
    protected final ResultSet delegate;
 
-   protected ResultSetProxy(ConnectionProxy connection, StatementProxy statement, ResultSet resultSet)
+   protected ProxyResultSet(ProxyConnection connection, ProxyStatement statement, ResultSet resultSet)
    {
       this.connection = connection;
       this.statement = statement;

@@ -28,7 +28,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zaxxer.hikari.pool.Mediator;
+import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.pool.PoolEntry;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
@@ -40,7 +40,7 @@ import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 public class TestConcurrentBag
 {
    private static HikariDataSource ds;
-   private static Mediator mediator;
+   private static HikariPool pool;
 
    @BeforeClass
    public static void setup()
@@ -53,7 +53,7 @@ public class TestConcurrentBag
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       ds = new HikariDataSource(config);      
-      mediator = new Mediator(TestElf.getPool(ds));
+      pool = TestElf.getPool(ds);
    }
 
    @AfterClass
@@ -104,15 +104,15 @@ public class TestConcurrentBag
       });
       Assert.assertEquals(0, bag.values(8).size());
 
-      PoolEntry reserved = mediator.newPoolEntry();
+      PoolEntry reserved = pool.newPoolEntry();
       bag.add(reserved);
       bag.reserve(reserved);      // reserved
 
-      PoolEntry inuse = mediator.newPoolEntry();
+      PoolEntry inuse = pool.newPoolEntry();
       bag.add(inuse);
       bag.borrow(2, TimeUnit.MILLISECONDS); // in use
       
-      PoolEntry notinuse = mediator.newPoolEntry();
+      PoolEntry notinuse = pool.newPoolEntry();
       bag.add(notinuse); // not in use
 
       bag.dumpState();
@@ -135,7 +135,7 @@ public class TestConcurrentBag
 
       bag.close();
       try {
-         PoolEntry bagEntry = mediator.newPoolEntry();
+         PoolEntry bagEntry = pool.newPoolEntry();
          bag.add(bagEntry);
          Assert.assertNotEquals(bagEntry, bag.borrow(100, TimeUnit.MILLISECONDS));
       }

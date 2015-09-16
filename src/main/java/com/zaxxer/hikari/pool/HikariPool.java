@@ -36,8 +36,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.sql.DataSource;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,14 +49,11 @@ import com.zaxxer.hikari.metrics.MetricsTracker;
 import com.zaxxer.hikari.metrics.MetricsTracker.MetricsContext;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.PoolStats;
-import com.zaxxer.hikari.pool.Mediators.PoolEntryMediator;
-import com.zaxxer.hikari.pool.Mediators.JdbcMediator;
-import com.zaxxer.hikari.pool.Mediators.PoolMediator;
-import com.zaxxer.hikari.proxy.IHikariConnectionProxy;
 import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
+import com.zaxxer.hikari.util.SuspendResumeLock;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -66,7 +61,7 @@ import com.zaxxer.hikari.util.DefaultThreadFactory;
  *
  * @author Brett Wooldridge
  */
-public class HikariPool implements HikariPoolMXBean, IBagStateListener
+public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateListener
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
 
@@ -79,13 +74,12 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
    private static final int POOL_SUSPENDED = 1;
    private static final int POOL_SHUTDOWN = 2;
 
-   final HikariConfig config;
    final ConcurrentBag<PoolEntry> connectionBag;
    final ScheduledThreadPoolExecutor houseKeepingExecutorService;
 
-   private final JdbcMediator jdbcMediator;
-   private final PoolMediator poolMediator;
-   private final PoolEntryMediator entryMediator;
+//   private final JdbcMediator jdbcMediator;
+//   private final PoolMediator poolMediator;
+//   private final PoolEntryMediator entryMediator;
 
    private final AtomicInteger totalConnections;
    private final ThreadPoolExecutor addConnectionExecutor;
@@ -95,7 +89,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
    private long connectionTimeout;
 
    private final String poolName;
-   private final LeakTask leakTask;
+   private final ProxyLeakTask leakTask;
    private final SuspendResumeLock suspendResumeLock;
 
    private volatile MetricsTracker metricsTracker;
@@ -108,18 +102,17 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
     */
    public HikariPool(final HikariConfig config)
     {
-      this.config = config;
+      super(config);
 
-      final Mediator mediators = new Mediator(this);
-      this.jdbcMediator = mediators.getJdbcMediator();
-      this.poolMediator = mediators.getPoolMediator();
-      this.entryMediator = mediators.getConnectionStateMediator();
+//      this.jdbcMediator = mediators.getJdbcMediator();
+//      this.poolMediator = mediators.getPoolMediator();
+//      this.entryMediator = mediators.getConnectionStateMediator();
 
       this.poolName = config.getPoolName();
       this.connectionBag = new ConcurrentBag<>(this);
       this.totalConnections = new AtomicInteger();
       this.connectionTimeout = config.getConnectionTimeout();
-      this.suspendResumeLock = config.isAllowPoolSuspension() ? new SuspendResumeLock(true) : SuspendResumeLock.FAUX_LOCK;
+      this.suspendResumeLock = config.isAllowPoolSuspension() ? new SuspendResumeLock() : SuspendResumeLock.FAUX_LOCK;
 
       this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection filler (pool " + poolName + ")", config.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
       this.closeConnectionExecutor = createThreadPoolExecutor(4, "Hikari connection closer (pool " + poolName + ")", config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
@@ -136,7 +129,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
 
       this.houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), HOUSEKEEPING_PERIOD_MS, HOUSEKEEPING_PERIOD_MS, TimeUnit.MILLISECONDS);
 
-      this.leakTask = new LeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
+      this.leakTask = new ProxyLeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
       if (config.getMetricsTrackerFactory() != null) {
          setMetricsTrackerFactory(config.getMetricsTrackerFactory());
@@ -147,7 +140,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
 
       setHealthCheckRegistry(config.getHealthCheckRegistry());
 
-      poolMediator.registerMBeans();
+      registerMBeans(this);
 
       initializeConnections();
    }
@@ -185,7 +178,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
             }
 
             final long now = clockSource.currentTime();
-            if (poolEntry.evict || (clockSource.elapsedMillis(poolEntry.lastAccess, now) > ALIVE_BYPASS_WINDOW_MS && !jdbcMediator.isConnectionAlive(poolEntry.connection))) {
+            if (poolEntry.evict || (clockSource.elapsedMillis(poolEntry.lastAccess, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
                closeConnection(poolEntry, "(connection evicted or dead)"); // Throw away the dead connection and try again
                timeout = hardTimeout - clockSource.elapsedMillis(startTime, now);
             }
@@ -207,7 +200,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       logPoolState("Timeout failure\t");
 
       String sqlState = null;
-      final Throwable originalException = jdbcMediator.getLastConnectionFailure();
+      final Throwable originalException = getLastConnectionFailure();
       if (originalException instanceof SQLException) {
          sqlState = ((SQLException) originalException).getSQLState();
       }
@@ -272,14 +265,14 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
             assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
          }
 
-         poolMediator.shutdownTimeoutExecutor();
+         shutdownNetworkTimeoutExecutor();
          closeConnectionExecutor.shutdown();
          closeConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
       }
       finally {
          logPoolState("After closing\t");
 
-         poolMediator.unregisterMBeans();
+         unregisterMBeans();
          metricsTracker.close();
       }
    }
@@ -289,19 +282,9 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
     *
     * @param proxyConnection the connection to evict
     */
-   public final void evictConnection(IHikariConnectionProxy proxyConnection)
+   public final void evictConnection(Connection proxyConnection)
    {
-      softEvictConnection(proxyConnection.getPoolEntry(), "(connection evicted by user)", true /* owner */);
-   }
-
-   /**
-    * Get the wrapped DataSource.
-    *
-    * @return the wrapped DataSource
-    */
-   public final DataSource getDataSource()
-   {
-      return jdbcMediator.getUnwrappedDataSource();
+      softEvictConnection(((ProxyConnection) proxyConnection).getPoolEntry(), "(connection evicted by user)", true /* owner */);
    }
 
    public void setMetricRegistry(Object metricRegistry)
@@ -468,7 +451,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          closeConnectionExecutor.execute(new Runnable() {
             @Override
             public void run() {
-               jdbcMediator.quietlyCloseConnection(connection, closureReason);
+               quietlyCloseConnection(connection, closureReason);
             }
          });
       }
@@ -490,7 +473,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       }
 
       try {
-         final PoolEntry poolEntry = entryMediator.newPoolEntry();
+         final PoolEntry poolEntry = newPoolEntry();
          connectionBag.add(poolEntry);
 
          final long maxLifetime = config.getMaxLifetime();
@@ -548,7 +531,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
             poolEntry.connection.abort(assassinExecutor);
          }
          catch (Throwable e) {
-            jdbcMediator.quietlyCloseConnection(poolEntry.connection, "(connection aborted during shutdown)");
+            quietlyCloseConnection(poolEntry.connection, "(connection aborted during shutdown)");
          }
          finally {
             poolEntry.close();
@@ -567,7 +550,7 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
       if (config.isInitializationFailFast()) {
          try {
             if (!addConnection()) {
-               throw jdbcMediator.getLastConnectionFailure();
+               throw getLastConnectionFailure();
             }
 
             final PoolEntry poolEntry = connectionBag.borrow(connectionTimeout, TimeUnit.MILLISECONDS);
@@ -665,6 +648,20 @@ public class HikariPool implements HikariPoolMXBean, IBagStateListener
          }
 
          fillPool(); // Try to maintain minimum connections
+      }
+   }
+
+   public static class PoolInitializationException extends RuntimeException
+   {
+      private static final long serialVersionUID = 929872118275916520L;
+
+      /**
+       * Construct an exception, possibly wrapping the provided Throwable as the cause.
+       * @param t the Throwable to wrap
+       */
+      public PoolInitializationException(Throwable t)
+      {
+         super("Exception during pool initialization: " + t.getMessage(), t);
       }
    }
 }

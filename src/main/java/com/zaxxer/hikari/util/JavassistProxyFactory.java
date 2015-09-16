@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.proxy;
+package com.zaxxer.hikari.util;
 
 import java.lang.reflect.Array;
 import java.sql.CallableStatement;
@@ -27,6 +27,13 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import com.zaxxer.hikari.pool.ProxyCallableStatement;
+import com.zaxxer.hikari.pool.ProxyConnection;
+import com.zaxxer.hikari.pool.ProxyFactory;
+import com.zaxxer.hikari.pool.ProxyPreparedStatement;
+import com.zaxxer.hikari.pool.ProxyResultSet;
+import com.zaxxer.hikari.pool.ProxyStatement;
 
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -57,14 +64,14 @@ public final class JavassistProxyFactory
       try {
          // Cast is not needed for these
          String methodBody = "{ try { return delegate.method($$); } catch (SQLException e) { throw checkException(e); } }";
-         generateProxyClass(Connection.class, ConnectionProxy.class.getName(), methodBody);
-         generateProxyClass(Statement.class, StatementProxy.class.getName(), methodBody);
-         generateProxyClass(ResultSet.class, ResultSetProxy.class.getName(), methodBody);
+         generateProxyClass(Connection.class, ProxyConnection.class.getName(), methodBody);
+         generateProxyClass(Statement.class, ProxyStatement.class.getName(), methodBody);
+         generateProxyClass(ResultSet.class, ProxyResultSet.class.getName(), methodBody);
          
          // For these we have to cast the delegate
          methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { throw checkException(e); } }";
-         generateProxyClass(PreparedStatement.class, PreparedStatementProxy.class.getName(), methodBody);
-         generateProxyClass(CallableStatement.class, CallableStatementProxy.class.getName(), methodBody);
+         generateProxyClass(PreparedStatement.class, ProxyPreparedStatement.class.getName(), methodBody);
+         generateProxyClass(CallableStatement.class, ProxyCallableStatement.class.getName(), methodBody);
 
          modifyProxyFactory();
       }
@@ -77,24 +84,24 @@ public final class JavassistProxyFactory
    {
       System.out.println("Generating method bodies for com.zaxxer.hikari.proxy.ProxyFactory");
 
-      String packageName = JavassistProxyFactory.class.getPackage().getName();
-      CtClass proxyCt = classPool.getCtClass("com.zaxxer.hikari.proxy.ProxyFactory");
+      String packageName = ProxyConnection.class.getPackage().getName();
+      CtClass proxyCt = classPool.getCtClass("com.zaxxer.hikari.pool.ProxyFactory");
       for (CtMethod method : proxyCt.getMethods()) {
          switch (method.getName()) {
          case "getProxyConnection":
-            method.setBody("{return new " + packageName + ".HikariConnectionProxy($$);}");
+            method.setBody("{return new " + packageName + ".HikariProxyConnection($$);}");
             break;
          case "getProxyStatement":
-            method.setBody("{return new " + packageName + ".HikariStatementProxy($$);}");
+            method.setBody("{return new " + packageName + ".HikariProxyStatement($$);}");
             break;
          case "getProxyPreparedStatement":
-            method.setBody("{return new " + packageName + ".HikariPreparedStatementProxy($$);}");
+            method.setBody("{return new " + packageName + ".HikariProxyPreparedStatement($$);}");
             break;
          case "getProxyCallableStatement":
-            method.setBody("{return new " + packageName + ".HikariCallableStatementProxy($$);}");
+            method.setBody("{return new " + packageName + ".HikariProxyCallableStatement($$);}");
             break;
          case "getProxyResultSet":
-            method.setBody("{return new " + packageName + ".HikariResultSetProxy($$);}");
+            method.setBody("{return new " + packageName + ".HikariProxyResultSet($$);}");
             break;
          }
       }

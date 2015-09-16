@@ -17,6 +17,8 @@
 package com.zaxxer.hikari.util;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.sql.Connection;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
@@ -99,5 +101,44 @@ public final class UtilityElf
       ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 5, TimeUnit.SECONDS, queue, threadFactory, policy);
       executor.allowCoreThreadTimeOut(true);
       return executor;
+   }
+
+   // ***********************************************************************
+   //                       Misc. public methods
+   // ***********************************************************************
+
+   /**
+    * Get the int value of a transaction isolation level by name.
+    *
+    * @param transactionIsolationName the name of the transaction isolation level
+    * @return the int value of the isolation level or -1
+    */
+   public static int getTransactionIsolation(final String transactionIsolationName)
+   {
+      if (transactionIsolationName != null) {
+         try {
+            final String upperName = transactionIsolationName.toUpperCase();
+            if (upperName.startsWith("TRANSACTION_")) {
+               Field field = Connection.class.getField(upperName);
+               return field.getInt(null);
+            }
+            final int level = Integer.parseInt(transactionIsolationName);
+            switch (level) {
+               case Connection.TRANSACTION_READ_UNCOMMITTED:
+               case Connection.TRANSACTION_READ_COMMITTED:
+               case Connection.TRANSACTION_REPEATABLE_READ:
+               case Connection.TRANSACTION_SERIALIZABLE:
+               case Connection.TRANSACTION_NONE:
+                  return level;
+               default:
+                  throw new IllegalArgumentException();
+             }
+         }
+         catch (Exception e) {
+            throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
+         }
+      }
+
+      return -1;
    }
 }

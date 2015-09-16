@@ -16,6 +16,8 @@
 
 package com.zaxxer.hikari;
 
+import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -31,10 +33,8 @@ import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.mocks.StubDataSource;
 import com.zaxxer.hikari.mocks.StubStatement;
 import com.zaxxer.hikari.pool.HikariPool;
-import com.zaxxer.hikari.pool.PoolInitializationException;
+import com.zaxxer.hikari.pool.HikariPool.PoolInitializationException;
 import com.zaxxer.hikari.util.UtilityElf;
-
-import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 
 /**
  * System property testProxy can be one of:

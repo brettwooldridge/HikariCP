@@ -40,8 +40,8 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
-import com.zaxxer.hikari.pool.Mediator;
 import com.zaxxer.hikari.util.PropertyElf;
+import com.zaxxer.hikari.util.UtilityElf;
 
 public class HikariConfig implements HikariConfigMXBean
 {
@@ -775,7 +775,7 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       if (transactionIsolationName != null) {
-         Mediator.getTransactionIsolation(transactionIsolationName);
+         UtilityElf.getTransactionIsolation(transactionIsolationName);
       }
 
       if (LOGGER.isDebugEnabled() || unitTest) {
