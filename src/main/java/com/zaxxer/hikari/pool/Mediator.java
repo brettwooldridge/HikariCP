@@ -537,7 +537,7 @@ public final class Mediator implements Mediators, JdbcMediator, PoolMediator, Po
             if (isCommit) {
                connection.commit();
             }
-            if (isRollback) {
+            else if (isRollback) {
                connection.rollback();
             }
          }

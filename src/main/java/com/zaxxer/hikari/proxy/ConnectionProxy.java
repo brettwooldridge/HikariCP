@@ -133,13 +133,6 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
       return networkTimeout;
    }
 
-   /** {@inheritDoc} */
-   @Override
-   public final long getLastAccess()
-   {
-      return lastAccess;
-   }
-
    // ***********************************************************************
    //                      IHikariConnectionProxy methods
    // ***********************************************************************
@@ -257,7 +250,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy, Connect
          }
          finally {
             delegate = ClosedConnection.CLOSED_CONNECTION;
-            poolEntry.close(lastAccess);
+            poolEntry.recycle(lastAccess);
          }
       }
    }

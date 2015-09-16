@@ -80,7 +80,7 @@ public final class PoolEntry implements IConcurrentBagEntry
     *
     * @param lastAccess last access time-stamp
     */
-   public void close(final long lastAccess)
+   public void recycle(final long lastAccess)
    {
       this.lastAccess = lastAccess;
       hikariPool.releaseConnection(this);
