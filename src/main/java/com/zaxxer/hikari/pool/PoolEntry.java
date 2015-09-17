@@ -37,11 +37,11 @@ public final class PoolEntry implements IConcurrentBagEntry
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(PoolEntry.class);
 
-   public Connection connection;
-   public long lastAccess;
+   Connection connection;
+   long lastAccess;
 
-   public volatile long lastOpenTime;
-   public volatile boolean evict;
+   volatile long lastOpenTime;
+   volatile boolean evict;
 
    private final FastList<Statement> openStatements;
    private final PoolBase poolBase;
@@ -63,7 +63,7 @@ public final class PoolEntry implements IConcurrentBagEntry
     *
     * @param lastAccess last access time-stamp
     */
-   public void recycle(final long lastAccess)
+   void recycle(final long lastAccess)
    {
       this.lastAccess = lastAccess;
       poolBase.releaseConnection(this);
@@ -72,7 +72,7 @@ public final class PoolEntry implements IConcurrentBagEntry
    /**
     * @param endOfLife
     */
-   public void setFutureEol(final ScheduledFuture<?> endOfLife)
+   void setFutureEol(final ScheduledFuture<?> endOfLife)
    {
       this.endOfLife = endOfLife;
    }
@@ -92,7 +92,7 @@ public final class PoolEntry implements IConcurrentBagEntry
       return poolBase.getPoolName();
    }
 
-   public Connection getConnection()
+   Connection getConnection()
    {
       return connection;
    }
@@ -107,14 +107,20 @@ public final class PoolEntry implements IConcurrentBagEntry
       return evict;
    }
 
-   public void evict()
+   void evict()
    {
       this.evict = true;
    }
 
-   public FastList<Statement> getStatementsList()
+   FastList<Statement> getStatementsList()
    {
       return openStatements;
+   }
+
+   /** Returns millis since lastOpenTime */
+   public long getElapsedMillis()
+   {
+      return ClockSource.INSTANCE.elapsedMillis(lastOpenTime);
    }
 
    // ***********************************************************************

@@ -21,12 +21,9 @@ import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.zaxxer.hikari.pool.PoolEntry;
-import com.zaxxer.hikari.util.ClockSource;
 
 public final class CodaHaleMetricsTracker extends MetricsTracker
 {
-   private static final ClockSource clockSource = ClockSource.INSTANCE;
-
    private final String poolName;
    private final Timer connectionObtainTimer;
    private final Histogram connectionUsage;
@@ -95,7 +92,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    @Override
    public void recordConnectionUsage(final PoolEntry bagEntry)
    {
-      connectionUsage.update(clockSource.elapsedMillis(bagEntry.lastOpenTime));
+      connectionUsage.update(bagEntry.getElapsedMillis());
    }
 
    public Timer getConnectionAcquisitionTimer()
@@ -121,13 +118,6 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
       public void stop()
       {
          innerContext.stop();
-      }
-
-      /** {@inheritDoc} */
-      @Override
-      public void setConnectionLastOpen(final PoolEntry bagEntry, final long now)
-      {
-         bagEntry.lastOpenTime = now;
       }
    }
 }
