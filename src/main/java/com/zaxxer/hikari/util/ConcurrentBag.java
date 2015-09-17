@@ -156,8 +156,8 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
             addItemFuture = listener.addBagItem();
          }
 
-         timeout = originTimeout - (System.nanoTime() - startScan);
-      } while (timeout > 1000L && synchronizer.waitUntilSequenceExceeded(startSeq, timeout));
+         timeout = originTimeout - Math.abs(System.nanoTime() - startScan);
+      } while (timeout > 100_00L && synchronizer.waitUntilSequenceExceeded(startSeq, timeout));
 
       return null;
    }

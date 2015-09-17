@@ -50,7 +50,7 @@ public interface Sequence
       public static Sequence create()
       {
          try {
-            if (Sequence.class.getClassLoader().loadClass("java.util.concurrent.atomic.LongAdder") != null) {
+            if (Sequence.class.getClassLoader().loadClass("java.util.concurrent.atomic.LongAdder") != null && !Boolean.getBoolean("com.zaxxer.hikari.useAtomicLongSequence")) {
                return new Java8Sequence();
             }
          }
