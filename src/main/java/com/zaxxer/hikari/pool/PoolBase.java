@@ -31,6 +31,7 @@ abstract class PoolBase
 {
    protected final Logger LOGGER = LoggerFactory.getLogger(PoolBase.class);
    protected final HikariConfig config;
+   protected final String poolName;
    protected long connectionTimeout;
 
    private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout"};
@@ -45,8 +46,6 @@ abstract class PoolBase
    private Executor netTimeoutExecutor;
    private DataSource dataSource;
 
-   // private final HikariPool hikariPool;
-   private final String poolName;
    private final String catalog;
    private final boolean isReadOnly;
    private final boolean isAutoCommit;

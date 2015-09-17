@@ -83,7 +83,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private final ConcurrentBag<PoolEntry> connectionBag;
 
-   private final String poolName;
    private final ProxyLeakTask leakTask;
    private final SuspendResumeLock suspendResumeLock;
 
@@ -99,7 +98,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
     {
       super(config);
 
-      this.poolName = config.getPoolName();
       this.connectionBag = new ConcurrentBag<>(this);
       this.totalConnections = new AtomicInteger();
       this.suspendResumeLock = config.isAllowPoolSuspension() ? new SuspendResumeLock() : SuspendResumeLock.FAUX_LOCK;
