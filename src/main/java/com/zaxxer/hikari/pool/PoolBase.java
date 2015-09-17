@@ -29,7 +29,7 @@ import com.zaxxer.hikari.util.UtilityElf;
 
 abstract class PoolBase
 {
-   protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
+   protected final Logger LOGGER = LoggerFactory.getLogger(PoolBase.class);
    protected final HikariConfig config;
    protected long connectionTimeout;
 
