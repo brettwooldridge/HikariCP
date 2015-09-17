@@ -18,8 +18,6 @@ package com.zaxxer.hikari.pool;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -37,10 +35,7 @@ import com.zaxxer.hikari.util.FastList;
  */
 public final class PoolEntry implements IConcurrentBagEntry
 {
-   private static final Logger LOGGER;
-   private static final SimpleDateFormat DATE_FORMAT;
-
-   public final long creationTime;
+   private static final Logger LOGGER = LoggerFactory.getLogger(PoolEntry.class);
 
    public Connection connection;
    public long lastAccess;
@@ -54,17 +49,10 @@ public final class PoolEntry implements IConcurrentBagEntry
 
    private volatile ScheduledFuture<?> endOfLife;
 
-   static
-   {
-      LOGGER = LoggerFactory.getLogger(PoolEntry.class);
-      DATE_FORMAT = new SimpleDateFormat("MMM dd, HH:mm:ss.SSS");
-   }
-
    PoolEntry(final Connection connection, final PoolBase pool)
    {
       this.connection = connection;
       this.poolBase = pool;
-      this.creationTime = System.currentTimeMillis();
       this.state = new AtomicInteger(STATE_NOT_IN_USE);
       this.lastAccess = ClockSource.INSTANCE.currentTime();
       this.openStatements = new FastList<>(Statement.class, 16);
@@ -159,8 +147,7 @@ public final class PoolEntry implements IConcurrentBagEntry
    public String toString()
    {
       return connection
-         + ", created " + formatDateTime(creationTime)
-         + ", last release " + ClockSource.INSTANCE.elapsedMillis(lastAccess) + "ms ago, "
+         + ", last access " + ClockSource.INSTANCE.elapsedMillis(lastAccess) + "ms ago, "
          + stateToString();
    }
 
@@ -172,11 +159,6 @@ public final class PoolEntry implements IConcurrentBagEntry
 
       endOfLife = null;
       connection = null;
-   }
-
-   private static synchronized String formatDateTime(final long timestamp)
-   {
-      return DATE_FORMAT.format(new Date(timestamp));
    }
 
    private String stateToString()

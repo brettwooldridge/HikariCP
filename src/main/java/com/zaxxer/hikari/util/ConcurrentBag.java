@@ -244,9 +244,9 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    public List<T> values(final int state)
    {
       final ArrayList<T> list = new ArrayList<>(sharedList.size());
-      for (final T reference : sharedList) {
-         if (reference.getState() == state) {
-            list.add(reference);
+      for (final T entry : sharedList) {
+         if (entry.getState() == state) {
+            list.add(entry);
          }
       }
 
@@ -320,8 +320,8 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    public int getCount(final int state)
    {
       int count = 0;
-      for (final T reference : sharedList) {
-         if (reference.getState() == state) {
+      for (final T entry : sharedList) {
+         if (entry.getState() == state) {
             count++;
          }
       }
