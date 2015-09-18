@@ -40,7 +40,7 @@ public abstract class ProxyStatement implements Statement
       this.delegate = statement;
    }
 
-   protected final SQLException checkException(SQLException e)
+   final SQLException checkException(SQLException e)
    {
       return connection.checkException(e);
    }

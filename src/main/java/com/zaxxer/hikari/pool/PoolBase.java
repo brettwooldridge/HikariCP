@@ -77,7 +77,7 @@ abstract class PoolBase
       initializeDataSource();
    }
 
-   public String getPoolName()
+   String getPoolName()
    {
       return poolName;
    }
@@ -88,7 +88,7 @@ abstract class PoolBase
    //                           JDBC methods
    // ***********************************************************************
 
-   public void quietlyCloseConnection(final Connection connection, final String closureReason)
+   void quietlyCloseConnection(final Connection connection, final String closureReason)
    {
       try {
          if (connection == null || connection.isClosed()) {
@@ -109,7 +109,7 @@ abstract class PoolBase
       }
    }
 
-   public boolean isConnectionAlive(final Connection connection)
+   boolean isConnectionAlive(final Connection connection)
    {
       try {
          final long validationTimeout = config.getValidationTimeout();
@@ -143,16 +143,15 @@ abstract class PoolBase
       }
    }
 
-   public DataSource getUnwrappedDataSource()
-   {
-      return dataSource;
-   }
-
-   public Throwable getLastConnectionFailure()
+   Throwable getLastConnectionFailure()
    {
       return lastConnectionFailure.getAndSet(null);
    }
 
+   public DataSource getUnwrappedDataSource()
+   {
+      return dataSource;
+   }
 
    // ***********************************************************************
    //                         PoolEntry methods
@@ -163,7 +162,7 @@ abstract class PoolBase
       return new PoolEntry(newConnection(), this);
    }
 
-   public void resetConnectionState(final Connection connection, final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
+   void resetConnectionState(final Connection connection, final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
    {
       int resetBits = 0;
 
@@ -200,9 +199,15 @@ abstract class PoolBase
       }
    }
    
+   void shutdownNetworkTimeoutExecutor()
+   {
+      if (netTimeoutExecutor != null && netTimeoutExecutor instanceof ThreadPoolExecutor) {
+         ((ThreadPoolExecutor) netTimeoutExecutor).shutdownNow();
+      }
+   }
 
    // ***********************************************************************
-   //                       PoolMediator methods
+   //                       JMX methods
    // ***********************************************************************
 
    /**
@@ -255,13 +260,6 @@ abstract class PoolBase
       }
       catch (Exception e) {
          LOGGER.warn("{} - Unable to unregister management beans.", poolName, e);
-      }
-   }
-
-   public void shutdownNetworkTimeoutExecutor()
-   {
-      if (netTimeoutExecutor != null && netTimeoutExecutor instanceof ThreadPoolExecutor) {
-         ((ThreadPoolExecutor) netTimeoutExecutor).shutdownNow();
       }
    }
 

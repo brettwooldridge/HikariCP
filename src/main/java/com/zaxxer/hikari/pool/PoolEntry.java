@@ -81,12 +81,12 @@ public final class PoolEntry implements IConcurrentBagEntry
       return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, now);
    }
 
-   public void resetConnectionState(final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
+   void resetConnectionState(final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
    {
       poolBase.resetConnectionState(connection, proxyConnection, dirtyBits);
    }
 
-   public String getPoolName()
+   String getPoolName()
    {
       return poolBase.getPoolName();
    }
@@ -96,7 +96,7 @@ public final class PoolEntry implements IConcurrentBagEntry
       return connection;
    }
 
-   public boolean isEvicted()
+   boolean isEvicted()
    {
       return evict;
    }

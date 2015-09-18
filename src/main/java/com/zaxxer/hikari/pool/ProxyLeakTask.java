@@ -87,7 +87,7 @@ class ProxyLeakTask implements Runnable
       LOGGER.warn("Connection leak detection triggered for connection {}, stack trace follows", connectionName, exception);
    }
 
-   public void cancel()
+   void cancel()
    {
       scheduledFuture.cancel(false);
    }
