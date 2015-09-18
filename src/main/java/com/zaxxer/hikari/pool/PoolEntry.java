@@ -38,9 +38,8 @@ public final class PoolEntry implements IConcurrentBagEntry
    private static final Logger LOGGER = LoggerFactory.getLogger(PoolEntry.class);
 
    Connection connection;
-   long lastAccess;
-
-   volatile long lastOpenTime;
+   long lastAccessed;
+   long lastBorrowed;
    volatile boolean evict;
 
    private final FastList<Statement> openStatements;
@@ -54,18 +53,18 @@ public final class PoolEntry implements IConcurrentBagEntry
       this.connection = connection;
       this.poolBase = pool;
       this.state = new AtomicInteger(STATE_NOT_IN_USE);
-      this.lastAccess = ClockSource.INSTANCE.currentTime();
+      this.lastAccessed = ClockSource.INSTANCE.currentTime();
       this.openStatements = new FastList<>(Statement.class, 16);
    }
 
    /**
     * Release this entry back to the pool.
     *
-    * @param lastAccess last access time-stamp
+    * @param lastAccessed last access time-stamp
     */
-   void recycle(final long lastAccess)
+   void recycle(final long lastAccessed)
    {
-      this.lastAccess = lastAccess;
+      this.lastAccessed = lastAccessed;
       poolBase.releaseConnection(this);
    }
 
@@ -97,11 +96,6 @@ public final class PoolEntry implements IConcurrentBagEntry
       return connection;
    }
 
-   public long getLastAccess()
-   {
-      return lastAccess;
-   }
-
    public boolean isEvicted()
    {
       return evict;
@@ -117,10 +111,10 @@ public final class PoolEntry implements IConcurrentBagEntry
       return openStatements;
    }
 
-   /** Returns millis since lastOpenTime */
-   public long getElapsedMillis()
+   /** Returns millis since lastBorrowed */
+   public long getElapsedLastBorrowed()
    {
-      return ClockSource.INSTANCE.elapsedMillis(lastOpenTime);
+      return ClockSource.INSTANCE.elapsedMillis(lastBorrowed);
    }
 
    // ***********************************************************************
@@ -153,7 +147,8 @@ public final class PoolEntry implements IConcurrentBagEntry
    public String toString()
    {
       return connection
-         + ", last access " + ClockSource.INSTANCE.elapsedMillis(lastAccess) + "ms ago, "
+         + ", borrowed " + ClockSource.INSTANCE.elapsedMillis(lastBorrowed) + "ms ago, "
+         + ", accessed " + ClockSource.INSTANCE.elapsedMillis(lastAccessed) + "ms ago, "
          + stateToString();
    }
 

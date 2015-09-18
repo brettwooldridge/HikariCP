@@ -166,12 +166,12 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             }
 
             final long now = clockSource.currentTime();
-            if (poolEntry.evict || (clockSource.elapsedMillis(poolEntry.lastAccess, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
+            if (poolEntry.evict || (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
                closeConnection(poolEntry, "(connection evicted or dead)"); // Throw away the dead connection and try again
                timeout = hardTimeout - clockSource.elapsedMillis(startTime, now);
             }
             else {
-               poolEntry.lastOpenTime = now;
+               poolEntry.lastBorrowed = now;
                metricsContext.stop();
                return poolEntry.createProxyConnection(leakTask.start(poolEntry), now);
             }
@@ -625,7 +625,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                if (removable <= 0) {
                   break;
                }
-               if (clockSource.elapsedMillis(poolEntry.lastAccess, now) > idleTimeout) {
+               if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout) {
                   if (connectionBag.reserve(poolEntry)) {
                      closeConnection(poolEntry, "(connection passed idleTimeout)");
                      removable--;
