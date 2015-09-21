@@ -79,7 +79,7 @@ abstract class PoolBase
       initializeDataSource();
    }
 
-   String getPoolName()
+   public String toString()
    {
       return poolName;
    }
@@ -571,14 +571,14 @@ abstract class PoolBase
 
       void recordConnectionUsage(final PoolEntry poolEntry)
       {
-         tracker.recordConnectionUsage(poolEntry.getElapsedLastBorrowed());
+         tracker.recordConnectionUsage(poolEntry.getMillisSinceBorrowed());
       }
 
       /**
        * @param poolEntry
        * @param now
        */
-      void recordLastBurrowed(final PoolEntry poolEntry, final long now)
+      void recordLastBorrowed(final PoolEntry poolEntry, final long now)
       {
          poolEntry.lastBorrowed = now;
       }
@@ -603,7 +603,7 @@ abstract class PoolBase
       }
 
       @Override
-      void recordLastBurrowed(final PoolEntry poolEntry, final long now)
+      void recordLastBorrowed(final PoolEntry poolEntry, final long now)
       {
          // no-op
       }

@@ -88,7 +88,7 @@ final class PoolEntry implements IConcurrentBagEntry
 
    String getPoolName()
    {
-      return poolBase.getPoolName();
+      return poolBase.toString();
    }
 
    Connection getConnection()
@@ -112,7 +112,7 @@ final class PoolEntry implements IConcurrentBagEntry
    }
 
    /** Returns millis since lastBorrowed */
-   long getElapsedLastBorrowed()
+   long getMillisSinceBorrowed()
    {
       return ClockSource.INSTANCE.elapsedMillis(lastBorrowed);
    }
