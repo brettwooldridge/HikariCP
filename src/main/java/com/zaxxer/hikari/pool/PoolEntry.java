@@ -112,7 +112,7 @@ final class PoolEntry implements IConcurrentBagEntry
    }
 
    /** Returns millis since lastBorrowed */
-   long getElapsedLastBorrowed()
+   long getMillisSinceBorrowed()
    {
       return ClockSource.INSTANCE.elapsedMillis(lastBorrowed);
    }
