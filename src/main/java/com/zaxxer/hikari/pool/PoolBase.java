@@ -561,6 +561,7 @@ abstract class PoolBase
       @Override
       public void close()
       {
+         tracker.close();
       }
 
       MetricsTimerContext recordConnectionRequest()
@@ -591,6 +592,18 @@ abstract class PoolBase
       }
 
       void recordConnectionUsage(final PoolEntry poolEntry)
+      {
+         // no-op
+      }
+
+      @Override
+      public void close()
+      {
+         // no-op
+      }
+
+      @Override
+      void recordLastBurrowed(final PoolEntry poolEntry, final long now)
       {
          // no-op
       }
