@@ -291,7 +291,7 @@ public class ShutdownTest
                   Assert.fail(e.getMessage());
                }
                finally {
-                  TestElf.getPool(ds).quietlyCloseConnection(connection, "(because this is a test)");
+                  try { connection.close(); } catch (SQLException e) { e.printStackTrace(); }
                   ds.close();
                }
             };

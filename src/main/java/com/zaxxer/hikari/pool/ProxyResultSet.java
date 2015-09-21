@@ -39,7 +39,7 @@ public abstract class ProxyResultSet implements ResultSet
       this.delegate = resultSet;
    }
 
-   protected final SQLException checkException(SQLException e)
+   final SQLException checkException(SQLException e)
    {
       return connection.checkException(e);
    }

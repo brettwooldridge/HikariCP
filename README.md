@@ -360,7 +360,6 @@ Here is a list of JDBC *DataSource* classes for popular databases:
 | Apache Derby     | Derby        | org.apache.derby.jdbc.ClientDataSource |
 | Firebird         | Jaybird      | org.firebirdsql.pool.FBSimpleDataSource |
 | H2               | H2           | org.h2.jdbcx.JdbcDataSource |
-| IBM AS400        | IBM          | com.ibm.as400.access.AS400JDBCDriver |
 | HSQLDB           | HSQLDB       | org.hsqldb.jdbc.JDBCDataSource |
 | IBM AS400        | IBM          | com.ibm.as400.access.AS400JDBCDriver |
 | IBM DB2          | DB2          | com.ibm.db2.jcc.DB2SimpleDataSource |
