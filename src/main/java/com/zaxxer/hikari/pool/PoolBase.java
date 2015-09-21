@@ -79,7 +79,7 @@ abstract class PoolBase
       initializeDataSource();
    }
 
-   String getPoolName()
+   public String toString()
    {
       return poolName;
    }

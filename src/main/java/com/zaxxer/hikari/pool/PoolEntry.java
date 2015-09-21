@@ -88,7 +88,7 @@ final class PoolEntry implements IConcurrentBagEntry
 
    String getPoolName()
    {
-      return poolBase.getPoolName();
+      return poolBase.toString();
    }
 
    Connection getConnection()

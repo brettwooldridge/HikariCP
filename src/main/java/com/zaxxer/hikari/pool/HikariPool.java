@@ -318,13 +318,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       }
    }
 
-   /** {@inheritDoc} */
-   @Override
-   public String toString()
-   {
-      return poolName;
-   }
-
    // ***********************************************************************
    //                        IBagStateListener callback
    // ***********************************************************************
