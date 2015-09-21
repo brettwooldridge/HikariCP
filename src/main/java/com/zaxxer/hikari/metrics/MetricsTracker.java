@@ -16,8 +16,6 @@
 
 package com.zaxxer.hikari.metrics;
 
-import com.zaxxer.hikari.pool.PoolEntry;
-
 /**
  * This class only supports realtime, not historical metrics.
  *
@@ -25,18 +23,18 @@ import com.zaxxer.hikari.pool.PoolEntry;
  */
 public class MetricsTracker implements AutoCloseable
 {
-   public static final MetricsContext NO_CONTEXT = new MetricsContext();
+   public static final MetricsTimerContext NO_CONTEXT = new MetricsTimerContext();
 
    public MetricsTracker()
    {
    }
 
-   public MetricsContext recordConnectionRequest()
+   public MetricsTimerContext recordConnectionRequest()
    {
       return NO_CONTEXT;
    }
 
-   public void recordConnectionUsage(final PoolEntry bagEntry)
+   public void recordConnectionUsage(final long elapsedLastBorrowed)
    {
    }
 
@@ -48,11 +46,11 @@ public class MetricsTracker implements AutoCloseable
    /**
     * A base instance of a MetricsContext.  Classes extending this class should exhibit the
     * behavior of "starting" a timer upon construction, and "stopping" the timer when the
-    * {@link MetricsContext#stop()} method is called.
+    * {@link MetricsTimerContext#stop()} method is called.
     *
     * @author Brett Wooldridge
     */
-   public static class MetricsContext
+   public static class MetricsTimerContext
    {
       public void stop()
       {

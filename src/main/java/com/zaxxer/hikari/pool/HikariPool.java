@@ -43,12 +43,12 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariPoolMXBean;
-import com.zaxxer.hikari.metrics.CodahaleHealthChecker;
-import com.zaxxer.hikari.metrics.CodahaleMetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.MetricsTracker;
-import com.zaxxer.hikari.metrics.MetricsTracker.MetricsContext;
+import com.zaxxer.hikari.metrics.MetricsTracker.MetricsTimerContext;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.PoolStats;
+import com.zaxxer.hikari.metrics.dropwizard.CodahaleHealthChecker;
+import com.zaxxer.hikari.metrics.dropwizard.CodahaleMetricsTrackerFactory;
 import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
@@ -86,7 +86,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private final ProxyLeakTask leakTask;
    private final SuspendResumeLock suspendResumeLock;
 
-   private volatile MetricsTracker metricsTracker;
+   private MetricsTrackerDelegate metricsTracker;
    private boolean isRecordMetrics;
 
    /**
@@ -158,7 +158,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
       try {
          long timeout = hardTimeout;
-         final MetricsContext metricsContext = (isRecordMetrics ? metricsTracker.recordConnectionRequest() : MetricsTracker.NO_CONTEXT);
+         final MetricsTimerContext metricsContext = (isRecordMetrics ? metricsTracker.recordConnectionRequest() : MetricsTracker.NO_CONTEXT);
          do {
             final PoolEntry poolEntry = connectionBag.borrow(timeout, TimeUnit.MILLISECONDS);
             if (poolEntry == null) {
@@ -171,7 +171,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                timeout = hardTimeout - clockSource.elapsedMillis(startTime, now);
             }
             else {
-               poolEntry.lastBorrowed = now;
+               metricsTracker.recordLastBurrowed(poolEntry, now);
                metricsContext.stop();
                return poolEntry.createProxyConnection(leakTask.start(poolEntry), now);
             }
@@ -290,10 +290,10 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    {
       this.isRecordMetrics = metricsTrackerFactory != null;
       if (isRecordMetrics) {
-         this.metricsTracker = metricsTrackerFactory.create(config.getPoolName(), getPoolStats());
+         this.metricsTracker = new MetricsTrackerDelegate(metricsTrackerFactory.create(config.getPoolName(), getPoolStats()));
       }
       else {
-         this.metricsTracker = new MetricsTracker();
+         this.metricsTracker = new NopMetricsTrackerDelegate();
       }
    }
 

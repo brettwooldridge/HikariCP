@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.metrics;
+package com.zaxxer.hikari.metrics.dropwizard;
 
 import com.codahale.metrics.MetricRegistry;
+import com.zaxxer.hikari.metrics.MetricsTracker;
+import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
+import com.zaxxer.hikari.metrics.PoolStats;
 
 public final class CodahaleMetricsTrackerFactory implements MetricsTrackerFactory
 {

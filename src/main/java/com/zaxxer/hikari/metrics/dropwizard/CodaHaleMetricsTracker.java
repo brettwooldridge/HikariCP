@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.metrics;
+package com.zaxxer.hikari.metrics.dropwizard;
 
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.zaxxer.hikari.pool.PoolEntry;
+import com.zaxxer.hikari.metrics.MetricsTracker;
+import com.zaxxer.hikari.metrics.PoolStats;
 
 public final class CodaHaleMetricsTracker extends MetricsTracker
 {
@@ -90,9 +91,9 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
 
    /** {@inheritDoc} */
    @Override
-   public void recordConnectionUsage(final PoolEntry bagEntry)
+   public void recordConnectionUsage(final long elapsedLastBorrowed)
    {
-      connectionUsage.update(bagEntry.getElapsedLastBorrowed());
+      connectionUsage.update(elapsedLastBorrowed);
    }
 
    public Timer getConnectionAcquisitionTimer()
@@ -105,7 +106,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
       return connectionUsage;
    }
 
-   public static final class Context extends MetricsContext
+   public static final class Context extends MetricsTimerContext
    {
       final Timer.Context innerContext;
 

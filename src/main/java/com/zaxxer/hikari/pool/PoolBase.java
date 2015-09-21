@@ -22,6 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.metrics.MetricsTracker;
+import com.zaxxer.hikari.metrics.MetricsTracker.MetricsTimerContext;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyElf;
@@ -55,7 +57,7 @@ abstract class PoolBase
 
    private volatile boolean isValidChecked; 
 
-   public PoolBase(final HikariConfig config)
+   PoolBase(final HikariConfig config)
    {
       this.config = config;
 
@@ -157,7 +159,7 @@ abstract class PoolBase
    //                         PoolEntry methods
    // ***********************************************************************
 
-   public PoolEntry newPoolEntry() throws Exception
+   PoolEntry newPoolEntry() throws Exception
    {
       return new PoolEntry(newConnection(), this);
    }
@@ -215,7 +217,7 @@ abstract class PoolBase
     *
     * @param pool a HikariPool instance
     */
-   public void registerMBeans(final HikariPool hikariPool)
+   void registerMBeans(final HikariPool hikariPool)
    {
       if (!config.isRegisterMbeans()) {
          return;
@@ -242,7 +244,7 @@ abstract class PoolBase
    /**
     * Unregister MBeans for HikariConfig and HikariPool.
     */
-   public void unregisterMBeans()
+   void unregisterMBeans()
    {
       if (!config.isRegisterMbeans()) {
          return;
@@ -540,5 +542,57 @@ abstract class PoolBase
 
       sb.setLength(sb.length() - 2);  // trim trailing comma
       return sb.toString();
+   }
+
+   static class MetricsTrackerDelegate implements AutoCloseable
+   {
+      final MetricsTracker tracker;
+
+      protected MetricsTrackerDelegate()
+      {
+         this.tracker = null;
+      }
+
+      MetricsTrackerDelegate(MetricsTracker tracker)
+      {
+         this.tracker = tracker;
+      }
+
+      @Override
+      public void close()
+      {
+      }
+
+      MetricsTimerContext recordConnectionRequest()
+      {
+         return tracker.recordConnectionRequest();
+      }
+
+      void recordConnectionUsage(final PoolEntry poolEntry)
+      {
+         tracker.recordConnectionUsage(poolEntry.getElapsedLastBorrowed());
+      }
+
+      /**
+       * @param poolEntry
+       * @param now
+       */
+      void recordLastBurrowed(final PoolEntry poolEntry, final long now)
+      {
+         poolEntry.lastBorrowed = now;
+      }
+   }
+
+   static final class NopMetricsTrackerDelegate extends MetricsTrackerDelegate
+   {
+      MetricsTimerContext recordConnectionRequest()
+      {
+         return MetricsTracker.NO_CONTEXT;
+      }
+
+      void recordConnectionUsage(final PoolEntry poolEntry)
+      {
+         // no-op
+      }
    }
 }

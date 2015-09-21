@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zaxxer.hikari;
+package com.zaxxer.hikari.pool;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.mocks.StubDataSource;
 
 /**

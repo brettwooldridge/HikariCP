@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zaxxer.hikari;
+package com.zaxxer.hikari.pool;
 
 import javax.naming.Context;
 import javax.naming.Name;
@@ -25,6 +25,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.osjava.sj.jndi.AbstractContext;
 
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.HikariJNDIFactory;
 import com.zaxxer.hikari.mocks.StubDataSource;
 
 public class TestJNDI

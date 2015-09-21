@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari;
+package com.zaxxer.hikari.pool;
 
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 
@@ -29,6 +29,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.spi.LocationAwareLogger;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.mocks.StubDataSource;
 import com.zaxxer.hikari.mocks.StubStatement;

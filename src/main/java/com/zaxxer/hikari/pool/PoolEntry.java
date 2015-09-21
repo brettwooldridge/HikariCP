@@ -33,7 +33,7 @@ import com.zaxxer.hikari.util.FastList;
  *
  * @author Brett Wooldridge
  */
-public final class PoolEntry implements IConcurrentBagEntry
+final class PoolEntry implements IConcurrentBagEntry
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(PoolEntry.class);
 
@@ -112,7 +112,7 @@ public final class PoolEntry implements IConcurrentBagEntry
    }
 
    /** Returns millis since lastBorrowed */
-   public long getElapsedLastBorrowed()
+   long getElapsedLastBorrowed()
    {
       return ClockSource.INSTANCE.elapsedMillis(lastBorrowed);
    }
