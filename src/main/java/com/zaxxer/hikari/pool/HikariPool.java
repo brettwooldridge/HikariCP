@@ -43,8 +43,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariPoolMXBean;
-import com.zaxxer.hikari.metrics.MetricsTracker;
-import com.zaxxer.hikari.metrics.MetricsTracker.MetricsTimerContext;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.PoolStats;
 import com.zaxxer.hikari.metrics.dropwizard.CodahaleHealthChecker;
@@ -158,7 +156,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
       try {
          long timeout = hardTimeout;
-         final MetricsTimerContext metricsContext = (isRecordMetrics ? metricsTracker.recordConnectionRequest() : MetricsTracker.NO_CONTEXT);
          do {
             final PoolEntry poolEntry = connectionBag.borrow(timeout, TimeUnit.MILLISECONDS);
             if (poolEntry == null) {
@@ -171,8 +168,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                timeout = hardTimeout - clockSource.elapsedMillis(startTime, now);
             }
             else {
-               metricsTracker.recordLastBurrowed(poolEntry, now);
-               metricsContext.stop();
+               metricsTracker.recordBorrowStats(poolEntry, startTime);
                return poolEntry.createProxyConnection(leakTask.start(poolEntry), now);
             }
          }

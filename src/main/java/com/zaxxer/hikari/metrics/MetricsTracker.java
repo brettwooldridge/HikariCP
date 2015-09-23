@@ -23,38 +23,20 @@ package com.zaxxer.hikari.metrics;
  */
 public class MetricsTracker implements AutoCloseable
 {
-   public static final MetricsTimerContext NO_CONTEXT = new MetricsTimerContext();
-
    public MetricsTracker()
    {
    }
 
-   public MetricsTimerContext recordConnectionRequest()
+   public void recordConnectionAcquireNanos(final long elapsedAcquireNano)
    {
-      return NO_CONTEXT;
    }
 
-   public void recordConnectionUsage(final long elapsedLastBorrowed)
+   public void recordConnectionUsageMillis(final long elapsedLastBorrowed)
    {
    }
 
    @Override
    public void close()
    {
-   }
-
-   /**
-    * A base instance of a MetricsContext.  Classes extending this class should exhibit the
-    * behavior of "starting" a timer upon construction, and "stopping" the timer when the
-    * {@link MetricsTimerContext#stop()} method is called.
-    *
-    * @author Brett Wooldridge
-    */
-   public static class MetricsTimerContext
-   {
-      public void stop()
-      {
-         // do nothing
-      }
    }
 }
