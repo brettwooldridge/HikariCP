@@ -271,7 +271,7 @@ allows you to set the instance of the ``java.util.concurrent.ThreadFactory`` tha
 for creating all threads used by the pool. It is needed in some restricted execution environments
 where threads can only be created through a ``ThreadFactory`` provided by the application container.
 *Default: none*
-as
+
 #### Missing Knobs
 
 HikariCP has plenty of "knobs" to turn as you can see above, but comparatively less than some other pools.
