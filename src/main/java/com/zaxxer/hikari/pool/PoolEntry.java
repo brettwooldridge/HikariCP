@@ -33,7 +33,7 @@ import com.zaxxer.hikari.util.FastList;
  *
  * @author Brett Wooldridge
  */
-final class PoolEntry implements IConcurrentBagEntry, Comparable
+final class PoolEntry implements IConcurrentBagEntry
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(PoolEntry.class);
 
@@ -126,17 +126,6 @@ final class PoolEntry implements IConcurrentBagEntry, Comparable
          + ", borrowed " + ClockSource.INSTANCE.elapsedMillis(lastBorrowed, now) + "ms ago, "
          + ", accessed " + ClockSource.INSTANCE.elapsedMillis(lastAccessed, now) + "ms ago, "
          + stateToString();
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public int compareTo(final Object o) {
-      PoolEntry other = (PoolEntry) o;
-      return this.lastAccessed < other.lastAccessed
-             ? -1
-             : this.lastAccessed > other.lastAccessed
-               ? 1
-               : 0;
    }
 
    // ***********************************************************************
