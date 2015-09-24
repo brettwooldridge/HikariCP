@@ -16,6 +16,8 @@
 
 package com.zaxxer.hikari.metrics.dropwizard;
 
+import java.util.concurrent.TimeUnit;
+
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
@@ -84,16 +86,16 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
 
    /** {@inheritDoc} */
    @Override
-   public Context recordConnectionRequest()
+   public void recordConnectionAcquireNanos(final long elapsedAcquireNanos)
    {
-      return new Context(connectionObtainTimer);
+      connectionObtainTimer.update(elapsedAcquireNanos, TimeUnit.NANOSECONDS);
    }
 
    /** {@inheritDoc} */
    @Override
-   public void recordConnectionUsage(final long elapsedLastBorrowed)
+   public void recordConnectionUsageMillis(final long elapsedBorrowedMillis)
    {
-      connectionUsage.update(elapsedLastBorrowed);
+      connectionUsage.update(elapsedBorrowedMillis);
    }
 
    public Timer getConnectionAcquisitionTimer()
@@ -104,21 +106,5 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    public Histogram getConnectionDurationHistogram()
    {
       return connectionUsage;
-   }
-
-   public static final class Context extends MetricsTimerContext
-   {
-      final Timer.Context innerContext;
-
-      Context(Timer timer) {
-         innerContext = timer.time();
-      }
-
-      /** {@inheritDoc} */
-      @Override
-      public void stop()
-      {
-         innerContext.stop();
-      }
    }
 }

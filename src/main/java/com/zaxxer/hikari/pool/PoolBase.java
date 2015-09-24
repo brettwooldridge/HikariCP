@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.metrics.MetricsTracker;
-import com.zaxxer.hikari.metrics.MetricsTracker.MetricsTimerContext;
+import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyElf;
@@ -130,7 +130,7 @@ abstract class PoolBase
             statement.execute(config.getConnectionTestQuery());
          }
    
-         if (isIsolateInternalQueries && !isAutoCommit) {
+         if (isIsolateInternalQueries && !isReadOnly && !isAutoCommit) {
             connection.rollback();
          }
 
@@ -461,11 +461,13 @@ abstract class PoolBase
 
             statement.execute(sql);
 
-            if (isCommit) {
-               connection.commit();
-            }
-            else if (isRollback) {
-               connection.rollback();
+            if (!isReadOnly) {
+               if (isCommit) {
+                  connection.commit();
+               }
+               else if (isRollback) {
+                  connection.rollback();
+               }
             }
          }
       }
@@ -564,33 +566,26 @@ abstract class PoolBase
          tracker.close();
       }
 
-      MetricsTimerContext recordConnectionRequest()
-      {
-         return tracker.recordConnectionRequest();
-      }
-
       void recordConnectionUsage(final PoolEntry poolEntry)
       {
-         tracker.recordConnectionUsage(poolEntry.getMillisSinceBorrowed());
+         tracker.recordConnectionUsageMillis(poolEntry.getMillisSinceBorrowed());
       }
 
       /**
        * @param poolEntry
        * @param now
        */
-      void recordLastBorrowed(final PoolEntry poolEntry, final long now)
+      void recordBorrowStats(final PoolEntry poolEntry, final long startTime)
       {
+         final long now = ClockSource.INSTANCE.currentTime();
          poolEntry.lastBorrowed = now;
+         tracker.recordConnectionAcquireNanos(ClockSource.INSTANCE.elapsedNanos(startTime, now));
       }
    }
 
    static final class NopMetricsTrackerDelegate extends MetricsTrackerDelegate
    {
-      MetricsTimerContext recordConnectionRequest()
-      {
-         return MetricsTracker.NO_CONTEXT;
-      }
-
+      @Override
       void recordConnectionUsage(final PoolEntry poolEntry)
       {
          // no-op
@@ -603,7 +598,7 @@ abstract class PoolBase
       }
 
       @Override
-      void recordLastBorrowed(final PoolEntry poolEntry, final long now)
+      void recordBorrowStats(final PoolEntry poolEntry, final long startTime)
       {
          // no-op
       }
