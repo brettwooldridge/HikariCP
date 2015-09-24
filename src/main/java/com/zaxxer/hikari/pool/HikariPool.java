@@ -26,6 +26,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -586,8 +587,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    {
       private volatile long previous = clockSource.currentTime();
 
-      @SuppressWarnings("unchecked")
-	@Override
+      @Override
       public void run()
       {
          // refresh timeouts in case they changed via MBean
@@ -613,10 +613,13 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             int removable = notInUseList.size() - config.getMinimumIdle();
             if (removable > 0) {
                logPoolState("Before cleanup\t");
-
-               //pool entry sorts on lastAccessed
-               Collections.sort(notInUseList);
-
+               //sort pool entries on lastAccessed
+               Collections.sort(notInUseList, new Comparator<PoolEntry>() {
+                  @Override
+                  public int compare(final PoolEntry entryOne, final PoolEntry entryTwo) {
+                     return Long.compare(entryOne.lastAccessed, entryTwo.lastAccessed);
+                  }
+               });
                for (int i = 0; i < removable; i++) {
                   final PoolEntry poolEntry = notInUseList.get(i);
                   if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout) {
