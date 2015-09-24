@@ -79,7 +79,9 @@ abstract class PoolBase
       initializeDataSource();
    }
 
-   String getPoolName()
+   /** {@inheritDoc} */
+   @Override
+   public String toString()
    {
       return poolName;
    }
@@ -130,7 +132,7 @@ abstract class PoolBase
             statement.execute(config.getConnectionTestQuery());
          }
    
-         if (isIsolateInternalQueries && !isAutoCommit) {
+         if (isIsolateInternalQueries && !isReadOnly && !isAutoCommit) {
             connection.rollback();
          }
 
@@ -461,11 +463,13 @@ abstract class PoolBase
 
             statement.execute(sql);
 
-            if (isCommit) {
-               connection.commit();
-            }
-            else if (isRollback) {
-               connection.rollback();
+            if (!isReadOnly) {
+               if (isCommit) {
+                  connection.commit();
+               }
+               else if (isRollback) {
+                  connection.rollback();
+               }
             }
          }
       }
@@ -566,7 +570,7 @@ abstract class PoolBase
 
       void recordConnectionUsage(final PoolEntry poolEntry)
       {
-         tracker.recordConnectionUsageMillis(poolEntry.getElapsedLastBorrowed());
+         tracker.recordConnectionUsageMillis(poolEntry.getMillisSinceBorrowed());
       }
 
       /**
@@ -577,7 +581,7 @@ abstract class PoolBase
       {
          final long now = ClockSource.INSTANCE.currentTime();
          poolEntry.lastBorrowed = now;
-         tracker.recordConnectionAcquireNanos(ClockSource.INSTANCE.elapsedNanos(startTime, now));
+         tracker.recordConnectionAcquiredNanos(ClockSource.INSTANCE.elapsedNanos(startTime, now));
       }
    }
 
