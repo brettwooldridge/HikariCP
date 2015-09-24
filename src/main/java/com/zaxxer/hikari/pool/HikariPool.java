@@ -616,16 +616,16 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                //sort pool entries on lastAccessed
                Collections.sort(notInUseList, new Comparator<PoolEntry>() {
                   @Override
-                  public int compare(PoolEntry pe1, PoolEntry pe2) {
-                     return pe1.lastAccessed < pe2.lastAccessed
+                  public int compare(final PoolEntry entryOne, final PoolEntry entryTwo) {
+                     return entryOne.lastAccessed < entryTwo.lastAccessed
                             ? -1
-                            : pe1.lastAccessed > pe2.lastAccessed
+                            : entryOne.lastAccessed > entryTwo.lastAccessed
                               ? 1
                               : 0;
                   }
                });
                for (int i = 0; i < removable; i++) {
-                  PoolEntry poolEntry = notInUseList.get(i);
+                  final PoolEntry poolEntry = notInUseList.get(i);
                   if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout) {
                      if (connectionBag.reserve(poolEntry)) {
                         closeConnection(poolEntry, "(connection passed idleTimeout)");
