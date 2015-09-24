@@ -33,7 +33,7 @@ import com.zaxxer.hikari.util.FastList;
  *
  * @author Brett Wooldridge
  */
-final class PoolEntry implements IConcurrentBagEntry
+final class PoolEntry implements IConcurrentBagEntry, Comparable
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(PoolEntry.class);
 
@@ -117,6 +117,28 @@ final class PoolEntry implements IConcurrentBagEntry
       return ClockSource.INSTANCE.elapsedMillis(lastBorrowed);
    }
 
+   /** {@inheritDoc} */
+   @Override
+   public String toString()
+   {
+      final long now = ClockSource.INSTANCE.currentTime();
+      return connection
+         + ", borrowed " + ClockSource.INSTANCE.elapsedMillis(lastBorrowed, now) + "ms ago, "
+         + ", accessed " + ClockSource.INSTANCE.elapsedMillis(lastAccessed, now) + "ms ago, "
+         + stateToString();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public int compareTo(final Object o) {
+      PoolEntry other = (PoolEntry) o;
+      return this.lastAccessed < other.lastAccessed
+             ? -1
+             : this.lastAccessed > other.lastAccessed
+               ? 1
+               : 0;
+   }
+
    // ***********************************************************************
    //                      IConcurrentBagEntry methods
    // ***********************************************************************
@@ -140,17 +162,6 @@ final class PoolEntry implements IConcurrentBagEntry
    public void lazySet(int update)
    {
       state.lazySet(update);
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public String toString()
-   {
-      final long now = ClockSource.INSTANCE.currentTime();
-      return connection
-         + ", borrowed " + ClockSource.INSTANCE.elapsedMillis(lastBorrowed, now) + "ms ago, "
-         + ", accessed " + ClockSource.INSTANCE.elapsedMillis(lastAccessed, now) + "ms ago, "
-         + stateToString();
    }
 
    void close()
