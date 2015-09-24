@@ -86,16 +86,16 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
 
    /** {@inheritDoc} */
    @Override
-   public void recordConnectionAcquireNanos(final long elapsedAcquireNanos)
+   public void recordConnectionAcquiredNanos(final long elapsedAcquiredNanos)
    {
-      connectionObtainTimer.update(elapsedAcquireNanos, TimeUnit.NANOSECONDS);
+      connectionObtainTimer.update(elapsedAcquiredNanos, TimeUnit.NANOSECONDS);
    }
 
    /** {@inheritDoc} */
    @Override
-   public void recordConnectionUsageMillis(final long elapsedBorrowedMilli)
+   public void recordConnectionUsageMillis(final long elapsedBorrowedMillis)
    {
-      connectionUsage.update(elapsedBorrowedMilli);
+      connectionUsage.update(elapsedBorrowedMillis);
    }
 
    public Timer getConnectionAcquisitionTimer()

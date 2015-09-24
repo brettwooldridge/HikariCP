@@ -27,11 +27,11 @@ public class MetricsTracker implements AutoCloseable
    {
    }
 
-   public void recordConnectionAcquireNanos(final long elapsedAcquireNano)
+   public void recordConnectionAcquiredNanos(final long elapsedAcquiredNanos)
    {
    }
 
-   public void recordConnectionUsageMillis(final long elapsedLastBorrowed)
+   public void recordConnectionUsageMillis(final long elapsedBorrowedMillis)
    {
    }
 
