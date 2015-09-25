@@ -117,6 +117,17 @@ final class PoolEntry implements IConcurrentBagEntry
       return ClockSource.INSTANCE.elapsedMillis(lastBorrowed);
    }
 
+   /** {@inheritDoc} */
+   @Override
+   public String toString()
+   {
+      final long now = ClockSource.INSTANCE.currentTime();
+      return connection
+         + ", borrowed " + ClockSource.INSTANCE.elapsedMillis(lastBorrowed, now) + "ms ago, "
+         + ", accessed " + ClockSource.INSTANCE.elapsedMillis(lastAccessed, now) + "ms ago, "
+         + stateToString();
+   }
+
    // ***********************************************************************
    //                      IConcurrentBagEntry methods
    // ***********************************************************************
@@ -140,17 +151,6 @@ final class PoolEntry implements IConcurrentBagEntry
    public void lazySet(int update)
    {
       state.lazySet(update);
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public String toString()
-   {
-      final long now = ClockSource.INSTANCE.currentTime();
-      return connection
-         + ", borrowed " + ClockSource.INSTANCE.elapsedMillis(lastBorrowed, now) + "ms ago, "
-         + ", accessed " + ClockSource.INSTANCE.elapsedMillis(lastAccessed, now) + "ms ago, "
-         + stateToString();
    }
 
    void close()
