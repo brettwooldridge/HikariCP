@@ -613,11 +613,11 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             int removable = notInUseList.size() - config.getMinimumIdle();
             if (removable > 0) {
                logPoolState("Before cleanup\t");
-               //sort pool entries on lastAccessed
+               //sort pool entries on descending lastAccessed
                Collections.sort(notInUseList, new Comparator<PoolEntry>() {
                   @Override
                   public int compare(final PoolEntry entryOne, final PoolEntry entryTwo) {
-                     return Long.compare(entryOne.lastAccessed, entryTwo.lastAccessed);
+                     return -1 * Long.compare(entryOne.lastAccessed, entryTwo.lastAccessed);
                   }
                });
                for (int i = 0; i < removable; i++) {
