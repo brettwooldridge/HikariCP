@@ -18,6 +18,7 @@ package com.zaxxer.hikari.pool;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Comparator;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -37,6 +38,7 @@ final class PoolEntry implements IConcurrentBagEntry
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(PoolEntry.class);
 
+   static final Comparator<PoolEntry> LASTACCESS_COMPARABLE;
    Connection connection;
    long lastAccessed;
    long lastBorrowed;
@@ -47,6 +49,16 @@ final class PoolEntry implements IConcurrentBagEntry
    private final AtomicInteger state;
 
    private volatile ScheduledFuture<?> endOfLife;
+
+   static
+   {
+      LASTACCESS_COMPARABLE = new Comparator<PoolEntry>() {
+         @Override
+         public int compare(final PoolEntry entryOne, final PoolEntry entryTwo) {
+            return Long.compare(entryOne.lastAccessed, entryTwo.lastAccessed);
+         }
+      };      
+   }
 
    PoolEntry(final Connection connection, final PoolBase pool)
    {

@@ -26,7 +26,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
 import java.util.Collections;
-import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -608,29 +608,26 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
          previous = now;
 
+         logPoolState("Before cleanup\t");
+
          if (idleTimeout > 0L) {
             final List<PoolEntry> notInUseList = connectionBag.values(STATE_NOT_IN_USE);
-            final int removable = notInUseList.size() - config.getMinimumIdle();
+            int removable = notInUseList.size() - config.getMinimumIdle();
             if (removable > 0) {
-               logPoolState("Before cleanup\t");
-               //sort pool entries on lastAccessed
-               Collections.sort(notInUseList, new Comparator<PoolEntry>() {
-                  @Override
-                  public int compare(final PoolEntry entryOne, final PoolEntry entryTwo) {
-                     return Long.compare(entryOne.lastAccessed, entryTwo.lastAccessed);
-                  }
-               });
-               for (int i = 0; i < removable; i++) {
-                  final PoolEntry poolEntry = notInUseList.get(i);
-                  if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout) {
-                     if (connectionBag.reserve(poolEntry)) {
-                        closeConnection(poolEntry, "(connection passed idleTimeout)");
-                     }
+               // Sort pool entries on lastAccessed
+               Collections.sort(notInUseList, PoolEntry.LASTACCESS_COMPARABLE);
+               // Iterate the first N removable elements
+               for (final Iterator<PoolEntry> iter = notInUseList.iterator(); removable > 0 && iter.hasNext(); ) {
+                  final PoolEntry poolEntry = iter.next();
+                  if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout && connectionBag.reserve(poolEntry)) {
+                     closeConnection(poolEntry, "(connection passed idleTimeout)");
+                     removable--;
                   }
                }
-               logPoolState("After cleanup\t");
             }
          }
+         
+         logPoolState("After cleanup\t");
 
          fillPool(); // Try to maintain minimum connections
       }
