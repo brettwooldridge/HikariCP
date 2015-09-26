@@ -42,10 +42,10 @@ final class PoolEntry implements IConcurrentBagEntry
    Connection connection;
    long lastAccessed;
    long lastBorrowed;
-   volatile boolean evict;
+   volatile boolean evicted;
 
    private final FastList<Statement> openStatements;
-   private final PoolBase poolBase;
+   private final HikariPool pool;
    private final AtomicInteger state;
 
    private volatile ScheduledFuture<?> endOfLife;
@@ -60,10 +60,10 @@ final class PoolEntry implements IConcurrentBagEntry
       };      
    }
 
-   PoolEntry(final Connection connection, final PoolBase pool)
+   PoolEntry(final Connection connection, final HikariPool pool)
    {
       this.connection = connection;
-      this.poolBase = pool;
+      this.pool = pool;
       this.state = new AtomicInteger(STATE_NOT_IN_USE);
       this.lastAccessed = ClockSource.INSTANCE.currentTime();
       this.openStatements = new FastList<>(Statement.class, 16);
@@ -77,7 +77,18 @@ final class PoolEntry implements IConcurrentBagEntry
    void recycle(final long lastAccessed)
    {
       this.lastAccessed = lastAccessed;
-      poolBase.releaseConnection(this);
+      pool.releaseConnection(this);
+   }
+
+   /**
+    * Close connection held by this entry 
+    *
+    * @param lastAccessed last access time-stamp
+    */
+   void close(final long lastAccessed)
+   {
+      this.lastAccessed = lastAccessed;
+      pool.closeConnection(this);
    }
 
    /**
@@ -95,32 +106,12 @@ final class PoolEntry implements IConcurrentBagEntry
 
    void resetConnectionState(final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
    {
-      poolBase.resetConnectionState(connection, proxyConnection, dirtyBits);
+      pool.resetConnectionState(connection, proxyConnection, dirtyBits);
    }
 
    String getPoolName()
    {
-      return poolBase.toString();
-   }
-
-   Connection getConnection()
-   {
-      return connection;
-   }
-
-   boolean isEvicted()
-   {
-      return evict;
-   }
-
-   void evict()
-   {
-      this.evict = true;
-   }
-
-   FastList<Statement> getStatementsList()
-   {
-      return openStatements;
+      return pool.toString();
    }
 
    /** Returns millis since lastBorrowed */
