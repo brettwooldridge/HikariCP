@@ -141,7 +141,7 @@ public abstract class ProxyConnection implements Connection
       if (sqlState != null) {
          boolean isForceClose = sqlState.startsWith("08") || SQL_ERRORS.contains(sqlState);
          if (isForceClose) {
-            poolEntry.evict();
+            poolEntry.evicted = true;
             LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
                         poolEntry.getPoolName(), delegate, sqlState, sqle.getErrorCode(), sqle);
          }
@@ -214,6 +214,12 @@ public abstract class ProxyConnection implements Connection
       if (delegate != ClosedConnection.CLOSED_CONNECTION) {
          leakTask.cancel();
 
+         if (poolEntry.evicted) {
+            poolEntry.close(lastAccess);
+            delegate = ClosedConnection.CLOSED_CONNECTION;
+            return;
+         }
+
          try {
             closeStatements();
             if (isCommitStateDirty && !isAutoCommit) {
@@ -231,7 +237,7 @@ public abstract class ProxyConnection implements Connection
          }
          catch (SQLException e) {
             // when connections are aborted, exceptions are often thrown that should not reach the application
-            if (!poolEntry.isEvicted()) {
+            if (!poolEntry.evicted) {
                throw checkException(e);
             }
          }

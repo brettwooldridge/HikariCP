@@ -165,7 +165,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             }
 
             final long now = clockSource.currentTime();
-            if (poolEntry.evict || (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
+            if (poolEntry.evicted || (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
                closeConnection(poolEntry, "(connection evicted or dead)"); // Throw away the dead connection and try again
                timeout = hardTimeout - clockSource.elapsedMillis(startTime, now);
             }
@@ -198,20 +198,25 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    }
 
    /**
-    * Release a connection back to the pool, or permanently close it if it is broken.
+    * Release connection back to the pool
     *
-    * @param poolEntry the PoolBagEntry to release back to the pool
+    * @param poolEntry the PoolBagEntry
     */
    public final void releaseConnection(final PoolEntry poolEntry)
    {
       metricsTracker.recordConnectionUsage(poolEntry);
+      connectionBag.requite(poolEntry);
+   }
 
-      if (poolEntry.evict) {
-         closeConnection(poolEntry, "(connection broken or evicted)");
-      }
-      else {
-         connectionBag.requite(poolEntry);
-      }
+   /**
+    * Close real connection, it is broken.
+    *
+    * @param poolEntry the PoolBagEntry
+    */
+   public final void closeConnection(final PoolEntry poolEntry)
+   {
+      metricsTracker.recordConnectionUsage(poolEntry);
+      closeConnection(poolEntry, "(connection broken or evicted)");
    }
 
    /**
@@ -506,7 +511,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    {
       for (PoolEntry poolEntry : connectionBag.values(STATE_IN_USE)) {
          try {
-            poolEntry.evict = true;
+            poolEntry.evicted = true;
             poolEntry.connection.abort(assassinExecutor);
          }
          catch (Throwable e) {
@@ -557,7 +562,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private void softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
    {
-      poolEntry.evict();
+      poolEntry.evicted = true;
       if (connectionBag.reserve(poolEntry) || owner) {
          closeConnection(poolEntry, reason);
       }

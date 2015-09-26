@@ -163,7 +163,7 @@ abstract class PoolBase
 
    PoolEntry newPoolEntry() throws Exception
    {
-      return new PoolEntry(newConnection(), this);
+      return new PoolEntry(newConnection(), (HikariPool) this);
    }
 
    void resetConnectionState(final Connection connection, final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
