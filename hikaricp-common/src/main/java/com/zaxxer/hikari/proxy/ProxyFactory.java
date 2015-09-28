@@ -49,31 +49,31 @@ public final class ProxyFactory
     */
    public static IHikariConnectionProxy getProxyConnection(final HikariPool pool, final PoolBagEntry bagEntry, final LeakTask leakTask)
    {
-      // Body is injected by JavassistProxyFactory
-      return null;
+      // Body is replaced (injected) by JavassistProxyFactory
+      throw new IllegalStateException("You need to run the CLI build and you need target/classes in your classpath to run.");
    }
 
    static Statement getProxyStatement(final ConnectionProxy connection, final Statement statement)
    {
-      // Body is injected by JavassistProxyFactory
-      return null;
+      // Body is replaced (injected) by JavassistProxyFactory
+      throw new IllegalStateException("You need to run the CLI build and you need target/classes in your classpath to run.");
    }
 
    static CallableStatement getProxyCallableStatement(final ConnectionProxy connection, final CallableStatement statement)
    {
-      // Body is injected by JavassistProxyFactory
-      return null;
+      // Body is replaced (injected) by JavassistProxyFactory
+      throw new IllegalStateException("You need to run the CLI build and you need target/classes in your classpath to run.");
    }
 
    static PreparedStatement getProxyPreparedStatement(final ConnectionProxy connection, final PreparedStatement statement)
    {
-      // Body is injected by JavassistProxyFactory
-      return null;
+      // Body is replaced (injected) by JavassistProxyFactory
+      throw new IllegalStateException("You need to run the CLI build and you need target/classes in your classpath to run.");
    }
 
    static ResultSet getProxyResultSet(final ConnectionProxy connection, final ResultSet resultSet)
    {
-      // Body is injected by JavassistProxyFactory
-      return null;
+      // Body is replaced (injected) by JavassistProxyFactory
+      throw new IllegalStateException("You need to run the CLI build and you need target/classes in your classpath to run.");
    }
 }

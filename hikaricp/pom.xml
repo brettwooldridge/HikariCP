@@ -55,6 +55,27 @@
       <sourceDirectory>src/main/java</sourceDirectory>
       <testSourceDirectory>src/test/java</testSourceDirectory>
       <plugins>
+         <plugin>
+            <!-- Generate proxies -->
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>1.4.0</version>
+            <executions>
+               <execution>
+                  <phase>compile</phase>
+                  <!-- phase>generate-test-sources</phase -->
+                  <goals>
+                     <goal>java</goal>
+                  </goals>
+               </execution>
+            </executions>
+            <configuration>
+               <mainClass>com.zaxxer.hikari.util.JavassistProxyFactory</mainClass>
+               <arguments>
+                  <argument>hikaricp</argument>
+               </arguments>
+            </configuration>
+         </plugin>
 
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>

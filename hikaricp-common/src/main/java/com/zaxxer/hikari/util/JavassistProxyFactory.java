@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.proxy;
+package com.zaxxer.hikari.util;
 
+import java.io.File;
 import java.lang.reflect.Array;
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -23,9 +24,17 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import com.zaxxer.hikari.proxy.CallableStatementProxy;
+import com.zaxxer.hikari.proxy.ConnectionProxy;
+import com.zaxxer.hikari.proxy.PreparedStatementProxy;
+import com.zaxxer.hikari.proxy.ProxyFactory;
+import com.zaxxer.hikari.proxy.ResultSetProxy;
+import com.zaxxer.hikari.proxy.StatementProxy;
 
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -34,8 +43,6 @@ import javassist.CtNewMethod;
 import javassist.LoaderClassPath;
 import javassist.Modifier;
 import javassist.NotFoundException;
-
-import com.zaxxer.hikari.util.ClassLoaderUtils;
 
 /**
  * This class generates the proxy objects for {@link Connection}, {@link Statement},
@@ -47,100 +54,89 @@ import com.zaxxer.hikari.util.ClassLoaderUtils;
  */
 public final class JavassistProxyFactory
 {
-   private ClassPool classPool;
+   private static ClassPool classPool;
+   private static String outputPrefix;
 
-   static {
-      ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-      try {
-         Thread.currentThread().setContextClassLoader(JavassistProxyFactory.class.getClassLoader());
-
-         JavassistProxyFactory proxyFactoryFactory = new JavassistProxyFactory();
-         proxyFactoryFactory.modifyProxyFactory();
-      }
-      catch (Exception e) {
-         throw new RuntimeException("Fatal exception during proxy generation", e);
-      }
-      finally {
-         Thread.currentThread().setContextClassLoader(contextClassLoader);
-      }
-   }
-
-   /**
-    * Simply invoking this method causes the initialization of this class.  All work
-    * by this class is performed in static initialization.
-    */
-   public static void initialize()
+   public static void main(String... args)
    {
-      // no-op
-   }
+      outputPrefix = args[0] + File.separator + "target" + File.separator + "classes";
 
-   private JavassistProxyFactory() throws Exception
-   {
       classPool = new ClassPool();
       classPool.importPackage("java.sql");
-      classPool.appendClassPath(new LoaderClassPath(this.getClass().getClassLoader()));
+      classPool.appendClassPath(new LoaderClassPath(JavassistProxyFactory.class.getClassLoader()));
 
-      // Cast is not needed for these
-      String methodBody = "{ try { return delegate.method($$); } catch (SQLException e) { throw checkException(e); } }";
-      generateProxyClass(Connection.class, ConnectionProxy.class, methodBody);
-      generateProxyClass(Statement.class, StatementProxy.class, methodBody);
-      generateProxyClass(ResultSet.class, ResultSetProxy.class, methodBody);
+      try {
+         // Cast is not needed for these
+         String methodBody = "{ try { return delegate.method($$); } catch (SQLException e) { throw checkException(e); } }";
+         generateProxyClass(Connection.class, ConnectionProxy.class.getName(), methodBody);
+         generateProxyClass(Statement.class, StatementProxy.class.getName(), methodBody);
+         generateProxyClass(ResultSet.class, ResultSetProxy.class.getName(), methodBody);
+         
+         // For these we have to cast the delegate
+         methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { throw checkException(e); } }";
+         generateProxyClass(PreparedStatement.class, PreparedStatementProxy.class.getName(), methodBody);
+         generateProxyClass(CallableStatement.class, CallableStatementProxy.class.getName(), methodBody);
 
-      // For these we have to cast the delegate
-      methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { throw checkException(e); } }";
-      generateProxyClass(PreparedStatement.class, PreparedStatementProxy.class, methodBody);
-      generateProxyClass(CallableStatement.class, CallableStatementProxy.class, methodBody);
+         modifyProxyFactory();
+      }
+      catch (Exception e) {
+         throw new RuntimeException(e);
+      }
    }
 
-   private void modifyProxyFactory() throws Exception
+   private static void modifyProxyFactory() throws Exception
    {
-      String packageName = JavassistProxyFactory.class.getPackage().getName();
+      System.out.println("Generating method bodies for com.zaxxer.hikari.proxy.ProxyFactory");
+
+      String packageName = ConnectionProxy.class.getPackage().getName();
       CtClass proxyCt = classPool.getCtClass("com.zaxxer.hikari.proxy.ProxyFactory");
       for (CtMethod method : proxyCt.getMethods()) {
-         switch (method.getName()) {
-         case "getProxyConnection":
-            method.setBody("{return new " + packageName + ".ConnectionJavassistProxy($$);}");
-            break;
-         case "getProxyStatement":
-            method.setBody("{return new " + packageName + ".StatementJavassistProxy($$);}");
-            break;
-         case "getProxyPreparedStatement":
-            method.setBody("{return new " + packageName + ".PreparedStatementJavassistProxy($$);}");
-            break;
-         case "getProxyCallableStatement":
-            method.setBody("{return new " + packageName + ".CallableStatementJavassistProxy($$);}");
-            break;
-         case "getProxyResultSet":
-            method.setBody("{return new " + packageName + ".ResultSetJavassistProxy($$);}");
-            break;
+         String name = method.getName();
+         if ("getProxyConnection".equals(name)) {
+            method.setBody("{return new " + packageName + ".HikariConnectionProxy($$);}");
+         }
+         if ("getProxyStatement".equals(name)) {
+            method.setBody("{return new " + packageName + ".HikariStatementProxy($$);}");
+         }
+         if ("getProxyPreparedStatement".equals(name)) {
+            method.setBody("{return new " + packageName + ".HikariPreparedStatementProxy($$);}");
+         }
+         if ("getProxyCallableStatement".equals(name)) {
+            method.setBody("{return new " + packageName + ".HikariCallableStatementProxy($$);}");
+         }
+         if ("getProxyResultSet".equals(name)) {
+            method.setBody("{return new " + packageName + ".HikariResultSetProxy($$);}");
          }
       }
 
-      proxyCt.toClass(classPool.getClassLoader(), getClass().getProtectionDomain());
+      proxyCt.writeFile(outputPrefix);
    }
 
    /**
     *  Generate Javassist Proxy Classes
     */
-   @SuppressWarnings("unchecked")
-   private <T> Class<T> generateProxyClass(Class<T> primaryInterface, Class<?> superClass, String methodBody) throws Exception
+   private static <T> void generateProxyClass(Class<T> primaryInterface, String superClassName, String methodBody) throws Exception
    {
-      // Make a new class that extends one of the JavaProxy classes (ie. superClass); use the name to XxxJavassistProxy instead of XxxProxy
-      String superClassName = superClass.getName();
-      CtClass superClassCt = classPool.getCtClass(superClassName);
-      CtClass targetCt = classPool.makeClass(superClassName.replace("Proxy", "JavassistProxy"), superClassCt);
-      targetCt.setModifiers(Modifier.FINAL);
+      String newClassName = superClassName.replaceAll("(.+)\\.(\\w+)", "$1.Hikari$2");
+
+      CtClass superCt = classPool.getCtClass(superClassName);
+      CtClass targetCt = classPool.makeClass(newClassName, superCt);
+      targetCt.setModifiers(Modifier.FINAL);         
+
+      System.out.println("Generating " + newClassName);
+
+      targetCt.setModifiers(Modifier.PUBLIC);
 
       // Make a set of method signatures we inherit implementation for, so we don't generate delegates for these
       Set<String> superSigs = new HashSet<String>();
-      for (CtMethod method : superClassCt.getMethods()) {
+      for (CtMethod method : superCt.getMethods()) {
          if ((method.getModifiers() & Modifier.FINAL) == Modifier.FINAL) {
             superSigs.add(method.getName() + method.getSignature());
          }
       }
 
       Set<String> methods = new HashSet<String>();
-      Set<Class<?>> interfaces = ClassLoaderUtils.getAllInterfaces(primaryInterface);
+      Set<Class<?>> interfaces = getAllInterfaces(primaryInterface);
       for (Class<?> intf : interfaces) {
          CtClass intfCt = classPool.getCtClass(intf.getName());
          targetCt.addInterface(intfCt);
@@ -171,7 +167,7 @@ public final class JavassistProxyFactory
             String modifiedBody = methodBody;
 
             // If the super-Proxy has concrete methods (non-abstract), transform the call into a simple super.method() call
-            CtMethod superMethod = superClassCt.getMethod(intfMethod.getName(), intfMethod.getSignature());
+            CtMethod superMethod = superCt.getMethod(intfMethod.getName(), intfMethod.getSignature());
             if ((superMethod.getModifiers() & Modifier.ABSTRACT) != Modifier.ABSTRACT) {
                modifiedBody = modifiedBody.replace("((cast) ", "");
                modifiedBody = modifiedBody.replace("delegate", "super");
@@ -197,10 +193,10 @@ public final class JavassistProxyFactory
          }
       }
 
-      return targetCt.toClass(classPool.getClassLoader(), getClass().getProtectionDomain());
+      targetCt.writeFile(outputPrefix);
    }
 
-   private boolean isThrowsSqlException(CtMethod method)
+   private static boolean isThrowsSqlException(CtMethod method)
    {
       try {
          for (CtClass clazz : method.getExceptionTypes()) {
@@ -216,7 +212,7 @@ public final class JavassistProxyFactory
       return false;
    }
 
-   private boolean isDefaultMethod(Class<?> intf, CtClass intfCt, CtMethod intfMethod) throws Exception
+   private static boolean isDefaultMethod(Class<?> intf, CtClass intfCt, CtMethod intfMethod) throws Exception
    {
       List<Class<?>> paramTypes = new ArrayList<Class<?>>();
 
@@ -224,10 +220,30 @@ public final class JavassistProxyFactory
          paramTypes.add(toJavaClass(pt));
       }
 
-      return intf.getDeclaredMethod(intfMethod.getName(), paramTypes.toArray(new Class[0])).toString().contains("default ");
+      return intf.getDeclaredMethod(intfMethod.getName(), paramTypes.toArray(new Class[paramTypes.size()])).toString().contains("default ");
    }
 
-   private Class<?> toJavaClass(CtClass cls) throws Exception
+   private static Set<Class<?>> getAllInterfaces(Class<?> clazz)
+   {
+      Set<Class<?>> interfaces = new HashSet<Class<?>>();
+      for (Class<?> intf : Arrays.asList(clazz.getInterfaces())) {
+         if (intf.getInterfaces().length > 0) {
+            interfaces.addAll(getAllInterfaces(intf));
+         }
+         interfaces.add(intf);
+      }
+      if (clazz.getSuperclass() != null) {
+         interfaces.addAll(getAllInterfaces(clazz.getSuperclass()));
+      }
+
+      if (clazz.isInterface()) {
+         interfaces.add(clazz);
+      }
+
+      return interfaces;
+   }
+
+   private static Class<?> toJavaClass(CtClass cls) throws Exception
    {
       if (cls.getName().endsWith("[]")) {
          return Array.newInstance(toJavaClass(cls.getName().replace("[]", "")), 0).getClass();
@@ -237,29 +253,36 @@ public final class JavassistProxyFactory
       }
    }
 
-   private Class<?> toJavaClass(String cn) throws Exception
+   private static Class<?> toJavaClass(String cn) throws Exception
    {
-      switch (cn) {
-      case "int":
+      if ("int".equals(cn)) {
          return int.class;
-      case "long":
-         return long.class;
-      case "short":
-         return short.class;
-      case "byte":
-         return byte.class;
-      case "float":
-         return float.class;
-      case "double":
-         return double.class;
-      case "boolean":
-         return boolean.class;
-      case "char":
-         return char.class;
-      case "void":
-         return void.class;
-      default:
-         return Class.forName(cn);
       }
+      if ("long".equals(cn)) {
+         return long.class;
+      }
+      if ("short".equals(cn)) {
+         return short.class;
+      }
+      if ("byte".equals(cn)) {
+         return byte.class;
+      }
+      if ("float".equals(cn)) {
+         return float.class;
+      }
+      if ("double".equals(cn)) {
+         return double.class;
+      }
+      if ("boolean".equals(cn)) {
+         return boolean.class;
+      }
+      if ("char".equals(cn)) {
+         return char.class;
+      }
+      if ("void".equals(cn)) {
+         return void.class;
+      }
+
+      return Class.forName(cn);
    }
 }

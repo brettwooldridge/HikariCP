@@ -22,15 +22,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import com.zaxxer.hikari.proxy.JavassistProxyFactory;
 import com.zaxxer.hikari.util.PropertyBeanSetter;
 
 public class HikariConfig extends AbstractHikariConfig
 {
-   static {
-      JavassistProxyFactory.initialize();
-   }
-
    /**
     * Default constructor
     */

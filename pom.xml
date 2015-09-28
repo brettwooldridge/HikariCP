@@ -85,6 +85,7 @@
          <artifactId>javassist</artifactId>
          <version>${javassist.version}</version>
          <scope>compile</scope>
+         <optional>true</optional>
       </dependency>
       <dependency>
          <groupId>org.hibernate</groupId>
