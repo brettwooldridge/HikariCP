@@ -40,7 +40,7 @@
 
    <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-      <felix.version>4.6.0</felix.version>
+      <felix.version>5.0.0</felix.version>
       <hibernate.version>4.3.8.Final</hibernate.version>
       <javassist.version>3.18.2-GA</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>

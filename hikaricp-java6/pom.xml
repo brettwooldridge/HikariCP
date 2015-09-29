@@ -40,8 +40,8 @@
 
    <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <felix.version>5.0.0</felix.version>
       <felix.bundle.plugin.version>2.5.3</felix.bundle.plugin.version>
-      <felix.version>4.6.0</felix.version>
    </properties>
 
    <parent>
@@ -72,7 +72,6 @@
                <mainClass>com.zaxxer.hikari.util.JavassistProxyFactory</mainClass>
                <arguments>
                   <argument>hikaricp-java6</argument>
-                  <argument>com.zaxxer.hikari.util.Java6ConcurrentBag</argument>
                </arguments>
             </configuration>
          </plugin>
