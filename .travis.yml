@@ -1,5 +1,8 @@
 language: java
 sudo: false
+cache:
+  directories:
+    - $HOME/.m2/repository
 jdk:
   - oraclejdk8
 
@@ -7,6 +10,6 @@ install: /bin/true
 
 script:
   - mvn install -Dskip.unit.tests=true -Dmaven.javadoc.skip=true -V -B
-  - mvn clean test coveralls:report -V -pl hikaricp -P coverage 
+  - mvn clean test coveralls:report -V -pl hikaricp -P coverage
   - jdk_switcher use openjdk6
   - mvn test -V -pl hikaricp-java6
