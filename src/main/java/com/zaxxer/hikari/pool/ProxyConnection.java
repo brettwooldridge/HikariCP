@@ -220,6 +220,7 @@ public abstract class ProxyConnection implements Connection
          leakTask.cancel();
 
          try {
+            closeStatements();
             if (isCommitStateDirty && !isAutoCommit) {
                delegate.rollback();
                lastAccess = clockSource.currentTime();
