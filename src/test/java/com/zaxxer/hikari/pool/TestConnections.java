@@ -240,8 +240,6 @@ public class TestConnections
       try {
          Connection connection = ds.getConnection();
 
-         quietlySleep(1000);
-
          Assert.assertEquals(1, TestElf.getPool(ds).getTotalConnections());
          ds.evictConnection(connection);
          Assert.assertEquals(0, TestElf.getPool(ds).getTotalConnections());
@@ -264,7 +262,7 @@ public class TestConnections
 
       HikariDataSource ds = new HikariDataSource(config);
       try {
-         UtilityElf.quietlySleep(1200L);
+         UtilityElf.quietlySleep(500);
 
          Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
@@ -272,8 +270,6 @@ public class TestConnections
          // This will take the pool down to zero
          Connection connection = ds.getConnection();
          Assert.assertNotNull(connection);
-
-         quietlySleep(500);
 
          Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
@@ -294,8 +290,6 @@ public class TestConnections
 
          // The connection will be ejected from the pool here
          connection.close();
-
-         quietlySleep(500);
 
          Assert.assertSame("Totals connections not as expected", 0, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
@@ -372,12 +366,12 @@ public class TestConnections
       StubStatement.oldDriver = true;
       HikariDataSource ds = new HikariDataSource(config);
       try {
-         quietlySleep(1001);
+         quietlySleep(500);
 
          Connection connection = ds.getConnection();
          connection.close();
 
-         quietlySleep(1001);
+         quietlySleep(500);
          connection = ds.getConnection();
       }
       finally {
