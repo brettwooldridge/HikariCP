@@ -167,7 +167,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             final long now = clockSource.currentTime();
             if (poolEntry.evict || (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
                closeConnection(poolEntry, "(connection evicted or dead)"); // Throw away the dead connection and try again
-               timeout = hardTimeout - clockSource.elapsedMillis(startTime, now);
+               timeout = hardTimeout - clockSource.elapsedMillis(startTime);
             }
             else {
                metricsTracker.recordBorrowStats(poolEntry, startTime);
@@ -626,7 +626,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                }
             }
          }
-         
+
          logPoolState("After cleanup\t");
 
          fillPool(); // Try to maintain minimum connections
