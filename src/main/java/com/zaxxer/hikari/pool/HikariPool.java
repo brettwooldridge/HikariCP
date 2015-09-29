@@ -165,7 +165,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             }
 
             final long now = clockSource.currentTime();
-            if (poolEntry.evict || (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
+            if (poolEntry.isMarkedEvicted() || (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
                closeConnection(poolEntry, "(connection evicted or dead)"); // Throw away the dead connection and try again
                timeout = hardTimeout - clockSource.elapsedMillis(startTime);
             }
@@ -206,12 +206,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    {
       metricsTracker.recordConnectionUsage(poolEntry);
 
-      if (poolEntry.evict) {
-         closeConnection(poolEntry, "(connection broken or evicted)");
-      }
-      else {
-         connectionBag.requite(poolEntry);
-      }
+      connectionBag.requite(poolEntry);
    }
 
    /**
@@ -506,7 +501,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    {
       for (PoolEntry poolEntry : connectionBag.values(STATE_IN_USE)) {
          try {
-            poolEntry.evict = true;
+            poolEntry.markEvicted();
             poolEntry.connection.abort(assassinExecutor);
          }
          catch (Throwable e) {
@@ -557,7 +552,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private void softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
    {
-      poolEntry.evict();
+      poolEntry.markEvicted();
       if (connectionBag.reserve(poolEntry) || owner) {
          closeConnection(poolEntry, reason);
       }

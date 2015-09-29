@@ -42,10 +42,10 @@ final class PoolEntry implements IConcurrentBagEntry
    Connection connection;
    long lastAccessed;
    long lastBorrowed;
-   volatile boolean evict;
+   private volatile boolean evict;
 
    private final FastList<Statement> openStatements;
-   private final PoolBase poolBase;
+   private final HikariPool hikariPool;
    private final AtomicInteger state;
 
    private volatile ScheduledFuture<?> endOfLife;
@@ -63,7 +63,7 @@ final class PoolEntry implements IConcurrentBagEntry
    PoolEntry(final Connection connection, final PoolBase pool)
    {
       this.connection = connection;
-      this.poolBase = pool;
+      this.hikariPool = (HikariPool) pool;
       this.state = new AtomicInteger(STATE_NOT_IN_USE);
       this.lastAccessed = ClockSource.INSTANCE.currentTime();
       this.openStatements = new FastList<>(Statement.class, 16);
@@ -77,7 +77,7 @@ final class PoolEntry implements IConcurrentBagEntry
    void recycle(final long lastAccessed)
    {
       this.lastAccessed = lastAccessed;
-      poolBase.releaseConnection(this);
+      hikariPool.releaseConnection(this);
    }
 
    /**
@@ -95,12 +95,12 @@ final class PoolEntry implements IConcurrentBagEntry
 
    void resetConnectionState(final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
    {
-      poolBase.resetConnectionState(connection, proxyConnection, dirtyBits);
+      hikariPool.resetConnectionState(connection, proxyConnection, dirtyBits);
    }
 
    String getPoolName()
    {
-      return poolBase.toString();
+      return hikariPool.toString();
    }
 
    Connection getConnection()
@@ -108,14 +108,19 @@ final class PoolEntry implements IConcurrentBagEntry
       return connection;
    }
 
-   boolean isEvicted()
+   boolean isMarkedEvicted()
    {
       return evict;
    }
 
-   void evict()
+   void markEvicted()
    {
       this.evict = true;
+   }
+
+   void evict(final String closureReason)
+   {
+      hikariPool.closeConnection(this, closureReason);
    }
 
    FastList<Statement> getStatementsList()
