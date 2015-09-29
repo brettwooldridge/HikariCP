@@ -171,6 +171,7 @@
                   </Import-Package>
                   <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
                   <DynamicImport-Package>*</DynamicImport-Package>
+                  <_noee>true<_noee>
                </instructions>
             </configuration>
             <executions>
