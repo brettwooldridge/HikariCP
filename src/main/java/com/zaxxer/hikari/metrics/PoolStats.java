@@ -83,12 +83,12 @@ public abstract class PoolStats
    private boolean shouldLoad()
    {
       for (; ; ) {
-          final long time = clock.currentTime();
-          final long current = reloadAt.get();
-          if (current > time) {
+          final long now = clock.currentTime();
+          final long reloadTime = reloadAt.get();
+          if (reloadTime > now) {
               return false;
           }
-          if (reloadAt.compareAndSet(current, clock.plusMillis(time, timeoutMs))) {
+          else if (reloadAt.compareAndSet(reloadTime, clock.plusMillis(now, timeoutMs))) {
               return true;
           }
       }

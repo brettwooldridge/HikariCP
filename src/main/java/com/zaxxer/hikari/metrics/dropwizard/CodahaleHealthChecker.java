@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.metrics;
+package com.zaxxer.hikari.metrics.dropwizard;
 
 import java.sql.Connection;
 import java.sql.SQLException;

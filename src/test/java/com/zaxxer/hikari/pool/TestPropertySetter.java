@@ -1,4 +1,4 @@
-package com.zaxxer.hikari;
+package com.zaxxer.hikari.pool;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
@@ -10,6 +10,7 @@ import javax.sql.DataSource;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.util.PropertyElf;
 
 public class TestPropertySetter

@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zaxxer.hikari;
+package com.zaxxer.hikari.pool;
 
 import java.sql.SQLException;
 
 import org.junit.Test;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 public class TestMBean
 {

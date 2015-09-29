@@ -275,7 +275,7 @@ where threads can only be created through a ``ThreadFactory`` provided by the ap
 #### Missing Knobs
 
 HikariCP has plenty of "knobs" to turn as you can see above, but comparatively less than some other pools.
-This is a design philosophy.  The HikariCP design asthetic is Minimalism.  In keeping with the
+This is a design philosophy.  The HikariCP design aesthetic is Minimalism.  In keeping with the
 *simple is better* or *less is more* design philosophy, some knobs are intentionally left out.  Here are two,
 and the rationale.
 
@@ -360,7 +360,6 @@ Here is a list of JDBC *DataSource* classes for popular databases:
 | Apache Derby     | Derby        | org.apache.derby.jdbc.ClientDataSource |
 | Firebird         | Jaybird      | org.firebirdsql.pool.FBSimpleDataSource |
 | H2               | H2           | org.h2.jdbcx.JdbcDataSource |
-| IBM AS400        | IBM          | com.ibm.as400.access.AS400JDBCDriver |
 | HSQLDB           | HSQLDB       | org.hsqldb.jdbc.JDBCDataSource |
 | IBM AS400        | IBM          | com.ibm.as400.access.AS400JDBCDriver |
 | IBM DB2          | DB2          | com.ibm.db2.jcc.DB2SimpleDataSource |

@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari.metrics;
+package com.zaxxer.hikari.metrics.dropwizard;
+
+import java.util.concurrent.TimeUnit;
 
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.zaxxer.hikari.pool.PoolEntry;
-import com.zaxxer.hikari.util.ClockSource;
+import com.zaxxer.hikari.metrics.MetricsTracker;
+import com.zaxxer.hikari.metrics.PoolStats;
 
 public final class CodaHaleMetricsTracker extends MetricsTracker
 {
-   private static final ClockSource clockSource = ClockSource.INSTANCE;
-
    private final String poolName;
    private final Timer connectionObtainTimer;
    private final Histogram connectionUsage;
@@ -86,16 +86,16 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
 
    /** {@inheritDoc} */
    @Override
-   public Context recordConnectionRequest()
+   public void recordConnectionAcquiredNanos(final long elapsedAcquiredNanos)
    {
-      return new Context(connectionObtainTimer);
+      connectionObtainTimer.update(elapsedAcquiredNanos, TimeUnit.NANOSECONDS);
    }
 
    /** {@inheritDoc} */
    @Override
-   public void recordConnectionUsage(final PoolEntry bagEntry)
+   public void recordConnectionUsageMillis(final long elapsedBorrowedMillis)
    {
-      connectionUsage.update(clockSource.elapsedMillis(bagEntry.lastOpenTime));
+      connectionUsage.update(elapsedBorrowedMillis);
    }
 
    public Timer getConnectionAcquisitionTimer()
@@ -106,28 +106,5 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    public Histogram getConnectionDurationHistogram()
    {
       return connectionUsage;
-   }
-
-   public static final class Context extends MetricsContext
-   {
-      final Timer.Context innerContext;
-
-      Context(Timer timer) {
-         innerContext = timer.time();
-      }
-
-      /** {@inheritDoc} */
-      @Override
-      public void stop()
-      {
-         innerContext.stop();
-      }
-
-      /** {@inheritDoc} */
-      @Override
-      public void setConnectionLastOpen(final PoolEntry bagEntry, final long now)
-      {
-         bagEntry.lastOpenTime = now;
-      }
    }
 }

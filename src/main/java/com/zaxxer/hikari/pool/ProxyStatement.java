@@ -33,6 +33,7 @@ public abstract class ProxyStatement implements Statement
    protected final Statement delegate;
 
    private boolean isClosed;
+   private ResultSet proxyResultSet;
 
    protected ProxyStatement(ProxyConnection connection, Statement statement)
    {
@@ -40,7 +41,7 @@ public abstract class ProxyStatement implements Statement
       this.delegate = statement;
    }
 
-   protected final SQLException checkException(SQLException e)
+   final SQLException checkException(SQLException e)
    {
       return connection.checkException(e);
    }
@@ -212,9 +213,14 @@ public abstract class ProxyStatement implements Statement
    public ResultSet getResultSet() throws SQLException {
       final ResultSet resultSet = delegate.getResultSet();
       if (resultSet != null) {
-         return ProxyFactory.getProxyResultSet(connection, this, resultSet);
+         if (proxyResultSet == null || ((ProxyResultSet) proxyResultSet).delegate != resultSet) {
+            proxyResultSet = ProxyFactory.getProxyResultSet(connection, this, resultSet);
+         }
       }
-      return null;
+      else {
+         proxyResultSet = null;
+      }
+      return proxyResultSet;
    }
 
    /** {@inheritDoc} */

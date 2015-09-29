@@ -64,6 +64,25 @@ public interface ClockSource
    long elapsedMillis(long startTime, long endTime);
 
    /**
+    * Convert an opaque time-stamp returned by currentTime() into an
+    * elapsed time in milliseconds, based on the current instant in time.
+    *
+    * @param startTime an opaque time-stamp returned by an instance of this class
+    * @return the elapsed time between startTime and now in milliseconds
+    */
+   long elapsedNanos(long startTime);
+
+   /**
+    * Get the difference in nanoseconds between two opaque time-stamps returned
+    * by currentTime().
+    *
+    * @param startTime an opaque time-stamp returned by an instance of this class
+    * @param endTime an opaque time-stamp returned by an instance of this class
+    * @return the elapsed time between startTime and endTime in nanoseconds
+    */
+   long elapsedNanos(long startTime, long endTime);
+
+   /**
     * Return the specified opaque time-stamp plus the specified number of milliseconds.
     *
     * @param time an opaque time-stamp 
@@ -71,6 +90,12 @@ public interface ClockSource
     * @return a new opaque time-stamp
     */
    long plusMillis(long time, long millis);
+
+   /**
+    * Get the TimeUnit the ClockSource is denominated in.
+    * @return
+    */
+   TimeUnit getSourceTimeUnit();
 
    /**
     * Factory class used to create a platform-specific ClockSource. 
@@ -113,16 +138,37 @@ public interface ClockSource
 
       /** {@inheritDoc} */
       @Override
-      public long toMillis(long time)
+      public long elapsedNanos(final long startTime)
+      {
+         return TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis() - startTime);
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public long elapsedNanos(final long startTime, final long endTime)
+      {
+         return TimeUnit.MILLISECONDS.toNanos(endTime - startTime);
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public long toMillis(final long time)
       {
          return time;
       }
 
       /** {@inheritDoc} */
       @Override
-      public long plusMillis(long time, long millis)
+      public long plusMillis(final long time, final long millis)
       {
          return time + millis;
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public TimeUnit getSourceTimeUnit()
+      {
+         return TimeUnit.MILLISECONDS;
       }
    }
 
@@ -158,9 +204,30 @@ public interface ClockSource
 
       /** {@inheritDoc} */
       @Override
+      public long elapsedNanos(final long startTime)
+      {
+         return System.nanoTime() - startTime;
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public long elapsedNanos(final long startTime, final long endTime)
+      {
+         return endTime - startTime;
+      }
+
+      /** {@inheritDoc} */
+      @Override
       public long plusMillis(final long time, final long millis)
       {
          return time + TimeUnit.MILLISECONDS.toNanos(millis);
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public TimeUnit getSourceTimeUnit()
+      {
+         return TimeUnit.NANOSECONDS;
       }
    }
 }

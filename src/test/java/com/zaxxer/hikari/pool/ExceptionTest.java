@@ -1,4 +1,4 @@
-package com.zaxxer.hikari;
+package com.zaxxer.hikari.pool;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,6 +9,9 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 public class ExceptionTest
 {

@@ -1,4 +1,4 @@
-package com.zaxxer.hikari;
+package com.zaxxer.hikari.pool;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -8,6 +8,8 @@ import java.sql.Statement;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.util.UtilityElf;
 
 public class ConnectionStateTest

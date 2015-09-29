@@ -1,4 +1,4 @@
-package com.zaxxer.hikari;
+package com.zaxxer.hikari.pool;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,6 +9,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.mocks.StubStatement;
 

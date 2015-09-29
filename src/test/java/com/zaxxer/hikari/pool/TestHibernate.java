@@ -1,4 +1,4 @@
-package com.zaxxer.hikari;
+package com.zaxxer.hikari.pool;
 
 import java.sql.Connection;
 import java.util.Properties;

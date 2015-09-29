@@ -25,6 +25,8 @@ import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -43,12 +45,10 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariPoolMXBean;
-import com.zaxxer.hikari.metrics.CodahaleHealthChecker;
-import com.zaxxer.hikari.metrics.CodahaleMetricsTrackerFactory;
-import com.zaxxer.hikari.metrics.MetricsTracker;
-import com.zaxxer.hikari.metrics.MetricsTracker.MetricsContext;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.PoolStats;
+import com.zaxxer.hikari.metrics.dropwizard.CodahaleHealthChecker;
+import com.zaxxer.hikari.metrics.dropwizard.CodahaleMetricsTrackerFactory;
 import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
@@ -67,27 +67,26 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private static final ClockSource clockSource = ClockSource.INSTANCE;
 
-   private final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindow", TimeUnit.SECONDS.toMillis(1));
-   private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30));
+   private static final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindow", TimeUnit.SECONDS.toMillis(1));
+   private static final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30));
 
    private static final int POOL_NORMAL = 0;
    private static final int POOL_SUSPENDED = 1;
    private static final int POOL_SHUTDOWN = 2;
 
-   final ConcurrentBag<PoolEntry> connectionBag;
-   final ScheduledThreadPoolExecutor houseKeepingExecutorService;
+   private volatile int poolState;
 
    private final AtomicInteger totalConnections;
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
+   private final ScheduledThreadPoolExecutor houseKeepingExecutorService;
 
-   private volatile int poolState;
+   private final ConcurrentBag<PoolEntry> connectionBag;
 
-   private final String poolName;
    private final ProxyLeakTask leakTask;
    private final SuspendResumeLock suspendResumeLock;
 
-   private volatile MetricsTracker metricsTracker;
+   private MetricsTrackerDelegate metricsTracker;
    private boolean isRecordMetrics;
 
    /**
@@ -99,7 +98,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
     {
       super(config);
 
-      this.poolName = config.getPoolName();
       this.connectionBag = new ConcurrentBag<>(this);
       this.totalConnections = new AtomicInteger();
       this.suspendResumeLock = config.isAllowPoolSuspension() ? new SuspendResumeLock() : SuspendResumeLock.FAUX_LOCK;
@@ -160,7 +158,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
       try {
          long timeout = hardTimeout;
-         final MetricsContext metricsContext = (isRecordMetrics ? metricsTracker.recordConnectionRequest() : MetricsTracker.NO_CONTEXT);
          do {
             final PoolEntry poolEntry = connectionBag.borrow(timeout, TimeUnit.MILLISECONDS);
             if (poolEntry == null) {
@@ -168,13 +165,12 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             }
 
             final long now = clockSource.currentTime();
-            if (poolEntry.evict || (clockSource.elapsedMillis(poolEntry.lastAccess, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
+            if (poolEntry.evict || (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
                closeConnection(poolEntry, "(connection evicted or dead)"); // Throw away the dead connection and try again
                timeout = hardTimeout - clockSource.elapsedMillis(startTime, now);
             }
             else {
-               metricsContext.setConnectionLastOpen(poolEntry, now);
-               metricsContext.stop();
+               metricsTracker.recordBorrowStats(poolEntry, startTime);
                return poolEntry.createProxyConnection(leakTask.start(poolEntry), now);
             }
          }
@@ -292,10 +288,10 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    {
       this.isRecordMetrics = metricsTrackerFactory != null;
       if (isRecordMetrics) {
-         this.metricsTracker = metricsTrackerFactory.create(config.getPoolName(), getPoolStats());
+         this.metricsTracker = new MetricsTrackerDelegate(metricsTrackerFactory.create(config.getPoolName(), getPoolStats()));
       }
       else {
-         this.metricsTracker = new MetricsTracker();
+         this.metricsTracker = new NopMetricsTrackerDelegate();
       }
    }
 
@@ -318,13 +314,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                       (prefix.length > 0 ? prefix[0] : ""), poolName,
                       getTotalConnections(), getActiveConnections(), getIdleConnections(), getThreadsAwaitingConnection());
       }
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public String toString()
-   {
-      return poolName;
    }
 
    // ***********************************************************************
@@ -619,23 +608,26 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
          previous = now;
 
+         logPoolState("Before cleanup\t");
+
          if (idleTimeout > 0L) {
-            logPoolState("Before cleanup\t");
             final List<PoolEntry> notInUseList = connectionBag.values(STATE_NOT_IN_USE);
             int removable = notInUseList.size() - config.getMinimumIdle();
-            for (PoolEntry poolEntry : notInUseList) {
-               if (removable <= 0) {
-                  break;
-               }
-               if (clockSource.elapsedMillis(poolEntry.lastAccess, now) > idleTimeout) {
-                  if (connectionBag.reserve(poolEntry)) {
+            if (removable > 0) {
+               // Sort pool entries on lastAccessed
+               Collections.sort(notInUseList, PoolEntry.LASTACCESS_COMPARABLE);
+               // Iterate the first N removable elements
+               for (final Iterator<PoolEntry> iter = notInUseList.iterator(); removable > 0 && iter.hasNext(); ) {
+                  final PoolEntry poolEntry = iter.next();
+                  if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout && connectionBag.reserve(poolEntry)) {
                      closeConnection(poolEntry, "(connection passed idleTimeout)");
                      removable--;
                   }
                }
             }
-            logPoolState("After cleanup\t");
          }
+         
+         logPoolState("After cleanup\t");
 
          fillPool(); // Try to maintain minimum connections
       }

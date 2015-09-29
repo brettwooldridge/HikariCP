@@ -22,6 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.metrics.MetricsTracker;
+import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyElf;
@@ -29,8 +31,9 @@ import com.zaxxer.hikari.util.UtilityElf;
 
 abstract class PoolBase
 {
-   protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
+   private final Logger LOGGER = LoggerFactory.getLogger(PoolBase.class);
    protected final HikariConfig config;
+   protected final String poolName;
    protected long connectionTimeout;
 
    private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout"};
@@ -45,8 +48,6 @@ abstract class PoolBase
    private Executor netTimeoutExecutor;
    private DataSource dataSource;
 
-   // private final HikariPool hikariPool;
-   private final String poolName;
    private final String catalog;
    private final boolean isReadOnly;
    private final boolean isAutoCommit;
@@ -56,7 +57,7 @@ abstract class PoolBase
 
    private volatile boolean isValidChecked; 
 
-   public PoolBase(final HikariConfig config)
+   PoolBase(final HikariConfig config)
    {
       this.config = config;
 
@@ -78,7 +79,9 @@ abstract class PoolBase
       initializeDataSource();
    }
 
-   public String getPoolName()
+   /** {@inheritDoc} */
+   @Override
+   public String toString()
    {
       return poolName;
    }
@@ -89,7 +92,7 @@ abstract class PoolBase
    //                           JDBC methods
    // ***********************************************************************
 
-   public void quietlyCloseConnection(final Connection connection, final String closureReason)
+   void quietlyCloseConnection(final Connection connection, final String closureReason)
    {
       try {
          if (connection == null || connection.isClosed()) {
@@ -110,7 +113,7 @@ abstract class PoolBase
       }
    }
 
-   public boolean isConnectionAlive(final Connection connection)
+   boolean isConnectionAlive(final Connection connection)
    {
       try {
          final long validationTimeout = config.getValidationTimeout();
@@ -129,7 +132,7 @@ abstract class PoolBase
             statement.execute(config.getConnectionTestQuery());
          }
    
-         if (isIsolateInternalQueries && !isAutoCommit) {
+         if (isIsolateInternalQueries && !isReadOnly && !isAutoCommit) {
             connection.rollback();
          }
 
@@ -144,54 +147,53 @@ abstract class PoolBase
       }
    }
 
+   Throwable getLastConnectionFailure()
+   {
+      return lastConnectionFailure.getAndSet(null);
+   }
+
    public DataSource getUnwrappedDataSource()
    {
       return dataSource;
    }
 
-   public Throwable getLastConnectionFailure()
-   {
-      return lastConnectionFailure.getAndSet(null);
-   }
-
-
    // ***********************************************************************
    //                         PoolEntry methods
    // ***********************************************************************
 
-   public PoolEntry newPoolEntry() throws Exception
+   PoolEntry newPoolEntry() throws Exception
    {
       return new PoolEntry(newConnection(), this);
    }
 
-   public void resetConnectionState(final Connection connection, final ProxyConnection liveState, final int dirtyBits) throws SQLException
+   void resetConnectionState(final Connection connection, final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
    {
       int resetBits = 0;
 
-      if ((dirtyBits & 0b00001) != 0 && liveState.getReadOnlyState() != isReadOnly) {
+      if ((dirtyBits & 0b00001) != 0 && proxyConnection.getReadOnlyState() != isReadOnly) {
          connection.setReadOnly(isReadOnly);
          resetBits |= 0b00001;
       }
 
-      if ((dirtyBits & 0b00010) != 0 && liveState.getAutoCommitState() != isAutoCommit) {
+      if ((dirtyBits & 0b00010) != 0 && proxyConnection.getAutoCommitState() != isAutoCommit) {
          connection.setAutoCommit(isAutoCommit);
          resetBits |= 0b00010;
       }
 
-      if ((dirtyBits & 0b00100) != 0 && liveState.getTransactionIsolationState() != transactionIsolation) {
+      if ((dirtyBits & 0b00100) != 0 && proxyConnection.getTransactionIsolationState() != transactionIsolation) {
          connection.setTransactionIsolation(transactionIsolation);
          resetBits |= 0b00100;
       }
 
       if ((dirtyBits & 0b01000) != 0) {
-         final String currentCatalog = liveState.getCatalogState();
+         final String currentCatalog = proxyConnection.getCatalogState();
          if ((currentCatalog != null && !currentCatalog.equals(catalog)) || (currentCatalog == null && catalog != null)) {
             connection.setCatalog(catalog);
             resetBits |= 0b01000;
          }
       }
 
-      if ((dirtyBits & 0b10000) != 0 && liveState.getNetworkTimeoutState() != networkTimeout) {
+      if ((dirtyBits & 0b10000) != 0 && proxyConnection.getNetworkTimeoutState() != networkTimeout) {
          setNetworkTimeout(connection, networkTimeout);
          resetBits |= 0b10000;
       }
@@ -201,9 +203,15 @@ abstract class PoolBase
       }
    }
    
+   void shutdownNetworkTimeoutExecutor()
+   {
+      if (netTimeoutExecutor != null && netTimeoutExecutor instanceof ThreadPoolExecutor) {
+         ((ThreadPoolExecutor) netTimeoutExecutor).shutdownNow();
+      }
+   }
 
    // ***********************************************************************
-   //                       PoolMediator methods
+   //                       JMX methods
    // ***********************************************************************
 
    /**
@@ -211,7 +219,7 @@ abstract class PoolBase
     *
     * @param pool a HikariPool instance
     */
-   public void registerMBeans(final HikariPool hikariPool)
+   void registerMBeans(final HikariPool hikariPool)
    {
       if (!config.isRegisterMbeans()) {
          return;
@@ -238,7 +246,7 @@ abstract class PoolBase
    /**
     * Unregister MBeans for HikariConfig and HikariPool.
     */
-   public void unregisterMBeans()
+   void unregisterMBeans()
    {
       if (!config.isRegisterMbeans()) {
          return;
@@ -256,13 +264,6 @@ abstract class PoolBase
       }
       catch (Exception e) {
          LOGGER.warn("{} - Unable to unregister management beans.", poolName, e);
-      }
-   }
-
-   public void shutdownNetworkTimeoutExecutor()
-   {
-      if (netTimeoutExecutor != null && netTimeoutExecutor instanceof ThreadPoolExecutor) {
-         ((ThreadPoolExecutor) netTimeoutExecutor).shutdownNow();
       }
    }
 
@@ -462,11 +463,13 @@ abstract class PoolBase
 
             statement.execute(sql);
 
-            if (isCommit) {
-               connection.commit();
-            }
-            else if (isRollback) {
-               connection.rollback();
+            if (!isReadOnly) {
+               if (isCommit) {
+                  connection.commit();
+               }
+               else if (isRollback) {
+                  connection.rollback();
+               }
             }
          }
       }
@@ -543,5 +546,63 @@ abstract class PoolBase
 
       sb.setLength(sb.length() - 2);  // trim trailing comma
       return sb.toString();
+   }
+
+   static class MetricsTrackerDelegate implements AutoCloseable
+   {
+      final MetricsTracker tracker;
+
+      protected MetricsTrackerDelegate()
+      {
+         this.tracker = null;
+      }
+
+      MetricsTrackerDelegate(MetricsTracker tracker)
+      {
+         this.tracker = tracker;
+      }
+
+      @Override
+      public void close()
+      {
+         tracker.close();
+      }
+
+      void recordConnectionUsage(final PoolEntry poolEntry)
+      {
+         tracker.recordConnectionUsageMillis(poolEntry.getMillisSinceBorrowed());
+      }
+
+      /**
+       * @param poolEntry
+       * @param now
+       */
+      void recordBorrowStats(final PoolEntry poolEntry, final long startTime)
+      {
+         final long now = ClockSource.INSTANCE.currentTime();
+         poolEntry.lastBorrowed = now;
+         tracker.recordConnectionAcquiredNanos(ClockSource.INSTANCE.elapsedNanos(startTime, now));
+      }
+   }
+
+   static final class NopMetricsTrackerDelegate extends MetricsTrackerDelegate
+   {
+      @Override
+      void recordConnectionUsage(final PoolEntry poolEntry)
+      {
+         // no-op
+      }
+
+      @Override
+      public void close()
+      {
+         // no-op
+      }
+
+      @Override
+      void recordBorrowStats(final PoolEntry poolEntry, final long startTime)
+      {
+         // no-op
+      }
    }
 }

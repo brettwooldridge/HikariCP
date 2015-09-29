@@ -18,8 +18,7 @@ package com.zaxxer.hikari.pool;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.Comparator;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -35,18 +34,15 @@ import com.zaxxer.hikari.util.FastList;
  *
  * @author Brett Wooldridge
  */
-public final class PoolEntry implements IConcurrentBagEntry
+final class PoolEntry implements IConcurrentBagEntry
 {
-   private static final Logger LOGGER;
-   private static final SimpleDateFormat DATE_FORMAT;
+   private static final Logger LOGGER = LoggerFactory.getLogger(PoolEntry.class);
 
-   public final long creationTime;
-
-   public Connection connection;
-   public long lastAccess;
-
-   public volatile long lastOpenTime;
-   public volatile boolean evict;
+   static final Comparator<PoolEntry> LASTACCESS_COMPARABLE;
+   Connection connection;
+   long lastAccessed;
+   long lastBorrowed;
+   volatile boolean evict;
 
    private final FastList<Statement> openStatements;
    private final PoolBase poolBase;
@@ -56,35 +52,38 @@ public final class PoolEntry implements IConcurrentBagEntry
 
    static
    {
-      LOGGER = LoggerFactory.getLogger(PoolEntry.class);
-      DATE_FORMAT = new SimpleDateFormat("MMM dd, HH:mm:ss.SSS");
+      LASTACCESS_COMPARABLE = new Comparator<PoolEntry>() {
+         @Override
+         public int compare(final PoolEntry entryOne, final PoolEntry entryTwo) {
+            return Long.compare(entryOne.lastAccessed, entryTwo.lastAccessed);
+         }
+      };      
    }
 
    PoolEntry(final Connection connection, final PoolBase pool)
    {
       this.connection = connection;
       this.poolBase = pool;
-      this.creationTime = System.currentTimeMillis();
       this.state = new AtomicInteger(STATE_NOT_IN_USE);
-      this.lastAccess = ClockSource.INSTANCE.currentTime();
+      this.lastAccessed = ClockSource.INSTANCE.currentTime();
       this.openStatements = new FastList<>(Statement.class, 16);
    }
 
    /**
     * Release this entry back to the pool.
     *
-    * @param lastAccess last access time-stamp
+    * @param lastAccessed last access time-stamp
     */
-   public void recycle(final long lastAccess)
+   void recycle(final long lastAccessed)
    {
-      this.lastAccess = lastAccess;
+      this.lastAccessed = lastAccessed;
       poolBase.releaseConnection(this);
    }
 
    /**
     * @param endOfLife
     */
-   public void setFutureEol(final ScheduledFuture<?> endOfLife)
+   void setFutureEol(final ScheduledFuture<?> endOfLife)
    {
       this.endOfLife = endOfLife;
    }
@@ -94,39 +93,51 @@ public final class PoolEntry implements IConcurrentBagEntry
       return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, now);
    }
 
-   public void resetConnectionState(final ProxyConnection liveState, final int dirtyBits) throws SQLException
+   void resetConnectionState(final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
    {
-      poolBase.resetConnectionState(connection, liveState, dirtyBits);
+      poolBase.resetConnectionState(connection, proxyConnection, dirtyBits);
    }
 
-   public String getPoolName()
+   String getPoolName()
    {
-      return poolBase.getPoolName();
+      return poolBase.toString();
    }
 
-   public Connection getConnection()
+   Connection getConnection()
    {
       return connection;
    }
 
-   public long getLastAccess()
-   {
-      return lastAccess;
-   }
-
-   public boolean isEvicted()
+   boolean isEvicted()
    {
       return evict;
    }
 
-   public void evict()
+   void evict()
    {
       this.evict = true;
    }
 
-   public FastList<Statement> getStatementsList()
+   FastList<Statement> getStatementsList()
    {
       return openStatements;
+   }
+
+   /** Returns millis since lastBorrowed */
+   long getMillisSinceBorrowed()
+   {
+      return ClockSource.INSTANCE.elapsedMillis(lastBorrowed);
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public String toString()
+   {
+      final long now = ClockSource.INSTANCE.currentTime();
+      return connection
+         + ", borrowed " + ClockSource.INSTANCE.elapsedMillis(lastBorrowed, now) + "ms ago, "
+         + ", accessed " + ClockSource.INSTANCE.elapsedMillis(lastAccessed, now) + "ms ago, "
+         + stateToString();
    }
 
    // ***********************************************************************
@@ -154,16 +165,6 @@ public final class PoolEntry implements IConcurrentBagEntry
       state.lazySet(update);
    }
 
-   /** {@inheritDoc} */
-   @Override
-   public String toString()
-   {
-      return connection
-         + ", created " + formatDateTime(creationTime)
-         + ", last release " + ClockSource.INSTANCE.elapsedMillis(lastAccess) + "ms ago, "
-         + stateToString();
-   }
-
    void close()
    {
       if (endOfLife != null && !endOfLife.isDone() && !endOfLife.cancel(false)) {
@@ -172,11 +173,6 @@ public final class PoolEntry implements IConcurrentBagEntry
 
       endOfLife = null;
       connection = null;
-   }
-
-   private static synchronized String formatDateTime(final long timestamp)
-   {
-      return DATE_FORMAT.format(new Date(timestamp));
    }
 
    private String stateToString()

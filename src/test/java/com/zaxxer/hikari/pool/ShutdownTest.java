@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zaxxer.hikari;
+package com.zaxxer.hikari.pool;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -26,6 +26,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.util.ClockSource;
@@ -291,7 +293,7 @@ public class ShutdownTest
                   Assert.fail(e.getMessage());
                }
                finally {
-                  TestElf.getPool(ds).quietlyCloseConnection(connection, "(because this is a test)");
+                  try { connection.close(); } catch (SQLException e) { e.printStackTrace(); }
                   ds.close();
                }
             };

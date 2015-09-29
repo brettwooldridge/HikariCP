@@ -96,30 +96,30 @@ public abstract class ProxyConnection implements Connection
    }
 
    // ***********************************************************************
-   //                     Live Connection State accessors
+   //                     Connection State Accessors
    // ***********************************************************************
 
-   public final boolean getAutoCommitState()
+   final boolean getAutoCommitState()
    {
       return isAutoCommit;
    }
 
-   public final String getCatalogState()
+   final String getCatalogState()
    {
       return dbcatalog;
    }
 
-   public final int getTransactionIsolationState()
+   final int getTransactionIsolationState()
    {
       return transactionIsolation;
    }
 
-   public final boolean getReadOnlyState()
+   final boolean getReadOnlyState()
    {
       return isReadOnly;
    }
 
-   public final int getNetworkTimeoutState()
+   final int getNetworkTimeoutState()
    {
       return networkTimeout;
    }
@@ -129,13 +129,13 @@ public abstract class ProxyConnection implements Connection
    // ***********************************************************************
 
    /** {@inheritDoc} */
-   public final PoolEntry getPoolEntry()
+   final PoolEntry getPoolEntry()
    {
       return poolEntry;
    }
 
    /** {@inheritDoc} */
-   public final SQLException checkException(final SQLException sqle)
+   final SQLException checkException(final SQLException sqle)
    {
       String sqlState = sqle.getSQLState();
       if (sqlState != null) {
@@ -156,13 +156,13 @@ public abstract class ProxyConnection implements Connection
    }
 
    /** {@inheritDoc} */
-   public final void untrackStatement(final Statement statement)
+   final void untrackStatement(final Statement statement)
    {
       openStatements.remove(statement);
    }
 
    /** {@inheritDoc} */
-   public final void markCommitStateDirty()
+   final void markCommitStateDirty()
    {
       if (isAutoCommit) {
          lastAccess = clockSource.currentTime();         
