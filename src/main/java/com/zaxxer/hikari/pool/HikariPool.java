@@ -198,18 +198,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    }
 
    /**
-    * Release a connection back to the pool, or permanently close it if it is broken.
-    *
-    * @param poolEntry the PoolBagEntry to release back to the pool
-    */
-   public final void releaseConnection(final PoolEntry poolEntry)
-   {
-      metricsTracker.recordConnectionUsage(poolEntry);
-
-      connectionBag.requite(poolEntry);
-   }
-
-   /**
     * Shutdown the pool, closing all idle connections and aborting or closing
     * active connections.
     *
@@ -294,20 +282,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    {
       if (healthCheckRegistry != null) {
          CodahaleHealthChecker.registerHealthChecks(this, config, (HealthCheckRegistry) healthCheckRegistry);
-      }
-   }
-
-   /**
-    * Log the current pool state at debug level.
-    *
-    * @param prefix an optional prefix to prepend the log message
-    */
-   public final void logPoolState(String... prefix)
-   {
-      if (LOGGER.isDebugEnabled()) {
-         LOGGER.debug("{}pool {} stats (total={}, active={}, idle={}, waiting={})",
-                      (prefix.length > 0 ? prefix[0] : ""), poolName,
-                      getTotalConnections(), getActiveConnections(), getIdleConnections(), getThreadsAwaitingConnection());
       }
    }
 
@@ -408,11 +382,37 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    // ***********************************************************************
 
    /**
+    * Log the current pool state at debug level.
+    *
+    * @param prefix an optional prefix to prepend the log message
+    */
+   final void logPoolState(String... prefix)
+   {
+      if (LOGGER.isDebugEnabled()) {
+         LOGGER.debug("{}pool {} stats (total={}, active={}, idle={}, waiting={})",
+                      (prefix.length > 0 ? prefix[0] : ""), poolName,
+                      getTotalConnections(), getActiveConnections(), getIdleConnections(), getThreadsAwaitingConnection());
+      }
+   }
+
+   /**
+    * Release a connection back to the pool, or permanently close it if it is broken.
+    *
+    * @param poolEntry the PoolBagEntry to release back to the pool
+    */
+   final void releaseConnection(final PoolEntry poolEntry)
+   {
+      metricsTracker.recordConnectionUsage(poolEntry);
+
+      connectionBag.requite(poolEntry);
+   }
+
+   /**
     * Permanently close the real (underlying) connection (eat any exception).
     *
     * @param poolEntry the connection to actually close
     */
-   void closeConnection(final PoolEntry poolEntry, final String closureReason)
+   final void closeConnection(final PoolEntry poolEntry, final String closureReason)
    {
       final Connection connection = poolEntry.connection;
       poolEntry.close();
@@ -612,13 +612,14 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                // Sort pool entries on lastAccessed
                Collections.sort(notInUseList, PoolEntry.LASTACCESS_COMPARABLE);
                // Iterate the first N removable elements
-               for (final Iterator<PoolEntry> iter = notInUseList.iterator(); removable > 0 && iter.hasNext(); ) {
+               final Iterator<PoolEntry> iter = notInUseList.iterator();
+               do {
                   final PoolEntry poolEntry = iter.next();
                   if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout && connectionBag.reserve(poolEntry)) {
                      closeConnection(poolEntry, "(connection passed idleTimeout)");
                      removable--;
                   }
-               }
+               } while (removable > 0 && iter.hasNext());
             }
          }
 

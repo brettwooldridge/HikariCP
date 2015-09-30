@@ -103,11 +103,6 @@ final class PoolEntry implements IConcurrentBagEntry
       return hikariPool.toString();
    }
 
-   Connection getConnection()
-   {
-      return connection;
-   }
-
    boolean isMarkedEvicted()
    {
       return evict;
@@ -121,11 +116,6 @@ final class PoolEntry implements IConcurrentBagEntry
    void evict(final String closureReason)
    {
       hikariPool.closeConnection(this, closureReason);
-   }
-
-   FastList<Statement> getStatementsList()
-   {
-      return openStatements;
    }
 
    /** Returns millis since lastBorrowed */
