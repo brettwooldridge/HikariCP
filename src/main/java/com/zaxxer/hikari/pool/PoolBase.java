@@ -1,6 +1,11 @@
 package com.zaxxer.hikari.pool;
 
 import static com.zaxxer.hikari.util.UtilityElf.createInstance;
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_CATALOG;
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_READONLY;
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_ISOLATION;
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_AUTOCOMMIT;
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_NETTIMEOUT;
 
 import java.lang.management.ManagementFactory;
 import java.sql.Connection;
@@ -170,32 +175,32 @@ abstract class PoolBase
    {
       int resetBits = 0;
 
-      if ((dirtyBits & 0b00001) != 0 && proxyConnection.getReadOnlyState() != isReadOnly) {
+      if ((dirtyBits & DIRTY_BIT_READONLY) != 0 && proxyConnection.getReadOnlyState() != isReadOnly) {
          connection.setReadOnly(isReadOnly);
-         resetBits |= 0b00001;
+         resetBits |= DIRTY_BIT_READONLY;
       }
 
-      if ((dirtyBits & 0b00010) != 0 && proxyConnection.getAutoCommitState() != isAutoCommit) {
+      if ((dirtyBits & DIRTY_BIT_AUTOCOMMIT) != 0 && proxyConnection.getAutoCommitState() != isAutoCommit) {
          connection.setAutoCommit(isAutoCommit);
-         resetBits |= 0b00010;
+         resetBits |= DIRTY_BIT_AUTOCOMMIT;
       }
 
-      if ((dirtyBits & 0b00100) != 0 && proxyConnection.getTransactionIsolationState() != transactionIsolation) {
+      if ((dirtyBits & DIRTY_BIT_ISOLATION) != 0 && proxyConnection.getTransactionIsolationState() != transactionIsolation) {
          connection.setTransactionIsolation(transactionIsolation);
-         resetBits |= 0b00100;
+         resetBits |= DIRTY_BIT_ISOLATION;
       }
 
-      if ((dirtyBits & 0b01000) != 0) {
+      if ((dirtyBits & DIRTY_BIT_CATALOG) != 0) {
          final String currentCatalog = proxyConnection.getCatalogState();
          if ((currentCatalog != null && !currentCatalog.equals(catalog)) || (currentCatalog == null && catalog != null)) {
             connection.setCatalog(catalog);
-            resetBits |= 0b01000;
+            resetBits |= DIRTY_BIT_CATALOG;
          }
       }
 
-      if ((dirtyBits & 0b10000) != 0 && proxyConnection.getNetworkTimeoutState() != networkTimeout) {
+      if ((dirtyBits & DIRTY_BIT_NETTIMEOUT) != 0 && proxyConnection.getNetworkTimeoutState() != networkTimeout) {
          setNetworkTimeout(connection, networkTimeout);
-         resetBits |= 0b10000;
+         resetBits |= DIRTY_BIT_NETTIMEOUT;
       }
       
       if (LOGGER.isDebugEnabled()) {

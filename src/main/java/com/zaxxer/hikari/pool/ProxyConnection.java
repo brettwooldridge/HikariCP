@@ -43,6 +43,12 @@ import com.zaxxer.hikari.util.FastList;
  */
 public abstract class ProxyConnection implements Connection
 {
+   static final int DIRTY_BIT_READONLY   = 0b00001;
+   static final int DIRTY_BIT_AUTOCOMMIT = 0b00010;
+   static final int DIRTY_BIT_ISOLATION  = 0b00100;
+   static final int DIRTY_BIT_CATALOG    = 0b01000;
+   static final int DIRTY_BIT_NETTIMEOUT = 0b10000;
+   
    private static final Logger LOGGER;
    private static final Set<String> SQL_ERRORS;
    private static final ClockSource clockSource;
@@ -371,7 +377,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.setAutoCommit(autoCommit);
       isAutoCommit = autoCommit;
-      dirtyBits |= 0b00010;
+      dirtyBits |= DIRTY_BIT_AUTOCOMMIT;
    }
 
    /** {@inheritDoc} */
@@ -380,7 +386,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.setReadOnly(readOnly);
       isReadOnly = readOnly;
-      dirtyBits |= 0b00001;
+      dirtyBits |= DIRTY_BIT_READONLY;
    }
 
    /** {@inheritDoc} */
@@ -389,7 +395,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.setTransactionIsolation(level);
       transactionIsolation = level;
-      dirtyBits |= 0b00100;
+      dirtyBits |= DIRTY_BIT_ISOLATION;
    }
 
    /** {@inheritDoc} */
@@ -398,7 +404,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.setCatalog(catalog);
       dbcatalog = catalog;
-      dirtyBits |= 0b01000;
+      dirtyBits |= DIRTY_BIT_CATALOG;
    }
 
    /** {@inheritDoc} */
@@ -407,7 +413,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.setNetworkTimeout(executor, milliseconds);
       networkTimeout = milliseconds;
-      dirtyBits |= 0b10000;
+      dirtyBits |= DIRTY_BIT_NETTIMEOUT;
    }
 
    /** {@inheritDoc} */
