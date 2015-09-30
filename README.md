@@ -13,7 +13,7 @@ _Java 8 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>2.3.9</version>
+        <version>2.3.10</version>
         <scope>compile</scope>
     </dependency>
 ```
@@ -22,7 +22,7 @@ _Java 6 and Java 7 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP-java6</artifactId>
-        <version>2.3.9</version>
+        <version>2.3.10</version>
         <scope>compile</scope>
     </dependency>
 ```
@@ -142,14 +142,14 @@ This property controls the maximum lifetime of a connection in the pool.  When a
 reaches this timeout it will be retired from the pool, subject to a maximum variation of +30
 seconds.  An in-use connection will never be retired, only when it is closed will it then be
 removed.  **We strongly recommend setting this value, and it should be at least 30 seconds less
-than any database-level connection timeout.**  A value of 0 indicates no maximum lifetime 
+than any database-level connection timeout.**  A value of 0 indicates no maximum lifetime
 (infinite lifetime), subject of course to the ``idleTimeout`` setting.
 *Default: 1800000 (30 minutes)*
 
 &#128288;``connectionTestQuery``<br/>
-**If your driver supports JDBC4 we strongly recommend not setting this property.** This is for 
+**If your driver supports JDBC4 we strongly recommend not setting this property.** This is for
 "legacy" databases that do not support the JDBC4 ``Connection.isValid() API``.  This is the query that
-will be executed just before a connection is given to you from the pool to validate that the 
+will be executed just before a connection is given to you from the pool to validate that the
 connection to the database is still alive. *Again, try running the pool without this property,
 HikariCP will log an error if your driver is not JDBC4 compliant to let you know.*
 *Default: none*
@@ -215,7 +215,7 @@ useful for certain failover automation scenarios.  When the pool is suspended, c
 This property controls whether *Connections* obtained from the pool are in read-only mode by
 default.  Note some databases do not support the concept of read-only mode, while others provide
 query optimizations when the *Connection* is set to read-only.  Whether you need this property
-or not will depend largely on your application and database. 
+or not will depend largely on your application and database.
 *Default: false*
 
 &#10062;``registerMbeans``<br/>
