@@ -198,6 +198,9 @@ public abstract class ProxyConnection implements Connection
             }
             catch (SQLException e) {
                checkException(e);
+               if (delegate == ClosedConnection.CLOSED_CONNECTION) {
+                  break; //connection closed in checkException
+               }
             }
          }
 
@@ -220,7 +223,6 @@ public abstract class ProxyConnection implements Connection
          leakTask.cancel();
 
          try {
-            closeStatements();
             if (isCommitStateDirty && !isAutoCommit) {
                delegate.rollback();
                lastAccess = clockSource.currentTime();

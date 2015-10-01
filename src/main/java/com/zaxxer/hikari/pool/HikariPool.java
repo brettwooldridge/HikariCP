@@ -227,7 +227,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                softEvictConnections();
                abortActiveConnections(assassinExecutor);
             } while (getTotalConnections() > 0 && clockSource.elapsedMillis(start) < TimeUnit.SECONDS.toMillis(5));
-         } finally {
+         }
+         finally {
             assassinExecutor.shutdown();
             assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
          }
