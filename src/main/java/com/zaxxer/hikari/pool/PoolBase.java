@@ -100,7 +100,7 @@ abstract class PoolBase
    void quietlyCloseConnection(final Connection connection, final String closureReason)
    {
       try {
-         if (connection == null || connection.isClosed()) {
+         if (connection == null) {
             return;
          }
 
@@ -133,10 +133,10 @@ abstract class PoolBase
             if (isNetworkTimeoutSupported != TRUE) {
                setQueryTimeout(statement, (int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout));
             }
-         
+
             statement.execute(config.getConnectionTestQuery());
          }
-   
+
          if (isIsolateInternalQueries && !isReadOnly && !isAutoCommit) {
             connection.rollback();
          }
@@ -466,6 +466,7 @@ abstract class PoolBase
       if (sql != null) {
          try (Statement statement = connection.createStatement()) {
 
+            //con created few ms before, set query timeout is omitted
             statement.execute(sql);
 
             if (!isReadOnly) {

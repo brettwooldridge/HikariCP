@@ -173,8 +173,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                metricsTracker.recordBorrowStats(poolEntry, startTime);
                return poolEntry.createProxyConnection(leakTask.start(poolEntry), now);
             }
-         }
-         while (timeout > 0L);
+         } while (timeout > 0L);
       }
       catch (InterruptedException e) {
          throw new SQLException(poolName + " - Interrupted during connection acquisition", e);
@@ -227,8 +226,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             do {
                softEvictConnections();
                abortActiveConnections(assassinExecutor);
-            }
-            while (getTotalConnections() > 0 && clockSource.elapsedMillis(start) < TimeUnit.SECONDS.toMillis(5));
+            } while (getTotalConnections() > 0 && clockSource.elapsedMillis(start) < TimeUnit.SECONDS.toMillis(5));
          } finally {
             assassinExecutor.shutdown();
             assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
