@@ -189,7 +189,7 @@ public abstract class ProxyConnection implements Connection
    {
       final int size = openStatements.size();
       if (size > 0) {
-         for (int i = 0; i < size; i++) {
+         for (int i = 0; i < size && delegate != ClosedConnection.CLOSED_CONNECTION; i++) {
             try {
                final Statement statement = openStatements.get(i);
                if (statement != null) {
@@ -198,9 +198,6 @@ public abstract class ProxyConnection implements Connection
             }
             catch (SQLException e) {
                checkException(e);
-               if (delegate == ClosedConnection.CLOSED_CONNECTION) {
-                  break; //connection closed in checkException
-               }
             }
          }
 

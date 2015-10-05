@@ -500,7 +500,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    {
       for (PoolEntry poolEntry : connectionBag.values(STATE_IN_USE)) {
          try {
-            poolEntry.markEvicted();
             poolEntry.connection.abort(assassinExecutor);
          }
          catch (Throwable e) {
@@ -551,9 +550,11 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private void softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
    {
-      poolEntry.markEvicted();
-      if (connectionBag.reserve(poolEntry) || owner) {
+      if (owner || connectionBag.reserve(poolEntry)) {
          closeConnection(poolEntry, reason);
+      }
+      else {
+         poolEntry.markEvicted();
       }
    }
 
