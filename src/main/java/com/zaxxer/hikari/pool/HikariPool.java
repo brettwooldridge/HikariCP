@@ -95,7 +95,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
     * @param config a HikariConfig instance
     */
    public HikariPool(final HikariConfig config)
-    {
+   {
       super(config);
 
       this.connectionBag = new ConcurrentBag<>(this);
@@ -227,7 +227,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                softEvictConnections();
                abortActiveConnections(assassinExecutor);
             } while (getTotalConnections() > 0 && clockSource.elapsedMillis(start) < TimeUnit.SECONDS.toMillis(5));
-         } finally {
+         }
+         finally {
             assassinExecutor.shutdown();
             assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
          }
@@ -499,7 +500,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    {
       for (PoolEntry poolEntry : connectionBag.values(STATE_IN_USE)) {
          try {
-            poolEntry.markEvicted();
             poolEntry.connection.abort(assassinExecutor);
          }
          catch (Throwable e) {
@@ -550,9 +550,11 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private void softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
    {
-      poolEntry.markEvicted();
-      if (connectionBag.reserve(poolEntry) || owner) {
+      if (owner || connectionBag.reserve(poolEntry)) {
          closeConnection(poolEntry, reason);
+      }
+      else {
+         poolEntry.markEvicted();
       }
    }
 
