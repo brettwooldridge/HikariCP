@@ -479,18 +479,17 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private void fillPool()
    {
       final int connectionsToAdd = Math.min(config.getMaximumPoolSize() - totalConnections.get(), config.getMinimumIdle() - getIdleConnections());
-
-      if (connectionsToAdd > 0) {
+      for (int i = 0; i < connectionsToAdd; i++) {
          addBagItem();
+      }
 
-         if (LOGGER.isDebugEnabled()) {
-            addConnectionExecutor.execute(new Runnable() {
-               @Override
-               public void run() {
-                  logPoolState("After fill\t");
-               }
-            });
-         }
+      if (connectionsToAdd > 0 && LOGGER.isDebugEnabled()) {
+         addConnectionExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+               logPoolState("After fill\t");
+            }
+         });
       }
    }
 
