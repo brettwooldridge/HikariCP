@@ -1,5 +1,15 @@
 HikariCP Changes
 
+Changes in 2.3.11
+
+ * Fixed issue with new proxy class generation whereby Java 6 classes were generated
+   with the incorrect major version number.
+
+Changes in 2.3.10
+
+ * Generate proxy classes at build-time instead of runtime.  This removes the runtime
+   dependency on Javassist.
+
 Changes in 2.3.9
 
  * Fixed regression in JMX MBean registration.
