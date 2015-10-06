@@ -236,7 +236,7 @@ public class TestConnectionTimeoutRetry
 
          Thread.sleep(2000);
 
-         Assert.assertSame("Totals connections not as expected", 10, TestElf.getPool(ds).getTotalConnections());
+         Assert.assertSame("Total connections not as expected", 10, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 3, TestElf.getPool(ds).getIdleConnections());
 
          connection1.close();

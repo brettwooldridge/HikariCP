@@ -442,7 +442,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       // Speculative increment of totalConnections with expectation of success
       if (totalConnections.incrementAndGet() > config.getMaximumPoolSize()) {
          totalConnections.decrementAndGet(); // Pool is maxed out, so undo speculative increment of totalConnections
-         LOGGER.debug("{} - Cannot exceed maximum connections capacity: {}", poolName, config.getMaximumPoolSize());
+         //LOGGER.debug("{} - Cannot exceed maximum connections capacity: {}", poolName, config.getMaximumPoolSize());
          return true;
       }
 

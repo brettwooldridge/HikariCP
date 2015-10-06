@@ -1,5 +1,29 @@
 HikariCP Changes
 
+Changes in 2.4.2
+
+ * Fixed issue with proxy generation whereby the generated classes contain the
+   major version number for Java 8, which makes them incompatible with the Java 7
+   runtime.
+
+ * Improve accuracy of timeouts for getConnection() calls by accounting for possibly
+   long delay aliveness tests.
+
+ * Improve adherence to minimumIdle goal by closing idle connections starting from
+   longest idle time to shortest.  Additionally, stop when minimumIdle is reached even
+   if connections exceeding idleTimeout remain (but are still within maxLifetime).
+
+ * Ongoing com.zaxxer.hikari.metrics refactors. This is not considered public API until
+   such time as we announce it. Caveat lector.
+
+ * Performance improvements in the getConnection()/close() hot path.
+
+ * issue 415: remove use of java.beans classes to allow use of HikariCP with the
+   Zulu JRE compact3 profile.
+
+ * issue 406: execute validation query during connection setup to make sure it is
+   valid SQL.
+
 Changes in 2.4.1
 
  * issue 380: housekeeper was not being scheduled in the case of a user specified
