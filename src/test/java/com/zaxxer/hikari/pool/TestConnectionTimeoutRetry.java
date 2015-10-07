@@ -223,7 +223,7 @@ public class TestConnectionTimeoutRetry
       config.setConnectionTestQuery("VALUES 2");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "500");
+      System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "400");
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
          Connection connection1 = ds.getConnection();
@@ -234,7 +234,7 @@ public class TestConnectionTimeoutRetry
          Connection connection6 = ds.getConnection();
          Connection connection7 = ds.getConnection();
 
-         Thread.sleep(2000);
+         Thread.sleep(2500);
 
          Assert.assertSame("Total connections not as expected", 10, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 3, TestElf.getPool(ds).getIdleConnections());
