@@ -55,12 +55,14 @@ import javassist.bytecode.ClassFile;
  */
 public final class JavassistProxyFactory
 {
+   private static boolean JAVA6_TARGET;
    private static ClassPool classPool;
    private static String outputPrefix;
 
    public static void main(String... args)
    {
       outputPrefix = args[0] + File.separator + "target" + File.separator + "classes";
+      JAVA6_TARGET = args[0].contains("java6");
 
       classPool = new ClassPool();
       classPool.importPackage("java.sql");
@@ -138,6 +140,10 @@ public final class JavassistProxyFactory
 
       Set<String> methods = new HashSet<String>();
       Set<Class<?>> interfaces = getAllInterfaces(primaryInterface);
+      if (JAVA6_TARGET) {
+         interfaces.remove(AutoCloseable.class);
+      }
+
       for (Class<?> intf : interfaces) {
          CtClass intfCt = classPool.getCtClass(intf.getName());
          targetCt.addInterface(intfCt);

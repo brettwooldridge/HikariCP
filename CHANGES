@@ -1,5 +1,10 @@
 HikariCP Changes
 
+Changes in 2.3.12
+
+ * Fixed issue with new proxy class generation whereby Java 6 classes were generated
+   as extending java.lang.AutoClosable, which was not introduced until Java 7. 
+
 Changes in 2.3.11
 
  * Fixed issue with new proxy class generation whereby Java 6 classes were generated
