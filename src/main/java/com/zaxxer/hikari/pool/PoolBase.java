@@ -525,7 +525,7 @@ abstract class PoolBase
          try {
             dataSource.setLoginTimeout((int) TimeUnit.MILLISECONDS.toSeconds(Math.max(1000L, connectionTimeout)));
          }
-         catch (SQLException e) {
+         catch (SQLException | UnsupportedOperationException e) {
             LOGGER.warn("{} - Unable to set DataSource login timeout", poolName, e);
          }
       }
