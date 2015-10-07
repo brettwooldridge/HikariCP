@@ -528,6 +528,9 @@ abstract class PoolBase
          catch (SQLException e) {
             LOGGER.warn("{} - Unable to set DataSource login timeout", poolName, e);
          }
+         catch (UnsupportedOperationException e) {
+            LOGGER.warn("{} - Unable to set DataSource login timeout", poolName, e);
+         }
       }
    }
 
