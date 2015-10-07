@@ -73,6 +73,7 @@
                <arguments>
                   <argument>hikaricp-java6</argument>
                </arguments>
+               <skip>${maven.exec.skip}</skip>
             </configuration>
          </plugin>
 

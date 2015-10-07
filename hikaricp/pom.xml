@@ -74,6 +74,7 @@
                <arguments>
                   <argument>hikaricp</argument>
                </arguments>
+               <skip>${maven.exec.skip}</skip>
             </configuration>
          </plugin>
 
