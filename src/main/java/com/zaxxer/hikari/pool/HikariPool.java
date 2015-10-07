@@ -67,7 +67,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private static final ClockSource clockSource = ClockSource.INSTANCE;
 
-   private static final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindow", TimeUnit.SECONDS.toMillis(1));
+   private static final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", TimeUnit.MILLISECONDS.toMillis(500));
    private static final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30));
 
    private static final int POOL_NORMAL = 0;
