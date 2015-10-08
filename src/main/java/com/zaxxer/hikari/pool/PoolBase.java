@@ -99,11 +99,11 @@ abstract class PoolBase
 
    void quietlyCloseConnection(final Connection connection, final String closureReason)
    {
-      try {
-         if (connection == null) {
-            return;
-         }
+      if (connection == null) {
+         return;
+      }
 
+      try {
          LOGGER.debug("{} - Closing connection {}: {}", poolName, connection, closureReason);
          try {
             setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(15));
@@ -525,7 +525,7 @@ abstract class PoolBase
          try {
             dataSource.setLoginTimeout((int) TimeUnit.MILLISECONDS.toSeconds(Math.max(1000L, connectionTimeout)));
          }
-         catch (SQLException | UnsupportedOperationException e) {
+         catch (Throwable e) {
             LOGGER.warn("{} - Unable to set DataSource login timeout", poolName, e);
          }
       }
