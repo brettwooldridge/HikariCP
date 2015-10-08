@@ -90,7 +90,9 @@ final class PoolEntry implements IConcurrentBagEntry
 
    Connection createProxyConnection(final ProxyLeakTask leakTask, final long now)
    {
-      return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, now, hikariPool.isAutoCommit());
+      ProxyConnection pc = ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, now);
+      hikariPool.initProxyConnection(pc);
+      return pc;
    }
 
    void resetConnectionState(final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException

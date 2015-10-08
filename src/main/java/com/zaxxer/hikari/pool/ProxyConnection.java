@@ -55,19 +55,19 @@ public abstract class ProxyConnection implements Connection
 
    protected Connection delegate;
 
-   private final ProxyLeakTask leakTask;
    private final PoolEntry poolEntry;
+   private final ProxyLeakTask leakTask;
    private final FastList<Statement> openStatements;
    
    private int dirtyBits;
    private long lastAccess;
    private boolean isCommitStateDirty;
 
-   protected boolean isAutoCommit;
+   private boolean isReadOnly;
+   private boolean isAutoCommit;
    private int networkTimeout;
    private int transactionIsolation;
    private String dbcatalog;
-   private boolean isReadOnly;
 
    // static initializer
    static {
@@ -83,13 +83,12 @@ public abstract class ProxyConnection implements Connection
       SQL_ERRORS.add("JZ0C1"); // Sybase disconnect error
    }
 
-   protected ProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final long now, final boolean isAutoCommit) {
+   protected ProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final long now) {
       this.poolEntry = poolEntry;
       this.delegate = connection;
       this.openStatements = openStatements;
       this.leakTask = leakTask;
       this.lastAccess = now;
-      this.isAutoCommit = isAutoCommit;
    }
 
    /** {@inheritDoc} */
@@ -103,8 +102,17 @@ public abstract class ProxyConnection implements Connection
    }
 
    // ***********************************************************************
-   //                     Connection State Accessors
+   //                     Connection State set/getters
    // ***********************************************************************
+
+   final void init(boolean isReadOnly, boolean isAutoCommit, int networkTimeout, int transactionIsolation, String dbcatalog)
+   {
+      this.isReadOnly = isReadOnly;
+      this.isAutoCommit = isAutoCommit;
+      this.networkTimeout = networkTimeout;
+      this.transactionIsolation = transactionIsolation;
+      this.dbcatalog = dbcatalog;
+   }
 
    final boolean getAutoCommitState()
    {
