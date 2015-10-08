@@ -143,9 +143,9 @@ public abstract class ProxyConnection implements Connection
    /** {@inheritDoc} */
    final SQLException checkException(final SQLException sqle)
    {
-      String sqlState = sqle.getSQLState();
+      final String sqlState = sqle.getSQLState();
       if (sqlState != null) {
-         boolean isForceClose = sqlState.startsWith("08") || SQL_ERRORS.contains(sqlState);
+         final boolean isForceClose = sqlState.startsWith("08") || SQL_ERRORS.contains(sqlState);
          if (isForceClose && delegate != ClosedConnection.CLOSED_CONNECTION) {
             LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
                         poolEntry.getPoolName(), delegate, sqlState, sqle.getErrorCode(), sqle);
@@ -154,7 +154,7 @@ public abstract class ProxyConnection implements Connection
             poolEntry.evict("(connection broken)");
          }
          else {
-            SQLException nse = sqle.getNextException();
+            final SQLException nse = sqle.getNextException();
             if (nse != null && nse != sqle) {
                checkException(nse);
             }
