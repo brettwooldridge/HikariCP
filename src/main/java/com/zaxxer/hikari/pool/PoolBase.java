@@ -157,6 +157,11 @@ abstract class PoolBase
       return lastConnectionFailure.getAndSet(null);
    }
 
+   boolean isAutoCommit()
+   {
+      return isAutoCommit;
+   }
+
    public DataSource getUnwrappedDataSource()
    {
       return dataSource;
@@ -169,6 +174,11 @@ abstract class PoolBase
    PoolEntry newPoolEntry() throws Exception
    {
       return new PoolEntry(newConnection(), this);
+   }
+
+   public void initConnectionState(ProxyConnection proxyConnection)
+   {
+      proxyConnection.isAutoCommit = isAutoCommit;
    }
 
    void resetConnectionState(final Connection connection, final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
