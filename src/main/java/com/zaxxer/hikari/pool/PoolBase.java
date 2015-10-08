@@ -102,6 +102,7 @@ abstract class PoolBase
       if (connection == null) {
          return;
       }
+
       try {
          LOGGER.debug("{} - Closing connection {}: {}", poolName, connection, closureReason);
          try {
