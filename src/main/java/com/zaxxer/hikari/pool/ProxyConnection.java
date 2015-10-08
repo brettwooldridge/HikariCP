@@ -83,12 +83,14 @@ public abstract class ProxyConnection implements Connection
       SQL_ERRORS.add("JZ0C1"); // Sybase disconnect error
    }
 
-   protected ProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final long now) {
+   protected ProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final long now, final boolean isReadOnly, final boolean isAutoCommit) {
       this.poolEntry = poolEntry;
       this.delegate = connection;
       this.openStatements = openStatements;
       this.leakTask = leakTask;
       this.lastAccess = now;
+      this.isReadOnly = isReadOnly;
+      this.isAutoCommit = isAutoCommit;
    }
 
    /** {@inheritDoc} */
@@ -102,15 +104,8 @@ public abstract class ProxyConnection implements Connection
    }
 
    // ***********************************************************************
-   //                     Connection State init & getters
+   //                     Connection State Accessors
    // ***********************************************************************
-
-   final void init(boolean isReadOnly, boolean isAutoCommit)
-   {
-      // only these two are used in close so set them correctly.
-      this.isReadOnly = isReadOnly;
-      this.isAutoCommit = isAutoCommit;
-   }
 
    final boolean getAutoCommitState()
    {

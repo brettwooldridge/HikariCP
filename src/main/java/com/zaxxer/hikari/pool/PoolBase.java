@@ -162,11 +162,6 @@ abstract class PoolBase
       return dataSource;
    }
 
-   public void initProxyConnection(ProxyConnection pc)
-   {
-      pc.init(isReadOnly, isAutoCommit);
-   }
-
    // ***********************************************************************
    //                         PoolEntry methods
    // ***********************************************************************
@@ -174,6 +169,16 @@ abstract class PoolBase
    PoolEntry newPoolEntry() throws Exception
    {
       return new PoolEntry(newConnection(), this);
+   }
+
+   boolean getReadOnly()
+   {
+      return isReadOnly;
+   }
+
+   boolean getAutoCommit()
+   {
+      return isAutoCommit;
    }
 
    void resetConnectionState(final Connection connection, final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
