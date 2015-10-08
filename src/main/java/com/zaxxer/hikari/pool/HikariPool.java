@@ -528,7 +528,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
             final PoolEntry poolEntry = connectionBag.borrow(connectionTimeout, TimeUnit.MILLISECONDS);
             if (config.getMinimumIdle() == 0) {
-               closeConnection(poolEntry, "Initialization validation complete, closing test connection.");
+               closeConnection(poolEntry, "Closing connection borrowed for validation.");
             }
             else {
                connectionBag.requite(poolEntry);
