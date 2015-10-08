@@ -102,7 +102,7 @@ public abstract class ProxyConnection implements Connection
    }
 
    // ***********************************************************************
-   //                     Connection State set/getters
+   //                     Connection State init & getters
    // ***********************************************************************
 
    final void init(boolean isReadOnly, boolean isAutoCommit, int networkTimeout, int transactionIsolation, String dbcatalog)
