@@ -164,7 +164,7 @@ abstract class PoolBase
 
    public void initProxyConnection(ProxyConnection pc)
    {
-      pc.init(isReadOnly, isAutoCommit, networkTimeout, transactionIsolation, catalog);
+      pc.init(isReadOnly, isAutoCommit);
    }
 
    // ***********************************************************************

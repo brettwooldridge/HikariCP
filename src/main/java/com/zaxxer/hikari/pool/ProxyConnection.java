@@ -105,13 +105,11 @@ public abstract class ProxyConnection implements Connection
    //                     Connection State init & getters
    // ***********************************************************************
 
-   final void init(boolean isReadOnly, boolean isAutoCommit, int networkTimeout, int transactionIsolation, String dbcatalog)
+   final void init(boolean isReadOnly, boolean isAutoCommit)
    {
+      // only these two are used in close so set them correctly.
       this.isReadOnly = isReadOnly;
       this.isAutoCommit = isAutoCommit;
-      this.networkTimeout = networkTimeout;
-      this.transactionIsolation = transactionIsolation;
-      this.dbcatalog = dbcatalog;
    }
 
    final boolean getAutoCommitState()
