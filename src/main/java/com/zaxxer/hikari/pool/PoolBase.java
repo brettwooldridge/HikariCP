@@ -157,11 +157,6 @@ abstract class PoolBase
       return lastConnectionFailure.getAndSet(null);
    }
 
-   boolean isAutoCommit()
-   {
-      return isAutoCommit;
-   }
-
    public DataSource getUnwrappedDataSource()
    {
       return dataSource;
