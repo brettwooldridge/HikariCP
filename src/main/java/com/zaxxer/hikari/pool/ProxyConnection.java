@@ -63,7 +63,7 @@ public abstract class ProxyConnection implements Connection
    private long lastAccess;
    private boolean isCommitStateDirty;
 
-   private boolean isAutoCommit;
+   protected boolean isAutoCommit;
    private int networkTimeout;
    private int transactionIsolation;
    private String dbcatalog;
@@ -83,12 +83,13 @@ public abstract class ProxyConnection implements Connection
       SQL_ERRORS.add("JZ0C1"); // Sybase disconnect error
    }
 
-   protected ProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final long now) {
+   protected ProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final long now, final boolean isAutoCommit) {
       this.poolEntry = poolEntry;
       this.delegate = connection;
       this.openStatements = openStatements;
       this.leakTask = leakTask;
       this.lastAccess = now;
+      this.isAutoCommit = isAutoCommit;
    }
 
    /** {@inheritDoc} */
