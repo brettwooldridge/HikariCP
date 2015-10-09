@@ -44,11 +44,14 @@ final class PoolEntry implements IConcurrentBagEntry
    long lastBorrowed;
    private volatile boolean evict;
 
+   private volatile ScheduledFuture<?> endOfLife;
+
    private final FastList<Statement> openStatements;
    private final HikariPool hikariPool;
    private final AtomicInteger state;
 
-   private volatile ScheduledFuture<?> endOfLife;
+   private final boolean isReadOnly;
+   private final boolean isAutoCommit;
 
    static
    {
@@ -60,13 +63,15 @@ final class PoolEntry implements IConcurrentBagEntry
       };      
    }
 
-   PoolEntry(final Connection connection, final PoolBase pool)
+   PoolEntry(final Connection connection, final PoolBase pool, final boolean isReadOnly, final boolean isAutoCommit)
    {
       this.connection = connection;
       this.hikariPool = (HikariPool) pool;
       this.state = new AtomicInteger(STATE_NOT_IN_USE);
       this.lastAccessed = ClockSource.INSTANCE.currentTime();
       this.openStatements = new FastList<>(Statement.class, 16);
+      this.isReadOnly = isReadOnly;
+      this.isAutoCommit = isAutoCommit;
    }
 
    /**
@@ -90,7 +95,7 @@ final class PoolEntry implements IConcurrentBagEntry
 
    Connection createProxyConnection(final ProxyLeakTask leakTask, final long now)
    {
-      return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, now, hikariPool.getReadOnly(), hikariPool.getAutoCommit());
+      return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, now, isReadOnly, isAutoCommit);
    }
 
    void resetConnectionState(final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
