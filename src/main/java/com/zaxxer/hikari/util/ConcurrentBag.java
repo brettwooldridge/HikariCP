@@ -309,6 +309,10 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       return synchronizer.getQueueLength();
    }
 
+   public QueuedSequenceSynchronizer getSynchronizer() {
+      return synchronizer;
+   }
+
    /**
     * Get a count of the number of items in the specified state at the time of this call.
     *

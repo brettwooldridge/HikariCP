@@ -304,6 +304,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                quietlySleep(sleepBackoff);
                sleepBackoff = Math.min(connectionTimeout / 2, (long) (sleepBackoff * 1.5));
             }
+
+            connectionBag.getSynchronizer().signal();
          }
       }, true);
 
