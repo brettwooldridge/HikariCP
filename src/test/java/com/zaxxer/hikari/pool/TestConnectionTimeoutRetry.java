@@ -1,5 +1,7 @@
 package com.zaxxer.hikari.pool;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.Executors;
@@ -9,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.sun.media.jfxmedia.logging.Logger;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.mocks.StubConnection;
@@ -225,6 +228,12 @@ public class TestConnectionTimeoutRetry
 
       System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "400");
 
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      PrintStream ps = new PrintStream(baos, true);
+      TestElf.setSlf4jTargetStream(HikariPool.class, ps);
+      TestElf.setSlf4jLogLevel(HikariPool.class, Logger.DEBUG);
+
+      boolean success = false;
       try (HikariDataSource ds = new HikariDataSource(config)) {
          Connection connection1 = ds.getConnection();
          Connection connection2 = ds.getConnection();
@@ -234,7 +243,7 @@ public class TestConnectionTimeoutRetry
          Connection connection6 = ds.getConnection();
          Connection connection7 = ds.getConnection();
 
-         Thread.sleep(2500);
+         Thread.sleep(900);
 
          Assert.assertSame("Total connections not as expected", 10, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 3, TestElf.getPool(ds).getIdleConnections());
@@ -249,9 +258,14 @@ public class TestConnectionTimeoutRetry
 
          Assert.assertSame("Totals connections not as expected", 10, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 10, TestElf.getPool(ds).getIdleConnections());
+         success = true;
       }
       finally {
+         TestElf.setSlf4jLogLevel(HikariPool.class, Logger.INFO);
          System.getProperties().remove("com.zaxxer.hikari.housekeeping.periodMs");
+         if (!success) {
+            System.err.println(new String(baos.toByteArray()));
+         }
       }
    }
 }
