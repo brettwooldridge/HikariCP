@@ -42,6 +42,7 @@ import javassist.CtNewMethod;
 import javassist.LoaderClassPath;
 import javassist.Modifier;
 import javassist.NotFoundException;
+import javassist.bytecode.ClassFile;
 
 /**
  * This class generates the proxy objects for {@link Connection}, {@link Statement},
@@ -190,6 +191,7 @@ public final class JavassistProxyFactory
          }
       }
 
+      targetCt.getClassFile().setMajorVersion(ClassFile.JAVA_7);
       targetCt.writeFile("target/classes");
    }
 

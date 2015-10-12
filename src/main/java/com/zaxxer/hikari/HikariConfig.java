@@ -763,6 +763,9 @@ public class HikariConfig implements HikariConfigMXBean
          LOGGER.error("cannot use driverClassName and dataSourceClassName together");
          throw new IllegalArgumentException("cannot use driverClassName and dataSourceClassName together");
       }
+      else if (jdbcUrl != null && dataSourceClassName != null) {
+         LOGGER.warn("using dataSourceClassName and ignoring jdbcUrl");
+      }
       else if (jdbcUrl != null) {
          // OK
       }
