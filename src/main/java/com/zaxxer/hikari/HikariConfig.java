@@ -41,7 +41,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.util.PropertyElf;
-import com.zaxxer.hikari.util.UtilityElf;
 
 public class HikariConfig implements HikariConfigMXBean
 {
