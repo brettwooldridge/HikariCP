@@ -16,21 +16,15 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_USE;
-import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
-import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_REMOVED;
-import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
-import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadLocalRandom;
@@ -55,6 +49,13 @@ import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.SuspendResumeLock;
 
+import static com.zaxxer.hikari.pool.PoolEntry.MAXED_POOL_MARKER;
+import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_USE;
+import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
+import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_REMOVED;
+import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
+import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
+
 /**
  * This is the primary connection pool class that provides the basic
  * pooling behavior for HikariCP.
@@ -67,8 +68,10 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private static final ClockSource clockSource = ClockSource.INSTANCE;
 
-   private static final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", TimeUnit.MILLISECONDS.toMillis(500));
-   private static final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30));
+   private final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", TimeUnit.MILLISECONDS.toMillis(500));
+   private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30));
+
+   private final AddPoolEntryCallable ADD_POOLENTRY_CALLABLE = new AddPoolEntryCallable();
 
    private static final int POOL_NORMAL = 0;
    private static final int POOL_SUSPENDED = 1;
@@ -104,6 +107,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
       this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection filler (pool " + poolName + ")", config.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
       this.closeConnectionExecutor = createThreadPoolExecutor(4, "Hikari connection closer (pool " + poolName + ")", config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
+
 
       if (config.getScheduledExecutorService() == null) {
          ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari housekeeper (pool " + poolName + ")", true);
@@ -292,23 +296,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    @Override
    public Future<Boolean> addBagItem()
    {
-      FutureTask<Boolean> future = new FutureTask<>(new Runnable() {
-         @Override
-         public void run()
-         {
-            long sleepBackoff = 200L;
-            final int minimumIdle = config.getMinimumIdle();
-            final int maxPoolSize = config.getMaximumPoolSize();
-            while (poolState == POOL_NORMAL && totalConnections.get() < maxPoolSize && getIdleConnections() <= minimumIdle && !addConnection()) {
-               // If we got into the loop, addConnection() failed, so we sleep and retry
-               quietlySleep(sleepBackoff);
-               sleepBackoff = Math.min(connectionTimeout / 2, (long) (sleepBackoff * 1.3));
-            }
-         }
-      }, true);
-
-      addConnectionExecutor.execute(future);
-      return future;
+      return addConnectionExecutor.submit(ADD_POOLENTRY_CALLABLE);
    }
 
    // ***********************************************************************
@@ -399,6 +387,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
     *
     * @param poolEntry the PoolBagEntry to release back to the pool
     */
+   @Override
    final void releaseConnection(final PoolEntry poolEntry)
    {
       metricsTracker.recordConnectionUsage(poolEntry);
@@ -437,18 +426,16 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    /**
     * Create and add a single connection to the pool.
     */
-   private boolean addConnection()
+   private PoolEntry createPoolEntry()
    {
       // Speculative increment of totalConnections with expectation of success
       if (totalConnections.incrementAndGet() > config.getMaximumPoolSize()) {
          totalConnections.decrementAndGet(); // Pool is maxed out, so undo speculative increment of totalConnections
-         //LOGGER.debug("{} - Cannot exceed maximum connections capacity: {}", poolName, config.getMaximumPoolSize());
-         return true;
+         return PoolEntry.MAXED_POOL_MARKER;
       }
 
       try {
          final PoolEntry poolEntry = newPoolEntry();
-         connectionBag.add(poolEntry);
 
          final long maxLifetime = config.getMaxLifetime();
          if (maxLifetime > 0) {
@@ -463,14 +450,14 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          }
 
          LOGGER.debug("{} - Added connection {}", poolName, poolEntry.connection);
-         return true;
+         return poolEntry;
       }
       catch (Exception e) {
          totalConnections.decrementAndGet(); // We failed, so undo speculative increment of totalConnections
          if (poolState == POOL_NORMAL) {
             LOGGER.debug("{} - Cannot acquire connection from data source", poolName, e);
          }
-         return false;
+         return null;
       }
    }
 
@@ -522,16 +509,12 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    {
       if (config.isInitializationFailFast()) {
          try {
-            if (!addConnection()) {
-               throw getLastConnectionFailure();
-            }
-
-            final PoolEntry poolEntry = connectionBag.borrow(connectionTimeout, TimeUnit.MILLISECONDS);
+            Connection connection = getConnection();
             if (config.getMinimumIdle() == 0) {
-               closeConnection(poolEntry, "Closing connection borrowed for validation.");
+               evictConnection(connection);
             }
             else {
-               connectionBag.requite(poolEntry);
+               connection.close();
             }
          }
          catch (Throwable e) {
@@ -575,6 +558,29 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    // ***********************************************************************
    //                      Non-anonymous Inner-classes
    // ***********************************************************************
+
+   private class AddPoolEntryCallable implements Callable<Boolean>
+   {
+      @Override
+      public Boolean call() throws Exception
+      {
+         long sleepBackoff = 200L;
+         do {
+            final PoolEntry poolEntry = createPoolEntry();
+            if (poolEntry == MAXED_POOL_MARKER) {
+               return Boolean.FALSE;
+            }
+            else if (poolEntry != null) {
+               connectionBag.add(poolEntry);
+               return Boolean.TRUE;
+            }
+
+            // addConnection() failed, so we sleep and retry
+            quietlySleep(sleepBackoff);
+            sleepBackoff = Math.min(connectionTimeout / 2, (long) (sleepBackoff * 1.3));
+         } while (true);
+      }
+   }
 
    /**
     * The house keeping task to retire idle connections.

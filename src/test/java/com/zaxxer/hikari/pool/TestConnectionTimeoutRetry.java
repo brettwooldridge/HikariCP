@@ -8,10 +8,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.logging.log4j.Level;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
-import com.sun.media.jfxmedia.logging.Logger;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.mocks.StubConnection;
@@ -66,6 +68,7 @@ public class TestConnectionTimeoutRetry
 
          ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
          scheduler.schedule(new Runnable() {
+            @Override
             public void run()
             {
                stubDataSource.setThrowException(null);
@@ -109,6 +112,7 @@ public class TestConnectionTimeoutRetry
 
          ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
          scheduler.schedule(new Runnable() {
+            @Override
             public void run()
             {
                try {
@@ -183,6 +187,7 @@ public class TestConnectionTimeoutRetry
 
          ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
          scheduler.schedule(new Runnable() {
+            @Override
             public void run()
             {
                try {
@@ -221,8 +226,8 @@ public class TestConnectionTimeoutRetry
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(5);
       config.setMaximumPoolSize(10);
-      config.setConnectionTimeout(1000);
-      config.setValidationTimeout(1000);
+      config.setConnectionTimeout(2000);
+      config.setValidationTimeout(2000);
       config.setConnectionTestQuery("VALUES 2");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -231,10 +236,10 @@ public class TestConnectionTimeoutRetry
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       PrintStream ps = new PrintStream(baos, true);
       TestElf.setSlf4jTargetStream(HikariPool.class, ps);
-      TestElf.setSlf4jLogLevel(HikariPool.class, Logger.DEBUG);
 
-      boolean success = false;
       try (HikariDataSource ds = new HikariDataSource(config)) {
+         TestElf.setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
+
          Connection connection1 = ds.getConnection();
          Connection connection2 = ds.getConnection();
          Connection connection3 = ds.getConnection();
@@ -243,7 +248,7 @@ public class TestConnectionTimeoutRetry
          Connection connection6 = ds.getConnection();
          Connection connection7 = ds.getConnection();
 
-         Thread.sleep(900);
+         Thread.sleep(1300);
 
          Assert.assertSame("Total connections not as expected", 10, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 3, TestElf.getPool(ds).getIdleConnections());
@@ -258,14 +263,19 @@ public class TestConnectionTimeoutRetry
 
          Assert.assertSame("Totals connections not as expected", 10, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 10, TestElf.getPool(ds).getIdleConnections());
-         success = true;
       }
-      finally {
-         TestElf.setSlf4jLogLevel(HikariPool.class, Logger.INFO);
-         System.getProperties().remove("com.zaxxer.hikari.housekeeping.periodMs");
-         if (!success) {
-            System.err.println(new String(baos.toByteArray()));
-         }
-      }
+   }
+
+   @Before
+   public void before()
+   {
+      TestElf.setSlf4jTargetStream(HikariPool.class, System.err);
+   }
+
+   @After
+   public void after()
+   {
+      System.getProperties().remove("com.zaxxer.hikari.housekeeping.periodMs");
+      TestElf.setSlf4jLogLevel(HikariPool.class, Level.WARN);
    }
 }

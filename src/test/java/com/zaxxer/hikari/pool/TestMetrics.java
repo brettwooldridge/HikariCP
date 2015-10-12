@@ -57,8 +57,7 @@ public class TestMetrics
       config.setPoolName("test");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      HikariDataSource ds = new HikariDataSource(config);
-      try {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
          ds.getConnection().close();
 
          Timer timer = metricRegistry.getTimers(new MetricFilter() {
@@ -72,9 +71,6 @@ public class TestMetrics
 
          Assert.assertEquals(1, timer.getCount());
          Assert.assertTrue(timer.getMeanRate() > 0.0);
-      }
-      finally {
-         ds.close();
       }
    }
 
@@ -91,8 +87,7 @@ public class TestMetrics
       config.setPoolName("test");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      HikariDataSource ds = new HikariDataSource(config);
-      try {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
          Connection connection = ds.getConnection();
          UtilityElf.quietlySleep(250L);
          connection.close();
@@ -110,9 +105,6 @@ public class TestMetrics
          double seventyFifth = histo.getSnapshot().get75thPercentile();
          Assert.assertTrue("Seventy-fith percentile less than 250ms: " + seventyFifth, seventyFifth >= 250.0);
       }
-      finally {
-         ds.close();
-      }
    }
 
    @Test
@@ -128,10 +120,9 @@ public class TestMetrics
       config.setPoolName("test");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
       config.addHealthCheckProperty("connectivityCheckTimeoutMs", "1000");
-      config.addHealthCheckProperty("expected99thPercentileMs", "10");
+      config.addHealthCheckProperty("expected99thPercentileMs", "100");
 
-      HikariDataSource ds = new HikariDataSource(config);
-      try {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
          UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(2));
 
          Connection connection = ds.getConnection();
@@ -148,9 +139,6 @@ public class TestMetrics
          Result slaResult = healthChecks.get("test.pool.Connection99Percent");
          Assert.assertTrue(slaResult.isHealthy());
       }
-      finally {
-         ds.close();
-      }
    }
 
    @Test
@@ -159,7 +147,7 @@ public class TestMetrics
       HikariDataSource ds = new HikariDataSource();
       ds.setMaximumPoolSize(1);
       ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-      
+
       MetricRegistry metricRegistry = new MetricRegistry();
       HealthCheckRegistry healthRegistry = new HealthCheckRegistry();
 
@@ -196,7 +184,7 @@ public class TestMetrics
       HikariDataSource ds = new HikariDataSource();
       ds.setMaximumPoolSize(1);
       ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-      
+
       MetricRegistry metricRegistry = new MetricRegistry();
       HealthCheckRegistry healthRegistry = new HealthCheckRegistry();
 
@@ -216,7 +204,7 @@ public class TestMetrics
          Assert.fail("Should not have been allowed to set registry after pool started");
       }
       catch (IllegalStateException ise) {
-         
+         // pass
       }
       finally {
          ds.close();

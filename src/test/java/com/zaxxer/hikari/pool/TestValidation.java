@@ -144,7 +144,9 @@ public class TestValidation
       config.setMaxLifetime(TimeUnit.MINUTES.toMillis(2));
       config.setIdleTimeout(TimeUnit.MINUTES.toMillis(3));
       config.validate();
-      Assert.assertTrue(new String(baos.toByteArray()).contains("greater than maxLifetime"));
+
+      String s = new String(baos.toByteArray());
+      Assert.assertTrue("Expected exception to contain 'greater than maxLifetime' but contains *" + s + "*", s.contains("greater than maxLifetime"));
    }
 
    @Test
@@ -202,7 +204,9 @@ public class TestValidation
          config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
          config.setDataSource(new StubDataSource());
          config.validate();
-         Assert.assertTrue(new String(baos.toByteArray()).contains("using dataSource"));
+
+         String s = new String(baos.toByteArray());
+         Assert.assertTrue("Expected exception to contain 'using dataSource' but contains *" + s + "*", s.contains("using dataSource"));
       }
       catch (IllegalStateException ise) {
          Assert.fail();

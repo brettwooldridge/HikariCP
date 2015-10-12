@@ -24,13 +24,12 @@ import java.sql.SQLException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.logging.log4j.Level;
 import org.junit.Assert;
 import org.junit.Test;
-import org.slf4j.spi.LocationAwareLogger;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.util.UtilityElf;
 
 /**
@@ -105,7 +104,7 @@ public class MiscTest
 
       final HikariDataSource ds = new HikariDataSource(config);
       try {
-         TestElf.setSlf4jLogLevel(HikariPool.class, LocationAwareLogger.DEBUG_INT);
+         TestElf.setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
          TestElf.getPool(ds).logPoolState();
 
          Connection connection = ds.getConnection();
@@ -115,7 +114,7 @@ public class MiscTest
          ps.close();
          String s = new String(baos.toByteArray());
          Assert.assertNotNull("Exception string was null", s);
-         Assert.assertTrue("Expected exception to contain 'Apparent connection leak detected' but contains *" + s + "*", s.contains("Apparent connection leak detected"));
+         Assert.assertTrue("Expected exception to contain 'Connection leak detection' but contains *" + s + "*", s.contains("Connection leak detection"));
       }
       finally
       {

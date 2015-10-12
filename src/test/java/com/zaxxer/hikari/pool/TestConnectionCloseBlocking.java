@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.zaxxer.hikari.pool;
 
@@ -29,7 +29,7 @@ import com.zaxxer.hikari.util.UtilityElf;
  *
  */
 public class TestConnectionCloseBlocking {
-   private volatile boolean shouldSleep = true;
+   private volatile boolean shouldSleep = false;
 
    @Test
    public void testConnectionCloseBlocking() throws SQLException {
@@ -39,16 +39,17 @@ public class TestConnectionCloseBlocking {
       config.setConnectionTimeout(1500);
       config.setDataSource(new CustomMockDataSource());
 
-      HikariDataSource ds = new HikariDataSource(config);
-
       long start = ClockSource.INSTANCE.currentTime();
-      try {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
          Connection connection = ds.getConnection();
          connection.close();
+
          // Hikari only checks for validity for connections with lastAccess > 1000 ms so we sleep for 1001 ms to force
          // Hikari to do a connection validation which will fail and will trigger the connection to be closed
          UtilityElf.quietlySleep(1001);
          start = ClockSource.INSTANCE.currentTime();
+
+         shouldSleep = true;
          connection = ds.getConnection(); // on physical connection close we sleep 2 seconds
          Assert.assertTrue("Waited longer than timeout",
                (ClockSource.INSTANCE.elapsedMillis(start) < config.getConnectionTimeout()));
@@ -57,7 +58,6 @@ public class TestConnectionCloseBlocking {
                (ClockSource.INSTANCE.elapsedMillis(start) < config.getConnectionTimeout()));
       } finally {
          shouldSleep = false;
-         ds.close();
       }
    }
 

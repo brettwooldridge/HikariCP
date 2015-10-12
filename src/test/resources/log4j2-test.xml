@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="OFF">
+  <appenders>
+    <Console name="Console" target="SYSTEM_ERR">
+      <PatternLayout pattern="%6sn [%-26.26t] %-5level %-20c{1} - %msg%n" />
+    </Console>
+  </appenders>
+  <Loggers>
+    <Root level="info">
+      <AppenderRef ref="Console" />
+    </Root>
+  </Loggers>
+</configuration>

@@ -29,7 +29,6 @@ import org.junit.Test;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.mocks.StubConnection;
-import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.UtilityElf;
 
@@ -70,6 +69,7 @@ public class ShutdownTest
       Thread[] threads = new Thread[10];
       for (int i = 0; i < 10; i++) {
          threads[i] = new Thread() {
+            @Override
             public void run()
             {
                try {
@@ -132,7 +132,7 @@ public class ShutdownTest
       Assert.assertSame("StubConnection count not as expected", 0, StubConnection.count.get());
 
       StubConnection.slowCreate = false;
-      
+
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(5);
       config.setMaximumPoolSize(5);
@@ -263,6 +263,7 @@ public class ShutdownTest
       for (int i = 0; i < 4; i++) {
          final HikariDataSource ds = new HikariDataSource(config);
          Thread t = new Thread() {
+            @Override
             public void run() {
                Connection connection = null;
                try {
@@ -299,8 +300,9 @@ public class ShutdownTest
             };
          };
          t.start();
-   
+
          Thread t2 = new Thread() {
+            @Override
             public void run() {
                UtilityElf.quietlySleep(100);
                try {
