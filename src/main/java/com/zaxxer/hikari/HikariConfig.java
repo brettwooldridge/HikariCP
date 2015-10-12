@@ -777,10 +777,6 @@ public class HikariConfig implements HikariConfigMXBean
          LOGGER.warn("using dataSource and ignoring dataSourceClassName");
       }
 
-      if (transactionIsolationName != null) {
-         UtilityElf.getTransactionIsolation(transactionIsolationName);
-      }
-
       if (LOGGER.isDebugEnabled() || unitTest) {
          logConfiguration();
       }
