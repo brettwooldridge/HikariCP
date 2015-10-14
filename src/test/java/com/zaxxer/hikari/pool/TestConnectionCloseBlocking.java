@@ -46,16 +46,16 @@ public class TestConnectionCloseBlocking {
 
          // Hikari only checks for validity for connections with lastAccess > 1000 ms so we sleep for 1001 ms to force
          // Hikari to do a connection validation which will fail and will trigger the connection to be closed
-         UtilityElf.quietlySleep(1001);
-         start = ClockSource.INSTANCE.currentTime();
+         UtilityElf.quietlySleep(1100L);
 
          shouldSleep = true;
-         connection = ds.getConnection(); // on physical connection close we sleep 2 seconds
-         Assert.assertTrue("Waited longer than timeout",
-               (ClockSource.INSTANCE.elapsedMillis(start) < config.getConnectionTimeout()));
+
+         // on physical connection close we sleep 2 seconds
+         connection = ds.getConnection();
+
+         Assert.assertTrue("Waited longer than timeout", (ClockSource.INSTANCE.elapsedMillis(start) < config.getConnectionTimeout()));
       } catch (SQLException e) {
-         Assert.assertTrue("getConnection failed because close connection took longer than timeout",
-               (ClockSource.INSTANCE.elapsedMillis(start) < config.getConnectionTimeout()));
+         Assert.assertTrue("getConnection failed because close connection took longer than timeout", (ClockSource.INSTANCE.elapsedMillis(start) < config.getConnectionTimeout()));
       } finally {
          shouldSleep = false;
       }
