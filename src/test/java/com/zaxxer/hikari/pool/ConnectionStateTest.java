@@ -14,7 +14,7 @@ import com.zaxxer.hikari.util.UtilityElf;
 
 public class ConnectionStateTest
 {
-   @Test
+   // @Test
    public void testAutoCommit() throws SQLException
    {
       try (HikariDataSource ds = new HikariDataSource()) {
