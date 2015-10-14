@@ -451,22 +451,19 @@ public abstract class ProxyConnection implements Connection
       {
          InvocationHandler handler = new InvocationHandler() {
             
-            @Override
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
-            {
-               final String methodName = method.getName();
-               if ("isValid".equals(methodName)) {
-                  return Boolean.FALSE;
-               }
-               else if ("close".equals(methodName)) { 
-                  return Void.TYPE;
-               }
-               else if ("abort".equals(methodName)) { 
-                  return Void.TYPE;
-               }
-               else if ("toString".equals(methodName)) {
-                  return ClosedConnection.class.getCanonicalName();
-               }
+             @Override
+             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
+             {
+                final String methodName = method.getName();
+                if ("abort".equals(methodName)) { 
+                   return Void.TYPE;
+                }
+                else if ("isValid".equals(methodName)) {
+                   return Boolean.FALSE;
+                }
+                else if ("toString".equals(methodName)) {
+                   return ClosedConnection.class.getCanonicalName();
+                }
 
                throw new SQLException("Connection is closed");
             }
