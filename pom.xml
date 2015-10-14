@@ -47,6 +47,7 @@
       <pax.exam.version>4.5.0</pax.exam.version>
       <pax.url.version>2.4.1</pax.url.version>
       <slf4j.version>1.7.12</slf4j.version>
+      <log4j.version>2.4.1</log4j.version>
       <felix.bundle.plugin.version>2.5.3</felix.bundle.plugin.version>
       <felix.version>5.0.0</felix.version>
    </properties>
@@ -64,10 +65,28 @@
          <version>${slf4j.version}</version>
       </dependency>
       <dependency>
-         <groupId>org.slf4j</groupId>
-         <artifactId>slf4j-simple</artifactId>
-         <version>${slf4j.version}</version>
-         <optional>true</optional>
+         <groupId>org.apache.logging.log4j</groupId>
+         <artifactId>log4j-slf4j-impl</artifactId>
+         <version>${log4j.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.logging.log4j</groupId>
+         <artifactId>log4j-api</artifactId>
+         <version>${log4j.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.logging.log4j</groupId>
+         <artifactId>log4j-core</artifactId>
+         <version>${log4j.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.commons</groupId>
+         <artifactId>commons-csv</artifactId>
+         <version>1.2</version>
+         <scope>test</scope>
       </dependency>
       <dependency>
          <groupId>org.mockito</groupId>
@@ -87,6 +106,16 @@
          <version>${hibernate.version}</version>
          <scope>provided</scope>
          <optional>true</optional>
+         <exclusions>
+            <exclusion>
+               <artifactId>jboss-logging</artifactId>
+               <groupId>org.jboss.logging</groupId>
+            </exclusion>
+            <exclusion>
+               <artifactId>jboss-logging-annotations</artifactId>
+               <groupId>org.jboss.logging</groupId>
+            </exclusion>
+         </exclusions>
       </dependency>
       <dependency>
          <groupId>io.dropwizard.metrics</groupId>
@@ -300,6 +329,7 @@
                   <argLine>${surefireArgLine}</argLine>
                   <!-- Skips unit tests if the value of skip.unit.tests property is true -->
                   <skipTests>${skip.unit.tests}</skipTests>
+                  <reuseForks>false</reuseForks>
                </configuration>
             </plugin>
 

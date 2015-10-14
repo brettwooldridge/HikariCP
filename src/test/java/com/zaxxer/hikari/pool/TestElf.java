@@ -21,13 +21,17 @@ import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.util.HashMap;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.layout.CsvLogEventLayout;
+import org.apache.logging.slf4j.Log4jLogger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.impl.SimpleLogger;
 
-import com.zaxxer.hikari.pool.ProxyConnection;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.pool.HikariPool;
 
 /**
  * Utility methods for testing.
@@ -37,7 +41,7 @@ import com.zaxxer.hikari.pool.HikariPool;
 public final class TestElf
 {
    private TestElf() {
-      // default constructor   
+      // default constructor
    }
 
    public static HikariPool getPool(HikariDataSource ds)
@@ -74,7 +78,7 @@ public final class TestElf
       }
       catch (Exception e) {
          throw new RuntimeException(e);
-      }      
+      }
    }
 
    public static void setConfigUnitTest(boolean unitTest)
@@ -86,32 +90,61 @@ public final class TestElf
       }
       catch (Exception e) {
          throw new RuntimeException(e);
-      }      
+      }
    }
 
    public static void setSlf4jTargetStream(Class<?> clazz, PrintStream stream)
    {
-      SimpleLogger simpleLogger = (SimpleLogger) LoggerFactory.getLogger(clazz);
       try {
-         Field field = clazz.getClassLoader().loadClass("org.slf4j.impl.SimpleLogger").getDeclaredField("TARGET_STREAM");
+         Log4jLogger log4Jlogger = (Log4jLogger) LoggerFactory.getLogger(clazz);
+
+         Field field = clazz.getClassLoader().loadClass("org.apache.logging.slf4j.Log4jLogger").getDeclaredField("logger");
          field.setAccessible(true);
-         field.set(simpleLogger, stream);
+
+         Logger logger = (Logger) field.get(log4Jlogger);
+         if (logger.getAppenders().containsKey("string")) {
+            Appender appender = logger.getAppenders().get("string");
+            logger.removeAppender(appender);
+         }
+
+         logger.addAppender(new StringAppender("string", stream));
       }
       catch (Exception e) {
          throw new RuntimeException(e);
       }
    }
 
-   public static void setSlf4jLogLevel(Class<?> clazz, int logLevel)
+   public static void setSlf4jLogLevel(Class<?> clazz, Level logLevel)
    {
-      SimpleLogger simpleLogger = (SimpleLogger) LoggerFactory.getLogger(clazz);
       try {
-         Field field = clazz.getClassLoader().loadClass("org.slf4j.impl.SimpleLogger").getDeclaredField("currentLogLevel");
+         Log4jLogger log4Jlogger = (Log4jLogger) LoggerFactory.getLogger(clazz);
+
+         Field field = clazz.getClassLoader().loadClass("org.apache.logging.slf4j.Log4jLogger").getDeclaredField("logger");
          field.setAccessible(true);
-         field.setInt(simpleLogger, logLevel);
+
+         Logger logger = (Logger) field.get(log4Jlogger);
+         logger.setLevel(logLevel);
       }
       catch (Exception e) {
          throw new RuntimeException(e);
+      }
+   }
+
+   private static class StringAppender extends AbstractAppender
+   {
+      private static final long serialVersionUID = -1932433845656444920L;
+      private PrintStream stream;
+
+      StringAppender(String name, PrintStream stream)
+      {
+         super(name, null, CsvLogEventLayout.createDefaultLayout());
+         this.stream = stream;
+      }
+
+      @Override
+      public void append(LogEvent event)
+      {
+         stream.println(event.getMessage().getFormattedMessage());
       }
    }
 }

@@ -1,11 +1,11 @@
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.util.UtilityElf.createInstance;
-import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_CATALOG;
-import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_READONLY;
-import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_ISOLATION;
 import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_AUTOCOMMIT;
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_CATALOG;
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_ISOLATION;
 import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_NETTIMEOUT;
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_READONLY;
+import static com.zaxxer.hikari.util.UtilityElf.createInstance;
 
 import java.lang.management.ManagementFactory;
 import java.sql.Connection;
@@ -60,7 +60,7 @@ abstract class PoolBase
    private final boolean isIsolateInternalQueries;
    private final AtomicReference<Throwable> lastConnectionFailure;
 
-   private volatile boolean isValidChecked; 
+   private volatile boolean isValidChecked;
 
    PoolBase(final HikariConfig config)
    {
@@ -202,12 +202,12 @@ abstract class PoolBase
          setNetworkTimeout(connection, networkTimeout);
          resetBits |= DIRTY_BIT_NETTIMEOUT;
       }
-      
+
       if (LOGGER.isDebugEnabled()) {
          LOGGER.debug("{} - Reset ({}) on connection {}", poolName, resetBits != 0 ? stringFromResetBits(resetBits) : "nothing", connection);
       }
    }
-   
+
    void shutdownNetworkTimeoutExecutor()
    {
       if (netTimeoutExecutor != null && netTimeoutExecutor instanceof ThreadPoolExecutor) {
@@ -494,7 +494,7 @@ abstract class PoolBase
          ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool(threadFactory);
          executor.allowCoreThreadTimeOut(true);
          executor.setKeepAliveTime(15, TimeUnit.SECONDS);
-         netTimeoutExecutor = executor; 
+         netTimeoutExecutor = executor;
       }
    }
 
@@ -534,9 +534,9 @@ abstract class PoolBase
    /**
     * This will create a string for debug logging. Given a set of "reset bits", this
     * method will return a concatenated string, for example:
-    * 
+    *
     * Input : 0b00110
-    * Output: "autoCommit, isolation"  
+    * Output: "autoCommit, isolation"
     *
     * @param bits a set of "reset bits"
     * @return a string of which states were reset
@@ -544,7 +544,7 @@ abstract class PoolBase
    private String stringFromResetBits(final int bits)
    {
       final StringBuilder sb = new StringBuilder();
-      for (int ndx = 0; ndx < RESET_STATES.length; ndx++) { 
+      for (int ndx = 0; ndx < RESET_STATES.length; ndx++) {
          if ( (bits & (0b1 << ndx)) != 0) {
             sb.append(RESET_STATES[ndx]).append(", ");
          }
