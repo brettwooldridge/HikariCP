@@ -152,8 +152,8 @@ public abstract class ProxyConnection implements Connection
             LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
                         poolEntry.getPoolName(), delegate, sqlState, sqle.getErrorCode(), sqle);
             leakTask.cancel();
-            delegate = ClosedConnection.CLOSED_CONNECTION;
             poolEntry.evict("(connection broken)");
+            delegate = ClosedConnection.CLOSED_CONNECTION;
          }
          else {
             final SQLException nse = sqle.getNextException();
