@@ -14,7 +14,10 @@ Changes in 2.4.2
 
  * Performance improvements in the getConnection()/close() hot path.
 
- * issue 415: remove use of java.beans classes to allow use of HikariCP with the
+ * issue 452: fixed race condition when creating an rapidly ramping connections in the
+   pool.
+
+ * issue 415: removed use of java.beans classes to allow use of HikariCP with the
    Zulu JRE compact3 profile.
 
  * issue 406: execute validation query during connection setup to make sure it is

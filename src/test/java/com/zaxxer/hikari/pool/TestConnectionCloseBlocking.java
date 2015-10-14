@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
+import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -28,8 +29,9 @@ import com.zaxxer.hikari.util.UtilityElf;
  *
  */
 public class TestConnectionCloseBlocking {
-   private volatile boolean shouldFail = false;
+   private static volatile boolean shouldFail = false;
 
+   @Test
    public void testConnectionCloseBlocking() throws SQLException {
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
@@ -57,7 +59,7 @@ public class TestConnectionCloseBlocking {
       }
    }
 
-   private class CustomMockDataSource extends MockDataSource {
+   private static class CustomMockDataSource extends MockDataSource {
       @Override
       public Connection getConnection() throws SQLException {
          Connection mockConnection = super.getConnection();
