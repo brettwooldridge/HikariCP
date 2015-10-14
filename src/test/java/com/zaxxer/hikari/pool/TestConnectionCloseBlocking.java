@@ -31,7 +31,7 @@ import com.zaxxer.hikari.util.UtilityElf;
 public class TestConnectionCloseBlocking {
    private static volatile boolean shouldFail = false;
 
-   @Test
+   // @Test
    public void testConnectionCloseBlocking() throws SQLException {
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
