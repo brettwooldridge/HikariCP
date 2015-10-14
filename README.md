@@ -20,7 +20,7 @@ _Java 6 maven artifact (*maintenance mode*):_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP-java6</artifactId>
-        <version>2.3.9</version>
+        <version>2.3.10</version>
     </dependency>
 ```
 Or [download from here](http://search.maven.org/#search%7Cga%7C1%7Ccom.zaxxer.hikaricp).
