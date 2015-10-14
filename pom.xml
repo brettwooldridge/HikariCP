@@ -39,17 +39,19 @@
 
    <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-      <hibernate.version>4.3.9.Final</hibernate.version>
-      <javassist.version>3.18.2-GA</javassist.version>
+
+      <felix.bundle.plugin.version>3.0.0</felix.bundle.plugin.version>
+      <felix.version>5.2.0</felix.version>
+      <hibernate.version>5.0.2.Final</hibernate.version>
+      <javassist.version>3.20.0-GA</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>
+      <maven.release.version>2.5.1</maven.release.version>
       <metrics.version>3.1.2</metrics.version>
       <mockito.version>1.10.19</mockito.version>
-      <pax.exam.version>4.5.0</pax.exam.version>
-      <pax.url.version>2.4.1</pax.url.version>
+      <pax.exam.version>4.6.0</pax.exam.version>
+      <pax.url.version>2.4.3</pax.url.version>
       <slf4j.version>1.7.12</slf4j.version>
       <log4j.version>2.4.1</log4j.version>
-      <felix.bundle.plugin.version>2.5.3</felix.bundle.plugin.version>
-      <felix.version>5.0.0</felix.version>
    </properties>
 
    <parent>
@@ -207,7 +209,7 @@
          <plugin>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
-            <version>0.7.4.201502262128</version>
+            <version>0.7.5.201505241946</version>
             <executions>
                <!-- Prepares the property pointing to the JaCoCo runtime agent which is passed as VM argument when Maven the Surefire plugin is executed. -->
                <execution>
@@ -313,7 +315,7 @@
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-release-plugin</artifactId>
-               <version>2.5</version>
+               <version>${maven.release.version}</version>
                <configuration>
                   <autoVersionSubmodules>true</autoVersionSubmodules>
                   <tagNameFormat>HikariCP-@{project.version}</tagNameFormat>
@@ -384,7 +386,7 @@
                <plugin>
                   <groupId>org.eluder.coveralls</groupId>
                   <artifactId>coveralls-maven-plugin</artifactId>
-                  <version>3.1.0</version>
+                  <version>4.0.0</version>
                   <executions>
                      <execution>
                         <id>coveralls</id>
