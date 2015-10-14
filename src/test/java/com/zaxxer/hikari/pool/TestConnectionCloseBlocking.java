@@ -29,7 +29,7 @@ import com.zaxxer.hikari.util.UtilityElf;
  *
  */
 public class TestConnectionCloseBlocking {
-   private volatile boolean shouldSleep = false;
+   private volatile boolean shouldFail = false;
 
    @Test
    public void testConnectionCloseBlocking() throws SQLException {
@@ -48,7 +48,7 @@ public class TestConnectionCloseBlocking {
          // Hikari to do a connection validation which will fail and will trigger the connection to be closed
          UtilityElf.quietlySleep(1100L);
 
-         shouldSleep = true;
+         shouldFail = true;
 
          // on physical connection close we sleep 2 seconds
          connection = ds.getConnection();
@@ -56,8 +56,6 @@ public class TestConnectionCloseBlocking {
          Assert.assertTrue("Waited longer than timeout", (ClockSource.INSTANCE.elapsedMillis(start) < config.getConnectionTimeout()));
       } catch (SQLException e) {
          Assert.assertTrue("getConnection failed because close connection took longer than timeout", (ClockSource.INSTANCE.elapsedMillis(start) < config.getConnectionTimeout()));
-      } finally {
-         shouldSleep = false;
       }
    }
 
@@ -65,11 +63,11 @@ public class TestConnectionCloseBlocking {
       @Override
       public Connection getConnection() throws SQLException {
          Connection mockConnection = super.getConnection();
-         when(mockConnection.isValid(anyInt())).thenReturn(false);
+         when(mockConnection.isValid(anyInt())).thenReturn(!shouldFail);
          doAnswer(new Answer<Void>() {
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
-               if (shouldSleep) {
+               if (shouldFail) {
                   TimeUnit.SECONDS.sleep(2);
                }
                return null;
