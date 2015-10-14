@@ -41,7 +41,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.util.PropertyElf;
-import com.zaxxer.hikari.util.UtilityElf;
 
 public class HikariConfig implements HikariConfigMXBean
 {
@@ -775,10 +774,6 @@ public class HikariConfig implements HikariConfigMXBean
       }
       else if (dataSource != null && dataSourceClassName != null) {
          LOGGER.warn("using dataSource and ignoring dataSourceClassName");
-      }
-
-      if (transactionIsolationName != null) {
-         UtilityElf.getTransactionIsolation(transactionIsolationName);
       }
 
       if (LOGGER.isDebugEnabled() || unitTest) {

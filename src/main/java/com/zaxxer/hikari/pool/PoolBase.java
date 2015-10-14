@@ -190,12 +190,9 @@ abstract class PoolBase
          resetBits |= DIRTY_BIT_ISOLATION;
       }
 
-      if ((dirtyBits & DIRTY_BIT_CATALOG) != 0) {
-         final String currentCatalog = proxyConnection.getCatalogState();
-         if ((currentCatalog != null && !currentCatalog.equals(catalog)) || (currentCatalog == null && catalog != null)) {
-            connection.setCatalog(catalog);
-            resetBits |= DIRTY_BIT_CATALOG;
-         }
+      if ((dirtyBits & DIRTY_BIT_CATALOG) != 0 && catalog != null && !catalog.equals(proxyConnection.getCatalogState())) {
+         connection.setCatalog(catalog);
+         resetBits |= DIRTY_BIT_CATALOG;
       }
 
       if ((dirtyBits & DIRTY_BIT_NETTIMEOUT) != 0 && proxyConnection.getNetworkTimeoutState() != networkTimeout) {
