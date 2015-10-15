@@ -350,7 +350,7 @@ abstract class PoolBase
          connection.setCatalog(catalog);
       }
 
-      executeSql(connection, config.getConnectionInitSql(), !isAutoCommit, false);
+      executeSql(connection, config.getConnectionInitSql(), isIsolateInternalQueries && !isAutoCommit, false);
 
       setNetworkTimeout(connection, networkTimeout);
    }
