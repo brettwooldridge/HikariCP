@@ -127,9 +127,18 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    public T borrow(long timeout, final TimeUnit timeUnit) throws InterruptedException
    {
       // Try the thread-local list first
-      T claimed = claimFromThreadLocal();
-      if (claimed != null) {
-         return claimed;
+      List<?> list = threadList.get();
+      if (weakThreadLocals && list == null) {
+         list = new ArrayList<>(16);
+         threadList.set(list);
+      }
+
+      for (int i = list.size() - 1; i >= 0; i--) {
+         @SuppressWarnings("unchecked")
+         final T bagEntry = (T) (weakThreadLocals ? ((WeakReference) list.remove(i)).get() : list.remove(i));
+         if (bagEntry != null && bagEntry.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
+            return bagEntry;
+         }
       }
 
       // Otherwise, scan the shared list ... for maximum of timeout
@@ -353,25 +362,6 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       for (T bagEntry : sharedList) {
          LOGGER.info(bagEntry.toString());
       }
-   }
-
-   private T claimFromThreadLocal()
-   {
-      List<?> list = threadList.get();
-      if (weakThreadLocals && list == null) {
-         list = new ArrayList<>(16);
-         threadList.set(list);
-      }
-
-      for (int i = list.size() - 1; i >= 0; i--) {
-         @SuppressWarnings("unchecked")
-         final T bagEntry = (T) (weakThreadLocals ? ((WeakReference) list.remove(i)).get() : list.remove(i));
-         if (bagEntry != null && bagEntry.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
-            return bagEntry;
-         }
-      }
-
-      return null;
    }
 
    /**
