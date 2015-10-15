@@ -49,6 +49,8 @@ import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.SuspendResumeLock;
 
+import static com.zaxxer.hikari.pool.PoolEntry.LASTACCESS_COMPARABLE;
+import static com.zaxxer.hikari.pool.PoolEntry.MAXED_POOL_MARKER;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_REMOVED;
@@ -430,7 +432,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       // Speculative increment of totalConnections with expectation of success
       if (totalConnections.incrementAndGet() > config.getMaximumPoolSize()) {
          totalConnections.decrementAndGet(); // Pool is maxed out, so undo speculative increment of totalConnections
-         return PoolEntry.MAXED_POOL_MARKER;
+         return MAXED_POOL_MARKER;
       }
 
       try {
@@ -566,7 +568,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          long sleepBackoff = 200L;
          do {
             final PoolEntry poolEntry = createPoolEntry();
-            if (poolEntry == PoolEntry.MAXED_POOL_MARKER) {
+            if (poolEntry == MAXED_POOL_MARKER) {
                return Boolean.FALSE;
             }
             else if (poolEntry != null) {
@@ -616,7 +618,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             int removable = notInUseList.size() - config.getMinimumIdle();
             if (removable > 0) {
                // Sort pool entries on lastAccessed
-               Collections.sort(notInUseList, PoolEntry.LASTACCESS_COMPARABLE);
+               Collections.sort(notInUseList, LASTACCESS_COMPARABLE);
                // Iterate the first N removable elements
                final Iterator<PoolEntry> iter = notInUseList.iterator();
                do {
