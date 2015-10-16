@@ -23,10 +23,6 @@ Changes in 2.4.2
  * issue 406: execute validation query during connection setup to make sure it is
    valid SQL.
 
- * Fixed issue with proxy generation whereby the generated classes contain the
-   major version number for Java 8, which makes them incompatible with the Java 7
-   runtime.
-
 Changes in 2.4.1
 
  * issue 380: housekeeper was not being scheduled in the case of a user specified
