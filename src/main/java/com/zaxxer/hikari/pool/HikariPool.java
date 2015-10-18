@@ -69,10 +69,10 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private static final ClockSource clockSource = ClockSource.INSTANCE;
 
-   private final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", TimeUnit.MILLISECONDS.toMillis(500));
-   private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30));
+   private static final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", TimeUnit.MILLISECONDS.toMillis(500));
+   private static final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30));
 
-   private final AddPoolEntryCallable ADD_POOLENTRY_CALLABLE = new AddPoolEntryCallable();
+   private final PoolEntryCreator POOL_ENTRY_CREATOR = new PoolEntryCreator();
 
    private static final int POOL_NORMAL = 0;
    private static final int POOL_SUSPENDED = 1;
@@ -108,7 +108,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
       this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection filler (pool " + poolName + ")", config.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
       this.closeConnectionExecutor = createThreadPoolExecutor(4, "Hikari connection closer (pool " + poolName + ")", config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
-
 
       if (config.getScheduledExecutorService() == null) {
          ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari housekeeper (pool " + poolName + ")", true);
@@ -297,7 +296,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    @Override
    public Future<Boolean> addBagItem()
    {
-      return addConnectionExecutor.submit(ADD_POOLENTRY_CALLABLE);
+      return addConnectionExecutor.submit(POOL_ENTRY_CREATOR);
    }
 
    // ***********************************************************************
@@ -560,7 +559,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    //                      Non-anonymous Inner-classes
    // ***********************************************************************
 
-   private class AddPoolEntryCallable implements Callable<Boolean>
+   private class PoolEntryCreator implements Callable<Boolean>
    {
       @Override
       public Boolean call() throws Exception
