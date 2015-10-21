@@ -133,16 +133,14 @@ public abstract class ProxyConnection implements Connection
    }
 
    // ***********************************************************************
-   //                      IHikariConnectionProxy methods
+   //                          Internal methods
    // ***********************************************************************
 
-   /** {@inheritDoc} */
    final PoolEntry getPoolEntry()
    {
       return poolEntry;
    }
 
-   /** {@inheritDoc} */
    final SQLException checkException(final SQLException sqle)
    {
       final String sqlState = sqle.getSQLState();
@@ -165,13 +163,11 @@ public abstract class ProxyConnection implements Connection
       return sqle;
    }
 
-   /** {@inheritDoc} */
    final void untrackStatement(final Statement statement)
    {
       openStatements.remove(statement);
    }
 
-   /** {@inheritDoc} */
    final void markCommitStateDirty()
    {
       if (isAutoCommit) {
@@ -182,9 +178,13 @@ public abstract class ProxyConnection implements Connection
       }
    }
 
-   // ***********************************************************************
-   //                        Internal methods
-   // ***********************************************************************
+   /**
+    * 
+    */
+   void cancelLeakTask()
+   {
+      leakTask.cancel();
+   }
 
    private final <T extends Statement> T trackStatement(final T statement)
    {

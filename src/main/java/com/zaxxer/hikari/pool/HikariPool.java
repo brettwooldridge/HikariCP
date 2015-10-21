@@ -252,11 +252,14 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    /**
     * Evict a connection from the pool.
     *
-    * @param proxyConnection the connection to evict
+    * @param connection the connection to evict
     */
-   public final void evictConnection(Connection proxyConnection)
+   public final void evictConnection(Connection connection)
    {
-      softEvictConnection(((ProxyConnection) proxyConnection).getPoolEntry(), "(connection evicted by user)", true /* owner */);
+      ProxyConnection proxyConnection = (ProxyConnection) connection;
+      proxyConnection.cancelLeakTask();
+
+      softEvictConnection(proxyConnection.getPoolEntry(), "(connection evicted by user)", true /* owner */);
    }
 
    public void setMetricRegistry(Object metricRegistry)
