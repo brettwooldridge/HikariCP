@@ -71,7 +71,7 @@ public final class ClassLoaderUtils
 
    private static class CascadingClassLoader extends ClassLoader
    {
-      private ClassLoader contextLoader;
+      private final ClassLoader contextLoader;
 
       CascadingClassLoader(ClassLoader contextLoader)
       {

@@ -48,7 +48,7 @@ public class StubConnection extends StubBaseConnection implements Connection
     public static final AtomicInteger count = new AtomicInteger();
     public static volatile boolean slowCreate;
 
-    private static long foo;
+    private static final long foo;
     private boolean autoCommit;
     private int isolation;
     private String catalog;

@@ -45,7 +45,7 @@ import com.zaxxer.hikari.util.ClassLoaderUtils;
  */
 public final class JavassistProxyFactory
 {
-   private ClassPool classPool;
+   private final ClassPool classPool;
 
    static {
       ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();

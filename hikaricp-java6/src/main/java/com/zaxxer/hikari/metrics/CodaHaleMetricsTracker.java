@@ -23,9 +23,9 @@ import com.zaxxer.hikari.pool.HikariPool;
 
 public final class CodaHaleMetricsTracker extends MetricsTracker
 {
-   private MetricRegistry registry;
-   private Timer connectionObtainTimer;
-   private Histogram connectionUsage;
+   private final MetricRegistry registry;
+   private final Timer connectionObtainTimer;
+   private final Histogram connectionUsage;
 
    public CodaHaleMetricsTracker(String poolName)
    {
@@ -48,7 +48,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
 
    public static final class Context extends MetricsContext
    {
-      Timer.Context innerContext;
+      final Timer.Context innerContext;
 
       Context(Timer timer)
       {

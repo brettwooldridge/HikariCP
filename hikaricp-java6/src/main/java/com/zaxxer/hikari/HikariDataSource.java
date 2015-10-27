@@ -250,8 +250,8 @@ public class HikariDataSource extends HikariConfig implements DataSource
 
    private static class MultiPoolKey
    {
-      private String username;
-      private String password;
+      private final String username;
+      private final String password;
 
       MultiPoolKey(String username, String password)
       {

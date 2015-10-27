@@ -29,7 +29,7 @@ import java.sql.Statement;
 public class StubStatement implements Statement
 {
     private boolean closed;
-    private Connection connection;
+    private final Connection connection;
 
     public StubStatement(Connection connection)
     {

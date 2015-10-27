@@ -73,9 +73,9 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
       void addBagItem();
    }
 
-   private ThreadLocal<FastList<WeakReference<T>>> threadList;
-   private CopyOnWriteArraySet<T> sharedList;
-   private Synchronizer synchronizer;
+   private final ThreadLocal<FastList<WeakReference<T>>> threadList;
+   private final CopyOnWriteArraySet<T> sharedList;
+   private final Synchronizer synchronizer;
    private IBagStateListener listener;
 
    /**
