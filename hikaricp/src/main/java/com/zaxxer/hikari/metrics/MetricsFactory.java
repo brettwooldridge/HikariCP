@@ -29,7 +29,7 @@ public final class MetricsFactory
       // private contructor
    }
 
-   public static final IMetricsTracker createMetricsTracker(String metricsClassName, String poolName)
+   public static IMetricsTracker createMetricsTracker(String metricsClassName, String poolName)
    {
       return PoolUtilities.createInstance(metricsClassName, IMetricsTracker.class, poolName);
    }

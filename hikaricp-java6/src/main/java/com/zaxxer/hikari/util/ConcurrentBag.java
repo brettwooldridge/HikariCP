@@ -331,13 +331,8 @@ public class ConcurrentBag<T extends com.zaxxer.hikari.util.ConcurrentBag.IBagMa
          return true;
       }
 
-      private boolean java67hasQueuedPredecessors()
-      {
-         if (JAVA7) {
-            return hasQueuedPredecessors();
-         }
-
-         return false;
+      private boolean java67hasQueuedPredecessors() {
+         return JAVA7 && hasQueuedPredecessors();
       }
    }
 }
