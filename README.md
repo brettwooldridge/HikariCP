@@ -1,9 +1,8 @@
 <h1>![](https://github.com/brettwooldridge/HikariCP/wiki/Hikari.png) HikariCP<sup><sup>&nbsp;It's Faster.</sup></sup><sub><sub><sup>Hi·ka·ri [hi·ka·'lē] &#40;*Origin: Japanese*): light; ray.</sup></sub></sub></h1><br>
 [![][Build Status img]][Build Status]
-[![Issue Stats](http://issuestats.com/github/brettwooldridge/HikariCP/badge/issue?style=flat&concise=true)](http://issuestats.com/github/brettwooldridge/HikariCP)
-[![Issue Stats](http://issuestats.com/github/brettwooldridge/HikariCP/badge/pr?style=flat&concise=true)](http://issuestats.com/github/brettwooldridge/HikariCP)
-[![Coverage Status](https://coveralls.io/repos/brettwooldridge/HikariCP/badge.svg?branch=master)](https://coveralls.io/r/brettwooldridge/HikariCP?branch=master)
-[![Dependency Status](https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0/badge.svg?style=flat)](https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0)
+[![][Issue Stats img]][Issue Stats]
+[![][Coverage Status img]][Coverage Status]
+[![][Dependency Status img]][Dependency Status]
 [![][license img]][license]
 
 Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC connection pool.  At roughly 90Kb, the library is very light.  Read about [how we do it here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).
@@ -419,6 +418,15 @@ Please perform changes and submit pull requests from the ``dev`` branch instead 
 
 [Build Status]:https://travis-ci.org/brettwooldridge/HikariCP
 [Build Status img]:https://travis-ci.org/brettwooldridge/HikariCP.svg?branch=master
+
+[Issue Stats]:http://issuestats.com/github/brettwooldridge/HikariCP
+[Issue Stats img]:http://issuestats.com/github/brettwooldridge/HikariCP/badge/issue?style=flat&concise=true
+
+[Coverage Status]:https://coveralls.io/r/brettwooldridge/HikariCP?branch=master
+[Coverage Status img]:https://coveralls.io/repos/brettwooldridge/HikariCP/badge.svg?branch=master
+
+[Dependency Status]:https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0
+[Dependency Status img]:https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0/badge.svg?style=flat
 
 [license]:LICENSE-2.0.txt
 [license img]:https://img.shields.io/badge/License-Apache%202-blue.svg
