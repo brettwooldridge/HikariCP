@@ -428,5 +428,5 @@ Please perform changes and submit pull requests from the ``dev`` branch instead 
 [Dependency Status]:https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0
 [Dependency Status img]:https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0/badge.svg?style=flat
 
-[license]:LICENSE-2.0.txt
+[license]:LICENSE
 [license img]:https://img.shields.io/badge/License-Apache%202-blue.svg
