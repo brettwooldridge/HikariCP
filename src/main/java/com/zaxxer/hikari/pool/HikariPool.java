@@ -442,16 +442,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
          final long maxLifetime = config.getMaxLifetime();
          if (maxLifetime > 0) {
-            /*
-            3 minutes = 15 seconds variance
-            5 minutes = 30 seconds variance
-            30 minutes = 90 seconds variance
-            1 day = 71 minutes variance
-            */
-        	   final long randomIntervalInMillis = Math.max(10_000, maxLifetime / 20);
-        	 
-            final long variance = randomIntervalInMillis > 0 ? ThreadLocalRandom.current().nextLong(randomIntervalInMillis) : 0;
-            final long lifetime = maxLifetime - variance;
+        	// Determines the random variance max ceiling, from 10 seconds to 2.5% of the maxlifetime whichever is bigger.
+        	final long randomIntervalInMillis = maxLifetime > 10_000 ? Math.max(10_000, maxLifetime / 40) : 0;
+            final long lifetime = maxLifetime - randomIntervalInMillis;
             poolEntry.setFutureEol(houseKeepingExecutorService.schedule(new Runnable() {
                @Override
                public void run() {
