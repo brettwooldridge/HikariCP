@@ -790,8 +790,7 @@ public class HikariConfig implements HikariConfigMXBean
       if (minIdle < 0) {
          minIdle = maxPoolSize;
       }
-
-      if (minIdle > maxPoolSize) {
+      else if (minIdle > maxPoolSize) {
          maxPoolSize = minIdle;
       }
 
