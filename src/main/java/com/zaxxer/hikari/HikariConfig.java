@@ -787,7 +787,11 @@ public class HikariConfig implements HikariConfigMXBean
          validationTimeout = connectionTimeout;
       }
 
-      if (minIdle < 0 || minIdle > maxPoolSize) {
+      if (minIdle < 0) {
+         minIdle = maxPoolSize;
+      }
+
+      if (minIdle > maxPoolSize) {
          maxPoolSize = minIdle;
       }
 
