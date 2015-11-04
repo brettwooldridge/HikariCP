@@ -9,6 +9,13 @@ Changes in 2.4.2
    longest idle time to shortest.  Additionally, stop when minimumIdle is reached even
    if connections exceeding idleTimeout remain (but are still within maxLifetime).
 
+ * Introduce larger variance into maxLifetime to avoid mass connection closing and
+   subsequent new connection creation load on the database.  Connections now have a
+   maximum lifetime between 97.5-100% of configured maxLifetime.  In the case of the
+   default 30 minute lifetime, this generates actual lifetimes with a maximum deviation
+   of 45 seconds.  Currently, no attempt is made to futher avoid clustering that may
+   occur due to randomness.
+
  * Ongoing com.zaxxer.hikari.metrics refactors. This is not considered public API until
    such time as we announce it. Caveat lector.
 
