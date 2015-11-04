@@ -787,8 +787,11 @@ public class HikariConfig implements HikariConfigMXBean
          validationTimeout = connectionTimeout;
       }
 
-      if (minIdle < 0 || minIdle > maxPoolSize) {
+      if (minIdle < 0) {
          minIdle = maxPoolSize;
+      }
+      else if (minIdle > maxPoolSize) {
+         maxPoolSize = minIdle;
       }
 
       if (maxLifetime < 0) {
@@ -806,6 +809,7 @@ public class HikariConfig implements HikariConfigMXBean
       }
       if (idleTimeout + TimeUnit.SECONDS.toMillis(1) > maxLifetime && maxLifetime > 0) {
          LOGGER.warn("idleTimeout is close to or greater than maxLifetime, disabling it.");
+         maxLifetime = idleTimeout;
          idleTimeout = 0;
       }
       if (maxLifetime == 0 && idleTimeout == 0) {

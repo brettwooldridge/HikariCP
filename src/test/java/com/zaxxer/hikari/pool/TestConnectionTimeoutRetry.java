@@ -269,13 +269,12 @@ public class TestConnectionTimeoutRetry
    @Before
    public void before()
    {
-      TestElf.setSlf4jTargetStream(HikariPool.class, System.err);
+      TestElf.setSlf4jLogLevel(HikariPool.class, Level.INFO);
    }
 
    @After
    public void after()
    {
       System.getProperties().remove("com.zaxxer.hikari.housekeeping.periodMs");
-      TestElf.setSlf4jLogLevel(HikariPool.class, Level.WARN);
    }
 }
