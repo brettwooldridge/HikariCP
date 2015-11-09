@@ -575,11 +575,11 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                return Boolean.TRUE;
             }
             else if (poolEntry == MAXED_POOL_MARKER) {
-               //max connections reached
+               // max connections reached
                return Boolean.FALSE;
             }
             else if (min < sleepBackoff) {
-               //max tries reached
+               // max tries reached
                return Boolean.FALSE;
             }
 
