@@ -567,21 +567,23 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       @Override
       public Boolean call() throws Exception
       {
-         long sleepBackoff = 200L;
+         long sleepBackoff = 200L, min = 0L;
          do {
+            min = sleepBackoff;
             final PoolEntry poolEntry = createPoolEntry();
-            if (poolEntry == MAXED_POOL_MARKER) {
-               return Boolean.FALSE;
-            }
-            else if (poolEntry != null) {
+            if (poolEntry != null) {
                connectionBag.add(poolEntry);
                return Boolean.TRUE;
+            }
+            else if (poolEntry == MAXED_POOL_MARKER) {
+               return Boolean.FALSE;
             }
 
             // addConnection() failed, so we sleep and retry
             quietlySleep(sleepBackoff);
             sleepBackoff = Math.min(connectionTimeout / 2, (long) (sleepBackoff * 1.3));
-         } while (true);
+         } while (min < sleepBackoff);
+         return Boolean.FALSE;
       }
    }
 
