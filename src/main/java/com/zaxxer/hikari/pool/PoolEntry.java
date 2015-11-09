@@ -39,7 +39,6 @@ final class PoolEntry implements IConcurrentBagEntry
    private static final Logger LOGGER = LoggerFactory.getLogger(PoolEntry.class);
 
    static final Comparator<PoolEntry> LASTACCESS_COMPARABLE;
-   static final PoolEntry MAXED_POOL_MARKER = new PoolEntry();
 
    Connection connection;
    long lastAccessed;
@@ -63,15 +62,6 @@ final class PoolEntry implements IConcurrentBagEntry
             return Long.compare(entryOne.lastAccessed, entryTwo.lastAccessed);
          }
       };
-   }
-
-   private PoolEntry()
-   {
-      this.state = null;
-      this.openStatements = null;
-      this.hikariPool = null;
-      this.isReadOnly = false;
-      this.isAutoCommit = false;
    }
 
    PoolEntry(final Connection connection, final PoolBase pool, final boolean isReadOnly, final boolean isAutoCommit)

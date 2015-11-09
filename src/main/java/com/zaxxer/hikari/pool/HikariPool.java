@@ -50,7 +50,6 @@ import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.SuspendResumeLock;
 
 import static com.zaxxer.hikari.pool.PoolEntry.LASTACCESS_COMPARABLE;
-import static com.zaxxer.hikari.pool.PoolEntry.MAXED_POOL_MARKER;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_REMOVED;
@@ -431,12 +430,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
     */
    private PoolEntry createPoolEntry()
    {
-      // Speculative increment of totalConnections with expectation of success
-      if (totalConnections.incrementAndGet() > config.getMaximumPoolSize()) {
-         totalConnections.decrementAndGet(); // Pool is maxed out, so undo speculative increment of totalConnections
-         return MAXED_POOL_MARKER;
-      }
-
       try {
          final PoolEntry poolEntry = newPoolEntry();
 
@@ -460,7 +453,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          return poolEntry;
       }
       catch (Exception e) {
-         totalConnections.decrementAndGet(); // We failed, so undo speculative increment of totalConnections
          if (poolState == POOL_NORMAL) {
             LOGGER.debug("{} - Cannot acquire connection from data source", poolName, e);
          }
@@ -573,11 +565,14 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       {
          long sleepBackoff = 200L;
          do {
-            final PoolEntry poolEntry = createPoolEntry();
-            if (poolEntry == MAXED_POOL_MARKER) {
+            // restrict add requests to maximum pool size
+            if (totalConnections.get() + 1 > config.getMaximumPoolSize()) {
+               // Pool is at max size
                return Boolean.FALSE;
             }
-            else if (poolEntry != null) {
+            final PoolEntry poolEntry = createPoolEntry();
+            if (poolEntry != null) {
+               totalConnections.incrementAndGet();
                connectionBag.add(poolEntry);
                return Boolean.TRUE;
             }
