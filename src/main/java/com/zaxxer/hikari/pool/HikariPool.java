@@ -566,7 +566,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             // Speculative increment of poolSize with expectation of success
             poolSize.set(totalConnections.get());
             if (poolSize.incrementAndGet() > config.getMaximumPoolSize()) {
-               poolSize.decrementAndGet(); // Pool is at max size
+               // Pool is at max size
                return Boolean.FALSE;
             }
             final PoolEntry poolEntry = createPoolEntry();
