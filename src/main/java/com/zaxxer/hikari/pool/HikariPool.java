@@ -79,6 +79,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private volatile int poolState;
 
+   private final AtomicInteger poolSize;
    private final AtomicInteger totalConnections;
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
@@ -102,6 +103,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       super(config);
 
       this.connectionBag = new ConcurrentBag<>(this);
+      this.poolSize = new AtomicInteger();
       this.totalConnections = new AtomicInteger();
       this.suspendResumeLock = config.isAllowPoolSuspension() ? new SuspendResumeLock() : SuspendResumeLock.FAUX_LOCK;
 
@@ -559,9 +561,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       @Override
       public Boolean call() throws Exception
       {
-         // Speculative increment of totalConnections with expectation of success
-         if (totalConnections.incrementAndGet() > config.getMaximumPoolSize()) {
-            totalConnections.decrementAndGet(); // Pool is at max size
+         // Speculative increment of poolSize with expectation of success
+         if (poolSize.incrementAndGet() > config.getMaximumPoolSize()) {
+            poolSize.decrementAndGet(); // Pool is at max size
             return Boolean.FALSE;
          }
          long sleepBackoff = 200L;
@@ -569,6 +571,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             final PoolEntry poolEntry = createPoolEntry();
             if (poolEntry != null) {
                connectionBag.add(poolEntry);
+               totalConnections.incrementAndGet();
                return Boolean.TRUE;
             }
 
