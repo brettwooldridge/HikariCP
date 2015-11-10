@@ -404,6 +404,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
     */
    final void closeConnection(final PoolEntry poolEntry, final String closureReason)
    {
+      metricsTracker.recordConnectionUsage(poolEntry);
       if (connectionBag.remove(poolEntry)) {
          final Connection connection = poolEntry.connection;
          poolEntry.close();
