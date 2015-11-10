@@ -561,13 +561,14 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       @Override
       public Boolean call() throws Exception
       {
-         // Speculative increment of poolSize with expectation of success
-         if (poolSize.incrementAndGet() > config.getMaximumPoolSize()) {
-            poolSize.decrementAndGet(); // Pool is at max size
-            return Boolean.FALSE;
-         }
          long sleepBackoff = 200L;
          do {
+            // Speculative increment of poolSize with expectation of success
+            poolSize.set(totalConnections.get());
+            if (poolSize.incrementAndGet() > config.getMaximumPoolSize()) {
+               poolSize.decrementAndGet(); // Pool is at max size
+               return Boolean.FALSE;
+            }
             final PoolEntry poolEntry = createPoolEntry();
             if (poolEntry != null) {
                connectionBag.add(poolEntry);
