@@ -568,8 +568,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             }
             final PoolEntry poolEntry = createPoolEntry();
             if (poolEntry != null) {
-               connectionBag.add(poolEntry);
                totalConnections.incrementAndGet();
+               connectionBag.add(poolEntry);
                return Boolean.TRUE;
             }
 
