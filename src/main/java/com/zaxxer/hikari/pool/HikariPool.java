@@ -615,13 +615,13 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          logPoolState("Before cleanup\t");
 
          if (idleTimeout > 0L) {
-            final List<PoolEntry> notInUseList = connectionBag.values(STATE_NOT_IN_USE);
-            int removable = notInUseList.size() - config.getMinimumIdle();
+            final List<PoolEntry> idleList = connectionBag.values(STATE_NOT_IN_USE);
+            int removable = idleList.size() - config.getMinimumIdle();
             if (removable > 0) {
                // Sort pool entries on lastAccessed
-               Collections.sort(notInUseList, LASTACCESS_COMPARABLE);
+               Collections.sort(idleList, LASTACCESS_COMPARABLE);
                // Iterate the first N removable elements
-               final Iterator<PoolEntry> iter = notInUseList.iterator();
+               final Iterator<PoolEntry> iter = idleList.iterator();
                do {
                   final PoolEntry poolEntry = iter.next();
                   if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout && connectionBag.reserve(poolEntry)) {
