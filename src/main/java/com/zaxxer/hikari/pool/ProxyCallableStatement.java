@@ -18,6 +18,8 @@ package com.zaxxer.hikari.pool;
 
 import java.sql.CallableStatement;
 
+import com.zaxxer.hikari.HikariConfig;
+
 /**
  * This is the proxy class for java.sql.CallableStatement.
  *
@@ -25,9 +27,9 @@ import java.sql.CallableStatement;
  */
 public abstract class ProxyCallableStatement extends ProxyPreparedStatement implements CallableStatement
 {
-   protected ProxyCallableStatement(ProxyConnection connection, CallableStatement statement)
+   protected ProxyCallableStatement(ProxyConnection connection, CallableStatement statement, HikariConfig config, String sql)
    {
-      super(connection, statement);
+      super(connection, statement, config, sql);
    }
 
    // **********************************************************************

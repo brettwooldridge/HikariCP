@@ -92,6 +92,9 @@ public class HikariConfig implements HikariConfigMXBean
    private Object healthCheckRegistry;
    private Properties healthCheckProperties;
 
+   private boolean isLongSqlTrackingEnabled = false;
+   private long longSqlTimeoutInMillis = -1;
+   
    /**
     * Default constructor
     */
@@ -742,6 +745,25 @@ public class HikariConfig implements HikariConfigMXBean
       this.threadFactory = threadFactory;
    }
 
+   /**
+    * Gets whether the LONG executing SQL tracking is enabled or not.
+    * 
+    * @return True/False
+    */
+   public boolean isLongSqlTrackingEnabled() {
+	   return isLongSqlTrackingEnabled;
+   }
+   
+   /**
+    * Gets the minimum milliseconds to log the SQL.  It is applicable when the isLongSqlTrackingEnabled() returns true.
+    * Also, the minimum value for this property should be 1000ms.
+    * 
+    * @return Tracking time in Milliseconds
+    */
+   public long getLongSqlTimeoutInMillis() {
+		return longSqlTimeoutInMillis;
+   }
+
    public void validate()
    {
       validateNumerics();
@@ -816,6 +838,14 @@ public class HikariConfig implements HikariConfigMXBean
       if (leakDetectionThreshold != 0 && leakDetectionThreshold < TimeUnit.SECONDS.toMillis(2) && !unitTest) {
          LOGGER.warn("leakDetectionThreshold is less than 2000ms, setting to minimum 2000ms.");
          leakDetectionThreshold = 2000L;
+      }
+      
+      if (isLongSqlTrackingEnabled) {
+    	  LOGGER.warn("Long SQL Tracking enabled.  It is NOT a recommended setting in Production");
+    	  
+    	  if (longSqlTimeoutInMillis < TimeUnit.SECONDS.toMillis(1)) {
+    		  throw new IllegalArgumentException("longSqlTimeoutInMillis cannot be less than 1000 milliseconds");
+    	  }
       }
    }
 

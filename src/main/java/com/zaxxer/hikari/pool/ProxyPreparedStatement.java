@@ -20,6 +20,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import com.zaxxer.hikari.HikariConfig;
+
 /**
  * This is the proxy class for java.sql.PreparedStatement.
  *
@@ -27,9 +29,12 @@ import java.sql.SQLException;
  */
 public abstract class ProxyPreparedStatement extends ProxyStatement implements PreparedStatement
 {
-   protected ProxyPreparedStatement(ProxyConnection connection, PreparedStatement statement)
+   private final String sql ;
+   
+   protected ProxyPreparedStatement(ProxyConnection connection, PreparedStatement statement, HikariConfig config, String sql)
    {
-      super(connection, statement);
+      super(connection, statement, config);
+      this.sql = sql;
    }
 
    // **********************************************************************
@@ -40,32 +45,52 @@ public abstract class ProxyPreparedStatement extends ProxyStatement implements P
    @Override
    public boolean execute() throws SQLException
    {
-      connection.markCommitStateDirty();
-      return ((PreparedStatement) delegate).execute();
+	  final long start = source.currentTime();
+	  try {
+	      connection.markCommitStateDirty();
+	      return ((PreparedStatement) delegate).execute();
+	  } finally {
+		  log (source.elapsedMillis(start), sql);
+	  }
    }
 
    /** {@inheritDoc} */
    @Override
    public ResultSet executeQuery() throws SQLException
    {
-      connection.markCommitStateDirty();
-      ResultSet resultSet = ((PreparedStatement) delegate).executeQuery();
-      return ProxyFactory.getProxyResultSet(connection, this, resultSet); 
+	  final long start = source.currentTime();
+	  try {
+		  connection.markCommitStateDirty();
+	      ResultSet resultSet = ((PreparedStatement) delegate).executeQuery();
+	      return ProxyFactory.getProxyResultSet(connection, this, resultSet); 
+	  } finally {
+		  log (source.elapsedMillis(start), sql);
+	  }
    }
 
    /** {@inheritDoc} */
    @Override
    public int executeUpdate() throws SQLException
    {
-      connection.markCommitStateDirty();
-      return ((PreparedStatement) delegate).executeUpdate();
+	  final long start = source.currentTime();
+	  try {
+	      connection.markCommitStateDirty();
+	      return ((PreparedStatement) delegate).executeUpdate();
+	  } finally {
+		  log (source.elapsedMillis(start), sql);
+	  }
    }
 
    /** {@inheritDoc} */
    @Override
    public long executeLargeUpdate() throws SQLException
    {
-      connection.markCommitStateDirty();
-      return ((PreparedStatement) delegate).executeLargeUpdate();
+	  final long start = source.currentTime();
+	  try {
+	      connection.markCommitStateDirty();
+	      return ((PreparedStatement) delegate).executeLargeUpdate();
+	  } finally {
+		  log (source.elapsedMillis(start), sql);
+	  }
    }
 }
