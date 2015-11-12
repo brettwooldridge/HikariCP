@@ -435,12 +435,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
          final long maxLifetime = config.getMaxLifetime();
          if (maxLifetime > 0) {
-        	// Determines the random variance max ceiling, from 10 seconds to 2.5% of the maxlifetime whichever is bigger.
-        	final long maxIntervalInMillis = maxLifetime > 10_000 ? Math.max(10_000, maxLifetime / 40) : 0;
-        	
-        	// Randomize the current max interval
-        	final long randomIntervalInMillis = maxIntervalInMillis > 0 ? ThreadLocalRandom.current().nextLong(maxIntervalInMillis) : 0;
-            final long lifetime = maxLifetime - randomIntervalInMillis;
+            // variance up to 2.5% of the maxlifetime
+            final long variance = maxLifetime > 10_000 ? ThreadLocalRandom.current().nextLong( Math.max(10_000, maxLifetime / 40) ) : 0;
+            final long lifetime = maxLifetime - variance;
             poolEntry.setFutureEol(houseKeepingExecutorService.schedule(new Runnable() {
                @Override
                public void run() {
@@ -564,12 +561,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       public Boolean call() throws Exception
       {
          long sleepBackoff = 200L;
-         do {
-            // restrict add requests to maximum pool size
-            if (totalConnections.get() + 1 > config.getMaximumPoolSize()) {
-               // Pool is at max size
-               return Boolean.FALSE;
-            }
+         while (totalConnections.get() < config.getMaximumPoolSize()) {
             final PoolEntry poolEntry = createPoolEntry();
             if (poolEntry != null) {
                totalConnections.incrementAndGet();
@@ -577,10 +569,12 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                return Boolean.TRUE;
             }
 
-            // addConnection() failed, so we sleep and retry
+            // failed to get connection from db, sleep and retry
             quietlySleep(sleepBackoff);
             sleepBackoff = Math.min(connectionTimeout / 2, (long) (sleepBackoff * 1.3));
-         } while (true);
+         }
+         // Pool is at max size
+         return Boolean.FALSE;
       }
    }
 
@@ -615,13 +609,13 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          logPoolState("Before cleanup\t");
 
          if (idleTimeout > 0L) {
-            final List<PoolEntry> notInUseList = connectionBag.values(STATE_NOT_IN_USE);
-            int removable = notInUseList.size() - config.getMinimumIdle();
+            final List<PoolEntry> idleList = connectionBag.values(STATE_NOT_IN_USE);
+            int removable = idleList.size() - config.getMinimumIdle();
             if (removable > 0) {
                // Sort pool entries on lastAccessed
-               Collections.sort(notInUseList, LASTACCESS_COMPARABLE);
+               Collections.sort(idleList, LASTACCESS_COMPARABLE);
                // Iterate the first N removable elements
-               final Iterator<PoolEntry> iter = notInUseList.iterator();
+               final Iterator<PoolEntry> iter = idleList.iterator();
                do {
                   final PoolEntry poolEntry = iter.next();
                   if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout && connectionBag.reserve(poolEntry)) {
