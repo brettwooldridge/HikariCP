@@ -87,13 +87,13 @@ public class ShutdownTest
 
       UtilityElf.quietlySleep(1200L);
 
-      Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() > 0);
+      Assert.assertTrue("Total connection count not as expected, ", pool.getTotalConnections() > 0);
 
       ds.close();
 
       Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
       Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
-      Assert.assertSame("Total connection count not as expected", 0, pool.getTotalConnections());
+      Assert.assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
       Assert.assertTrue(ds.isClosed());
    }
 
@@ -116,13 +116,13 @@ public class ShutdownTest
 
       UtilityElf.quietlySleep(1200L);
 
-      Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() > 0);
+      Assert.assertTrue("Total connection count not as expected, ", pool.getTotalConnections() > 0);
 
       ds.close();
 
       Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
       Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
-      Assert.assertSame("Total connection count not as expected", 0, pool.getTotalConnections());
+      Assert.assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
       Assert.assertTrue(ds.toString().startsWith("HikariDataSource (") && ds.toString().endsWith(")"));
    }
 
@@ -145,13 +145,13 @@ public class ShutdownTest
 
       UtilityElf.quietlySleep(1200L);
 
-      Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() == 5);
+      Assert.assertTrue("Total connection count not as expected, ", pool.getTotalConnections() == 5);
 
       ds.close();
 
       Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
       Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
-      Assert.assertSame("Total connection count not as expected", 0, pool.getTotalConnections());
+      Assert.assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
    }
 
    @Test
@@ -200,13 +200,13 @@ public class ShutdownTest
          connections[i] = ds.getConnection();
       }
 
-      Assert.assertTrue("Totals connection count not as expected, ", pool.getTotalConnections() == 5);
+      Assert.assertTrue("Total connection count not as expected, ", pool.getTotalConnections() == 5);
 
       ds.close();
 
       Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
       Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
-      Assert.assertSame("Total connection count not as expected", 0, pool.getTotalConnections());
+      Assert.assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
    }
 
    @Test
