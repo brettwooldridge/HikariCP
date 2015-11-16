@@ -115,7 +115,7 @@ public final class UtilityElf
     */
    public static int getTransactionIsolation(final String transactionIsolationName)
    {
-      if (transactionIsolationName != null) {
+      if (transactionIsolationName != null && !transactionIsolationName.isEmpty()) {
          try {
             final String upperName = transactionIsolationName.toUpperCase();
             if (upperName.startsWith("TRANSACTION_")) {

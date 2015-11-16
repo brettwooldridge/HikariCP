@@ -67,14 +67,14 @@ abstract class PoolBase
       this.config = config;
 
       this.networkTimeout = -1;
-      this.catalog = config.getCatalog();
+      this.catalog = config.getCatalog() == null || config.getCatalog().isEmpty() ? null : config.getCatalog();
       this.isReadOnly = config.isReadOnly();
       this.isAutoCommit = config.isAutoCommit();
       this.transactionIsolation = UtilityElf.getTransactionIsolation(config.getTransactionIsolation());
 
       this.isQueryTimeoutSupported = UNINITIALIZED;
       this.isNetworkTimeoutSupported = UNINITIALIZED;
-      this.isUseJdbc4Validation = config.getConnectionTestQuery() == null;
+      this.isUseJdbc4Validation = config.getConnectionTestQuery() == null || config.getConnectionTestQuery().isEmpty();
       this.isIsolateInternalQueries = config.isIsolateInternalQueries();
 
       this.poolName = config.getPoolName();
