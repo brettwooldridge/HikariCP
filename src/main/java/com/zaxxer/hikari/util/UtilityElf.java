@@ -32,6 +32,15 @@ import java.util.concurrent.TimeUnit;
 public final class UtilityElf
 {
    /**
+    *
+    * @return null if string is null or empty
+   */
+   public static String nullOrNotEmpty(final String text)
+   {
+      return text == null ? null : text.trim().isEmpty() ? null : text.trim();
+   }
+
+   /**
     * Sleep and transform an InterruptedException into a RuntimeException.
     *
     * @param millis the number of milliseconds to sleep
@@ -115,14 +124,14 @@ public final class UtilityElf
     */
    public static int getTransactionIsolation(final String transactionIsolationName)
    {
-      if (transactionIsolationName != null && !transactionIsolationName.isEmpty()) {
+      if (nullOrNotEmpty(transactionIsolationName) != null) {
          try {
-            final String upperName = transactionIsolationName.toUpperCase();
+            final String upperName = transactionIsolationName.trim().toUpperCase();
             if (upperName.startsWith("TRANSACTION_")) {
                Field field = Connection.class.getField(upperName);
                return field.getInt(null);
             }
-            final int level = Integer.parseInt(transactionIsolationName);
+            final int level = Integer.parseInt(transactionIsolationName.trim());
             switch (level) {
                case Connection.TRANSACTION_READ_UNCOMMITTED:
                case Connection.TRANSACTION_READ_COMMITTED:

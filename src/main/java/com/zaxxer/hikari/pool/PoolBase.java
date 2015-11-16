@@ -6,6 +6,7 @@ import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_ISOLATION;
 import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_NETTIMEOUT;
 import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_READONLY;
 import static com.zaxxer.hikari.util.UtilityElf.createInstance;
+import static com.zaxxer.hikari.util.UtilityElf.nullOrNotEmpty;
 
 import java.lang.management.ManagementFactory;
 import java.sql.Connection;
@@ -67,14 +68,14 @@ abstract class PoolBase
       this.config = config;
 
       this.networkTimeout = -1;
-      this.catalog = config.getCatalog() == null || config.getCatalog().isEmpty() ? null : config.getCatalog();
+      this.catalog = nullOrNotEmpty(config.getCatalog());
       this.isReadOnly = config.isReadOnly();
       this.isAutoCommit = config.isAutoCommit();
       this.transactionIsolation = UtilityElf.getTransactionIsolation(config.getTransactionIsolation());
 
       this.isQueryTimeoutSupported = UNINITIALIZED;
       this.isNetworkTimeoutSupported = UNINITIALIZED;
-      this.isUseJdbc4Validation = config.getConnectionTestQuery() == null || config.getConnectionTestQuery().isEmpty();
+      this.isUseJdbc4Validation = nullOrNotEmpty(config.getConnectionTestQuery()) == null;
       this.isIsolateInternalQueries = config.isIsolateInternalQueries();
 
       this.poolName = config.getPoolName();
