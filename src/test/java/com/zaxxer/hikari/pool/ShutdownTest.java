@@ -31,6 +31,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.UtilityElf;
+import org.apache.logging.log4j.Level;
 
 /**
  * @author Brett Wooldridge
@@ -40,6 +41,7 @@ public class ShutdownTest
    @Before
    public void beforeTest()
    {
+      TestElf.setSlf4jLogLevel(ShutdownTest.class, Level.DEBUG);
       StubConnection.count.set(0);
    }
 
