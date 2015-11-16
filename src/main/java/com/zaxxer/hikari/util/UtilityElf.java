@@ -124,14 +124,14 @@ public final class UtilityElf
     */
    public static int getTransactionIsolation(final String transactionIsolationName)
    {
-      if (nullOrNotEmpty(transactionIsolationName) != null) {
+      if (transactionIsolationName != null) {
          try {
-            final String upperName = transactionIsolationName.trim().toUpperCase();
+            final String upperName = transactionIsolationName.toUpperCase();
             if (upperName.startsWith("TRANSACTION_")) {
                Field field = Connection.class.getField(upperName);
                return field.getInt(null);
             }
-            final int level = Integer.parseInt(transactionIsolationName.trim());
+            final int level = Integer.parseInt(transactionIsolationName);
             switch (level) {
                case Connection.TRANSACTION_READ_UNCOMMITTED:
                case Connection.TRANSACTION_READ_COMMITTED:
