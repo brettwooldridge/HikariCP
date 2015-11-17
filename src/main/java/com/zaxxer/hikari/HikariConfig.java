@@ -42,7 +42,7 @@ import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.util.PropertyElf;
 
-import static com.zaxxer.hikari.util.UtilityElf.nullOrNotEmpty;
+import static com.zaxxer.hikari.util.UtilityElf.getNullIfEmpty;
 
 public class HikariConfig implements HikariConfigMXBean
 {
@@ -749,14 +749,14 @@ public class HikariConfig implements HikariConfigMXBean
       validateNumerics();
 
       // treat empty property as null
-      catalog = nullOrNotEmpty(catalog);
-      connectionInitSql = nullOrNotEmpty(connectionInitSql);
-      connectionTestQuery = nullOrNotEmpty(connectionTestQuery);
-      transactionIsolationName = nullOrNotEmpty(transactionIsolationName);
-      dataSourceClassName = nullOrNotEmpty(dataSourceClassName);
-      dataSourceJndiName = nullOrNotEmpty(dataSourceJndiName);
-      driverClassName = nullOrNotEmpty(driverClassName);
-      jdbcUrl = nullOrNotEmpty(jdbcUrl);
+      catalog = getNullIfEmpty(catalog);
+      connectionInitSql = getNullIfEmpty(connectionInitSql);
+      connectionTestQuery = getNullIfEmpty(connectionTestQuery);
+      transactionIsolationName = getNullIfEmpty(transactionIsolationName);
+      dataSourceClassName = getNullIfEmpty(dataSourceClassName);
+      dataSourceJndiName = getNullIfEmpty(dataSourceJndiName);
+      driverClassName = getNullIfEmpty(driverClassName);
+      jdbcUrl = getNullIfEmpty(jdbcUrl);
 
       if (poolName == null) {
          poolName = "HikariPool-" + POOL_NUMBER.getAndIncrement();
