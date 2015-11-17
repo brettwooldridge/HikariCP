@@ -41,13 +41,16 @@ public class ShutdownTest
    @Before
    public void beforeTest()
    {
-      TestElf.setSlf4jLogLevel(ShutdownTest.class, Level.DEBUG);
+      TestElf.setSlf4jLogLevel(PoolBase.class, Level.DEBUG);
+      TestElf.setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
       StubConnection.count.set(0);
    }
 
    @After
    public void afterTest()
    {
+      TestElf.setSlf4jLogLevel(PoolBase.class, Level.WARN);
+      TestElf.setSlf4jLogLevel(HikariPool.class, Level.WARN);
       StubConnection.slowCreate = false;
    }
 

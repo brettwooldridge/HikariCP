@@ -35,7 +35,7 @@ public final class UtilityElf
     *
     * @return null if string is null or empty
    */
-   public static String nullOrNotEmpty(final String text)
+   public static String getNullIfEmpty(final String text)
    {
       return text == null ? null : text.trim().isEmpty() ? null : text.trim();
    }
