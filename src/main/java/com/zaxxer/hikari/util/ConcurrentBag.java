@@ -94,7 +94,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       this.listener = listener;
       this.weakThreadLocals = useWeakThreadLocals();
 
-      this.waiters = new AtomicInteger(0);
+      this.waiters = new AtomicInteger();
       this.sharedList = new CopyOnWriteArrayList<>();
       this.synchronizer = new QueuedSequenceSynchronizer();
       if (weakThreadLocals) {

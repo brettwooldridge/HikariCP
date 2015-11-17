@@ -32,6 +32,15 @@ import java.util.concurrent.TimeUnit;
 public final class UtilityElf
 {
    /**
+    *
+    * @return null if string is null or empty
+   */
+   public static String nullOrNotEmpty(final String text)
+   {
+      return text == null ? null : text.trim().isEmpty() ? null : text.trim();
+   }
+
+   /**
     * Sleep and transform an InterruptedException into a RuntimeException.
     *
     * @param millis the number of milliseconds to sleep

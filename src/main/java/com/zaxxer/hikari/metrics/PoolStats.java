@@ -38,7 +38,7 @@ public abstract class PoolStats
    public PoolStats(final long timeoutMs)
    {
       this.timeoutMs = timeoutMs;
-      this.reloadAt = new AtomicLong(0);
+      this.reloadAt = new AtomicLong();
       this.clock = ClockSource.INSTANCE;
    }
    
