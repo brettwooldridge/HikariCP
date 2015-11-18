@@ -52,6 +52,19 @@ public class TestValidation
    }
 
    @Test
+   public void validateMissingDS()
+   {
+      try {
+         HikariConfig config = new HikariConfig();
+         config.validate();
+         Assert.fail();
+      }
+      catch (IllegalArgumentException ise) {
+         Assert.assertTrue(ise.getMessage().contains("dataSource or dataSourceClassName or jdbcUrl is required."));
+      }
+   }
+
+   @Test
    public void validateMissingUrl()
    {
       try {
@@ -61,7 +74,21 @@ public class TestValidation
          Assert.fail();
       }
       catch (IllegalArgumentException ise) {
-         // pass
+         Assert.assertTrue(ise.getMessage().contains("dataSource or dataSourceClassName or jdbcUrl is required."));
+      }
+   }
+
+   @Test
+   public void validateDriverAndUrl()
+   {
+      try {
+         HikariConfig config = new HikariConfig();
+         config.setDriverClassName("com.zaxxer.hikari.mocks.StubDriver");
+         config.setJdbcUrl("jdbc:stub");
+         config.validate();
+      }
+      catch (Throwable t) {
+          Assert.fail(t.getMessage());
       }
    }
 
@@ -76,19 +103,6 @@ public class TestValidation
       }
       catch (RuntimeException ise) {
          Assert.assertTrue(ise.getMessage().contains("class of driverClassName "));
-      }
-   }
-
-   @Test
-   public void validateMissingDriverAndDS()
-   {
-      try {
-         HikariConfig config = new HikariConfig();
-         config.validate();
-         Assert.fail();
-      }
-      catch (IllegalArgumentException ise) {
-         Assert.assertTrue(ise.getMessage().contains("either dataSource"));
       }
    }
 
@@ -172,44 +186,6 @@ public class TestValidation
       }
       catch (IllegalArgumentException ise) {
          Assert.assertTrue(ise.getMessage().contains("maxPoolSize cannot be less than 1"));
-      }
-   }
-
-   @Test
-   public void validateBothDriverAndDS()
-   {
-      try {
-         HikariConfig config = new HikariConfig();
-         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-         config.setDriverClassName("com.zaxxer.hikari.mocks.StubDriver");
-         config.setJdbcUrl("jdbc:stub");
-         config.validate();
-         Assert.fail();
-      }
-      catch (IllegalArgumentException ise) {
-         Assert.assertTrue(ise.getMessage().contains("together"));
-      }
-   }
-
-   @Test
-   public void validateBothDSAndDSName()
-   {
-      try {
-         HikariConfig config = new HikariConfig();
-
-         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-         PrintStream ps = new PrintStream(baos, true);
-         TestElf.setSlf4jTargetStream(HikariConfig.class, ps);
-
-         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-         config.setDataSource(new StubDataSource());
-         config.validate();
-
-         String s = new String(baos.toByteArray());
-         Assert.assertTrue("Expected exception to contain 'using dataSource' but contains *" + s + "*", s.contains("using dataSource"));
-      }
-      catch (IllegalStateException ise) {
-         Assert.fail();
       }
    }
 
