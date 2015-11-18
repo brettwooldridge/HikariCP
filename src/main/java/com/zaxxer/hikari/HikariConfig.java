@@ -229,7 +229,7 @@ public class HikariConfig implements HikariConfigMXBean
          this.connectionTimeout = connectionTimeoutMs;
       }
 
-      if (validationTimeout > connectionTimeoutMs && connectionTimeoutMs > 0) {
+      if (validationTimeout > connectionTimeoutMs) {
          this.validationTimeout = connectionTimeoutMs;
       }
    }
@@ -766,26 +766,18 @@ public class HikariConfig implements HikariConfigMXBean
          throw new IllegalArgumentException("poolName cannot contain ':' when used with JMX");
       }
 
-      if (driverClassName != null && jdbcUrl == null) {
-         LOGGER.error("jdbcUrl is required with driverClassName");
-         throw new IllegalArgumentException("jdbcUrl is required with driverClassName");
+      if (dataSource != null) {
+         LOGGER.debug("{} - using dataSource={}", poolName, dataSource);
       }
-      else if (driverClassName != null && dataSourceClassName != null) {
-         LOGGER.error("cannot use driverClassName and dataSourceClassName together");
-         throw new IllegalArgumentException("cannot use driverClassName and dataSourceClassName together");
-      }
-      else if (jdbcUrl != null && dataSourceClassName != null) {
-         LOGGER.warn("using dataSourceClassName and ignoring jdbcUrl");
+      else if (dataSourceClassName != null) {
+         LOGGER.debug("{} - using dataSourceClassName={}", poolName, dataSourceClassName);
       }
       else if (jdbcUrl != null) {
-         // OK
+         LOGGER.debug("{} - using url={}, driverClassName={}", poolName, jdbcUrl, driverClassName);
       }
-      else if (dataSource == null && dataSourceClassName == null) {
-         LOGGER.error("either dataSource or dataSourceClassName is required");
-         throw new IllegalArgumentException("either dataSource or dataSourceClassName is required");
-      }
-      else if (dataSource != null && dataSourceClassName != null) {
-         LOGGER.warn("using dataSource and ignoring dataSourceClassName");
+      else {
+         LOGGER.error("{} - dataSource or dataSourceClassName or jdbcUrl is required.", poolName);
+         throw new IllegalArgumentException("dataSource or dataSourceClassName or jdbcUrl is required.");
       }
 
       if (LOGGER.isDebugEnabled() || unitTest) {
@@ -819,11 +811,13 @@ public class HikariConfig implements HikariConfigMXBean
          LOGGER.warn("idleTimeout is less than 10000ms, setting to default {}ms.", IDLE_TIMEOUT);
          idleTimeout = IDLE_TIMEOUT;
       }
+
       if (idleTimeout + TimeUnit.SECONDS.toMillis(1) > maxLifetime && maxLifetime > 0) {
          LOGGER.warn("idleTimeout is close to or greater than maxLifetime, disabling it.");
          maxLifetime = idleTimeout;
          idleTimeout = 0;
       }
+
       if (maxLifetime == 0 && idleTimeout == 0) {
          LOGGER.warn("setting idleTimeout to {}ms.", IDLE_TIMEOUT);
          idleTimeout = IDLE_TIMEOUT;
