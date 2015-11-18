@@ -767,12 +767,18 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       if (dataSource != null) {
+         if (dataSourceClassName != null) {
+            LOGGER.warn("using dataSource and ignoring dataSourceClassName");
+         }
          LOGGER.info("{} - using dataSource={}", poolName, dataSource);
       }
       else if (dataSourceClassName != null) {
          if (driverClassName != null) {
             LOGGER.error("cannot use driverClassName and dataSourceClassName together");
             throw new IllegalArgumentException("cannot use driverClassName and dataSourceClassName together");
+         }
+         else if (jdbcUrl != null) {
+            LOGGER.warn("using dataSourceClassName and ignoring jdbcUrl");
          }
          LOGGER.info("{} - using dataSourceClassName={}", poolName, dataSourceClassName);
       }
