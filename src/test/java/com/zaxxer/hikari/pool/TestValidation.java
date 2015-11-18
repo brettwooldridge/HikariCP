@@ -74,7 +74,7 @@ public class TestValidation
          Assert.fail();
       }
       catch (IllegalArgumentException ise) {
-         Assert.assertTrue(ise.getMessage().contains("dataSource or dataSourceClassName or jdbcUrl is required."));
+         Assert.assertTrue(ise.getMessage().contains("jdbcUrl is required with driverClassName"));
       }
    }
 
