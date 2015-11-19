@@ -766,11 +766,11 @@ public class HikariConfig implements HikariConfigMXBean
          throw new IllegalArgumentException("poolName cannot contain ':' when used with JMX");
       }
 
+      // Check Data Source Options
       if (dataSource != null) {
          if (dataSourceClassName != null) {
             LOGGER.warn("using dataSource and ignoring dataSourceClassName");
          }
-         LOGGER.info("{} - using dataSource={}", poolName, dataSource);
       }
       else if (dataSourceClassName != null) {
          if (driverClassName != null) {
@@ -780,10 +780,8 @@ public class HikariConfig implements HikariConfigMXBean
          else if (jdbcUrl != null) {
             LOGGER.warn("using dataSourceClassName and ignoring jdbcUrl");
          }
-         LOGGER.info("{} - using dataSourceClassName={}", poolName, dataSourceClassName);
       }
       else if (jdbcUrl != null) {
-         LOGGER.info("{} - using url={}, driverClassName={}", poolName, jdbcUrl, driverClassName);
       }
       else if (driverClassName != null) {
          LOGGER.error("jdbcUrl is required with driverClassName");
