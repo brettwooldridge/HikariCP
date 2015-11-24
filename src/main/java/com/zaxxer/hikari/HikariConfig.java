@@ -839,6 +839,14 @@ public class HikariConfig implements HikariConfigMXBean
          LOGGER.warn("leakDetectionThreshold is less than 2000ms, setting to minimum 2000ms.");
          leakDetectionThreshold = 2000L;
       }
+
+      if (validationTimeout > connectionTimeout) {
+         LOGGER.warn("validationTimeout should be less than connectionTimeout");
+      }
+
+      if (maxLifetime > 0 && connectionTimeout > maxLifetime) {
+         LOGGER.warn("connectionTimeout should be less than maxLifetime");
+      }
    }
 
    private void logConfiguration()
