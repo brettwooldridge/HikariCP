@@ -844,7 +844,7 @@ public class HikariConfig implements HikariConfigMXBean
          LOGGER.warn("validationTimeout should be less than connectionTimeout");
       }
 
-      if (maxLifetime > 0 && connectionTimeout > maxLifetime) {
+      if (maxLifetime > 0 && connectionTimeout != Integer.MAX_VALUE && connectionTimeout > maxLifetime) {
          LOGGER.warn("connectionTimeout should be less than maxLifetime");
       }
    }
