@@ -799,10 +799,6 @@ public class HikariConfig implements HikariConfigMXBean
 
    private void validateNumerics()
    {
-      if (validationTimeout > connectionTimeout && connectionTimeout != Integer.MAX_VALUE) {
-         validationTimeout = connectionTimeout;
-      }
-
       if (minIdle < 0) {
          minIdle = maxPoolSize;
       }
@@ -840,12 +836,15 @@ public class HikariConfig implements HikariConfigMXBean
          leakDetectionThreshold = 2000L;
       }
 
-      if (validationTimeout > connectionTimeout) {
-         LOGGER.warn("validationTimeout should be less than connectionTimeout");
-      }
-
-      if (maxLifetime > 0 && connectionTimeout != Integer.MAX_VALUE && connectionTimeout > maxLifetime) {
-         LOGGER.warn("connectionTimeout should be less than maxLifetime");
+      if (connectionTimeout != Integer.MAX_VALUE) {
+         if (validationTimeout > connectionTimeout) {
+            LOGGER.warn("validationTimeout should be less than connectionTimeout, setting validationTimeout to connectionTimeout");
+            validationTimeout = connectionTimeout;
+         }
+         if (maxLifetime > 0 && connectionTimeout > maxLifetime) {
+            LOGGER.warn("connectionTimeout should be less than maxLifetime, setting maxLifetime to connectionTimeout");
+            maxLifetime = connectionTimeout;
+         }
       }
    }
 
