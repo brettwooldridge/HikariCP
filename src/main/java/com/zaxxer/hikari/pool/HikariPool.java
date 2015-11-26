@@ -20,7 +20,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -616,15 +615,14 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             if (removable > 0) {
                // Sort pool entries on lastAccessed
                Collections.sort(idleList, LASTACCESS_COMPARABLE);
-               // Iterate the first N removable elements
-               final Iterator<PoolEntry> iter = idleList.iterator();
-               do {
-                  final PoolEntry poolEntry = iter.next();
+               for (PoolEntry poolEntry : idleList) {
                   if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout && connectionBag.reserve(poolEntry)) {
                      closeConnection(poolEntry, "(connection passed idleTimeout)");
-                     removable--;
+                     if (--removable == 0) {
+                        break; // keep min idle cons
+                     };
                   }
-               } while (removable > 0 && iter.hasNext());
+               }
             }
          }
 
