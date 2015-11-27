@@ -313,7 +313,6 @@ abstract class PoolBase
 
          connection = (username == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
          setupConnection(connection);
-         lastConnectionFailure.set(null);
          return connection;
       }
       catch (Exception e) {
