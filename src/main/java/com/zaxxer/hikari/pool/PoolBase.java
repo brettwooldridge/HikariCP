@@ -304,7 +304,7 @@ abstract class PoolBase
       this.dataSource = dataSource;
    }
 
-   private Connection newConnection() throws Exception
+   Connection newConnection() throws Exception
    {
       Connection connection = null;
       try {

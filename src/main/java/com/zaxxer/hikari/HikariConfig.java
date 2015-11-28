@@ -799,13 +799,6 @@ public class HikariConfig implements HikariConfigMXBean
 
    private void validateNumerics()
    {
-      if (minIdle < 0) {
-         minIdle = maxPoolSize;
-      }
-      else if (minIdle > maxPoolSize) {
-         maxPoolSize = minIdle;
-      }
-
       if (maxLifetime < 0) {
          LOGGER.error("maxLifetime cannot be negative.");
          throw new IllegalArgumentException("maxLifetime cannot be negative.");
@@ -845,6 +838,14 @@ public class HikariConfig implements HikariConfigMXBean
             LOGGER.warn("connectionTimeout should be less than maxLifetime, setting maxLifetime to connectionTimeout");
             maxLifetime = connectionTimeout;
          }
+      }
+
+      if (minIdle < 0) {
+         minIdle = maxPoolSize;
+      }
+      else if (minIdle > maxPoolSize) {
+         LOGGER.warn("minIdle should be less than maxPoolSize, setting maxPoolSize to minIdle");
+         maxPoolSize = minIdle;
       }
    }
 

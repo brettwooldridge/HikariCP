@@ -506,13 +506,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    {
       if (config.isInitializationFailFast()) {
          try {
-            Connection connection = getConnection();
-            if (config.getMinimumIdle() == 0) {
-               evictConnection(connection);
-            }
-            else {
-               connection.close();
-            }
+            newConnection().close();
          }
          catch (Throwable e) {
             try {
