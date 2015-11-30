@@ -37,13 +37,13 @@ public class StatementTest
     @Test
     public void testStatementClose() throws SQLException
     {
-        Assert.assertTrue("Totals connections not as expected", TestElf.getPool(ds).getTotalConnections() >= 1);
+        Assert.assertTrue("Total connections not as expected", TestElf.getPool(ds).getTotalConnections() >= 1);
         Assert.assertTrue("Idle connections not as expected", TestElf.getPool(ds).getIdleConnections() >= 1);
 
         Connection connection = ds.getConnection();
         Assert.assertNotNull(connection);
 
-        Assert.assertTrue("Totals connections not as expected", TestElf.getPool(ds).getTotalConnections() >= 1);
+        Assert.assertTrue("Total connections not as expected", TestElf.getPool(ds).getTotalConnections() >= 1);
         Assert.assertTrue("Idle connections not as expected", TestElf.getPool(ds).getIdleConnections() >= 0);
 
         Statement statement = connection.createStatement();

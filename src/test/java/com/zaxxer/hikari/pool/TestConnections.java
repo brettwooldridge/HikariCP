@@ -332,9 +332,9 @@ public class TestConnections
                {
                   try {
                      HikariPool pool = TestElf.getPool(ds);
-                     pool.logPoolState("Before acquire");
+                     pool.logPoolState("Before acquire ");
                      Connection connection = ds.getConnection();
-                     pool.logPoolState("After  acquire");
+                     pool.logPoolState("After  acquire ");
                      quietlySleep(500);
                      connection.close();
                   }
