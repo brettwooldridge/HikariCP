@@ -123,12 +123,10 @@ public class TestConnections
 
          ds.setMaxLifetime(700);
 
-         Connection connection = ds.getConnection();
-         connection.close();
          Assert.assertSame("Total connections not as expected", 0, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
 
-         connection = ds.getConnection();
+         Connection connection = ds.getConnection();
          Connection unwrap = connection.unwrap(Connection.class);
          Assert.assertNotNull(connection);
 
@@ -172,12 +170,10 @@ public class TestConnections
       try (HikariDataSource ds = new HikariDataSource(config)) {
          ds.setMaxLifetime(700);
 
-         Connection connection = ds.getConnection();
-         connection.close();
          Assert.assertSame("Total connections not as expected", 0, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
 
-         connection = ds.getConnection();
+         Connection connection = ds.getConnection();
          Connection unwrap = connection.unwrap(Connection.class);
          Assert.assertNotNull(connection);
 
@@ -267,13 +263,11 @@ public class TestConnections
 
          UtilityElf.quietlySleep(500);
 
-         Connection connection = ds.getConnection();
-         connection.close();
          Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
 
          // This will take the pool down to zero
-         connection = ds.getConnection();
+         Connection connection = ds.getConnection();
          Assert.assertNotNull(connection);
 
          Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
