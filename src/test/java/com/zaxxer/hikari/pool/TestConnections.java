@@ -317,6 +317,7 @@ public class TestConnections
       config.setInitializationFailFast(true);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      config.setPoolName("===TestMaximumPoolLimit===");
 
       StubConnection.count.set(0);
 
