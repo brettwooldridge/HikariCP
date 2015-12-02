@@ -75,15 +75,14 @@ public class TestConnections
          ds.setLoginTimeout(10);
          Assert.assertSame(10, ds.getLoginTimeout());
 
-         Connection connection = ds.getConnection();
-         connection.close();
-         Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
+         ds.getConnection().close();
+         Assert.assertSame("Total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
 
-         connection = ds.getConnection();
+         Connection connection = ds.getConnection();
          Assert.assertNotNull(connection);
 
-         Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
+         Assert.assertSame("Total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
 
          PreparedStatement statement = connection.prepareStatement("SELECT * FROM device WHERE device_id=?");
@@ -100,7 +99,7 @@ public class TestConnections
          statement.close();
          connection.close();
 
-         Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
+         Assert.assertSame("Total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
       }
    }
@@ -263,14 +262,14 @@ public class TestConnections
 
          UtilityElf.quietlySleep(500);
 
-         Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
+         Assert.assertSame("Total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
 
          // This will take the pool down to zero
          Connection connection = ds.getConnection();
          Assert.assertNotNull(connection);
 
-         Assert.assertSame("Totals connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
+         Assert.assertSame("Total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
 
          PreparedStatement statement = connection.prepareStatement("SELECT some, thing FROM somewhere WHERE something=?");
@@ -296,14 +295,14 @@ public class TestConnections
 
          TestElf.getPool(ds).logPoolState("testBackfill() after close...");
 
-         Assert.assertSame("Totals connections not as expected", 0, TestElf.getPool(ds).getTotalConnections());
+         Assert.assertSame("Total connections not as expected", 0, TestElf.getPool(ds).getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
 
          // This will cause a backfill
          connection = ds.getConnection();
          connection.close();
 
-         Assert.assertTrue("Totals connections not as expected", TestElf.getPool(ds).getTotalConnections() > 0);
+         Assert.assertTrue("Total connections not as expected", TestElf.getPool(ds).getTotalConnections() > 0);
          Assert.assertTrue("Idle connections not as expected", TestElf.getPool(ds).getIdleConnections() > 0);
       }
    }
@@ -324,6 +323,9 @@ public class TestConnections
       final AtomicReference<Exception> ref = new AtomicReference<>();
 
       try (final HikariDataSource ds = new HikariDataSource(config)) {
+
+         final HikariPool pool = TestElf.getPool(ds);
+         ds.getConnection().close();
          TestElf.setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
 
          Thread[] threads = new Thread[20];
@@ -333,7 +335,6 @@ public class TestConnections
                public void run()
                {
                   try {
-                     HikariPool pool = TestElf.getPool(ds);
                      pool.logPoolState("Before acquire ");
                      Connection connection = ds.getConnection();
                      pool.logPoolState("After  acquire ");
