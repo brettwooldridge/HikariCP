@@ -49,13 +49,16 @@ public class TestConnections
    public void before()
    {
       TestElf.setSlf4jTargetStream(HikariPool.class, System.err);
+      TestElf.setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
+      TestElf.setSlf4jLogLevel(PoolBase.class, Level.DEBUG);
    }
 
    @After
    public void after()
    {
       System.getProperties().remove("com.zaxxer.hikari.housekeeping.periodMs");
-      TestElf.setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
+      TestElf.setSlf4jLogLevel(HikariPool.class, Level.WARN);
+      TestElf.setSlf4jLogLevel(PoolBase.class, Level.WARN);
    }
 
    @Test
@@ -258,8 +261,6 @@ public class TestConnections
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
 
-         TestElf.setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
-
          UtilityElf.quietlySleep(500);
 
          Assert.assertSame("Total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
@@ -317,15 +318,14 @@ public class TestConnections
       config.setInitializationFailFast(true);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-      config.setPoolName("===TestMaximumPoolLimit===");
 
+      config.setPoolName("===TestMaximumPoolLimit===");
+      
       StubConnection.count.set(0);
 
       final AtomicReference<Exception> ref = new AtomicReference<>();
 
       try (final HikariDataSource ds = new HikariDataSource(config)) {
-
-         TestElf.setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
 
          final HikariPool pool = TestElf.getPool(ds);
          ds.getConnection().close();
