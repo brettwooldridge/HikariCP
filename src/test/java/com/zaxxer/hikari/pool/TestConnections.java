@@ -324,9 +324,10 @@ public class TestConnections
 
       try (final HikariDataSource ds = new HikariDataSource(config)) {
 
+         TestElf.setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
+
          final HikariPool pool = TestElf.getPool(ds);
          ds.getConnection().close();
-         TestElf.setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
 
          Thread[] threads = new Thread[20];
          for (int i = 0; i < threads.length; i++) {

@@ -59,7 +59,7 @@ public class ExceptionTest
 
         connection.close();
 
-        Assert.assertTrue("Totals (3) connections not as expected", TestElf.getPool(ds).getTotalConnections() >= 0);
+        Assert.assertTrue("Total (3) connections not as expected", TestElf.getPool(ds).getTotalConnections() >= 0);
         Assert.assertTrue("Idle (3) connections not as expected", TestElf.getPool(ds).getIdleConnections() >= 0);
     }
 
