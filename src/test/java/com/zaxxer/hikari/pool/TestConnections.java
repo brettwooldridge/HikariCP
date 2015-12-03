@@ -327,12 +327,11 @@ public class TestConnections
 
       final AtomicReference<Exception> ref = new AtomicReference<>();
 
+      StubConnection.count.set(0); // reset counter
+
       try (final HikariDataSource ds = new HikariDataSource(config)) {
 
          final HikariPool pool = TestElf.getPool(ds);
-
-         ds.getConnection().close();  // initialize
-         StubConnection.count.set(0); // now reset counter
 
          Thread[] threads = new Thread[20];
          for (int i = 0; i < threads.length; i++) {
@@ -364,7 +363,7 @@ public class TestConnections
 
          pool.logPoolState("before check ");
          Assert.assertNull((ref.get() != null ? ref.get().toString() : ""), ref.get());
-         Assert.assertSame("StubConnection count not as expected", 4, StubConnection.count.get()); 
+         Assert.assertSame("StubConnection count not as expected", 4+1, StubConnection.count.get()); // 1st connection is in pool.initializeConnections()
       }
    }
 
