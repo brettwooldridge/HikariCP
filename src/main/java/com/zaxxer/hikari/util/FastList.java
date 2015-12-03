@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.NoSuchElementException;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -206,7 +207,25 @@ public final class FastList<T> extends ArrayList<T>
    @Override
    public Iterator<T> iterator()
    {
-      throw new UnsupportedOperationException();
+      return new Iterator<T>() {
+         private int index;
+
+         @Override
+         public boolean hasNext()
+         {
+            return index < size;
+         }
+
+         @Override
+         public T next()
+         {
+            if (index < size) {
+               return elementData[index++];
+            }
+
+            throw new NoSuchElementException("No more elements in FastList"); 
+         }
+      };
    }
 
    /** {@inheritDoc} */
