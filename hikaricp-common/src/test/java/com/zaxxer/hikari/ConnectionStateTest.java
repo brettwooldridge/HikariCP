@@ -126,6 +126,7 @@ public class ConnectionStateTest
    public void testCommitTracking() throws SQLException
    {
       HikariDataSource ds = new HikariDataSource();
+      ds.setAutoCommit(false);
       ds.setMinimumIdle(1);
       ds.setMaximumPoolSize(1);
       ds.setConnectionTestQuery("VALUES 1");

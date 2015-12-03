@@ -58,6 +58,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    private boolean isCatalogDirty;
    private boolean isReadOnlyDirty;
    private boolean isTransactionIsolationDirty;
+   private boolean isAutoCommit;
 
    // static initializer
    static {
@@ -72,11 +73,12 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
       SQL_ERRORS.add("JZ0C1"); // Sybase disconnect error
    }
 
-   protected ConnectionProxy(final HikariPool pool, final PoolBagEntry bagEntry, final LeakTask leakTask) {
+   protected ConnectionProxy(final HikariPool pool, final PoolBagEntry bagEntry, final LeakTask leakTask, final boolean isAutoCommit) {
       this.parentPool = pool;
       this.bagEntry = bagEntry;
       this.delegate = bagEntry.connection;
       this.leakTask = leakTask;
+      this.isAutoCommit = isAutoCommit;
       this.lastAccess = bagEntry.lastAccess;
 
       this.openStatements = new FastList<Statement>(Statement.class, 16);
@@ -129,8 +131,12 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    @Override
    public final void markCommitStateDirty()
    {
-      isCommitStateDirty = true;
-      lastAccess = System.currentTimeMillis();
+      if (isAutoCommit) {
+         lastAccess = System.currentTimeMillis();
+      }
+      else {
+         isCommitStateDirty = true;
+      }
    }
 
    // ***********************************************************************
@@ -201,13 +207,15 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
          try {
             closeOpenStatements();
 
-            if (isCommitStateDirty && !delegate.getAutoCommit()) {
+            if (isCommitStateDirty && isAutoCommit) {
                LOGGER.debug("{} Performing rollback on {} due to dirty commit state.", parentPool, delegate);
+               lastAccess = System.currentTimeMillis();
                delegate.rollback();
             }
 
             if (isConnectionStateDirty) {
                resetConnectionState();
+               lastAccess = System.currentTimeMillis();
             }
 
             delegate.clearWarnings();
@@ -323,6 +331,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       delegate.commit();
       isCommitStateDirty = false;
+      lastAccess = System.currentTimeMillis();
    }
 
    /** {@inheritDoc} */
@@ -331,6 +340,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       delegate.rollback();
       isCommitStateDirty = false;
+      lastAccess = System.currentTimeMillis();
    }
 
    /** {@inheritDoc} */
@@ -339,6 +349,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       delegate.rollback(savepoint);
       isCommitStateDirty = false;
+      lastAccess = System.currentTimeMillis();
    }
 
    /** {@inheritDoc} */
@@ -347,6 +358,7 @@ public abstract class ConnectionProxy implements IHikariConnectionProxy
    {
       delegate.setAutoCommit(autoCommit);
       isConnectionStateDirty = true;
+      isAutoCommit = autoCommit;
       isAutoCommitDirty = (autoCommit != parentPool.isAutoCommit);
    }
 

@@ -45,9 +45,10 @@ public final class ProxyFactory
     * @param pool the {@link HikariPool} that will own this proxy
     * @param bagEntry the PoolBagEntry entry for this proxy
     * @param leakTask a leak detetection task
+    * @param isAutoCommit 
     * @return a proxy that wraps the specified {@link Connection}
     */
-   public static IHikariConnectionProxy getProxyConnection(final HikariPool pool, final PoolBagEntry bagEntry, final LeakTask leakTask)
+   public static IHikariConnectionProxy getProxyConnection(final HikariPool pool, final PoolBagEntry bagEntry, final LeakTask leakTask, final boolean isAutoCommit)
    {
       // Body is replaced (injected) by JavassistProxyFactory
       throw new IllegalStateException("You need to run the CLI build and you need target/classes in your classpath to run.");

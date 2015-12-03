@@ -212,7 +212,7 @@ public abstract class BaseHikariPool implements HikariPoolMXBean, IBagStateListe
             else {
                metricsContext.setConnectionLastOpen(bagEntry, now);
                metricsContext.stop();
-               return ProxyFactory.getProxyConnection((HikariPool) this, bagEntry, leakTask.start(bagEntry));
+               return ProxyFactory.getProxyConnection((HikariPool) this, bagEntry, leakTask.start(bagEntry), isAutoCommit);
             }
          }
          while (timeout > 0L);
