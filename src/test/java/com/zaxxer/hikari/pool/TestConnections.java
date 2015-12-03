@@ -325,16 +325,13 @@ public class TestConnections
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      config.setPoolName("TestMaximumPoolLimit");
-      
-      StubConnection.count.set(0);
-      Assert.assertSame("StubConnection count not as expected", 0, StubConnection.count.get());
-
       final AtomicReference<Exception> ref = new AtomicReference<>();
 
       try (final HikariDataSource ds = new HikariDataSource(config)) {
 
          final HikariPool pool = TestElf.getPool(ds);
+
+         StubConnection.count.set(0); // reset connection counter
 
          Thread[] threads = new Thread[20];
          for (int i = 0; i < threads.length; i++) {
@@ -366,7 +363,7 @@ public class TestConnections
 
          pool.logPoolState("before check ");
          Assert.assertNull((ref.get() != null ? ref.get().toString() : ""), ref.get());
-         Assert.assertSame("StubConnection count not as expected", 4+1, StubConnection.count.get()); // 1 connection is created in init 
+         Assert.assertSame("StubConnection count not as expected", 4, StubConnection.count.get()); 
       }
    }
 
