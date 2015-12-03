@@ -1,5 +1,13 @@
 HikariCP Changes
 
+Changes in 2.4.3
+
+ * Improve pool shutdown behavior.  Stop active connection acquisition once the
+   shutdown sequence has initiated.
+
+ * Improved detection and reporting of ambiguous pool configuration, when both the
+   connection URL and DataSource class names are specified.
+
 Changes in 2.4.2
 
  * Improve accuracy of timeouts for getConnection() calls by accounting for possibly
