@@ -366,7 +366,7 @@ public class TestConnections
 
          pool.logPoolState("before check ");
          Assert.assertNull((ref.get() != null ? ref.get().toString() : ""), ref.get());
-         Assert.assertSame("StubConnection count not as expected", 4, StubConnection.count.get());
+         Assert.assertSame("StubConnection count not as expected", 4+1, StubConnection.count.get()); // 1 connection is created in init 
       }
    }
 
