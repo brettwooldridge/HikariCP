@@ -566,7 +566,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
             // failed to get connection from db, sleep and retry
             quietlySleep(sleepBackoff);
-            sleepBackoff = Math.min( TimeUnit.SECONDS.toMillis(5), Math.min(connectionTimeout, (long) (sleepBackoff * 1.3)));
+            sleepBackoff = Math.min( TimeUnit.SECONDS.toMillis(10), Math.min(connectionTimeout, (long) (sleepBackoff * 1.3)));
          }
          // Pool is suspended or shutdown or at max size
          return Boolean.FALSE;

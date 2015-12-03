@@ -347,7 +347,6 @@ public class TestConnections
                      Connection connection = ds.getConnection();
                      pool.logPoolState("After  acquire ");
                      quietlySleep(500);
-                     pool.logPoolState("After sleeping ");
                      connection.close();
                   }
                   catch (Exception e) {
@@ -368,7 +367,6 @@ public class TestConnections
          pool.logPoolState("before check ");
          Assert.assertNull((ref.get() != null ? ref.get().toString() : ""), ref.get());
          Assert.assertEquals(4, StubConnection.count.get());
-         pool.logPoolState("after  check ");
       }
    }
 
