@@ -24,9 +24,11 @@ public class RampUpDown
         System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "250");
 
         try (HikariDataSource ds = new HikariDataSource(config)) {
-           ds.setIdleTimeout(1000);
 
-           Assert.assertSame("Total connections not as expected", 5, TestElf.getPool(ds).getTotalConnections());
+           ds.setIdleTimeout(1000);
+           HikariPool pool = TestElf.getPool(ds);
+
+           Assert.assertSame("Total connections not as expected", 5, pool.getTotalConnections());
 
            Connection[] connections = new Connection[ds.getMaximumPoolSize()];
            for (int i = 0; i < connections.length; i++)
@@ -34,7 +36,7 @@ public class RampUpDown
                connections[i] = ds.getConnection();
            }
 
-           Assert.assertSame("Total connections not as expected", 60, TestElf.getPool(ds).getTotalConnections());
+           Assert.assertSame("Total connections not as expected", 60, pool.getTotalConnections());
 
            for (Connection connection : connections)
            {
@@ -43,7 +45,7 @@ public class RampUpDown
 
            Thread.sleep(2500);
 
-           Assert.assertSame("Total connections not as expected", 5, TestElf.getPool(ds).getTotalConnections());
+           Assert.assertSame("Total connections not as expected", 5, pool.getTotalConnections());
         }
     }
 }

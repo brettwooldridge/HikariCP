@@ -39,14 +39,15 @@ public class StatementTest
     {
         ds.getConnection().close();
 
-        Assert.assertTrue("Total connections not as expected", TestElf.getPool(ds).getTotalConnections() >= 1);
-        Assert.assertTrue("Idle connections not as expected", TestElf.getPool(ds).getIdleConnections() >= 1);
+        HikariPool pool = TestElf.getPool(ds);
+        Assert.assertTrue("Total connections not as expected", pool.getTotalConnections() >= 1);
+        Assert.assertTrue("Idle connections not as expected", pool.getIdleConnections() >= 1);
 
         Connection connection = ds.getConnection();
         Assert.assertNotNull(connection);
 
-        Assert.assertTrue("Total connections not as expected", TestElf.getPool(ds).getTotalConnections() >= 1);
-        Assert.assertTrue("Idle connections not as expected", TestElf.getPool(ds).getIdleConnections() >= 0);
+        Assert.assertTrue("Total connections not as expected", pool.getTotalConnections() >= 1);
+        Assert.assertTrue("Idle connections not as expected", pool.getIdleConnections() >= 0);
 
         Statement statement = connection.createStatement();
         Assert.assertNotNull(statement);

@@ -78,15 +78,16 @@ public class TestConnections
          ds.setLoginTimeout(10);
          Assert.assertSame(10, ds.getLoginTimeout());
 
+         HikariPool pool = TestElf.getPool(ds);
          ds.getConnection().close();
-         Assert.assertSame("Total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
-         Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
+         Assert.assertSame("Total connections not as expected", 1, pool.getTotalConnections());
+         Assert.assertSame("Idle connections not as expected", 1, pool.getIdleConnections());
 
          Connection connection = ds.getConnection();
          Assert.assertNotNull(connection);
 
-         Assert.assertSame("Total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
-         Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
+         Assert.assertSame("Total connections not as expected", 1, pool.getTotalConnections());
+         Assert.assertSame("Idle connections not as expected", 0, pool.getIdleConnections());
 
          PreparedStatement statement = connection.prepareStatement("SELECT * FROM device WHERE device_id=?");
          Assert.assertNotNull(statement);
@@ -102,8 +103,8 @@ public class TestConnections
          statement.close();
          connection.close();
 
-         Assert.assertSame("Total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
-         Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
+         Assert.assertSame("Total connections not as expected", 1, pool.getTotalConnections());
+         Assert.assertSame("Idle connections not as expected", 1, pool.getIdleConnections());
       }
    }
 
@@ -113,7 +114,7 @@ public class TestConnections
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(1);
-      config.setConnectionTimeout(2500);
+      config.setConnectionTimeout(700);
       config.setConnectionTestQuery("VALUES 1");
       config.setInitializationFailFast(false);
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
@@ -125,24 +126,26 @@ public class TestConnections
 
          ds.setMaxLifetime(700);
 
-         Assert.assertSame("Total connections not as expected", 0, TestElf.getPool(ds).getTotalConnections());
-         Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
+         HikariPool pool = TestElf.getPool(ds);
+
+         Assert.assertSame("Total connections not as expected", 0, pool.getTotalConnections());
+         Assert.assertSame("Idle connections not as expected", 0, pool.getIdleConnections());
 
          Connection connection = ds.getConnection();
          Connection unwrap = connection.unwrap(Connection.class);
          Assert.assertNotNull(connection);
 
-         Assert.assertSame("Second total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
-         Assert.assertSame("Second idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
+         Assert.assertSame("Second total connections not as expected", 1, pool.getTotalConnections());
+         Assert.assertSame("Second idle connections not as expected", 0, pool.getIdleConnections());
          connection.close();
 
-         Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
+         Assert.assertSame("Idle connections not as expected", 1, pool.getIdleConnections());
 
          Connection connection2 = ds.getConnection();
          Connection unwrap2 = connection2.unwrap(Connection.class);
          Assert.assertSame(unwrap, unwrap2);
-         Assert.assertSame("Second total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
-         Assert.assertSame("Second idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
+         Assert.assertSame("Second total connections not as expected", 1, pool.getTotalConnections());
+         Assert.assertSame("Second idle connections not as expected", 0, pool.getIdleConnections());
          connection2.close();
 
          quietlySleep(TimeUnit.SECONDS.toMillis(2));
@@ -152,8 +155,8 @@ public class TestConnections
 
          connection2.close();
 
-         Assert.assertSame("Post total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
-         Assert.assertSame("Post idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
+         Assert.assertSame("Post total connections not as expected", 1, pool.getTotalConnections());
+         Assert.assertSame("Post idle connections not as expected", 1, pool.getIdleConnections());
       }
    }
 
@@ -163,7 +166,7 @@ public class TestConnections
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(1);
-      config.setConnectionTimeout(2500);
+      config.setConnectionTimeout(700);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -172,24 +175,25 @@ public class TestConnections
       try (HikariDataSource ds = new HikariDataSource(config)) {
          ds.setMaxLifetime(700);
 
-         Assert.assertSame("Total connections not as expected", 0, TestElf.getPool(ds).getTotalConnections());
-         Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
+         HikariPool pool = TestElf.getPool(ds);
+         Assert.assertSame("Total connections not as expected", 0, pool.getTotalConnections());
+         Assert.assertSame("Idle connections not as expected", 0, pool.getIdleConnections());
 
          Connection connection = ds.getConnection();
          Connection unwrap = connection.unwrap(Connection.class);
          Assert.assertNotNull(connection);
 
-         Assert.assertSame("Second total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
-         Assert.assertSame("Second idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
+         Assert.assertSame("Second total connections not as expected", 1, pool.getTotalConnections());
+         Assert.assertSame("Second idle connections not as expected", 0, pool.getIdleConnections());
          connection.close();
 
-         Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
+         Assert.assertSame("Idle connections not as expected", 1, pool.getIdleConnections());
 
          Connection connection2 = ds.getConnection();
          Connection unwrap2 = connection2.unwrap(Connection.class);
          Assert.assertSame(unwrap, unwrap2);
-         Assert.assertSame("Second total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
-         Assert.assertSame("Second idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
+         Assert.assertSame("Second total connections not as expected", 1, pool.getTotalConnections());
+         Assert.assertSame("Second idle connections not as expected", 0, pool.getIdleConnections());
          connection2.close();
 
          quietlySleep(800);
@@ -199,8 +203,8 @@ public class TestConnections
 
          connection2.close();
 
-         Assert.assertSame("Post total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
-         Assert.assertSame("Post idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
+         Assert.assertSame("Post total connections not as expected", 1, pool.getTotalConnections());
+         Assert.assertSame("Post idle connections not as expected", 1, pool.getIdleConnections());
       }
    }
 
@@ -242,9 +246,10 @@ public class TestConnections
       try (HikariDataSource ds = new HikariDataSource(config)) {
          Connection connection = ds.getConnection();
 
-         Assert.assertEquals(1, TestElf.getPool(ds).getTotalConnections());
+         HikariPool pool = TestElf.getPool(ds);
+         Assert.assertEquals(1, pool.getTotalConnections());
          ds.evictConnection(connection);
-         Assert.assertEquals(0, TestElf.getPool(ds).getTotalConnections());
+         Assert.assertEquals(0, pool.getTotalConnections());
       }
    }
 
@@ -261,17 +266,18 @@ public class TestConnections
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
 
-         UtilityElf.quietlySleep(500);
+          HikariPool pool = TestElf.getPool(ds);
+    	  UtilityElf.quietlySleep(500);
 
-         Assert.assertSame("Total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
-         Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
+         Assert.assertSame("Total connections not as expected", 1, pool.getTotalConnections());
+         Assert.assertSame("Idle connections not as expected", 1, pool.getIdleConnections());
 
          // This will take the pool down to zero
          Connection connection = ds.getConnection();
          Assert.assertNotNull(connection);
 
-         Assert.assertSame("Total connections not as expected", 1, TestElf.getPool(ds).getTotalConnections());
-         Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
+         Assert.assertSame("Total connections not as expected", 1, pool.getTotalConnections());
+         Assert.assertSame("Idle connections not as expected", 0, pool.getIdleConnections());
 
          PreparedStatement statement = connection.prepareStatement("SELECT some, thing FROM somewhere WHERE something=?");
          Assert.assertNotNull(statement);
@@ -287,24 +293,24 @@ public class TestConnections
             Assert.assertSame(SQLException.class, e.getClass());
          }
 
-         TestElf.getPool(ds).logPoolState("testBackfill() before close...");
+         pool.logPoolState("testBackfill() before close...");
 
          // The connection will be ejected from the pool here
          connection.close();
 
          UtilityElf.quietlySleep(500);
 
-         TestElf.getPool(ds).logPoolState("testBackfill() after close...");
+         pool.logPoolState("testBackfill() after close...");
 
-         Assert.assertSame("Total connections not as expected", 0, TestElf.getPool(ds).getTotalConnections());
-         Assert.assertSame("Idle connections not as expected", 0, TestElf.getPool(ds).getIdleConnections());
+         Assert.assertSame("Total connections not as expected", 0, pool.getTotalConnections());
+         Assert.assertSame("Idle connections not as expected", 0, pool.getIdleConnections());
 
          // This will cause a backfill
          connection = ds.getConnection();
          connection.close();
 
-         Assert.assertTrue("Total connections not as expected", TestElf.getPool(ds).getTotalConnections() > 0);
-         Assert.assertTrue("Idle connections not as expected", TestElf.getPool(ds).getIdleConnections() > 0);
+         Assert.assertTrue("Total connections not as expected", pool.getTotalConnections() > 0);
+         Assert.assertTrue("Idle connections not as expected", pool.getIdleConnections() > 0);
       }
    }
 
@@ -319,7 +325,7 @@ public class TestConnections
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      config.setPoolName("===TestMaximumPoolLimit===");
+      config.setPoolName("TestMaximumPoolLimit");
       
       StubConnection.count.set(0);
 
@@ -358,8 +364,10 @@ public class TestConnections
             threads[i].join();
          }
 
+         pool.logPoolState("before check ");
          Assert.assertNull((ref.get() != null ? ref.get().toString() : ""), ref.get());
          Assert.assertEquals(4, StubConnection.count.get());
+         pool.logPoolState("after  check ");
       }
    }
 
