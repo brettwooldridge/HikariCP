@@ -331,7 +331,8 @@ public class TestConnections
 
          final HikariPool pool = TestElf.getPool(ds);
 
-         StubConnection.count.set(0); // reset connection counter
+         ds.getConnection().close();  // initialize
+         StubConnection.count.set(0); // now reset counter
 
          Thread[] threads = new Thread[20];
          for (int i = 0; i < threads.length; i++) {
