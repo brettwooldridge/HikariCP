@@ -792,6 +792,12 @@ public class HikariConfig implements HikariConfigMXBean
          throw new IllegalArgumentException("dataSource or dataSourceClassName or jdbcUrl is required.");
       }
 
+      if (isIsolateInternalQueries) {
+         // set it false if not required
+         LOGGER.warn("setting isIsolateInternalQueries is not required as there is no query to execute (connectionInitSql or connectionTestQuery)");
+         isIsolateInternalQueries = connectionInitSql != null || connectionTestQuery != null;
+      }
+
       if (LOGGER.isDebugEnabled() || unitTest) {
          logConfiguration();
       }
