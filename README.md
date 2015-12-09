@@ -4,6 +4,7 @@
 [![][Coverage Status img]][Coverage Status]
 [![][Dependency Status img]][Dependency Status]
 [![][license img]][license]
+[![][Maven Central img]][Maven Central]
 
 Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC connection pool.  At roughly 90Kb, the library is very light.  Read about [how we do it here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).
 
@@ -430,3 +431,6 @@ Please perform changes and submit pull requests from the ``dev`` branch instead 
 
 [license]:LICENSE
 [license img]:https://img.shields.io/badge/License-Apache%202-blue.svg
+
+[Maven Central]:https://maven-badges.herokuapp.com/maven-central/com.zaxxer/HikariCP
+[Maven Central img]:https://maven-badges.herokuapp.com/maven-central/com.zaxxer/HikariCP/badge.svg
