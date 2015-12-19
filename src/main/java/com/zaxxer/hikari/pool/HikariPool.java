@@ -168,7 +168,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
             final long now = clockSource.currentTime();
             if (poolEntry.isMarkedEvicted() || (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
-               closeConnection(poolEntry, "(connection evicted or dead)"); // Throw away the dead connection and try again
+               closeConnection(poolEntry, "(connection is evicted or dead)"); // Throw away the dead connection and try again
                timeout = hardTimeout - clockSource.elapsedMillis(startTime);
             }
             else {
@@ -442,7 +442,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             poolEntry.setFutureEol(houseKeepingExecutorService.schedule(new Runnable() {
                @Override
                public void run() {
-                  softEvictConnection(poolEntry, "(connection reached maxLifetime)", false /* not owner */);
+                  softEvictConnection(poolEntry, "(connection has passed maxLifetime)", false /* not owner */);
                }
             }, lifetime, TimeUnit.MILLISECONDS));
          }
@@ -611,7 +611,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                Collections.sort(idleList, LASTACCESS_COMPARABLE);
                for (PoolEntry poolEntry : idleList) {
                   if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout && connectionBag.reserve(poolEntry)) {
-                     closeConnection(poolEntry, "(connection passed idleTimeout)");
+                     closeConnection(poolEntry, "(connection has passed idleTimeout)");
                      if (--removable == 0) {
                         break; // keep min idle cons
                      };

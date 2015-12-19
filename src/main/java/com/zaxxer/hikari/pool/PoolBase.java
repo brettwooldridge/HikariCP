@@ -318,7 +318,8 @@ abstract class PoolBase
       }
       catch (Exception e) {
          lastConnectionFailure.set(e);
-         quietlyCloseConnection(connection, "(exception during connection creation)");
+         String reason = e.getMessage();
+         quietlyCloseConnection(connection, reason != null ? reason : "(exception during connection creation)");
          throw e;
       }
    }
