@@ -636,7 +636,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
        */
       public PoolInitializationException(Throwable t)
       {
-         super("Exception during pool initialization: " + t.getMessage(), t);
+         super("Failed to initialize pool: " + t.getMessage(), t);
       }
    }
 }

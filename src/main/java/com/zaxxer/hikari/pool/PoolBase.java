@@ -319,7 +319,7 @@ abstract class PoolBase
       catch (Exception e) {
          lastConnectionFailure.set(e);
          String reason = e.getMessage();
-         quietlyCloseConnection(connection, reason != null ? reason : "(exception during connection creation)");
+         quietlyCloseConnection(connection, reason != null ? reason : "(Failed to create/set connection)");
          throw e;
       }
    }
@@ -378,7 +378,7 @@ abstract class PoolBase
                executeSql(connection, config.getConnectionTestQuery(), false, isIsolateInternalQueries && !isAutoCommit);
             }
             catch (Throwable e) {
-               LOGGER.debug("{} - Exception during executing connection test query. ({})", poolName, e.getMessage());
+               LOGGER.debug("{} - Failed to execute connection test query. ({})", poolName, e.getMessage());
                throw e;
             }
          }
