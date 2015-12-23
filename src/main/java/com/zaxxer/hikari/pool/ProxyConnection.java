@@ -252,7 +252,7 @@ public abstract class ProxyConnection implements Connection
                delegate = ClosedConnection.CLOSED_CONNECTION;
                poolEntry.recycle(lastAccess);
             }
-            poolEntry = null; leakTask = null; openStatements = null; // HELP GC
+            poolEntry = null; leakTask = null; // HELP GC
          }
       }
    }
