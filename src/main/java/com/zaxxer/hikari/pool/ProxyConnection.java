@@ -55,9 +55,9 @@ public abstract class ProxyConnection implements Connection
 
    protected Connection delegate;
 
-   private PoolEntry poolEntry;
-   private ProxyLeakTask leakTask;
-   private FastList<Statement> openStatements;
+   private final PoolEntry poolEntry;
+   private final ProxyLeakTask leakTask;
+   private final FastList<Statement> openStatements;
    
    private int dirtyBits;
    private long lastAccess;
@@ -251,7 +251,6 @@ public abstract class ProxyConnection implements Connection
             if (delegate != ClosedConnection.CLOSED_CONNECTION) {
                delegate = ClosedConnection.CLOSED_CONNECTION;
                poolEntry.recycle(lastAccess);
-               poolEntry = null; leakTask = null; // HELP GC
             }
          }
       }
