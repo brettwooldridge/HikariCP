@@ -43,7 +43,7 @@ public class HikariJNDIFactory implements ObjectFactory
    public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment) throws Exception
    {
       // We only know how to deal with <code>javax.naming.Reference</code> that specify a class name of "javax.sql.DataSource"
-      if ((obj == null) || !(obj instanceof Reference)) {
+      if (!(obj instanceof Reference)) {
          return null;
       }
 

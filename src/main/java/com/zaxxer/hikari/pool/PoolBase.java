@@ -207,7 +207,7 @@ abstract class PoolBase
 
    void shutdownNetworkTimeoutExecutor()
    {
-      if (netTimeoutExecutor != null && netTimeoutExecutor instanceof ThreadPoolExecutor) {
+      if (netTimeoutExecutor instanceof ThreadPoolExecutor) {
          ((ThreadPoolExecutor) netTimeoutExecutor).shutdownNow();
       }
    }
