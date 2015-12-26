@@ -869,8 +869,8 @@ public class HikariConfig implements HikariConfigMXBean
             if (prop.contains("password")) {
                value = "<masked>";
             }
-            else {
-               value = (value instanceof String) ? "\"" + value + "\"" : value;
+            else if (value instanceof String) {
+               value = "\"" + value + "\""; // quote to see lead/trailing spaces is any
             }
             LOGGER.debug((prop + "................................................").substring(0, 32) + value);
          }
