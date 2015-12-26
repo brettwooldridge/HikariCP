@@ -866,8 +866,12 @@ public class HikariConfig implements HikariConfigMXBean
                dsProps.setProperty("password", "<masked>");
                value = dsProps;
             }
-            value = (prop.contains("password") ? "<masked>" : value);
-            value = (value instanceof String) ? "\"" + value + "\"" : value;
+            if (prop.contains("password")) {
+               value = "<masked>";
+            }
+            else {
+               value = (value instanceof String) ? "\"" + value + "\"" : value;
+            }
             LOGGER.debug((prop + "................................................").substring(0, 32) + value);
          }
          catch (Exception e) {
