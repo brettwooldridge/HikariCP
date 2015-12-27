@@ -372,6 +372,7 @@ Here is a list of JDBC *DataSource* classes for popular databases:
 | MySQL            | Connector/J  | com.mysql.jdbc.jdbc2.optional.MysqlDataSource |
 | MS SQL Server    | Microsoft    | com.microsoft.sqlserver.jdbc.SQLServerDataSource |
 | Oracle           | Oracle       | oracle.jdbc.pool.OracleDataSource |
+| OrientDB         | OrientDB     | com.orientechnologies.orient.jdbc.OrientDataSource |
 | PostgreSQL       | pgjdbc-ng    | com.impossibl.postgres.jdbc.PGDataSource |
 | PostgreSQL       | PostgreSQL   | org.postgresql.ds.PGSimpleDataSource |
 | SAP MaxDB        | SAP          | com.sap.dbtech.jdbc.DriverSapDB |
