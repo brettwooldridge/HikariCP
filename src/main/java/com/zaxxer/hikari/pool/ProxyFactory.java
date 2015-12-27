@@ -22,6 +22,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
+import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.util.FastList;
 
 /**
@@ -48,25 +49,25 @@ public final class ProxyFactory
     * @param isAutoCommit
     * @return a proxy that wraps the specified {@link Connection}
     */
-   static ProxyConnection getProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final long now, final boolean isReadOnly, final boolean isAutoCommit)
+   static ProxyConnection getProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final long now, final boolean isReadOnly, final boolean isAutoCommit, HikariConfig config)
    {
       // Body is replaced (injected) by JavassistProxyFactory
       throw new IllegalStateException("You need to run the CLI build and you need target/classes in your classpath to run.");
    }
 
-   static Statement getProxyStatement(final ProxyConnection connection, final Statement statement)
+   static Statement getProxyStatement(final ProxyConnection connection, final Statement statement, HikariConfig config)
    {
       // Body is replaced (injected) by JavassistProxyFactory
       throw new IllegalStateException("You need to run the CLI build and you need target/classes in your classpath to run.");
    }
 
-   static CallableStatement getProxyCallableStatement(final ProxyConnection connection, final CallableStatement statement)
+   static CallableStatement getProxyCallableStatement(final ProxyConnection connection, final CallableStatement statement, HikariConfig config, String sql)
    {
       // Body is replaced (injected) by JavassistProxyFactory
       throw new IllegalStateException("You need to run the CLI build and you need target/classes in your classpath to run.");
    }
 
-   static PreparedStatement getProxyPreparedStatement(final ProxyConnection connection, final PreparedStatement statement)
+   static PreparedStatement getProxyPreparedStatement(final ProxyConnection connection, final PreparedStatement statement, HikariConfig config, String sql)
    {
       // Body is replaced (injected) by JavassistProxyFactory
       throw new IllegalStateException("You need to run the CLI build and you need target/classes in your classpath to run.");
