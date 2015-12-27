@@ -99,22 +99,15 @@ abstract class PoolBase
 
    void quietlyCloseConnection(final Connection connection, final String closureReason)
    {
-      if (connection == null) {
-         return;
-      }
-
-      try {
-         LOGGER.debug("{} - Closing connection {}: {}", poolName, connection, closureReason);
+      if (connection != null) {
          try {
+            LOGGER.debug("{} - Closing connection {}: {}", poolName, connection, closureReason);
             setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(15));
-         }
-         finally {
-            // continue with the close even if setNetworkTimeout() throws (due to driver poorly behaving drivers)
             connection.close();
          }
-      }
-      catch (Throwable e) {
-         LOGGER.debug("{} - Closing connection {} failed", poolName, connection, e);
+         catch (Throwable e) {
+            LOGGER.debug("{} - Closing connection {} failed", poolName, connection, e);
+         }
       }
    }
 
