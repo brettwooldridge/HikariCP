@@ -124,7 +124,7 @@ abstract class PoolBase
             return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout));
          }
 
-         final int originalTimeout = getAndSetNetworkTimeout(connection, validationTimeout);
+         setNetworkTimeout(connection, validationTimeout);
 
          try (Statement statement = connection.createStatement()) {
             if (isNetworkTimeoutSupported != TRUE) {
@@ -138,7 +138,7 @@ abstract class PoolBase
             connection.rollback();
          }
 
-         setNetworkTimeout(connection, originalTimeout);
+         setNetworkTimeout(connection, networkTimeout);
 
          return true;
       }
