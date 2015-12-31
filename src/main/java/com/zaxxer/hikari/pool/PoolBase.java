@@ -315,7 +315,8 @@ abstract class PoolBase
       }
       catch (Exception e) {
          lastConnectionFailure.set(e);
-         quietlyCloseConnection(connection, "(Failed to create/set connection)");
+         String reason = e.getMessage();
+         quietlyCloseConnection(connection, reason != null ? reason : "(Failed to create/set connection)");
          throw e;
       }
    }
