@@ -53,7 +53,7 @@ public class HikariConfig implements HikariConfigMXBean
    private static final long IDLE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
    private static final long MAX_LIFETIME = TimeUnit.MINUTES.toMillis(30);
 
-   private static final AtomicInteger POOL_NUMBER = new AtomicInteger();
+   private static final AtomicInteger POOL_NUMBER;
    private static boolean unitTest;
 
    // Properties changeable at runtime through the MBean
@@ -93,6 +93,14 @@ public class HikariConfig implements HikariConfigMXBean
    private Object metricRegistry;
    private Object healthCheckRegistry;
    private Properties healthCheckProperties;
+
+   static
+   {
+      // POOL_NUMBER is global to the VM to avoid overlapping pool numbers in classloader scoped environments
+      final Properties sysProps = System.getProperties();
+      sysProps.putIfAbsent("com.zaxxer.hikari.pool_number", new AtomicInteger());
+      POOL_NUMBER = (AtomicInteger) sysProps.get("com.zaxxer.hikari.pool_number");
+   }
 
    /**
     * Default constructor
@@ -229,7 +237,7 @@ public class HikariConfig implements HikariConfigMXBean
          this.connectionTimeout = connectionTimeoutMs;
       }
 
-      if (validationTimeout > connectionTimeoutMs && connectionTimeoutMs > 0) {
+      if (validationTimeout > connectionTimeoutMs) {
          this.validationTimeout = connectionTimeoutMs;
       }
    }
@@ -766,26 +774,35 @@ public class HikariConfig implements HikariConfigMXBean
          throw new IllegalArgumentException("poolName cannot contain ':' when used with JMX");
       }
 
-      if (driverClassName != null && jdbcUrl == null) {
+      // Check Data Source Options
+      if (dataSource != null) {
+         if (dataSourceClassName != null) {
+            LOGGER.warn("using dataSource and ignoring dataSourceClassName");
+         }
+      }
+      else if (dataSourceClassName != null) {
+         if (driverClassName != null) {
+            LOGGER.error("cannot use driverClassName and dataSourceClassName together");
+            throw new IllegalArgumentException("cannot use driverClassName and dataSourceClassName together");
+         }
+         else if (jdbcUrl != null) {
+            LOGGER.warn("using dataSourceClassName and ignoring jdbcUrl");
+         }
+      }
+      else if (jdbcUrl != null) {
+      }
+      else if (driverClassName != null) {
          LOGGER.error("jdbcUrl is required with driverClassName");
          throw new IllegalArgumentException("jdbcUrl is required with driverClassName");
       }
-      else if (driverClassName != null && dataSourceClassName != null) {
-         LOGGER.error("cannot use driverClassName and dataSourceClassName together");
-         throw new IllegalArgumentException("cannot use driverClassName and dataSourceClassName together");
+      else {
+         LOGGER.error("{} - dataSource or dataSourceClassName or jdbcUrl is required.", poolName);
+         throw new IllegalArgumentException("dataSource or dataSourceClassName or jdbcUrl is required.");
       }
-      else if (jdbcUrl != null && dataSourceClassName != null) {
-         LOGGER.warn("using dataSourceClassName and ignoring jdbcUrl");
-      }
-      else if (jdbcUrl != null) {
-         // OK
-      }
-      else if (dataSource == null && dataSourceClassName == null) {
-         LOGGER.error("either dataSource or dataSourceClassName is required");
-         throw new IllegalArgumentException("either dataSource or dataSourceClassName is required");
-      }
-      else if (dataSource != null && dataSourceClassName != null) {
-         LOGGER.warn("using dataSource and ignoring dataSourceClassName");
+
+      if (isIsolateInternalQueries) {
+         // set it false if not required
+         isIsolateInternalQueries = connectionInitSql != null || connectionTestQuery != null;
       }
 
       if (LOGGER.isDebugEnabled() || unitTest) {
@@ -795,17 +812,6 @@ public class HikariConfig implements HikariConfigMXBean
 
    private void validateNumerics()
    {
-      if (validationTimeout > connectionTimeout && connectionTimeout != Integer.MAX_VALUE) {
-         validationTimeout = connectionTimeout;
-      }
-
-      if (minIdle < 0) {
-         minIdle = maxPoolSize;
-      }
-      else if (minIdle > maxPoolSize) {
-         maxPoolSize = minIdle;
-      }
-
       if (maxLifetime < 0) {
          LOGGER.error("maxLifetime cannot be negative.");
          throw new IllegalArgumentException("maxLifetime cannot be negative.");
@@ -819,11 +825,13 @@ public class HikariConfig implements HikariConfigMXBean
          LOGGER.warn("idleTimeout is less than 10000ms, setting to default {}ms.", IDLE_TIMEOUT);
          idleTimeout = IDLE_TIMEOUT;
       }
+
       if (idleTimeout + TimeUnit.SECONDS.toMillis(1) > maxLifetime && maxLifetime > 0) {
          LOGGER.warn("idleTimeout is close to or greater than maxLifetime, disabling it.");
          maxLifetime = idleTimeout;
          idleTimeout = 0;
       }
+
       if (maxLifetime == 0 && idleTimeout == 0) {
          LOGGER.warn("setting idleTimeout to {}ms.", IDLE_TIMEOUT);
          idleTimeout = IDLE_TIMEOUT;
@@ -832,6 +840,25 @@ public class HikariConfig implements HikariConfigMXBean
       if (leakDetectionThreshold != 0 && leakDetectionThreshold < TimeUnit.SECONDS.toMillis(2) && !unitTest) {
          LOGGER.warn("leakDetectionThreshold is less than 2000ms, setting to minimum 2000ms.");
          leakDetectionThreshold = 2000L;
+      }
+
+      if (connectionTimeout != Integer.MAX_VALUE) {
+         if (validationTimeout > connectionTimeout) {
+            LOGGER.warn("validationTimeout should be less than connectionTimeout, setting validationTimeout to connectionTimeout");
+            validationTimeout = connectionTimeout;
+         }
+         if (maxLifetime > 0 && connectionTimeout > maxLifetime) {
+            LOGGER.warn("connectionTimeout should be less than maxLifetime, setting maxLifetime to connectionTimeout");
+            maxLifetime = connectionTimeout;
+         }
+      }
+
+      if (minIdle < 0) {
+         minIdle = maxPoolSize;
+      }
+      else if (minIdle > maxPoolSize) {
+         LOGGER.warn("minIdle should be less than maxPoolSize, setting maxPoolSize to minIdle");
+         maxPoolSize = minIdle;
       }
    }
 
@@ -847,8 +874,13 @@ public class HikariConfig implements HikariConfigMXBean
                dsProps.setProperty("password", "<masked>");
                value = dsProps;
             }
-            value = (prop.contains("password") ? "<masked>" : value);
-            LOGGER.debug((prop + "................................................").substring(0, 32) + (value != null ? value : ""));
+            if (prop.contains("password")) {
+               value = "<masked>";
+            }
+            else if (value instanceof String) {
+               value = "\"" + value + "\""; // quote to see lead/trailing spaces is any
+            }
+            LOGGER.debug((prop + "................................................").substring(0, 32) + value);
          }
          catch (Exception e) {
             continue;

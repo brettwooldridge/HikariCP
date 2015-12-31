@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,12 +41,15 @@ public final class PropertyElf
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(PropertyElf.class);
 
-   public static void setTargetFromProperties(Object target, Properties properties)
+   private static final Pattern GETTER_PATTERN = Pattern.compile("(get|is)[A-Z].+");
+
+   public static void setTargetFromProperties(final Object target, final Properties properties)
    {
       if (target == null || properties == null) {
          return;
       }
 
+      List<Method> methods = Arrays.asList(target.getClass().getMethods());
       Enumeration<?> propertyNames = properties.propertyNames();
       while (propertyNames.hasMoreElements()) {
          Object key = propertyNames.nextElement();
@@ -59,7 +64,7 @@ public final class PropertyElf
             config.addDataSourceProperty(propName.substring("dataSource.".length()), propValue);
          }
          else {
-            setProperty(target, propName, propValue);
+            setProperty(target, propName, propValue, methods);
          }
       }
    }
@@ -70,12 +75,13 @@ public final class PropertyElf
     * @param targetClass the target object
     * @return a set of property names
     */
-   public static Set<String> getPropertyNames(Class<?> targetClass)
+   public static Set<String> getPropertyNames(final Class<?> targetClass)
    {
       HashSet<String> set = new HashSet<>();
+      Matcher matcher = GETTER_PATTERN.matcher("");
       for (Method method : targetClass.getMethods()) {
          String name = method.getName();
-         if (name.matches("(get|is)[A-Z].+") && method.getParameterTypes().length == 0) {
+         if (method.getParameterTypes().length == 0 && matcher.reset(name).matches()) {
             name = name.replaceFirst("(get|is)", "");
             try {
                if (targetClass.getMethod("set" + name, method.getReturnType()) != null) {
@@ -92,7 +98,7 @@ public final class PropertyElf
       return set;
    }
 
-   public static Object getProperty(String propName, Object target)
+   public static Object getProperty(final String propName, final Object target)
    {
       try {
          String capitalized = "get" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
@@ -111,7 +117,7 @@ public final class PropertyElf
       }
    }
 
-   public static Properties copyProperties(Properties props)
+   public static Properties copyProperties(final Properties props)
    {
       Properties copy = new Properties();
       for (Map.Entry<Object, Object> entry : props.entrySet()) {
@@ -120,12 +126,11 @@ public final class PropertyElf
       return copy;
    }
 
-   private static void setProperty(Object target, String propName, Object propValue)
+   private static void setProperty(final Object target, final String propName, final Object propValue, final List<Method> methods)
    {
       Method writeMethod = null;
       String methodName = "set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
 
-      List<Method> methods = Arrays.asList(target.getClass().getMethods());
       for (Method method : methods) {
          if (method.getName().equals(methodName) && method.getParameterTypes().length == 1) {
             writeMethod = method;
@@ -140,7 +145,7 @@ public final class PropertyElf
                writeMethod = method;
                break;
             }
-         }            
+         }
       }
 
       if (writeMethod == null) {

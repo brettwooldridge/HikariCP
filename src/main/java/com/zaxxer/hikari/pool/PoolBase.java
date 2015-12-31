@@ -40,6 +40,7 @@ abstract class PoolBase
    protected final HikariConfig config;
    protected final String poolName;
    protected long connectionTimeout;
+   protected long validationTimeout;
 
    private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout"};
    private static final int UNINITIALIZED = -1;
@@ -79,6 +80,7 @@ abstract class PoolBase
 
       this.poolName = config.getPoolName();
       this.connectionTimeout = config.getConnectionTimeout();
+      this.validationTimeout = config.getValidationTimeout();
       this.lastConnectionFailure = new AtomicReference<>();
 
       initializeDataSource();
@@ -99,35 +101,30 @@ abstract class PoolBase
 
    void quietlyCloseConnection(final Connection connection, final String closureReason)
    {
-      if (connection == null) {
-         return;
-      }
-
-      try {
-         LOGGER.debug("{} - Closing connection {}: {}", poolName, connection, closureReason);
+      if (connection != null) {
          try {
-            setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(15));
+            LOGGER.debug("{} - Closing connection {}: {}", poolName, connection, closureReason);
+            try {
+               setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(15));
+            }
+            finally {
+               connection.close(); // continue with the close even if setNetworkTimeout() throws
+            }
          }
-         finally {
-            // continue with the close even if setNetworkTimeout() throws (due to driver poorly behaving drivers)
-            connection.close();
+         catch (Throwable e) {
+            LOGGER.debug("{} - Closing connection {} failed", poolName, connection, e);
          }
-      }
-      catch (Throwable e) {
-         LOGGER.debug("{} - Closing connection {} failed", poolName, connection, e);
       }
    }
 
    boolean isConnectionAlive(final Connection connection)
    {
       try {
-         final long validationTimeout = config.getValidationTimeout();
-
          if (isUseJdbc4Validation) {
             return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout));
          }
 
-         final int originalTimeout = getAndSetNetworkTimeout(connection, validationTimeout);
+         setNetworkTimeout(connection, validationTimeout);
 
          try (Statement statement = connection.createStatement()) {
             if (isNetworkTimeoutSupported != TRUE) {
@@ -141,7 +138,7 @@ abstract class PoolBase
             connection.rollback();
          }
 
-         setNetworkTimeout(connection, originalTimeout);
+         setNetworkTimeout(connection, networkTimeout);
 
          return true;
       }
@@ -200,14 +197,14 @@ abstract class PoolBase
          resetBits |= DIRTY_BIT_NETTIMEOUT;
       }
 
-      if (LOGGER.isDebugEnabled()) {
-         LOGGER.debug("{} - Reset ({}) on connection {}", poolName, resetBits != 0 ? stringFromResetBits(resetBits) : "nothing", connection);
+      if (resetBits != 0 && LOGGER.isDebugEnabled()) {
+         LOGGER.debug("{} - Reset ({}) on connection {}", poolName, stringFromResetBits(resetBits), connection);
       }
    }
 
    void shutdownNetworkTimeoutExecutor()
    {
-      if (netTimeoutExecutor != null && netTimeoutExecutor instanceof ThreadPoolExecutor) {
+      if (netTimeoutExecutor instanceof ThreadPoolExecutor) {
          ((ThreadPoolExecutor) netTimeoutExecutor).shutdownNow();
       }
    }
@@ -304,7 +301,7 @@ abstract class PoolBase
       this.dataSource = dataSource;
    }
 
-   private Connection newConnection() throws Exception
+   Connection newConnection() throws Exception
    {
       Connection connection = null;
       try {
@@ -318,7 +315,7 @@ abstract class PoolBase
       }
       catch (Exception e) {
          lastConnectionFailure.set(e);
-         quietlyCloseConnection(connection, "(exception during connection creation)");
+         quietlyCloseConnection(connection, "(Failed to create/set connection)");
          throw e;
       }
    }
@@ -377,7 +374,7 @@ abstract class PoolBase
                executeSql(connection, config.getConnectionTestQuery(), false, isIsolateInternalQueries && !isAutoCommit);
             }
             catch (Throwable e) {
-               LOGGER.debug("{} - Exception during executing connection test query. ({})", poolName, e.getMessage());
+               LOGGER.debug("{} - Failed to execute connection test query. ({})", poolName, e.getMessage());
                throw e;
             }
          }

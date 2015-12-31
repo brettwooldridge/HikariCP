@@ -240,6 +240,7 @@ public class TestConnectionTimeoutRetry
       try (HikariDataSource ds = new HikariDataSource(config)) {
          TestElf.setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
 
+         HikariPool pool = TestElf.getPool(ds);
          Connection connection1 = ds.getConnection();
          Connection connection2 = ds.getConnection();
          Connection connection3 = ds.getConnection();
@@ -250,8 +251,8 @@ public class TestConnectionTimeoutRetry
 
          Thread.sleep(1300);
 
-         Assert.assertSame("Total connections not as expected", 10, TestElf.getPool(ds).getTotalConnections());
-         Assert.assertSame("Idle connections not as expected", 3, TestElf.getPool(ds).getIdleConnections());
+         Assert.assertSame("Total connections not as expected", 10, pool.getTotalConnections());
+         Assert.assertSame("Idle connections not as expected", 3, pool.getIdleConnections());
 
          connection1.close();
          connection2.close();
@@ -261,8 +262,8 @@ public class TestConnectionTimeoutRetry
          connection6.close();
          connection7.close();
 
-         Assert.assertSame("Totals connections not as expected", 10, TestElf.getPool(ds).getTotalConnections());
-         Assert.assertSame("Idle connections not as expected", 10, TestElf.getPool(ds).getIdleConnections());
+         Assert.assertSame("Total connections not as expected", 10, pool.getTotalConnections());
+         Assert.assertSame("Idle connections not as expected", 10, pool.getIdleConnections());
       }
    }
 

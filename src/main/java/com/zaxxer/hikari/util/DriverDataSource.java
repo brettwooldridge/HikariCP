@@ -71,7 +71,7 @@ public final class DriverDataSource implements DataSource
                driver = (Driver) driverClass.newInstance();
             }
             catch (Exception e) {
-               LOGGER.warn("Could not instantiate instance of driver class {}, trying JDBC URL resolution", driverClassName, e);
+               LOGGER.warn("Failed to create instance of driver class {}, trying jdbcUrl resolution", driverClassName, e);
             }
          }
       }
@@ -81,11 +81,11 @@ public final class DriverDataSource implements DataSource
             driver = DriverManager.getDriver(jdbcUrl);
          }
          else if (!driver.acceptsURL(jdbcUrl)) {
-            throw new RuntimeException("Driver " + driverClassName + " claims to not accept JDBC URL " + jdbcUrl);
+            throw new RuntimeException("Driver " + driverClassName + " claims to not accept jdbcUrl, " + jdbcUrl);
          }
       }
       catch (SQLException e) {
-         throw new RuntimeException("Unable to get driver instance for jdbcUrl=" + jdbcUrl, e);
+         throw new RuntimeException("Failed to get driver instance for jdbcUrl=" + jdbcUrl, e);
       }
    }
 
