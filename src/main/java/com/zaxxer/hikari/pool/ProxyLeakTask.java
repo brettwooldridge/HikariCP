@@ -84,7 +84,7 @@ class ProxyLeakTask implements Runnable
       System.arraycopy(stackTrace, 5, trace, 0, trace.length);
 
       exception.setStackTrace(trace);
-      LOGGER.warn("Connection leak detection triggered for connection {}, stack trace follows", connectionName, exception);
+      LOGGER.warn("Connection leak detection triggered for {}, stack trace follows", connectionName, exception);
    }
 
    void cancel()

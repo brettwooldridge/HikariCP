@@ -40,6 +40,7 @@ abstract class PoolBase
    protected final HikariConfig config;
    protected final String poolName;
    protected long connectionTimeout;
+   protected long validationTimeout;
 
    private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout"};
    private static final int UNINITIALIZED = -1;
@@ -79,6 +80,7 @@ abstract class PoolBase
 
       this.poolName = config.getPoolName();
       this.connectionTimeout = config.getConnectionTimeout();
+      this.validationTimeout = config.getValidationTimeout();
       this.lastConnectionFailure = new AtomicReference<>();
 
       initializeDataSource();
@@ -118,8 +120,6 @@ abstract class PoolBase
    boolean isConnectionAlive(final Connection connection)
    {
       try {
-         final long validationTimeout = config.getValidationTimeout();
-
          if (isUseJdbc4Validation) {
             return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(validationTimeout));
          }
@@ -197,8 +197,8 @@ abstract class PoolBase
          resetBits |= DIRTY_BIT_NETTIMEOUT;
       }
 
-      if (LOGGER.isDebugEnabled()) {
-         LOGGER.debug("{} - Reset ({}) on connection {}", poolName, resetBits != 0 ? stringFromResetBits(resetBits) : "nothing", connection);
+      if (resetBits != 0 && LOGGER.isDebugEnabled()) {
+         LOGGER.debug("{} - Reset ({}) on connection {}", poolName, stringFromResetBits(resetBits), connection);
       }
    }
 
