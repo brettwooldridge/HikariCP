@@ -282,15 +282,27 @@ where threads can only be created through a ``ThreadFactory`` provided by the ap
 
 HikariCP has plenty of "knobs" to turn as you can see above, but comparatively less than some other pools.
 This is a design philosophy.  The HikariCP design aesthetic is Minimalism.  In keeping with the
-*simple is better* or *less is more* design philosophy, some knobs are intentionally left out.  Here are two,
-and the rationale.
+*simple is better* or *less is more* design philosophy, some configuration axis are intentionally left out.
 
 #### Statement Cache
 
-Most major database JDBC drivers already have a Statement cache that can be configured
-([MySQL](https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration), PostgreSQL, Derby, etc).
-A statement cache in the pool would add unneeded weight and no additional functionality.  It is simply
-unnecessary with modern database drivers to implement a cache at the pool level.
+Many connection pools, including Apache DBCP, Vibur, CP30 and others offer ``PreparedStatement`` caching.
+HikariCP does not.  Why?
+
+At the connection pool layer ``PreparedStatements`` can only be cached *per connection*.  If your application
+has 250 commonly executed queries and a pool of 20 connections you are asking your database to hold on to
+5000 query execution plans -- and similarly the pool must cache this many ``PreparedStatements`` and their
+related graph of objects.
+
+Most major database JDBC drivers already have a Statement cache that can be configured, including PostgreSQL,
+Oracle, Derby, MySQL, DB2, and many others.  JDBC drivers are in a unique position to exploit database specific
+features, and nearly all of the caching implementations are capable of sharing execution plans *across connections*.
+This means that instead of 5000 statements in memory and associated execution plans, your 250 commonly executed
+queries result in exactly 250 execution plans in the database.  Clever implementations do not even retain
+``PreparedStatement`` objects in memory at the driver-level but instead merely attach new instances to existing plan IDs.
+
+Using a statement cache at the pooling layer in an [anti-pattern](https://en.wikipedia.org/wiki/Anti-pattern),
+and will negatively impact your application performance compared to driver-provided caches.
 
 #### Log Statement Text / Slow Query Logging
 
