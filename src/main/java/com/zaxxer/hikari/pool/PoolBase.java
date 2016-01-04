@@ -36,16 +36,16 @@ import com.zaxxer.hikari.util.UtilityElf;
 
 abstract class PoolBase
 {
-   private final Logger LOGGER = LoggerFactory.getLogger(PoolBase.class);
-   protected final HikariConfig config;
-   protected final String poolName;
-   protected long connectionTimeout;
-   protected long validationTimeout;
-
+   private static final Logger LOGGER = LoggerFactory.getLogger(PoolBase.class);
    private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout"};
    private static final int UNINITIALIZED = -1;
    private static final int TRUE = 1;
    private static final int FALSE = 0;
+
+   protected final HikariConfig config;
+   protected final String poolName;
+   protected long connectionTimeout;
+   protected long validationTimeout;
 
    private int networkTimeout;
    private int transactionIsolation;
@@ -502,7 +502,7 @@ abstract class PoolBase
             command.run();
          }
          catch (Throwable t) {
-            LoggerFactory.getLogger(PoolBase.class).debug("Exception executing {}", command, t);
+            LOGGER.debug("Exception executing {}", command, t);
          }
       }
    }
