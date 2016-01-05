@@ -237,7 +237,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
          }
 
-         shutdownNetworkTimeoutExecutor();
          closeConnectionExecutor.shutdown();
          closeConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
       }

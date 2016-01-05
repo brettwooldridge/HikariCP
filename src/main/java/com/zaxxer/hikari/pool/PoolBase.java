@@ -13,8 +13,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -29,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.metrics.MetricsTracker;
 import com.zaxxer.hikari.util.ClockSource;
-import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyElf;
 import com.zaxxer.hikari.util.UtilityElf;
@@ -51,7 +48,6 @@ abstract class PoolBase
    private int transactionIsolation;
    private int isNetworkTimeoutSupported;
    private int isQueryTimeoutSupported;
-   private Executor netTimeoutExecutor;
    private DataSource dataSource;
 
    private final String catalog;
@@ -60,6 +56,7 @@ abstract class PoolBase
    private final boolean isUseJdbc4Validation;
    private final boolean isIsolateInternalQueries;
    private final AtomicReference<Throwable> lastConnectionFailure;
+   private final Executor netTimeoutExecutor;
 
    private volatile boolean isValidChecked;
 
@@ -82,6 +79,7 @@ abstract class PoolBase
       this.connectionTimeout = config.getConnectionTimeout();
       this.validationTimeout = config.getValidationTimeout();
       this.lastConnectionFailure = new AtomicReference<>();
+      this.netTimeoutExecutor = new SynchronousExecutor();
 
       initializeDataSource();
    }
@@ -202,13 +200,6 @@ abstract class PoolBase
       }
    }
 
-   void shutdownNetworkTimeoutExecutor()
-   {
-      if (netTimeoutExecutor instanceof ThreadPoolExecutor) {
-         ((ThreadPoolExecutor) netTimeoutExecutor).shutdownNow();
-      }
-   }
-
    // ***********************************************************************
    //                       JMX methods
    // ***********************************************************************
@@ -295,7 +286,6 @@ abstract class PoolBase
 
       if (dataSource != null) {
          setLoginTimeout(dataSource, connectionTimeout);
-         createNetworkTimeoutExecutor(dataSource, dsClassName, jdbcUrl);
       }
 
       this.dataSource = dataSource;
@@ -472,23 +462,6 @@ abstract class PoolBase
                }
             }
          }
-      }
-   }
-
-   private void createNetworkTimeoutExecutor(final DataSource dataSource, final String dsClassName, final String jdbcUrl)
-   {
-      // Temporary hack for MySQL issue: http://bugs.mysql.com/bug.php?id=75615
-      if ((dsClassName != null && dsClassName.contains("Mysql")) ||
-          (jdbcUrl != null && jdbcUrl.contains("mysql")) ||
-          (dataSource != null && dataSource.getClass().getName().contains("Mysql"))) {
-         netTimeoutExecutor = new SynchronousExecutor();
-      }
-      else {
-         ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari JDBC-timeout executor", true);
-         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool(threadFactory);
-         executor.allowCoreThreadTimeOut(true);
-         executor.setKeepAliveTime(15, TimeUnit.SECONDS);
-         netTimeoutExecutor = executor;
       }
    }
 
