@@ -45,7 +45,7 @@ import com.zaxxer.hikari.metrics.dropwizard.CodahaleMetricsTrackerFactory;
 import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
-import com.zaxxer.hikari.util.DefaultThreadFactory;
+import com.zaxxer.hikari.util.UtilityElf.DefaultThreadFactory;
 import com.zaxxer.hikari.util.SuspendResumeLock;
 
 import static com.zaxxer.hikari.pool.PoolEntry.LASTACCESS_COMPARABLE;
@@ -104,11 +104,12 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       this.totalConnections = new AtomicInteger();
       this.suspendResumeLock = config.isAllowPoolSuspension() ? new SuspendResumeLock() : SuspendResumeLock.FAUX_LOCK;
 
-      this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection adder (pool " + poolName + ")", config.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
-      this.closeConnectionExecutor = createThreadPoolExecutor(4, "Hikari connection closer (pool " + poolName + ")", config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
+      ThreadFactory threadFactory = config.getThreadFactory();
+      this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection adder (pool " + poolName + ")", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
+      this.closeConnectionExecutor = createThreadPoolExecutor(4, "Hikari connection closer (pool " + poolName + ")", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
       if (config.getScheduledExecutorService() == null) {
-         ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari housekeeper (pool " + poolName + ")", true);
+         threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory("Hikari housekeeper (pool " + poolName + ")", true);
          this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
          this.houseKeepingExecutorService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
          this.houseKeepingExecutorService.setRemoveOnCancelPolicy(true);

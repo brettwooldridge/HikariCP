@@ -150,4 +150,22 @@ public final class UtilityElf
 
       return -1;
    }
+
+   public static final class DefaultThreadFactory implements ThreadFactory {
+
+      private final String threadName;
+      private final boolean daemon;
+
+      public DefaultThreadFactory(String threadName, boolean daemon) {
+         this.threadName = threadName;
+         this.daemon = daemon;
+      }
+
+      @Override
+      public Thread newThread(Runnable r) {
+         Thread thread = new Thread(r, threadName);
+         thread.setDaemon(daemon);
+         return thread;
+      }
+   }
 }
