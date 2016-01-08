@@ -116,14 +116,15 @@ public class HikariConfig implements HikariConfigMXBean
       dataSourceProperties = new Properties();
       healthCheckProperties = new Properties();
 
-      connectionTimeout = CONNECTION_TIMEOUT;
-      validationTimeout = VALIDATION_TIMEOUT;
-      idleTimeout = IDLE_TIMEOUT;
-      isAutoCommit = true;
-      isInitializationFailFast = true;
       minIdle = -1;
       maxPoolSize = 10;
       maxLifetime = MAX_LIFETIME;
+      connectionTimeout = CONNECTION_TIMEOUT;
+      validationTimeout = VALIDATION_TIMEOUT;
+      idleTimeout = IDLE_TIMEOUT;
+
+      isAutoCommit = true;
+      isInitializationFailFast = true;
 
       String systemProp = System.getProperty("hikaricp.configurationFile");
       if ( systemProp != null) {

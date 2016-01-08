@@ -67,17 +67,16 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private static final ClockSource clockSource = ClockSource.INSTANCE;
 
-   private final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", TimeUnit.MILLISECONDS.toMillis(500));
-   private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30));
-
-   private final PoolEntryCreator POOL_ENTRY_CREATOR = new PoolEntryCreator();
-
    private static final int POOL_NORMAL = 0;
    private static final int POOL_SUSPENDED = 1;
    private static final int POOL_SHUTDOWN = 2;
 
    private volatile int poolState;
 
+   private final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", TimeUnit.MILLISECONDS.toMillis(500));
+   private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30));
+
+   private final PoolEntryCreator POOL_ENTRY_CREATOR = new PoolEntryCreator();
    private final AtomicInteger totalConnections;
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
@@ -89,7 +88,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private final SuspendResumeLock suspendResumeLock;
 
    private MetricsTrackerDelegate metricsTracker;
-   private boolean isRecordMetrics;
 
    /**
     * Construct a HikariPool with the specified configuration.
@@ -264,8 +262,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    public void setMetricRegistry(Object metricRegistry)
    {
-      this.isRecordMetrics = metricRegistry != null;
-      if (isRecordMetrics) {
+      if (metricRegistry != null) {
          setMetricsTrackerFactory(new CodahaleMetricsTrackerFactory((MetricRegistry) metricRegistry));
       }
       else {
@@ -275,8 +272,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    public void setMetricsTrackerFactory(MetricsTrackerFactory metricsTrackerFactory)
    {
-      this.isRecordMetrics = metricsTrackerFactory != null;
-      if (isRecordMetrics) {
+      if (metricsTrackerFactory != null) {
          this.metricsTracker = new MetricsTrackerDelegate(metricsTrackerFactory.create(config.getPoolName(), getPoolStats()));
       }
       else {
@@ -588,8 +584,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          validationTimeout = config.getValidationTimeout();
          leakTask.updateLeakDetectionThreshold(config.getLeakDetectionThreshold());
 
-         final long now = clockSource.currentTime();
          final long idleTimeout = config.getIdleTimeout();
+         final long now = clockSource.currentTime();
 
          // Detect retrograde time as well as forward leaps of unacceptable duration
          if (now < previous || now > clockSource.plusMillis(previous, (2 * HOUSEKEEPING_PERIOD_MS))) {
