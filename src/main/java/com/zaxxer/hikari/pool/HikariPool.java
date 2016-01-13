@@ -403,13 +403,12 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    final void closeConnection(final PoolEntry poolEntry, final String closureReason)
    {
       if (connectionBag.remove(poolEntry)) {
-         final Connection connection = poolEntry.connection;
-         poolEntry.close();
          final int tc = totalConnections.decrementAndGet();
          if (tc < 0) {
             LOGGER.warn("{} - Internal accounting inconsistency, totalConnections={}", poolName, tc, new Exception());
          }
-
+         final Connection connection = poolEntry.connection;
+         poolEntry.close();
          closeConnectionExecutor.execute(new Runnable() {
             @Override
             public void run() {
