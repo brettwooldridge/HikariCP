@@ -67,27 +67,27 @@ public class HikariJNDIFactory implements ObjectFactory
       return createDataSource(properties, nameCtx);
    }
 
-   private DataSource createDataSource(Properties properties, Context context) throws NamingException
+   private DataSource createDataSource(final Properties properties, final Context context) throws NamingException
    {
-      if (properties.getProperty("dataSourceJNDI") != null) {
-         return lookupJndiDataSource(properties, context);
+      String jndiName = properties.getProperty("dataSourceJNDI");
+      if (jndiName != null) {
+         return lookupJndiDataSource(properties, context, jndiName);
       }
 
       return new HikariDataSource(new HikariConfig(properties));
    }
 
-   private DataSource lookupJndiDataSource(Properties properties, Context context) throws NamingException
+   private DataSource lookupJndiDataSource(final Properties properties, final Context context, final String jndiName) throws NamingException
    {
-      String jndiName = properties.getProperty("dataSourceJNDI");
       if (context == null) {
          throw new RuntimeException("JNDI context does not found for dataSourceJNDI : " + jndiName);
       }
 
       DataSource jndiDS = (DataSource) context.lookup(jndiName);
       if (jndiDS == null) {
-         context = new InitialContext();
-         jndiDS = (DataSource) context.lookup(jndiName);
-         //context.close(); //it should remain open for global contexts?
+         Context initContext = new InitialContext();
+         jndiDS = (DataSource) initContext.lookup(jndiName);
+         //context.close(); // questionable
       }
 
       if (jndiDS != null) {

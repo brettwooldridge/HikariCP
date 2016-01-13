@@ -84,7 +84,7 @@ public class TestJNDI
          Assert.fail();
       }
       catch (RuntimeException e) {
-         Assert.assertTrue(e.getMessage().contains("JNDI context is null"));
+         Assert.assertTrue(e.getMessage().contains("JNDI context does not found"));
       }
    }
 
