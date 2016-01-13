@@ -78,16 +78,16 @@ public class HikariJNDIFactory implements ObjectFactory
 
    private DataSource lookupJndiDataSource(Properties properties, Context context) throws NamingException
    {
+      String jndiName = properties.getProperty("dataSourceJNDI");
       if (context == null) {
-         throw new RuntimeException("dataSourceJNDI property is configured, but local JNDI context is null.");
+         throw new RuntimeException("JNDI context does not found for dataSourceJNDI : " + jndiName);
       }
 
-      String jndiName = properties.getProperty("dataSourceJNDI");
       DataSource jndiDS = (DataSource) context.lookup(jndiName);
       if (jndiDS == null) {
          context = new InitialContext();
          jndiDS = (DataSource) context.lookup(jndiName);
-         context.close();
+         //context.close(); //it should remain open for global contexts?
       }
 
       if (jndiDS != null) {
