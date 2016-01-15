@@ -104,7 +104,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
       ThreadFactory threadFactory = config.getThreadFactory();
       this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection adder (pool " + poolName + ")", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
-      this.closeConnectionExecutor = createThreadPoolExecutor(4, "Hikari connection closer (pool " + poolName + ")", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
+      this.closeConnectionExecutor = createThreadPoolExecutor(1 + config.getMaximumPoolSize() / 2, "Hikari connection closer (pool " + poolName + ")", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
       if (config.getScheduledExecutorService() == null) {
          threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory("Hikari housekeeper (pool " + poolName + ")", true);
