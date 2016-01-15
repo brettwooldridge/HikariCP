@@ -388,6 +388,7 @@ Here is a list of JDBC *DataSource* classes for popular databases:
 | PostgreSQL       | pgjdbc-ng    | com.impossibl.postgres.jdbc.PGDataSource |
 | PostgreSQL       | PostgreSQL   | org.postgresql.ds.PGSimpleDataSource |
 | SAP MaxDB        | SAP          | com.sap.dbtech.jdbc.DriverSapDB |
+| SQLite           | xerial       | org.sqlite.SQLiteDataSource |
 | SyBase           | jConnect     | com.sybase.jdbc4.jdbc.SybDataSource |
 
 ### Play Framework Plugin
