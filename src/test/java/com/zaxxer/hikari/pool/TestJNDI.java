@@ -46,9 +46,10 @@ public class TestJNDI
       ref.add(new BogusRef("dataSource.loginTimeout", "10"));
       Context nameCtx = new BogusContext();
 
-      HikariDataSource ds = (HikariDataSource) jndi.getObjectInstance(ref, null, nameCtx, null);
-      Assert.assertNotNull(ds);
-      Assert.assertEquals("foo", ds.getUsername());
+      try (HikariDataSource ds = (HikariDataSource) jndi.getObjectInstance(ref, null, nameCtx, null)) {
+         Assert.assertNotNull(ds);
+         Assert.assertEquals("foo", ds.getUsername());
+      }
    }
 
    @Test
@@ -67,9 +68,10 @@ public class TestJNDI
       ref.add(new BogusRef("dataSource.loginTimeout", "10"));
       Context nameCtx = new BogusContext2();
 
-      HikariDataSource ds = (HikariDataSource) jndi.getObjectInstance(ref, null, nameCtx, null);
-      Assert.assertNotNull(ds);
-      Assert.assertEquals("foo", ds.getUsername());
+      try (HikariDataSource ds = (HikariDataSource) jndi.getObjectInstance(ref, null, nameCtx, null)) {
+         Assert.assertNotNull(ds);
+         Assert.assertEquals("foo", ds.getUsername());
+      }
    }
 
    @Test
