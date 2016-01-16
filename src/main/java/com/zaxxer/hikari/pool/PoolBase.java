@@ -459,17 +459,15 @@ abstract class PoolBase
    {
       if (sql != null) {
          try (Statement statement = connection.createStatement()) {
-
             //con created few ms before, set query timeout is omitted
             statement.execute(sql);
-
-            if (!isReadOnly) {
-               if (isCommit) {
-                  connection.commit();
-               }
-               else if (isRollback) {
-                  connection.rollback();
-               }
+         }
+         if (!isReadOnly) {
+            if (isCommit) {
+               connection.commit();
+            }
+            else if (isRollback) {
+               connection.rollback();
             }
          }
       }
