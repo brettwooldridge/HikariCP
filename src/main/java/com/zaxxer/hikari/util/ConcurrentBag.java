@@ -53,7 +53,6 @@ import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_RES
  *
  * @param <T> the templated type to store in the bag
  */
-@SuppressWarnings("rawtypes")
 public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseable
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentBag.class);
@@ -62,7 +61,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    private final CopyOnWriteArrayList<T> sharedList;
    private final boolean weakThreadLocals;
 
-   private final ThreadLocal<List> threadList;
+   private final ThreadLocal<List<Object>> threadList;
    private final IBagStateListener listener;
    private final AtomicInteger waiters;
    private volatile boolean closed;
@@ -101,9 +100,9 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
          this.threadList = new ThreadLocal<>();
       }
       else {
-         this.threadList = new ThreadLocal<List>() {
+         this.threadList = new ThreadLocal<List<Object>>() {
             @Override
-            protected List initialValue()
+            protected List<Object> initialValue()
             {
                return new FastList<>(IConcurrentBagEntry.class, 16);
             }
@@ -123,15 +122,16 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    public T borrow(long timeout, final TimeUnit timeUnit) throws InterruptedException
    {
       // Try the thread-local list first
-      List<?> list = threadList.get();
+      List<Object> list = threadList.get();
       if (weakThreadLocals && list == null) {
          list = new ArrayList<>(16);
          threadList.set(list);
       }
 
       for (int i = list.size() - 1; i >= 0; i--) {
+         final Object entry = list.remove(i);
          @SuppressWarnings("unchecked")
-         final T bagEntry = (T) (weakThreadLocals ? ((WeakReference) list.remove(i)).get() : list.remove(i));
+         final T bagEntry = weakThreadLocals ? ((WeakReference<T>) entry).get() : (T) entry;
          if (bagEntry != null && bagEntry.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
             return bagEntry;
          }
@@ -184,14 +184,13 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     * @throws NullPointerException if value is null
     * @throws IllegalStateException if the requited value was not borrowed from the bag
     */
-   @SuppressWarnings("unchecked")
    public void requite(final T bagEntry)
    {
       bagEntry.lazySet(STATE_NOT_IN_USE);
 
-      final List threadLocalList = threadList.get();
+      final List<Object> threadLocalList = threadList.get();
       if (threadLocalList != null) {
-         threadLocalList.add((weakThreadLocals ? new WeakReference<>(bagEntry) : bagEntry));
+         threadLocalList.add(weakThreadLocals ? new WeakReference<>(bagEntry) : bagEntry);
       }
 
       synchronizer.signal();
