@@ -174,7 +174,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       if (iface.isInstance(this)) {
          return true;
       }
-      
+
       if (pool != null) {
          if (iface.isInstance(pool.getUnwrappedDataSource())) {
             return true;
@@ -287,7 +287,8 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
             pool.shutdown();
          }
          catch (InterruptedException e) {
-        	 LOGGER.warn("Interrupted during closing", e);
+            LOGGER.warn("Interrupted during closing", e);
+            Thread.currentThread().interrupt();
          }
       }
    }
