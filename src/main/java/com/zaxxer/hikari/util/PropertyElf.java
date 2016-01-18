@@ -81,7 +81,7 @@ public final class PropertyElf
       Matcher matcher = GETTER_PATTERN.matcher("");
       for (Method method : targetClass.getMethods()) {
          String name = method.getName();
-         if (method.getParameterTypes().length == 0 && matcher.reset(name).matches()) {
+         if (method.getParameterCount() == 0 && matcher.reset(name).matches()) {
             name = name.replaceFirst("(get|is)", "");
             try {
                if (targetClass.getMethod("set" + name, method.getReturnType()) != null) {
@@ -132,7 +132,7 @@ public final class PropertyElf
       String methodName = "set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
 
       for (Method method : methods) {
-         if (method.getName().equals(methodName) && method.getParameterTypes().length == 1) {
+         if (method.getName().equals(methodName) && method.getParameterCount() == 1) {
             writeMethod = method;
             break;
          }
@@ -141,7 +141,7 @@ public final class PropertyElf
       if (writeMethod == null) {
          methodName = "set" + propName.toUpperCase();
          for (Method method : methods) {
-            if (method.getName().equals(methodName) && method.getParameterTypes().length == 1) {
+            if (method.getName().equals(methodName) && method.getParameterCount() == 1) {
                writeMethod = method;
                break;
             }
