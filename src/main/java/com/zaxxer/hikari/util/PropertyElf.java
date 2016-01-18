@@ -132,7 +132,7 @@ public final class PropertyElf
       String methodName = "set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
 
       for (Method method : methods) {
-         if (method.getName().equals(methodName) && method.getParameterCount() == 1) {
+         if (method.getParameterCount() == 1 && method.getName().equals(methodName)) {
             writeMethod = method;
             break;
          }
@@ -141,7 +141,7 @@ public final class PropertyElf
       if (writeMethod == null) {
          methodName = "set" + propName.toUpperCase();
          for (Method method : methods) {
-            if (method.getName().equals(methodName) && method.getParameterCount() == 1) {
+            if (method.getParameterCount() == 1 && method.getName().equals(methodName)) {
                writeMethod = method;
                break;
             }
