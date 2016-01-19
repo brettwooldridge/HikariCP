@@ -48,7 +48,6 @@ abstract class PoolBase
    private static final int FALSE = 0;
 
    private int networkTimeout;
-   private int transactionIsolation;
    private int isNetworkTimeoutSupported;
    private int isQueryTimeoutSupported;
    private Executor netTimeoutExecutor;
@@ -57,6 +56,8 @@ abstract class PoolBase
    private final String catalog;
    private final boolean isReadOnly;
    private final boolean isAutoCommit;
+   private final int transactionIsolation;
+
    private final boolean isUseJdbc4Validation;
    private final boolean isIsolateInternalQueries;
    private final AtomicReference<Throwable> lastConnectionFailure;
