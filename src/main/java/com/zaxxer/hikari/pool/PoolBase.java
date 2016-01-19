@@ -327,7 +327,11 @@ abstract class PoolBase
 
       connection.setReadOnly(isReadOnly);
       connection.setAutoCommit(isAutoCommit);
-      connection.setTransactionIsolation(transactionIsolation);
+
+      if (transactionIsolation != -1) {
+         connection.setTransactionIsolation(transactionIsolation);
+      }
+
       if (catalog != null) {
          connection.setCatalog(catalog);
       }
