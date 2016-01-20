@@ -405,7 +405,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       if (connectionBag.remove(poolEntry)) {
          final int tc = totalConnections.decrementAndGet();
          if (tc < 0) {
-            LOGGER.warn("{} - Internal accounting inconsistency, totalConnections={}", poolName, tc, new Exception());
+            LOGGER.warn("{} - Unexpected value of totalConnections={}", poolName, tc, new Exception());
          }
          final Connection connection = poolEntry.connection;
          poolEntry.close();

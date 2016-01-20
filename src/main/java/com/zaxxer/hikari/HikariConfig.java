@@ -117,7 +117,7 @@ public class HikariConfig implements HikariConfigMXBean
       healthCheckProperties = new Properties();
 
       minIdle = -1;
-      maxPoolSize = 10;
+      maxPoolSize = -1;
       maxLifetime = MAX_LIFETIME;
       connectionTimeout = CONNECTION_TIMEOUT;
       validationTimeout = VALIDATION_TIMEOUT;
@@ -855,12 +855,14 @@ public class HikariConfig implements HikariConfigMXBean
          }
       }
 
-      if (minIdle < 0) {
-         minIdle = maxPoolSize;
-      }
-      else if (minIdle > maxPoolSize) {
-         LOGGER.warn("minIdle should be less than maxPoolSize, setting maxPoolSize to minIdle");
+      if (maxPoolSize < 0) {
+         if (minIdle < 0) {
+        	 minIdle = 10;
+         }
          maxPoolSize = minIdle;
+      }
+      else if (minIdle < 0 || minIdle > maxPoolSize) {
+         minIdle = maxPoolSize;
       }
    }
 

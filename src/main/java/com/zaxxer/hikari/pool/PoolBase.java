@@ -145,7 +145,7 @@ abstract class PoolBase
       }
       catch (SQLException e) {
          lastConnectionFailure.set(e);
-         LOGGER.warn("{} - Connection {} failed alive test with exception {}", poolName, connection, e.getMessage());
+         LOGGER.warn("{} - Failed to validate connection {} ({})", poolName, connection, e.getMessage());
          return false;
       }
    }
@@ -355,7 +355,7 @@ abstract class PoolBase
                connection.isValid(1);
             }
             catch (Throwable e) {
-               LOGGER.debug("{} - Connection.isValid() is not supported, configure connection test query. ({})", poolName, e.getMessage());
+               LOGGER.debug("{} - Failed to execute isValid() for connection, configure connection test query. ({})", poolName, e.getMessage());
                throw e;
             }
          }
@@ -388,7 +388,7 @@ abstract class PoolBase
          catch (Throwable e) {
             if (isQueryTimeoutSupported == UNINITIALIZED) {
                isQueryTimeoutSupported = FALSE;
-               LOGGER.debug("{} - Statement.setQueryTimeout() is not supported ({})", poolName, e.getMessage());
+               LOGGER.debug("{} - Unable to set query timeout for statement. ({})", poolName, e.getMessage());
             }
          }
       }
@@ -414,7 +414,7 @@ abstract class PoolBase
          catch (Throwable e) {
             if (isNetworkTimeoutSupported == UNINITIALIZED) {
                isNetworkTimeoutSupported = FALSE;
-               LOGGER.debug("{} - Connection.setNetworkTimeout() is not supported ({})", poolName, e.getMessage());
+               LOGGER.debug("{} - Unable to get/set network timeout for connection. ({})", poolName, e.getMessage());
             }
          }
       }
@@ -491,7 +491,7 @@ abstract class PoolBase
             command.run();
          }
          catch (Throwable t) {
-            LoggerFactory.getLogger(PoolBase.class).debug("Exception executing {}", command, t);
+            LoggerFactory.getLogger(PoolBase.class).debug("Failed to execute: {}", command, t);
          }
       }
    }
@@ -509,7 +509,7 @@ abstract class PoolBase
             dataSource.setLoginTimeout((int) TimeUnit.MILLISECONDS.toSeconds(Math.max(1000L, connectionTimeout)));
          }
          catch (Throwable e) {
-            LOGGER.warn("{} - Unable to set DataSource login timeout", poolName, e);
+            LOGGER.warn("{} - Unable to set login timeout for data source. ({})", poolName, e.getMessage());
          }
       }
    }
