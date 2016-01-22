@@ -166,14 +166,16 @@ final class PoolEntry implements IConcurrentBagEntry
       state.lazySet(update);
    }
 
-   void close()
+   Connection close()
    {
       if (endOfLife != null && !endOfLife.isDone() && !endOfLife.cancel(false)) {
          LOGGER.warn("{} - maxLifeTime expiration task cancellation unexpectedly returned false for connection {}", getPoolName(), connection);
       }
 
-      endOfLife = null;
+      Connection con = connection;
       connection = null;
+      endOfLife = null;
+      return con;
    }
 
    private String stateToString()
