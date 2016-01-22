@@ -776,8 +776,7 @@ public class HikariConfig implements HikariConfigMXBean
       if (poolName == null) {
          poolName = "HikariPool-" + POOL_NUMBER.getAndIncrement();
       }
-
-      if (poolName.contains(":") && isRegisterMbeans) {
+      else if (isRegisterMbeans && poolName.contains(":")) {
          throw new IllegalArgumentException("poolName cannot contain ':' when used with JMX");
       }
 
