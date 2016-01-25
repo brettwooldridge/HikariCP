@@ -22,6 +22,7 @@ import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 
 import com.codahale.metrics.Histogram;
@@ -36,6 +37,8 @@ import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.dropwizard.CodahaleMetricsTrackerFactory;
 import com.zaxxer.hikari.util.UtilityElf;
+
+import shaded.org.codehaus.plexus.interpolation.os.Os;
 
 /**
  * Test HikariCP/CodaHale metrics integration.
@@ -77,6 +80,7 @@ public class TestMetrics
    @Test
    public void testMetricUsage() throws SQLException
    {
+      Assume.assumeFalse(Os.isFamily(Os.FAMILY_WINDOWS));
       MetricRegistry metricRegistry = new MetricRegistry();
 
       HikariConfig config = new HikariConfig();
