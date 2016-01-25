@@ -151,11 +151,6 @@ public final class JavassistProxyFactory
                continue;
             }
 
-            // Ignore default methods (only for Jre8 or later)
-            if (isDefaultMethod(intf, intfCt, intfMethod)) {
-               continue;
-            }
-
             // Track what methods we've added
             methods.add(signature);
 
@@ -209,17 +204,6 @@ public final class JavassistProxyFactory
       }
 
       return false;
-   }
-
-   private static boolean isDefaultMethod(Class<?> intf, CtClass intfCt, CtMethod intfMethod) throws Exception
-   {
-      List<Class<?>> paramTypes = new ArrayList<>();
-
-      for (CtClass pt : intfMethod.getParameterTypes()) {
-         paramTypes.add(toJavaClass(pt));
-      }
-
-      return intf.getDeclaredMethod(intfMethod.getName(), paramTypes.toArray(new Class[paramTypes.size()])).toString().contains("default ");
    }
 
    private static Set<Class<?>> getAllInterfaces(Class<?> clazz)
