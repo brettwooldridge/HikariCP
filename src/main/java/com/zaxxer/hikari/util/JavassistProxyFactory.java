@@ -161,7 +161,7 @@ public final class JavassistProxyFactory
 
             // If the super-Proxy has concrete methods (non-abstract), transform the call into a simple super.method() call
             CtMethod superMethod = superCt.getMethod(intfMethod.getName(), intfMethod.getSignature());
-            if ((superMethod.getModifiers() & Modifier.ABSTRACT) != Modifier.ABSTRACT) {
+            if ((superMethod.getModifiers() & Modifier.ABSTRACT) != Modifier.ABSTRACT && !isDefaultMethod(intf, intfCt, intfMethod)) {
                modifiedBody = modifiedBody.replace("((cast) ", "");
                modifiedBody = modifiedBody.replace("delegate", "super");
                modifiedBody = modifiedBody.replace("super)", "super");
@@ -206,6 +206,17 @@ public final class JavassistProxyFactory
       return false;
    }
 
+   private static boolean isDefaultMethod(Class<?> intf, CtClass intfCt, CtMethod intfMethod) throws Exception
+   {
+      List<Class<?>> paramTypes = new ArrayList<>();
+
+      for (CtClass pt : intfMethod.getParameterTypes()) {
+         paramTypes.add(toJavaClass(pt));
+      }
+
+      return intf.getDeclaredMethod(intfMethod.getName(), paramTypes.toArray(new Class[paramTypes.size()])).toString().contains("default ");
+   }
+   
    private static Set<Class<?>> getAllInterfaces(Class<?> clazz)
    {
       Set<Class<?>> interfaces = new HashSet<Class<?>>();
