@@ -171,28 +171,35 @@ abstract class PoolBase
 
    void resetConnectionState(final Connection connection, final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
    {
+      int resetBits = 0;
+
       if ((dirtyBits & DIRTY_BIT_READONLY) != 0 && proxyConnection.getReadOnlyState() != isReadOnly) {
          connection.setReadOnly(isReadOnly);
+         resetBits |= DIRTY_BIT_READONLY;
       }
 
       if ((dirtyBits & DIRTY_BIT_AUTOCOMMIT) != 0 && proxyConnection.getAutoCommitState() != isAutoCommit) {
          connection.setAutoCommit(isAutoCommit);
+         resetBits |= DIRTY_BIT_AUTOCOMMIT;
       }
 
       if ((dirtyBits & DIRTY_BIT_ISOLATION) != 0 && proxyConnection.getTransactionIsolationState() != transactionIsolation) {
          connection.setTransactionIsolation(transactionIsolation);
+         resetBits |= DIRTY_BIT_ISOLATION;
       }
 
       if ((dirtyBits & DIRTY_BIT_CATALOG) != 0 && catalog != null && !catalog.equals(proxyConnection.getCatalogState())) {
          connection.setCatalog(catalog);
+         resetBits |= DIRTY_BIT_CATALOG;
       }
 
       if ((dirtyBits & DIRTY_BIT_NETTIMEOUT) != 0 && proxyConnection.getNetworkTimeoutState() != networkTimeout) {
          setNetworkTimeout(connection, networkTimeout);
+         resetBits |= DIRTY_BIT_NETTIMEOUT;
       }
 
-      if (dirtyBits != 0 && LOGGER.isDebugEnabled()) {
-         LOGGER.debug("{} - Reset ({}) on connection {}", poolName, stringFromResetBits(dirtyBits), connection);
+      if (resetBits != 0 && LOGGER.isDebugEnabled()) {
+         LOGGER.debug("{} - Reset ({}) on connection {}", poolName, stringFromResetBits(resetBits), connection);
       }
    }
 
