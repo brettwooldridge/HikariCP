@@ -50,13 +50,14 @@ abstract class PoolBase
    private int networkTimeout;
    private int isNetworkTimeoutSupported;
    private int isQueryTimeoutSupported;
+   private int defaultTransactionIsolation;
+   private int transactionIsolation;
    private Executor netTimeoutExecutor;
    private DataSource dataSource;
 
    private final String catalog;
    private final boolean isReadOnly;
    private final boolean isAutoCommit;
-   private final int transactionIsolation;
 
    private final boolean isUseJdbc4Validation;
    private final boolean isIsolateInternalQueries;
@@ -331,12 +332,12 @@ abstract class PoolBase
    {
       networkTimeout = getAndSetNetworkTimeout(connection, connectionTimeout);
 
-      checkValidationMode(connection);
+      checkDriverSupport(connection);
 
       connection.setReadOnly(isReadOnly);
       connection.setAutoCommit(isAutoCommit);
 
-      if (transactionIsolation != -1) {
+      if (transactionIsolation != defaultTransactionIsolation) {
          connection.setTransactionIsolation(transactionIsolation);
       }
 
@@ -354,7 +355,7 @@ abstract class PoolBase
     *
     * @param connection a Connection to check
     */
-   private void checkValidationMode(final Connection connection) throws SQLException
+   private void checkDriverSupport(final Connection connection) throws SQLException
    {
       if (!isValidChecked) {
          if (isUseJdbc4Validation) {
@@ -374,6 +375,10 @@ abstract class PoolBase
                LOGGER.debug("{} - Failed to execute connection test query. ({})", poolName, e.getMessage());
                throw e;
             }
+         }
+         defaultTransactionIsolation = connection.getTransactionIsolation();
+         if (transactionIsolation == -1) {
+            transactionIsolation = defaultTransactionIsolation;
          }
          isValidChecked = true;
       }
