@@ -1,5 +1,15 @@
 HikariCP Changes
 
+Changes in 2.4.4
+
+ * issue 555: include support for Java 8 interface 'default' methods during proxy
+   generation.
+
+ * issue 495: implemented iterator() method on custom FastList to support Tomcat
+   memory leak detection.
+
+ * Generate unique sequential pool names, even across container classloaders.
+
 Changes in 2.4.3
 
  * Improve pool shutdown behavior.  Stop active connection acquisition once the
