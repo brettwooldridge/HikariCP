@@ -593,7 +593,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
          // Detect retrograde time as well as forward leaps of unacceptable duration
          if (now < previous || now > clockSource.plusMillis(previous, (2 * HOUSEKEEPING_PERIOD_MS))) {
-            LOGGER.warn("{} - Unusual system clock change detected, soft-evicting connections from pool.", poolName);
+            LOGGER.warn("{} - Unusual system clock change detected (delta={}), soft-evicting connections from pool.", clockSource.elapsedDisplayString(previous, now), poolName);
             previous = now;
             softEvictConnections();
             fillPool();

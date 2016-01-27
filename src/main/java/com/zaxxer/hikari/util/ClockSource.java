@@ -16,7 +16,16 @@
 
 package com.zaxxer.hikari.util;
 
+import static java.util.concurrent.TimeUnit.DAYS;
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.util.concurrent.TimeUnit;
+
 
 /**
  * A resolution-independent provider of current time-stamps and elapsed time
@@ -98,6 +107,19 @@ public interface ClockSource
    TimeUnit getSourceTimeUnit();
 
    /**
+    * Get a String representation of the elapsed time in appropriate magnitude terminology.
+    *
+    * @param startTime an opaque time-stamp
+    * @param endTime an opaque time-stamp
+    * @return a string representation of the elapsed time interval
+    */
+   String elapsedDisplayString(long startTime, long endTime);
+
+   TimeUnit[] TIMEUNITS_DESCENDING = {DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS, MICROSECONDS, NANOSECONDS};
+
+   String[] TIMEUNIT_DISPLAY_VALUES = {"ns", "μs", "ms", "s", "m", "h", "d"};
+
+   /**
     * Factory class used to create a platform-specific ClockSource. 
     */
    class Factory
@@ -113,7 +135,7 @@ public interface ClockSource
       }
    }
 
-   final class MillisecondClockSource implements ClockSource
+   final class MillisecondClockSource extends NanosecondClockSource
    {
       /** {@inheritDoc} */
       @Override
@@ -140,14 +162,14 @@ public interface ClockSource
       @Override
       public long elapsedNanos(final long startTime)
       {
-         return TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis() - startTime);
+         return MILLISECONDS.toNanos(System.currentTimeMillis() - startTime);
       }
 
       /** {@inheritDoc} */
       @Override
       public long elapsedNanos(final long startTime, final long endTime)
       {
-         return TimeUnit.MILLISECONDS.toNanos(endTime - startTime);
+         return MILLISECONDS.toNanos(endTime - startTime);
       }
 
       /** {@inheritDoc} */
@@ -168,11 +190,11 @@ public interface ClockSource
       @Override
       public TimeUnit getSourceTimeUnit()
       {
-         return TimeUnit.MILLISECONDS;
+         return MILLISECONDS;
       }
    }
 
-   final class NanosecondClockSource implements ClockSource
+   class NanosecondClockSource implements ClockSource
    {
       /** {@inheritDoc} */
       @Override
@@ -183,23 +205,23 @@ public interface ClockSource
 
       /** {@inheritDoc} */
       @Override
-      public final long toMillis(final long time)
+      public long toMillis(final long time)
       {
-         return TimeUnit.NANOSECONDS.toMillis(time);
+         return NANOSECONDS.toMillis(time);
       }
 
       /** {@inheritDoc} */
       @Override
       public long elapsedMillis(final long startTime)
       {
-         return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
+         return NANOSECONDS.toMillis(System.nanoTime() - startTime);
       }
 
       /** {@inheritDoc} */
       @Override
       public long elapsedMillis(final long startTime, final long endTime)
       {
-         return TimeUnit.NANOSECONDS.toMillis(endTime - startTime);
+         return NANOSECONDS.toMillis(endTime - startTime);
       }
 
       /** {@inheritDoc} */
@@ -220,14 +242,34 @@ public interface ClockSource
       @Override
       public long plusMillis(final long time, final long millis)
       {
-         return time + TimeUnit.MILLISECONDS.toNanos(millis);
+         return time + MILLISECONDS.toNanos(millis);
       }
 
       /** {@inheritDoc} */
       @Override
       public TimeUnit getSourceTimeUnit()
       {
-         return TimeUnit.NANOSECONDS;
+         return NANOSECONDS;
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public String elapsedDisplayString(long startTime, long endTime)
+      {
+         long elapsedMs = elapsedNanos(startTime, endTime);
+
+         StringBuilder sb = new StringBuilder(elapsedMs < 0 ? "-" : "");
+         elapsedMs = Math.abs(elapsedMs);
+
+         for (TimeUnit unit : TIMEUNITS_DESCENDING) {
+            long converted = unit.convert(elapsedMs, NANOSECONDS);
+            if (converted > 0) {
+               sb.append(converted).append(TIMEUNIT_DISPLAY_VALUES[unit.ordinal()]);
+               elapsedMs -= NANOSECONDS.convert(converted, unit);
+            }
+         }
+
+         return sb.toString();
       }
    }
 }
