@@ -236,8 +236,8 @@ public class HikariConfig implements HikariConfigMXBean
       if (connectionTimeoutMs == 0) {
          this.connectionTimeout = Integer.MAX_VALUE;
       }
-      else if (connectionTimeoutMs < 1000) {
-         throw new IllegalArgumentException("connectionTimeout cannot be less than 1000ms");
+      else if (connectionTimeoutMs < 250) {
+         throw new IllegalArgumentException("connectionTimeout cannot be less than 250ms");
       }
       else {
          this.connectionTimeout = connectionTimeoutMs;
@@ -259,8 +259,8 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setValidationTimeout(long validationTimeoutMs)
    {
-      if (validationTimeoutMs < 1000) {
-         throw new IllegalArgumentException("validationTimeout cannot be less than 1000ms");
+      if (validationTimeoutMs < 250) {
+         throw new IllegalArgumentException("validationTimeout cannot be less than 250ms");
       }
       else {
          this.validationTimeout = validationTimeoutMs;

@@ -23,7 +23,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.mocks.StubDataSource;
 
 /**
  * @author Brett Wooldridge
@@ -115,7 +114,7 @@ public class TestValidation
          Assert.fail();
       }
       catch (IllegalArgumentException ise) {
-         Assert.assertTrue(ise.getMessage().contains("connectionTimeout cannot be less than 1000ms"));
+         Assert.assertTrue(ise.getMessage().contains("connectionTimeout cannot be less than 250ms"));
       }
    }
 
