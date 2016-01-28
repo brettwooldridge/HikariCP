@@ -363,7 +363,7 @@ abstract class PoolBase
                connection.isValid(1);
             }
             catch (Throwable e) {
-               LOGGER.debug("{} - Failed to execute isValid() for connection, configure connection test query. ({})", poolName, e.getMessage());
+               LOGGER.warn("{} - Failed to execute isValid() for connection, configure connection test query. ({})", poolName, e.getMessage());
                throw e;
             }
          }
@@ -372,7 +372,7 @@ abstract class PoolBase
                executeSql(connection, config.getConnectionTestQuery(), false, isIsolateInternalQueries && !isAutoCommit);
             }
             catch (Throwable e) {
-               LOGGER.debug("{} - Failed to execute connection test query. ({})", poolName, e.getMessage());
+               LOGGER.warn("{} - Failed to execute connection test query. ({})", poolName, e.getMessage());
                throw e;
             }
          }
@@ -400,7 +400,7 @@ abstract class PoolBase
          catch (Throwable e) {
             if (isQueryTimeoutSupported == UNINITIALIZED) {
                isQueryTimeoutSupported = FALSE;
-               LOGGER.debug("{} - Unable to set query timeout for statement. ({})", poolName, e.getMessage());
+               LOGGER.warn("{} - Unable to set query timeout for statement. ({})", poolName, e.getMessage());
             }
          }
       }
@@ -426,7 +426,7 @@ abstract class PoolBase
          catch (Throwable e) {
             if (isNetworkTimeoutSupported == UNINITIALIZED) {
                isNetworkTimeoutSupported = FALSE;
-               LOGGER.debug("{} - Unable to get/set network timeout for connection. ({})", poolName, e.getMessage());
+               LOGGER.warn("{} - Unable to get/set network timeout for connection. ({})", poolName, e.getMessage());
             }
          }
       }
