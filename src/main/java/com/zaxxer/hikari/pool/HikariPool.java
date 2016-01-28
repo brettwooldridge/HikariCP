@@ -463,7 +463,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
     */
    private void fillPool()
    {
-      final int connectionsToAdd = Math.min(config.getMaximumPoolSize() - totalConnections.get(), config.getMinimumIdle() - getIdleConnections());
+      final int connectionsToAdd = Math.min(config.getMaximumPoolSize() - totalConnections.get(), config.getMinimumIdle() - getIdleConnections())
+                                   - addConnectionExecutor.getQueue().size();
       for (int i = 0; i < connectionsToAdd; i++) {
          addBagItem();
       }
