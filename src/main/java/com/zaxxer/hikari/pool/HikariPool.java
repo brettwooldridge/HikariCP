@@ -107,6 +107,19 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection adder (pool " + poolName + ")", config.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
       this.closeConnectionExecutor = createThreadPoolExecutor(4, "Hikari connection closer (pool " + poolName + ")", config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
 
+      if (config.getMetricsTrackerFactory() != null) {
+         setMetricsTrackerFactory(config.getMetricsTrackerFactory());
+      }
+      else {
+         setMetricRegistry(config.getMetricRegistry());
+      }
+
+      setHealthCheckRegistry(config.getHealthCheckRegistry());
+
+      registerMBeans(this);
+
+      initializeConnections();
+
       if (config.getScheduledExecutorService() == null) {
          ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari housekeeper (pool " + poolName + ")", true);
          this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
@@ -120,19 +133,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       this.houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), HOUSEKEEPING_PERIOD_MS, HOUSEKEEPING_PERIOD_MS, TimeUnit.MILLISECONDS);
 
       this.leakTask = new ProxyLeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
-
-      if (config.getMetricsTrackerFactory() != null) {
-         setMetricsTrackerFactory(config.getMetricsTrackerFactory());
-      }
-      else {
-         setMetricRegistry(config.getMetricRegistry());
-      }
-
-      setHealthCheckRegistry(config.getHealthCheckRegistry());
-
-      registerMBeans(this);
-
-      initializeConnections();
    }
 
    /**

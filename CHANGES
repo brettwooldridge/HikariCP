@@ -2,8 +2,17 @@ HikariCP Changes
 
 Changes in 2.4.4
 
+ * issue 563: Do not start the house-keeping thread until after pool initialisation
+   has succeeded.
+
+ * issue 559: Ensure the pool refill after house-keeping does not enqueue more add
+   connection requests if there are already minimumIdle requests pending.
+
  * issue 555: include support for Java 8 interface 'default' methods during proxy
    generation.
+
+ * issue 547: decreased allowable minimum connectionTimeout and validationTimeout to
+   250ms.
 
  * issue 495: implemented iterator() method on custom FastList to support Tomcat
    memory leak detection.
@@ -31,7 +40,7 @@ Changes in 2.4.2
    subsequent new connection creation load on the database.  Connections now have a
    maximum lifetime between 97.5-100% of configured maxLifetime.  In the case of the
    default 30 minute lifetime, this generates actual lifetimes with a maximum deviation
-   of 45 seconds.  Currently, no attempt is made to futher avoid clustering that may
+   of 45 seconds.  Currently, no attempt is made to further avoid clustering that may
    occur due to randomness.
 
  * Ongoing com.zaxxer.hikari.metrics refactors. This is not considered public API until
