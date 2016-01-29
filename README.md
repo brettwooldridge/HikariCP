@@ -301,7 +301,7 @@ This means that instead of 5000 statements in memory and associated execution pl
 queries result in exactly 250 execution plans in the database.  Clever implementations do not even retain
 ``PreparedStatement`` objects in memory at the driver-level but instead merely attach new instances to existing plan IDs.
 
-Using a statement cache at the pooling layer in an [anti-pattern](https://en.wikipedia.org/wiki/Anti-pattern),
+Using a statement cache at the pooling layer is an [anti-pattern](https://en.wikipedia.org/wiki/Anti-pattern),
 and will negatively impact your application performance compared to driver-provided caches.
 
 #### Log Statement Text / Slow Query Logging
