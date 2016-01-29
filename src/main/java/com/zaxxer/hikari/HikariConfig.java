@@ -828,7 +828,7 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       if (idleTimeout + TimeUnit.SECONDS.toMillis(1) > maxLifetime && maxLifetime > 0) {
-         LOGGER.warn("idleTimeout is close to or greater than maxLifetime, disabling it.");
+         LOGGER.warn("idleTimeout is close to or more than maxLifetime, disabling it.");
          idleTimeout = 0;
       }
 
@@ -837,24 +837,22 @@ public class HikariConfig implements HikariConfigMXBean
          idleTimeout = IDLE_TIMEOUT;
       }
 
+      if (leakDetectionThreshold > 0 && !unitTest) {
+         if (leakDetectionThreshold < TimeUnit.SECONDS.toMillis(2) || (leakDetectionThreshold > maxLifetime && maxLifetime > 0)) {        
+            LOGGER.warn("leakDetectionThreshold is less than 2000ms or more than maxLifetime, disabling it.");
+            leakDetectionThreshold = 0L;
+         }
+      }
+
       if (connectionTimeout != Integer.MAX_VALUE) {
          if (validationTimeout > connectionTimeout) {
             LOGGER.warn("validationTimeout should be less than connectionTimeout, setting validationTimeout to connectionTimeout");
             validationTimeout = connectionTimeout;
          }
          if (maxLifetime > 0 && connectionTimeout > maxLifetime) {
-            LOGGER.warn("connectionTimeout should be less than maxLifetime, setting maxLifetime to connectionTimeout");
-            maxLifetime = connectionTimeout;
+            LOGGER.warn("connectionTimeout should be less than maxLifetime, setting connectionTimeout to maxLifetime");
+            connectionTimeout = maxLifetime;
          }
-      }
-
-      if (leakDetectionThreshold != 0 && leakDetectionThreshold < TimeUnit.SECONDS.toMillis(2) && !unitTest) {
-         LOGGER.warn("leakDetectionThreshold is less than 2000ms, setting to minimum 2000ms.");
-         leakDetectionThreshold = 2000L;
-      }
-      else if (leakDetectionThreshold > maxLifetime && maxLifetime > 2000) {
-         LOGGER.warn("leakDetectionThreshold is more than maxLifetime, setting to minimum 2000ms.");
-         leakDetectionThreshold = 2000L;
       }
 
       if (maxPoolSize < 0) {
