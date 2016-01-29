@@ -837,11 +837,6 @@ public class HikariConfig implements HikariConfigMXBean
          idleTimeout = IDLE_TIMEOUT;
       }
 
-      if (leakDetectionThreshold != 0 && leakDetectionThreshold < TimeUnit.SECONDS.toMillis(2) && !unitTest) {
-         LOGGER.warn("leakDetectionThreshold is less than 2000ms, setting to minimum 2000ms.");
-         leakDetectionThreshold = 2000L;
-      }
-
       if (connectionTimeout != Integer.MAX_VALUE) {
          if (validationTimeout > connectionTimeout) {
             LOGGER.warn("validationTimeout should be less than connectionTimeout, setting validationTimeout to connectionTimeout");
@@ -851,6 +846,15 @@ public class HikariConfig implements HikariConfigMXBean
             LOGGER.warn("connectionTimeout should be less than maxLifetime, setting maxLifetime to connectionTimeout");
             maxLifetime = connectionTimeout;
          }
+      }
+
+      if (leakDetectionThreshold != 0 && leakDetectionThreshold < TimeUnit.SECONDS.toMillis(2) && !unitTest) {
+         LOGGER.warn("leakDetectionThreshold is less than 2000ms, setting to minimum 2000ms.");
+         leakDetectionThreshold = 2000L;
+      }
+      else if (leakDetectionThreshold > maxLifetime && maxLifetime > 2000) {
+         LOGGER.warn("leakDetectionThreshold is more than maxLifetime, setting to minimum 2000ms.");
+         leakDetectionThreshold = 2000L;
       }
 
       if (maxPoolSize < 0) {
