@@ -216,7 +216,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
          addConnectionExecutor.shutdown();
          addConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
-         if (config.getScheduledExecutorService() == null) {
+         if (config.getScheduledExecutorService() == null && houseKeepingExecutorService != null) {
             houseKeepingExecutorService.shutdown();
             houseKeepingExecutorService.awaitTermination(5L, TimeUnit.SECONDS);
          }
