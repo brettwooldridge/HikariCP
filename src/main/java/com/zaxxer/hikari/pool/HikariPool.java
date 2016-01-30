@@ -577,7 +577,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
     */
    private class HouseKeeper implements Runnable
    {
-      private volatile long previous = clockSource.currentTime();
+      private volatile long previous = clockSource.plusMillis(clockSource.currentTime(), -HOUSEKEEPING_PERIOD_MS);
 
       @Override
       public void run()
