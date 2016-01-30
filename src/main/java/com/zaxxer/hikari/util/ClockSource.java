@@ -256,16 +256,16 @@ public interface ClockSource
       @Override
       public String elapsedDisplayString(long startTime, long endTime)
       {
-         long elapsedMs = elapsedNanos(startTime, endTime);
+         long elapsedNanos = elapsedNanos(startTime, endTime);
 
-         StringBuilder sb = new StringBuilder(elapsedMs < 0 ? "-" : "");
-         elapsedMs = Math.abs(elapsedMs);
+         StringBuilder sb = new StringBuilder(elapsedNanos < 0 ? "-" : "");
+         elapsedNanos = Math.abs(elapsedNanos);
 
          for (TimeUnit unit : TIMEUNITS_DESCENDING) {
-            long converted = unit.convert(elapsedMs, NANOSECONDS);
+            long converted = unit.convert(elapsedNanos, NANOSECONDS);
             if (converted > 0) {
                sb.append(converted).append(TIMEUNIT_DISPLAY_VALUES[unit.ordinal()]);
-               elapsedMs -= NANOSECONDS.convert(converted, unit);
+               elapsedNanos -= NANOSECONDS.convert(converted, unit);
             }
          }
 

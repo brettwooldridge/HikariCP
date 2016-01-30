@@ -465,7 +465,7 @@ public class StubConnection extends StubBaseConnection implements Connection
    /** {@inheritDoc} */
    public void abort(Executor executor) throws SQLException
    {
-      throw new SQLException("Intentianal exception during abort");
+      throw new SQLException("Intentional exception during abort");
    }
 
    /** {@inheritDoc} */
