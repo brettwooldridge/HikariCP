@@ -584,6 +584,10 @@ abstract class PoolBase
          poolEntry.lastBorrowed = now;
          tracker.recordConnectionAcquiredNanos(ClockSource.INSTANCE.elapsedNanos(startTime, now));
       }
+
+      void recordConnectionTimeout() {
+         tracker.recordConnectionTimeout();
+      }
    }
 
    static final class NopMetricsTrackerDelegate extends MetricsTrackerDelegate
@@ -602,6 +606,12 @@ abstract class PoolBase
 
       @Override
       void recordBorrowStats(final PoolEntry poolEntry, final long startTime)
+      {
+         // no-op
+      }
+
+      @Override
+      void recordConnectionTimeout()
       {
          // no-op
       }
