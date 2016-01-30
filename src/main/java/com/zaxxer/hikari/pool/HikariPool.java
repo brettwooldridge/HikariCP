@@ -591,7 +591,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          final long idleTimeout = config.getIdleTimeout();
 
          // Detect retrograde time, allowing +128ms as per NTP spec.
-         if (now + 128 < clockSource.plusMillis(previous, HOUSEKEEPING_PERIOD_MS)) {
+         if (clockSource.plusMillis(now, 128) < clockSource.plusMillis(previous, HOUSEKEEPING_PERIOD_MS)) {
             LOGGER.warn("{} - Retrograde clock change detected (housekeeper delta={}), soft-evicting connections from pool.", 
                         clockSource.elapsedDisplayString(previous, now), poolName);
             previous = now;
