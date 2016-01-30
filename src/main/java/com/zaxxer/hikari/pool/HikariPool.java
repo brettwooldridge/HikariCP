@@ -105,7 +105,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       this.suspendResumeLock = config.isAllowPoolSuspension() ? new SuspendResumeLock() : SuspendResumeLock.FAUX_LOCK;
 
       this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection adder (pool " + poolName + ")", config.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
-      this.closeConnectionExecutor = createThreadPoolExecutor(4, "Hikari connection closer (pool " + poolName + ")", config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
+      this.closeConnectionExecutor = createThreadPoolExecutor(1 + (config.getMaximumPoolSize() / 2), "Hikari connection closer (pool " + poolName + ")", config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
 
       if (config.getMetricsTrackerFactory() != null) {
          setMetricsTrackerFactory(config.getMetricsTrackerFactory());
@@ -118,7 +118,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
       registerMBeans(this);
 
-      initializeConnections();
+      checkFailFast();
 
       if (config.getScheduledExecutorService() == null) {
          ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari housekeeper (pool " + poolName + ")", true);
@@ -130,7 +130,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          this.houseKeepingExecutorService = config.getScheduledExecutorService();
       }
 
-      this.houseKeepingExecutorService.scheduleAtFixedRate(new HouseKeeper(), HOUSEKEEPING_PERIOD_MS, HOUSEKEEPING_PERIOD_MS, TimeUnit.MILLISECONDS);
+      this.houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 0L, HOUSEKEEPING_PERIOD_MS, TimeUnit.MILLISECONDS);
 
       this.leakTask = new ProxyLeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
    }
@@ -503,7 +503,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    /**
     * Fill the pool up to the minimum size.
     */
-   private void initializeConnections()
+   private void checkFailFast()
    {
       if (config.isInitializationFailFast()) {
          try {
@@ -520,8 +520,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             throw new PoolInitializationException(e);
          }
       }
-
-      fillPool();
    }
 
    private void softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
@@ -592,13 +590,18 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          final long now = clockSource.currentTime();
          final long idleTimeout = config.getIdleTimeout();
 
-         // Detect retrograde time as well as forward leaps of unacceptable duration
-         if (now < previous || now > clockSource.plusMillis(previous, (2 * HOUSEKEEPING_PERIOD_MS))) {
-            LOGGER.warn("{} - Unusual system clock change detected (delta={}), soft-evicting connections from pool.", clockSource.elapsedDisplayString(previous, now), poolName);
+         // Detect retrograde time, allowing +128ms as per NTP spec.
+         if (now + 128 < clockSource.plusMillis(previous, HOUSEKEEPING_PERIOD_MS)) {
+            LOGGER.warn("{} - Retrograde clock change detected (housekeeper delta={}), soft-evicting connections from pool.", 
+                        clockSource.elapsedDisplayString(previous, now), poolName);
             previous = now;
             softEvictConnections();
             fillPool();
             return;
+         }
+         else if (now > clockSource.plusMillis(previous, (3 * HOUSEKEEPING_PERIOD_MS) / 2)) {
+            // No point evicting for forward clock motion, this merely accelerates connection retirement anyway
+            LOGGER.warn("{} - Thread starvation or clock leap detected (housekeeper delta={}).", clockSource.elapsedDisplayString(previous, now), poolName);
          }
 
          previous = now;
