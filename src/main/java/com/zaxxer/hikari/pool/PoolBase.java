@@ -29,10 +29,10 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.metrics.MetricsTracker;
 import com.zaxxer.hikari.util.ClockSource;
-import com.zaxxer.hikari.util.DefaultThreadFactory;
 import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyElf;
 import com.zaxxer.hikari.util.UtilityElf;
+import com.zaxxer.hikari.util.UtilityElf.DefaultThreadFactory;
 
 abstract class PoolBase
 {
@@ -48,15 +48,17 @@ abstract class PoolBase
    private static final int FALSE = 0;
 
    private int networkTimeout;
-   private int transactionIsolation;
    private int isNetworkTimeoutSupported;
    private int isQueryTimeoutSupported;
+   private int defaultTransactionIsolation;
+   private int transactionIsolation;
    private Executor netTimeoutExecutor;
    private DataSource dataSource;
 
    private final String catalog;
    private final boolean isReadOnly;
    private final boolean isAutoCommit;
+
    private final boolean isUseJdbc4Validation;
    private final boolean isIsolateInternalQueries;
    private final AtomicReference<Throwable> lastConnectionFailure;
@@ -144,7 +146,7 @@ abstract class PoolBase
       }
       catch (SQLException e) {
          lastConnectionFailure.set(e);
-         LOGGER.warn("{} - Connection {} failed alive test with exception {}", poolName, connection, e.getMessage());
+         LOGGER.warn("{} - Failed to validate connection {} ({})", poolName, connection, e.getMessage());
          return false;
       }
    }
@@ -330,16 +332,12 @@ abstract class PoolBase
    {
       networkTimeout = getAndSetNetworkTimeout(connection, connectionTimeout);
 
-      checkValidationMode(connection);
+      checkDriverSupport(connection);
 
-      connection.setAutoCommit(isAutoCommit);
       connection.setReadOnly(isReadOnly);
+      connection.setAutoCommit(isAutoCommit);
 
-      final int defaultLevel = connection.getTransactionIsolation();
-      transactionIsolation = (transactionIsolation < 0 || defaultLevel == Connection.TRANSACTION_NONE)
-                           ? defaultLevel
-                           : transactionIsolation;
-      if (transactionIsolation != defaultLevel) {
+      if (transactionIsolation != defaultTransactionIsolation) {
          connection.setTransactionIsolation(transactionIsolation);
       }
 
@@ -357,7 +355,7 @@ abstract class PoolBase
     *
     * @param connection a Connection to check
     */
-   private void checkValidationMode(final Connection connection) throws SQLException
+   private void checkDriverSupport(final Connection connection) throws SQLException
    {
       if (!isValidChecked) {
          if (isUseJdbc4Validation) {
@@ -365,7 +363,7 @@ abstract class PoolBase
                connection.isValid(1);
             }
             catch (Throwable e) {
-               LOGGER.debug("{} - Connection.isValid() is not supported, configure connection test query. ({})", poolName, e.getMessage());
+               LOGGER.warn("{} - Failed to execute isValid() for connection, configure connection test query. ({})", poolName, e.getMessage());
                throw e;
             }
          }
@@ -374,9 +372,13 @@ abstract class PoolBase
                executeSql(connection, config.getConnectionTestQuery(), false, isIsolateInternalQueries && !isAutoCommit);
             }
             catch (Throwable e) {
-               LOGGER.debug("{} - Failed to execute connection test query. ({})", poolName, e.getMessage());
+               LOGGER.warn("{} - Failed to execute connection test query. ({})", poolName, e.getMessage());
                throw e;
             }
+         }
+         defaultTransactionIsolation = connection.getTransactionIsolation();
+         if (transactionIsolation == -1) {
+            transactionIsolation = defaultTransactionIsolation;
          }
          isValidChecked = true;
       }
@@ -398,7 +400,7 @@ abstract class PoolBase
          catch (Throwable e) {
             if (isQueryTimeoutSupported == UNINITIALIZED) {
                isQueryTimeoutSupported = FALSE;
-               LOGGER.debug("{} - Statement.setQueryTimeout() is not supported ({})", poolName, e.getMessage());
+               LOGGER.warn("{} - Unable to set query timeout for statement. ({})", poolName, e.getMessage());
             }
          }
       }
@@ -424,7 +426,7 @@ abstract class PoolBase
          catch (Throwable e) {
             if (isNetworkTimeoutSupported == UNINITIALIZED) {
                isNetworkTimeoutSupported = FALSE;
-               LOGGER.debug("{} - Connection.setNetworkTimeout() is not supported ({})", poolName, e.getMessage());
+               LOGGER.warn("{} - Unable to get/set network timeout for connection. ({})", poolName, e.getMessage());
             }
          }
       }
@@ -459,17 +461,15 @@ abstract class PoolBase
    {
       if (sql != null) {
          try (Statement statement = connection.createStatement()) {
-
             //con created few ms before, set query timeout is omitted
             statement.execute(sql);
-
-            if (!isReadOnly) {
-               if (isCommit) {
-                  connection.commit();
-               }
-               else if (isRollback) {
-                  connection.rollback();
-               }
+         }
+         if (!isReadOnly) {
+            if (isCommit) {
+               connection.commit();
+            }
+            else if (isRollback) {
+               connection.rollback();
             }
          }
       }
@@ -484,7 +484,8 @@ abstract class PoolBase
          netTimeoutExecutor = new SynchronousExecutor();
       }
       else {
-         ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari JDBC-timeout executor", true);
+         ThreadFactory threadFactory = config.getThreadFactory();
+         threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory("Hikari JDBC-timeout executor", true);
          ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool(threadFactory);
          executor.allowCoreThreadTimeOut(true);
          executor.setKeepAliveTime(15, TimeUnit.SECONDS);
@@ -502,7 +503,7 @@ abstract class PoolBase
             command.run();
          }
          catch (Throwable t) {
-            LoggerFactory.getLogger(PoolBase.class).debug("Exception executing {}", command, t);
+            LoggerFactory.getLogger(PoolBase.class).debug("Failed to execute: {}", command, t);
          }
       }
    }
@@ -520,7 +521,7 @@ abstract class PoolBase
             dataSource.setLoginTimeout((int) TimeUnit.MILLISECONDS.toSeconds(Math.max(1000L, connectionTimeout)));
          }
          catch (Throwable e) {
-            LOGGER.warn("{} - Unable to set DataSource login timeout", poolName, e);
+            LOGGER.warn("{} - Unable to set login timeout for data source. ({})", poolName, e.getMessage());
          }
       }
    }

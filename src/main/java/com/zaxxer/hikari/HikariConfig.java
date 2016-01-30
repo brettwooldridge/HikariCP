@@ -116,14 +116,15 @@ public class HikariConfig implements HikariConfigMXBean
       dataSourceProperties = new Properties();
       healthCheckProperties = new Properties();
 
+      minIdle = -1;
+      maxPoolSize = -1;
+      maxLifetime = MAX_LIFETIME;
       connectionTimeout = CONNECTION_TIMEOUT;
       validationTimeout = VALIDATION_TIMEOUT;
       idleTimeout = IDLE_TIMEOUT;
+
       isAutoCommit = true;
       isInitializationFailFast = true;
-      minIdle = -1;
-      maxPoolSize = 10;
-      maxLifetime = MAX_LIFETIME;
 
       String systemProp = System.getProperty("hikaricp.configurationFile");
       if ( systemProp != null) {
@@ -775,8 +776,7 @@ public class HikariConfig implements HikariConfigMXBean
       if (poolName == null) {
          poolName = "HikariPool-" + POOL_NUMBER.getAndIncrement();
       }
-
-      if (poolName.contains(":") && isRegisterMbeans) {
+      else if (isRegisterMbeans && poolName.contains(":")) {
          throw new IllegalArgumentException("poolName cannot contain ':' when used with JMX");
       }
 
@@ -828,8 +828,7 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       if (idleTimeout + TimeUnit.SECONDS.toMillis(1) > maxLifetime && maxLifetime > 0) {
-         LOGGER.warn("idleTimeout is close to or greater than maxLifetime, disabling it.");
-         maxLifetime = idleTimeout;
+         LOGGER.warn("idleTimeout is close to or more than maxLifetime, disabling it.");
          idleTimeout = 0;
       }
 
@@ -838,28 +837,32 @@ public class HikariConfig implements HikariConfigMXBean
          idleTimeout = IDLE_TIMEOUT;
       }
 
-      if (leakDetectionThreshold != 0 && leakDetectionThreshold < TimeUnit.SECONDS.toMillis(2) && !unitTest) {
-         LOGGER.warn("leakDetectionThreshold is less than 2000ms, setting to minimum 2000ms.");
-         leakDetectionThreshold = 2000L;
+      if (leakDetectionThreshold > 0 && !unitTest) {
+         if (leakDetectionThreshold < TimeUnit.SECONDS.toMillis(2) || (leakDetectionThreshold > maxLifetime && maxLifetime > 0)) {        
+            LOGGER.warn("leakDetectionThreshold is less than 2000ms or more than maxLifetime, disabling it.");
+            leakDetectionThreshold = 0L;
+         }
       }
 
       if (connectionTimeout != Integer.MAX_VALUE) {
          if (validationTimeout > connectionTimeout) {
-            LOGGER.warn("validationTimeout should be less than connectionTimeout, setting validationTimeout to connectionTimeout");
+            LOGGER.warn("validationTimeout should be less than connectionTimeout, setting validationTimeout to connectionTimeout.");
             validationTimeout = connectionTimeout;
          }
          if (maxLifetime > 0 && connectionTimeout > maxLifetime) {
-            LOGGER.warn("connectionTimeout should be less than maxLifetime, setting maxLifetime to connectionTimeout");
-            maxLifetime = connectionTimeout;
+            LOGGER.warn("connectionTimeout should be less than maxLifetime, setting connectionTimeout to maxLifetime.");
+            connectionTimeout = maxLifetime;
          }
       }
 
-      if (minIdle < 0) {
-         minIdle = maxPoolSize;
-      }
-      else if (minIdle > maxPoolSize) {
-         LOGGER.warn("minIdle should be less than maxPoolSize, setting maxPoolSize to minIdle");
+      if (maxPoolSize < 0) {
+         if (minIdle < 0) {
+            minIdle = 10;
+         }
          maxPoolSize = minIdle;
+      }
+      else if (minIdle < 0 || minIdle > maxPoolSize) {
+         minIdle = maxPoolSize;
       }
    }
 

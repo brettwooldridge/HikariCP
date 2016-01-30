@@ -159,7 +159,7 @@ public class TestValidation
       config.validate();
 
       String s = new String(baos.toByteArray());
-      Assert.assertTrue("Expected exception to contain 'greater than maxLifetime' but contains *" + s + "*", s.contains("greater than maxLifetime"));
+      Assert.assertTrue("idleTimeout is close to or more than maxLifetime, disabling it." + s + "*", s.contains("is close to or more than maxLifetime"));
    }
 
    @Test
@@ -208,16 +208,11 @@ public class TestValidation
    @Test
    public void validateInvalidLeakDetection()
    {
-      try {
-         HikariConfig config = new HikariConfig();
-         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-         config.setLeakDetectionThreshold(1000L);
-         config.validate();
-         Assert.assertEquals(2000L, config.getLeakDetectionThreshold());
-      }
-      catch (IllegalArgumentException ise) {
-         // pass
-      }
+      HikariConfig config = new HikariConfig();
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      config.setLeakDetectionThreshold(1000L);
+      config.validate();
+      Assert.assertEquals(0L, config.getLeakDetectionThreshold());
    }
 
    @Test

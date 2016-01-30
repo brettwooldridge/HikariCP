@@ -40,7 +40,7 @@ import com.zaxxer.hikari.util.PropertyElf;
 public class HikariJNDIFactory implements ObjectFactory
 {
    @Override
-   public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment) throws Exception
+   synchronized public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment) throws Exception
    {
       // We only know how to deal with <code>javax.naming.Reference</code> that specify a class name of "javax.sql.DataSource"
       if (!(obj instanceof Reference)) {
@@ -67,27 +67,27 @@ public class HikariJNDIFactory implements ObjectFactory
       return createDataSource(properties, nameCtx);
    }
 
-   private DataSource createDataSource(Properties properties, Context context) throws NamingException
+   private DataSource createDataSource(final Properties properties, final Context context) throws NamingException
    {
-      if (properties.getProperty("dataSourceJNDI") != null) {
-         return lookupJndiDataSource(properties, context);
+      String jndiName = properties.getProperty("dataSourceJNDI");
+      if (jndiName != null) {
+         return lookupJndiDataSource(properties, context, jndiName);
       }
 
       return new HikariDataSource(new HikariConfig(properties));
    }
 
-   private DataSource lookupJndiDataSource(Properties properties, Context context) throws NamingException
+   private DataSource lookupJndiDataSource(final Properties properties, final Context context, final String jndiName) throws NamingException
    {
       if (context == null) {
-         throw new RuntimeException("dataSourceJNDI property is configured, but local JNDI context is null.");
+         throw new RuntimeException("JNDI context does not found for dataSourceJNDI : " + jndiName);
       }
 
-      String jndiName = properties.getProperty("dataSourceJNDI");
       DataSource jndiDS = (DataSource) context.lookup(jndiName);
       if (jndiDS == null) {
-         context = new InitialContext();
-         jndiDS = (DataSource) context.lookup(jndiName);
-         context.close();
+         final Context ic = new InitialContext();
+         jndiDS = (DataSource) ic.lookup(jndiName);
+         ic.close();
       }
 
       if (jndiDS != null) {

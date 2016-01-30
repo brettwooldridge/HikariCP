@@ -45,7 +45,7 @@ import com.zaxxer.hikari.metrics.dropwizard.CodahaleMetricsTrackerFactory;
 import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
-import com.zaxxer.hikari.util.DefaultThreadFactory;
+import com.zaxxer.hikari.util.UtilityElf.DefaultThreadFactory;
 import com.zaxxer.hikari.util.SuspendResumeLock;
 
 import static com.zaxxer.hikari.pool.PoolEntry.LASTACCESS_COMPARABLE;
@@ -67,17 +67,16 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private static final ClockSource clockSource = ClockSource.INSTANCE;
 
-   private final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", TimeUnit.MILLISECONDS.toMillis(500));
-   private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30));
-
-   private final PoolEntryCreator POOL_ENTRY_CREATOR = new PoolEntryCreator();
-
    private static final int POOL_NORMAL = 0;
    private static final int POOL_SUSPENDED = 1;
    private static final int POOL_SHUTDOWN = 2;
 
    private volatile int poolState;
 
+   private final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", TimeUnit.MILLISECONDS.toMillis(500));
+   private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30));
+
+   private final PoolEntryCreator POOL_ENTRY_CREATOR = new PoolEntryCreator();
    private final AtomicInteger totalConnections;
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
@@ -89,7 +88,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private final SuspendResumeLock suspendResumeLock;
 
    private MetricsTrackerDelegate metricsTracker;
-   private boolean isRecordMetrics;
 
    /**
     * Construct a HikariPool with the specified configuration.
@@ -104,9 +102,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       this.totalConnections = new AtomicInteger();
       this.suspendResumeLock = config.isAllowPoolSuspension() ? new SuspendResumeLock() : SuspendResumeLock.FAUX_LOCK;
 
-      this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection adder (pool " + poolName + ")", config.getThreadFactory(), new ThreadPoolExecutor.DiscardPolicy());
-      this.closeConnectionExecutor = createThreadPoolExecutor(1 + (config.getMaximumPoolSize() / 2), "Hikari connection closer (pool " + poolName + ")", config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
-
       if (config.getMetricsTrackerFactory() != null) {
          setMetricsTrackerFactory(config.getMetricsTrackerFactory());
       }
@@ -120,8 +115,12 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
       checkFailFast();
 
+      ThreadFactory threadFactory = config.getThreadFactory();
+      this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection adder (pool " + poolName + ")", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
+      this.closeConnectionExecutor = createThreadPoolExecutor(1 + (config.getMaximumPoolSize() / 2), "Hikari connection closer (pool " + poolName + ")", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
+
       if (config.getScheduledExecutorService() == null) {
-         ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory("Hikari housekeeper (pool " + poolName + ")", true);
+         threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory("Hikari housekeeper (pool " + poolName + ")", true);
          this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
          this.houseKeepingExecutorService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
          this.houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
@@ -265,8 +264,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    public void setMetricRegistry(Object metricRegistry)
    {
-      this.isRecordMetrics = metricRegistry != null;
-      if (isRecordMetrics) {
+      if (metricRegistry != null) {
          setMetricsTrackerFactory(new CodahaleMetricsTrackerFactory((MetricRegistry) metricRegistry));
       }
       else {
@@ -276,8 +274,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    public void setMetricsTrackerFactory(MetricsTrackerFactory metricsTrackerFactory)
    {
-      this.isRecordMetrics = metricsTrackerFactory != null;
-      if (isRecordMetrics) {
+      if (metricsTrackerFactory != null) {
          this.metricsTracker = new MetricsTrackerDelegate(metricsTrackerFactory.create(config.getPoolName(), getPoolStats()));
       }
       else {
@@ -407,13 +404,11 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    final void closeConnection(final PoolEntry poolEntry, final String closureReason)
    {
       if (connectionBag.remove(poolEntry)) {
-         final Connection connection = poolEntry.connection;
-         poolEntry.close();
          final int tc = totalConnections.decrementAndGet();
          if (tc < 0) {
-            LOGGER.warn("{} - Internal accounting inconsistency, totalConnections={}", poolName, tc, new Exception());
+            LOGGER.warn("{} - Unexpected value of totalConnections={}", poolName, tc, new Exception());
          }
-
+         final Connection connection = poolEntry.close();
          closeConnectionExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -588,8 +583,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          validationTimeout = config.getValidationTimeout();
          leakTask.updateLeakDetectionThreshold(config.getLeakDetectionThreshold());
 
-         final long now = clockSource.currentTime();
          final long idleTimeout = config.getIdleTimeout();
+         final long now = clockSource.currentTime();
 
          // Detect retrograde time, allowing +128ms as per NTP spec.
          if (clockSource.plusMillis(now, 128) < clockSource.plusMillis(previous, HOUSEKEEPING_PERIOD_MS)) {

@@ -73,18 +73,16 @@ public final class UtilityElf
 
       try {
          Class<?> loaded = UtilityElf.class.getClassLoader().loadClass(className);
+         if (args.length == 0) {
+            return clazz.cast(loaded.newInstance());
+         }
 
          Class<?>[] argClasses = new Class<?>[args.length];
          for (int i = 0; i < args.length; i++) {
             argClasses[i] = args[i].getClass();
          }
-
-         if (args.length > 0) {
-            Constructor<?> constructor = loaded.getConstructor(argClasses);
-            return clazz.cast(constructor.newInstance(args));
-         }
-
-         return clazz.cast(loaded.newInstance());
+         Constructor<?> constructor = loaded.getConstructor(argClasses);
+         return clazz.cast(constructor.newInstance(args));
       }
       catch (Exception e) {
          throw new RuntimeException(e);
@@ -149,5 +147,23 @@ public final class UtilityElf
       }
 
       return -1;
+   }
+
+   public static final class DefaultThreadFactory implements ThreadFactory {
+
+      private final String threadName;
+      private final boolean daemon;
+
+      public DefaultThreadFactory(String threadName, boolean daemon) {
+         this.threadName = threadName;
+         this.daemon = daemon;
+      }
+
+      @Override
+      public Thread newThread(Runnable r) {
+         Thread thread = new Thread(r, threadName);
+         thread.setDaemon(daemon);
+         return thread;
+      }
    }
 }

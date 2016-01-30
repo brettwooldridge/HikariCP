@@ -378,11 +378,11 @@ Here is a list of JDBC *DataSource* classes for popular databases:
 | Firebird         | Jaybird      | org.firebirdsql.pool.FBSimpleDataSource |
 | H2               | H2           | org.h2.jdbcx.JdbcDataSource |
 | HSQLDB           | HSQLDB       | org.hsqldb.jdbc.JDBCDataSource |
-| IBM AS400        | IBM          | com.ibm.as400.access.AS400JDBCDriver |
-| IBM DB2          | DB2          | com.ibm.db2.jcc.DB2SimpleDataSource |
-| MariaDB & MySQL  | MariaDB      | org.mariadb.jdbc.MySQLDataSource |
-| MySQL            | Connector/J  | com.mysql.jdbc.jdbc2.optional.MysqlDataSource |
+| IBM DB2          | IBM JCC      | com.ibm.db2.jcc.DB2SimpleDataSource |
+| IBM Informix     | IBM Informix | com.informix.jdbcx.IfxDataSource |
 | MS SQL Server    | Microsoft    | com.microsoft.sqlserver.jdbc.SQLServerDataSource |
+| MySQL            | Connector/J  | com.mysql.jdbc.jdbc2.optional.MysqlDataSource |
+| MySQL/MariaDB    | MariaDB      | org.mariadb.jdbc.MySQLDataSource |
 | Oracle           | Oracle       | oracle.jdbc.pool.OracleDataSource |
 | OrientDB         | OrientDB     | com.orientechnologies.orient.jdbc.OrientDataSource |
 | PostgreSQL       | pgjdbc-ng    | com.impossibl.postgres.jdbc.PGDataSource |
