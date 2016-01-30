@@ -184,7 +184,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          suspendResumeLock.release();
       }
 
-      logPoolState("Timeout failure\t");
+      logPoolState("Timeout failure ");
 
       String sqlState = null;
       final Throwable originalException = getLastConnectionFailure();
@@ -209,8 +209,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       try {
          poolState = POOL_SHUTDOWN;
 
-         LOGGER.info("{} - is closing down.", poolName);
-         logPoolState("Before closing\t");
+         LOGGER.info("{} - Close initiated...", poolName);
+         logPoolState("Before closing ");
 
          softEvictConnections();
 
@@ -242,7 +242,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          closeConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
       }
       finally {
-         logPoolState("After closing\t");
+         logPoolState("After closing ");
+         LOGGER.info("{} - Closed.", poolName);
 
          unregisterMBeans();
          metricsTracker.close();
@@ -379,8 +380,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    final void logPoolState(String... prefix)
    {
       if (LOGGER.isDebugEnabled()) {
-         LOGGER.debug("{}pool {} stats (total={}, active={}, idle={}, waiting={})",
-                      (prefix.length > 0 ? prefix[0] : ""), poolName,
+         LOGGER.debug("{} - {}stats (total={}, active={}, idle={}, waiting={})",
+                      poolName, (prefix.length > 0 ? prefix[0] : ""),
                       getTotalConnections(), getActiveConnections(), getIdleConnections(), getThreadsAwaitingConnection());
       }
    }
@@ -473,7 +474,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          addConnectionExecutor.execute(new Runnable() {
             @Override
             public void run() {
-               logPoolState("After adding\t");
+               logPoolState("After adding ");
             }
          });
       }
@@ -606,12 +607,14 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
          previous = now;
 
-         logPoolState("Before cleanup\t");
-
+         String afterPrefix = "Pool ";
          if (idleTimeout > 0L) {
             final List<PoolEntry> idleList = connectionBag.values(STATE_NOT_IN_USE);
             int removable = idleList.size() - config.getMinimumIdle();
             if (removable > 0) {
+               logPoolState("Before cleanup ");
+               afterPrefix = "After cleanup  "; 
+               
                // Sort pool entries on lastAccessed
                Collections.sort(idleList, LASTACCESS_COMPARABLE);
                for (PoolEntry poolEntry : idleList) {
@@ -621,11 +624,11 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                         break; // keep min idle cons
                      };
                   }
-               }
+               }               
             }
          }
 
-         logPoolState("After cleanup\t");
+         logPoolState(afterPrefix);
 
          fillPool(); // Try to maintain minimum connections
       }
