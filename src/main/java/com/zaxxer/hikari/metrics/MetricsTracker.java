@@ -35,6 +35,10 @@ public class MetricsTracker implements AutoCloseable
    {
    }
 
+   public void recordConnectionTimeout()
+   {
+   }
+
    @Override
    public void close()
    {

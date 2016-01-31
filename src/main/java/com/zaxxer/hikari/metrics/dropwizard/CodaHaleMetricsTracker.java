@@ -18,8 +18,10 @@ package com.zaxxer.hikari.metrics.dropwizard;
 
 import java.util.concurrent.TimeUnit;
 
+import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.zaxxer.hikari.metrics.MetricsTracker;
@@ -30,6 +32,8 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    private final String poolName;
    private final Timer connectionObtainTimer;
    private final Histogram connectionUsage;
+   private final Counter connectionTimeouts;
+   private final Meter connectionTimeoutMeter;
    private final MetricRegistry registry;
 
    public CodaHaleMetricsTracker(final String poolName, final PoolStats poolStats, final MetricRegistry registry)
@@ -38,6 +42,8 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
       this.registry = registry;
       this.connectionObtainTimer = registry.timer(MetricRegistry.name(poolName, "pool", "Wait"));
       this.connectionUsage = registry.histogram(MetricRegistry.name(poolName, "pool", "Usage"));
+      this.connectionTimeouts = registry.counter(MetricRegistry.name(poolName, "pool", "ConnectionTimeouts"));
+      this.connectionTimeoutMeter = registry.meter(MetricRegistry.name(poolName, "pool", "ConnectionTimeoutRate"));
 
       registry.register(MetricRegistry.name(poolName, "pool", "TotalConnections"),
                         new Gauge<Integer>() {
@@ -96,6 +102,13 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    public void recordConnectionUsageMillis(final long elapsedBorrowedMillis)
    {
       connectionUsage.update(elapsedBorrowedMillis);
+   }
+
+   @Override
+   public void recordConnectionTimeout()
+   {
+      connectionTimeouts.inc();
+      connectionTimeoutMeter.mark();
    }
 
    public Timer getConnectionAcquisitionTimer()

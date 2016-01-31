@@ -184,6 +184,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       }
 
       logPoolState("Timeout failure ");
+      metricsTracker.recordConnectionTimeout();
 
       String sqlState = null;
       final Throwable originalException = getLastConnectionFailure();
