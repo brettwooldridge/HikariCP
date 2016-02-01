@@ -116,11 +116,11 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       checkFailFast();
 
       ThreadFactory threadFactory = config.getThreadFactory();
-      this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection adder (" + poolName + ")", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
-      this.closeConnectionExecutor = createThreadPoolExecutor(1 + (config.getMaximumPoolSize() / 2), "Hikari connection closer (" + poolName + ")", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
+      this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
+      this.closeConnectionExecutor = createThreadPoolExecutor(1 + (config.getMaximumPoolSize() / 2), poolName + " connection closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
       if (config.getScheduledExecutorService() == null) {
-         threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory("Hikari housekeeper (" + poolName + ")", true);
+         threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory(poolName + " housekeeper", true);
          this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
          this.houseKeepingExecutorService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
          this.houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
@@ -223,7 +223,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
          connectionBag.close();
 
-         final ExecutorService assassinExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection assassin (" + poolName + ")",
+         final ExecutorService assassinExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection assassinator",
                                                                            config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
          try {
             final long start = clockSource.currentTime();
