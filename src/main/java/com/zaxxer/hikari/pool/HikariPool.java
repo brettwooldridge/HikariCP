@@ -243,10 +243,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       }
       finally {
          logPoolState("After closing ");
-         LOGGER.info("{} - Closed.", poolName);
-
          unregisterMBeans();
          metricsTracker.close();
+         LOGGER.info("{} - Closed.", poolName);
       }
    }
 
