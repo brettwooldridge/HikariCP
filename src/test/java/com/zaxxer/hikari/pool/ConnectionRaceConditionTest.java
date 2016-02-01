@@ -62,7 +62,6 @@ public class ConnectionRaceConditionTest
          threadPool.awaitTermination(30, TimeUnit.SECONDS);
 
          if (ref.get() != null) {
-            ref.get().fillInStackTrace();
             LoggerFactory.getLogger(ConnectionRaceConditionTest.class).error("Submit1 task failed", ref.get());
             Assert.fail("Task failed");
          }
