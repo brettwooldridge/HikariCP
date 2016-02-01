@@ -2,6 +2,19 @@ HikariCP Changes
 
 Changes in 2.4.4
 
+ * Generate unique sequential pool names, even across container classloaders to avoid
+   JMX name collisions when registering pools.
+
+ * Improve pool stability when running on computers using power-saving or sleep modes
+   where wake-up previously caused pool to grow to maximum size.
+
+ * Improve pool stability under severe thread-starvation conditions.  Previous code
+   could interpret prolonged starvation (exceeding one minute) as non-contiguous clock
+   advancement, and reacted by soft-evicting connections (unnecessarily).
+
+ * Added total number of connection timeout events as well as connection timeout rate
+   to Dropwizard metrics (ConnectionTimeouts and ConnectionTimeoutRate respectively).
+
  * issue 563: Do not start the house-keeping thread until after pool initialisation
    has succeeded.
 
@@ -16,8 +29,6 @@ Changes in 2.4.4
 
  * issue 495: implemented iterator() method on custom FastList to support Tomcat
    memory leak detection.
-
- * Generate unique sequential pool names, even across container classloaders.
 
 Changes in 2.4.3
 
