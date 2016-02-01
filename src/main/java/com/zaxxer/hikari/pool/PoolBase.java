@@ -487,8 +487,8 @@ abstract class PoolBase
          ThreadFactory threadFactory = config.getThreadFactory();
          threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory("Hikari network timeout executor (" + poolName + ")", true);
          ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool(threadFactory);
-         executor.allowCoreThreadTimeOut(true);
          executor.setKeepAliveTime(15, TimeUnit.SECONDS);
+         executor.allowCoreThreadTimeOut(true);
          netTimeoutExecutor = executor;
       }
    }
