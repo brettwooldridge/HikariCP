@@ -12,8 +12,7 @@ Changes in 2.4.4
    could interpret prolonged starvation (exceeding one minute) as non-contiguous clock
    advancement, and reacted by soft-evicting connections (unnecessarily).
 
- * Added total number of connection timeout events as well as connection timeout rate
-   to Dropwizard metrics (ConnectionTimeouts and ConnectionTimeoutRate respectively).
+ * Added connection timeout rate to Dropwizard metrics (ConnectionTimeoutRate).
 
  * issue 563: Do not start the house-keeping thread until after pool initialisation
    has succeeded.
