@@ -167,7 +167,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
             final long now = clockSource.currentTime();
             if (poolEntry.isMarkedEvicted() || (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
-               closeConnection(poolEntry, "(connection is evicted or dead)", true); // Throw away the dead connection and try again
+               closeConnection(poolEntry, "(connection is dead)", true); // Throw away the dead connection (passed max age or failed alive test)
                timeout = hardTimeout - clockSource.elapsedMillis(startTime);
             }
             else {
@@ -337,7 +337,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    public void softEvictConnections()
    {
       for (PoolEntry poolEntry : connectionBag.values()) {
-         softEvictConnection(poolEntry, "(connection evicted by user)", false /* not owner */);
+         softEvictConnection(poolEntry, "(connection evicted)", false /* not owner */);
       }
    }
 
