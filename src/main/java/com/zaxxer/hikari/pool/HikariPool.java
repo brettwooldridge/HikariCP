@@ -167,7 +167,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
             final long now = clockSource.currentTime();
             if (poolEntry.isMarkedEvicted() || (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
-               closeConnection(poolEntry, "(connection is dead)", true); // Throw away the dead connection (passed max age or failed alive test)
+               closeConnection(poolEntry, "(connection is dead)"); // Throw away the dead connection (passed max age or failed alive test)
                timeout = hardTimeout - clockSource.elapsedMillis(startTime);
             }
             else {
@@ -401,9 +401,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
     *
     * @param poolEntry poolEntry having the connection to close
     * @param closureReason reason to close
-    * @param recoverable false only when the connection is broken because of un-recoverable exception before, true otherwise
+    * @param callClose false when the connection is dead because of un-recoverable exception and calling any method would result in exception, true otherwise
     */
-   final void closeConnection(final PoolEntry poolEntry, final String closureReason, final boolean recoverable)
+   final void closeConnection(final PoolEntry poolEntry, final String closureReason, final boolean callClose)
    {
       if (connectionBag.remove(poolEntry)) {
          final int tc = totalConnections.decrementAndGet();
@@ -412,7 +412,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          }
 
          final Connection connection = poolEntry.close();
-         if (recoverable) {
+         if (callClose) {
             closeConnectionExecutor.execute(new Runnable() {
                @Override
                public void run() {
@@ -426,6 +426,11 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    // ***********************************************************************
    //                           Private methods
    // ***********************************************************************
+
+   private void closeConnection(final PoolEntry poolEntry, final String closureReason)
+   {
+	   closeConnection(poolEntry, closureReason, true);
+   }
 
    /**
     * Create and add a single connection to the pool.
@@ -526,7 +531,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private void softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
    {
       if (owner || connectionBag.reserve(poolEntry)) {
-         closeConnection(poolEntry, reason, true);
+         closeConnection(poolEntry, reason);
       }
       else {
          poolEntry.markEvicted();
@@ -619,7 +624,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                Collections.sort(idleList, LASTACCESS_COMPARABLE);
                for (PoolEntry poolEntry : idleList) {
                   if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout && connectionBag.reserve(poolEntry)) {
-                     closeConnection(poolEntry, "(connection has passed idleTimeout)", true);
+                     closeConnection(poolEntry, "(connection has passed idleTimeout)");
                      if (--removable == 0) {
                         break; // keep min idle cons
                      };
