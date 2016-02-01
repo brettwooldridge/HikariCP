@@ -783,23 +783,23 @@ public class HikariConfig implements HikariConfigMXBean
       // Check Data Source Options
       if (dataSource != null) {
          if (dataSourceClassName != null) {
-            LOGGER.warn("using dataSource and ignoring dataSourceClassName");
+            LOGGER.warn("{} - using dataSource and ignoring dataSourceClassName.", poolName);
          }
       }
       else if (dataSourceClassName != null) {
          if (driverClassName != null) {
-            LOGGER.error("cannot use driverClassName and dataSourceClassName together");
-            throw new IllegalArgumentException("cannot use driverClassName and dataSourceClassName together");
+            LOGGER.error("{} - cannot use driverClassName and dataSourceClassName together.", poolName);
+            throw new IllegalArgumentException("cannot use driverClassName and dataSourceClassName together.");
          }
          else if (jdbcUrl != null) {
-            LOGGER.warn("using dataSourceClassName and ignoring jdbcUrl");
+            LOGGER.warn("{} - using dataSourceClassName and ignoring jdbcUrl.", poolName);
          }
       }
       else if (jdbcUrl != null) {
       }
       else if (driverClassName != null) {
-         LOGGER.error("jdbcUrl is required with driverClassName");
-         throw new IllegalArgumentException("jdbcUrl is required with driverClassName");
+         LOGGER.error("{} - jdbcUrl is required with driverClassName.", poolName);
+         throw new IllegalArgumentException("jdbcUrl is required with driverClassName.");
       }
       else {
          LOGGER.error("{} - dataSource or dataSourceClassName or jdbcUrl is required.", poolName);
