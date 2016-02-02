@@ -29,6 +29,10 @@ Changes in 2.4.4
  * issue 495: implemented iterator() method on custom FastList to support Tomcat
    memory leak detection.
 
+Changes in 2.3.13
+
+ * issue 512: reduce the number of calls made to Connection.getAutoCommit().
+
 Changes in 2.4.3
 
  * Improve pool shutdown behavior.  Stop active connection acquisition once the
