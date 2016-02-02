@@ -56,13 +56,16 @@ public class ConnectionRaceConditionTest
                   return null;
                }
             });
+            if (ref.get() != null) {
+               break;
+            }
          }
 
          threadPool.shutdown();
          threadPool.awaitTermination(30, TimeUnit.SECONDS);
 
          if (ref.get() != null) {
-            LoggerFactory.getLogger(ConnectionRaceConditionTest.class).error("Submit1 task failed", ref.get());
+            LoggerFactory.getLogger(ConnectionRaceConditionTest.class).error("Task failed", ref.get());
             Assert.fail("Task failed");
          }
       }
