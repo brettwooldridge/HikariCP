@@ -63,7 +63,7 @@ import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
  */
 public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateListener
 {
-   private static final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
+   private final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
 
    private static final ClockSource clockSource = ClockSource.INSTANCE;
 
