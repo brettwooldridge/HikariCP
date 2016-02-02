@@ -363,7 +363,7 @@ abstract class PoolBase
                connection.isValid(1);
             }
             catch (Throwable e) {
-               LOGGER.warn("{} - Failed to execute isValid() for connection, configure connection test query. ({})", poolName, e.getMessage());
+               LOGGER.error("{} - Failed to execute isValid() for connection, configure connection test query. ({})", poolName, e.getMessage());
                throw e;
             }
          }
@@ -372,7 +372,7 @@ abstract class PoolBase
                executeSql(connection, config.getConnectionTestQuery(), false, isIsolateInternalQueries && !isAutoCommit);
             }
             catch (Throwable e) {
-               LOGGER.warn("{} - Failed to execute connection test query. ({})", poolName, e.getMessage());
+               LOGGER.error("{} - Failed to execute connection test query. ({})", poolName, e.getMessage());
                throw e;
             }
          }
