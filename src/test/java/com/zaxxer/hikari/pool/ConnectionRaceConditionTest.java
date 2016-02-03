@@ -45,20 +45,19 @@ public class ConnectionRaceConditionTest
                @Override
                public Exception call() throws Exception
                {
-                  Connection c2;
-                  try {
-                     c2 = ds.getConnection();
-                     ds.evictConnection(c2);
-                  }
-                  catch (Exception e) {
-                     ref.set(e);
+                  if (ref.get() != null) {
+                     Connection c2;
+                     try {
+                        c2 = ds.getConnection();
+                        ds.evictConnection(c2);
+                     }
+                     catch (Exception e) {
+                        ref.set(e);
+                     }
                   }
                   return null;
                }
             });
-            if (ref.get() != null) {
-               break;
-            }
          }
 
          threadPool.shutdown();
