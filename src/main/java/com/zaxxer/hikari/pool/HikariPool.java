@@ -167,7 +167,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
             final long now = clockSource.currentTime();
             if (poolEntry.isMarkedEvicted() || (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
-               closeConnection(poolEntry, "(connection is dead)"); // Throw away the dead connection (passed max age or failed alive test)
+               closeConnection(poolEntry, "(connection is evicted or dead)"); // Throw away the dead connection (passed max age or failed alive test)
                timeout = hardTimeout - clockSource.elapsedMillis(startTime);
             }
             else {
@@ -401,36 +401,27 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
     *
     * @param poolEntry poolEntry having the connection to close
     * @param closureReason reason to close
-    * @param callClose false when the connection is dead because of un-recoverable exception and calling any method would result in exception, true otherwise
     */
-   final void closeConnection(final PoolEntry poolEntry, final String closureReason, final boolean callClose)
+   final void closeConnection(final PoolEntry poolEntry, final String closureReason)
    {
       if (connectionBag.remove(poolEntry)) {
          final int tc = totalConnections.decrementAndGet();
          if (tc < 0) {
             LOGGER.warn("{} - Unexpected value of totalConnections={}", poolName, tc, new Exception());
          }
-
          final Connection connection = poolEntry.close();
-         if (callClose) {
-            closeConnectionExecutor.execute(new Runnable() {
-               @Override
-               public void run() {
-                  quietlyCloseConnection(connection, closureReason);
-               }
-            });
-         }
+         closeConnectionExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+               quietlyCloseConnection(connection, closureReason);
+            }
+         });
       }
    }
 
    // ***********************************************************************
    //                           Private methods
    // ***********************************************************************
-
-   private void closeConnection(final PoolEntry poolEntry, final String closureReason)
-   {
-	   closeConnection(poolEntry, closureReason, true);
-   }
 
    /**
     * Create and add a single connection to the pool.

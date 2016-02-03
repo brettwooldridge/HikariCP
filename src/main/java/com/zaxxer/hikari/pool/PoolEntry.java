@@ -121,7 +121,7 @@ final class PoolEntry implements IConcurrentBagEntry
 
    void evict(final String closureReason)
    {
-      hikariPool.closeConnection(this, closureReason, false);
+      hikariPool.closeConnection(this, closureReason);
    }
 
    /** Returns millis since lastBorrowed */
