@@ -761,6 +761,13 @@ public class HikariConfig implements HikariConfigMXBean
 
    public void validate()
    {
+      if (poolName == null) {
+         poolName = "HikariPool-" + POOL_NUMBER.getAndIncrement();
+      }
+      else if (isRegisterMbeans && poolName.contains(":")) {
+         throw new IllegalArgumentException("poolName cannot contain ':' when used with JMX");
+      }
+
       validateNumerics();
 
       // treat empty property as null
@@ -773,33 +780,26 @@ public class HikariConfig implements HikariConfigMXBean
       driverClassName = getNullIfEmpty(driverClassName);
       jdbcUrl = getNullIfEmpty(jdbcUrl);
 
-      if (poolName == null) {
-         poolName = "HikariPool-" + POOL_NUMBER.getAndIncrement();
-      }
-      else if (isRegisterMbeans && poolName.contains(":")) {
-         throw new IllegalArgumentException("poolName cannot contain ':' when used with JMX");
-      }
-
       // Check Data Source Options
       if (dataSource != null) {
          if (dataSourceClassName != null) {
-            LOGGER.warn("using dataSource and ignoring dataSourceClassName");
+            LOGGER.warn("{} - using dataSource and ignoring dataSourceClassName.", poolName);
          }
       }
       else if (dataSourceClassName != null) {
          if (driverClassName != null) {
-            LOGGER.error("cannot use driverClassName and dataSourceClassName together");
-            throw new IllegalArgumentException("cannot use driverClassName and dataSourceClassName together");
+            LOGGER.error("{} - cannot use driverClassName and dataSourceClassName together.", poolName);
+            throw new IllegalArgumentException("cannot use driverClassName and dataSourceClassName together.");
          }
          else if (jdbcUrl != null) {
-            LOGGER.warn("using dataSourceClassName and ignoring jdbcUrl");
+            LOGGER.warn("{} - using dataSourceClassName and ignoring jdbcUrl.", poolName);
          }
       }
       else if (jdbcUrl != null) {
       }
       else if (driverClassName != null) {
-         LOGGER.error("jdbcUrl is required with driverClassName");
-         throw new IllegalArgumentException("jdbcUrl is required with driverClassName");
+         LOGGER.error("{} - jdbcUrl is required with driverClassName.", poolName);
+         throw new IllegalArgumentException("jdbcUrl is required with driverClassName.");
       }
       else {
          LOGGER.error("{} - dataSource or dataSourceClassName or jdbcUrl is required.", poolName);
@@ -814,43 +814,43 @@ public class HikariConfig implements HikariConfigMXBean
    private void validateNumerics()
    {
       if (maxLifetime < 0) {
-         LOGGER.error("maxLifetime cannot be negative.");
+         LOGGER.error("{} - maxLifetime cannot be negative.", poolName);
          throw new IllegalArgumentException("maxLifetime cannot be negative.");
       }
       else if (maxLifetime > 0 && maxLifetime < TimeUnit.SECONDS.toMillis(30)) {
-         LOGGER.warn("maxLifetime is less than 30000ms, setting to default {}ms.", MAX_LIFETIME);
+         LOGGER.warn("{} - maxLifetime is less than 30000ms, setting to default {}ms.", poolName, MAX_LIFETIME);
          maxLifetime = MAX_LIFETIME;
       }
 
       if (idleTimeout != 0 && idleTimeout < TimeUnit.SECONDS.toMillis(10)) {
-         LOGGER.warn("idleTimeout is less than 10000ms, setting to default {}ms.", IDLE_TIMEOUT);
+         LOGGER.warn("{} - idleTimeout is less than 10000ms, setting to default {}ms.", poolName, IDLE_TIMEOUT);
          idleTimeout = IDLE_TIMEOUT;
       }
 
       if (idleTimeout + TimeUnit.SECONDS.toMillis(1) > maxLifetime && maxLifetime > 0) {
-         LOGGER.warn("idleTimeout is close to or more than maxLifetime, disabling it.");
+         LOGGER.warn("{} - idleTimeout is close to or more than maxLifetime, disabling it.", poolName);
          idleTimeout = 0;
       }
 
       if (maxLifetime == 0 && idleTimeout == 0) {
-         LOGGER.warn("setting idleTimeout to {}ms.", IDLE_TIMEOUT);
+         LOGGER.warn("{} - setting idleTimeout to {}ms.", poolName, IDLE_TIMEOUT);
          idleTimeout = IDLE_TIMEOUT;
       }
 
       if (leakDetectionThreshold > 0 && !unitTest) {
          if (leakDetectionThreshold < TimeUnit.SECONDS.toMillis(2) || (leakDetectionThreshold > maxLifetime && maxLifetime > 0)) {        
-            LOGGER.warn("leakDetectionThreshold is less than 2000ms or more than maxLifetime, disabling it.");
+            LOGGER.warn("{} - leakDetectionThreshold is less than 2000ms or more than maxLifetime, disabling it.", poolName);
             leakDetectionThreshold = 0L;
          }
       }
 
       if (connectionTimeout != Integer.MAX_VALUE) {
          if (validationTimeout > connectionTimeout) {
-            LOGGER.warn("validationTimeout should be less than connectionTimeout, setting validationTimeout to connectionTimeout.");
+            LOGGER.warn("{} - validationTimeout should be less than connectionTimeout, setting validationTimeout to connectionTimeout.", poolName);
             validationTimeout = connectionTimeout;
          }
          if (maxLifetime > 0 && connectionTimeout > maxLifetime) {
-            LOGGER.warn("connectionTimeout should be less than maxLifetime, setting connectionTimeout to maxLifetime.");
+            LOGGER.warn("{} - connectionTimeout should be less than maxLifetime, setting connectionTimeout to maxLifetime.", poolName);
             connectionTimeout = maxLifetime;
          }
       }

@@ -45,13 +45,15 @@ public class ConnectionRaceConditionTest
                @Override
                public Exception call() throws Exception
                {
-                  Connection c2;
-                  try {
-                     c2 = ds.getConnection();
-                     ds.evictConnection(c2);
-                  }
-                  catch (Exception e) {
-                     ref.set(e);
+                  if (ref.get() != null) {
+                     Connection c2;
+                     try {
+                        c2 = ds.getConnection();
+                        ds.evictConnection(c2);
+                     }
+                     catch (Exception e) {
+                        ref.set(e);
+                     }
                   }
                   return null;
                }
@@ -62,8 +64,7 @@ public class ConnectionRaceConditionTest
          threadPool.awaitTermination(30, TimeUnit.SECONDS);
 
          if (ref.get() != null) {
-            ref.get().fillInStackTrace();
-            LoggerFactory.getLogger(ConnectionRaceConditionTest.class).error("Submit1 task failed", ref.get());
+            LoggerFactory.getLogger(ConnectionRaceConditionTest.class).error("Task failed", ref.get());
             Assert.fail("Task failed");
          }
       }

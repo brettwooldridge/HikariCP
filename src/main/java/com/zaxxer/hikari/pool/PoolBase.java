@@ -363,7 +363,7 @@ abstract class PoolBase
                connection.isValid(1);
             }
             catch (Throwable e) {
-               LOGGER.warn("{} - Failed to execute isValid() for connection, configure connection test query. ({})", poolName, e.getMessage());
+               LOGGER.error("{} - Failed to execute isValid() for connection, configure connection test query. ({})", poolName, e.getMessage());
                throw e;
             }
          }
@@ -372,7 +372,7 @@ abstract class PoolBase
                executeSql(connection, config.getConnectionTestQuery(), false, isIsolateInternalQueries && !isAutoCommit);
             }
             catch (Throwable e) {
-               LOGGER.warn("{} - Failed to execute connection test query. ({})", poolName, e.getMessage());
+               LOGGER.error("{} - Failed to execute connection test query. ({})", poolName, e.getMessage());
                throw e;
             }
          }
@@ -485,10 +485,10 @@ abstract class PoolBase
       }
       else {
          ThreadFactory threadFactory = config.getThreadFactory();
-         threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory("Hikari JDBC-timeout executor", true);
+         threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory(poolName + " network timeout executor", true);
          ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool(threadFactory);
-         executor.allowCoreThreadTimeOut(true);
          executor.setKeepAliveTime(15, TimeUnit.SECONDS);
+         executor.allowCoreThreadTimeOut(true);
          netTimeoutExecutor = executor;
       }
    }

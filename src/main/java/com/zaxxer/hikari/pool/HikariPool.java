@@ -63,7 +63,7 @@ import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
  */
 public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateListener
 {
-   private static final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
+   private final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
 
    private static final ClockSource clockSource = ClockSource.INSTANCE;
 
@@ -116,11 +116,11 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       checkFailFast();
 
       ThreadFactory threadFactory = config.getThreadFactory();
-      this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection adder (pool " + poolName + ")", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
-      this.closeConnectionExecutor = createThreadPoolExecutor(1 + (config.getMaximumPoolSize() / 2), "Hikari connection closer (pool " + poolName + ")", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
+      this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
+      this.closeConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
       if (config.getScheduledExecutorService() == null) {
-         threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory("Hikari housekeeper (pool " + poolName + ")", true);
+         threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory(poolName + " housekeeper", true);
          this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
          this.houseKeepingExecutorService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
          this.houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
@@ -167,7 +167,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
             final long now = clockSource.currentTime();
             if (poolEntry.isMarkedEvicted() || (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
-               closeConnection(poolEntry, "(connection is evicted or dead)"); // Throw away the dead connection and try again
+               closeConnection(poolEntry, "(connection is evicted or dead)"); // Throw away the dead connection (passed max age or failed alive test)
                timeout = hardTimeout - clockSource.elapsedMillis(startTime);
             }
             else {
@@ -223,7 +223,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
          connectionBag.close();
 
-         final ExecutorService assassinExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection assassin (pool " + poolName + ")",
+         final ExecutorService assassinExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection assassinator",
                                                                            config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
          try {
             final long start = clockSource.currentTime();
@@ -243,10 +243,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       }
       finally {
          logPoolState("After closing ");
-         LOGGER.info("{} - Closed.", poolName);
-
          unregisterMBeans();
          metricsTracker.close();
+         LOGGER.info("{} - Closed.", poolName);
       }
    }
 
@@ -338,7 +337,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    public void softEvictConnections()
    {
       for (PoolEntry poolEntry : connectionBag.values()) {
-         softEvictConnection(poolEntry, "(connection evicted by user)", false /* not owner */);
+         softEvictConnection(poolEntry, "(connection evicted)", false /* not owner */);
       }
    }
 
@@ -400,7 +399,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    /**
     * Permanently close the real (underlying) connection (eat any exception).
     *
-    * @param poolEntry the connection to actually close
+    * @param poolEntry poolEntry having the connection to close
+    * @param closureReason reason to close
     */
    final void closeConnection(final PoolEntry poolEntry, final String closureReason)
    {
