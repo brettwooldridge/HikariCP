@@ -125,14 +125,14 @@ abstract class PoolBase
    {
       try {
          if (isUseJdbc4Validation) {
-            return connection.isValid((int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
+            return connection.isValid((int) MILLISECONDS.toSeconds(validationTimeout));
          }
 
          setNetworkTimeout(connection, validationTimeout);
 
          try (Statement statement = connection.createStatement()) {
             if (isNetworkTimeoutSupported != TRUE) {
-               setQueryTimeout(statement, (int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
+               setQueryTimeout(statement, (int) MILLISECONDS.toSeconds(validationTimeout));
             }
 
             statement.execute(config.getConnectionTestQuery());
@@ -332,7 +332,12 @@ abstract class PoolBase
     */
    private void setupConnection(final Connection connection) throws SQLException
    {
-      networkTimeout = getAndSetNetworkTimeout(connection, connectionTimeout);
+      if (networkTimeout == -1) {
+         networkTimeout = getAndSetNetworkTimeout(connection, validationTimeout);
+      }
+      else {
+         setNetworkTimeout(connection, networkTimeout);
+      }
 
       checkDriverSupport(connection);
 
@@ -430,14 +435,7 @@ abstract class PoolBase
          catch (Throwable e) {
             if (isNetworkTimeoutSupported == UNINITIALIZED) {
                isNetworkTimeoutSupported = FALSE;
-
                LOGGER.warn("{} - Unable to get/set network timeout for connection. ({})", poolName, e.getMessage());
-               if (validationTimeout < SECONDS.toMillis(1)) {
-                  LOGGER.warn("{} - A validationTimeout of less than 1 second cannot be honored on drivers without setNetworkTimeout() support.", poolName);
-               }
-               else if (validationTimeout % SECONDS.toMillis(1) != 0) {
-                  LOGGER.warn("{} - A validationTimeout with fractional second granularity cannot be honored on drivers without setNetworkTimeout() support.", poolName);
-               }
             }
          }
       }
