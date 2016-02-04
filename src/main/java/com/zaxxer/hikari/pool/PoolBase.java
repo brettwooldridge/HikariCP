@@ -125,14 +125,14 @@ abstract class PoolBase
    {
       try {
          if (isUseJdbc4Validation) {
-            return connection.isValid((int) MILLISECONDS.toSeconds(validationTimeout));
+            return connection.isValid((int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
          }
 
          setNetworkTimeout(connection, validationTimeout);
 
          try (Statement statement = connection.createStatement()) {
             if (isNetworkTimeoutSupported != TRUE) {
-               setQueryTimeout(statement, (int) MILLISECONDS.toSeconds(validationTimeout));
+               setQueryTimeout(statement, (int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
             }
 
             statement.execute(config.getConnectionTestQuery());
@@ -332,11 +332,11 @@ abstract class PoolBase
     */
    private void setupConnection(final Connection connection) throws SQLException
    {
-      if (networkTimeout == -1) {
+      if (networkTimeout == UNINITIALIZED) {
          networkTimeout = getAndSetNetworkTimeout(connection, validationTimeout);
       }
       else {
-         setNetworkTimeout(connection, networkTimeout);
+         setNetworkTimeout(connection, validationTimeout);
       }
 
       checkDriverSupport(connection);

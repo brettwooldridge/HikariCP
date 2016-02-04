@@ -234,10 +234,10 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setConnectionTimeout(long connectionTimeoutMs)
    {
-      if (connectionTimeoutMs == 0) {
+      if (connectionTimeoutMs == 0L) {
          this.connectionTimeout = Integer.MAX_VALUE;
       }
-      else if (connectionTimeoutMs < 250) {
+      else if (connectionTimeoutMs < 250L) {
          throw new IllegalArgumentException("connectionTimeout cannot be less than 250ms");
       }
       else {
@@ -256,8 +256,8 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setValidationTimeout(long validationTimeoutMs)
    {
-      if (validationTimeoutMs < 1000) {
-         throw new IllegalArgumentException("validationTimeout cannot be less than 1000ms");
+      if (validationTimeoutMs < 250L) {
+         throw new IllegalArgumentException("validationTimeout cannot be less than 250ms");
       }
       else {
          this.validationTimeout = validationTimeoutMs;
@@ -836,13 +836,13 @@ public class HikariConfig implements HikariConfigMXBean
          }
       }
 
-      if (validationTimeout < 1000) {
-         LOGGER.warn("{} - validationTimeout is less than 1000ms, setting to {}ms.", poolName, VALIDATION_TIMEOUT);
+      if (validationTimeout < 250L) {
+         LOGGER.warn("{} - validationTimeout is less than 250ms, setting to {}ms.", poolName, VALIDATION_TIMEOUT);
          validationTimeout = VALIDATION_TIMEOUT;
       }
 
       if (connectionTimeout != Integer.MAX_VALUE) {
-         if (connectionTimeout < 250) {
+         if (connectionTimeout < 250L) {
             LOGGER.warn("{} - connectionTimeout is less than 250ms, setting to {}ms.", poolName, CONNECTION_TIMEOUT);
             connectionTimeout = CONNECTION_TIMEOUT;
          }
@@ -852,7 +852,7 @@ public class HikariConfig implements HikariConfigMXBean
             connectionTimeout = maxLifetime;
          }
 
-         if (validationTimeout > connectionTimeout && connectionTimeout > 1000) {
+         if (validationTimeout > connectionTimeout) {
             LOGGER.warn("{} - validationTimeout is more than connectionTimeout, setting validationTimeout to connectionTimeout.", poolName);
             validationTimeout = connectionTimeout;
          }
