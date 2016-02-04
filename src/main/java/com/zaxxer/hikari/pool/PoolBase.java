@@ -6,6 +6,8 @@ import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_ISOLATION;
 import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_NETTIMEOUT;
 import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_READONLY;
 import static com.zaxxer.hikari.util.UtilityElf.createInstance;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.lang.management.ManagementFactory;
 import java.sql.Connection;
@@ -16,7 +18,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.management.MBeanServer;
@@ -37,6 +38,7 @@ import com.zaxxer.hikari.util.UtilityElf.DefaultThreadFactory;
 abstract class PoolBase
 {
    private final Logger LOGGER = LoggerFactory.getLogger(PoolBase.class);
+
    protected final HikariConfig config;
    protected final String poolName;
    protected long connectionTimeout;
@@ -107,7 +109,7 @@ abstract class PoolBase
          try {
             LOGGER.debug("{} - Closing connection {}: {}", poolName, connection, closureReason);
             try {
-               setNetworkTimeout(connection, TimeUnit.SECONDS.toMillis(15));
+               setNetworkTimeout(connection, SECONDS.toMillis(15));
             }
             finally {
                connection.close(); // continue with the close even if setNetworkTimeout() throws
@@ -123,14 +125,14 @@ abstract class PoolBase
    {
       try {
          if (isUseJdbc4Validation) {
-            return connection.isValid((int) TimeUnit.MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
+            return connection.isValid((int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
          }
 
          setNetworkTimeout(connection, validationTimeout);
 
          try (Statement statement = connection.createStatement()) {
             if (isNetworkTimeoutSupported != TRUE) {
-               setQueryTimeout(statement, (int) TimeUnit.MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
+               setQueryTimeout(statement, (int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
             }
 
             statement.execute(config.getConnectionTestQuery());
@@ -376,10 +378,12 @@ abstract class PoolBase
                throw e;
             }
          }
+
          defaultTransactionIsolation = connection.getTransactionIsolation();
          if (transactionIsolation == -1) {
             transactionIsolation = defaultTransactionIsolation;
          }
+
          isValidChecked = true;
       }
    }
@@ -428,8 +432,11 @@ abstract class PoolBase
                isNetworkTimeoutSupported = FALSE;
 
                LOGGER.warn("{} - Unable to get/set network timeout for connection. ({})", poolName, e.getMessage());
-               if (validationTimeout < 1000) {
+               if (validationTimeout < SECONDS.toMillis(1)) {
                   LOGGER.warn("{} - A validationTimeout of less than 1 second cannot be honored on drivers without setNetworkTimeout() support.", poolName);
+               }
+               else if (validationTimeout % SECONDS.toMillis(1) != 0) {
+                  LOGGER.warn("{} - A validationTimeout with fractional second granularity cannot be honored on drivers without setNetworkTimeout() support.", poolName);
                }
             }
          }
@@ -465,9 +472,10 @@ abstract class PoolBase
    {
       if (sql != null) {
          try (Statement statement = connection.createStatement()) {
-            //con created few ms before, set query timeout is omitted
+            // connection was created a few milliseconds before, so set query timeout is omitted (we assume it will succeed)
             statement.execute(sql);
          }
+
          if (!isReadOnly) {
             if (isCommit) {
                connection.commit();
@@ -491,24 +499,9 @@ abstract class PoolBase
          ThreadFactory threadFactory = config.getThreadFactory();
          threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory(poolName + " network timeout executor", true);
          ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool(threadFactory);
-         executor.setKeepAliveTime(15, TimeUnit.SECONDS);
+         executor.setKeepAliveTime(15, SECONDS);
          executor.allowCoreThreadTimeOut(true);
          netTimeoutExecutor = executor;
-      }
-   }
-
-   private static class SynchronousExecutor implements Executor
-   {
-      /** {@inheritDoc} */
-      @Override
-      public void execute(Runnable command)
-      {
-         try {
-            command.run();
-         }
-         catch (Throwable t) {
-            LoggerFactory.getLogger(PoolBase.class).debug("Failed to execute: {}", command, t);
-         }
       }
    }
 
@@ -522,7 +515,7 @@ abstract class PoolBase
    {
       if (connectionTimeout != Integer.MAX_VALUE) {
          try {
-            dataSource.setLoginTimeout((int) TimeUnit.MILLISECONDS.toSeconds(Math.max(1000L, connectionTimeout)));
+            dataSource.setLoginTimeout((int) MILLISECONDS.toSeconds(Math.max(1000L, connectionTimeout)));
          }
          catch (Throwable e) {
             LOGGER.warn("{} - Unable to set login timeout for data source. ({})", poolName, e.getMessage());
@@ -553,6 +546,34 @@ abstract class PoolBase
       return sb.toString();
    }
 
+   // ***********************************************************************
+   //                      Private Static Classes
+   // ***********************************************************************
+
+   /**
+    * Special executor used only to work around a MySQL issue that has not been addressed.
+    * MySQL issue: http://bugs.mysql.com/bug.php?id=75615
+    */
+   private static class SynchronousExecutor implements Executor
+   {
+      /** {@inheritDoc} */
+      @Override
+      public void execute(Runnable command)
+      {
+         try {
+            command.run();
+         }
+         catch (Throwable t) {
+            LoggerFactory.getLogger(PoolBase.class).debug("Failed to execute: {}", command, t);
+         }
+      }
+   }
+
+   /**
+    * A class that delegates to a MetricsTracker implementation.  The use of a delegate
+    * allows us to use the NopMetricsTrackerDelegate when metrics are disabled, which in
+    * turn allows the JIT to completely optimize away to callsites to record metrics.
+    */
    static class MetricsTrackerDelegate implements AutoCloseable
    {
       final MetricsTracker tracker;
@@ -594,6 +615,10 @@ abstract class PoolBase
       }
    }
 
+   /**
+    * A no-op implementation of the MetricsTrackerDelegate that is used when metrics capture is
+    * disabled.
+    */
    static final class NopMetricsTrackerDelegate extends MetricsTrackerDelegate
    {
       @Override
