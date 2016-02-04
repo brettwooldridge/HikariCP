@@ -242,7 +242,7 @@ abstract class PoolBase
          }
       }
       catch (Exception e) {
-         LOGGER.warn("{} - Unable to register management beans.", poolName, e);
+         LOGGER.warn("{} - Failed to register management beans.", poolName, e);
       }
    }
 
@@ -266,7 +266,7 @@ abstract class PoolBase
          }
       }
       catch (Exception e) {
-         LOGGER.warn("{} - Unable to unregister management beans.", poolName, e);
+         LOGGER.warn("{} - Failed to unregister management beans.", poolName, e);
       }
    }
 
@@ -409,7 +409,7 @@ abstract class PoolBase
          catch (Throwable e) {
             if (isQueryTimeoutSupported == UNINITIALIZED) {
                isQueryTimeoutSupported = FALSE;
-               LOGGER.warn("{} - Unable to set query timeout for statement. ({})", poolName, e.getMessage());
+               LOGGER.warn("{} - Failed to set query timeout for statement. ({})", poolName, e.getMessage());
             }
          }
       }
@@ -435,7 +435,7 @@ abstract class PoolBase
          catch (Throwable e) {
             if (isNetworkTimeoutSupported == UNINITIALIZED) {
                isNetworkTimeoutSupported = FALSE;
-               LOGGER.warn("{} - Unable to get/set network timeout for connection. ({})", poolName, e.getMessage());
+               LOGGER.warn("{} - Failed to get/set network timeout for connection. ({})", poolName, e.getMessage());
             }
          }
       }
@@ -516,7 +516,7 @@ abstract class PoolBase
             dataSource.setLoginTimeout((int) MILLISECONDS.toSeconds(Math.max(1000L, connectionTimeout)));
          }
          catch (Throwable e) {
-            LOGGER.warn("{} - Unable to set login timeout for data source. ({})", poolName, e.getMessage());
+            LOGGER.warn("{} - Failed to set login timeout for data source. ({})", poolName, e.getMessage());
          }
       }
    }
