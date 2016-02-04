@@ -49,11 +49,6 @@ public final class PropertyElf
          return;
       }
 
-      HikariConfig config = null; 
-      if (target instanceof HikariConfig) {
-         config = (HikariConfig) target;
-      }
-
       List<Method> methods = Arrays.asList(target.getClass().getMethods());
       Enumeration<?> propertyNames = properties.propertyNames();
       while (propertyNames.hasMoreElements()) {
@@ -64,8 +59,8 @@ public final class PropertyElf
             propValue = properties.get(key);
          }
 
-         if (config != null && propName.startsWith("dataSource.")) {
-            config.addDataSourceProperty(propName.substring("dataSource.".length()), propValue);
+         if (target instanceof HikariConfig && propName.startsWith("dataSource.")) {
+            ((HikariConfig) target).addDataSourceProperty(propName.substring("dataSource.".length()), propValue);
          }
          else {
             setProperty(target, propName, propValue, methods);

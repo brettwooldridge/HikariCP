@@ -243,10 +243,6 @@ public class HikariConfig implements HikariConfigMXBean
       else {
          this.connectionTimeout = connectionTimeoutMs;
       }
-
-      if (validationTimeout > connectionTimeoutMs) {
-         this.validationTimeout = connectionTimeoutMs;
-      }
    }
 
    /** {@inheritDoc} */
@@ -260,17 +256,13 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setValidationTimeout(long validationTimeoutMs)
    {
-      if (validationTimeoutMs < 250) {
-         throw new IllegalArgumentException("validationTimeout cannot be less than 250ms");
+      if (validationTimeoutMs < 1000) {
+         throw new IllegalArgumentException("validationTimeout cannot be less than 1000ms");
       }
       else {
          this.validationTimeout = validationTimeoutMs;
       }
-
-      if (validationTimeout > connectionTimeout) {
-         this.validationTimeout = connectionTimeout;
-      }
-}
+   }
 
    /**
     * Get the {@link DataSource} that has been explicitly specified to be wrapped by the
@@ -844,14 +836,25 @@ public class HikariConfig implements HikariConfigMXBean
          }
       }
 
+      if (validationTimeout < 1000) {
+         LOGGER.warn("{} - validationTimeout is less than 1000ms, setting to {}ms.", poolName, VALIDATION_TIMEOUT);
+         validationTimeout = VALIDATION_TIMEOUT;
+      }
+
       if (connectionTimeout != Integer.MAX_VALUE) {
-         if (validationTimeout > connectionTimeout) {
-            LOGGER.warn("{} - validationTimeout should be less than connectionTimeout, setting validationTimeout to connectionTimeout.", poolName);
-            validationTimeout = connectionTimeout;
+         if (connectionTimeout < 250) {
+            LOGGER.warn("{} - connectionTimeout is less than 250ms, setting to {}ms.", poolName, CONNECTION_TIMEOUT);
+            connectionTimeout = CONNECTION_TIMEOUT;
          }
+
          if (maxLifetime > 0 && connectionTimeout > maxLifetime) {
-            LOGGER.warn("{} - connectionTimeout should be less than maxLifetime, setting connectionTimeout to maxLifetime.", poolName);
+            LOGGER.warn("{} - connectionTimeout is more than maxLifetime, setting connectionTimeout to maxLifetime.", poolName);
             connectionTimeout = maxLifetime;
+         }
+
+         if (validationTimeout > connectionTimeout && connectionTimeout > 1000) {
+            LOGGER.warn("{} - validationTimeout is more than connectionTimeout, setting validationTimeout to connectionTimeout.", poolName);
+            validationTimeout = connectionTimeout;
          }
       }
 
