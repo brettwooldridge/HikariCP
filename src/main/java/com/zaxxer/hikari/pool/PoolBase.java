@@ -426,7 +426,11 @@ abstract class PoolBase
          catch (Throwable e) {
             if (isNetworkTimeoutSupported == UNINITIALIZED) {
                isNetworkTimeoutSupported = FALSE;
+
                LOGGER.warn("{} - Unable to get/set network timeout for connection. ({})", poolName, e.getMessage());
+               if (validationTimeout < 1000) {
+                  LOGGER.warn("{} - A validationTimeout of less than 1 second cannot be honored on drivers without setNetworkTimeout() support.", poolName);
+               }
             }
          }
       }
