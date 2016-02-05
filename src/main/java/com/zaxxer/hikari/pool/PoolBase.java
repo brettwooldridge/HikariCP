@@ -71,7 +71,7 @@ abstract class PoolBase
    {
       this.config = config;
 
-      this.networkTimeout = -1;
+      this.networkTimeout = UNINITIALIZED;
       this.catalog = config.getCatalog();
       this.isReadOnly = config.isReadOnly();
       this.isAutoCommit = config.isAutoCommit();
