@@ -234,14 +234,18 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setConnectionTimeout(long connectionTimeoutMs)
    {
-      if (connectionTimeoutMs == 0L) {
+      if (connectionTimeoutMs == 0) {
          this.connectionTimeout = Integer.MAX_VALUE;
       }
-      else if (connectionTimeoutMs < 250L) {
+      else if (connectionTimeoutMs < 250) {
          throw new IllegalArgumentException("connectionTimeout cannot be less than 250ms");
       }
       else {
          this.connectionTimeout = connectionTimeoutMs;
+      }
+
+      if (validationTimeout > connectionTimeoutMs) {
+         this.validationTimeout = connectionTimeoutMs;
       }
    }
 
@@ -256,11 +260,15 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setValidationTimeout(long validationTimeoutMs)
    {
-      if (validationTimeoutMs < 250L) {
+      if (validationTimeoutMs < 250) {
          throw new IllegalArgumentException("validationTimeout cannot be less than 250ms");
       }
       else {
          this.validationTimeout = validationTimeoutMs;
+      }
+
+      if (validationTimeout > connectionTimeout) {
+         this.validationTimeout = connectionTimeout;
       }
    }
 
@@ -334,7 +342,7 @@ public class HikariConfig implements HikariConfigMXBean
          this.driverClassName = driverClassName;
       }
       catch (Exception e) {
-         throw new RuntimeException("Could not load class of driverClassName " + driverClassName, e);
+         throw new RuntimeException("Failed to load class of driverClassName " + driverClassName, e);
       }
    }
 
@@ -836,13 +844,13 @@ public class HikariConfig implements HikariConfigMXBean
          }
       }
 
-      if (validationTimeout < 250L) {
+      if (validationTimeout < 250) {
          LOGGER.warn("{} - validationTimeout is less than 250ms, setting to {}ms.", poolName, VALIDATION_TIMEOUT);
          validationTimeout = VALIDATION_TIMEOUT;
       }
 
       if (connectionTimeout != Integer.MAX_VALUE) {
-         if (connectionTimeout < 250L) {
+         if (connectionTimeout < 250) {
             LOGGER.warn("{} - connectionTimeout is less than 250ms, setting to {}ms.", poolName, CONNECTION_TIMEOUT);
             connectionTimeout = CONNECTION_TIMEOUT;
          }
@@ -905,11 +913,11 @@ public class HikariConfig implements HikariConfigMXBean
             PropertyElf.setTargetFromProperties(this, props);
          }
          else {
-            throw new IllegalArgumentException("Property file " + propertyFileName + " was not found.");
+            throw new IllegalArgumentException("Cannot find property file: " + propertyFileName);
          }
       }
       catch (IOException io) {
-         throw new RuntimeException("Error loading properties file", io);
+         throw new RuntimeException("Failed to read property file", io);
       }
    }
 
@@ -922,7 +930,7 @@ public class HikariConfig implements HikariConfigMXBean
                field.set(other, field.get(this));
             }
             catch (Exception e) {
-               throw new RuntimeException("Exception copying HikariConfig state: " + e.getMessage(), e);
+               throw new RuntimeException("Failed to copy HikariConfig state: " + e.getMessage(), e);
             }
          }
       }

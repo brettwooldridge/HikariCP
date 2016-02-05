@@ -171,7 +171,7 @@ public final class PropertyElf
          }
       }
       catch (Exception e) {
-         LOGGER.error("Exception setting property {} on target {}", propName, target.getClass(), e);
+         LOGGER.error("Failed to set property {} on target {}", propName, target.getClass(), e);
          throw new RuntimeException(e);
       }
    }

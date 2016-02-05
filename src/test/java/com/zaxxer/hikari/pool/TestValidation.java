@@ -46,7 +46,7 @@ public class TestValidation
          config.validate();
       }
       catch (IllegalArgumentException ise) {
-         Assert.assertTrue(ise.getMessage().contains("Property file"));
+         Assert.assertTrue(ise.getMessage().contains("property file"));
       }
    }
 
