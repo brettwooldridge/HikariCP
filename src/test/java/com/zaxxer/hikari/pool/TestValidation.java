@@ -110,7 +110,7 @@ public class TestValidation
    {
       try {
          HikariConfig config = new HikariConfig();
-         config.setConnectionTimeout(10L);
+         config.setConnectionTimeout(10);
          Assert.fail();
       }
       catch (IllegalArgumentException ise) {
@@ -123,7 +123,7 @@ public class TestValidation
    {
       try {
          HikariConfig config = new HikariConfig();
-         config.setIdleTimeout(-1L);
+         config.setIdleTimeout(-1);
          Assert.fail("negative idle timeout accepted");
       }
       catch (IllegalArgumentException ise) {
@@ -140,7 +140,7 @@ public class TestValidation
 
       HikariConfig config = new HikariConfig();
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-      config.setIdleTimeout(TimeUnit.SECONDS.toMillis(5));
+      config.setIdleTimeout((int) TimeUnit.SECONDS.toMillis(5));
       config.validate();
       Assert.assertTrue(new String(baos.toByteArray()).contains("less than 10000ms"));
    }
@@ -154,8 +154,8 @@ public class TestValidation
 
       HikariConfig config = new HikariConfig();
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-      config.setMaxLifetime(TimeUnit.MINUTES.toMillis(2));
-      config.setIdleTimeout(TimeUnit.MINUTES.toMillis(3));
+      config.setMaxLifetime((int) TimeUnit.MINUTES.toMillis(2));
+      config.setIdleTimeout((int) TimeUnit.MINUTES.toMillis(3));
       config.validate();
 
       String s = new String(baos.toByteArray());
@@ -194,9 +194,9 @@ public class TestValidation
       try {
          HikariConfig config = new HikariConfig();
          config.setConnectionTimeout(Integer.MAX_VALUE);
-         config.setIdleTimeout(1000L);
-         config.setLeakDetectionThreshold(1000L);
-         config.setMaxLifetime(-1L);
+         config.setIdleTimeout(1000);
+         config.setLeakDetectionThreshold(1000);
+         config.setMaxLifetime(-1);
          config.validate();
          Assert.fail();
       }
@@ -210,7 +210,7 @@ public class TestValidation
    {
       HikariConfig config = new HikariConfig();
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-      config.setLeakDetectionThreshold(1000L);
+      config.setLeakDetectionThreshold(1000);
       config.validate();
       Assert.assertEquals(0L, config.getLeakDetectionThreshold());
    }

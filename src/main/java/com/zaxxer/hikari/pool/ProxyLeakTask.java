@@ -16,9 +16,10 @@
 
 package com.zaxxer.hikari.pool;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ class ProxyLeakTask implements Runnable
    private static final ProxyLeakTask NO_LEAK;
 
    private ScheduledExecutorService executorService;
-   private long leakDetectionThreshold;
+   private int leakDetectionThreshold;
    private ScheduledFuture<?> scheduledFuture;
    private String connectionName;
    private Exception exception;
@@ -48,7 +49,7 @@ class ProxyLeakTask implements Runnable
       };
    }
 
-   ProxyLeakTask(final long leakDetectionThreshold, final ScheduledExecutorService executorService)
+   ProxyLeakTask(final int leakDetectionThreshold, final ScheduledExecutorService executorService)
    {
       this.executorService = executorService;
       this.leakDetectionThreshold = leakDetectionThreshold;
@@ -58,7 +59,7 @@ class ProxyLeakTask implements Runnable
    {
       this.exception = new Exception("Apparent connection leak detected");
       this.connectionName = poolEntry.connection.toString();
-      scheduledFuture = parent.executorService.schedule(this, parent.leakDetectionThreshold, TimeUnit.MILLISECONDS);
+      scheduledFuture = parent.executorService.schedule(this, parent.leakDetectionThreshold, MILLISECONDS);
    }
 
    private ProxyLeakTask()
@@ -70,7 +71,7 @@ class ProxyLeakTask implements Runnable
       return (leakDetectionThreshold == 0) ? NO_LEAK : new ProxyLeakTask(this, bagEntry);
    }
 
-   void updateLeakDetectionThreshold(final long leakDetectionThreshold)
+   void updateLeakDetectionThreshold(final int leakDetectionThreshold)
    {
       this.leakDetectionThreshold = leakDetectionThreshold;
    }

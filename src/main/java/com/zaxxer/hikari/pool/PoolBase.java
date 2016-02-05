@@ -1,13 +1,14 @@
 package com.zaxxer.hikari.pool;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_AUTOCOMMIT;
 import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_CATALOG;
 import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_ISOLATION;
 import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_NETTIMEOUT;
 import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_READONLY;
 import static com.zaxxer.hikari.util.UtilityElf.createInstance;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.lang.management.ManagementFactory;
 import java.sql.Connection;
@@ -41,8 +42,8 @@ abstract class PoolBase
 
    protected final HikariConfig config;
    protected final String poolName;
-   protected long connectionTimeout;
-   protected long validationTimeout;
+   protected int connectionTimeout;
+   protected int validationTimeout;
 
    private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout"};
    private static final int UNINITIALIZED = -1;
@@ -109,7 +110,7 @@ abstract class PoolBase
          try {
             LOGGER.debug("{} - Closing connection {}: {}", poolName, connection, closureReason);
             try {
-               setNetworkTimeout(connection, SECONDS.toMillis(15));
+               setNetworkTimeout(connection, (int) SECONDS.toMillis(15));
             }
             finally {
                connection.close(); // continue with the close even if setNetworkTimeout() throws
@@ -125,14 +126,14 @@ abstract class PoolBase
    {
       try {
          if (isUseJdbc4Validation) {
-            return connection.isValid((int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
+            return connection.isValid((int) MILLISECONDS.toSeconds(Math.max(1000, validationTimeout)));
          }
 
          setNetworkTimeout(connection, validationTimeout);
 
          try (Statement statement = connection.createStatement()) {
             if (isNetworkTimeoutSupported != TRUE) {
-               setQueryTimeout(statement, (int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
+               setQueryTimeout(statement, (int) MILLISECONDS.toSeconds(Math.max(1000, validationTimeout)));
             }
 
             statement.execute(config.getConnectionTestQuery());
@@ -423,12 +424,12 @@ abstract class PoolBase
     * @param timeoutMs the number of milliseconds before timeout
     * @return the pre-existing network timeout value
     */
-   private int getAndSetNetworkTimeout(final Connection connection, final long timeoutMs)
+   private int getAndSetNetworkTimeout(final Connection connection, final int timeoutMs)
    {
       if (isNetworkTimeoutSupported != FALSE) {
          try {
             final int originalTimeout = connection.getNetworkTimeout();
-            connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
+            connection.setNetworkTimeout(netTimeoutExecutor, timeoutMs);
             isNetworkTimeoutSupported = TRUE;
             return originalTimeout;
          }
@@ -451,10 +452,10 @@ abstract class PoolBase
     * @param timeoutMs the number of milliseconds before timeout
     * @throws SQLException throw if the connection.setNetworkTimeout() call throws
     */
-   private void setNetworkTimeout(final Connection connection, final long timeoutMs) throws SQLException
+   private void setNetworkTimeout(final Connection connection, final int timeoutMs) throws SQLException
    {
       if (isNetworkTimeoutSupported == TRUE) {
-         connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
+         connection.setNetworkTimeout(netTimeoutExecutor, timeoutMs);
       }
    }
 
@@ -509,11 +510,11 @@ abstract class PoolBase
     * @param dataSource the DataSource
     * @param connectionTimeout the timeout in milliseconds
     */
-   private void setLoginTimeout(final DataSource dataSource, final long connectionTimeout)
+   private void setLoginTimeout(final DataSource dataSource, final int connectionTimeout)
    {
       if (connectionTimeout != Integer.MAX_VALUE) {
          try {
-            dataSource.setLoginTimeout((int) MILLISECONDS.toSeconds(Math.max(1000L, connectionTimeout)));
+            dataSource.setLoginTimeout((int) MILLISECONDS.toSeconds(Math.max(1000, connectionTimeout)));
          }
          catch (Throwable e) {
             LOGGER.warn("{} - Failed to set login timeout for data source. ({})", poolName, e.getMessage());

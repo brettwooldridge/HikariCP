@@ -98,7 +98,7 @@ public class TestProxies
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(1);
-      config.setConnectionTimeout(TimeUnit.SECONDS.toMillis(1));
+      config.setConnectionTimeout((int) TimeUnit.SECONDS.toMillis(1));
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 

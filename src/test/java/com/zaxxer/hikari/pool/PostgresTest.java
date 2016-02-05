@@ -47,8 +47,8 @@ public class PostgresTest
       config.setMinimumIdle(3);
       config.setMaximumPoolSize(10);
       config.setConnectionTimeout(3000);
-      config.setIdleTimeout(TimeUnit.SECONDS.toMillis(10));
-      config.setValidationTimeout(TimeUnit.SECONDS.toMillis(2));
+      config.setIdleTimeout((int) TimeUnit.SECONDS.toMillis(10));
+      config.setValidationTimeout((int) TimeUnit.SECONDS.toMillis(2));
 
       config.setJdbcUrl("jdbc:pgsql://localhost:5432/test");
       config.setUsername("brettw");
@@ -82,7 +82,7 @@ public class PostgresTest
       config.setMinimumIdle(3);
       config.setMaximumPoolSize(10);
       config.setConnectionTimeout(1000);
-      config.setIdleTimeout(TimeUnit.SECONDS.toMillis(60));
+      config.setIdleTimeout((int) TimeUnit.SECONDS.toMillis(60));
 
       config.setJdbcUrl("jdbc:pgsql://localhost:5432/test");
       config.setUsername("brettw");
@@ -127,7 +127,7 @@ public class PostgresTest
       config.setMinimumIdle(3);
       config.setMaximumPoolSize(10);
       config.setConnectionTimeout(1000);
-      config.setIdleTimeout(TimeUnit.SECONDS.toMillis(60));
+      config.setIdleTimeout((int) TimeUnit.SECONDS.toMillis(60));
 
       config.setJdbcUrl("jdbc:pgsql://localhost:5432/test");
       config.setUsername("brettw");
@@ -162,8 +162,8 @@ public class PostgresTest
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(15);
       config.setConnectionTimeout(10000);
-      config.setIdleTimeout(TimeUnit.MINUTES.toMillis(1));
-      config.setMaxLifetime(TimeUnit.MINUTES.toMillis(2));
+      config.setIdleTimeout((int) TimeUnit.MINUTES.toMillis(1));
+      config.setMaxLifetime((int) TimeUnit.MINUTES.toMillis(2));
       config.setRegisterMbeans(true);
 
       config.setJdbcUrl("jdbc:postgresql://localhost:5432/netld");

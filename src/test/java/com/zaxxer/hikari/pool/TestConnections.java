@@ -71,7 +71,7 @@ public class TestConnections
       config.setConnectionInitSql("SELECT 1");
       config.setReadOnly(true);
       config.setConnectionTimeout(2500);
-      config.setLeakDetectionThreshold(TimeUnit.SECONDS.toMillis(30));
+      config.setLeakDetectionThreshold((int) TimeUnit.SECONDS.toMillis(30));
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
@@ -488,7 +488,7 @@ public class TestConnections
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(2);
-      config.setConnectionTimeout(TimeUnit.SECONDS.toMillis(3));
+      config.setConnectionTimeout((int) TimeUnit.SECONDS.toMillis(3));
       config.setConnectionTestQuery("VALUES 1");
       config.setInitializationFailFast(false);
       config.setDataSource(stubDataSource);
