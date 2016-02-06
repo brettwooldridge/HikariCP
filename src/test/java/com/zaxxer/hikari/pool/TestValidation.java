@@ -208,8 +208,8 @@ public class TestValidation
          HikariConfig config = new HikariConfig();
          config.setConnectionTimeout(Integer.MAX_VALUE);
          config.setIdleTimeout(1000L);
-         config.setLeakDetectionThreshold(1000L);
          config.setMaxLifetime(-1L);
+         config.setLeakDetectionThreshold(1000L);
          config.validate();
          Assert.fail();
       }
@@ -221,11 +221,15 @@ public class TestValidation
    @Test
    public void validateInvalidLeakDetection()
    {
-      HikariConfig config = new HikariConfig();
-      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-      config.setLeakDetectionThreshold(1000L);
-      config.validate();
-      Assert.assertEquals(0L, config.getLeakDetectionThreshold());
+      try {
+         HikariConfig config = new HikariConfig();
+         config.setLeakDetectionThreshold(1000L);
+         config.validate();
+         Assert.fail();
+      }
+      catch (IllegalArgumentException ise) {
+      // pass
+      }
    }
 
    @Test

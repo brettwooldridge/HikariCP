@@ -41,7 +41,7 @@ public class TestJNDI
       ref.add(new BogusRef("username", "foo"));
       ref.add(new BogusRef("password", "foo"));
       ref.add(new BogusRef("minimumIdle", "0"));
-      ref.add(new BogusRef("maxLifetime", "20000"));
+      ref.add(new BogusRef("maxLifetime", "30000"));
       ref.add(new BogusRef("maximumPoolSize", "10"));
       ref.add(new BogusRef("dataSource.loginTimeout", "10"));
       Context nameCtx = new BogusContext();
@@ -63,7 +63,7 @@ public class TestJNDI
       ref.add(new BogusRef("username", "foo"));
       ref.add(new BogusRef("password", "foo"));
       ref.add(new BogusRef("minimumIdle", "0"));
-      ref.add(new BogusRef("maxLifetime", "20000"));
+      ref.add(new BogusRef("maxLifetime", "30000"));
       ref.add(new BogusRef("maximumPoolSize", "10"));
       ref.add(new BogusRef("dataSource.loginTimeout", "10"));
       Context nameCtx = new BogusContext2();

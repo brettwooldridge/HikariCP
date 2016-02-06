@@ -91,6 +91,7 @@ public class MiscTest
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       PrintStream ps = new PrintStream(baos, true);
       TestElf.setSlf4jTargetStream(Class.forName("com.zaxxer.hikari.pool.ProxyLeakTask"), ps);
+      TestElf.setConfigUnitTest(true);
 
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
@@ -100,7 +101,6 @@ public class MiscTest
       config.setMetricRegistry(null);
       config.setLeakDetectionThreshold(TimeUnit.SECONDS.toMillis(1));
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-      TestElf.setConfigUnitTest(true);
 
       final HikariDataSource ds = new HikariDataSource(config);
       try {
