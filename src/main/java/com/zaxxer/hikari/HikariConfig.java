@@ -597,6 +597,9 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setLeakDetectionThreshold(long leakDetectionThresholdMs)
    {
+      if (leakDetectionThresholdMs != 0 && leakDetectionThresholdMs < SECONDS.toMillis(2)) {
+         throw new IllegalArgumentException("leakDetectionThreshold cannot be less than 2000ms");
+      }
       this.leakDetectionThreshold = leakDetectionThresholdMs;
    }
 
@@ -611,6 +614,9 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setMaxLifetime(long maxLifetimeMs)
    {
+      if (maxLifetimeMs != 0 && maxLifetimeMs < SECONDS.toMillis(30)) {
+         throw new IllegalArgumentException("maxLifetime cannot be less than 30000ms");
+      }
       this.maxLifetime = maxLifetimeMs;
    }
 
@@ -642,8 +648,8 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setMinimumIdle(int minIdle)
    {
-      if (minIdle < 0) {
-         throw new IllegalArgumentException("minimumIdle cannot be negative");
+      if (minIdle < 0 || minIdle > maxPoolSize) {
+         throw new IllegalArgumentException("minimumIdle cannot be negative or more than maximumPoolSize");
       }
       this.minIdle = minIdle;
    }
@@ -856,16 +862,15 @@ public class HikariConfig implements HikariConfigMXBean
             LOGGER.warn("{} - connectionTimeout is more than maxLifetime, setting connectionTimeout to maxLifetime.", poolName);
             connectionTimeout = maxLifetime;
          }
-
-         if (validationTimeout > connectionTimeout) {
-            LOGGER.warn("{} - validationTimeout is more than connectionTimeout, setting validationTimeout to connectionTimeout.", poolName);
-            validationTimeout = connectionTimeout;
-         }
       }
 
       if (validationTimeout < 250) {
          LOGGER.warn("{} - validationTimeout is less than 250ms, setting to {}ms.", poolName, VALIDATION_TIMEOUT);
          validationTimeout = VALIDATION_TIMEOUT;
+      }
+      else if (validationTimeout > connectionTimeout) {
+         LOGGER.warn("{} - validationTimeout is more than connectionTimeout, setting validationTimeout to connectionTimeout.", poolName);
+         validationTimeout = connectionTimeout;
       }
 
       if (maxPoolSize < 0) {

@@ -119,6 +119,19 @@ public class TestValidation
    }
 
    @Test
+   public void validateInvalidValidationTimeout()
+   {
+      try {
+         HikariConfig config = new HikariConfig();
+         config.setValidationTimeout(10L);
+         Assert.fail();
+      }
+      catch (IllegalArgumentException ise) {
+         Assert.assertTrue(ise.getMessage().contains("validationTimeout cannot be less than 250ms"));
+      }
+   }
+
+   @Test
    public void validateInvalidIdleTimeout()
    {
       try {
