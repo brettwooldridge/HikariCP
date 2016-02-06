@@ -30,12 +30,12 @@ import java.util.concurrent.TimeUnit;
 /**
  * A resolution-independent provider of current time-stamps and elapsed time
  * calculations.
- * 
+ *
  * @author Brett Wooldridge
  */
 public interface ClockSource
 {
-   final ClockSource INSTANCE = Factory.create();
+   ClockSource INSTANCE = Factory.create();
 
    /**
     * Get the current time-stamp (resolution is opaque).
@@ -94,7 +94,7 @@ public interface ClockSource
    /**
     * Return the specified opaque time-stamp plus the specified number of milliseconds.
     *
-    * @param time an opaque time-stamp 
+    * @param time an opaque time-stamp
     * @param millis milliseconds to add
     * @return a new opaque time-stamp
     */
@@ -120,7 +120,7 @@ public interface ClockSource
    String[] TIMEUNIT_DISPLAY_VALUES = {"ns", "μs", "ms", "s", "m", "h", "d"};
 
    /**
-    * Factory class used to create a platform-specific ClockSource. 
+    * Factory class used to create a platform-specific ClockSource.
     */
    class Factory
    {

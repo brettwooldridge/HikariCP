@@ -109,7 +109,7 @@ public abstract class ProxyStatement implements Statement
    {
       connection.markCommitStateDirty();
       ResultSet resultSet = delegate.executeQuery(sql);
-      return ProxyFactory.getProxyResultSet(connection, this, resultSet); 
+      return ProxyFactory.getProxyResultSet(connection, this, resultSet);
    }
 
    /** {@inheritDoc} */
@@ -232,7 +232,7 @@ public abstract class ProxyStatement implements Statement
          return (T) delegate;
       }
       else if (delegate instanceof Wrapper) {
-          return (T) delegate.unwrap(iface);
+          return delegate.unwrap(iface);
       }
 
       throw new SQLException("Wrapped statement is not an instance of " + iface);

@@ -47,8 +47,7 @@ public class MiscTest
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
       TestElf.setConfigUnitTest(true);
 
-      final HikariDataSource ds = new HikariDataSource(config);
-      try {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
          PrintWriter writer = new PrintWriter(System.out);
          ds.setLogWriter(writer);
          Assert.assertSame(writer, ds.getLogWriter());
@@ -57,7 +56,6 @@ public class MiscTest
       finally
       {
          TestElf.setConfigUnitTest(false);
-         ds.close();
       }
    }
 
@@ -102,8 +100,7 @@ public class MiscTest
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
       TestElf.setConfigUnitTest(true);
 
-      final HikariDataSource ds = new HikariDataSource(config);
-      try {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
          TestElf.setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
          TestElf.getPool(ds).logPoolState();
 
@@ -119,7 +116,6 @@ public class MiscTest
       finally
       {
          TestElf.setConfigUnitTest(false);
-         ds.close();
       }
    }
 }

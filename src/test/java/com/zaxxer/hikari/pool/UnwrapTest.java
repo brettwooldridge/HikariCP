@@ -42,21 +42,16 @@ public class UnwrapTest
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-        HikariDataSource ds = new HikariDataSource(config);
+       try (HikariDataSource ds = new HikariDataSource(config)) {
+          ds.getConnection().close();
+          Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
 
-        try {
-            ds.getConnection().close();
-            Assert.assertSame("Idle connections not as expected", 1, TestElf.getPool(ds).getIdleConnections());
-    
-            Connection connection = ds.getConnection();
-            Assert.assertNotNull(connection);
-    
-            StubConnection unwrapped = connection.unwrap(StubConnection.class);
-            Assert.assertTrue("unwrapped connection is not instance of StubConnection: " + unwrapped, (unwrapped != null && unwrapped instanceof StubConnection));
-        }
-        finally {
-            ds.close();
-        }
+          Connection connection = ds.getConnection();
+          Assert.assertNotNull(connection);
+
+          StubConnection unwrapped = connection.unwrap(StubConnection.class);
+          Assert.assertTrue("unwrapped connection is not instance of StubConnection: " + unwrapped, (unwrapped != null && unwrapped instanceof StubConnection));
+       }
     }
 
     @Test
@@ -69,8 +64,7 @@ public class UnwrapTest
        config.setConnectionTestQuery("VALUES 1");
        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-       HikariDataSource ds = new HikariDataSource(config);
-       try {
+       try (HikariDataSource ds = new HikariDataSource(config)) {
           StubDataSource unwrap = ds.unwrap(StubDataSource.class);
           Assert.assertNotNull(unwrap);
           Assert.assertTrue(unwrap instanceof StubDataSource);
@@ -85,9 +79,6 @@ public class UnwrapTest
           catch (SQLException e) {
              Assert.assertTrue(e.getMessage().contains("Wrapped DataSource"));
           }
-       }
-       finally {
-           ds.close();
        }
     }
 }

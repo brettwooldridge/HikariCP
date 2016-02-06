@@ -34,7 +34,7 @@ public class ConnectionRaceConditionTest
 
       TestElf.setSlf4jLogLevel(ConcurrentBag.class, Level.INFO);
 
-      final AtomicReference<Exception> ref = new AtomicReference<Exception>(null);
+      final AtomicReference<Exception> ref = new AtomicReference<>(null);
 
       // Initialize HikariPool with no initial connections and room to grow
       try (final HikariDataSource ds = new HikariDataSource(config)) {

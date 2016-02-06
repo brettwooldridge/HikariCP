@@ -589,7 +589,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
          // Detect retrograde time, allowing +128ms as per NTP spec.
          if (clockSource.plusMillis(now, 128) < clockSource.plusMillis(previous, HOUSEKEEPING_PERIOD_MS)) {
-            LOGGER.warn("{} - Retrograde clock change detected (housekeeper delta={}), soft-evicting connections from pool.", 
+            LOGGER.warn("{} - Retrograde clock change detected (housekeeper delta={}), soft-evicting connections from pool.",
                         clockSource.elapsedDisplayString(previous, now), poolName);
             previous = now;
             softEvictConnections();
@@ -609,8 +609,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             int removable = idleList.size() - config.getMinimumIdle();
             if (removable > 0) {
                logPoolState("Before cleanup ");
-               afterPrefix = "After cleanup  "; 
-               
+               afterPrefix = "After cleanup  ";
+
                // Sort pool entries on lastAccessed
                Collections.sort(idleList, LASTACCESS_COMPARABLE);
                for (PoolEntry poolEntry : idleList) {
@@ -618,9 +618,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                      closeConnection(poolEntry, "(connection has passed idleTimeout)");
                      if (--removable == 0) {
                         break; // keep min idle cons
-                     };
+                     }
                   }
-               }               
+               }
             }
          }
 

@@ -100,7 +100,7 @@ public class HikariConfig implements HikariConfigMXBean
       final Properties sysProps = System.getProperties();
       AtomicInteger poolNumber = (AtomicInteger) sysProps.get("com.zaxxer.hikari.pool_number");
       if (poolNumber == null) {
-         POOL_NUMBER = new AtomicInteger(); 
+         POOL_NUMBER = new AtomicInteger();
          sysProps.put("com.zaxxer.hikari.pool_number", POOL_NUMBER);
       }
       else {
@@ -179,8 +179,8 @@ public class HikariConfig implements HikariConfigMXBean
 
    /**
     * Get the SQL query to be executed to test the validity of connections.
-    * 
-    * @return the SQL query string, or null 
+    *
+    * @return the SQL query string, or null
     */
    public String getConnectionTestQuery()
    {
@@ -190,7 +190,7 @@ public class HikariConfig implements HikariConfigMXBean
    /**
     * Set the SQL query to be executed to test the validity of connections. Using
     * the JDBC4 <code>Connection.isValid()</code> method to test connection validity can
-    * be more efficient on some databases and is recommended.  See 
+    * be more efficient on some databases and is recommended.  See
     * {@link HikariConfig#setJdbc4ConnectionTest(boolean)}.
     *
     * @param connectionTestQuery a SQL query string
@@ -498,7 +498,7 @@ public class HikariConfig implements HikariConfigMXBean
          if (metricRegistry instanceof String) {
             try {
                InitialContext initCtx = new InitialContext();
-               metricRegistry = (MetricRegistry) initCtx.lookup((String) metricRegistry);
+               metricRegistry = initCtx.lookup((String) metricRegistry);
             }
             catch (NamingException e) {
                throw new IllegalArgumentException(e);
@@ -534,7 +534,7 @@ public class HikariConfig implements HikariConfigMXBean
          if (healthCheckRegistry instanceof String) {
             try {
                InitialContext initCtx = new InitialContext();
-               healthCheckRegistry = (HealthCheckRegistry) initCtx.lookup((String) healthCheckRegistry);
+               healthCheckRegistry = initCtx.lookup((String) healthCheckRegistry);
             }
             catch (NamingException e) {
                throw new IllegalArgumentException(e);
@@ -709,7 +709,7 @@ public class HikariConfig implements HikariConfigMXBean
 
    /**
     * Set the default transaction isolation level.  The specified value is the
-    * constant name from the <code>Connection</code> class, eg. 
+    * constant name from the <code>Connection</code> class, eg.
     * <code>TRANSACTION_REPEATABLE_READ</code>.
     *
     * @param isolationLevel the name of the isolation level
@@ -838,7 +838,7 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       if (leakDetectionThreshold > 0 && !unitTest) {
-         if (leakDetectionThreshold < TimeUnit.SECONDS.toMillis(2) || (leakDetectionThreshold > maxLifetime && maxLifetime > 0)) {        
+         if (leakDetectionThreshold < TimeUnit.SECONDS.toMillis(2) || (leakDetectionThreshold > maxLifetime && maxLifetime > 0)) {
             LOGGER.warn("{} - leakDetectionThreshold is less than 2000ms or more than maxLifetime, disabling it.", poolName);
             leakDetectionThreshold = 0L;
          }

@@ -14,9 +14,9 @@ public class TestFastList
     @Test
     public void testAddRemove()
     {
-        ArrayList<Statement> verifyList = new ArrayList<Statement>();
+        ArrayList<Statement> verifyList = new ArrayList<>();
 
-        FastList<Statement> list = new FastList<Statement>(Statement.class);
+        FastList<Statement> list = new FastList<>(Statement.class);
         for (int i = 0; i < 32; i++)
         {
             StubStatement statement = new StubStatement(null);
@@ -36,9 +36,9 @@ public class TestFastList
     @Test
     public void testAddRemoveTail()
     {
-        ArrayList<Statement> verifyList = new ArrayList<Statement>();
+        ArrayList<Statement> verifyList = new ArrayList<>();
 
-        FastList<Statement> list = new FastList<Statement>(Statement.class);
+        FastList<Statement> list = new FastList<>(Statement.class);
         for (int i = 0; i < 32; i++)
         {
             StubStatement statement = new StubStatement(null);
@@ -58,9 +58,9 @@ public class TestFastList
     @Test
     public void testOverflow()
     {
-        ArrayList<Statement> verifyList = new ArrayList<Statement>();
+        ArrayList<Statement> verifyList = new ArrayList<>();
 
-        FastList<Statement> list = new FastList<Statement>(Statement.class);
+        FastList<Statement> list = new FastList<>(Statement.class);
         for (int i = 0; i < 100; i++)
         {
             StubStatement statement = new StubStatement(null);
@@ -78,7 +78,7 @@ public class TestFastList
     @Test
     public void testClear()
     {
-       FastList<Statement> list = new FastList<Statement>(Statement.class);
+       FastList<Statement> list = new FastList<>(Statement.class);
        for (int i = 0; i < 100; i++)
        {
            StubStatement statement = new StubStatement(null);
@@ -93,7 +93,7 @@ public class TestFastList
     @Test
     public void testRemoveLast()
     {
-       FastList<Statement> list = new FastList<Statement>(Statement.class);
+       FastList<Statement> list = new FastList<>(Statement.class);
 
        Statement last = null;
        for (int i = 0; i < 100; i++)
@@ -106,19 +106,19 @@ public class TestFastList
        Assert.assertEquals(last, list.removeLast());
        Assert.assertEquals(99, list.size());
     }
-    
+
     @Test
     public void testPolyMorphism1()
     {
        class Foo implements Base2 {
-          
+
        }
 
        class Bar extends Foo {
-          
+
        }
 
-       FastList<Base> list = new FastList<Base>(Base.class, 2);
+       FastList<Base> list = new FastList<>(Base.class, 2);
        list.add(new Foo());
        list.add(new Foo());
        list.add(new Bar());
@@ -126,11 +126,11 @@ public class TestFastList
 
     interface Base
     {
-       
+
     }
 
     interface Base2 extends Base
     {
-       
+
     }
 }
