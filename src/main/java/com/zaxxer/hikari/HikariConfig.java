@@ -824,14 +824,14 @@ public class HikariConfig implements HikariConfigMXBean
          maxLifetime = MAX_LIFETIME;
       }
 
+      if (idleTimeout + SECONDS.toMillis(1) > maxLifetime && maxLifetime > 0) {
+          LOGGER.warn("{} - idleTimeout is close to or more than maxLifetime, disabling it.", poolName);
+          idleTimeout = 0;
+       }
+
       if (idleTimeout != 0 && idleTimeout < SECONDS.toMillis(10)) {
          LOGGER.warn("{} - idleTimeout is less than 10000ms, setting to default {}ms.", poolName, IDLE_TIMEOUT);
          idleTimeout = IDLE_TIMEOUT;
-      }
-
-      if (idleTimeout + SECONDS.toMillis(1) > maxLifetime && maxLifetime > 0) {
-         LOGGER.warn("{} - idleTimeout is close to or more than maxLifetime, disabling it.", poolName);
-         idleTimeout = 0;
       }
 
       if (maxLifetime == 0 && idleTimeout == 0) {
@@ -842,13 +842,8 @@ public class HikariConfig implements HikariConfigMXBean
       if (leakDetectionThreshold > 0 && !unitTest) {
          if (leakDetectionThreshold < SECONDS.toMillis(2) || (leakDetectionThreshold > maxLifetime && maxLifetime > 0)) {        
             LOGGER.warn("{} - leakDetectionThreshold is less than 2000ms or more than maxLifetime, disabling it.", poolName);
-            leakDetectionThreshold = 0L;
+            leakDetectionThreshold = 0;
          }
-      }
-
-      if (validationTimeout < 250) {
-         LOGGER.warn("{} - validationTimeout is less than 250ms, setting to {}ms.", poolName, VALIDATION_TIMEOUT);
-         validationTimeout = VALIDATION_TIMEOUT;
       }
 
       if (connectionTimeout != Integer.MAX_VALUE) {
@@ -866,6 +861,11 @@ public class HikariConfig implements HikariConfigMXBean
             LOGGER.warn("{} - validationTimeout is more than connectionTimeout, setting validationTimeout to connectionTimeout.", poolName);
             validationTimeout = connectionTimeout;
          }
+      }
+
+      if (validationTimeout < 250) {
+         LOGGER.warn("{} - validationTimeout is less than 250ms, setting to {}ms.", poolName, VALIDATION_TIMEOUT);
+         validationTimeout = VALIDATION_TIMEOUT;
       }
 
       if (maxPoolSize < 0) {
