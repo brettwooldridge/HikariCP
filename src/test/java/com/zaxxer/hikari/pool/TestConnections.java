@@ -121,6 +121,7 @@ public class TestConnections
 
       System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "100");
 
+      TestElf.setConfigUnitTest(true);
       try (HikariDataSource ds = new HikariDataSource(config)) {
          System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
 
@@ -158,6 +159,9 @@ public class TestConnections
          Assert.assertSame("Post total connections not as expected", 1, pool.getTotalConnections());
          Assert.assertSame("Post idle connections not as expected", 1, pool.getIdleConnections());
       }
+      finally {
+         TestElf.setConfigUnitTest(false);
+      }
    }
 
    @Test
@@ -172,6 +176,7 @@ public class TestConnections
 
       System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "100");
 
+      TestElf.setConfigUnitTest(true);
       try (HikariDataSource ds = new HikariDataSource(config)) {
          ds.setMaxLifetime(700);
 
@@ -205,6 +210,9 @@ public class TestConnections
 
          Assert.assertSame("Post total connections not as expected", 1, pool.getTotalConnections());
          Assert.assertSame("Post idle connections not as expected", 1, pool.getIdleConnections());
+      }
+      finally {
+         TestElf.setConfigUnitTest(false);
       }
    }
 

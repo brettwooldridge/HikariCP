@@ -597,7 +597,7 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setLeakDetectionThreshold(long leakDetectionThresholdMs)
    {
-      if (leakDetectionThresholdMs != 0 && leakDetectionThresholdMs < SECONDS.toMillis(2)) {
+      if (!unitTest && leakDetectionThresholdMs != 0 && leakDetectionThresholdMs < SECONDS.toMillis(2)) {
          throw new IllegalArgumentException("leakDetectionThreshold cannot be less than 2000ms");
       }
       this.leakDetectionThreshold = leakDetectionThresholdMs;
@@ -614,7 +614,7 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setMaxLifetime(long maxLifetimeMs)
    {
-      if (maxLifetimeMs != 0 && maxLifetimeMs < SECONDS.toMillis(30)) {
+      if (!unitTest && maxLifetimeMs != 0 && maxLifetimeMs < SECONDS.toMillis(30)) {
          throw new IllegalArgumentException("maxLifetime cannot be less than 30000ms");
       }
       this.maxLifetime = maxLifetimeMs;
