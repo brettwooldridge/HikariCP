@@ -648,7 +648,7 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setMinimumIdle(int minIdle)
    {
-      if (minIdle < 0 || minIdle > maxPoolSize) {
+      if (minIdle < 0 || (minIdle > maxPoolSize && maxPoolSize > 0)) {
          throw new IllegalArgumentException("minimumIdle cannot be negative or more than maximumPoolSize");
       }
       this.minIdle = minIdle;
