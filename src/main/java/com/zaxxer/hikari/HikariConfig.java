@@ -50,21 +50,21 @@ public class HikariConfig implements HikariConfigMXBean
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariConfig.class);
 
-   private static final int CONNECTION_TIMEOUT = (int) SECONDS.toMillis(30);
-   private static final int VALIDATION_TIMEOUT = (int) SECONDS.toMillis(5);
-   private static final int IDLE_TIMEOUT = (int) MINUTES.toMillis(10);
-   private static final int MAX_LIFETIME = (int) MINUTES.toMillis(30);
+   private static final long CONNECTION_TIMEOUT = SECONDS.toMillis(30);
+   private static final long VALIDATION_TIMEOUT = SECONDS.toMillis(5);
+   private static final long IDLE_TIMEOUT = MINUTES.toMillis(10);
+   private static final long MAX_LIFETIME = MINUTES.toMillis(30);
 
    private static final AtomicInteger POOL_NUMBER;
    private static boolean unitTest;
 
    // Properties changeable at runtime through the MBean
    //
-   private volatile int connectionTimeout;
-   private volatile int validationTimeout;
-   private volatile int idleTimeout;
-   private volatile int leakDetectionThreshold;
-   private volatile int maxLifetime;
+   private volatile long connectionTimeout;
+   private volatile long validationTimeout;
+   private volatile long idleTimeout;
+   private volatile long leakDetectionThreshold;
+   private volatile long maxLifetime;
    private volatile int maxPoolSize;
    private volatile int minIdle;
 
@@ -227,14 +227,14 @@ public class HikariConfig implements HikariConfigMXBean
 
    /** {@inheritDoc} */
    @Override
-   public int getConnectionTimeout()
+   public long getConnectionTimeout()
    {
       return connectionTimeout;
    }
 
    /** {@inheritDoc} */
    @Override
-   public void setConnectionTimeout(int connectionTimeoutMs)
+   public void setConnectionTimeout(long connectionTimeoutMs)
    {
       if (connectionTimeoutMs == 0) {
          this.connectionTimeout = Integer.MAX_VALUE;
@@ -253,14 +253,14 @@ public class HikariConfig implements HikariConfigMXBean
 
    /** {@inheritDoc} */
    @Override
-   public int getValidationTimeout()
+   public long getValidationTimeout()
    {
       return validationTimeout;
    }
 
    /** {@inheritDoc} */
    @Override
-   public void setValidationTimeout(int validationTimeoutMs)
+   public void setValidationTimeout(long validationTimeoutMs)
    {
       if (validationTimeoutMs < 250) {
          throw new IllegalArgumentException("validationTimeout cannot be less than 250ms");
@@ -350,14 +350,14 @@ public class HikariConfig implements HikariConfigMXBean
 
    /** {@inheritDoc} */
    @Override
-   public int getIdleTimeout()
+   public long getIdleTimeout()
    {
       return idleTimeout;
    }
 
    /** {@inheritDoc} */
    @Override
-   public void setIdleTimeout(int idleTimeoutMs)
+   public void setIdleTimeout(long idleTimeoutMs)
    {
       if (idleTimeoutMs < 0) {
          throw new IllegalArgumentException("idleTimeout cannot be negative");
@@ -588,28 +588,28 @@ public class HikariConfig implements HikariConfigMXBean
 
    /** {@inheritDoc} */
    @Override
-   public int getLeakDetectionThreshold()
+   public long getLeakDetectionThreshold()
    {
       return leakDetectionThreshold;
    }
 
    /** {@inheritDoc} */
    @Override
-   public void setLeakDetectionThreshold(int leakDetectionThresholdMs)
+   public void setLeakDetectionThreshold(long leakDetectionThresholdMs)
    {
       this.leakDetectionThreshold = leakDetectionThresholdMs;
    }
 
    /** {@inheritDoc} */
    @Override
-   public int getMaxLifetime()
+   public long getMaxLifetime()
    {
       return maxLifetime;
    }
 
    /** {@inheritDoc} */
    @Override
-   public void setMaxLifetime(int maxLifetimeMs)
+   public void setMaxLifetime(long maxLifetimeMs)
    {
       this.maxLifetime = maxLifetimeMs;
    }
@@ -842,7 +842,7 @@ public class HikariConfig implements HikariConfigMXBean
       if (leakDetectionThreshold > 0 && !unitTest) {
          if (leakDetectionThreshold < SECONDS.toMillis(2) || (leakDetectionThreshold > maxLifetime && maxLifetime > 0)) {        
             LOGGER.warn("{} - leakDetectionThreshold is less than 2000ms or more than maxLifetime, disabling it.", poolName);
-            leakDetectionThreshold = 0;
+            leakDetectionThreshold = 0L;
          }
       }
 

@@ -36,7 +36,7 @@ class ProxyLeakTask implements Runnable
    private static final ProxyLeakTask NO_LEAK;
 
    private ScheduledExecutorService executorService;
-   private int leakDetectionThreshold;
+   private long leakDetectionThreshold;
    private ScheduledFuture<?> scheduledFuture;
    private String connectionName;
    private Exception exception;
@@ -49,7 +49,7 @@ class ProxyLeakTask implements Runnable
       };
    }
 
-   ProxyLeakTask(final int leakDetectionThreshold, final ScheduledExecutorService executorService)
+   ProxyLeakTask(final long leakDetectionThreshold, final ScheduledExecutorService executorService)
    {
       this.executorService = executorService;
       this.leakDetectionThreshold = leakDetectionThreshold;
@@ -71,7 +71,7 @@ class ProxyLeakTask implements Runnable
       return (leakDetectionThreshold == 0) ? NO_LEAK : new ProxyLeakTask(this, bagEntry);
    }
 
-   void updateLeakDetectionThreshold(final int leakDetectionThreshold)
+   void updateLeakDetectionThreshold(final long leakDetectionThreshold)
    {
       this.leakDetectionThreshold = leakDetectionThreshold;
    }

@@ -42,8 +42,8 @@ abstract class PoolBase
 
    protected final HikariConfig config;
    protected final String poolName;
-   protected int connectionTimeout;
-   protected int validationTimeout;
+   protected long connectionTimeout;
+   protected long validationTimeout;
 
    private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout"};
    private static final int UNINITIALIZED = -1;
@@ -110,7 +110,7 @@ abstract class PoolBase
          try {
             LOGGER.debug("{} - Closing connection {}: {}", poolName, connection, closureReason);
             try {
-               setNetworkTimeout(connection, (int) SECONDS.toMillis(15));
+               setNetworkTimeout(connection, SECONDS.toMillis(15));
             }
             finally {
                connection.close(); // continue with the close even if setNetworkTimeout() throws
@@ -126,14 +126,14 @@ abstract class PoolBase
    {
       try {
          if (isUseJdbc4Validation) {
-            return connection.isValid((int) MILLISECONDS.toSeconds(Math.max(1000, validationTimeout)));
+            return connection.isValid((int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
          }
 
          setNetworkTimeout(connection, validationTimeout);
 
          try (Statement statement = connection.createStatement()) {
             if (isNetworkTimeoutSupported != TRUE) {
-               setQueryTimeout(statement, (int) MILLISECONDS.toSeconds(Math.max(1000, validationTimeout)));
+               setQueryTimeout(statement, (int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
             }
 
             statement.execute(config.getConnectionTestQuery());
@@ -424,12 +424,12 @@ abstract class PoolBase
     * @param timeoutMs the number of milliseconds before timeout
     * @return the pre-existing network timeout value
     */
-   private int getAndSetNetworkTimeout(final Connection connection, final int timeoutMs)
+   private int getAndSetNetworkTimeout(final Connection connection, final long timeoutMs)
    {
       if (isNetworkTimeoutSupported != FALSE) {
          try {
             final int originalTimeout = connection.getNetworkTimeout();
-            connection.setNetworkTimeout(netTimeoutExecutor, timeoutMs);
+            connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
             isNetworkTimeoutSupported = TRUE;
             return originalTimeout;
          }
@@ -452,10 +452,10 @@ abstract class PoolBase
     * @param timeoutMs the number of milliseconds before timeout
     * @throws SQLException throw if the connection.setNetworkTimeout() call throws
     */
-   private void setNetworkTimeout(final Connection connection, final int timeoutMs) throws SQLException
+   private void setNetworkTimeout(final Connection connection, final long timeoutMs) throws SQLException
    {
       if (isNetworkTimeoutSupported == TRUE) {
-         connection.setNetworkTimeout(netTimeoutExecutor, timeoutMs);
+         connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
       }
    }
 
@@ -510,11 +510,11 @@ abstract class PoolBase
     * @param dataSource the DataSource
     * @param connectionTimeout the timeout in milliseconds
     */
-   private void setLoginTimeout(final DataSource dataSource, final int connectionTimeout)
+   private void setLoginTimeout(final DataSource dataSource, final long connectionTimeout)
    {
       if (connectionTimeout != Integer.MAX_VALUE) {
          try {
-            dataSource.setLoginTimeout((int) MILLISECONDS.toSeconds(Math.max(1000, connectionTimeout)));
+            dataSource.setLoginTimeout((int) MILLISECONDS.toSeconds(Math.max(1000L, connectionTimeout)));
          }
          catch (Throwable e) {
             LOGGER.warn("{} - Failed to set login timeout for data source. ({})", poolName, e.getMessage());

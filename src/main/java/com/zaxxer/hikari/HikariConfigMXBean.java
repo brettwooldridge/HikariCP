@@ -30,7 +30,7 @@ public interface HikariConfigMXBean
     *
     * @return the connection timeout in milliseconds
     */
-   int getConnectionTimeout();
+   long getConnectionTimeout();
 
    /**
     * Set the maximum number of milliseconds that a client will wait for a connection from the pool. If this
@@ -39,7 +39,7 @@ public interface HikariConfigMXBean
     *
     * @param connectionTimeoutMs the connection timeout in milliseconds
     */
-   void setConnectionTimeout(int connectionTimeoutMs);
+   void setConnectionTimeout(long connectionTimeoutMs);
 
    /**
     * Get the maximum number of milliseconds that the pool will wait for a connection to be validated as
@@ -47,7 +47,7 @@ public interface HikariConfigMXBean
     *
     * @return the validation timeout in milliseconds
     */
-   int getValidationTimeout();
+   long getValidationTimeout();
 
    /**
     * Sets the maximum number of milliseconds that the pool will wait for a connection to be validated as
@@ -55,7 +55,7 @@ public interface HikariConfigMXBean
     *
     * @param validationTimeoutMs the validation timeout in milliseconds
     */
-   void setValidationTimeout(int validationTimeoutMs);
+   void setValidationTimeout(long validationTimeoutMs);
 
    /**
     * This property controls the maximum amount of time (in milliseconds) that a connection is allowed to sit 
@@ -65,7 +65,7 @@ public interface HikariConfigMXBean
     *
     * @return the idle timeout in milliseconds
     */
-   int getIdleTimeout();
+   long getIdleTimeout();
 
    /**
     * This property controls the maximum amount of time (in milliseconds) that a connection is allowed to sit 
@@ -75,7 +75,7 @@ public interface HikariConfigMXBean
     *
     * @param idleTimeoutMs the idle timeout in milliseconds
     */
-   void setIdleTimeout(int idleTimeoutMs);
+   void setIdleTimeout(long idleTimeoutMs);
 
    /**
     * This property controls the amount of time that a connection can be out of the pool before a message is
@@ -83,7 +83,7 @@ public interface HikariConfigMXBean
     *
     * @return the connection leak detection threshold in milliseconds
     */
-   int getLeakDetectionThreshold();
+   long getLeakDetectionThreshold();
 
    /**
     * This property controls the amount of time that a connection can be out of the pool before a message is
@@ -91,7 +91,7 @@ public interface HikariConfigMXBean
     *
     * @param leakDetectionThresholdMs the connection leak detection threshold in milliseconds
     */
-   void setLeakDetectionThreshold(int leakDetectionThresholdMs);
+   void setLeakDetectionThreshold(long leakDetectionThresholdMs);
 
    /**
     * This property controls the maximum lifetime of a connection in the pool. When a connection reaches this
@@ -100,7 +100,7 @@ public interface HikariConfigMXBean
     *
     * @return the maximum connection lifetime in milliseconds
     */
-   int getMaxLifetime();
+   long getMaxLifetime();
 
    /**
     * This property controls the maximum lifetime of a connection in the pool. When a connection reaches this
@@ -109,7 +109,7 @@ public interface HikariConfigMXBean
     *
     * @param maxLifetimeMs the maximum connection lifetime in milliseconds
     */
-   void setMaxLifetime(int maxLifetimeMs);
+   void setMaxLifetime(long maxLifetimeMs);
 
    /**
     * The property controls the maximum size that the pool is allowed to reach, including both idle and in-use

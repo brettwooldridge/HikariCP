@@ -98,7 +98,7 @@ public class MiscTest
       config.setPoolName("test");
       config.setThreadFactory(Executors.defaultThreadFactory());
       config.setMetricRegistry(null);
-      config.setLeakDetectionThreshold((int) TimeUnit.SECONDS.toMillis(1));
+      config.setLeakDetectionThreshold(TimeUnit.SECONDS.toMillis(1));
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
       TestElf.setConfigUnitTest(true);
 
@@ -108,9 +108,9 @@ public class MiscTest
          TestElf.getPool(ds).logPoolState();
 
          Connection connection = ds.getConnection();
-         UtilityElf.quietlySleep((int) TimeUnit.SECONDS.toMillis(4));
+         UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(4));
          connection.close();
-         UtilityElf.quietlySleep((int) TimeUnit.SECONDS.toMillis(1));
+         UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(1));
          ps.close();
          String s = new String(baos.toByteArray());
          Assert.assertNotNull("Exception string was null", s);
