@@ -169,8 +169,8 @@ public abstract class ProxyConnection implements Connection
 
    final void markCommitStateDirty()
    {
-      if (isAutoCommit) {
-         lastAccess = clockSource.currentTime();         
+      if (isAutoCommit || isReadOnly) {
+         lastAccess = clockSource.currentTime();
       }
       else {
          isCommitStateDirty = true;
@@ -227,7 +227,7 @@ public abstract class ProxyConnection implements Connection
          leakTask.cancel();
 
          try {
-            if (isCommitStateDirty && !isAutoCommit && !isReadOnly) {
+            if (isCommitStateDirty) {
                delegate.rollback();
                lastAccess = clockSource.currentTime();
                LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.getPoolName(), delegate);
@@ -377,6 +377,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.setAutoCommit(autoCommit);
       isAutoCommit = autoCommit;
+      isCommitStateDirty = false;
       dirtyBits |= DIRTY_BIT_AUTOCOMMIT;
    }
 
@@ -386,6 +387,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.setReadOnly(readOnly);
       isReadOnly = readOnly;
+      isCommitStateDirty = false;
       dirtyBits |= DIRTY_BIT_READONLY;
    }
 
