@@ -56,7 +56,7 @@ public abstract class ProxyConnection implements Connection
    protected Connection delegate;
 
    private final PoolEntry poolEntry;
-   private final ProxyLeakTask leakTask;
+   private final LeakTask leakTask;
    private final FastList<Statement> openStatements;
    
    private int dirtyBits;
@@ -83,7 +83,7 @@ public abstract class ProxyConnection implements Connection
       SQL_ERRORS.add("JZ0C1"); // Sybase disconnect error
    }
 
-   protected ProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final long now, final boolean isReadOnly, final boolean isAutoCommit) {
+   protected ProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final LeakTask leakTask, final long now, final boolean isReadOnly, final boolean isAutoCommit) {
       this.poolEntry = poolEntry;
       this.delegate = connection;
       this.openStatements = openStatements;

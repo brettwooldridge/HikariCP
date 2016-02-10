@@ -94,7 +94,7 @@ final class PoolEntry implements IConcurrentBagEntry
       this.endOfLife = endOfLife;
    }
 
-   Connection createProxyConnection(final ProxyLeakTask leakTask, final long now)
+   Connection createProxyConnection(final LeakTask leakTask, final long now)
    {
       return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, now, isReadOnly, isAutoCommit);
    }

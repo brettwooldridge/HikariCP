@@ -90,7 +90,7 @@ public class MiscTest
    {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       PrintStream ps = new PrintStream(baos, true);
-      TestElf.setSlf4jTargetStream(Class.forName("com.zaxxer.hikari.pool.ProxyLeakTask"), ps);
+      TestElf.setSlf4jTargetStream(Class.forName("com.zaxxer.hikari.pool.LeakTask"), ps);
       TestElf.setConfigUnitTest(true);
 
       HikariConfig config = new HikariConfig();

@@ -86,7 +86,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private final ConcurrentBag<PoolEntry> connectionBag;
 
-   private final ProxyLeakTask leakTask;
+   private final LeakTask leakTask;
    private final SuspendResumeLock suspendResumeLock;
 
    private MetricsTrackerDelegate metricsTracker;
@@ -131,7 +131,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          this.houseKeepingExecutorService = config.getScheduledExecutorService();
       }
 
-      this.leakTask = new ProxyLeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
+      this.leakTask = new LeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
       this.houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 0L, HOUSEKEEPING_PERIOD_MS, MILLISECONDS);
    }
