@@ -353,7 +353,7 @@ abstract class PoolBase
          connection.setCatalog(catalog);
       }
 
-      executeSql(connection, config.getConnectionInitSql(), isIsolateInternalQueries && !isAutoCommit, false);
+      executeSql(connection, config.getConnectionInitSql(), true);
 
       setNetworkTimeout(connection, networkTimeout);
    }
@@ -377,7 +377,7 @@ abstract class PoolBase
          }
          else {
             try {
-               executeSql(connection, config.getConnectionTestQuery(), false, isIsolateInternalQueries && !isAutoCommit);
+               executeSql(connection, config.getConnectionTestQuery(), false);
             }
             catch (Throwable e) {
                LOGGER.error("{} - Failed to execute connection test query. ({})", poolName, e.getMessage());
@@ -464,10 +464,10 @@ abstract class PoolBase
     *
     * @param connection the connection to initialize
     * @param sql the SQL to execute
-    * @param isAutoCommit whether to commit the SQL after execution or not
+    * @param isCommit whether to commit the SQL after execution or not
     * @throws SQLException throws if the init SQL execution fails
     */
-   private void executeSql(final Connection connection, final String sql, final boolean isCommit, final boolean isRollback) throws SQLException
+   private void executeSql(final Connection connection, final String sql, final boolean isCommit) throws SQLException
    {
       if (sql != null) {
          try (Statement statement = connection.createStatement()) {
@@ -475,11 +475,11 @@ abstract class PoolBase
             statement.execute(sql);
          }
 
-         if (!isReadOnly) {
+         if (isIsolateInternalQueries && !isReadOnly && !isAutoCommit) {
             if (isCommit) {
                connection.commit();
             }
-            else if (isRollback) {
+            else {
                connection.rollback();
             }
          }
