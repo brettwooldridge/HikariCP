@@ -776,8 +776,6 @@ public class HikariConfig implements HikariConfigMXBean
          throw new IllegalArgumentException("poolName cannot contain ':' when used with JMX");
       }
 
-      validateNumerics();
-
       // treat empty property as null
       catalog = getNullIfEmpty(catalog);
       connectionInitSql = getNullIfEmpty(connectionInitSql);
@@ -814,6 +812,8 @@ public class HikariConfig implements HikariConfigMXBean
          throw new IllegalArgumentException("dataSource or dataSourceClassName or jdbcUrl is required.");
       }
 
+      validateNumerics();
+
       if (LOGGER.isDebugEnabled() || unitTest) {
          logConfiguration();
       }
@@ -821,11 +821,7 @@ public class HikariConfig implements HikariConfigMXBean
 
    private void validateNumerics()
    {
-      if (maxLifetime < 0) {
-         LOGGER.error("{} - maxLifetime cannot be negative.", poolName);
-         throw new IllegalArgumentException("maxLifetime cannot be negative.");
-      }
-      else if (maxLifetime > 0 && maxLifetime < SECONDS.toMillis(30)) {
+      if (maxLifetime != 0 && maxLifetime < SECONDS.toMillis(30)) {
          LOGGER.warn("{} - maxLifetime is less than 30000ms, setting to default {}ms.", poolName, MAX_LIFETIME);
          maxLifetime = MAX_LIFETIME;
       }
