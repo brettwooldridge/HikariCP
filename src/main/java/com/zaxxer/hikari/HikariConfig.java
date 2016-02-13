@@ -245,10 +245,6 @@ public class HikariConfig implements HikariConfigMXBean
       else {
          this.connectionTimeout = connectionTimeoutMs;
       }
-
-      if (validationTimeout > connectionTimeoutMs) {
-         this.validationTimeout = connectionTimeoutMs;
-      }
    }
 
    /** {@inheritDoc} */
@@ -265,13 +261,8 @@ public class HikariConfig implements HikariConfigMXBean
       if (validationTimeoutMs < 250) {
          throw new IllegalArgumentException("validationTimeout cannot be less than 250ms");
       }
-      else {
-         this.validationTimeout = validationTimeoutMs;
-      }
 
-      if (validationTimeout > connectionTimeout) {
-         this.validationTimeout = connectionTimeout;
-      }
+      this.validationTimeout = validationTimeoutMs;
    }
 
    /**

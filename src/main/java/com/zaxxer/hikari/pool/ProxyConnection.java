@@ -146,12 +146,14 @@ public abstract class ProxyConnection implements Connection
       final String sqlState = sqle.getSQLState();
       if (sqlState != null) {
          final boolean isForceClose = sqlState.startsWith("08") || SQL_ERRORS.contains(sqlState);
-         if (isForceClose && delegate != ClosedConnection.CLOSED_CONNECTION) {
-            LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
-                        poolEntry.getPoolName(), delegate, sqlState, sqle.getErrorCode(), sqle);
-            leakTask.cancel();
-            poolEntry.evict("(connection is broken)");
-            delegate = ClosedConnection.CLOSED_CONNECTION;
+         if (isForceClose) {
+            if (delegate != ClosedConnection.CLOSED_CONNECTION) {
+               LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
+                           poolEntry.getPoolName(), delegate, sqlState, sqle.getErrorCode(), sqle);
+               leakTask.cancel();
+               poolEntry.evict("(connection is broken)");
+               delegate = ClosedConnection.CLOSED_CONNECTION;
+            }
          }
          else {
             final SQLException nse = sqle.getNextException();
@@ -170,7 +172,7 @@ public abstract class ProxyConnection implements Connection
 
    final void markCommitStateDirty()
    {
-      if (isAutoCommit) {
+      if (isAutoCommit || isReadOnly) {
          lastAccess = clockSource.currentTime();
       }
       else {
@@ -228,7 +230,7 @@ public abstract class ProxyConnection implements Connection
          leakTask.cancel();
 
          try {
-            if (isCommitStateDirty && !isAutoCommit && !isReadOnly) {
+            if (isCommitStateDirty) {
                delegate.rollback();
                lastAccess = clockSource.currentTime();
                LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.getPoolName(), delegate);
@@ -378,6 +380,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.setAutoCommit(autoCommit);
       isAutoCommit = autoCommit;
+      isCommitStateDirty = false;
       dirtyBits |= DIRTY_BIT_AUTOCOMMIT;
    }
 
@@ -387,6 +390,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.setReadOnly(readOnly);
       isReadOnly = readOnly;
+      isCommitStateDirty = false;
       dirtyBits |= DIRTY_BIT_READONLY;
    }
 
