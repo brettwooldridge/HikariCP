@@ -27,7 +27,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.naming.InitialContext;
@@ -42,16 +41,19 @@ import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.util.PropertyElf;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import static com.zaxxer.hikari.util.UtilityElf.getNullIfEmpty;
 
 public class HikariConfig implements HikariConfigMXBean
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariConfig.class);
 
-   private static final long CONNECTION_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
-   private static final long VALIDATION_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
-   private static final long IDLE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
-   private static final long MAX_LIFETIME = TimeUnit.MINUTES.toMillis(30);
+   private static final long CONNECTION_TIMEOUT = SECONDS.toMillis(30);
+   private static final long VALIDATION_TIMEOUT = SECONDS.toMillis(5);
+   private static final long IDLE_TIMEOUT = MINUTES.toMillis(10);
+   private static final long MAX_LIFETIME = MINUTES.toMillis(30);
 
    private static final AtomicInteger POOL_NUMBER;
    private static boolean unitTest;
@@ -270,7 +272,7 @@ public class HikariConfig implements HikariConfigMXBean
       if (validationTimeout > connectionTimeout) {
          this.validationTimeout = connectionTimeout;
       }
-}
+   }
 
    /**
     * Get the {@link DataSource} that has been explicitly specified to be wrapped by the
@@ -342,7 +344,7 @@ public class HikariConfig implements HikariConfigMXBean
          this.driverClassName = driverClassName;
       }
       catch (Exception e) {
-         throw new RuntimeException("Could not load class of driverClassName " + driverClassName, e);
+         throw new RuntimeException("Failed to load class of driverClassName " + driverClassName, e);
       }
    }
 
@@ -768,8 +770,6 @@ public class HikariConfig implements HikariConfigMXBean
          throw new IllegalArgumentException("poolName cannot contain ':' when used with JMX");
       }
 
-      validateNumerics();
-
       // treat empty property as null
       catalog = getNullIfEmpty(catalog);
       connectionInitSql = getNullIfEmpty(connectionInitSql);
@@ -806,6 +806,8 @@ public class HikariConfig implements HikariConfigMXBean
          throw new IllegalArgumentException("dataSource or dataSourceClassName or jdbcUrl is required.");
       }
 
+      validateNumerics();
+
       if (LOGGER.isDebugEnabled() || unitTest) {
          logConfiguration();
       }
@@ -813,46 +815,47 @@ public class HikariConfig implements HikariConfigMXBean
 
    private void validateNumerics()
    {
-      if (maxLifetime < 0) {
-         LOGGER.error("{} - maxLifetime cannot be negative.", poolName);
-         throw new IllegalArgumentException("maxLifetime cannot be negative.");
-      }
-      else if (maxLifetime > 0 && maxLifetime < TimeUnit.SECONDS.toMillis(30)) {
+      if (maxLifetime != 0 && maxLifetime < SECONDS.toMillis(30)) {
          LOGGER.warn("{} - maxLifetime is less than 30000ms, setting to default {}ms.", poolName, MAX_LIFETIME);
          maxLifetime = MAX_LIFETIME;
       }
 
-      if (idleTimeout != 0 && idleTimeout < TimeUnit.SECONDS.toMillis(10)) {
+      if (idleTimeout + SECONDS.toMillis(1) > maxLifetime && maxLifetime > 0) {
+          LOGGER.warn("{} - idleTimeout is close to or more than maxLifetime, disabling it.", poolName);
+          idleTimeout = 0;
+       }
+
+      if (idleTimeout != 0 && idleTimeout < SECONDS.toMillis(10)) {
          LOGGER.warn("{} - idleTimeout is less than 10000ms, setting to default {}ms.", poolName, IDLE_TIMEOUT);
          idleTimeout = IDLE_TIMEOUT;
       }
 
-      if (idleTimeout + TimeUnit.SECONDS.toMillis(1) > maxLifetime && maxLifetime > 0) {
-         LOGGER.warn("{} - idleTimeout is close to or more than maxLifetime, disabling it.", poolName);
-         idleTimeout = 0;
-      }
-
-      if (maxLifetime == 0 && idleTimeout == 0) {
-         LOGGER.warn("{} - setting idleTimeout to {}ms.", poolName, IDLE_TIMEOUT);
-         idleTimeout = IDLE_TIMEOUT;
-      }
-
       if (leakDetectionThreshold > 0 && !unitTest) {
-         if (leakDetectionThreshold < TimeUnit.SECONDS.toMillis(2) || (leakDetectionThreshold > maxLifetime && maxLifetime > 0)) {
+         if (leakDetectionThreshold < SECONDS.toMillis(2) || (leakDetectionThreshold > maxLifetime && maxLifetime > 0)) {        
             LOGGER.warn("{} - leakDetectionThreshold is less than 2000ms or more than maxLifetime, disabling it.", poolName);
-            leakDetectionThreshold = 0L;
+            leakDetectionThreshold = 0;
          }
       }
 
       if (connectionTimeout != Integer.MAX_VALUE) {
-         if (validationTimeout > connectionTimeout) {
-            LOGGER.warn("{} - validationTimeout is more than connectionTimeout, setting validationTimeout to connectionTimeout.", poolName);
-            validationTimeout = connectionTimeout;
+         if (connectionTimeout < 250) {
+            LOGGER.warn("{} - connectionTimeout is less than 250ms, setting to {}ms.", poolName, CONNECTION_TIMEOUT);
+            connectionTimeout = CONNECTION_TIMEOUT;
          }
+
          if (maxLifetime > 0 && connectionTimeout > maxLifetime) {
             LOGGER.warn("{} - connectionTimeout is more than maxLifetime, setting connectionTimeout to maxLifetime.", poolName);
             connectionTimeout = maxLifetime;
          }
+      }
+
+      if (validationTimeout < 250) {
+         LOGGER.warn("{} - validationTimeout is less than 250ms, setting to {}ms.", poolName, VALIDATION_TIMEOUT);
+         validationTimeout = VALIDATION_TIMEOUT;
+      }
+      else if (validationTimeout > connectionTimeout) {
+         LOGGER.warn("{} - validationTimeout is more than connectionTimeout, setting validationTimeout to connectionTimeout.", poolName);
+         validationTimeout = connectionTimeout;
       }
 
       if (maxPoolSize < 0) {
@@ -902,11 +905,11 @@ public class HikariConfig implements HikariConfigMXBean
             PropertyElf.setTargetFromProperties(this, props);
          }
          else {
-            throw new IllegalArgumentException("Property file " + propertyFileName + " was not found.");
+            throw new IllegalArgumentException("Cannot find property file: " + propertyFileName);
          }
       }
       catch (IOException io) {
-         throw new RuntimeException("Error loading properties file", io);
+         throw new RuntimeException("Failed to read property file", io);
       }
    }
 
@@ -919,7 +922,7 @@ public class HikariConfig implements HikariConfigMXBean
                field.set(other, field.get(this));
             }
             catch (Exception e) {
-               throw new RuntimeException("Exception copying HikariConfig state: " + e.getMessage(), e);
+               throw new RuntimeException("Failed to copy HikariConfig state: " + e.getMessage(), e);
             }
          }
       }

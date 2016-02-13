@@ -71,7 +71,7 @@ abstract class PoolBase
    {
       this.config = config;
 
-      this.networkTimeout = -1;
+      this.networkTimeout = UNINITIALIZED;
       this.catalog = config.getCatalog();
       this.isReadOnly = config.isReadOnly();
       this.isAutoCommit = config.isAutoCommit();
@@ -242,7 +242,7 @@ abstract class PoolBase
          }
       }
       catch (Exception e) {
-         LOGGER.warn("{} - Unable to register management beans.", poolName, e);
+         LOGGER.warn("{} - Failed to register management beans.", poolName, e);
       }
    }
 
@@ -266,7 +266,7 @@ abstract class PoolBase
          }
       }
       catch (Exception e) {
-         LOGGER.warn("{} - Unable to unregister management beans.", poolName, e);
+         LOGGER.warn("{} - Failed to unregister management beans.", poolName, e);
       }
    }
 
@@ -332,7 +332,12 @@ abstract class PoolBase
     */
    private void setupConnection(final Connection connection) throws SQLException
    {
-      networkTimeout = getAndSetNetworkTimeout(connection, connectionTimeout);
+      if (networkTimeout == UNINITIALIZED) {
+         networkTimeout = getAndSetNetworkTimeout(connection, validationTimeout);
+      }
+      else {
+         setNetworkTimeout(connection, validationTimeout);
+      }
 
       checkDriverSupport(connection);
 
@@ -347,7 +352,7 @@ abstract class PoolBase
          connection.setCatalog(catalog);
       }
 
-      executeSql(connection, config.getConnectionInitSql(), isIsolateInternalQueries && !isAutoCommit, false);
+      executeSql(connection, config.getConnectionInitSql(), true);
 
       setNetworkTimeout(connection, networkTimeout);
    }
@@ -371,7 +376,7 @@ abstract class PoolBase
          }
          else {
             try {
-               executeSql(connection, config.getConnectionTestQuery(), false, isIsolateInternalQueries && !isAutoCommit);
+               executeSql(connection, config.getConnectionTestQuery(), false);
             }
             catch (Throwable e) {
                LOGGER.error("{} - Failed to execute connection test query. ({})", poolName, e.getMessage());
@@ -404,7 +409,7 @@ abstract class PoolBase
          catch (Throwable e) {
             if (isQueryTimeoutSupported == UNINITIALIZED) {
                isQueryTimeoutSupported = FALSE;
-               LOGGER.warn("{} - Unable to set query timeout for statement. ({})", poolName, e.getMessage());
+               LOGGER.warn("{} - Failed to set query timeout for statement. ({})", poolName, e.getMessage());
             }
          }
       }
@@ -465,10 +470,10 @@ abstract class PoolBase
     *
     * @param connection the connection to initialize
     * @param sql the SQL to execute
-    * @param isAutoCommit whether to commit the SQL after execution or not
+    * @param isCommit whether to commit the SQL after execution or not
     * @throws SQLException throws if the init SQL execution fails
     */
-   private void executeSql(final Connection connection, final String sql, final boolean isCommit, final boolean isRollback) throws SQLException
+   private void executeSql(final Connection connection, final String sql, final boolean isCommit) throws SQLException
    {
       if (sql != null) {
          try (Statement statement = connection.createStatement()) {
@@ -476,11 +481,11 @@ abstract class PoolBase
             statement.execute(sql);
          }
 
-         if (!isReadOnly) {
+         if (isIsolateInternalQueries && !isReadOnly && !isAutoCommit) {
             if (isCommit) {
                connection.commit();
             }
-            else if (isRollback) {
+            else {
                connection.rollback();
             }
          }
@@ -518,7 +523,7 @@ abstract class PoolBase
             dataSource.setLoginTimeout((int) MILLISECONDS.toSeconds(Math.max(1000L, connectionTimeout)));
          }
          catch (Throwable e) {
-            LOGGER.warn("{} - Unable to set login timeout for data source. ({})", poolName, e.getMessage());
+            LOGGER.warn("{} - Failed to set login timeout for data source. ({})", poolName, e.getMessage());
          }
       }
    }
