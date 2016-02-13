@@ -92,7 +92,7 @@ public class PostgresTest
          try (Connection conn = ds.getConnection()) {
             System.err.println("\nGot a connection, and released it.  Now, enable the firewall.");
          }
-         
+
          TestElf.getPool(ds).logPoolState();
          UtilityElf.quietlySleep(5000L);
 
@@ -142,7 +142,7 @@ public class PostgresTest
                   catch (SQLException e) {
                      // expected
                   }
-               };
+               }
             }.start();
          }
 
@@ -189,10 +189,10 @@ public class PostgresTest
                         e.printStackTrace();
                         // throw new RuntimeException(e);
                      }
-   
+
                      // UtilityElf.quietlySleep(10L); //Math.max(50L, (long)(Math.random() * 250L)));
                   } while (ClockSource.INSTANCE.elapsedMillis(start) < TimeUnit.MINUTES.toMillis(5));
-               };
+               }
             });
          }
 

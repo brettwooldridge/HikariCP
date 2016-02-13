@@ -304,7 +304,7 @@ public class ShutdownTest
                   try { connection.close(); } catch (SQLException e) { e.printStackTrace(); }
                   ds.close();
                }
-            };
+            }
          };
          t.start();
 
@@ -318,7 +318,7 @@ public class ShutdownTest
                catch (IllegalStateException e) {
                   Assert.fail(e.getMessage());
                }
-            };
+            }
          };
          t2.start();
 

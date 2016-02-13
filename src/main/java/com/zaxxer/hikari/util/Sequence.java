@@ -45,7 +45,7 @@ public interface Sequence
    /**
     * Factory class used to create a platform-specific ClockSource.
     */
-   public final class Factory
+   final class Factory
    {
       public static Sequence create()
       {

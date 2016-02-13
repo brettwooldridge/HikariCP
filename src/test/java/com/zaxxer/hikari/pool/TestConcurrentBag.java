@@ -63,7 +63,7 @@ public class TestConcurrentBag
    @Test
    public void testConcurrentBag() throws Exception
    {
-      ConcurrentBag<PoolEntry> bag = new ConcurrentBag<PoolEntry>( new IBagStateListener() {
+      ConcurrentBag<PoolEntry> bag = new ConcurrentBag<>(new IBagStateListener() {
          @Override
          public Future<Boolean> addBagItem()
          {

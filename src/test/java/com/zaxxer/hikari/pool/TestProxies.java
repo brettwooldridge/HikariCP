@@ -25,8 +25,7 @@ public class TestProxies
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      HikariDataSource ds = new HikariDataSource(config);
-      try {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
          Connection conn = ds.getConnection();
 
          Assert.assertNotNull(conn.createStatement(ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE));
@@ -53,9 +52,6 @@ public class TestProxies
             // pass
          }
       }
-      finally {
-         ds.close();
-      }
    }
 
    @Test
@@ -67,8 +63,7 @@ public class TestProxies
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      HikariDataSource ds = new HikariDataSource(config);
-      try {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
          Connection conn = ds.getConnection();
 
          PreparedStatement stmt = conn.prepareStatement("some sql");
@@ -87,9 +82,6 @@ public class TestProxies
             // pass
          }
       }
-      finally {
-         ds.close();
-      }
    }
 
    @Test
@@ -102,8 +94,7 @@ public class TestProxies
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      HikariDataSource ds = new HikariDataSource(config);
-      try {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
          Connection conn = ds.getConnection();
          StubConnection stubConnection = conn.unwrap(StubConnection.class);
          stubConnection.throwException = true;
@@ -204,9 +195,6 @@ public class TestProxies
             // pass
          }
       }
-      finally {
-         ds.close();
-      }
    }
 
    @Test
@@ -218,8 +206,7 @@ public class TestProxies
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      HikariDataSource ds = new HikariDataSource(config);
-      try {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
          Connection conn = ds.getConnection();
          StubConnection stubConnection = conn.unwrap(StubConnection.class);
          stubConnection.throwException = true;
@@ -310,9 +297,6 @@ public class TestProxies
          catch (SQLException e) {
             Assert.fail();
          }
-      }
-      finally {
-         ds.close();
       }
    }
 }

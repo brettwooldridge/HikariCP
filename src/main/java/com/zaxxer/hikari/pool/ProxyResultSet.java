@@ -98,9 +98,9 @@ public abstract class ProxyResultSet implements ResultSet
          return (T) delegate;
       }
       else if (delegate instanceof Wrapper) {
-          return (T) delegate.unwrap(iface);
+          return delegate.unwrap(iface);
       }
 
       throw new SQLException("Wrapped ResultSet is not an instance of " + iface);
-   }   
+   }
 }
