@@ -250,7 +250,7 @@ public class ShutdownTest
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
-         StubConnection.slowCreate = true;
+      StubConnection.slowCreate = true;
          UtilityElf.quietlySleep(3000L);
       }
    }

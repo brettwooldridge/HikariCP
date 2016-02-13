@@ -174,7 +174,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             }
             else {
                metricsTracker.recordBorrowStats(poolEntry, startTime);
-               return poolEntry.createProxyConnection(leakTask.start(poolEntry), now);
+               return poolEntry.createProxyConnection(leakTask.schedule(poolEntry), now);
             }
          } while (timeout > 0L);
       }
@@ -553,7 +553,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       @Override
       public Boolean call() throws Exception
       {
-         long sleepBackoff = 200L;
+         long sleepBackoff = 250L;
          while (poolState == POOL_NORMAL && totalConnections.get() < config.getMaximumPoolSize()) {
             final PoolEntry poolEntry = createPoolEntry();
             if (poolEntry != null) {
@@ -564,7 +564,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
             // failed to get connection from db, sleep and retry
             quietlySleep(sleepBackoff);
-            sleepBackoff = Math.min(SECONDS.toMillis(10), Math.min(connectionTimeout, (long) (sleepBackoff * 1.3)));
+            sleepBackoff = Math.min(SECONDS.toMillis(10), Math.min(connectionTimeout, (long) (sleepBackoff * 1.5)));
          }
          // Pool is suspended or shutdown or at max size
          return Boolean.FALSE;

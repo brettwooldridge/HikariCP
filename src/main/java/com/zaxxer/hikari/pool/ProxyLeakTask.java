@@ -65,7 +65,7 @@ class ProxyLeakTask implements Runnable
    {
    }
    
-   ProxyLeakTask start(final PoolEntry bagEntry)
+   ProxyLeakTask schedule(final PoolEntry bagEntry)
    {
       return (leakDetectionThreshold == 0) ? NO_LEAK : new ProxyLeakTask(this, bagEntry);
    }
