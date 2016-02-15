@@ -844,10 +844,6 @@ public class HikariConfig implements HikariConfigMXBean
          LOGGER.warn("{} - validationTimeout is less than 250ms, setting to {}ms.", poolName, VALIDATION_TIMEOUT);
          validationTimeout = VALIDATION_TIMEOUT;
       }
-      else if (validationTimeout > connectionTimeout) {
-         LOGGER.warn("{} - validationTimeout is more than connectionTimeout, setting validationTimeout to connectionTimeout.", poolName);
-         validationTimeout = connectionTimeout;
-      }
 
       if (maxPoolSize < 0) {
          if (minIdle < 0) {
