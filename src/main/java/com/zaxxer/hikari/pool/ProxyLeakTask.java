@@ -57,7 +57,6 @@ class ProxyLeakTask implements Runnable
 
    private ProxyLeakTask(final ScheduledExecutorService executorService, final PoolEntry poolEntry, final long leakDetectionThreshold)
    {
-      this.leakDetectionThreshold = leakDetectionThreshold;
       this.exception = new Exception("Apparent connection leak detected");
       this.connectionName = poolEntry.connection.toString();
       this.scheduledFuture = executorService.schedule(this, leakDetectionThreshold, TimeUnit.MILLISECONDS);
