@@ -605,10 +605,8 @@ abstract class PoolBase
        * @param poolEntry
        * @param now
        */
-      void recordBorrowStats(final PoolEntry poolEntry, final long startTime)
+      void recordBorrowStats(final PoolEntry poolEntry, final long startTime, final long now)
       {
-         final long now = ClockSource.INSTANCE.currentTime();
-         poolEntry.lastBorrowed = now;
          tracker.recordConnectionAcquiredNanos(ClockSource.INSTANCE.elapsedNanos(startTime, now));
       }
 
@@ -636,7 +634,7 @@ abstract class PoolBase
       }
 
       @Override
-      void recordBorrowStats(final PoolEntry poolEntry, final long startTime)
+      void recordBorrowStats(final PoolEntry poolEntry, final long startTime, final long now)
       {
          // no-op
       }
