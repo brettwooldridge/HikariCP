@@ -136,8 +136,8 @@ final class PoolEntry implements IConcurrentBagEntry
    {
       final long now = ClockSource.INSTANCE.currentTime();
       return connection
-         + ", borrowed " + ClockSource.INSTANCE.elapsedMillis(lastBorrowed, now) + "ms ago"
-         + ", accessed " + ClockSource.INSTANCE.elapsedMillis(lastAccessed, now) + "ms ago, "
+         + ", borrowed " + ClockSource.INSTANCE.elapsedDisplayString(lastBorrowed, now) + " ago"
+         + ", accessed " + ClockSource.INSTANCE.elapsedDisplayString(lastAccessed, now) + " ago, "
          + stateToString();
    }
 
