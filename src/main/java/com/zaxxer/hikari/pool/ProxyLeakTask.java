@@ -34,7 +34,6 @@ class ProxyLeakTask implements Runnable
    private static final Logger LOGGER = LoggerFactory.getLogger(ProxyLeakTask.class);
    private static final ProxyLeakTask NO_LEAK;
 
-   private ScheduledExecutorService executorService;
    private long leakDetectionThreshold;
    private ScheduledFuture<?> scheduledFuture;
    private String connectionName;
@@ -48,26 +47,26 @@ class ProxyLeakTask implements Runnable
       };
    }
 
-   ProxyLeakTask(final long leakDetectionThreshold, final ScheduledExecutorService executorService)
+   ProxyLeakTask(final long leakDetectionThreshold)
    {
-      this.executorService = executorService;
       this.leakDetectionThreshold = leakDetectionThreshold;
    }
 
-   private ProxyLeakTask(final ProxyLeakTask parent, final PoolEntry poolEntry)
+   private ProxyLeakTask(final ScheduledExecutorService executorService, final PoolEntry poolEntry, final long leakDetectionThreshold)
    {
       this.exception = new Exception("Apparent connection leak detected");
+      this.leakDetectionThreshold = leakDetectionThreshold;
       this.connectionName = poolEntry.connection.toString();
-      scheduledFuture = parent.executorService.schedule(this, parent.leakDetectionThreshold, TimeUnit.MILLISECONDS);
+      this.scheduledFuture = executorService.schedule(this, leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
    private ProxyLeakTask()
    {
    }
    
-   ProxyLeakTask start(final PoolEntry bagEntry)
+   ProxyLeakTask schedule(final PoolEntry bagEntry, final ScheduledExecutorService executorService)
    {
-      return (leakDetectionThreshold == 0) ? NO_LEAK : new ProxyLeakTask(this, bagEntry);
+      return (leakDetectionThreshold == 0) ? NO_LEAK : new ProxyLeakTask(executorService, bagEntry, leakDetectionThreshold);
    }
 
    void updateLeakDetectionThreshold(final long leakDetectionThreshold)

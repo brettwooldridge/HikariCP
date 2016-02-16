@@ -131,7 +131,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          this.houseKeepingExecutorService = config.getScheduledExecutorService();
       }
 
-      this.leakTask = new ProxyLeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
+      this.leakTask = new ProxyLeakTask(config.getLeakDetectionThreshold());
 
       this.houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 0L, HOUSEKEEPING_PERIOD_MS, MILLISECONDS);
    }
@@ -174,7 +174,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             }
             else {
                metricsTracker.recordBorrowStats(poolEntry, startTime);
-               return poolEntry.createProxyConnection(leakTask.start(poolEntry), now);
+               return poolEntry.createProxyConnection(leakTask.schedule(poolEntry, houseKeepingExecutorService), now);
             }
          } while (timeout > 0L);
       }
