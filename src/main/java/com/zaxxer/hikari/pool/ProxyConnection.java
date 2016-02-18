@@ -346,7 +346,6 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.commit();
       isCommitStateDirty = false;
-      lastAccess = clockSource.currentTime();
    }
 
    /** {@inheritDoc} */
@@ -355,7 +354,6 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.rollback();
       isCommitStateDirty = false;
-      lastAccess = clockSource.currentTime();
    }
 
    /** {@inheritDoc} */
@@ -364,7 +362,6 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.rollback(savepoint);
       isCommitStateDirty = false;
-      lastAccess = clockSource.currentTime();
    }
 
    /** {@inheritDoc} */
