@@ -173,7 +173,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                timeout = hardTimeout - clockSource.elapsedMillis(startTime);
             }
             else {
-               poolEntry.lastBorrowed = now;
                metricsTracker.recordBorrowStats(poolEntry, startTime, now);
                return poolEntry.createProxyConnection(leakTask.schedule(poolEntry, houseKeepingExecutorService), now);
             }

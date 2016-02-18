@@ -607,6 +607,7 @@ abstract class PoolBase
        */
       void recordBorrowStats(final PoolEntry poolEntry, final long startTime, final long now)
       {
+         poolEntry.lastBorrowed = now;
          tracker.recordConnectionAcquiredNanos(ClockSource.INSTANCE.elapsedNanos(startTime, now));
       }
 
