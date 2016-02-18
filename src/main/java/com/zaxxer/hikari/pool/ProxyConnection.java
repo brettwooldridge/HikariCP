@@ -169,10 +169,7 @@ public abstract class ProxyConnection implements Connection
 
    final void markCommitStateDirty()
    {
-      if (isAutoCommit || isReadOnly) {
-         lastAccess = clockSource.currentTime();
-      }
-      else {
+      if (!(isAutoCommit || isReadOnly)) {
          isCommitStateDirty = true;
       }
    }
@@ -229,16 +226,15 @@ public abstract class ProxyConnection implements Connection
          try {
             if (isCommitStateDirty) {
                delegate.rollback();
-               lastAccess = clockSource.currentTime();
                LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.getPoolName(), delegate);
             }
 
             if (dirtyBits != 0) {
                poolEntry.resetConnectionState(this, dirtyBits);
-               lastAccess = clockSource.currentTime();
             }
 
             delegate.clearWarnings();
+            lastAccess = clockSource.currentTime();
          }
          catch (SQLException e) {
             // when connections are aborted, exceptions are often thrown that should not reach the application
