@@ -162,7 +162,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       try {
          long timeout = hardTimeout;
          do {
-            final PoolEntry poolEntry = connectionBag.borrow(clockSource.toNanos(timeout));
+            final PoolEntry poolEntry = connectionBag.borrow(timeout, MILLISECONDS);
             if (poolEntry == null) {
                break; // We timed out... break and throw exception
             }
