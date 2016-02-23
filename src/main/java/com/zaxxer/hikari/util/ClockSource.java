@@ -53,6 +53,15 @@ public interface ClockSource
    long toMillis(long time);
 
    /**
+    * Convert an opaque time-stamp returned by currentTime() into
+    * nanoseconds.
+    *
+    * @param time an opaque time-stamp returned by an instance of this class
+    * @return the time-stamp in nanoseconds
+    */
+   long toNanos(long time);
+
+   /**
     * Convert an opaque time-stamp returned by currentTime() into an
     * elapsed time in milliseconds, based on the current instant in time.
     *
@@ -180,6 +189,13 @@ public interface ClockSource
 
       /** {@inheritDoc} */
       @Override
+      public long toNanos(final long time)
+      {
+         return MILLISECONDS.toNanos(time);
+      }
+
+      /** {@inheritDoc} */
+      @Override
       public long plusMillis(final long time, final long millis)
       {
          return time + millis;
@@ -207,6 +223,13 @@ public interface ClockSource
       public long toMillis(final long time)
       {
          return NANOSECONDS.toMillis(time);
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public long toNanos(final long time)
+      {
+         return time;
       }
 
       /** {@inheritDoc} */
