@@ -436,12 +436,9 @@ abstract class PoolBase
             if (isNetworkTimeoutSupported == UNINITIALIZED) {
                isNetworkTimeoutSupported = FALSE;
 
-               LOGGER.warn("{} - Unable to get/set network timeout for connection. ({})", poolName, e.getMessage());
+               LOGGER.warn("{} - Failed to get/set network timeout for connection. ({})", poolName, e.getMessage());
                if (validationTimeout < SECONDS.toMillis(1)) {
                   LOGGER.warn("{} - A validationTimeout of less than 1 second cannot be honored on drivers without setNetworkTimeout() support.", poolName);
-               }
-               else if (validationTimeout % SECONDS.toMillis(1) != 0) {
-                  LOGGER.warn("{} - A validationTimeout with fractional second granularity cannot be honored on drivers without setNetworkTimeout() support.", poolName);
                }
             }
          }
@@ -608,9 +605,8 @@ abstract class PoolBase
        * @param poolEntry
        * @param now
        */
-      void recordBorrowStats(final PoolEntry poolEntry, final long startTime)
+      void recordBorrowStats(final PoolEntry poolEntry, final long startTime, final long now)
       {
-         final long now = ClockSource.INSTANCE.currentTime();
          poolEntry.lastBorrowed = now;
          tracker.recordConnectionAcquiredNanos(ClockSource.INSTANCE.elapsedNanos(startTime, now));
       }
@@ -639,7 +635,7 @@ abstract class PoolBase
       }
 
       @Override
-      void recordBorrowStats(final PoolEntry poolEntry, final long startTime)
+      void recordBorrowStats(final PoolEntry poolEntry, final long startTime, final long now)
       {
          // no-op
       }

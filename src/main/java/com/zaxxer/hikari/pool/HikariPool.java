@@ -133,7 +133,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
       this.houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 0L, HOUSEKEEPING_PERIOD_MS, MILLISECONDS);
 
-      this.leakTask = new ProxyLeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
+      this.leakTask = new ProxyLeakTask(config.getLeakDetectionThreshold());
    }
 
    /**
@@ -158,23 +158,25 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    {
       suspendResumeLock.acquire();
       final long startTime = clockSource.currentTime();
+      long now = startTime;
 
       try {
          long timeout = hardTimeout;
          do {
-            final PoolEntry poolEntry = connectionBag.borrow(timeout, MILLISECONDS);
+            final PoolEntry poolEntry = connectionBag.borrow(MILLISECONDS.toNanos(timeout), clockSource.toNanos(now));
             if (poolEntry == null) {
                break; // We timed out... break and throw exception
             }
 
-            final long now = clockSource.currentTime();
             if (poolEntry.isMarkedEvicted() || (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
                closeConnection(poolEntry, "(connection is evicted or dead)"); // Throw away the dead connection (passed max age or failed alive test)
-               timeout = hardTimeout - clockSource.elapsedMillis(startTime);
+               now = clockSource.currentTime();
+               timeout = hardTimeout - clockSource.elapsedMillis(startTime, now);
             }
             else {
-               metricsTracker.recordBorrowStats(poolEntry, startTime);
-               return poolEntry.createProxyConnection(leakTask.start(poolEntry), now);
+               now = clockSource.currentTime();
+               metricsTracker.recordBorrowStats(poolEntry, startTime, now);
+               return poolEntry.createProxyConnection(leakTask.schedule(poolEntry, houseKeepingExecutorService), now);
             }
          } while (timeout > 0L);
       }
@@ -553,7 +555,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       @Override
       public Boolean call() throws Exception
       {
-         long sleepBackoff = 200L;
+         long sleepBackoff = 250L;
          while (poolState == POOL_NORMAL && totalConnections.get() < config.getMaximumPoolSize()) {
             final PoolEntry poolEntry = createPoolEntry();
             if (poolEntry != null) {
@@ -564,7 +566,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
             // failed to get connection from db, sleep and retry
             quietlySleep(sleepBackoff);
-            sleepBackoff = Math.min(SECONDS.toMillis(10), Math.min(connectionTimeout, (long) (sleepBackoff * 1.3)));
+            sleepBackoff = Math.min(SECONDS.toMillis(10), Math.min(connectionTimeout, (long) (sleepBackoff * 1.5)));
          }
          // Pool is suspended or shutdown or at max size
          return Boolean.FALSE;
