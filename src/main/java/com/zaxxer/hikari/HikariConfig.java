@@ -129,7 +129,7 @@ public class HikariConfig implements HikariConfigMXBean
       isInitializationFailFast = true;
 
       String systemProp = System.getProperty("hikaricp.configurationFile");
-      if ( systemProp != null) {
+      if (systemProp != null) {
          loadProperties(systemProp);
       }
    }
@@ -652,6 +652,7 @@ public class HikariConfig implements HikariConfigMXBean
     * Set the default password to use for DataSource.getConnection(username, password) calls.
     * @param password the password
     */
+   @Override
    public void setPassword(String password)
    {
       this.password = password;
@@ -727,6 +728,7 @@ public class HikariConfig implements HikariConfigMXBean
     *
     * @param username the username
     */
+   @Override
    public void setUsername(String username)
    {
       this.username = username;
@@ -812,9 +814,9 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       if (idleTimeout + SECONDS.toMillis(1) > maxLifetime && maxLifetime > 0) {
-          LOGGER.warn("{} - idleTimeout is close to or more than maxLifetime, disabling it.", poolName);
-          idleTimeout = 0;
-       }
+         LOGGER.warn("{} - idleTimeout is close to or more than maxLifetime, disabling it.", poolName);
+         idleTimeout = 0;
+      }
 
       if (idleTimeout != 0 && idleTimeout < SECONDS.toMillis(10)) {
          LOGGER.warn("{} - idleTimeout is less than 10000ms, setting to default {}ms.", poolName, IDLE_TIMEOUT);
@@ -822,22 +824,15 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       if (leakDetectionThreshold > 0 && !unitTest) {
-         if (leakDetectionThreshold < SECONDS.toMillis(2) || (leakDetectionThreshold > maxLifetime && maxLifetime > 0)) {        
+         if (leakDetectionThreshold < SECONDS.toMillis(2) || (leakDetectionThreshold > maxLifetime && maxLifetime > 0)) {
             LOGGER.warn("{} - leakDetectionThreshold is less than 2000ms or more than maxLifetime, disabling it.", poolName);
             leakDetectionThreshold = 0;
          }
       }
 
-      if (connectionTimeout != Integer.MAX_VALUE) {
-         if (connectionTimeout < 250) {
-            LOGGER.warn("{} - connectionTimeout is less than 250ms, setting to {}ms.", poolName, CONNECTION_TIMEOUT);
-            connectionTimeout = CONNECTION_TIMEOUT;
-         }
-
-         if (maxLifetime > 0 && connectionTimeout > maxLifetime) {
-            LOGGER.warn("{} - connectionTimeout is more than maxLifetime, setting connectionTimeout to maxLifetime.", poolName);
-            connectionTimeout = maxLifetime;
-         }
+      if (connectionTimeout < 250) {
+         LOGGER.warn("{} - connectionTimeout is less than 250ms, setting to {}ms.", poolName, CONNECTION_TIMEOUT);
+         connectionTimeout = CONNECTION_TIMEOUT;
       }
 
       if (validationTimeout < 250) {
