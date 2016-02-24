@@ -46,7 +46,7 @@ public class TestValidation
          config.validate();
       }
       catch (IllegalArgumentException ise) {
-         Assert.assertTrue(ise.getMessage().contains("Property file"));
+         Assert.assertTrue(ise.getMessage().contains("property file"));
       }
    }
 
@@ -115,6 +115,19 @@ public class TestValidation
       }
       catch (IllegalArgumentException ise) {
          Assert.assertTrue(ise.getMessage().contains("connectionTimeout cannot be less than 250ms"));
+      }
+   }
+
+   @Test
+   public void validateInvalidValidationTimeout()
+   {
+      try {
+         HikariConfig config = new HikariConfig();
+         config.setValidationTimeout(10L);
+         Assert.fail();
+      }
+      catch (IllegalArgumentException ise) {
+         Assert.assertTrue(ise.getMessage().contains("validationTimeout cannot be less than 250ms"));
       }
    }
 
@@ -195,8 +208,8 @@ public class TestValidation
          HikariConfig config = new HikariConfig();
          config.setConnectionTimeout(Integer.MAX_VALUE);
          config.setIdleTimeout(1000L);
-         config.setLeakDetectionThreshold(1000L);
          config.setMaxLifetime(-1L);
+         config.setLeakDetectionThreshold(1000L);
          config.validate();
          Assert.fail();
       }
@@ -208,11 +221,15 @@ public class TestValidation
    @Test
    public void validateInvalidLeakDetection()
    {
-      HikariConfig config = new HikariConfig();
-      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-      config.setLeakDetectionThreshold(1000L);
-      config.validate();
-      Assert.assertEquals(0L, config.getLeakDetectionThreshold());
+      try {
+         HikariConfig config = new HikariConfig();
+         config.setLeakDetectionThreshold(1000L);
+         config.validate();
+         Assert.fail();
+      }
+      catch (IllegalArgumentException ise) {
+      // pass
+      }
    }
 
    @Test

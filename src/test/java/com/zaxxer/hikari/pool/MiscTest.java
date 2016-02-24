@@ -47,8 +47,7 @@ public class MiscTest
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
       TestElf.setConfigUnitTest(true);
 
-      final HikariDataSource ds = new HikariDataSource(config);
-      try {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
          PrintWriter writer = new PrintWriter(System.out);
          ds.setLogWriter(writer);
          Assert.assertSame(writer, ds.getLogWriter());
@@ -57,7 +56,6 @@ public class MiscTest
       finally
       {
          TestElf.setConfigUnitTest(false);
-         ds.close();
       }
    }
 
@@ -91,6 +89,7 @@ public class MiscTest
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       PrintStream ps = new PrintStream(baos, true);
       TestElf.setSlf4jTargetStream(Class.forName("com.zaxxer.hikari.pool.ProxyLeakTask"), ps);
+      TestElf.setConfigUnitTest(true);
 
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
@@ -100,10 +99,8 @@ public class MiscTest
       config.setMetricRegistry(null);
       config.setLeakDetectionThreshold(TimeUnit.SECONDS.toMillis(1));
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-      TestElf.setConfigUnitTest(true);
 
-      final HikariDataSource ds = new HikariDataSource(config);
-      try {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
          TestElf.setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
          TestElf.getPool(ds).logPoolState();
 
@@ -119,7 +116,6 @@ public class MiscTest
       finally
       {
          TestElf.setConfigUnitTest(false);
-         ds.close();
       }
    }
 }

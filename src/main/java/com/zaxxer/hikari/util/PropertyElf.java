@@ -60,8 +60,7 @@ public final class PropertyElf
          }
 
          if (target instanceof HikariConfig && propName.startsWith("dataSource.")) {
-            HikariConfig config = (HikariConfig) target;
-            config.addDataSourceProperty(propName.substring("dataSource.".length()), propValue);
+            ((HikariConfig) target).addDataSourceProperty(propName.substring("dataSource.".length()), propValue);
          }
          else {
             setProperty(target, propName, propValue, methods);
@@ -172,7 +171,7 @@ public final class PropertyElf
          }
       }
       catch (Exception e) {
-         LOGGER.error("Exception setting property {} on target {}", propName, target.getClass(), e);
+         LOGGER.error("Failed to set property {} on target {}", propName, target.getClass(), e);
          throw new RuntimeException(e);
       }
    }

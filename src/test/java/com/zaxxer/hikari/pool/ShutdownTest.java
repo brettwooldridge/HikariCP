@@ -87,6 +87,8 @@ public class ShutdownTest
             }
          };
          threads[i].setDaemon(true);
+      }
+      for (int i = 0; i < 10; i++) {
          threads[i].start();
       }
 
@@ -248,7 +250,7 @@ public class ShutdownTest
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
-         StubConnection.slowCreate = true;
+      StubConnection.slowCreate = true;
          UtilityElf.quietlySleep(3000L);
       }
    }
@@ -302,7 +304,7 @@ public class ShutdownTest
                   try { connection.close(); } catch (SQLException e) { e.printStackTrace(); }
                   ds.close();
                }
-            };
+            }
          };
          t.start();
 
@@ -316,7 +318,7 @@ public class ShutdownTest
                catch (IllegalStateException e) {
                   Assert.fail(e.getMessage());
                }
-            };
+            }
          };
          t2.start();
 

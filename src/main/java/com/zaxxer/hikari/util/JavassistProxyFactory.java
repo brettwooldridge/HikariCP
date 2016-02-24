@@ -68,7 +68,7 @@ public final class JavassistProxyFactory
          generateProxyClass(Connection.class, ProxyConnection.class.getName(), methodBody);
          generateProxyClass(Statement.class, ProxyStatement.class.getName(), methodBody);
          generateProxyClass(ResultSet.class, ProxyResultSet.class.getName(), methodBody);
-         
+
          // For these we have to cast the delegate
          methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { throw checkException(e); } }";
          generateProxyClass(PreparedStatement.class, ProxyPreparedStatement.class.getName(), methodBody);
@@ -119,7 +119,7 @@ public final class JavassistProxyFactory
 
       CtClass superCt = classPool.getCtClass(superClassName);
       CtClass targetCt = classPool.makeClass(newClassName, superCt);
-      targetCt.setModifiers(Modifier.FINAL);         
+      targetCt.setModifiers(Modifier.FINAL);
 
       System.out.println("Generating " + newClassName);
 
@@ -216,10 +216,10 @@ public final class JavassistProxyFactory
 
       return intf.getDeclaredMethod(intfMethod.getName(), paramTypes.toArray(new Class[paramTypes.size()])).toString().contains("default ");
    }
-   
+
    private static Set<Class<?>> getAllInterfaces(Class<?> clazz)
    {
-      Set<Class<?>> interfaces = new HashSet<Class<?>>();
+      Set<Class<?>> interfaces = new HashSet<>();
       for (Class<?> intf : Arrays.asList(clazz.getInterfaces())) {
          if (intf.getInterfaces().length > 0) {
             interfaces.addAll(getAllInterfaces(intf));

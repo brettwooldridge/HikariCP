@@ -166,7 +166,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
          }
 
          if (unwrappedDataSource != null) {
-            return (T) unwrappedDataSource.unwrap(iface);
+            return unwrappedDataSource.unwrap(iface);
          }
       }
 

@@ -48,7 +48,7 @@ public abstract class ProxyConnection implements Connection
    static final int DIRTY_BIT_ISOLATION  = 0b00100;
    static final int DIRTY_BIT_CATALOG    = 0b01000;
    static final int DIRTY_BIT_NETTIMEOUT = 0b10000;
-   
+
    private static final Logger LOGGER;
    private static final Set<String> SQL_ERRORS;
    private static final ClockSource clockSource;
@@ -58,7 +58,7 @@ public abstract class ProxyConnection implements Connection
    private final PoolEntry poolEntry;
    private final ProxyLeakTask leakTask;
    private final FastList<Statement> openStatements;
-   
+
    private int dirtyBits;
    private long lastAccess;
    private boolean isCommitStateDirty;
@@ -144,9 +144,8 @@ public abstract class ProxyConnection implements Connection
    final SQLException checkException(final SQLException sqle)
    {
       final String sqlState = sqle.getSQLState();
-      if (sqlState != null) {
-         final boolean isForceClose = sqlState.startsWith("08") || SQL_ERRORS.contains(sqlState);
-         if (isForceClose && delegate != ClosedConnection.CLOSED_CONNECTION) {
+      if (sqlState != null && delegate != ClosedConnection.CLOSED_CONNECTION) {
+         if (sqlState.startsWith("08") || SQL_ERRORS.contains(sqlState)) { // broken connection
             LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
                         poolEntry.getPoolName(), delegate, sqlState, sqle.getErrorCode(), sqle);
             leakTask.cancel();
@@ -171,16 +170,13 @@ public abstract class ProxyConnection implements Connection
    final void markCommitStateDirty()
    {
       if (isAutoCommit) {
-         lastAccess = clockSource.currentTime();         
+         lastAccess = clockSource.currentTime();
       }
       else {
          isCommitStateDirty = true;
       }
    }
 
-   /**
-    * 
-    */
    void cancelLeakTask()
    {
       leakTask.cancel();
@@ -387,6 +383,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.setReadOnly(readOnly);
       isReadOnly = readOnly;
+      isCommitStateDirty = false;
       dirtyBits |= DIRTY_BIT_READONLY;
    }
 
@@ -433,7 +430,7 @@ public abstract class ProxyConnection implements Connection
          return (T) delegate;
       }
       else if (delegate instanceof Wrapper) {
-          return (T) delegate.unwrap(iface);
+          return delegate.unwrap(iface);
       }
 
       throw new SQLException("Wrapped connection is not an instance of " + iface);
@@ -450,12 +447,12 @@ public abstract class ProxyConnection implements Connection
       private static Connection getClosedConnection()
       {
          InvocationHandler handler = new InvocationHandler() {
-            
+
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
             {
                final String methodName = method.getName();
-               if ("abort".equals(methodName)) { 
+               if ("abort".equals(methodName)) {
                   return Void.TYPE;
                }
                else if ("isValid".equals(methodName)) {

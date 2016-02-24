@@ -26,16 +26,15 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.util.concurrent.TimeUnit;
 
-
 /**
  * A resolution-independent provider of current time-stamps and elapsed time
  * calculations.
- * 
+ *
  * @author Brett Wooldridge
  */
 public interface ClockSource
 {
-   final ClockSource INSTANCE = Factory.create();
+   ClockSource INSTANCE = Factory.create();
 
    /**
     * Get the current time-stamp (resolution is opaque).
@@ -52,6 +51,15 @@ public interface ClockSource
     * @return the time-stamp in milliseconds
     */
    long toMillis(long time);
+
+   /**
+    * Convert an opaque time-stamp returned by currentTime() into
+    * nanoseconds.
+    *
+    * @param time an opaque time-stamp returned by an instance of this class
+    * @return the time-stamp in nanoseconds
+    */
+   long toNanos(long time);
 
    /**
     * Convert an opaque time-stamp returned by currentTime() into an
@@ -94,7 +102,7 @@ public interface ClockSource
    /**
     * Return the specified opaque time-stamp plus the specified number of milliseconds.
     *
-    * @param time an opaque time-stamp 
+    * @param time an opaque time-stamp
     * @param millis milliseconds to add
     * @return a new opaque time-stamp
     */
@@ -120,7 +128,7 @@ public interface ClockSource
    String[] TIMEUNIT_DISPLAY_VALUES = {"ns", "μs", "ms", "s", "m", "h", "d"};
 
    /**
-    * Factory class used to create a platform-specific ClockSource. 
+    * Factory class used to create a platform-specific ClockSource.
     */
    class Factory
    {
@@ -181,6 +189,13 @@ public interface ClockSource
 
       /** {@inheritDoc} */
       @Override
+      public long toNanos(final long time)
+      {
+         return MILLISECONDS.toNanos(time);
+      }
+
+      /** {@inheritDoc} */
+      @Override
       public long plusMillis(final long time, final long millis)
       {
          return time + millis;
@@ -208,6 +223,13 @@ public interface ClockSource
       public long toMillis(final long time)
       {
          return NANOSECONDS.toMillis(time);
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public long toNanos(final long time)
+      {
+         return time;
       }
 
       /** {@inheritDoc} */

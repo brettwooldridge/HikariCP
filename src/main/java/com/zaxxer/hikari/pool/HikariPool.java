@@ -28,7 +28,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -48,6 +47,9 @@ import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.UtilityElf.DefaultThreadFactory;
 import com.zaxxer.hikari.util.SuspendResumeLock;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import static com.zaxxer.hikari.pool.PoolEntry.LASTACCESS_COMPARABLE;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
@@ -63,7 +65,7 @@ import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
  */
 public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateListener
 {
-   private static final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
+   private final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
 
    private static final ClockSource clockSource = ClockSource.INSTANCE;
 
@@ -73,8 +75,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private volatile int poolState;
 
-   private final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", TimeUnit.MILLISECONDS.toMillis(500));
-   private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", TimeUnit.SECONDS.toMillis(30));
+   private final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", MILLISECONDS.toMillis(500));
+   private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", SECONDS.toMillis(30));
 
    private final PoolEntryCreator POOL_ENTRY_CREATOR = new PoolEntryCreator();
    private final AtomicInteger totalConnections;
@@ -116,11 +118,11 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       checkFailFast();
 
       ThreadFactory threadFactory = config.getThreadFactory();
-      this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection adder (pool " + poolName + ")", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
-      this.closeConnectionExecutor = createThreadPoolExecutor(1 + (config.getMaximumPoolSize() / 2), "Hikari connection closer (pool " + poolName + ")", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
+      this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
+      this.closeConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
       if (config.getScheduledExecutorService() == null) {
-         threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory("Hikari housekeeper (pool " + poolName + ")", true);
+         threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory(poolName + " housekeeper", true);
          this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
          this.houseKeepingExecutorService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
          this.houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
@@ -129,7 +131,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          this.houseKeepingExecutorService = config.getScheduledExecutorService();
       }
 
-      this.houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 0L, HOUSEKEEPING_PERIOD_MS, TimeUnit.MILLISECONDS);
+      this.houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 0L, HOUSEKEEPING_PERIOD_MS, MILLISECONDS);
 
       this.leakTask = new ProxyLeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
    }
@@ -160,19 +162,19 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       try {
          long timeout = hardTimeout;
          do {
-            final PoolEntry poolEntry = connectionBag.borrow(timeout, TimeUnit.MILLISECONDS);
+            final PoolEntry poolEntry = connectionBag.borrow(timeout, MILLISECONDS);
             if (poolEntry == null) {
                break; // We timed out... break and throw exception
             }
 
             final long now = clockSource.currentTime();
             if (poolEntry.isMarkedEvicted() || (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
-               closeConnection(poolEntry, "(connection is evicted or dead)"); // Throw away the dead connection and try again
+               closeConnection(poolEntry, "(connection is evicted or dead)"); // Throw away the dead connection (passed max age or failed alive test)
                timeout = hardTimeout - clockSource.elapsedMillis(startTime);
             }
             else {
                metricsTracker.recordBorrowStats(poolEntry, startTime);
-               return poolEntry.createProxyConnection(leakTask.start(poolEntry), now);
+               return poolEntry.createProxyConnection(leakTask.schedule(poolEntry), now);
             }
          } while (timeout > 0L);
       }
@@ -215,38 +217,37 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          softEvictConnections();
 
          addConnectionExecutor.shutdown();
-         addConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
+         addConnectionExecutor.awaitTermination(5L, SECONDS);
          if (config.getScheduledExecutorService() == null && houseKeepingExecutorService != null) {
             houseKeepingExecutorService.shutdown();
-            houseKeepingExecutorService.awaitTermination(5L, TimeUnit.SECONDS);
+            houseKeepingExecutorService.awaitTermination(5L, SECONDS);
          }
 
          connectionBag.close();
 
-         final ExecutorService assassinExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), "Hikari connection assassin (pool " + poolName + ")",
+         final ExecutorService assassinExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection assassinator",
                                                                            config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
          try {
             final long start = clockSource.currentTime();
             do {
                abortActiveConnections(assassinExecutor);
                softEvictConnections();
-            } while (getTotalConnections() > 0 && clockSource.elapsedMillis(start) < TimeUnit.SECONDS.toMillis(5));
+            } while (getTotalConnections() > 0 && clockSource.elapsedMillis(start) < SECONDS.toMillis(5));
          }
          finally {
             assassinExecutor.shutdown();
-            assassinExecutor.awaitTermination(5L, TimeUnit.SECONDS);
+            assassinExecutor.awaitTermination(5L, SECONDS);
          }
 
          shutdownNetworkTimeoutExecutor();
          closeConnectionExecutor.shutdown();
-         closeConnectionExecutor.awaitTermination(5L, TimeUnit.SECONDS);
+         closeConnectionExecutor.awaitTermination(5L, SECONDS);
       }
       finally {
          logPoolState("After closing ");
-         LOGGER.info("{} - Closed.", poolName);
-
          unregisterMBeans();
          metricsTracker.close();
+         LOGGER.info("{} - Closed.", poolName);
       }
    }
 
@@ -338,7 +339,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    public void softEvictConnections()
    {
       for (PoolEntry poolEntry : connectionBag.values()) {
-         softEvictConnection(poolEntry, "(connection evicted by user)", false /* not owner */);
+         softEvictConnection(poolEntry, "(connection evicted)", false /* not owner */);
       }
    }
 
@@ -400,7 +401,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    /**
     * Permanently close the real (underlying) connection (eat any exception).
     *
-    * @param poolEntry the connection to actually close
+    * @param poolEntry poolEntry having the connection to close
+    * @param closureReason reason to close
     */
    final void closeConnection(final PoolEntry poolEntry, final String closureReason)
    {
@@ -441,7 +443,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                public void run() {
                   softEvictConnection(poolEntry, "(connection has passed maxLifetime)", false /* not owner */);
                }
-            }, lifetime, TimeUnit.MILLISECONDS));
+            }, lifetime, MILLISECONDS));
          }
 
          LOGGER.debug("{} - Added connection {}", poolName, poolEntry.connection);
@@ -531,7 +533,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private PoolStats getPoolStats()
    {
-      return new PoolStats(TimeUnit.SECONDS.toMillis(1)) {
+      return new PoolStats(SECONDS.toMillis(1)) {
          @Override
          protected void update() {
             this.pendingThreads = HikariPool.this.getThreadsAwaitingConnection();
@@ -551,7 +553,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       @Override
       public Boolean call() throws Exception
       {
-         long sleepBackoff = 200L;
+         long sleepBackoff = 250L;
          while (poolState == POOL_NORMAL && totalConnections.get() < config.getMaximumPoolSize()) {
             final PoolEntry poolEntry = createPoolEntry();
             if (poolEntry != null) {
@@ -562,7 +564,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
             // failed to get connection from db, sleep and retry
             quietlySleep(sleepBackoff);
-            sleepBackoff = Math.min( TimeUnit.SECONDS.toMillis(10), Math.min(connectionTimeout, (long) (sleepBackoff * 1.3)));
+            sleepBackoff = Math.min(SECONDS.toMillis(10), Math.min(connectionTimeout, (long) (sleepBackoff * 1.5)));
          }
          // Pool is suspended or shutdown or at max size
          return Boolean.FALSE;
@@ -589,7 +591,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
          // Detect retrograde time, allowing +128ms as per NTP spec.
          if (clockSource.plusMillis(now, 128) < clockSource.plusMillis(previous, HOUSEKEEPING_PERIOD_MS)) {
-            LOGGER.warn("{} - Retrograde clock change detected (housekeeper delta={}), soft-evicting connections from pool.", 
+            LOGGER.warn("{} - Retrograde clock change detected (housekeeper delta={}), soft-evicting connections from pool.",
                         clockSource.elapsedDisplayString(previous, now), poolName);
             previous = now;
             softEvictConnections();
@@ -609,8 +611,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             int removable = idleList.size() - config.getMinimumIdle();
             if (removable > 0) {
                logPoolState("Before cleanup ");
-               afterPrefix = "After cleanup  "; 
-               
+               afterPrefix = "After cleanup  ";
+
                // Sort pool entries on lastAccessed
                Collections.sort(idleList, LASTACCESS_COMPARABLE);
                for (PoolEntry poolEntry : idleList) {
@@ -618,9 +620,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                      closeConnection(poolEntry, "(connection has passed idleTimeout)");
                      if (--removable == 0) {
                         break; // keep min idle cons
-                     };
+                     }
                   }
-               }               
+               }
             }
          }
 
