@@ -34,7 +34,6 @@ import java.sql.Struct;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.zaxxer.hikari.util.UtilityElf;
@@ -60,8 +59,8 @@ public class StubConnection extends StubBaseConnection implements Connection
 
    public StubConnection() {
       count.incrementAndGet();
-      if (slowCreate) { // other threads cannot enter ctor till 'this' completes
-         UtilityElf.quietlySleep(ThreadLocalRandom.current().nextLong(100, 1000));
+      if (slowCreate) {
+         UtilityElf.quietlySleep(1000);
       }
    }
 

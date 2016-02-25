@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -113,12 +114,12 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     * The method will borrow a BagEntry from the bag, blocking for the
     * specified timeout if none are available.
     *
-    * @param timeout how long to wait before giving up, in NANOSECONDS
-    * @param timeout start time, in NANOSECONDS
+    * @param timeout how long to wait before giving up, in units of unit
+    * @param timeUnit a <code>TimeUnit</code> determining how to interpret the timeout parameter
     * @return a borrowed instance from the bag or null if a timeout occurs
     * @throws InterruptedException if interrupted while waiting
     */
-   public T borrow(long timeout, final long startTime) throws InterruptedException
+   public T borrow(long timeout, final TimeUnit timeUnit) throws InterruptedException
    {
       // Try the thread-local list first
       List<Object> list = threadList.get();
@@ -137,7 +138,9 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       }
 
       // Otherwise, scan the shared list ... for maximum of timeout
+      timeout = timeUnit.toNanos(timeout);
       Future<Boolean> addItemFuture = null;
+      final long startTime = System.nanoTime();
       final long originTimeout = timeout;
       long startSeq;
       waiters.incrementAndGet();

@@ -79,7 +79,7 @@ public class ShutdownTest
             {
                try {
                   if (ds.getConnection() != null) {
-                     UtilityElf.quietlySleep(100);
+                     UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(1));
                   }
                }
                catch (SQLException e) {
@@ -150,7 +150,7 @@ public class ShutdownTest
       HikariDataSource ds = new HikariDataSource(config);
       HikariPool pool = TestElf.getPool(ds);
 
-      UtilityElf.quietlySleep(500L);
+      UtilityElf.quietlySleep(1200L);
 
       Assert.assertTrue("Total connection count not as expected, ", pool.getTotalConnections() == 5);
 
@@ -249,9 +249,9 @@ public class ShutdownTest
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      StubConnection.slowCreate = true;
       try (HikariDataSource ds = new HikariDataSource(config)) {
-         UtilityElf.quietlySleep(100L);
+         StubConnection.slowCreate = true;
+         UtilityElf.quietlySleep(3000L);
       }
    }
 
