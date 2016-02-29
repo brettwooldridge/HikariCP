@@ -168,7 +168,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                break; // We timed out... break and throw exception
             }
 
-            if (poolEntry.isMarkedEvicted() || (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
+            if (poolEntry.isMarkedEvicted() || (poolEntry.getMillisSinceAccessed(now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
                closeConnection(poolEntry, "(connection is evicted or dead)"); // Throw away the dead connection (passed max age or failed alive test)
                now = clockSource.currentTime();
                timeout = hardTimeout - clockSource.elapsedMillis(startTime, now);
@@ -618,7 +618,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                // Sort pool entries on lastAccessed
                Collections.sort(idleList, LASTACCESS_COMPARABLE);
                for (PoolEntry poolEntry : idleList) {
-                  if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout && connectionBag.reserve(poolEntry)) {
+                  if (poolEntry.getMillisSinceAccessed(now) > idleTimeout && connectionBag.reserve(poolEntry)) {
                      closeConnection(poolEntry, "(connection has passed idleTimeout)");
                      if (--removable == 0) {
                         break; // keep min idle cons

@@ -41,8 +41,8 @@ final class PoolEntry implements IConcurrentBagEntry
    static final Comparator<PoolEntry> LASTACCESS_COMPARABLE;
 
    Connection connection;
-   long lastAccessed;
-   long lastBorrowed;
+   private long lastAccessed;
+   private long lastBorrowed;
    private volatile boolean evict;
 
    private volatile ScheduledFuture<?> endOfLife;
@@ -129,6 +129,12 @@ final class PoolEntry implements IConcurrentBagEntry
    long getMillisSinceBorrowed()
    {
       return ClockSource.INSTANCE.elapsedMillis(lastBorrowed);
+   }
+
+   /** Returns millis since lastAccessed */
+   long getMillisSinceAccessed(final long now)
+   {
+      return ClockSource.INSTANCE.elapsedMillis(lastAccessed, now);
    }
 
    /** {@inheritDoc} */
