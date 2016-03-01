@@ -128,13 +128,19 @@ final class PoolEntry implements IConcurrentBagEntry
    /** Returns millis since lastBorrowed */
    long getMillisSinceBorrowed()
    {
-      return ClockSource.INSTANCE.elapsedMillis(lastBorrowed);
+      return ClockSource.INSTANCE.elapsedMillis(lastBorrowed, lastAccessed);
    }
 
    /** Returns millis since lastAccessed */
    long getMillisSinceAccessed(final long now)
    {
       return ClockSource.INSTANCE.elapsedMillis(lastAccessed, now);
+   }
+
+   /** Returns true if 'this' has 'valid' connection */
+   boolean isValid(final long now, final long aliveBypassWindow)
+   {
+      return (!evict && (ClockSource.INSTANCE.elapsedMillis(lastAccessed, now) < aliveBypassWindow || hikariPool.isConnectionAlive(connection)));
    }
 
    /** {@inheritDoc} */

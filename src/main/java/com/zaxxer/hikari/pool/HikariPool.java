@@ -165,19 +165,18 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          do {
             final PoolEntry poolEntry = connectionBag.borrow(timeout, MILLISECONDS);
             if (poolEntry == null) {
-               break; // We timed out... break and throw exception
+               break; // timed out
             }
 
-            if (poolEntry.isMarkedEvicted() || (poolEntry.getMillisSinceAccessed(now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
-               closeConnection(poolEntry, "(connection is evicted or dead)"); // Throw away the dead connection (passed max age or failed alive test)
-               now = clockSource.currentTime();
-               timeout = hardTimeout - clockSource.elapsedMillis(startTime, now);
-            }
-            else {
-               now = clockSource.currentTime();
+            if (poolEntry.isValid(now, ALIVE_BYPASS_WINDOW_MS)) {
+               now = clockSource.currentTime(); //include time spent doing poolEntry.isValid()
                metricsTracker.recordBorrowStats(startTime, now);
                return poolEntry.createProxyConnection(leakTask.schedule(poolEntry), now);
             }
+            // Throw away the dead connection (passed max age or failed alive test)
+            closeConnection(poolEntry, "(connection is evicted or dead)");
+            now = clockSource.currentTime();
+            timeout = hardTimeout - clockSource.elapsedMillis(startTime, now);
          } while (timeout > 0L);
       }
       catch (InterruptedException e) {
