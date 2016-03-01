@@ -57,11 +57,11 @@ class ProxyLeakTask implements Runnable
       this.scheduledFuture = null;
    }
 
-   private ProxyLeakTask(final ProxyLeakTask parent, final PoolEntry poolEntry)
+   private ProxyLeakTask(final ProxyLeakTask parent, final String connectionName)
    {
       this.executorService = null;
       this.exception = new Exception("Apparent connection leak detected");
-      this.connectionName = poolEntry.connection.toString();
+      this.connectionName = connectionName;
       this.scheduledFuture = parent.executorService.schedule(this, parent.leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
@@ -70,9 +70,9 @@ class ProxyLeakTask implements Runnable
       this(0, null);
    }
    
-   ProxyLeakTask schedule(final PoolEntry bagEntry)
+   ProxyLeakTask schedule(final PoolEntry poolEntry)
    {
-      return (leakDetectionThreshold == 0) ? NO_LEAK : new ProxyLeakTask(this, bagEntry);
+      return (leakDetectionThreshold == 0) ? NO_LEAK : new ProxyLeakTask(this, poolEntry.getConnectionName());
    }
 
    void updateLeakDetectionThreshold(final long leakDetectionThreshold)

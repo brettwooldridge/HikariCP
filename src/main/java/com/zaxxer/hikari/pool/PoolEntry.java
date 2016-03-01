@@ -40,7 +40,7 @@ final class PoolEntry implements IConcurrentBagEntry
 
    static final Comparator<PoolEntry> LASTACCESS_COMPARABLE;
 
-   Connection connection;
+   private Connection connection;
    private long lastAccessed;
    private long lastBorrowed;
    private volatile boolean evict;
@@ -108,6 +108,11 @@ final class PoolEntry implements IConcurrentBagEntry
    String getPoolName()
    {
       return hikariPool.toString();
+   }
+
+   String getConnectionName()
+   {
+      return connection.toString();
    }
 
    boolean isMarkedEvicted()
