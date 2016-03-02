@@ -75,7 +75,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private volatile int poolState;
 
-   private final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", MILLISECONDS.toMillis(500));
+   final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", MILLISECONDS.toMillis(500));
    private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", SECONDS.toMillis(30));
 
    private final PoolEntryCreator POOL_ENTRY_CREATOR = new PoolEntryCreator();
@@ -168,7 +168,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                break; // timed out
             }
 
-            if (poolEntry.isValid(now, ALIVE_BYPASS_WINDOW_MS)) {
+            if (poolEntry.isValid(now)) {
                now = clockSource.currentTime(); //include time spent doing poolEntry.isValid()
                metricsTracker.recordBorrowStats(startTime, now);
                return poolEntry.createProxyConnection(leakTask.schedule(poolEntry), now);

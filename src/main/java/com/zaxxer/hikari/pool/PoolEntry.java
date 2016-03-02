@@ -143,9 +143,9 @@ final class PoolEntry implements IConcurrentBagEntry
    }
 
    /** Returns true if 'this' has 'valid' connection */
-   boolean isValid(final long now, final long aliveBypassWindow)
+   boolean isValid(final long now)
    {
-      return (!evict && (ClockSource.INSTANCE.elapsedMillis(lastAccessed, now) < aliveBypassWindow || hikariPool.isConnectionAlive(connection)));
+      return (!evict && (ClockSource.INSTANCE.elapsedMillis(lastAccessed, now) < hikariPool.ALIVE_BYPASS_WINDOW_MS || hikariPool.isConnectionAlive(connection)));
    }
 
    /** {@inheritDoc} */
