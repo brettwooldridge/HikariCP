@@ -447,7 +447,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             }, lifetime, MILLISECONDS));
          }
 
-         LOGGER.debug("{} - Added connection {}", poolName, poolEntry.getConnectionName());
+         LOGGER.debug("{} - Added connection {}", poolName, poolEntry);
          return poolEntry;
       }
       catch (Exception e) {
