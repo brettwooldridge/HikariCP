@@ -67,8 +67,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 {
    private final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
 
-   private static final ClockSource clockSource = ClockSource.INSTANCE;
-
    private static final int POOL_NORMAL = 0;
    private static final int POOL_SUSPENDED = 1;
    private static final int POOL_SHUTDOWN = 2;
@@ -157,7 +155,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    public final Connection getConnection(final long hardTimeout) throws SQLException
    {
       suspendResumeLock.acquire();
-      final long startTime = clockSource.currentTime();
+      final long startTime = ClockSource.INSTANCE.currentTime();
       long now = startTime;
 
       try {
@@ -169,14 +167,14 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             }
 
             if (poolEntry.isValid(now)) {
-               now = clockSource.currentTime(); //include time spent doing poolEntry.isValid()
+               now = ClockSource.INSTANCE.currentTime(); //include time spent doing poolEntry.isValid()
                metricsTracker.recordBorrowStats(startTime, now);
                return poolEntry.createProxyConnection(leakTask.schedule(poolEntry), now);
             }
             // Throw away the dead connection (passed max age or failed alive test)
             closeConnection(poolEntry, "(connection is evicted or dead)");
-            now = clockSource.currentTime();
-            timeout = hardTimeout - clockSource.elapsedMillis(startTime, now);
+            now = ClockSource.INSTANCE.currentTime();
+            timeout = hardTimeout - ClockSource.INSTANCE.elapsedMillis(startTime, now);
          } while (timeout > 0L);
       }
       catch (InterruptedException e) {
@@ -194,7 +192,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       if (originalException instanceof SQLException) {
          sqlState = ((SQLException) originalException).getSQLState();
       }
-      final SQLException connectionException = new SQLTransientConnectionException(poolName + " - Connection is not available, request timed out after " + clockSource.elapsedMillis(startTime) + "ms.", sqlState, originalException);
+      final SQLException connectionException = new SQLTransientConnectionException(poolName + " - Connection is not available, request timed out after " + ClockSource.INSTANCE.elapsedMillis(startTime) + "ms.", sqlState, originalException);
       if (originalException instanceof SQLException) {
          connectionException.setNextException((SQLException) originalException);
       }
@@ -229,11 +227,11 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          final ExecutorService assassinExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection assassinator",
                                                                            config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
          try {
-            final long start = clockSource.currentTime();
+            final long start = ClockSource.INSTANCE.currentTime();
             do {
                abortActiveConnections(assassinExecutor);
                softEvictConnections();
-            } while (getTotalConnections() > 0 && clockSource.elapsedMillis(start) < SECONDS.toMillis(5));
+            } while (getTotalConnections() > 0 && ClockSource.INSTANCE.elapsedMillis(start) < SECONDS.toMillis(5));
          }
          finally {
             assassinExecutor.shutdown();
@@ -577,7 +575,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
     */
    private class HouseKeeper implements Runnable
    {
-      private volatile long previous = clockSource.plusMillis(clockSource.currentTime(), -HOUSEKEEPING_PERIOD_MS);
+      private volatile long previous = ClockSource.INSTANCE.plusMillis(ClockSource.INSTANCE.currentTime(), -HOUSEKEEPING_PERIOD_MS);
 
       @Override
       public void run()
@@ -588,20 +586,20 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          leakTask.updateLeakDetectionThreshold(config.getLeakDetectionThreshold());
 
          final long idleTimeout = config.getIdleTimeout();
-         final long now = clockSource.currentTime();
+         final long now = ClockSource.INSTANCE.currentTime();
 
          // Detect retrograde time, allowing +128ms as per NTP spec.
-         if (clockSource.plusMillis(now, 128) < clockSource.plusMillis(previous, HOUSEKEEPING_PERIOD_MS)) {
+         if (ClockSource.INSTANCE.plusMillis(now, 128) < ClockSource.INSTANCE.plusMillis(previous, HOUSEKEEPING_PERIOD_MS)) {
             LOGGER.warn("{} - Retrograde clock change detected (housekeeper delta={}), soft-evicting connections from pool.",
-                        clockSource.elapsedDisplayString(previous, now), poolName);
+                        ClockSource.INSTANCE.elapsedDisplayString(previous, now), poolName);
             previous = now;
             softEvictConnections();
             fillPool();
             return;
          }
-         else if (now > clockSource.plusMillis(previous, (3 * HOUSEKEEPING_PERIOD_MS) / 2)) {
+         else if (now > ClockSource.INSTANCE.plusMillis(previous, (3 * HOUSEKEEPING_PERIOD_MS) / 2)) {
             // No point evicting for forward clock motion, this merely accelerates connection retirement anyway
-            LOGGER.warn("{} - Thread starvation or clock leap detected (housekeeper delta={}).", clockSource.elapsedDisplayString(previous, now), poolName);
+            LOGGER.warn("{} - Thread starvation or clock leap detected (housekeeper delta={}).", ClockSource.INSTANCE.elapsedDisplayString(previous, now), poolName);
          }
 
          previous = now;

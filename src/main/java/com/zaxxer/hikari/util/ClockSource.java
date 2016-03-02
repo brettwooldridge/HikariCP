@@ -32,10 +32,53 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Brett Wooldridge
  */
-public interface ClockSource
+public abstract class ClockSource implements Clock
 {
-   ClockSource INSTANCE = Factory.create();
+   public static final ClockSource INSTANCE;
 
+   private static final TimeUnit[] TIMEUNITS_DESCENDING = {DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS, MICROSECONDS, NANOSECONDS};
+
+   private static final String[] TIMEUNIT_DISPLAY_VALUES = {"ns", "μs", "ms", "s", "m", "h", "d"};
+
+   static {
+      String os = System.getProperty("os.name");
+      if ("Mac OS X".equals(os)) {
+         INSTANCE = new MillisecondClockSource();
+      }
+      else {
+         INSTANCE = new NanosecondClockSource();
+      }
+   }
+
+   /**
+    * Get a String representation of the elapsed time in appropriate magnitude terminology.
+    *
+    * @param startTime an opaque time-stamp
+    * @param endTime an opaque time-stamp
+    * @return a string representation of the elapsed time interval
+    */
+   public String elapsedDisplayString(long startTime, long endTime)
+   {
+      long elapsedNanos = elapsedNanos(startTime, endTime);
+
+      StringBuilder sb = new StringBuilder(elapsedNanos < 0 ? "-" : "");
+      elapsedNanos = Math.abs(elapsedNanos);
+
+      for (TimeUnit unit : TIMEUNITS_DESCENDING) {
+         long converted = unit.convert(elapsedNanos, NANOSECONDS);
+         if (converted > 0) {
+            sb.append(converted).append(TIMEUNIT_DISPLAY_VALUES[unit.ordinal()]);
+            elapsedNanos -= NANOSECONDS.convert(converted, unit);
+         }
+      }
+
+      return sb.toString();
+   }
+
+}
+
+interface Clock
+{
    /**
     * Get the current time-stamp (resolution is opaque).
     *
@@ -114,36 +157,7 @@ public interface ClockSource
     */
    TimeUnit getSourceTimeUnit();
 
-   /**
-    * Get a String representation of the elapsed time in appropriate magnitude terminology.
-    *
-    * @param startTime an opaque time-stamp
-    * @param endTime an opaque time-stamp
-    * @return a string representation of the elapsed time interval
-    */
-   String elapsedDisplayString(long startTime, long endTime);
-
-   TimeUnit[] TIMEUNITS_DESCENDING = {DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS, MICROSECONDS, NANOSECONDS};
-
-   String[] TIMEUNIT_DISPLAY_VALUES = {"ns", "μs", "ms", "s", "m", "h", "d"};
-
-   /**
-    * Factory class used to create a platform-specific ClockSource.
-    */
-   class Factory
-   {
-      private static ClockSource create()
-      {
-         String os = System.getProperty("os.name");
-         if ("Mac OS X".equals(os)) {
-            return new MillisecondClockSource();
-         }
-
-         return new NanosecondClockSource();
-      }
-   }
-
-   final class MillisecondClockSource extends NanosecondClockSource
+   final class MillisecondClockSource extends ClockSource
    {
       /** {@inheritDoc} */
       @Override
@@ -209,7 +223,7 @@ public interface ClockSource
       }
    }
 
-   class NanosecondClockSource implements ClockSource
+   final class NanosecondClockSource extends ClockSource
    {
       /** {@inheritDoc} */
       @Override
@@ -272,26 +286,6 @@ public interface ClockSource
       public TimeUnit getSourceTimeUnit()
       {
          return NANOSECONDS;
-      }
-
-      /** {@inheritDoc} */
-      @Override
-      public String elapsedDisplayString(long startTime, long endTime)
-      {
-         long elapsedNanos = elapsedNanos(startTime, endTime);
-
-         StringBuilder sb = new StringBuilder(elapsedNanos < 0 ? "-" : "");
-         elapsedNanos = Math.abs(elapsedNanos);
-
-         for (TimeUnit unit : TIMEUNITS_DESCENDING) {
-            long converted = unit.convert(elapsedNanos, NANOSECONDS);
-            if (converted > 0) {
-               sb.append(converted).append(TIMEUNIT_DISPLAY_VALUES[unit.ordinal()]);
-               elapsedNanos -= NANOSECONDS.convert(converted, unit);
-            }
-         }
-
-         return sb.toString();
       }
    }
 }

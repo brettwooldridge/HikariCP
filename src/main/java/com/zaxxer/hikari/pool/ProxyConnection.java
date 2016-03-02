@@ -51,7 +51,6 @@ public abstract class ProxyConnection implements Connection
 
    private static final Logger LOGGER;
    private static final Set<String> SQL_ERRORS;
-   private static final ClockSource clockSource;
 
    protected Connection delegate;
 
@@ -72,7 +71,6 @@ public abstract class ProxyConnection implements Connection
    // static initializer
    static {
       LOGGER = LoggerFactory.getLogger(ProxyConnection.class);
-      clockSource = ClockSource.INSTANCE;
 
       SQL_ERRORS = new HashSet<>();
       SQL_ERRORS.add("57P01"); // ADMIN SHUTDOWN
@@ -232,7 +230,7 @@ public abstract class ProxyConnection implements Connection
             }
 
             delegate.clearWarnings();
-            lastAccess = clockSource.currentTime();
+            lastAccess = ClockSource.INSTANCE.currentTime();
          }
          catch (SQLException e) {
             // when connections are aborted, exceptions are often thrown that should not reach the application
