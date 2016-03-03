@@ -495,7 +495,8 @@ abstract class PoolBase
       if ((dsClassName != null && dsClassName.contains("Mysql")) ||
           (jdbcUrl != null && jdbcUrl.contains("mysql")) ||
           (dataSource != null && dataSource.getClass().getName().contains("Mysql"))) {
-         netTimeoutExecutor = new SynchronousExecutor();
+         isNetworkTimeoutSupported = FALSE;
+         //LOGGER.warn("{} - Invalid implementation by driver, Ignoring calls to setNetworkTimeout()", poolName);
       }
       else {
          ThreadFactory threadFactory = config.getThreadFactory();
@@ -551,25 +552,6 @@ abstract class PoolBase
    // ***********************************************************************
    //                      Private Static Classes
    // ***********************************************************************
-
-   /**
-    * Special executor used only to work around a MySQL issue that has not been addressed.
-    * MySQL issue: http://bugs.mysql.com/bug.php?id=75615
-    */
-   private static class SynchronousExecutor implements Executor
-   {
-      /** {@inheritDoc} */
-      @Override
-      public void execute(Runnable command)
-      {
-         try {
-            command.run();
-         }
-         catch (Throwable t) {
-            LoggerFactory.getLogger(PoolBase.class).debug("Failed to execute: {}", command, t);
-         }
-      }
-   }
 
    /**
     * A class that delegates to a MetricsTracker implementation.  The use of a delegate
