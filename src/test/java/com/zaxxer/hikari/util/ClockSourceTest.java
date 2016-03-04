@@ -36,7 +36,7 @@ public class ClockSourceTest
    @Test
    public void testClockSourceDisplay()
    {
-      ClockSource msSource = new ClockSource.MillisecondClockSource();
+      ClockSource msSource = new MillisecondClockSource();
 
       final long sTime = DAYS.toMillis(3) + HOURS.toMillis(9) + MINUTES.toMillis(24) + SECONDS.toMillis(18) + MILLISECONDS.toMillis(572);
 
@@ -49,7 +49,7 @@ public class ClockSourceTest
       Assert.assertEquals("-59m54s795ms", ds2);
 
       
-      ClockSource nsSource = new ClockSource.NanosecondClockSource();
+      ClockSource nsSource = new NanosecondClockSource();
 
       final long sTime2 = DAYS.toNanos(3) + HOURS.toNanos(9) + MINUTES.toNanos(24) + SECONDS.toNanos(18) + MILLISECONDS.toNanos(572) + MICROSECONDS.toNanos(324) + NANOSECONDS.toNanos(823);
 

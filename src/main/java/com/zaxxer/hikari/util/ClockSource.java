@@ -80,7 +80,7 @@ public abstract class ClockSource
     *
     * @return the current time-stamp
     */
-   abstract long currentTime();
+   public abstract long currentTime();
 
    /**
     * Convert an opaque time-stamp returned by currentTime() into
@@ -89,7 +89,7 @@ public abstract class ClockSource
     * @param time an opaque time-stamp returned by an instance of this class
     * @return the time-stamp in milliseconds
     */
-   abstract long toMillis(long time);
+   public abstract long toMillis(long time);
 
    /**
     * Convert an opaque time-stamp returned by currentTime() into
@@ -98,7 +98,7 @@ public abstract class ClockSource
     * @param time an opaque time-stamp returned by an instance of this class
     * @return the time-stamp in nanoseconds
     */
-   abstract long toNanos(long time);
+   public abstract long toNanos(long time);
 
    /**
     * Convert an opaque time-stamp returned by currentTime() into an
@@ -107,7 +107,7 @@ public abstract class ClockSource
     * @param startTime an opaque time-stamp returned by an instance of this class
     * @return the elapsed time between startTime and now in milliseconds
     */
-   abstract long elapsedMillis(long startTime);
+   public abstract long elapsedMillis(long startTime);
 
    /**
     * Get the difference in milliseconds between two opaque time-stamps returned
@@ -117,7 +117,7 @@ public abstract class ClockSource
     * @param endTime an opaque time-stamp returned by an instance of this class
     * @return the elapsed time between startTime and endTime in milliseconds
     */
-   abstract long elapsedMillis(long startTime, long endTime);
+   public abstract long elapsedMillis(long startTime, long endTime);
 
    /**
     * Convert an opaque time-stamp returned by currentTime() into an
@@ -126,7 +126,7 @@ public abstract class ClockSource
     * @param startTime an opaque time-stamp returned by an instance of this class
     * @return the elapsed time between startTime and now in milliseconds
     */
-   abstract long elapsedNanos(long startTime);
+   public abstract long elapsedNanos(long startTime);
 
    /**
     * Get the difference in nanoseconds between two opaque time-stamps returned
@@ -136,7 +136,7 @@ public abstract class ClockSource
     * @param endTime an opaque time-stamp returned by an instance of this class
     * @return the elapsed time between startTime and endTime in nanoseconds
     */
-   abstract long elapsedNanos(long startTime, long endTime);
+   public abstract long elapsedNanos(long startTime, long endTime);
 
    /**
     * Return the specified opaque time-stamp plus the specified number of milliseconds.
@@ -145,13 +145,13 @@ public abstract class ClockSource
     * @param millis milliseconds to add
     * @return a new opaque time-stamp
     */
-   abstract long plusMillis(long time, long millis);
+   public abstract long plusMillis(long time, long millis);
 
    /**
     * Get the TimeUnit the ClockSource is denominated in.
     * @return
     */
-   abstract TimeUnit getSourceTimeUnit();
+   public abstract TimeUnit getSourceTimeUnit();
 }
 
 final class MillisecondClockSource extends ClockSource
