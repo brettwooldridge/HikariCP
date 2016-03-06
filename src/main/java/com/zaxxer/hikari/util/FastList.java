@@ -184,6 +184,10 @@ public final class FastList<T> extends ArrayList<T>
    @Override
    public T remove(int index)
    {
+      if (size == 0) {
+         return null;
+      }
+
       final T old = elementData[index];
 
       final int numMoved = size - index - 1;

@@ -182,7 +182,7 @@ public abstract class ProxyConnection implements Connection
       leakTask.cancel();
    }
 
-   private final <T extends Statement> T trackStatement(final T statement)
+   private final synchronized <T extends Statement> T trackStatement(final T statement)
    {
       openStatements.add(statement);
 
@@ -205,7 +205,9 @@ public abstract class ProxyConnection implements Connection
             }
          }
 
-         openStatements.clear();
+         synchronized (this) {
+            openStatements.clear();
+         }
       }
    }
 
