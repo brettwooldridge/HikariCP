@@ -436,7 +436,7 @@ abstract class PoolBase
             if (isNetworkTimeoutSupported == UNINITIALIZED) {
                isNetworkTimeoutSupported = FALSE;
 
-               LOGGER.warn("{} - Failed to get/set network timeout for connection. ({})", poolName, e.getMessage());
+               LOGGER.info("{} - Driver does not support get/set network timeout for connections. ({})", poolName, e.getMessage());
                if (validationTimeout < SECONDS.toMillis(1)) {
                   LOGGER.warn("{} - A validationTimeout of less than 1 second cannot be honored on drivers without setNetworkTimeout() support.", poolName);
                }
