@@ -162,7 +162,7 @@ public abstract class ProxyConnection implements Connection
       return sqle;
    }
 
-   final void untrackStatement(final Statement statement)
+   final synchronized void untrackStatement(final Statement statement)
    {
       openStatements.remove(statement);
    }
