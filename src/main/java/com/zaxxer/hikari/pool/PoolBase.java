@@ -148,7 +148,7 @@ abstract class PoolBase
       }
       catch (SQLException e) {
          lastConnectionFailure.set(e);
-         LOGGER.warn("{} - Failed to validate connection {} ({})", poolName, connection, e.getMessage());
+         LOGGER.info("{} - Failed to validate connection {} ({})", poolName, connection, e.getMessage());
          return false;
       }
    }
@@ -409,7 +409,7 @@ abstract class PoolBase
          catch (Throwable e) {
             if (isQueryTimeoutSupported == UNINITIALIZED) {
                isQueryTimeoutSupported = FALSE;
-               LOGGER.warn("{} - Failed to set query timeout for statement. ({})", poolName, e.getMessage());
+               LOGGER.info("{} - Failed to set query timeout for statement. ({})", poolName, e.getMessage());
             }
          }
       }
@@ -436,9 +436,9 @@ abstract class PoolBase
             if (isNetworkTimeoutSupported == UNINITIALIZED) {
                isNetworkTimeoutSupported = FALSE;
 
-               LOGGER.warn("{} - Failed to get/set network timeout for connection. ({})", poolName, e.getMessage());
+               LOGGER.info("{} - Failed to get/set network timeout for connection. ({})", poolName, e.getMessage());
                if (validationTimeout < SECONDS.toMillis(1)) {
-                  LOGGER.warn("{} - A validationTimeout of less than 1 second cannot be honored on drivers without setNetworkTimeout() support.", poolName);
+                  LOGGER.info("{} - A validationTimeout of less than 1 second cannot be honored on drivers without setNetworkTimeout() support.", poolName);
                }
             }
          }
@@ -496,7 +496,7 @@ abstract class PoolBase
           (jdbcUrl != null && jdbcUrl.contains("mysql")) ||
           (dataSource != null && dataSource.getClass().getName().contains("Mysql"))) {
          isNetworkTimeoutSupported = FALSE;
-         //LOGGER.warn("{} - Invalid implementation by driver, Ignoring calls to setNetworkTimeout()", poolName);
+         //LOGGER.info("{} - Invalid implementation by driver, Ignoring calls to setNetworkTimeout()", poolName);
       }
       else {
          ThreadFactory threadFactory = config.getThreadFactory();
@@ -521,7 +521,7 @@ abstract class PoolBase
             dataSource.setLoginTimeout((int) MILLISECONDS.toSeconds(Math.max(1000L, connectionTimeout)));
          }
          catch (Throwable e) {
-            LOGGER.warn("{} - Failed to set login timeout for data source. ({})", poolName, e.getMessage());
+            LOGGER.info("{} - Failed to set login timeout for data source. ({})", poolName, e.getMessage());
          }
       }
    }

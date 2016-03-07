@@ -260,7 +260,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       ProxyConnection proxyConnection = (ProxyConnection) connection;
       proxyConnection.cancelLeakTask();
 
-      softEvictConnection(proxyConnection.getPoolEntry(), "(connection evicted by user)", true /* owner */);
+      softEvictConnection(proxyConnection.getPoolEntry(), "(connection evicted by user)");
    }
 
    public void setMetricRegistry(Object metricRegistry)
@@ -338,7 +338,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    public void softEvictConnections()
    {
       for (PoolEntry poolEntry : connectionBag.values()) {
-         softEvictConnection(poolEntry, "(connection evicted)", false /* not owner */);
+         softEvictConnection(poolEntry, "(connection evicted)");
       }
    }
 
@@ -440,7 +440,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             poolEntry.setFutureEol(houseKeepingExecutorService.schedule(new Runnable() {
                @Override
                public void run() {
-                  softEvictConnection(poolEntry, "(connection has passed maxLifetime)", false /* not owner */);
+                  softEvictConnection(poolEntry, "(connection has passed maxLifetime)");
                }
             }, lifetime, MILLISECONDS));
          }
@@ -520,9 +520,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       }
    }
 
-   private void softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
+   private void softEvictConnection(final PoolEntry poolEntry, final String reason)
    {
-      if (owner || connectionBag.reserve(poolEntry)) {
+      if (connectionBag.reserve(poolEntry)) {
          closeConnection(poolEntry, reason);
       }
       else {
