@@ -261,7 +261,12 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       ProxyConnection proxyConnection = (ProxyConnection) connection;
       proxyConnection.cancelLeakTask();
 
-      softEvictConnection(proxyConnection.getPoolEntry(), "(connection evicted by user)", true /* owner */);
+      try {
+         softEvictConnection(proxyConnection.getPoolEntry(), "(connection evicted by user)", !connection.isClosed() /* owner */);
+      }
+      catch (SQLException e) {
+         // unreachable in HikariCP, but we're still forced to catch it
+      }
    }
 
    public void setMetricRegistry(Object metricRegistry)
@@ -524,6 +529,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private void softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
    {
       if (owner || connectionBag.reserve(poolEntry)) {
+         poolEntry.markEvicted();
          closeConnection(poolEntry, reason);
       }
       else {
