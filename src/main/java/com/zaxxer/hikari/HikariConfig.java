@@ -883,18 +883,10 @@ public class HikariConfig implements HikariConfigMXBean
    private int generatePoolNumber()
    {
       // POOL_NUMBER is global to the VM to avoid overlapping pool numbers in classloader scoped environments
-      final Properties sysProps = System.getProperties();
-      synchronized (sysProps) {
-         final String poolNumber = (String) sysProps.get("com.zaxxer.hikari.pool_number");
-         if (poolNumber == null) {
-            sysProps.put("com.zaxxer.hikari.pool_number", "0");
-            return 0;
-         }
-         else {
-            final int next = Integer.parseInt(poolNumber) + 1;
-            sysProps.put("com.zaxxer.hikari.pool_number", String.valueOf(next));
-            return next;
-         }
+      synchronized (System.getProperties()) {
+         final int next = Integer.getInteger("com.zaxxer.hikari.pool_number", 0) + 1;
+         System.setProperty("com.zaxxer.hikari.pool_number", String.valueOf(next));
+         return next;
       }
    }
 
