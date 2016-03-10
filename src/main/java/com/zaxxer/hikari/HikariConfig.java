@@ -55,7 +55,6 @@ public class HikariConfig implements HikariConfigMXBean
    private static final long IDLE_TIMEOUT = MINUTES.toMillis(10);
    private static final long MAX_LIFETIME = MINUTES.toMillis(30);
 
-   private static final AtomicInteger POOL_NUMBER;
    private static boolean unitTest;
 
    // Properties changeable at runtime through the MBean
@@ -95,20 +94,6 @@ public class HikariConfig implements HikariConfigMXBean
    private Object metricRegistry;
    private Object healthCheckRegistry;
    private Properties healthCheckProperties;
-
-   static
-   {
-      // POOL_NUMBER is global to the VM to avoid overlapping pool numbers in classloader scoped environments
-      final Properties sysProps = System.getProperties();
-      AtomicInteger poolNumber = (AtomicInteger) sysProps.get("com.zaxxer.hikari.pool_number");
-      if (poolNumber == null) {
-         POOL_NUMBER = new AtomicInteger();
-         sysProps.put("com.zaxxer.hikari.pool_number", POOL_NUMBER);
-      }
-      else {
-         POOL_NUMBER = poolNumber;
-      }
-   }
 
    /**
     * Default constructor
@@ -757,7 +742,7 @@ public class HikariConfig implements HikariConfigMXBean
    public void validate()
    {
       if (poolName == null) {
-         poolName = "HikariPool-" + POOL_NUMBER.getAndIncrement();
+         poolName = "HikariPool-" + generatePoolNumber();
       }
       else if (isRegisterMbeans && poolName.contains(":")) {
          throw new IllegalArgumentException("poolName cannot contain ':' when used with JMX");
@@ -892,6 +877,24 @@ public class HikariConfig implements HikariConfigMXBean
       }
       catch (IOException io) {
          throw new RuntimeException("Failed to read property file", io);
+      }
+   }
+
+   private int generatePoolNumber()
+   {
+      // POOL_NUMBER is global to the VM to avoid overlapping pool numbers in classloader scoped environments
+      final Properties sysProps = System.getProperties();
+      synchronized (sysProps) {
+         final String poolNumber = (String) sysProps.get("com.zaxxer.hikari.pool_number");
+         if (poolNumber == null) {
+            sysProps.put("com.zaxxer.hikari.pool_number", "0");
+            return 0;
+         }
+         else {
+            final int next = Integer.parseInt(poolNumber) + 1;
+            sysProps.put("com.zaxxer.hikari.pool_number", String.valueOf(next));
+            return next;
+         }
       }
    }
 
