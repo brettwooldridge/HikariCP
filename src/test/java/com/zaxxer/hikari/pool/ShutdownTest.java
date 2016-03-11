@@ -92,7 +92,7 @@ public class ShutdownTest
          threads[i].start();
       }
 
-      UtilityElf.quietlySleep(1200L);
+      UtilityElf.quietlySleep(1800L);
 
       Assert.assertTrue("Total connection count not as expected, ", pool.getTotalConnections() > 0);
 

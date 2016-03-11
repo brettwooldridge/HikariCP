@@ -160,7 +160,7 @@ public abstract class ProxyConnection implements Connection
       return sqle;
    }
 
-   final void untrackStatement(final Statement statement)
+   final synchronized void untrackStatement(final Statement statement)
    {
       openStatements.remove(statement);
    }
@@ -170,15 +170,12 @@ public abstract class ProxyConnection implements Connection
       isCommitStateDirty = true;
    }
 
-   /**
-    *
-    */
    void cancelLeakTask()
    {
       leakTask.cancel();
    }
 
-   private final <T extends Statement> T trackStatement(final T statement)
+   private final synchronized <T extends Statement> T trackStatement(final T statement)
    {
       openStatements.add(statement);
 
@@ -201,7 +198,9 @@ public abstract class ProxyConnection implements Connection
             }
          }
 
-         openStatements.clear();
+         synchronized (this) {
+            openStatements.clear();
+         }
       }
    }
 
@@ -239,10 +238,8 @@ public abstract class ProxyConnection implements Connection
             }
          }
          finally {
-            if (delegate != ClosedConnection.CLOSED_CONNECTION) {
-               poolEntry.recycle(lastAccess);
-            }
             delegate = ClosedConnection.CLOSED_CONNECTION;
+            poolEntry.recycle(lastAccess);
          }
       }
    }

@@ -156,9 +156,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    {
       suspendResumeLock.acquire();
       final long startTime = ClockSource.INSTANCE.currentTime();
-      long now = startTime;
 
       try {
+         long now = startTime;
          long timeout = hardTimeout;
          do {
             final PoolEntry poolEntry = connectionBag.borrow(timeout, MILLISECONDS);
@@ -260,7 +260,12 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       ProxyConnection proxyConnection = (ProxyConnection) connection;
       proxyConnection.cancelLeakTask();
 
-      softEvictConnection(proxyConnection.getPoolEntry(), "(connection evicted by user)");
+      try {
+         softEvictConnection(proxyConnection.getPoolEntry(), "(connection evicted by user)", !connection.isClosed() /* owner */);
+      }
+      catch (SQLException e) {
+         // unreachable in HikariCP, but we're still forced to catch it
+      }
    }
 
    public void setMetricRegistry(Object metricRegistry)
@@ -338,7 +343,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    public void softEvictConnections()
    {
       for (PoolEntry poolEntry : connectionBag.values()) {
-         softEvictConnection(poolEntry, "(connection evicted)");
+         softEvictConnection(poolEntry, "(connection evicted)", false /* not owner */);
       }
    }
 
@@ -440,7 +445,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             poolEntry.setFutureEol(houseKeepingExecutorService.schedule(new Runnable() {
                @Override
                public void run() {
-                  softEvictConnection(poolEntry, "(connection has passed maxLifetime)");
+                  softEvictConnection(poolEntry, "(connection has passed maxLifetime)", false /* not owner */);
                }
             }, lifetime, MILLISECONDS));
          }
@@ -520,13 +525,11 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       }
    }
 
-   private void softEvictConnection(final PoolEntry poolEntry, final String reason)
+   private void softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
    {
-      if (connectionBag.reserve(poolEntry)) {
+      poolEntry.markEvicted();
+      if (owner || connectionBag.reserve(poolEntry)) {
          closeConnection(poolEntry, reason);
-      }
-      else {
-         poolEntry.markEvicted();
       }
    }
 

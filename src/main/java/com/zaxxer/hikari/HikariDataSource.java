@@ -251,7 +251,9 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    }
 
    /**
-    * Evict a connection from the pool.
+    * Evict a connection from the pool.  If the connection has already been closed (returned to the pool)
+    * this may result in a "soft" eviction; the connection will be evicted sometime in the future if it is
+    * currently in use.  If the connection has not been closed, the eviction is immediate.
     *
     * @param connection the connection to evict from the pool
     */
