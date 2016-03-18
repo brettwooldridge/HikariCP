@@ -298,7 +298,7 @@ abstract class PoolBase
       }
 
       if (dataSource != null) {
-         setLoginTimeout(dataSource, connectionTimeout);
+         setLoginTimeout(dataSource);
          createNetworkTimeoutExecutor(dataSource, dsClassName, jdbcUrl);
       }
 
@@ -512,9 +512,8 @@ abstract class PoolBase
     * Set the loginTimeout on the specified DataSource.
     *
     * @param dataSource the DataSource
-    * @param connectionTimeout the timeout in milliseconds
     */
-   private void setLoginTimeout(final DataSource dataSource, final long connectionTimeout)
+   private void setLoginTimeout(final DataSource dataSource)
    {
       if (connectionTimeout != Integer.MAX_VALUE) {
          try {
