@@ -1,5 +1,17 @@
 HikariCP Changes
 
+Changes in 2.4.5
+
+ * issue 596: fix bug that occurs when minimumIdle is set to 0, but maximumPoolSize is
+   not explicitly set.
+ 
+ * issue 594: fix incompatibility with various libraries caused by storing a non-String
+   object in System properties.
+
+ * issue 593: improve logging when network timeout is not supported by the driver
+
+ * issue 591: improve thread-safety of Statement proxies
+ 
 Changes in 2.4.4
 
  * Generate unique sequential pool names, even across container classloaders to avoid
