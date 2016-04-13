@@ -131,9 +131,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          this.houseKeepingExecutorService = config.getScheduledExecutorService();
       }
 
-      this.houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 0L, HOUSEKEEPING_PERIOD_MS, MILLISECONDS);
-
       this.leakTask = new ProxyLeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
+
+      this.houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L, HOUSEKEEPING_PERIOD_MS, MILLISECONDS);
    }
 
    /**
@@ -587,54 +587,59 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       @Override
       public void run()
       {
-         // refresh timeouts in case they changed via MBean
-         connectionTimeout = config.getConnectionTimeout();
-         validationTimeout = config.getValidationTimeout();
-         leakTask.updateLeakDetectionThreshold(config.getLeakDetectionThreshold());
-
-         final long idleTimeout = config.getIdleTimeout();
-         final long now = clockSource.currentTime();
-
-         // Detect retrograde time, allowing +128ms as per NTP spec.
-         if (clockSource.plusMillis(now, 128) < clockSource.plusMillis(previous, HOUSEKEEPING_PERIOD_MS)) {
-            LOGGER.warn("{} - Retrograde clock change detected (housekeeper delta={}), soft-evicting connections from pool.",
-                        clockSource.elapsedDisplayString(previous, now), poolName);
+         try {
+            // refresh timeouts in case they changed via MBean
+            connectionTimeout = config.getConnectionTimeout();
+            validationTimeout = config.getValidationTimeout();
+            leakTask.updateLeakDetectionThreshold(config.getLeakDetectionThreshold());
+   
+            final long idleTimeout = config.getIdleTimeout();
+            final long now = clockSource.currentTime();
+   
+            // Detect retrograde time, allowing +128ms as per NTP spec.
+            if (clockSource.plusMillis(now, 128) < clockSource.plusMillis(previous, HOUSEKEEPING_PERIOD_MS)) {
+               LOGGER.warn("{} - Retrograde clock change detected (housekeeper delta={}), soft-evicting connections from pool.",
+                           clockSource.elapsedDisplayString(previous, now), poolName);
+               previous = now;
+               softEvictConnections();
+               fillPool();
+               return;
+            }
+            else if (now > clockSource.plusMillis(previous, (3 * HOUSEKEEPING_PERIOD_MS) / 2)) {
+               // No point evicting for forward clock motion, this merely accelerates connection retirement anyway
+               LOGGER.warn("{} - Thread starvation or clock leap detected (housekeeper delta={}).", clockSource.elapsedDisplayString(previous, now), poolName);
+            }
+   
             previous = now;
-            softEvictConnections();
-            fillPool();
-            return;
-         }
-         else if (now > clockSource.plusMillis(previous, (3 * HOUSEKEEPING_PERIOD_MS) / 2)) {
-            // No point evicting for forward clock motion, this merely accelerates connection retirement anyway
-            LOGGER.warn("{} - Thread starvation or clock leap detected (housekeeper delta={}).", clockSource.elapsedDisplayString(previous, now), poolName);
-         }
-
-         previous = now;
-
-         String afterPrefix = "Pool ";
-         if (idleTimeout > 0L) {
-            final List<PoolEntry> idleList = connectionBag.values(STATE_NOT_IN_USE);
-            int removable = idleList.size() - config.getMinimumIdle();
-            if (removable > 0) {
-               logPoolState("Before cleanup ");
-               afterPrefix = "After cleanup  ";
-
-               // Sort pool entries on lastAccessed
-               Collections.sort(idleList, LASTACCESS_COMPARABLE);
-               for (PoolEntry poolEntry : idleList) {
-                  if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout && connectionBag.reserve(poolEntry)) {
-                     closeConnection(poolEntry, "(connection has passed idleTimeout)");
-                     if (--removable == 0) {
-                        break; // keep min idle cons
+   
+            String afterPrefix = "Pool ";
+            if (idleTimeout > 0L) {
+               final List<PoolEntry> idleList = connectionBag.values(STATE_NOT_IN_USE);
+               int removable = idleList.size() - config.getMinimumIdle();
+               if (removable > 0) {
+                  logPoolState("Before cleanup ");
+                  afterPrefix = "After cleanup  ";
+   
+                  // Sort pool entries on lastAccessed
+                  Collections.sort(idleList, LASTACCESS_COMPARABLE);
+                  for (PoolEntry poolEntry : idleList) {
+                     if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout && connectionBag.reserve(poolEntry)) {
+                        closeConnection(poolEntry, "(connection has passed idleTimeout)");
+                        if (--removable == 0) {
+                           break; // keep min idle cons
+                        }
                      }
                   }
                }
             }
+   
+            logPoolState(afterPrefix);
+   
+            fillPool(); // Try to maintain minimum connections
          }
-
-         logPoolState(afterPrefix);
-
-         fillPool(); // Try to maintain minimum connections
+         catch (Exception e) {
+            LOGGER.error("Unexpected exception in housekeeping task", e);
+         }
       }
    }
 

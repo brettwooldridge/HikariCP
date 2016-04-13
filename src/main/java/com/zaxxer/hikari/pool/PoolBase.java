@@ -12,6 +12,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import java.lang.management.ManagementFactory;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.SQLTransientConnectionException;
 import java.sql.Statement;
 import java.util.Properties;
 import java.util.concurrent.Executor;
@@ -313,6 +314,10 @@ abstract class PoolBase
          String password = config.getPassword();
 
          connection = (username == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
+         if (connection == null) {
+            throw new SQLTransientConnectionException("DataSource returned null unexpectedly");
+         }
+
          setupConnection(connection);
          lastConnectionFailure.set(null);
          return connection;

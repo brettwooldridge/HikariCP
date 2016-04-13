@@ -53,6 +53,7 @@ public class HikariConfig implements HikariConfigMXBean
    private static final long VALIDATION_TIMEOUT = SECONDS.toMillis(5);
    private static final long IDLE_TIMEOUT = MINUTES.toMillis(10);
    private static final long MAX_LIFETIME = MINUTES.toMillis(30);
+   private static final int DEFAULT_POOL_SIZE = 10;
 
    private static boolean unitTest;
 
@@ -825,7 +826,7 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       if (maxPoolSize < 1) {
-         maxPoolSize = (minIdle <= 0) ? 10 : minIdle;
+         maxPoolSize = (minIdle <= 0) ? DEFAULT_POOL_SIZE : minIdle;
       }
 
       if (minIdle < 0 || minIdle > maxPoolSize) {

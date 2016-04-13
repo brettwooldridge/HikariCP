@@ -508,4 +508,48 @@ public class TestConnections
          Assert.assertSame("Bad query or something.", e.getNextException().getMessage());
       }
    }
+
+   @Test
+   public void testPopulationSlowAcquisition() throws InterruptedException, SQLException
+   {
+      HikariConfig config = new HikariConfig();
+      config.setPoolName("SlowAcquisition");
+      config.setMaximumPoolSize(30);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "1000");
+
+      StubConnection.slowCreate = true;
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
+
+         ds.setIdleTimeout(3000);
+
+         TimeUnit.SECONDS.sleep(2);
+
+         HikariPool pool = TestElf.getPool(ds);
+         Assert.assertSame("Total connections not as expected", 1, pool.getTotalConnections());
+         Assert.assertSame("Idle connections not as expected", 1, pool.getIdleConnections());
+
+         Connection connection = ds.getConnection();
+         Assert.assertNotNull(connection);
+
+         TimeUnit.SECONDS.sleep(30);
+
+         Assert.assertSame("Second total connections not as expected", 30, pool.getTotalConnections());
+         Assert.assertSame("Second idle connections not as expected", 29, pool.getIdleConnections());
+         connection.close();
+
+         Assert.assertSame("Idle connections not as expected", 30, pool.getIdleConnections());
+
+         TimeUnit.SECONDS.sleep(5);
+
+         Assert.assertSame("Third total connections not as expected", 30, pool.getTotalConnections());
+         Assert.assertSame("Third idle connections not as expected", 30, pool.getIdleConnections());
+      }
+      finally {
+         StubConnection.slowCreate = false;
+      }
+   }
 }
