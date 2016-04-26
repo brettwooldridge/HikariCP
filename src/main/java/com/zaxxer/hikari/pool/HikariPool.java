@@ -216,8 +216,10 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
          softEvictConnections();
 
-         addConnectionExecutor.shutdown();
-         addConnectionExecutor.awaitTermination(5L, SECONDS);
+         if (addConnectionExecutor != null) {
+            addConnectionExecutor.shutdown();
+            addConnectionExecutor.awaitTermination(5L, SECONDS);
+         }
          if (config.getScheduledExecutorService() == null && houseKeepingExecutorService != null) {
             houseKeepingExecutorService.shutdown();
             houseKeepingExecutorService.awaitTermination(5L, SECONDS);
@@ -240,8 +242,10 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          }
 
          shutdownNetworkTimeoutExecutor();
-         closeConnectionExecutor.shutdown();
-         closeConnectionExecutor.awaitTermination(5L, SECONDS);
+         if (closeConnectionExecutor != null) {
+            closeConnectionExecutor.shutdown();
+            closeConnectionExecutor.awaitTermination(5L, SECONDS);
+         }
       }
       finally {
          logPoolState("After closing ");
