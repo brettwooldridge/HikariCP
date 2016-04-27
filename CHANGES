@@ -1,5 +1,16 @@
 HikariCP Changes
 
+Changes in 2.4.6
+
+ * Added Oracle SQL error code 61000 (exceeded maximum connect time) to evict connections
+   when it is encountered.
+
+ * issue 621: fix NPE in shutdown if invoked during initialization.
+
+ * issue 606, 610: housekeeper thread was running before all class members were
+   initialized, causing an unrecoverable exception and disabling idle connection
+   retirement (maximumLifetime still applied).
+
 Changes in 2.4.5
 
  * issue 596: fix bug that occurs when minimumIdle is set to 0, but maximumPoolSize is
