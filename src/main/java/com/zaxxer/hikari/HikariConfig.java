@@ -54,6 +54,7 @@ public class HikariConfig implements HikariConfigMXBean
    private static final long IDLE_TIMEOUT = MINUTES.toMillis(10);
    private static final long MAX_LIFETIME = MINUTES.toMillis(30);
    private static final int DEFAULT_POOL_SIZE = 10;
+   private static final String METRICS_PREFIX = "pool";
 
    private static boolean unitTest;
 
@@ -80,6 +81,7 @@ public class HikariConfig implements HikariConfigMXBean
    private String poolName;
    private String transactionIsolationName;
    private String username;
+   private String metricsPrefix;
    private boolean isAutoCommit;
    private boolean isReadOnly;
    private boolean isInitializationFailFast;
@@ -720,6 +722,27 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
+    * Get the default metricsPrefix used metrics
+    *
+    * @return the username
+    */
+   public String getMetricsPrefix()
+   {
+      return metricsPrefix;
+   }
+
+
+   /**
+   * Set the default prefix used for metrics.
+   *
+   * @param metricsPrefix the prefix for metrics
+   */
+   public void setMetricsPrefix(String metricsPrefix)
+   {
+      this.metricsPrefix = metricsPrefix;
+   }
+
+   /**
     * Get the thread factory used to create threads.
     *
     * @return the thread factory (may be null, in which case the default thread factory is used)
@@ -757,6 +780,11 @@ public class HikariConfig implements HikariConfigMXBean
       dataSourceJndiName = getNullIfEmpty(dataSourceJndiName);
       driverClassName = getNullIfEmpty(driverClassName);
       jdbcUrl = getNullIfEmpty(jdbcUrl);
+      metricsPrefix = getNullIfEmpty(metricsPrefix);
+
+      if (metricsPrefix == null) {
+        metricsPrefix = poolName + "." + METRICS_PREFIX;
+      }
 
       // Check Data Source Options
       if (dataSource != null) {
