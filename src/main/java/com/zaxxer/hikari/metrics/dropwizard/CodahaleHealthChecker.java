@@ -61,7 +61,7 @@ public final class CodahaleHealthChecker
       final MetricRegistry metricRegistry = (MetricRegistry) hikariConfig.getMetricRegistry();
 
       final long checkTimeoutMs = Long.parseLong(healthCheckProperties.getProperty("connectivityCheckTimeoutMs", String.valueOf(hikariConfig.getConnectionTimeout())));
-      registry.register(MetricRegistry.name(hikariConfig.getPoolName(), "pool", "ConnectivityCheck"), new ConnectivityHealthCheck(pool, checkTimeoutMs));
+      registry.register(MetricRegistry.name(hikariConfig.getMetricsPrefix(), "ConnectivityCheck"), new ConnectivityHealthCheck(pool, checkTimeoutMs));
 
       final long expected99thPercentile = Long.parseLong(healthCheckProperties.getProperty("expected99thPercentileMs", "0"));
       if (metricRegistry != null && expected99thPercentile > 0) {
@@ -69,13 +69,13 @@ public final class CodahaleHealthChecker
             @Override
             public boolean matches(String name, Metric metric)
             {
-               return name.equals(MetricRegistry.name(hikariConfig.getPoolName(), "pool", "Wait"));
+               return name.equals(MetricRegistry.name(hikariConfig.getMetricsPrefix(), "Wait"));
             }
          });
 
          if (!timers.isEmpty()) {
             final Timer timer = timers.entrySet().iterator().next().getValue();
-            registry.register(MetricRegistry.name(hikariConfig.getPoolName(), "pool", "Connection99Percent"), new Connection99Percent(timer, expected99thPercentile));
+            registry.register(MetricRegistry.name(hikariConfig.getMetricsPrefix(), "Connection99Percent"), new Connection99Percent(timer, expected99thPercentile));
          }
       }
    }

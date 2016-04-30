@@ -286,7 +286,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    public void setMetricsTrackerFactory(MetricsTrackerFactory metricsTrackerFactory)
    {
       if (metricsTrackerFactory != null) {
-         this.metricsTracker = new MetricsTrackerDelegate(metricsTrackerFactory.create(config.getPoolName(), getPoolStats()));
+         this.metricsTracker = new MetricsTrackerDelegate(metricsTrackerFactory.create(config.getMetricsPrefix(), getPoolStats()));
       }
       else {
          this.metricsTracker = new NopMetricsTrackerDelegate();
