@@ -47,6 +47,7 @@
       <jndi.version>0.11.4.1</jndi.version>
       <maven.release.version>2.5.3</maven.release.version>
       <metrics.version>3.1.2</metrics.version>
+      <simpleclient.version>0.0.14</simpleclient.version>
       <mockito.version>1.10.19</mockito.version>
       <pax.exam.version>4.8.0</pax.exam.version>
       <pax.url.version>2.4.5</pax.url.version>
@@ -134,6 +135,13 @@
          <groupId>io.dropwizard.metrics</groupId>
          <artifactId>metrics-healthchecks</artifactId>
          <version>${metrics.version}</version>
+         <scope>provided</scope>
+         <optional>true</optional>
+      </dependency>
+      <dependency>
+         <groupId>io.prometheus</groupId>
+         <artifactId>simpleclient</artifactId>
+         <version>${simpleclient.version}</version>
          <scope>provided</scope>
          <optional>true</optional>
       </dependency>
