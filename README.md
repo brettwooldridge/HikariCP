@@ -18,7 +18,7 @@ _Java 7 and Java 8 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>2.4.5</version>
+        <version>2.4.6</version>
     </dependency>
 ```
 _Java 6 maven artifact (*maintenance mode*):_
