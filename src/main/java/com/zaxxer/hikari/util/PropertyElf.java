@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -100,13 +101,14 @@ public final class PropertyElf
    public static Object getProperty(final String propName, final Object target)
    {
       try {
-         String capitalized = "get" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+         // use the english locale to avoid the infamous turkish locale bug
+         String capitalized = "get" + propName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propName.substring(1);
          Method method = target.getClass().getMethod(capitalized);
          return method.invoke(target);
       }
       catch (Exception e) {
          try {
-            String capitalized = "is" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+            String capitalized = "is" + propName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propName.substring(1);
             Method method = target.getClass().getMethod(capitalized);
             return method.invoke(target);
          }
@@ -128,7 +130,8 @@ public final class PropertyElf
    private static void setProperty(final Object target, final String propName, final Object propValue, final List<Method> methods)
    {
       Method writeMethod = null;
-      String methodName = "set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+      // use the english locale to avoid the infamous turkish locale bug
+      String methodName = "set" + propName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propName.substring(1);
 
       for (Method method : methods) {
          if (method.getName().equals(methodName) && method.getParameterTypes().length == 1) {
@@ -138,7 +141,7 @@ public final class PropertyElf
       }
 
       if (writeMethod == null) {
-         methodName = "set" + propName.toUpperCase();
+         methodName = "set" + propName.toUpperCase(Locale.ENGLISH);
          for (Method method : methods) {
             if (method.getName().equals(methodName) && method.getParameterTypes().length == 1) {
                writeMethod = method;
