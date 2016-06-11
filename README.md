@@ -437,8 +437,8 @@ Please perform changes and submit pull requests from the ``dev`` branch instead 
 [Issue Stats]:http://issuestats.com/github/brettwooldridge/HikariCP
 [Issue Stats img]:http://issuestats.com/github/brettwooldridge/HikariCP/badge/issue?style=flat&concise=true
 
-[Coverage Status]:https://coveralls.io/r/brettwooldridge/HikariCP?branch=master
-[Coverage Status img]:https://coveralls.io/repos/brettwooldridge/HikariCP/badge.svg?branch=master
+[Coverage Status]:https://coveralls.io/r/brettwooldridge/HikariCP?branch=dev
+[Coverage Status img]:https://coveralls.io/repos/brettwooldridge/HikariCP/badge.svg?branch=dev
 
 [Dependency Status]:https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0
 [Dependency Status img]:https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0/badge.svg?style=flat
