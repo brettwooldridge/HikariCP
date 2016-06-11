@@ -42,7 +42,7 @@
 
       <felix.bundle.plugin.version>3.0.1</felix.bundle.plugin.version>
       <felix.version>5.4.0</felix.version>
-      <hibernate.version>5.2.0.Final</hibernate.version>
+      <hibernate.version>5.0.9.Final</hibernate.version>
       <javassist.version>3.20.0-GA</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>
       <maven.release.version>2.5.3</maven.release.version>
