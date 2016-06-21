@@ -299,7 +299,7 @@ abstract class PoolBase
       }
 
       if (dataSource != null) {
-         setLoginTimeout(dataSource, connectionTimeout);
+         setLoginTimeout(dataSource);
          createNetworkTimeoutExecutor(dataSource, dsClassName, jdbcUrl);
       }
 
@@ -370,23 +370,17 @@ abstract class PoolBase
    private void checkDriverSupport(final Connection connection) throws SQLException
    {
       if (!isValidChecked) {
-         if (isUseJdbc4Validation) {
-            try {
+         try {
+            if (isUseJdbc4Validation) {
                connection.isValid(1);
             }
-            catch (Throwable e) {
-               LOGGER.error("{} - Failed to execute isValid() for connection, configure connection test query. ({})", poolName, e.getMessage());
-               throw e;
-            }
-         }
-         else {
-            try {
+            else {
                executeSql(connection, config.getConnectionTestQuery(), false);
             }
-            catch (Throwable e) {
-               LOGGER.error("{} - Failed to execute connection test query. ({})", poolName, e.getMessage());
-               throw e;
-            }
+         }
+         catch (Throwable e) {
+            LOGGER.error("{} - Failed to execute" + (isUseJdbc4Validation ? " isValid() for connection, configure" : "") + " connection test query. ({})", poolName, e.getMessage());
+            throw e;
          }
 
          defaultTransactionIsolation = connection.getTransactionIsolation();
@@ -444,9 +438,6 @@ abstract class PoolBase
                LOGGER.info("{} - Driver does not support get/set network timeout for connections. ({})", poolName, e.getMessage());
                if (validationTimeout < SECONDS.toMillis(1)) {
                   LOGGER.warn("{} - A validationTimeout of less than 1 second cannot be honored on drivers without setNetworkTimeout() support.", poolName);
-               }
-               else if (validationTimeout % SECONDS.toMillis(1) != 0) {
-                  LOGGER.warn("{} - A validationTimeout with fractional second granularity cannot be honored on drivers without setNetworkTimeout() support.", poolName);
                }
             }
          }
@@ -519,9 +510,8 @@ abstract class PoolBase
     * Set the loginTimeout on the specified DataSource.
     *
     * @param dataSource the DataSource
-    * @param connectionTimeout the timeout in milliseconds
     */
-   private void setLoginTimeout(final DataSource dataSource, final long connectionTimeout)
+   private void setLoginTimeout(final DataSource dataSource)
    {
       if (connectionTimeout != Integer.MAX_VALUE) {
          try {

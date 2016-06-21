@@ -104,6 +104,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       this.totalConnections = new AtomicInteger();
       this.suspendResumeLock = config.isAllowPoolSuspension() ? new SuspendResumeLock() : SuspendResumeLock.FAUX_LOCK;
 
+      checkFailFast();
+
       if (config.getMetricsTrackerFactory() != null) {
          setMetricsTrackerFactory(config.getMetricsTrackerFactory());
       }
@@ -114,8 +116,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       setHealthCheckRegistry(config.getHealthCheckRegistry());
 
       registerMBeans(this);
-
-      checkFailFast();
 
       ThreadFactory threadFactory = config.getThreadFactory();
       this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
@@ -216,11 +216,10 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
          softEvictConnections();
 
-         if (addConnectionExecutor != null) {
-            addConnectionExecutor.shutdown();
-            addConnectionExecutor.awaitTermination(5L, SECONDS);
-         }
-         if (config.getScheduledExecutorService() == null && houseKeepingExecutorService != null) {
+         addConnectionExecutor.shutdown();
+         addConnectionExecutor.awaitTermination(5L, SECONDS);
+
+         if (config.getScheduledExecutorService() == null) {
             houseKeepingExecutorService.shutdown();
             houseKeepingExecutorService.awaitTermination(5L, SECONDS);
          }
@@ -242,10 +241,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          }
 
          shutdownNetworkTimeoutExecutor();
-         if (closeConnectionExecutor != null) {
-            closeConnectionExecutor.shutdown();
-            closeConnectionExecutor.awaitTermination(5L, SECONDS);
-         }
+         closeConnectionExecutor.shutdown();
+         closeConnectionExecutor.awaitTermination(5L, SECONDS);
       }
       finally {
          logPoolState("After closing ");
@@ -518,13 +515,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             newConnection().close();
          }
          catch (Throwable e) {
-            try {
-               shutdown();
-            }
-            catch (Throwable ex) {
-               e.addSuppressed(ex);
-            }
-
             throw new PoolInitializationException(e);
          }
       }
@@ -532,12 +522,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private void softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
    {
+      poolEntry.markEvicted();
       if (owner || connectionBag.reserve(poolEntry)) {
-         poolEntry.markEvicted();
          closeConnection(poolEntry, reason);
-      }
-      else {
-         poolEntry.markEvicted();
       }
    }
 
