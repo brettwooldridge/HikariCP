@@ -136,7 +136,8 @@ available, a SQLException will be thrown.  1000ms is the minimum value.
 
 &#8986;``idleTimeout``<br/>
 This property controls the maximum amount of time that a connection is allowed to sit idle in the
-pool.  Whether a connection is retired as idle or not is subject to a maximum variation of +30
+pool.  **This setting only applies when ``minimumIdle`` is defined to be less than ``maximumPoolSize``.**
+Whether a connection is retired as idle or not is subject to a maximum variation of +30
 seconds, and average variation of +15 seconds.  A connection will never be retired as idle *before*
 this timeout.  A value of 0 means that idle connections are never removed from the pool.
 *Default: 600000 (10 minutes)*
