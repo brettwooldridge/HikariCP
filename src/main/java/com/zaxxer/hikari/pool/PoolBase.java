@@ -343,12 +343,12 @@ abstract class PoolBase
       else {
          setNetworkTimeout(connection, validationTimeout);
       }
-
+      connection.setAutoCommit(isAutoCommit);
+      
       checkDriverSupport(connection);
 
       connection.setReadOnly(isReadOnly);
-      connection.setAutoCommit(isAutoCommit);
-
+      
       if (transactionIsolation != defaultTransactionIsolation) {
          connection.setTransactionIsolation(transactionIsolation);
       }
