@@ -165,7 +165,7 @@ public final class UtilityElf
          return false;
       }
 
-      return Float.parseFloat(matcher.group(1)) > 1.7;
+      return Float.parseFloat(matcher.group(1)) > 1.7f;
    }
 
    public static final class DefaultThreadFactory implements ThreadFactory {
