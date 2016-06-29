@@ -127,7 +127,7 @@ public class TestValidation
          Assert.fail();
       }
       catch (IllegalArgumentException ise) {
-         Assert.assertTrue(ise.getMessage().contains("validationTimeout cannot be less than 250ms"));
+         Assert.assertTrue(ise.getMessage().contains("validationTimeout cannot be less than 1000ms"));
       }
    }
 
