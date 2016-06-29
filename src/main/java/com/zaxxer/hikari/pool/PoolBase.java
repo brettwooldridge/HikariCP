@@ -126,14 +126,14 @@ abstract class PoolBase
    {
       try {
          if (isUseJdbc4Validation) {
-            return connection.isValid(Math.max(1, (int) MILLISECONDS.toSeconds(500L + validationTimeout)));
+            return connection.isValid((int) MILLISECONDS.toSeconds(500L + validationTimeout));
          }
 
          setNetworkTimeout(connection, validationTimeout);
 
          try (Statement statement = connection.createStatement()) {
             if (isNetworkTimeoutSupported != TRUE) {
-               setQueryTimeout(statement, Math.max(1, (int) MILLISECONDS.toSeconds(500L + validationTimeout)));
+               setQueryTimeout(statement, (int) MILLISECONDS.toSeconds(500L + validationTimeout));
             }
 
             statement.execute(config.getConnectionTestQuery());
