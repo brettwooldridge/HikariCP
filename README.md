@@ -252,9 +252,8 @@ class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, e
 *Default: driver default*
 
 &#8986;``validationTimeout``<br/>
-This property controls the maximum amount of time that a connection will be tested for aliveness.
-This value must be less than the ``connectionTimeout``.  The lowest accepted validation timeout is
-1000ms (1 second).
+This property controls the maximum amount of time to wait before pool discards the connection as dead while validating connection.
+The lowest accepted validation timeout is 1000ms (1 second).
 *Default: 5000*
 
 &#8986;``leakDetectionThreshold``<br/>

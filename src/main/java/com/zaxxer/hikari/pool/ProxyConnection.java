@@ -170,12 +170,7 @@ public abstract class ProxyConnection implements Connection
 
    final void markCommitStateDirty()
    {
-      if (isAutoCommit) {
-         lastAccess = clockSource.currentTime();
-      }
-      else {
-         isCommitStateDirty = true;
-      }
+      isCommitStateDirty = true;
    }
 
    void cancelLeakTask()
@@ -229,16 +224,15 @@ public abstract class ProxyConnection implements Connection
          try {
             if (isCommitStateDirty && !isAutoCommit && !isReadOnly) {
                delegate.rollback();
-               lastAccess = clockSource.currentTime();
                LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.getPoolName(), delegate);
             }
 
             if (dirtyBits != 0) {
                poolEntry.resetConnectionState(this, dirtyBits);
-               lastAccess = clockSource.currentTime();
             }
 
             delegate.clearWarnings();
+            lastAccess = clockSource.currentTime();
          }
          catch (SQLException e) {
             // when connections are aborted, exceptions are often thrown that should not reach the application
@@ -350,7 +344,6 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.commit();
       isCommitStateDirty = false;
-      lastAccess = clockSource.currentTime();
    }
 
    /** {@inheritDoc} */
@@ -359,7 +352,6 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.rollback();
       isCommitStateDirty = false;
-      lastAccess = clockSource.currentTime();
    }
 
    /** {@inheritDoc} */
@@ -368,7 +360,6 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.rollback(savepoint);
       isCommitStateDirty = false;
-      lastAccess = clockSource.currentTime();
    }
 
    /** {@inheritDoc} */
@@ -376,8 +367,11 @@ public abstract class ProxyConnection implements Connection
    public void setAutoCommit(boolean autoCommit) throws SQLException
    {
       delegate.setAutoCommit(autoCommit);
-      isAutoCommit = autoCommit;
-      dirtyBits |= DIRTY_BIT_AUTOCOMMIT;
+      if (isAutoCommit != autoCommit) {
+         isAutoCommit = autoCommit;
+         dirtyBits |= DIRTY_BIT_AUTOCOMMIT;
+         isCommitStateDirty = false;
+      }
    }
 
    /** {@inheritDoc} */
@@ -455,7 +449,7 @@ public abstract class ProxyConnection implements Connection
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
             {
                final String methodName = method.getName();
-               if ("close".equals(methodName) || "abort".equals(methodName)) {
+               if ("abort".equals(methodName)) {
                   return Void.TYPE;
                }
                else if ("isValid".equals(methodName)) {
