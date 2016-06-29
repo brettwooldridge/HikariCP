@@ -493,14 +493,14 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private void abortActiveConnections(final ExecutorService assassinExecutor)
    {
       for (PoolEntry poolEntry : connectionBag.values(STATE_IN_USE)) {
+         Connection connection = poolEntry.close();
          try {
-            poolEntry.connection.abort(assassinExecutor);
+            connection.abort(assassinExecutor);
          }
          catch (Throwable e) {
-            quietlyCloseConnection(poolEntry.connection, "(connection aborted during shutdown)");
+            quietlyCloseConnection(connection, "(connection aborted during shutdown)");
          }
          finally {
-            poolEntry.close();
             if (connectionBag.remove(poolEntry)) {
                totalConnections.decrementAndGet();
             }

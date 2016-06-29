@@ -49,17 +49,16 @@ public interface Sequence
    {
       public static Sequence create()
       {
-         try {
-            if (Sequence.class.getClassLoader().loadClass("java.util.concurrent.atomic.LongAdder") != null && !Boolean.getBoolean("com.zaxxer.hikari.useAtomicLongSequence")) {
-               return new Java8Sequence();
-            }
+         if (UtilityElf.isJdk8Plus() && !Boolean.getBoolean("com.zaxxer.hikari.useAtomicLongSequence")) {
+            return new Java8Sequence();
          }
-         catch (ClassNotFoundException e) {
+         else {
             try {
                Class<?> longAdderClass = Sequence.class.getClassLoader().loadClass("com.codahale.metrics.LongAdder");
                return new DropwizardSequence(longAdderClass);
             }
             catch (Exception e2) {
+               // fall thru
             }
          }
 

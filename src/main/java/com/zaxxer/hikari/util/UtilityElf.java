@@ -26,6 +26,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -150,6 +152,20 @@ public final class UtilityElf
       }
 
       return -1;
+   }
+
+   /**
+    * Are we running on JDK 8 or above?
+    *
+    * @return true if JDK 8+, false otherwise
+    */
+   public static boolean isJdk8Plus() {
+      Matcher matcher = Pattern.compile("(?:(\\d+(?:\\.?\\d*)))").matcher(System.getProperty("java.version"));
+      if (!matcher.find()) {
+         return false;
+      }
+
+      return Float.parseFloat(matcher.group(1)) > 1.7;
    }
 
    public static final class DefaultThreadFactory implements ThreadFactory {

@@ -344,10 +344,10 @@ abstract class PoolBase
          setNetworkTimeout(connection, validationTimeout);
       }
 
-      checkDriverSupport(connection);
-
       connection.setReadOnly(isReadOnly);
       connection.setAutoCommit(isAutoCommit);
+
+      checkDriverSupport(connection);
 
       if (transactionIsolation != defaultTransactionIsolation) {
          connection.setTransactionIsolation(transactionIsolation);
@@ -414,7 +414,7 @@ abstract class PoolBase
          catch (Throwable e) {
             if (isQueryTimeoutSupported == UNINITIALIZED) {
                isQueryTimeoutSupported = FALSE;
-               LOGGER.warn("{} - Failed to set query timeout for statement. ({})", poolName, e.getMessage());
+               LOGGER.info("{} - Failed to set query timeout for statement. ({})", poolName, e.getMessage());
             }
          }
       }
@@ -525,10 +525,10 @@ abstract class PoolBase
    {
       if (connectionTimeout != Integer.MAX_VALUE) {
          try {
-            dataSource.setLoginTimeout((int) MILLISECONDS.toSeconds(Math.max(1000L, connectionTimeout)));
+            dataSource.setLoginTimeout(Math.max(1, (int) MILLISECONDS.toSeconds(500L + connectionTimeout)));
          }
          catch (Throwable e) {
-            LOGGER.warn("{} - Failed to set login timeout for data source. ({})", poolName, e.getMessage());
+            LOGGER.info("{} - Failed to set login timeout for data source. ({})", poolName, e.getMessage());
          }
       }
    }
