@@ -50,7 +50,8 @@ public abstract class ProxyConnection implements Connection
    static final int DIRTY_BIT_NETTIMEOUT = 0b10000;
 
    private static final Logger LOGGER;
-   private static final Set<String> SQL_ERRORS;
+   private static final Set<String> ERROR_STATES;
+   private static final Set<Integer> ERROR_CODES;
    private static final ClockSource clockSource;
 
    protected Connection delegate;
@@ -74,14 +75,17 @@ public abstract class ProxyConnection implements Connection
       LOGGER = LoggerFactory.getLogger(ProxyConnection.class);
       clockSource = ClockSource.INSTANCE;
 
-      SQL_ERRORS = new HashSet<>();
-      SQL_ERRORS.add("57P01"); // ADMIN SHUTDOWN
-      SQL_ERRORS.add("57P02"); // CRASH SHUTDOWN
-      SQL_ERRORS.add("57P03"); // CANNOT CONNECT NOW
-      SQL_ERRORS.add("01002"); // SQL92 disconnect error
-      SQL_ERRORS.add("JZ0C0"); // Sybase disconnect error
-      SQL_ERRORS.add("JZ0C1"); // Sybase disconnect error
-      SQL_ERRORS.add("61000"); // Oracle ORA-02399: exceeded maximum connect time.
+      ERROR_STATES = new HashSet<>();
+      ERROR_STATES.add("57P01"); // ADMIN SHUTDOWN
+      ERROR_STATES.add("57P02"); // CRASH SHUTDOWN
+      ERROR_STATES.add("57P03"); // CANNOT CONNECT NOW
+      ERROR_STATES.add("01002"); // SQL92 disconnect error
+      ERROR_STATES.add("JZ0C0"); // Sybase disconnect error
+      ERROR_STATES.add("JZ0C1"); // Sybase disconnect error
+      ERROR_STATES.add("61000"); // Oracle ORA-02399: exceeded maximum connect time.
+
+      ERROR_CODES = new HashSet<>();
+      ERROR_CODES.add(500150);
    }
 
    protected ProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final long now, final boolean isReadOnly, final boolean isAutoCommit) {
@@ -146,7 +150,7 @@ public abstract class ProxyConnection implements Connection
    {
       final String sqlState = sqle.getSQLState();
       if (sqlState != null && delegate != ClosedConnection.CLOSED_CONNECTION) {
-         if (sqlState.startsWith("08") || SQL_ERRORS.contains(sqlState)) { // broken connection
+         if (sqlState.startsWith("08") || ERROR_STATES.contains(sqlState) || ERROR_CODES.contains(sqle.getErrorCode())) { // broken connection
             LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
                         poolEntry.getPoolName(), delegate, sqlState, sqle.getErrorCode(), sqle);
             leakTask.cancel();
