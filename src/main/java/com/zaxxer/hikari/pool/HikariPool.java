@@ -185,19 +185,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          suspendResumeLock.release();
       }
 
-      logPoolState("Timeout failure ");
-      metricsTracker.recordConnectionTimeout();
-
-      String sqlState = null;
-      final Throwable originalException = getLastConnectionFailure();
-      if (originalException instanceof SQLException) {
-         sqlState = ((SQLException) originalException).getSQLState();
-      }
-      final SQLException connectionException = new SQLTransientConnectionException(poolName + " - Connection is not available, request timed out after " + clockSource.elapsedMillis(startTime) + "ms.", sqlState, originalException);
-      if (originalException instanceof SQLException) {
-         connectionException.setNextException((SQLException) originalException);
-      }
-      throw connectionException;
+      throw createTimeoutException(startTime);
    }
 
    /**
@@ -552,6 +540,24 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             this.activeConnections = HikariPool.this.getActiveConnections();
          }
       };
+   }
+
+   private SQLException createTimeoutException(long startTime)
+   {
+      logPoolState("Timeout failure ");
+      metricsTracker.recordConnectionTimeout();
+
+      String sqlState = null;
+      final Throwable originalException = getLastConnectionFailure();
+      if (originalException instanceof SQLException) {
+         sqlState = ((SQLException) originalException).getSQLState();
+      }
+      final SQLException connectionException = new SQLTransientConnectionException(poolName + " - Connection is not available, request timed out after " + clockSource.elapsedMillis(startTime) + "ms.", sqlState, originalException);
+      if (originalException instanceof SQLException) {
+         connectionException.setNextException((SQLException) originalException);
+      }
+
+      return connectionException;
    }
 
    // ***********************************************************************
