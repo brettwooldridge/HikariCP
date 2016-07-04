@@ -82,10 +82,10 @@ public abstract class ProxyConnection implements Connection
       ERROR_STATES.add("01002"); // SQL92 disconnect error
       ERROR_STATES.add("JZ0C0"); // Sybase disconnect error
       ERROR_STATES.add("JZ0C1"); // Sybase disconnect error
-      ERROR_STATES.add("61000"); // Oracle ORA-02399: exceeded maximum connect time.
 
       ERROR_CODES = new HashSet<>();
       ERROR_CODES.add(500150);
+      ERROR_CODES.add(2399);
    }
 
    protected ProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final long now, final boolean isReadOnly, final boolean isAutoCommit) {
