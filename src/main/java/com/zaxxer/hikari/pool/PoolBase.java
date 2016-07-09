@@ -126,14 +126,14 @@ abstract class PoolBase
    {
       try {
          if (isUseJdbc4Validation) {
-            return connection.isValid((int) MILLISECONDS.toSeconds(500L + validationTimeout));
+            return connection.isValid((int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
          }
 
          setNetworkTimeout(connection, validationTimeout);
 
          try (Statement statement = connection.createStatement()) {
             if (isNetworkTimeoutSupported != TRUE) {
-               setQueryTimeout(statement, (int) MILLISECONDS.toSeconds(500L + validationTimeout));
+               setQueryTimeout(statement, (int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
             }
 
             statement.execute(config.getConnectionTestQuery());
@@ -149,7 +149,7 @@ abstract class PoolBase
       }
       catch (SQLException e) {
          lastConnectionFailure.set(e);
-         LOGGER.info("{} - Failed to validate connection {} ({})", poolName, connection, e.getMessage());
+         LOGGER.warn("{} - Failed to validate connection {} ({})", poolName, connection, e.getMessage());
          return false;
       }
    }
@@ -439,6 +439,12 @@ abstract class PoolBase
                isNetworkTimeoutSupported = FALSE;
 
                LOGGER.info("{} - Failed to get/set network timeout for connection. ({})", poolName, e.getMessage());
+               if (validationTimeout < SECONDS.toMillis(1)) {
+                  LOGGER.warn("{} - A validationTimeout of less than 1 second cannot be honored on drivers without setNetworkTimeout() support.", poolName);
+               }
+               else if (validationTimeout % SECONDS.toMillis(1) != 0) {
+                  LOGGER.warn("{} - A validationTimeout with fractional second granularity cannot be honored on drivers without setNetworkTimeout() support.", poolName);
+               }
             }
          }
       }

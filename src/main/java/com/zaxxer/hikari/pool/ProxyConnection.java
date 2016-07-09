@@ -50,7 +50,8 @@ public abstract class ProxyConnection implements Connection
    static final int DIRTY_BIT_NETTIMEOUT = 0b10000;
 
    private static final Logger LOGGER;
-   private static final Set<String> SQL_ERRORS;
+   private static final Set<String> ERROR_STATES;
+   private static final Set<Integer> ERROR_CODES;
    private static final ClockSource clockSource;
 
    protected Connection delegate;
@@ -74,14 +75,17 @@ public abstract class ProxyConnection implements Connection
       LOGGER = LoggerFactory.getLogger(ProxyConnection.class);
       clockSource = ClockSource.INSTANCE;
 
-      SQL_ERRORS = new HashSet<>();
-      SQL_ERRORS.add("57P01"); // ADMIN SHUTDOWN
-      SQL_ERRORS.add("57P02"); // CRASH SHUTDOWN
-      SQL_ERRORS.add("57P03"); // CANNOT CONNECT NOW
-      SQL_ERRORS.add("01002"); // SQL92 disconnect error
-      SQL_ERRORS.add("JZ0C0"); // Sybase disconnect error
-      SQL_ERRORS.add("JZ0C1"); // Sybase disconnect error
-      SQL_ERRORS.add("61000"); // Oracle ORA-02399: exceeded maximum connect time.
+      ERROR_STATES = new HashSet<>();
+      ERROR_STATES.add("57P01"); // ADMIN SHUTDOWN
+      ERROR_STATES.add("57P02"); // CRASH SHUTDOWN
+      ERROR_STATES.add("57P03"); // CANNOT CONNECT NOW
+      ERROR_STATES.add("01002"); // SQL92 disconnect error
+      ERROR_STATES.add("JZ0C0"); // Sybase disconnect error
+      ERROR_STATES.add("JZ0C1"); // Sybase disconnect error
+
+      ERROR_CODES = new HashSet<>();
+      ERROR_CODES.add(500150);
+      ERROR_CODES.add(2399);
    }
 
    protected ProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final long now, final boolean isReadOnly, final boolean isAutoCommit) {
@@ -146,7 +150,7 @@ public abstract class ProxyConnection implements Connection
    {
       final String sqlState = sqle.getSQLState();
       if (sqlState != null && delegate != ClosedConnection.CLOSED_CONNECTION) {
-         if (sqlState.startsWith("08") || SQL_ERRORS.contains(sqlState)) { // broken connection
+         if (sqlState.startsWith("08") || ERROR_STATES.contains(sqlState) || ERROR_CODES.contains(sqle.getErrorCode())) { // broken connection
             LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
                         poolEntry.getPoolName(), delegate, sqlState, sqle.getErrorCode(), sqle);
             leakTask.cancel();
@@ -170,7 +174,12 @@ public abstract class ProxyConnection implements Connection
 
    final void markCommitStateDirty()
    {
-      isCommitStateDirty = true;
+      if (isAutoCommit) {
+         lastAccess = clockSource.currentTime();
+      }
+      else {
+         isCommitStateDirty = true;
+      }
    }
 
    void cancelLeakTask()
@@ -224,15 +233,16 @@ public abstract class ProxyConnection implements Connection
          try {
             if (isCommitStateDirty && !isAutoCommit && !isReadOnly) {
                delegate.rollback();
+               lastAccess = clockSource.currentTime();
                LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.getPoolName(), delegate);
             }
 
             if (dirtyBits != 0) {
                poolEntry.resetConnectionState(this, dirtyBits);
+               lastAccess = clockSource.currentTime();
             }
 
             delegate.clearWarnings();
-            lastAccess = clockSource.currentTime();
          }
          catch (SQLException e) {
             // when connections are aborted, exceptions are often thrown that should not reach the application
@@ -344,6 +354,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.commit();
       isCommitStateDirty = false;
+      lastAccess = clockSource.currentTime();
    }
 
    /** {@inheritDoc} */
@@ -352,6 +363,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.rollback();
       isCommitStateDirty = false;
+      lastAccess = clockSource.currentTime();
    }
 
    /** {@inheritDoc} */
@@ -360,6 +372,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.rollback(savepoint);
       isCommitStateDirty = false;
+      lastAccess = clockSource.currentTime();
    }
 
    /** {@inheritDoc} */
@@ -367,11 +380,8 @@ public abstract class ProxyConnection implements Connection
    public void setAutoCommit(boolean autoCommit) throws SQLException
    {
       delegate.setAutoCommit(autoCommit);
-      if (isAutoCommit != autoCommit) {
-         isAutoCommit = autoCommit;
-         dirtyBits |= DIRTY_BIT_AUTOCOMMIT;
-         isCommitStateDirty = false;
-      }
+      isAutoCommit = autoCommit;
+      dirtyBits |= DIRTY_BIT_AUTOCOMMIT;
    }
 
    /** {@inheritDoc} */

@@ -1,5 +1,21 @@
 HikariCP Changes
 
+Changes in 2.4.7
+
+ * Miscellaneous stability improvements.
+
+ * Removed Oracle SQL state 61000, added specific error code (2399) to evict connections
+   when it is encountered.
+
+ * issue 664: do not recycle PoolEntry objects that have closed their held connection.
+
+ * issue 641, 643: reflection used method String.toUpperCase() without a Locale, which causes
+   problems in some locales such as Turkish.
+
+ * pull 632: added support for Prometheus metrics tracker.
+ 
+ * issue 650: detect Amazon Redshift connection refused error codes.
+
 Changes in 2.4.6
 
  * Added Oracle SQL error code 61000 (exceeded maximum connect time) to evict connections

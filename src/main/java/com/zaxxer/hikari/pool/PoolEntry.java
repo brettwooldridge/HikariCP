@@ -82,8 +82,10 @@ final class PoolEntry implements IConcurrentBagEntry
     */
    void recycle(final long lastAccessed)
    {
-      this.lastAccessed = lastAccessed;
-      hikariPool.recycle(this);
+      if (connection != null) {
+         this.lastAccessed = lastAccessed;
+         hikariPool.recycle(this);
+      }
    }
 
    /**
@@ -169,7 +171,7 @@ final class PoolEntry implements IConcurrentBagEntry
    {
       ScheduledFuture<?> eol = endOfLife;
       if (eol != null && !eol.isDone() && !eol.cancel(false)) {
-         LOGGER.info("{} - maxLifeTime expiration task cancellation unexpectedly returned false for connection {}", getPoolName(), connection);
+         LOGGER.warn("{} - maxLifeTime expiration task cancellation unexpectedly returned false for connection {}", getPoolName(), connection);
       }
 
       Connection con = connection;

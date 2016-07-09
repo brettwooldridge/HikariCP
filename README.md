@@ -18,7 +18,7 @@ _Java 7 and Java 8 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>2.4.6</version>
+        <version>2.4.7</version>
     </dependency>
 ```
 _Java 6 maven artifact (*maintenance mode*):_
@@ -131,12 +131,13 @@ It is a boolean value.
 &#8986;``connectionTimeout``<br/>
 This property controls the maximum number of milliseconds that a client (that's you) will wait
 for a connection from the pool.  If this time is exceeded without a connection becoming
-available, a SQLException will be thrown.  1000ms is the minimum value.
+available, a SQLException will be thrown.  Lowest acceptable connection timeout is 250 ms.
 *Default: 30000 (30 seconds)*
 
 &#8986;``idleTimeout``<br/>
 This property controls the maximum amount of time that a connection is allowed to sit idle in the
-pool.  Whether a connection is retired as idle or not is subject to a maximum variation of +30
+pool.  **This setting only applies when ``minimumIdle`` is defined to be less than ``maximumPoolSize``.**
+Whether a connection is retired as idle or not is subject to a maximum variation of +30
 seconds, and average variation of +15 seconds.  A connection will never be retired as idle *before*
 this timeout.  A value of 0 means that idle connections are never removed from the pool.
 *Default: 600000 (10 minutes)*
@@ -252,14 +253,14 @@ class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, e
 *Default: driver default*
 
 &#8986;``validationTimeout``<br/>
-This property controls the maximum amount of time to wait before pool discards the connection as dead while validating connection.
-The lowest accepted validation timeout is 1000ms (1 second).
+This property controls the maximum amount of time that a connection will be tested for aliveness.
+This value must be less than the ``connectionTimeout``.  Lowest acceptable validation timeout is 250 ms.
 *Default: 5000*
 
 &#8986;``leakDetectionThreshold``<br/>
 This property controls the amount of time that a connection can be out of the pool before a
 message is logged indicating a possible connection leak.  A value of 0 means leak detection
-is disabled.  Lowest acceptable value for enabling leak detection is 2000 (2 secs).
+is disabled.  Lowest acceptable value for enabling leak detection is 2000 (2 seconds).
 *Default: 0*
 
 &#10145;``dataSource``<br/>
