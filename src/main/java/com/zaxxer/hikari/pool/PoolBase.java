@@ -98,7 +98,7 @@ abstract class PoolBase
       return poolName;
    }
 
-   abstract void releaseConnection(final PoolEntry poolEntry);
+   abstract void recycle(final PoolEntry poolEntry);
 
    // ***********************************************************************
    //                           JDBC methods
@@ -239,7 +239,7 @@ abstract class PoolBase
             mBeanServer.registerMBean(hikariPool, beanPoolName);
          }
          else {
-            LOGGER.error("{} - You cannot use the same pool name for separate pool instances.", poolName);
+            LOGGER.error("{} - is already registered.", poolName);
          }
       }
       catch (Exception e) {
@@ -264,6 +264,9 @@ abstract class PoolBase
          if (mBeanServer.isRegistered(beanConfigName)) {
             mBeanServer.unregisterMBean(beanConfigName);
             mBeanServer.unregisterMBean(beanPoolName);
+         }
+         else {
+            LOGGER.error("{} - is not registered.", poolName);
          }
       }
       catch (Exception e) {
