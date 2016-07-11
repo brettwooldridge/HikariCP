@@ -421,7 +421,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    // ***********************************************************************
 
    /**
-    * Create and add a single connection to the pool.
+    * Getting new connection from data source.
     */
    private PoolEntry createPoolEntry()
    {
@@ -474,7 +474,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    }
 
    /**
-    * Attempt to abort() active connections, or close() them.
+    * abort or close active connections.
     */
    private void abortActiveConnections(final ExecutorService assassinExecutor)
    {
@@ -495,7 +495,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    }
 
    /**
-    * Fill the pool up to the minimum size.
+    * @throws PoolInitializationException if fails to create or validate connection
     */
    private void checkFailFast()
    {
@@ -552,6 +552,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    //                      Non-anonymous Inner-classes
    // ***********************************************************************
 
+   /**
+    * Creating and adding connections to the pool.
+    */
    private class PoolEntryCreator implements Callable<Boolean>
    {
       @Override
@@ -576,7 +579,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    }
 
    /**
-    * The house keeping task to retire idle connections.
+    * The house keeping task to retire and maintain minimum idle connections.
     */
    private class HouseKeeper implements Runnable
    {
