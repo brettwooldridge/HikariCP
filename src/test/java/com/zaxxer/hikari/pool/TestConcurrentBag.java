@@ -89,7 +89,7 @@ public class TestConcurrentBag
       PrintStream ps = new PrintStream(baos, true);
       TestElf.setSlf4jTargetStream(ConcurrentBag.class, ps);
 
-      bag.requite(reserved);
+      bag.recycle(reserved);
 
       bag.remove(notinuse);
       Assert.assertTrue(new String(baos.toByteArray()).contains("not borrowed or reserved"));
