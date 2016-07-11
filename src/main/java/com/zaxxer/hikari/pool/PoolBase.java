@@ -98,7 +98,7 @@ abstract class PoolBase
       return poolName;
    }
 
-   abstract void releaseConnection(final PoolEntry poolEntry);
+   abstract void recycle(final PoolEntry poolEntry);
 
    // ***********************************************************************
    //                           JDBC methods
@@ -239,7 +239,7 @@ abstract class PoolBase
             mBeanServer.registerMBean(hikariPool, beanPoolName);
          }
          else {
-            LOGGER.error("{} - You cannot use the same pool name for separate pool instances.", poolName);
+            LOGGER.error("{} - is already registered.", poolName);
          }
       }
       catch (Exception e) {
@@ -264,6 +264,9 @@ abstract class PoolBase
          if (mBeanServer.isRegistered(beanConfigName)) {
             mBeanServer.unregisterMBean(beanConfigName);
             mBeanServer.unregisterMBean(beanPoolName);
+         }
+         else {
+            LOGGER.error("{} - is not registered.", poolName);
          }
       }
       catch (Exception e) {
@@ -299,7 +302,7 @@ abstract class PoolBase
       }
 
       if (dataSource != null) {
-         setLoginTimeout(dataSource, connectionTimeout);
+         setLoginTimeout(dataSource);
          createNetworkTimeoutExecutor(dataSource, dsClassName, jdbcUrl);
       }
 
@@ -370,23 +373,17 @@ abstract class PoolBase
    private void checkDriverSupport(final Connection connection) throws SQLException
    {
       if (!isValidChecked) {
-         if (isUseJdbc4Validation) {
-            try {
+         try {
+            if (isUseJdbc4Validation) {
                connection.isValid(1);
             }
-            catch (Throwable e) {
-               LOGGER.error("{} - Failed to execute isValid() for connection, configure connection test query. ({})", poolName, e.getMessage());
-               throw e;
-            }
-         }
-         else {
-            try {
+            else {
                executeSql(connection, config.getConnectionTestQuery(), false);
             }
-            catch (Throwable e) {
-               LOGGER.error("{} - Failed to execute connection test query. ({})", poolName, e.getMessage());
-               throw e;
-            }
+         }
+         catch (Throwable e) {
+            LOGGER.error("{} - Failed to execute" + (isUseJdbc4Validation ? " isValid() for connection, configure" : "") + " connection test query. ({})", poolName, e.getMessage());
+            throw e;
          }
 
          defaultTransactionIsolation = connection.getTransactionIsolation();
@@ -441,7 +438,7 @@ abstract class PoolBase
             if (isNetworkTimeoutSupported == UNINITIALIZED) {
                isNetworkTimeoutSupported = FALSE;
 
-               LOGGER.info("{} - Driver does not support get/set network timeout for connections. ({})", poolName, e.getMessage());
+               LOGGER.info("{} - Failed to get/set network timeout for connection. ({})", poolName, e.getMessage());
                if (validationTimeout < SECONDS.toMillis(1)) {
                   LOGGER.warn("{} - A validationTimeout of less than 1 second cannot be honored on drivers without setNetworkTimeout() support.", poolName);
                }
@@ -519,9 +516,8 @@ abstract class PoolBase
     * Set the loginTimeout on the specified DataSource.
     *
     * @param dataSource the DataSource
-    * @param connectionTimeout the timeout in milliseconds
     */
-   private void setLoginTimeout(final DataSource dataSource, final long connectionTimeout)
+   private void setLoginTimeout(final DataSource dataSource)
    {
       if (connectionTimeout != Integer.MAX_VALUE) {
          try {

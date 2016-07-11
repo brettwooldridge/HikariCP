@@ -104,6 +104,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       this.totalConnections = new AtomicInteger();
       this.suspendResumeLock = config.isAllowPoolSuspension() ? new SuspendResumeLock() : SuspendResumeLock.FAUX_LOCK;
 
+      checkFailFast();
+
       if (config.getMetricsTrackerFactory() != null) {
          setMetricsTrackerFactory(config.getMetricsTrackerFactory());
       }
@@ -114,8 +116,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       setHealthCheckRegistry(config.getHealthCheckRegistry());
 
       registerMBeans(this);
-
-      checkFailFast();
 
       ThreadFactory threadFactory = config.getThreadFactory();
       this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
@@ -204,11 +204,10 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
          softEvictConnections();
 
-         if (addConnectionExecutor != null) {
-            addConnectionExecutor.shutdown();
-            addConnectionExecutor.awaitTermination(5L, SECONDS);
-         }
-         if (config.getScheduledExecutorService() == null && houseKeepingExecutorService != null) {
+         addConnectionExecutor.shutdown();
+         addConnectionExecutor.awaitTermination(5L, SECONDS);
+
+         if (config.getScheduledExecutorService() == null) {
             houseKeepingExecutorService.shutdown();
             houseKeepingExecutorService.awaitTermination(5L, SECONDS);
          }
@@ -230,10 +229,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          }
 
          shutdownNetworkTimeoutExecutor();
-         if (closeConnectionExecutor != null) {
-            closeConnectionExecutor.shutdown();
-            closeConnectionExecutor.awaitTermination(5L, SECONDS);
-         }
+
+         closeConnectionExecutor.shutdown();
+         closeConnectionExecutor.awaitTermination(5L, SECONDS);
       }
       finally {
          logPoolState("After closing ");
@@ -383,16 +381,16 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    }
 
    /**
-    * Release a connection back to the pool, or permanently close it if it is broken.
+    * Recycle PoolEntry (add back to the pool)
     *
-    * @param poolEntry the PoolBagEntry to release back to the pool
+    * @param poolEntry the PoolEntry to recycle
     */
    @Override
-   final void releaseConnection(final PoolEntry poolEntry)
+   final void recycle(final PoolEntry poolEntry)
    {
       metricsTracker.recordConnectionUsage(poolEntry);
 
-      connectionBag.requite(poolEntry);
+      connectionBag.recycle(poolEntry);
    }
 
    /**
@@ -506,13 +504,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             newConnection().close();
          }
          catch (Throwable e) {
-            try {
-               shutdown();
-            }
-            catch (Throwable ex) {
-               e.addSuppressed(ex);
-            }
-
             throw new PoolInitializationException(e);
          }
       }
@@ -520,12 +511,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private void softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
    {
+      poolEntry.markEvicted();
       if (owner || connectionBag.reserve(poolEntry)) {
-         poolEntry.markEvicted();
          closeConnection(poolEntry, reason);
-      }
-      else {
-         poolEntry.markEvicted();
       }
    }
 
@@ -609,7 +597,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             // Detect retrograde time, allowing +128ms as per NTP spec.
             if (clockSource.plusMillis(now, 128) < clockSource.plusMillis(previous, HOUSEKEEPING_PERIOD_MS)) {
                LOGGER.warn("{} - Retrograde clock change detected (housekeeper delta={}), soft-evicting connections from pool.",
-                           clockSource.elapsedDisplayString(previous, now), poolName);
+                           poolName, clockSource.elapsedDisplayString(previous, now));
                previous = now;
                softEvictConnections();
                fillPool();
@@ -617,7 +605,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             }
             else if (now > clockSource.plusMillis(previous, (3 * HOUSEKEEPING_PERIOD_MS) / 2)) {
                // No point evicting for forward clock motion, this merely accelerates connection retirement anyway
-               LOGGER.warn("{} - Thread starvation or clock leap detected (housekeeper delta={}).", clockSource.elapsedDisplayString(previous, now), poolName);
+               LOGGER.warn("{} - Thread starvation or clock leap detected (housekeeper delta={}).", poolName, clockSource.elapsedDisplayString(previous, now));
             }
    
             previous = now;

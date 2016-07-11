@@ -140,7 +140,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       // Otherwise, scan the shared list ... for maximum of timeout
       timeout = timeUnit.toNanos(timeout);
       Future<Boolean> addItemFuture = null;
-      final long startScan = System.nanoTime();
+      final long startTime = System.nanoTime();
       final long originTimeout = timeout;
       long startSeq;
       waiters.incrementAndGet();
@@ -165,7 +165,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
                addItemFuture = listener.addBagItem();
             }
 
-            timeout = originTimeout - (System.nanoTime() - startScan);
+            timeout = originTimeout - (System.nanoTime() - startTime);
          } while (timeout > 10_000L && synchronizer.waitUntilSequenceExceeded(startSeq, timeout));
       }
       finally {
@@ -177,14 +177,14 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
 
    /**
     * This method will return a borrowed object to the bag.  Objects
-    * that are borrowed from the bag but never "requited" will result
+    * that are borrowed from the bag but never "recycled" will result
     * in a memory leak.
     *
     * @param bagEntry the value to return to the bag
     * @throws NullPointerException if value is null
-    * @throws IllegalStateException if the requited value was not borrowed from the bag
+    * @throws IllegalStateException if the bagEntry was not borrowed from the bag
     */
-   public void requite(final T bagEntry)
+   public void recycle(final T bagEntry)
    {
       bagEntry.lazySet(STATE_NOT_IN_USE);
 

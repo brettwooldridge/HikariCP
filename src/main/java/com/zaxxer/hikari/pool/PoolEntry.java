@@ -84,7 +84,7 @@ final class PoolEntry implements IConcurrentBagEntry
    {
       if (connection != null) {
          this.lastAccessed = lastAccessed;
-         hikariPool.releaseConnection(this);
+         hikariPool.recycle(this);
       }
    }
 
