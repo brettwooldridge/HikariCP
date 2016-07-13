@@ -602,10 +602,10 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             connectionTimeout = config.getConnectionTimeout();
             validationTimeout = config.getValidationTimeout();
             leakTask.updateLeakDetectionThreshold(config.getLeakDetectionThreshold());
-   
+
             final long idleTimeout = config.getIdleTimeout();
             final long now = clockSource.currentTime();
-   
+
             // Detect retrograde time, allowing +128ms as per NTP spec.
             if (clockSource.plusMillis(now, 128) < clockSource.plusMillis(previous, HOUSEKEEPING_PERIOD_MS)) {
                LOGGER.warn("{} - Retrograde clock change detected (housekeeper delta={}), soft-evicting connections from pool.",
@@ -617,11 +617,11 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             }
             else if (now > clockSource.plusMillis(previous, (3 * HOUSEKEEPING_PERIOD_MS) / 2)) {
                // No point evicting for forward clock motion, this merely accelerates connection retirement anyway
-               LOGGER.warn("{} - Thread starvation or clock leap detected (housekeeper delta={}).", clockSource.elapsedDisplayString(previous, now), poolName);
+               LOGGER.warn("{} - Thread starvation or clock leap detected (housekeeper delta={}).", poolName, clockSource.elapsedDisplayString(previous, now));
             }
-   
+
             previous = now;
-   
+
             String afterPrefix = "Pool ";
             if (idleTimeout > 0L) {
                final List<PoolEntry> idleList = connectionBag.values(STATE_NOT_IN_USE);
@@ -629,7 +629,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                if (removable > 0) {
                   logPoolState("Before cleanup ");
                   afterPrefix = "After cleanup  ";
-   
+
                   // Sort pool entries on lastAccessed
                   Collections.sort(idleList, LASTACCESS_COMPARABLE);
                   for (PoolEntry poolEntry : idleList) {
@@ -642,9 +642,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                   }
                }
             }
-   
+
             logPoolState(afterPrefix);
-   
+
             fillPool(); // Try to maintain minimum connections
          }
          catch (Exception e) {
