@@ -27,7 +27,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -54,8 +53,8 @@ public class HikariConfig implements HikariConfigMXBean
    private static final long VALIDATION_TIMEOUT = SECONDS.toMillis(5);
    private static final long IDLE_TIMEOUT = MINUTES.toMillis(10);
    private static final long MAX_LIFETIME = MINUTES.toMillis(30);
+   private static final int DEFAULT_POOL_SIZE = 10;
 
-   private static final AtomicInteger POOL_NUMBER;
    private static boolean unitTest;
 
    // Properties changeable at runtime through the MBean
@@ -95,20 +94,6 @@ public class HikariConfig implements HikariConfigMXBean
    private Object metricRegistry;
    private Object healthCheckRegistry;
    private Properties healthCheckProperties;
-
-   static
-   {
-      // POOL_NUMBER is global to the VM to avoid overlapping pool numbers in classloader scoped environments
-      final Properties sysProps = System.getProperties();
-      AtomicInteger poolNumber = (AtomicInteger) sysProps.get("com.zaxxer.hikari.pool_number");
-      if (poolNumber == null) {
-         POOL_NUMBER = new AtomicInteger();
-         sysProps.put("com.zaxxer.hikari.pool_number", POOL_NUMBER);
-      }
-      else {
-         POOL_NUMBER = poolNumber;
-      }
-   }
 
    /**
     * Default constructor
@@ -757,7 +742,7 @@ public class HikariConfig implements HikariConfigMXBean
    public void validate()
    {
       if (poolName == null) {
-         poolName = "HikariPool-" + POOL_NUMBER.getAndIncrement();
+         poolName = "HikariPool-" + generatePoolNumber();
       }
       else if (isRegisterMbeans && poolName.contains(":")) {
          throw new IllegalArgumentException("poolName cannot contain ':' when used with JMX");
@@ -840,13 +825,11 @@ public class HikariConfig implements HikariConfigMXBean
          validationTimeout = VALIDATION_TIMEOUT;
       }
 
-      if (maxPoolSize < 0) {
-         if (minIdle < 0) {
-            minIdle = 10;
-         }
-         maxPoolSize = minIdle;
+      if (maxPoolSize < 1) {
+         maxPoolSize = (minIdle <= 0) ? DEFAULT_POOL_SIZE : minIdle;
       }
-      else if (minIdle < 0 || minIdle > maxPoolSize) {
+
+      if (minIdle < 0 || minIdle > maxPoolSize) {
          minIdle = maxPoolSize;
       }
    }
@@ -892,6 +875,16 @@ public class HikariConfig implements HikariConfigMXBean
       }
       catch (IOException io) {
          throw new RuntimeException("Failed to read property file", io);
+      }
+   }
+
+   private int generatePoolNumber()
+   {
+      // Pool number is global to the VM to avoid overlapping pool numbers in classloader scoped environments
+      synchronized (System.getProperties()) {
+         final int next = Integer.getInteger("com.zaxxer.hikari.pool_number", 0) + 1;
+         System.setProperty("com.zaxxer.hikari.pool_number", String.valueOf(next));
+         return next;
       }
    }
 

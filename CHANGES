@@ -1,5 +1,44 @@
 HikariCP Changes
 
+Changes in 2.4.7
+
+ * Miscellaneous stability improvements.
+
+ * Removed Oracle SQL state 61000, added specific error code (2399) to evict connections
+   when it is encountered.
+
+ * issue 664: do not recycle PoolEntry objects that have closed their held connection.
+
+ * issue 641, 643: reflection used method String.toUpperCase() without a Locale, which causes
+   problems in some locales such as Turkish.
+
+ * pull 632: added support for Prometheus metrics tracker.
+ 
+ * issue 650: detect Amazon Redshift connection refused error codes.
+
+Changes in 2.4.6
+
+ * Added Oracle SQL error code 61000 (exceeded maximum connect time) to evict connections
+   when it is encountered.
+
+ * issue 621: fix NPE in shutdown if invoked during initialization.
+
+ * issue 606, 610: housekeeper thread was running before all class members were
+   initialized, causing an unrecoverable exception and disabling idle connection
+   retirement (maximumLifetime still applied).
+
+Changes in 2.4.5
+
+ * issue 596: fix bug that occurs when minimumIdle is set to 0, but maximumPoolSize is
+   not explicitly set.
+ 
+ * issue 594: fix incompatibility with various libraries caused by storing a non-String
+   object in System properties.
+
+ * issue 593: improve logging when network timeout is not supported by the driver
+
+ * issue 591: improve thread-safety of Statement proxies
+ 
 Changes in 2.4.4
 
  * Generate unique sequential pool names, even across container classloaders to avoid

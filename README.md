@@ -18,7 +18,7 @@ _Java 7 and Java 8 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>2.4.3</version>
+        <version>2.4.7</version>
     </dependency>
 ```
 _Java 6 maven artifact (*maintenance mode*):_
@@ -136,7 +136,8 @@ available, a SQLException will be thrown.  1000ms is the minimum value.
 
 &#8986;``idleTimeout``<br/>
 This property controls the maximum amount of time that a connection is allowed to sit idle in the
-pool.  Whether a connection is retired as idle or not is subject to a maximum variation of +30
+pool.  **This setting only applies when ``minimumIdle`` is defined to be less than ``maximumPoolSize``.**
+Whether a connection is retired as idle or not is subject to a maximum variation of +30
 seconds, and average variation of +15 seconds.  A connection will never be retired as idle *before*
 this timeout.  A value of 0 means that idle connections are never removed from the pool.
 *Default: 600000 (10 minutes)*
@@ -432,13 +433,13 @@ YourKit supports open source projects with its full-featured Java Profiler.  Cli
 Please perform changes and submit pull requests from the ``dev`` branch instead of ``master``.  Please set your editor to use spaces instead of tabs, and adhere to the apparent style of the code you are editing.  The ``dev`` branch is always more "current" than the ``master`` if you are looking to live life on the edge.
 
 [Build Status]:https://travis-ci.org/brettwooldridge/HikariCP
-[Build Status img]:https://travis-ci.org/brettwooldridge/HikariCP.svg?branch=master
+[Build Status img]:https://travis-ci.org/brettwooldridge/HikariCP.svg?branch=dev
 
 [Issue Stats]:http://issuestats.com/github/brettwooldridge/HikariCP
 [Issue Stats img]:http://issuestats.com/github/brettwooldridge/HikariCP/badge/issue?style=flat&concise=true
 
-[Coverage Status]:https://coveralls.io/r/brettwooldridge/HikariCP?branch=master
-[Coverage Status img]:https://coveralls.io/repos/brettwooldridge/HikariCP/badge.svg?branch=master
+[Coverage Status]:https://coveralls.io/r/brettwooldridge/HikariCP?branch=dev
+[Coverage Status img]:https://coveralls.io/repos/brettwooldridge/HikariCP/badge.svg?branch=dev
 
 [Dependency Status]:https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0
 [Dependency Status img]:https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0/badge.svg?style=flat

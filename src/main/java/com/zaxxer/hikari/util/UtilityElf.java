@@ -21,10 +21,13 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.sql.Connection;
+import java.util.Locale;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -125,7 +128,8 @@ public final class UtilityElf
    {
       if (transactionIsolationName != null) {
          try {
-            final String upperName = transactionIsolationName.toUpperCase();
+            // use the english locale to avoid the infamous turkish locale bug
+            final String upperName = transactionIsolationName.toUpperCase(Locale.ENGLISH);
             if (upperName.startsWith("TRANSACTION_")) {
                Field field = Connection.class.getField(upperName);
                return field.getInt(null);
@@ -148,6 +152,20 @@ public final class UtilityElf
       }
 
       return -1;
+   }
+
+   /**
+    * Are we running on JDK 8 or above?
+    *
+    * @return true if JDK 8+, false otherwise
+    */
+   public static boolean isJdk8Plus() {
+      Matcher matcher = Pattern.compile("(?:(\\d+(?:\\.?\\d*)))").matcher(System.getProperty("java.version"));
+      if (!matcher.find()) {
+         return false;
+      }
+
+      return Float.parseFloat(matcher.group(1)) > 1.7f;
    }
 
    public static final class DefaultThreadFactory implements ThreadFactory {

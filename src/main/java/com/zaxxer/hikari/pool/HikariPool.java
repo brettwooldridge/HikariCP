@@ -131,9 +131,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          this.houseKeepingExecutorService = config.getScheduledExecutorService();
       }
 
-      this.houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 0L, HOUSEKEEPING_PERIOD_MS, MILLISECONDS);
-
       this.leakTask = new ProxyLeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
+
+      this.houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L, HOUSEKEEPING_PERIOD_MS, MILLISECONDS);
    }
 
    /**
@@ -185,19 +185,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          suspendResumeLock.release();
       }
 
-      logPoolState("Timeout failure ");
-      metricsTracker.recordConnectionTimeout();
-
-      String sqlState = null;
-      final Throwable originalException = getLastConnectionFailure();
-      if (originalException instanceof SQLException) {
-         sqlState = ((SQLException) originalException).getSQLState();
-      }
-      final SQLException connectionException = new SQLTransientConnectionException(poolName + " - Connection is not available, request timed out after " + clockSource.elapsedMillis(startTime) + "ms.", sqlState, originalException);
-      if (originalException instanceof SQLException) {
-         connectionException.setNextException((SQLException) originalException);
-      }
-      throw connectionException;
+      throw createTimeoutException(startTime);
    }
 
    /**
@@ -216,8 +204,10 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
          softEvictConnections();
 
-         addConnectionExecutor.shutdown();
-         addConnectionExecutor.awaitTermination(5L, SECONDS);
+         if (addConnectionExecutor != null) {
+            addConnectionExecutor.shutdown();
+            addConnectionExecutor.awaitTermination(5L, SECONDS);
+         }
          if (config.getScheduledExecutorService() == null && houseKeepingExecutorService != null) {
             houseKeepingExecutorService.shutdown();
             houseKeepingExecutorService.awaitTermination(5L, SECONDS);
@@ -240,8 +230,10 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          }
 
          shutdownNetworkTimeoutExecutor();
-         closeConnectionExecutor.shutdown();
-         closeConnectionExecutor.awaitTermination(5L, SECONDS);
+         if (closeConnectionExecutor != null) {
+            closeConnectionExecutor.shutdown();
+            closeConnectionExecutor.awaitTermination(5L, SECONDS);
+         }
       }
       finally {
          logPoolState("After closing ");
@@ -261,7 +253,12 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       ProxyConnection proxyConnection = (ProxyConnection) connection;
       proxyConnection.cancelLeakTask();
 
-      softEvictConnection(proxyConnection.getPoolEntry(), "(connection evicted by user)", true /* owner */);
+      try {
+         softEvictConnection(proxyConnection.getPoolEntry(), "(connection evicted by user)", !connection.isClosed() /* owner */);
+      }
+      catch (SQLException e) {
+         // unreachable in HikariCP, but we're still forced to catch it
+      }
    }
 
    public void setMetricRegistry(Object metricRegistry)
@@ -484,14 +481,14 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private void abortActiveConnections(final ExecutorService assassinExecutor)
    {
       for (PoolEntry poolEntry : connectionBag.values(STATE_IN_USE)) {
+         Connection connection = poolEntry.close();
          try {
-            poolEntry.connection.abort(assassinExecutor);
+            connection.abort(assassinExecutor);
          }
          catch (Throwable e) {
-            quietlyCloseConnection(poolEntry.connection, "(connection aborted during shutdown)");
+            quietlyCloseConnection(connection, "(connection aborted during shutdown)");
          }
          finally {
-            poolEntry.close();
             if (connectionBag.remove(poolEntry)) {
                totalConnections.decrementAndGet();
             }
@@ -524,6 +521,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private void softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
    {
       if (owner || connectionBag.reserve(poolEntry)) {
+         poolEntry.markEvicted();
          closeConnection(poolEntry, reason);
       }
       else {
@@ -542,6 +540,24 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             this.activeConnections = HikariPool.this.getActiveConnections();
          }
       };
+   }
+
+   private SQLException createTimeoutException(long startTime)
+   {
+      logPoolState("Timeout failure ");
+      metricsTracker.recordConnectionTimeout();
+
+      String sqlState = null;
+      final Throwable originalException = getLastConnectionFailure();
+      if (originalException instanceof SQLException) {
+         sqlState = ((SQLException) originalException).getSQLState();
+      }
+      final SQLException connectionException = new SQLTransientConnectionException(poolName + " - Connection is not available, request timed out after " + clockSource.elapsedMillis(startTime) + "ms.", sqlState, originalException);
+      if (originalException instanceof SQLException) {
+         connectionException.setNextException((SQLException) originalException);
+      }
+
+      return connectionException;
    }
 
    // ***********************************************************************
@@ -581,54 +597,59 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       @Override
       public void run()
       {
-         // refresh timeouts in case they changed via MBean
-         connectionTimeout = config.getConnectionTimeout();
-         validationTimeout = config.getValidationTimeout();
-         leakTask.updateLeakDetectionThreshold(config.getLeakDetectionThreshold());
+         try {
+            // refresh timeouts in case they changed via MBean
+            connectionTimeout = config.getConnectionTimeout();
+            validationTimeout = config.getValidationTimeout();
+            leakTask.updateLeakDetectionThreshold(config.getLeakDetectionThreshold());
 
-         final long idleTimeout = config.getIdleTimeout();
-         final long now = clockSource.currentTime();
+            final long idleTimeout = config.getIdleTimeout();
+            final long now = clockSource.currentTime();
 
-         // Detect retrograde time, allowing +128ms as per NTP spec.
-         if (clockSource.plusMillis(now, 128) < clockSource.plusMillis(previous, HOUSEKEEPING_PERIOD_MS)) {
-            LOGGER.warn("{} - Retrograde clock change detected (housekeeper delta={}), soft-evicting connections from pool.",
-                        clockSource.elapsedDisplayString(previous, now), poolName);
+            // Detect retrograde time, allowing +128ms as per NTP spec.
+            if (clockSource.plusMillis(now, 128) < clockSource.plusMillis(previous, HOUSEKEEPING_PERIOD_MS)) {
+               LOGGER.warn("{} - Retrograde clock change detected (housekeeper delta={}), soft-evicting connections from pool.",
+                           clockSource.elapsedDisplayString(previous, now), poolName);
+               previous = now;
+               softEvictConnections();
+               fillPool();
+               return;
+            }
+            else if (now > clockSource.plusMillis(previous, (3 * HOUSEKEEPING_PERIOD_MS) / 2)) {
+               // No point evicting for forward clock motion, this merely accelerates connection retirement anyway
+               LOGGER.warn("{} - Thread starvation or clock leap detected (housekeeper delta={}).", poolName, clockSource.elapsedDisplayString(previous, now));
+            }
+
             previous = now;
-            softEvictConnections();
-            fillPool();
-            return;
-         }
-         else if (now > clockSource.plusMillis(previous, (3 * HOUSEKEEPING_PERIOD_MS) / 2)) {
-            // No point evicting for forward clock motion, this merely accelerates connection retirement anyway
-            LOGGER.warn("{} - Thread starvation or clock leap detected (housekeeper delta={}).", clockSource.elapsedDisplayString(previous, now), poolName);
-         }
 
-         previous = now;
+            String afterPrefix = "Pool ";
+            if (idleTimeout > 0L) {
+               final List<PoolEntry> idleList = connectionBag.values(STATE_NOT_IN_USE);
+               int removable = idleList.size() - config.getMinimumIdle();
+               if (removable > 0) {
+                  logPoolState("Before cleanup ");
+                  afterPrefix = "After cleanup  ";
 
-         String afterPrefix = "Pool ";
-         if (idleTimeout > 0L) {
-            final List<PoolEntry> idleList = connectionBag.values(STATE_NOT_IN_USE);
-            int removable = idleList.size() - config.getMinimumIdle();
-            if (removable > 0) {
-               logPoolState("Before cleanup ");
-               afterPrefix = "After cleanup  ";
-
-               // Sort pool entries on lastAccessed
-               Collections.sort(idleList, LASTACCESS_COMPARABLE);
-               for (PoolEntry poolEntry : idleList) {
-                  if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout && connectionBag.reserve(poolEntry)) {
-                     closeConnection(poolEntry, "(connection has passed idleTimeout)");
-                     if (--removable == 0) {
-                        break; // keep min idle cons
+                  // Sort pool entries on lastAccessed
+                  Collections.sort(idleList, LASTACCESS_COMPARABLE);
+                  for (PoolEntry poolEntry : idleList) {
+                     if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout && connectionBag.reserve(poolEntry)) {
+                        closeConnection(poolEntry, "(connection has passed idleTimeout)");
+                        if (--removable == 0) {
+                           break; // keep min idle cons
+                        }
                      }
                   }
                }
             }
+
+            logPoolState(afterPrefix);
+
+            fillPool(); // Try to maintain minimum connections
          }
-
-         logPoolState(afterPrefix);
-
-         fillPool(); // Try to maintain minimum connections
+         catch (Exception e) {
+            LOGGER.error("Unexpected exception in housekeeping task", e);
+         }
       }
    }
 
