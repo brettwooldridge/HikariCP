@@ -141,7 +141,7 @@ public class TestConnectionTimeoutRetry
       }
    }
 
-   @Test
+   @Test @org.junit.Ignore
    public void testConnectionRetries4() throws SQLException
    {
       HikariConfig config = new HikariConfig();
