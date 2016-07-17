@@ -99,12 +99,10 @@
          <version>${commons.csv.version}</version>
          <scope>test</scope>
       </dependency>
-      <dependency>
-         <groupId>org.mockito</groupId>
-         <artifactId>mockito-all</artifactId>
-         <version>${mockito.version}</version>
-         <scope>test</scope>
-      </dependency>
+      <!-- the hamcrest dependencies have to be declared before the mockto and junit dependencies to
+           prevent a “NoSuchMethodError: org.hamcrest.Matcher.describeMismatch”
+           (see http://stackoverflow.com/questions/7869711/getting-nosuchmethoderror-org-hamcrest-matcher-describemismatch-when-running
+           for details) -->
       <dependency>
          <groupId>org.hamcrest</groupId>
          <artifactId>hamcrest-core</artifactId>
@@ -112,15 +110,21 @@
          <scope>test</scope>
       </dependency>
       <dependency>
-         <groupId>junit</groupId>
-         <artifactId>junit</artifactId>
-         <version>${junit.version}</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
          <groupId>org.hamcrest</groupId>
          <artifactId>hamcrest-library</artifactId>
          <version>${hamcrest.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.mockito</groupId>
+         <artifactId>mockito-core</artifactId>
+         <version>${mockito.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>junit</groupId>
+         <artifactId>junit</artifactId>
+         <version>${junit.version}</version>
          <scope>test</scope>
       </dependency>
       <dependency>
