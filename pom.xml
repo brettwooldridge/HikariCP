@@ -55,7 +55,6 @@
       <log4j.version>2.6.1</log4j.version>
       <commons.csv.version>1.4</commons.csv.version>
       <h2.version>1.4.192</h2.version>
-      <hamcrest.version>1.3</hamcrest.version>
       <junit.version>4.12</junit.version>
    </properties>
 
@@ -101,26 +100,20 @@
       </dependency>
       <dependency>
          <groupId>org.mockito</groupId>
-         <artifactId>mockito-all</artifactId>
+         <artifactId>mockito-core</artifactId>
          <version>${mockito.version}</version>
          <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.hamcrest</groupId>
-         <artifactId>hamcrest-core</artifactId>
-         <version>${hamcrest.version}</version>
-         <scope>test</scope>
+         <exclusions>
+            <exclusion>
+               <groupId>org.hamcrest</groupId>
+               <artifactId>hamcrest-core</artifactId>
+            </exclusion>
+         </exclusions>
       </dependency>
       <dependency>
          <groupId>junit</groupId>
          <artifactId>junit</artifactId>
          <version>${junit.version}</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.hamcrest</groupId>
-         <artifactId>hamcrest-library</artifactId>
-         <version>${hamcrest.version}</version>
          <scope>test</scope>
       </dependency>
       <dependency>
