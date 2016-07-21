@@ -309,6 +309,11 @@ abstract class PoolBase
       this.dataSource = dataSource;
    }
 
+   /**
+    * Obtain connection from data source.
+    *
+    * @return a Connection connection
+    */
    Connection newConnection() throws Exception
    {
       Connection connection = null;

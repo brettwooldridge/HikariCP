@@ -46,7 +46,7 @@ import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_RES
  * Note that items that are "borrowed" from the bag are not actually
  * removed from any collection, so garbage collection will not occur
  * even if the reference is abandoned.  Thus care must be taken to
- * "recycle" borrowed objects otherwise a memory leak will result.  Only
+ * "requite" borrowed objects otherwise a memory leak will result.  Only
  * the "remove" method can completely remove an object from the bag.
  *
  * @author Brett Wooldridge
@@ -177,14 +177,14 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
 
    /**
     * This method will return a borrowed object to the bag.  Objects
-    * that are borrowed from the bag but never "recycled" will result
+    * that are borrowed from the bag but never "requited" will result
     * in a memory leak.
     *
     * @param bagEntry the value to return to the bag
     * @throws NullPointerException if value is null
     * @throws IllegalStateException if the bagEntry was not borrowed from the bag
     */
-   public void recycle(final T bagEntry)
+   public void requite(final T bagEntry)
    {
       bagEntry.lazySet(STATE_NOT_IN_USE);
 
