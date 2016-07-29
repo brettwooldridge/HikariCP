@@ -507,6 +507,14 @@ public class TestConnections
       catch (SQLException e) {
          Assert.assertSame("Bad query or something.", e.getNextException().getMessage());
       }
+      
+      config.setInitializationFailFast(true);
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         Assert.fail("Initialization should have failed");
+      }
+      catch (PoolInitializationException e) {
+         // passed
+      }
    }
 
    @Test
