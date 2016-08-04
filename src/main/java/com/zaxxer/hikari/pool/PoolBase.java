@@ -332,6 +332,10 @@ abstract class PoolBase
     */
    private void setupConnection(final Connection connection) throws SQLException
    {
+      checkDriverSupport(connection);
+      connection.setReadOnly(isReadOnly);
+      connection.setAutoCommit(isAutoCommit);
+
       if (networkTimeout == UNINITIALIZED) {
          networkTimeout = getAndSetNetworkTimeout(connection, validationTimeout);
       }
@@ -339,10 +343,6 @@ abstract class PoolBase
          setNetworkTimeout(connection, validationTimeout);
       }
 
-      checkDriverSupport(connection);
-
-      connection.setReadOnly(isReadOnly);
-      connection.setAutoCommit(isAutoCommit);
 
       if (transactionIsolation != defaultTransactionIsolation) {
          connection.setTransactionIsolation(transactionIsolation);
