@@ -142,22 +142,25 @@ abstract class PoolBase
    boolean isConnectionAlive(final Connection connection)
    {
       try {
-         if (isUseJdbc4Validation) {
-            return connection.isValid((int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
-         }
-
-         setNetworkTimeout(connection, validationTimeout);
-
-         try (Statement statement = connection.createStatement()) {
-            if (isNetworkTimeoutSupported != TRUE) {
-               setQueryTimeout(statement, (int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
+         try {
+            if (isUseJdbc4Validation) {
+               return connection.isValid((int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
             }
-
-            statement.execute(config.getConnectionTestQuery());
+   
+            setNetworkTimeout(connection, validationTimeout);
+   
+            try (Statement statement = connection.createStatement()) {
+               if (isNetworkTimeoutSupported != TRUE) {
+                  setQueryTimeout(statement, (int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
+               }
+   
+               statement.execute(config.getConnectionTestQuery());
+            }
          }
-
-         if (isIsolateInternalQueries && !isReadOnly && !isAutoCommit) {
-            connection.rollback();
+         finally {
+            if (isIsolateInternalQueries && !isAutoCommit) {
+               connection.rollback();
+            }
          }
 
          setNetworkTimeout(connection, networkTimeout);
