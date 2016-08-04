@@ -156,7 +156,7 @@ abstract class PoolBase
             statement.execute(config.getConnectionTestQuery());
          }
 
-         if (isIsolateInternalQueries && !isReadOnly && !isAutoCommit) {
+         if (isIsolateInternalQueries && !isAutoCommit) {
             connection.rollback();
          }
 
@@ -502,7 +502,7 @@ abstract class PoolBase
             statement.execute(sql);
          }
 
-         if (isIsolateInternalQueries && !isReadOnly && !isAutoCommit) {
+         if (isIsolateInternalQueries && !isAutoCommit) {
             if (isCommit) {
                connection.commit();
             }
