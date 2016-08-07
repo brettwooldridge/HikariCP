@@ -505,8 +505,10 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private void checkFailFast()
    {
       if (config.isInitializationFailFast()) {
-         try {
-            newConnection().close();
+         try (Connection connection = newConnection()) {
+            if (!connection.getAutoCommit()) {
+               connection.commit();
+            }
          }
          catch (Throwable e) {
             throw new PoolInitializationException(e);
