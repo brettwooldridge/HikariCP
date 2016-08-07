@@ -408,12 +408,18 @@ abstract class PoolBase
             throw e;
          }
 
-         defaultTransactionIsolation = connection.getTransactionIsolation();
-         if (transactionIsolation == -1) {
-            transactionIsolation = defaultTransactionIsolation;
+         try {
+            defaultTransactionIsolation = connection.getTransactionIsolation();
+            if (transactionIsolation == -1) {
+               transactionIsolation = defaultTransactionIsolation;
+            }
          }
-
-         isValidChecked = true;
+         catch (SQLException e) {
+            LOGGER.warn("{} - Default transaction isolation level detection failed. ({})", poolName, e.getMessage());
+         }
+         finally {
+            isValidChecked = true;
+         }
       }
    }
 
