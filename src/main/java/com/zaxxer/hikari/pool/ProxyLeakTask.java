@@ -39,6 +39,7 @@ class ProxyLeakTask implements Runnable
    private ScheduledFuture<?> scheduledFuture;
    private String connectionName;
    private Exception exception;
+   private boolean isLeaked;
 
    static
    {
@@ -79,6 +80,8 @@ class ProxyLeakTask implements Runnable
    @Override
    public void run()
    {
+      isLeaked = true;
+
       final StackTraceElement[] stackTrace = exception.getStackTrace(); 
       final StackTraceElement[] trace = new StackTraceElement[stackTrace.length - 5];
       System.arraycopy(stackTrace, 5, trace, 0, trace.length);
@@ -90,5 +93,8 @@ class ProxyLeakTask implements Runnable
    void cancel()
    {
       scheduledFuture.cancel(false);
+      if (isLeaked) {
+         LOGGER.info("Previously reported leaked connection {} was returned to the pool (unleaked)", connectionName);
+      }
    }
 }
