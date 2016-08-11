@@ -1,5 +1,18 @@
 HikariCP Changes
 
+Changes in 2.4.8
+
+ * Added Connection.commit() call to the fail-fast initialization for databases that
+   automatically start a new Connection in a transaction and throw an exception on close
+   if it is not committed.
+ 
+ * feature 694: report if a previously reported leaked connection is returned to the pool
+
+ * issue 689: log a warning if default transaction isolation level cannot be detected.
+   This can occur with pseudo-database drivers such as the one for JSonar
+
+ * issue 674: fix regression caused by pull request #450 (overzealous optimisation)
+
 Changes in 2.4.7
 
  * Miscellaneous stability improvements.

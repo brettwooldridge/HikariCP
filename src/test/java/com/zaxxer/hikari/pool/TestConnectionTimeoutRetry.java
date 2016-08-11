@@ -157,34 +157,6 @@ public class TestConnectionTimeoutRetry
       }
    }
 
-   @Test @org.junit.Ignore
-   public void testConnectionRetries4() throws SQLException
-   {
-      HikariConfig config = new HikariConfig();
-      config.setMinimumIdle(0);
-      config.setMaximumPoolSize(1);
-      config.setConnectionTimeout(1000);
-      config.setValidationTimeout(1000);
-      config.setConnectionTestQuery("VALUES 1");
-      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-
-      try (HikariDataSource ds = new HikariDataSource(config)) {
-         StubDataSource stubDataSource = ds.unwrap(StubDataSource.class);
-         stubDataSource.setThrowException(new SQLException("Connection refused"));
-
-         long start = ClockSource.INSTANCE.currentTime();
-         try {
-            Connection connection = ds.getConnection();
-            connection.close();
-            Assert.fail("Should not have been able to get a connection.");
-         }
-         catch (SQLException e) {
-            long elapsed = ClockSource.INSTANCE.elapsedMillis(start);
-            Assert.assertTrue("Didn't wait long enough for timeout", (elapsed >= config.getConnectionTimeout()));
-         }
-      }
-   }
-
    @Test
    public void testConnectionRetries5() throws SQLException
    {
