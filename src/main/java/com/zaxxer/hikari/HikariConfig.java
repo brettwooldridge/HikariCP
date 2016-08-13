@@ -33,6 +33,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.security.AccessControlException;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ScheduledExecutorService;
@@ -1028,8 +1029,8 @@ public class HikariConfig implements HikariConfigMXBean
          }
       } catch (AccessControlException e) {
          // The SecurityManager didn't allow us to read/write system properties
-         // so use a static counter instead
-         return poolNumberCounter.getAndAdd(1);
+         // so just generate a random pool number instead
+         return new Random().nextInt(100000);
       }
    }
 
