@@ -22,7 +22,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.security.AccessControlException;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -880,11 +882,17 @@ public class HikariConfig implements HikariConfigMXBean
 
    private int generatePoolNumber()
    {
-      // Pool number is global to the VM to avoid overlapping pool numbers in classloader scoped environments
-      synchronized (System.getProperties()) {
-         final int next = Integer.getInteger("com.zaxxer.hikari.pool_number", 0) + 1;
-         System.setProperty("com.zaxxer.hikari.pool_number", String.valueOf(next));
-         return next;
+      try {
+         // Pool number is global to the VM to avoid overlapping pool numbers in classloader scoped environments
+         synchronized (System.getProperties()) {
+            final int next = Integer.getInteger("com.zaxxer.hikari.pool_number", 0) + 1;
+            System.setProperty("com.zaxxer.hikari.pool_number", String.valueOf(next));
+            return next;
+         }
+      } catch (AccessControlException e) {
+         // The SecurityManager didn't allow us to read/write system properties
+         // so just generate a random pool number instead
+         return new Random().nextInt(100000);
       }
    }
 
