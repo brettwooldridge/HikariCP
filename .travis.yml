@@ -10,6 +10,4 @@ install: /bin/true
 
 script:
   - mvn install -Dskip.unit.tests=true -Dmaven.javadoc.skip=true -V -B
-  - mvn clean test coveralls:report -V -P coverage 
-  - jdk_switcher use openjdk7
-  - mvn test
+  - mvn test coveralls:report -V -P coverage 
