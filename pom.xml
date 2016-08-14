@@ -2,7 +2,7 @@
    <modelVersion>4.0.0</modelVersion>
 
    <groupId>com.zaxxer</groupId>
-   <artifactId>HikariCP</artifactId>
+   <artifactId>HikariCP-java7</artifactId>
    <version>2.4.8-SNAPSHOT</version>
    <packaging>bundle</packaging>
 
