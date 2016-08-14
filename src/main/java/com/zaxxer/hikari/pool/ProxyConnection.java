@@ -146,11 +146,13 @@ public abstract class ProxyConnection implements Connection
       return poolEntry;
    }
 
-   final SQLException checkException(final SQLException sqle)
+   final SQLException checkException(SQLException sqle)
    {
-      final String sqlState = sqle.getSQLState();
-      if (sqlState != null && delegate != ClosedConnection.CLOSED_CONNECTION) {
-         if (sqlState.startsWith("08") || ERROR_STATES.contains(sqlState) || ERROR_CODES.contains(sqle.getErrorCode())) { // broken connection
+      SQLException nse = sqle;
+      while (nse != null && delegate != ClosedConnection.CLOSED_CONNECTION) {
+         final String sqlState = nse.getSQLState();
+         if (sqlState != null && sqlState.startsWith("08") || ERROR_STATES.contains(sqlState) || ERROR_CODES.contains(sqle.getErrorCode())) {
+            // broken connection
             LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
                         poolEntry.getPoolName(), delegate, sqlState, sqle.getErrorCode(), sqle);
             leakTask.cancel();
@@ -158,12 +160,13 @@ public abstract class ProxyConnection implements Connection
             delegate = ClosedConnection.CLOSED_CONNECTION;
          }
          else {
-            final SQLException nse = sqle.getNextException();
-            if (nse != null && nse != sqle) {
-               checkException(nse);
+            nse = sqle.getNextException();
+            if (nse == sqle) {
+               break;
             }
          }
       }
+
       return sqle;
    }
 
