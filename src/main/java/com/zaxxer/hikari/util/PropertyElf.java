@@ -18,11 +18,9 @@ package com.zaxxer.hikari.util;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -51,22 +49,14 @@ public final class PropertyElf
       }
 
       List<Method> methods = Arrays.asList(target.getClass().getMethods());
-      Enumeration<?> propertyNames = properties.propertyNames();
-      while (propertyNames.hasMoreElements()) {
-         Object key = propertyNames.nextElement();
-         String propName = key.toString();
-         Object propValue = properties.getProperty(propName);
-         if (propValue == null) {
-            propValue = properties.get(key);
-         }
-
-         if (target instanceof HikariConfig && propName.startsWith("dataSource.")) {
-            ((HikariConfig) target).addDataSourceProperty(propName.substring("dataSource.".length()), propValue);
+      properties.stringPropertyNames().forEach(key -> {
+         if (target instanceof HikariConfig && key.startsWith("dataSource.")) {
+            ((HikariConfig) target).addDataSourceProperty(key.substring("dataSource.".length()), properties.getProperty(key));
          }
          else {
-            setProperty(target, propName, propValue, methods);
+            setProperty(target, key, properties.getProperty(key), methods);
          }
-      }
+      });
    }
 
    /**
@@ -121,33 +111,19 @@ public final class PropertyElf
    public static Properties copyProperties(final Properties props)
    {
       Properties copy = new Properties();
-      for (Map.Entry<Object, Object> entry : props.entrySet()) {
-         copy.setProperty(entry.getKey().toString(), entry.getValue().toString());
-      }
+      props.forEach((key, value) -> copy.setProperty(key.toString(), value.toString()));
       return copy;
    }
 
    private static void setProperty(final Object target, final String propName, final Object propValue, final List<Method> methods)
    {
-      Method writeMethod = null;
       // use the english locale to avoid the infamous turkish locale bug
       String methodName = "set" + propName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propName.substring(1);
-
-      for (Method method : methods) {
-         if (method.getName().equals(methodName) && method.getParameterTypes().length == 1) {
-            writeMethod = method;
-            break;
-         }
-      }
+      Method writeMethod = methods.stream().filter(m -> m.getName().equals(methodName) && m.getParameterCount() == 1).findFirst().orElse(null);
 
       if (writeMethod == null) {
-         methodName = "set" + propName.toUpperCase(Locale.ENGLISH);
-         for (Method method : methods) {
-            if (method.getName().equals(methodName) && method.getParameterTypes().length == 1) {
-               writeMethod = method;
-               break;
-            }
-         }
+         String methodName2 = "set" + propName.toUpperCase(Locale.ENGLISH);
+         writeMethod = methods.stream().filter(m -> m.getName().equals(methodName2) && m.getParameterCount() == 1).findFirst().orElse(null);
       }
 
       if (writeMethod == null) {
