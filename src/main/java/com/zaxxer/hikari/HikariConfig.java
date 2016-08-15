@@ -24,12 +24,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.security.AccessControlException;
 import java.util.Properties;
-import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
@@ -56,6 +56,7 @@ public class HikariConfig implements HikariConfigMXBean
    private static final long IDLE_TIMEOUT = MINUTES.toMillis(10);
    private static final long MAX_LIFETIME = MINUTES.toMillis(30);
    private static final int DEFAULT_POOL_SIZE = 10;
+   private static final AtomicInteger poolNumberCounter = new AtomicInteger(1);
 
    private static boolean unitTest;
 
@@ -891,8 +892,8 @@ public class HikariConfig implements HikariConfigMXBean
          }
       } catch (AccessControlException e) {
          // The SecurityManager didn't allow us to read/write system properties
-         // so just generate a random pool number instead
-         return new Random().nextInt(100000);
+         // so use a static counter instead
+         return poolNumberCounter.getAndAdd(1);
       }
    }
 
