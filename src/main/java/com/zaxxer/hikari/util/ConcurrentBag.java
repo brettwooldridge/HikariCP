@@ -22,6 +22,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -257,14 +258,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     */
    public List<T> values(final int state)
    {
-      final ArrayList<T> list = new ArrayList<>(sharedList.size());
-      for (final T entry : sharedList) {
-         if (entry.getState() == state) {
-            list.add(entry);
-         }
-      }
-
-      return list;
+      return sharedList.stream().filter(e -> e.getState() == state).collect(Collectors.toList());
    }
 
    /**
@@ -333,13 +327,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     */
    public int getCount(final int state)
    {
-      int count = 0;
-      for (final T entry : sharedList) {
-         if (entry.getState() == state) {
-            count++;
-         }
-      }
-      return count;
+      return (int) sharedList.stream().filter(e -> e.getState() == state).count();
    }
 
    /**
@@ -354,9 +342,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
 
    public void dumpState()
    {
-      for (T bagEntry : sharedList) {
-         LOGGER.info(bagEntry.toString());
-      }
+      sharedList.forEach(entry -> LOGGER.info(entry.toString()));
    }
 
    /**

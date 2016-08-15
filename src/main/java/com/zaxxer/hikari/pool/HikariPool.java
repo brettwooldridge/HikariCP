@@ -16,13 +16,18 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.PoolEntry.LASTACCESS_COMPARABLE;
+import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_USE;
+import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
+import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_REMOVED;
+import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
+import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -49,13 +54,6 @@ import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.SuspendResumeLock;
 import com.zaxxer.hikari.util.UtilityElf.DefaultThreadFactory;
-
-import static com.zaxxer.hikari.pool.PoolEntry.LASTACCESS_COMPARABLE;
-import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_USE;
-import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
-import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_REMOVED;
-import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
-import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -629,7 +627,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                   afterPrefix = "After cleanup  ";
 
                   // Sort pool entries on lastAccessed
-                  Collections.sort(idleList, LASTACCESS_COMPARABLE);
+                  idleList.sort(LASTACCESS_COMPARABLE);
                   for (PoolEntry poolEntry : idleList) {
                      if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout && connectionBag.reserve(poolEntry)) {
                         closeConnection(poolEntry, "(connection has passed idleTimeout)");

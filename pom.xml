@@ -340,8 +340,8 @@
                <version>3.5.1</version>
                <extensions>true</extensions>
                <configuration>
-                  <source>1.7</source>
-                  <target>1.7</target>
+                  <source>1.8</source>
+                  <target>1.8</target>
                </configuration>
             </plugin>
 
