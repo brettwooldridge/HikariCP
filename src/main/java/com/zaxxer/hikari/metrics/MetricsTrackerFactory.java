@@ -21,9 +21,9 @@ public interface MetricsTrackerFactory
    /**
     * Create an instance of a MetricsTracker.
     *
-    * @param poolName the name of the pool
+    * @param metricsPrefix the name used to prefix metrics
     * @param poolStats a PoolStats instance to use
     * @return a MetricsTracker implementation instance
     */
-   MetricsTracker create(String poolName, PoolStats poolStats);
+   MetricsTracker create(String metricsPrefix, PoolStats poolStats);
 }

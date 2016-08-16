@@ -36,8 +36,8 @@ public final class CodahaleMetricsTrackerFactory implements MetricsTrackerFactor
    }
 
    @Override
-   public MetricsTracker create(String poolName, PoolStats poolStats)
+   public MetricsTracker create(String metricsPrefix, PoolStats poolStats)
    {
-      return new CodaHaleMetricsTracker(poolName, poolStats, registry);
+      return new CodaHaleMetricsTracker(metricsPrefix, poolStats, registry);
    }
 }

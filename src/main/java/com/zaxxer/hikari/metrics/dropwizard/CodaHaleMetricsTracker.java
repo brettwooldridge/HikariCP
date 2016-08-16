@@ -28,21 +28,21 @@ import com.zaxxer.hikari.metrics.PoolStats;
 
 public final class CodaHaleMetricsTracker extends MetricsTracker
 {
-   private final String poolName;
+   private final String metricsPrefix;
    private final Timer connectionObtainTimer;
    private final Histogram connectionUsage;
    private final Meter connectionTimeoutMeter;
    private final MetricRegistry registry;
 
-   public CodaHaleMetricsTracker(final String poolName, final PoolStats poolStats, final MetricRegistry registry)
+   public CodaHaleMetricsTracker(final String metricsPrefix, final PoolStats poolStats, final MetricRegistry registry)
    {
-      this.poolName = poolName;
+      this.metricsPrefix = metricsPrefix;
       this.registry = registry;
-      this.connectionObtainTimer = registry.timer(MetricRegistry.name(poolName, "pool", "Wait"));
-      this.connectionUsage = registry.histogram(MetricRegistry.name(poolName, "pool", "Usage"));
-      this.connectionTimeoutMeter = registry.meter(MetricRegistry.name(poolName, "pool", "ConnectionTimeoutRate"));
+      this.connectionObtainTimer = registry.timer(MetricRegistry.name(metricsPrefix, "Wait"));
+      this.connectionUsage = registry.histogram(MetricRegistry.name(metricsPrefix, "Usage"));
+      this.connectionTimeoutMeter = registry.meter(MetricRegistry.name(metricsPrefix, "ConnectionTimeoutRate"));
 
-      registry.register(MetricRegistry.name(poolName, "pool", "TotalConnections"),
+      registry.register(MetricRegistry.name(metricsPrefix, "TotalConnections"),
                         new Gauge<Integer>() {
                            @Override
                            public Integer getValue() {
@@ -50,7 +50,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
                            }
                         });
 
-      registry.register(MetricRegistry.name(poolName, "pool", "IdleConnections"),
+      registry.register(MetricRegistry.name(metricsPrefix, "IdleConnections"),
                         new Gauge<Integer>() {
                            @Override
                            public Integer getValue() {
@@ -58,7 +58,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
                            }
                         });
 
-      registry.register(MetricRegistry.name(poolName, "pool", "ActiveConnections"),
+      registry.register(MetricRegistry.name(metricsPrefix, "ActiveConnections"),
                         new Gauge<Integer>() {
                            @Override
                            public Integer getValue() {
@@ -66,7 +66,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
                            }
                         });
 
-      registry.register(MetricRegistry.name(poolName, "pool", "PendingConnections"),
+      registry.register(MetricRegistry.name(metricsPrefix, "PendingConnections"),
                         new Gauge<Integer>() {
                            @Override
                            public Integer getValue() {
@@ -79,12 +79,12 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    @Override
    public void close()
    {
-      registry.remove(MetricRegistry.name(poolName, "pool", "Wait"));
-      registry.remove(MetricRegistry.name(poolName, "pool", "Usage"));
-      registry.remove(MetricRegistry.name(poolName, "pool", "TotalConnections"));
-      registry.remove(MetricRegistry.name(poolName, "pool", "IdleConnections"));
-      registry.remove(MetricRegistry.name(poolName, "pool", "ActiveConnections"));
-      registry.remove(MetricRegistry.name(poolName, "pool", "PendingConnections"));
+      registry.remove(MetricRegistry.name(metricsPrefix, "Wait"));
+      registry.remove(MetricRegistry.name(metricsPrefix, "Usage"));
+      registry.remove(MetricRegistry.name(metricsPrefix, "TotalConnections"));
+      registry.remove(MetricRegistry.name(metricsPrefix, "IdleConnections"));
+      registry.remove(MetricRegistry.name(metricsPrefix, "ActiveConnections"));
+      registry.remove(MetricRegistry.name(metricsPrefix, "PendingConnections"));
    }
 
    /** {@inheritDoc} */
