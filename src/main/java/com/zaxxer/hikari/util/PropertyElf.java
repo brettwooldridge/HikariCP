@@ -49,12 +49,12 @@ public final class PropertyElf
       }
 
       List<Method> methods = Arrays.asList(target.getClass().getMethods());
-      properties.stringPropertyNames().forEach(key -> {
-         if (target instanceof HikariConfig && key.startsWith("dataSource.")) {
-            ((HikariConfig) target).addDataSourceProperty(key.substring("dataSource.".length()), properties.getProperty(key));
+      properties.forEach((key, value) -> {
+         if (target instanceof HikariConfig && key.toString().startsWith("dataSource.")) {
+            ((HikariConfig) target).addDataSourceProperty(key.toString().substring("dataSource.".length()), value);
          }
          else {
-            setProperty(target, key, properties.getProperty(key), methods);
+            setProperty(target, key.toString(), value, methods);
          }
       });
    }
