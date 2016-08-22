@@ -767,6 +767,8 @@ public class HikariConfig implements HikariConfigMXBean
       else if (dataSourceClassName != null) {
          if (driverClassName != null) {
             LOGGER.error("{} - cannot use driverClassName and dataSourceClassName together.", poolName);
+            // NOTE: This exception text is referenced by a Spring Boot FailureAnalyzer, it should not be
+            // changed without first notifying the Spring Boot developers.
             throw new IllegalArgumentException("cannot use driverClassName and dataSourceClassName together.");
          }
          else if (jdbcUrl != null) {
