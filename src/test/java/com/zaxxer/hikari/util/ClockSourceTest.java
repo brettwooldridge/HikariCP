@@ -55,6 +55,6 @@ public class ClockSourceTest
 
       final long eTime3 = DAYS.toNanos(4) + HOURS.toNanos(19) + MINUTES.toNanos(55) + SECONDS.toNanos(23) + MILLISECONDS.toNanos(777) + MICROSECONDS.toNanos(0) + NANOSECONDS.toNanos(982);
       String ds3 = nsSource.elapsedDisplayString(sTime2, eTime3);
-      Assert.assertEquals("1d10h31m5s204ms676μs159ns", ds3);
+      Assert.assertEquals("1d10h31m5s204ms676µs159ns", ds3);
    }
 }
