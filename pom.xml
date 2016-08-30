@@ -40,19 +40,19 @@
    <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-      <felix.bundle.plugin.version>3.0.1</felix.bundle.plugin.version>
+      <felix.bundle.plugin.version>3.2.0</felix.bundle.plugin.version>
       <felix.version>5.4.0</felix.version>
-      <hibernate.version>5.0.9.Final</hibernate.version>
+      <hibernate.version>5.2.2.Final</hibernate.version>
       <javassist.version>3.20.0-GA</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>
       <maven.release.version>2.5.3</maven.release.version>
       <metrics.version>3.1.2</metrics.version>
-      <simpleclient.version>0.0.14</simpleclient.version>
+      <simpleclient.version>0.0.16</simpleclient.version>
       <mockito.version>1.10.19</mockito.version>
       <pax.exam.version>4.9.1</pax.exam.version>
       <pax.url.version>2.4.7</pax.url.version>
       <slf4j.version>1.7.21</slf4j.version>
-      <log4j.version>2.6.1</log4j.version>
+      <log4j.version>2.6.2</log4j.version>
       <commons.csv.version>1.4</commons.csv.version>
       <h2.version>1.4.192</h2.version>
       <junit.version>4.12</junit.version>
@@ -371,7 +371,7 @@
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-source-plugin</artifactId>
-               <version>3.0.0</version>
+               <version>3.0.1</version>
                <configuration>
                   <!-- outputDirectory>/absolute/path/to/the/output/directory</outputDirectory>
                      <finalName>filename-of-generated-jar-file</finalName -->
@@ -390,7 +390,7 @@
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-javadoc-plugin</artifactId>
-               <version>2.10.3</version>
+               <version>2.10.4</version>
                <configuration>
                   <show>public</show>
                   <!-- excludePackageNames>com.zaxxer.hikari.*</excludePackageNames -->
