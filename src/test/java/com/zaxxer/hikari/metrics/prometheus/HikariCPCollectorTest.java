@@ -65,6 +65,7 @@ public class HikariCPCollectorTest {
 
       try (HikariDataSource ds = new HikariDataSource(config);
            Connection connection1 = ds.getConnection()) {
+
          assertThat(getValue("hikaricp_active_connections", "connection1"), is(1.0));
          assertThat(getValue("hikaricp_idle_connections", "connection1"), is(0.0));
          assertThat(getValue("hikaricp_pending_threads", "connection1"), is(0.0));
@@ -82,12 +83,12 @@ public class HikariCPCollectorTest {
 
       try (HikariDataSource ds = new HikariDataSource(config);
            Connection connection1 = ds.getConnection()) {
+         
+         assertThat(getValue("hikaricp_active_connections", "connectionClosed"), is(0.0));
+         assertThat(getValue("hikaricp_idle_connections", "connectionClosed"), is(1.0));
+         assertThat(getValue("hikaricp_pending_threads", "connectionClosed"), is(0.0));
+         assertThat(getValue("hikaricp_connections", "connectionClosed"), is(1.0));
       }
-
-      assertThat(getValue("hikaricp_active_connections", "connectionClosed"), is(0.0));
-      assertThat(getValue("hikaricp_idle_connections", "connectionClosed"), is(1.0));
-      assertThat(getValue("hikaricp_pending_threads", "connectionClosed"), is(0.0));
-      assertThat(getValue("hikaricp_connections", "connectionClosed"), is(1.0));
    }
 
    private double getValue(String name, String poolName) {
