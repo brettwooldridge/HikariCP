@@ -81,8 +81,10 @@ public class HikariCPCollectorTest {
       config.setJdbcUrl("jdbc:h2:mem:");
       config.setMaximumPoolSize(20);
 
-      try (HikariDataSource ds = new HikariDataSource(config);
-           Connection connection1 = ds.getConnection()) {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         try (Connection connection1 = ds.getConnection()) {
+            // close immediately
+         }
          
          assertThat(getValue("hikaricp_active_connections", "connectionClosed"), is(0.0));
          assertThat(getValue("hikaricp_idle_connections", "connectionClosed"), is(1.0));
