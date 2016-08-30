@@ -45,7 +45,7 @@ public class ConcurrentCloseConnectionTest
 
 		  ExecutorService executorService = Executors.newFixedThreadPool(10);
 
-		  List<Future> futures = new ArrayList<>();
+		  List<Future<?>> futures = new ArrayList<>();
 
 		  for (int i = 0; i < 500; i++) {
 			  final PreparedStatement preparedStatement =
@@ -65,7 +65,7 @@ public class ConcurrentCloseConnectionTest
 
 		  executorService.shutdown();
 
-		  for (Future future : futures) {
+		  for (Future<?> future : futures) {
 			  future.get();
 		  }
 	  }

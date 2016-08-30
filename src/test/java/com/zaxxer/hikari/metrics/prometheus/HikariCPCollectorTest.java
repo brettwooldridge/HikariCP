@@ -34,12 +34,12 @@ public class HikariCPCollectorTest {
       config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
       config.setJdbcUrl("jdbc:h2:mem:");
 
-      new HikariDataSource(config);
-
-      assertThat(getValue("hikaricp_active_connections", "no_connection"), is(0.0));
-      assertThat(getValue("hikaricp_idle_connections", "no_connection"), is(0.0));
-      assertThat(getValue("hikaricp_pending_threads", "no_connection"), is(0.0));
-      assertThat(getValue("hikaricp_connections", "no_connection"), is(0.0));
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         assertThat(getValue("hikaricp_active_connections", "no_connection"), is(0.0));
+         assertThat(getValue("hikaricp_idle_connections", "no_connection"), is(0.0));
+         assertThat(getValue("hikaricp_pending_threads", "no_connection"), is(0.0));
+         assertThat(getValue("hikaricp_connections", "no_connection"), is(0.0));
+      }
    }
 
    @Test
@@ -48,12 +48,12 @@ public class HikariCPCollectorTest {
       config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
       config.setJdbcUrl("jdbc:h2:mem:");
 
-      new HikariDataSource(config);
-
-      assertThat(getValue("hikaricp_active_connections", "HikariPool-1"), is(0.0));
-      assertThat(getValue("hikaricp_idle_connections", "HikariPool-1"), is(0.0));
-      assertThat(getValue("hikaricp_pending_threads", "HikariPool-1"), is(0.0));
-      assertThat(getValue("hikaricp_connections", "HikariPool-1"), is(0.0));
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         assertThat(getValue("hikaricp_active_connections", "HikariPool-1"), is(0.0));
+         assertThat(getValue("hikaricp_idle_connections", "HikariPool-1"), is(0.0));
+         assertThat(getValue("hikaricp_pending_threads", "HikariPool-1"), is(0.0));
+         assertThat(getValue("hikaricp_connections", "HikariPool-1"), is(0.0));
+      }
    }
 
    @Test
@@ -63,15 +63,13 @@ public class HikariCPCollectorTest {
       config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
       config.setJdbcUrl("jdbc:h2:mem:");
 
-      HikariDataSource ds = new HikariDataSource(config);
-      Connection connection1 = ds.getConnection();
-
-      assertThat(getValue("hikaricp_active_connections", "connection1"), is(1.0));
-      assertThat(getValue("hikaricp_idle_connections", "connection1"), is(0.0));
-      assertThat(getValue("hikaricp_pending_threads", "connection1"), is(0.0));
-      assertThat(getValue("hikaricp_connections", "connection1"), is(1.0));
-
-      connection1.close();
+      try (HikariDataSource ds = new HikariDataSource(config);
+           Connection connection1 = ds.getConnection()) {
+         assertThat(getValue("hikaricp_active_connections", "connection1"), is(1.0));
+         assertThat(getValue("hikaricp_idle_connections", "connection1"), is(0.0));
+         assertThat(getValue("hikaricp_pending_threads", "connection1"), is(0.0));
+         assertThat(getValue("hikaricp_connections", "connection1"), is(1.0));
+      }
    }
 
    @Test
@@ -82,9 +80,9 @@ public class HikariCPCollectorTest {
       config.setJdbcUrl("jdbc:h2:mem:");
       config.setMaximumPoolSize(20);
 
-      HikariDataSource ds = new HikariDataSource(config);
-      Connection connection1 = ds.getConnection();
-      connection1.close();
+      try (HikariDataSource ds = new HikariDataSource(config);
+           Connection connection1 = ds.getConnection()) {
+      }
 
       assertThat(getValue("hikaricp_active_connections", "connectionClosed"), is(0.0));
       assertThat(getValue("hikaricp_idle_connections", "connectionClosed"), is(1.0));

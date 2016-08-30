@@ -132,7 +132,6 @@ public final class TestElf
 
    private static class StringAppender extends AbstractAppender
    {
-      private static final long serialVersionUID = -1932433845656444920L;
       private PrintStream stream;
 
       StringAppender(String name, PrintStream stream)
