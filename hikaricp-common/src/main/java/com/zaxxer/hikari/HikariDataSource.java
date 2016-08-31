@@ -81,6 +81,26 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       multiPool.put(new MultiPoolKey(getUsername(), getPassword()), pool);
    }
 
+   /** Expose the PoolMbean's idle connection count */
+   public int getIdleConnections() {
+      return pool.getIdleConnections();
+   }
+
+   /** Expose the PoolMbean's active connection count */
+   public int getActiveConnections() {
+      return pool.getActiveConnections();
+   }
+
+   /** Expose the PoolMbean's total connection count */
+   public int getTotalConnections() {
+      return pool.getTotalConnections();
+   }
+
+   /** Expose the PoolMbean's threads awaiting connection count */
+   public int getThreadsAwaitingConnection() {
+      return pool.getThreadsAwaitingConnection();
+   }
+
    /** {@inheritDoc} */
    @Override
    public Connection getConnection() throws SQLException
@@ -205,7 +225,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       if (iface.isInstance(this)) {
          return true;
       }
-      
+
       if (pool != null) {
          if (iface.isInstance(pool.getDataSource())) {
             return true;
