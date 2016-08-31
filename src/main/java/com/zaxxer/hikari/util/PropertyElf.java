@@ -40,7 +40,7 @@ public final class PropertyElf
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(PropertyElf.class);
 
-   private static final Pattern GETTER_PATTERN = Pattern.compile("(get|is)[A-Z].+");
+   private static final Matcher METHOD_MATCHER = Pattern.compile("(get|is)[A-Z].+").matcher("");
 
    public static void setTargetFromProperties(final Object target, final Properties properties)
    {
@@ -68,10 +68,9 @@ public final class PropertyElf
    public static Set<String> getPropertyNames(final Class<?> targetClass)
    {
       HashSet<String> set = new HashSet<>();
-      Matcher matcher = GETTER_PATTERN.matcher("");
       for (Method method : targetClass.getMethods()) {
          String name = method.getName();
-         if (method.getParameterTypes().length == 0 && matcher.reset(name).matches()) {
+         if (method.getParameterTypes().length == 0 && METHOD_MATCHER.reset(name).matches()) {
             name = name.replaceFirst("(get|is)", "");
             try {
                if (targetClass.getMethod("set" + name, method.getReturnType()) != null) {
