@@ -104,6 +104,9 @@ public final class JavassistProxyFactory
          case "getProxyResultSet":
             method.setBody("{return new " + packageName + ".HikariProxyResultSet($$);}");
             break;
+         default:
+            // unhandled method
+            break;
          }
       }
 

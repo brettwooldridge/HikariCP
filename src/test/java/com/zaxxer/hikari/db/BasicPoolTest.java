@@ -80,24 +80,24 @@ public class BasicPoolTest
 
          ds.setIdleTimeout(3000);
 
-         Assert.assertSame("Total connections not as expected", 5, pool.getTotalConnections());
-         Assert.assertSame("Idle connections not as expected", 5, pool.getIdleConnections());
+         Assert.assertEquals("Total connections not as expected", 5, pool.getTotalConnections());
+         Assert.assertEquals("Idle connections not as expected", 5, pool.getIdleConnections());
 
-         Connection connection = ds.getConnection();
-         Assert.assertNotNull(connection);
+         try (Connection connection = ds.getConnection()) {
+            Assert.assertNotNull(connection);
+   
+            TimeUnit.MILLISECONDS.sleep(1500);
+   
+            Assert.assertEquals("Second total connections not as expected", 6, pool.getTotalConnections());
+            Assert.assertEquals("Second idle connections not as expected", 5, pool.getIdleConnections());
+         }
 
-         TimeUnit.MILLISECONDS.sleep(1500);
-
-         Assert.assertSame("Second total connections not as expected", 6, pool.getTotalConnections());
-         Assert.assertSame("Second idle connections not as expected", 5, pool.getIdleConnections());
-         connection.close();
-
-         Assert.assertSame("Idle connections not as expected", 6, pool.getIdleConnections());
+         Assert.assertEquals("Idle connections not as expected", 6, pool.getIdleConnections());
 
          TimeUnit.SECONDS.sleep(2);
 
-         Assert.assertSame("Third total connections not as expected", 5, pool.getTotalConnections());
-         Assert.assertSame("Third idle connections not as expected", 5, pool.getIdleConnections());
+         Assert.assertEquals("Third total connections not as expected", 5, pool.getTotalConnections());
+         Assert.assertEquals("Third idle connections not as expected", 5, pool.getIdleConnections());
       }
    }
 
@@ -121,24 +121,24 @@ public class BasicPoolTest
 
          ds.setIdleTimeout(3000);
 
-         Assert.assertSame("Total connections not as expected", 50, pool.getTotalConnections());
-         Assert.assertSame("Idle connections not as expected", 50, pool.getIdleConnections());
+         Assert.assertEquals("Total connections not as expected", 50, pool.getTotalConnections());
+         Assert.assertEquals("Idle connections not as expected", 50, pool.getIdleConnections());
 
-         Connection connection = ds.getConnection();
-         Assert.assertNotNull(connection);
+         try (Connection connection = ds.getConnection()) {
+            Assert.assertNotNull(connection);
+   
+            TimeUnit.MILLISECONDS.sleep(1500);
+   
+            Assert.assertEquals("Second total connections not as expected", 50, pool.getTotalConnections());
+            Assert.assertEquals("Second idle connections not as expected", 49, pool.getIdleConnections());
+         }
 
-         TimeUnit.MILLISECONDS.sleep(1500);
-
-         Assert.assertSame("Second total connections not as expected", 50, pool.getTotalConnections());
-         Assert.assertSame("Second idle connections not as expected", 49, pool.getIdleConnections());
-         connection.close();
-
-         Assert.assertSame("Idle connections not as expected", 50, pool.getIdleConnections());
+         Assert.assertEquals("Idle connections not as expected", 50, pool.getIdleConnections());
 
          TimeUnit.SECONDS.sleep(3);
 
-         Assert.assertSame("Third total connections not as expected", 50, pool.getTotalConnections());
-         Assert.assertSame("Third idle connections not as expected", 50, pool.getIdleConnections());
+         Assert.assertEquals("Third total connections not as expected", 50, pool.getTotalConnections());
+         Assert.assertEquals("Third idle connections not as expected", 50, pool.getIdleConnections());
       }
    }
 }

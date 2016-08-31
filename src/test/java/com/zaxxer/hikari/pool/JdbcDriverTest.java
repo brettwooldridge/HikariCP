@@ -57,8 +57,9 @@ public class JdbcDriverTest
       DriverDataSource unwrap = ds.unwrap(DriverDataSource.class);
       Assert.assertNotNull(unwrap);
 
-      Connection connection = ds.getConnection();
-      connection.close();
+      try (Connection connection = ds.getConnection()) {
+         // test that getConnection() succeeds
+      }
    }
 
    @Test

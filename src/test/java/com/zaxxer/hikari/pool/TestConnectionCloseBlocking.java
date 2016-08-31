@@ -55,20 +55,21 @@ public class TestConnectionCloseBlocking {
       config.setDataSource(new CustomMockDataSource());
 
       long start = ClockSource.INSTANCE.currentTime();
-      try (HikariDataSource ds = new HikariDataSource(config)) {
-         Connection connection = ds.getConnection();
-         connection.close();
-
-         // Hikari only checks for validity for connections with lastAccess > 1000 ms so we sleep for 1001 ms to force
-         // Hikari to do a connection validation which will fail and will trigger the connection to be closed
-         UtilityElf.quietlySleep(1100L);
-
-         shouldFail = true;
-
-         // on physical connection close we sleep 2 seconds
-         connection = ds.getConnection();
-
-         Assert.assertTrue("Waited longer than timeout", (ClockSource.INSTANCE.elapsedMillis(start) < config.getConnectionTimeout()));
+      try (HikariDataSource ds = new HikariDataSource(config);
+            Connection connection = ds.getConnection()) {
+            
+            connection.close();
+   
+            // Hikari only checks for validity for connections with lastAccess > 1000 ms so we sleep for 1001 ms to force
+            // Hikari to do a connection validation which will fail and will trigger the connection to be closed
+            UtilityElf.quietlySleep(1100L);
+   
+            shouldFail = true;
+   
+            // on physical connection close we sleep 2 seconds
+            try (Connection connection2 = ds.getConnection()) {   
+               Assert.assertTrue("Waited longer than timeout", (ClockSource.INSTANCE.elapsedMillis(start) < config.getConnectionTimeout()));
+            }
       } catch (SQLException e) {
          Assert.assertTrue("getConnection failed because close connection took longer than timeout", (ClockSource.INSTANCE.elapsedMillis(start) < config.getConnectionTimeout()));
       }
