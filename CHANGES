@@ -1,6 +1,16 @@
 HikariCP Changes
 
+Changes in 2.5.0
+
+ * Release 2.5.0 marks the start of a Java 8 HikariCP artifact.  The Java 7 artifact is
+   now called "HikariCP-java7".
+
+ * HikariCP 2.5.0 and HikariCP-java7 2.4.8 have identical functionality.
+   
 Changes in 2.4.8
+
+ * Release 2.4.8 marks the start of a Java 7 HikariCP artifact, HikariCP-java7, representing
+   support for Java 7 entering maintenance mode.
 
  * Added Connection.commit() call to the fail-fast initialization for databases that
    automatically start a new Connection in a transaction and throw an exception on close
