@@ -344,7 +344,8 @@ ds.setPassword("51mp50n");
 ```
 or property file based:
 ```java
-HikariConfig config = new HikariConfig("some/path/hikari.properties");
+// Examines both filesystem and classpath for .properties file
+HikariConfig config = new HikariConfig("/some/path/hikari.properties");
 HikariDataSource ds = new HikariDataSource(config);
 ```
 Example property file:
