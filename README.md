@@ -1,6 +1,5 @@
 <h1>![](https://github.com/brettwooldridge/HikariCP/wiki/Hikari.png) HikariCP<sup><sup>&nbsp;It's Faster.</sup></sup><sub><sub><sup>Hi·ka·ri [hi·ka·'lē] &#40;*Origin: Japanese*): light; ray.</sup></sub></sub></h1><br>
 [![][Build Status img]][Build Status]
-[![][Issue Stats img]][Issue Stats]
 [![][Coverage Status img]][Coverage Status]
 [![][Dependency Status img]][Dependency Status]
 [![][license img]][license]
@@ -441,9 +440,6 @@ Please perform changes and submit pull requests from the ``dev`` branch instead 
 
 [Build Status]:https://travis-ci.org/brettwooldridge/HikariCP
 [Build Status img]:https://travis-ci.org/brettwooldridge/HikariCP.svg?branch=dev
-
-[Issue Stats]:http://issuestats.com/github/brettwooldridge/HikariCP
-[Issue Stats img]:http://issuestats.com/github/brettwooldridge/HikariCP/badge/issue?style=flat&concise=true
 
 [Coverage Status]:https://coveralls.io/r/brettwooldridge/HikariCP?branch=dev
 [Coverage Status img]:https://coveralls.io/repos/brettwooldridge/HikariCP/badge.svg?branch=dev
