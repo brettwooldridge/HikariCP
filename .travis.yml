@@ -9,6 +9,6 @@ jdk:
 install: /bin/true
 
 script:
-  - mvn install -Dskip.unit.tests=true -Dmaven.javadoc.skip=true -V -B
+  - mvn install -Dmaven.javadoc.skip=true -V -B
   - jdk_switcher use openjdk7
   - mvn test
