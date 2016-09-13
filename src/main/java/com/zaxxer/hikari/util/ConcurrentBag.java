@@ -75,7 +75,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       int STATE_RESERVED = -2;
 
       boolean compareAndSet(int expectState, int newState);
-      void lazySet(int newState);
+      void setState(int newState);
       int getState();
    }
 
@@ -187,7 +187,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     */
    public void requite(final T bagEntry)
    {
-      bagEntry.lazySet(STATE_NOT_IN_USE);
+      bagEntry.setState(STATE_NOT_IN_USE);
 
       final List<Object> threadLocalList = threadList.get();
       if (threadLocalList != null) {
