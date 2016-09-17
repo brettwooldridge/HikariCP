@@ -160,7 +160,7 @@ public abstract class ProxyConnection implements Connection
             delegate = ClosedConnection.CLOSED_CONNECTION;
          }
 
-         nse = sqle.getNextException();
+         nse = nse.getNextException();
       }
 
       return sqle;
