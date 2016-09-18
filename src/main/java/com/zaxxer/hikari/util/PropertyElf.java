@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -42,7 +43,7 @@ public final class PropertyElf
 
    private static final Pattern GETTER_PATTERN = Pattern.compile("(get|is)[A-Z].+");
 
-   public static void setTargetFromProperties(final Object target, final Properties properties)
+   public static void setTargetFromProperties(final Object target, final Map<?, ?> properties)
    {
       if (target == null || properties == null) {
          return;
