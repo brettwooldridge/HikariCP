@@ -149,7 +149,7 @@ public abstract class ProxyConnection implements Connection
    final SQLException checkException(SQLException sqle)
    {
       SQLException nse = sqle;
-      for (int depth = 0; nse != null && delegate != ClosedConnection.CLOSED_CONNECTION && depth < 10; depth++) {
+      for (int depth = 0; delegate != ClosedConnection.CLOSED_CONNECTION && nse != null && depth < 10; depth++) {
          final String sqlState = nse.getSQLState();
          if (sqlState != null && sqlState.startsWith("08") || ERROR_STATES.contains(sqlState) || ERROR_CODES.contains(nse.getErrorCode())) {
             // broken connection
@@ -159,8 +159,9 @@ public abstract class ProxyConnection implements Connection
             poolEntry.evict("(connection is broken)");
             delegate = ClosedConnection.CLOSED_CONNECTION;
          }
-
-         nse = nse.getNextException();
+         else {
+            nse = nse.getNextException();
+         }
       }
 
       return sqle;
