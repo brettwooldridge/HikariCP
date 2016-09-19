@@ -43,6 +43,10 @@ public final class PropertyElf
 
    private static final Pattern GETTER_PATTERN = Pattern.compile("(get|is)[A-Z].+");
 
+   public static void setTargetFromProperties(final Object target, final Properties properties) {
+      setTargetFromProperties(target, (Map<?, ?>) properties);
+   }
+
    public static void setTargetFromProperties(final Object target, final Map<?, ?> properties)
    {
       if (target == null || properties == null) {
