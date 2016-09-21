@@ -17,7 +17,18 @@ Changes in 2.5.0
    now called "HikariCP-java7".
 
  * HikariCP 2.5.0 and HikariCP-java7 2.4.8 have identical functionality.
-   
+
+Changes in 2.4.9
+
+ * issue 719 only reset lastConnectionFailure after a successful dataSource.getConnection()
+   call.
+
+ * issue 716 do not scan deeper than 10 nested SQLExceptions, it's typically a trap ...
+   a chain that never terminates.
+
+ * issue 714 fix possible issue with cross-thread visibility.  Change pool entry state from
+   AtomicInteger w/lazySet() to a volatile int with use of AtomicIntegerFieldUpdater.
+
 Changes in 2.4.8
 
  * Release 2.4.8 marks the start of a Java 7 HikariCP artifact, HikariCP-java7, representing
