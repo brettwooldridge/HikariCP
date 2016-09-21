@@ -30,90 +30,86 @@ import com.zaxxer.hikari.HikariDataSource;
 
 public class StatementTest
 {
-    private HikariDataSource ds;
+   private HikariDataSource ds;
 
-    @Before
-    public void setup()
-    {
-        HikariConfig config = new HikariConfig();
-        config.setMinimumIdle(1);
-        config.setMaximumPoolSize(2);
-        config.setConnectionTestQuery("VALUES 1");
-        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+   @Before
+   public void setup()
+   {
+      HikariConfig config = new HikariConfig();
+      config.setMinimumIdle(1);
+      config.setMaximumPoolSize(2);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-        ds = new HikariDataSource(config);
-    }
+      ds = new HikariDataSource(config);
+   }
 
-    @After
-    public void teardown()
-    {
-        ds.close();
-    }
+   @After
+   public void teardown()
+   {
+      ds.close();
+   }
 
-    @Test
-    public void testStatementClose() throws SQLException
-    {
-        ds.getConnection().close();
+   @Test
+   public void testStatementClose() throws SQLException
+   {
+      ds.getConnection().close();
 
-        HikariPool pool = TestElf.getPool(ds);
-        Assert.assertTrue("Total connections not as expected", pool.getTotalConnections() >= 1);
-        Assert.assertTrue("Idle connections not as expected", pool.getIdleConnections() >= 1);
+      HikariPool pool = TestElf.getPool(ds);
+      Assert.assertTrue("Total connections not as expected", pool.getTotalConnections() >= 1);
+      Assert.assertTrue("Idle connections not as expected", pool.getIdleConnections() >= 1);
 
-        Connection connection = ds.getConnection();
-        Assert.assertNotNull(connection);
+      try (Connection connection = ds.getConnection()) {
+         Assert.assertNotNull(connection);
 
-        Assert.assertTrue("Total connections not as expected", pool.getTotalConnections() >= 1);
-        Assert.assertTrue("Idle connections not as expected", pool.getIdleConnections() >= 0);
+         Assert.assertTrue("Total connections not as expected", pool.getTotalConnections() >= 1);
+         Assert.assertTrue("Idle connections not as expected", pool.getIdleConnections() >= 0);
 
-        Statement statement = connection.createStatement();
-        Assert.assertNotNull(statement);
+         Statement statement = connection.createStatement();
+         Assert.assertNotNull(statement);
 
-        connection.close();
+         connection.close();
 
-        Assert.assertTrue(statement.isClosed());
-    }
+         Assert.assertTrue(statement.isClosed());
+      }
+   }
 
-    @Test
-    public void testAutoStatementClose() throws SQLException
-    {
-        Connection connection = ds.getConnection();
-        Assert.assertNotNull(connection);
+   @Test
+   public void testAutoStatementClose() throws SQLException
+   {
+      try (Connection connection = ds.getConnection()) {
+         Assert.assertNotNull(connection);
 
-        Statement statement1 = connection.createStatement();
-        Assert.assertNotNull(statement1);
-        Statement statement2 = connection.createStatement();
-        Assert.assertNotNull(statement2);
+         Statement statement1 = connection.createStatement();
+         Assert.assertNotNull(statement1);
+         Statement statement2 = connection.createStatement();
+         Assert.assertNotNull(statement2);
 
-        connection.close();
+         connection.close();
 
-        Assert.assertTrue(statement1.isClosed());
-        Assert.assertTrue(statement2.isClosed());
-    }
+         Assert.assertTrue(statement1.isClosed());
+         Assert.assertTrue(statement2.isClosed());
+      }
+   }
 
-    @Test
-    public void testDoubleStatementClose() throws SQLException
-    {
-        Connection connection = ds.getConnection();
+   @Test
+   public void testDoubleStatementClose() throws SQLException
+   {
+      try (Connection connection = ds.getConnection();
+            Statement statement1 = connection.createStatement()) {
+         statement1.close();
+         statement1.close();
+      }
+   }
 
-        Statement statement1 = connection.createStatement();
-
-        statement1.close();
-        statement1.close();
-
-        connection.close();
-    }
-
-    @Test
-    public void testOutOfOrderStatementClose() throws SQLException
-    {
-        Connection connection = ds.getConnection();
-
-        Statement statement1 = connection.createStatement();
-        Statement statement2 = connection.createStatement();
-
-        statement1.close();
-        statement2.close();
-
-        connection.close();
-    }    
+   @Test
+   public void testOutOfOrderStatementClose() throws SQLException
+   {
+      try (Connection connection = ds.getConnection();
+            Statement statement1 = connection.createStatement();
+            Statement statement2 = connection.createStatement()) {
+         statement1.close();
+         statement2.close();
+      }
+   }
 }

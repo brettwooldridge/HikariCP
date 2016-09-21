@@ -63,54 +63,56 @@ public class TestConcurrentBag
    @Test
    public void testConcurrentBag() throws Exception
    {
-      ConcurrentBag<PoolEntry> bag = new ConcurrentBag<>(new IBagStateListener() {
-         @Override
-         public Future<Boolean> addBagItem()
-         {
-            return null;
+      try (ConcurrentBag<PoolEntry> bag = new ConcurrentBag<>(new IBagStateListener() {
+               @Override
+               public Future<Boolean> addBagItem()
+               {
+                  return null;
+               }
+            })
+          ) {
+         Assert.assertEquals(0, bag.values(8).size());
+   
+         PoolEntry reserved = pool.newPoolEntry();
+         bag.add(reserved);
+         bag.reserve(reserved);      // reserved
+   
+         PoolEntry inuse = pool.newPoolEntry();
+         bag.add(inuse);
+         bag.borrow(2, TimeUnit.MILLISECONDS); // in use
+   
+         PoolEntry notinuse = pool.newPoolEntry();
+         bag.add(notinuse); // not in use
+   
+         bag.dumpState();
+   
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         PrintStream ps = new PrintStream(baos, true);
+         TestElf.setSlf4jTargetStream(ConcurrentBag.class, ps);
+   
+         bag.requite(reserved);
+   
+         bag.remove(notinuse);
+         Assert.assertTrue(new String(baos.toByteArray()).contains("not borrowed or reserved"));
+   
+         bag.unreserve(notinuse);
+         Assert.assertTrue(new String(baos.toByteArray()).contains("was not reserved"));
+   
+         bag.remove(inuse);
+         bag.remove(inuse);
+         Assert.assertTrue(new String(baos.toByteArray()).contains("not borrowed or reserved"));
+   
+         bag.close();
+         try {
+            PoolEntry bagEntry = pool.newPoolEntry();
+            bag.add(bagEntry);
+            Assert.assertNotEquals(bagEntry, bag.borrow(100, TimeUnit.MILLISECONDS));
          }
-      });
-      Assert.assertEquals(0, bag.values(8).size());
-
-      PoolEntry reserved = pool.newPoolEntry();
-      bag.add(reserved);
-      bag.reserve(reserved);      // reserved
-
-      PoolEntry inuse = pool.newPoolEntry();
-      bag.add(inuse);
-      bag.borrow(2, TimeUnit.MILLISECONDS); // in use
-
-      PoolEntry notinuse = pool.newPoolEntry();
-      bag.add(notinuse); // not in use
-
-      bag.dumpState();
-
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      PrintStream ps = new PrintStream(baos, true);
-      TestElf.setSlf4jTargetStream(ConcurrentBag.class, ps);
-
-      bag.requite(reserved);
-
-      bag.remove(notinuse);
-      Assert.assertTrue(new String(baos.toByteArray()).contains("not borrowed or reserved"));
-
-      bag.unreserve(notinuse);
-      Assert.assertTrue(new String(baos.toByteArray()).contains("was not reserved"));
-
-      bag.remove(inuse);
-      bag.remove(inuse);
-      Assert.assertTrue(new String(baos.toByteArray()).contains("not borrowed or reserved"));
-
-      bag.close();
-      try {
-         PoolEntry bagEntry = pool.newPoolEntry();
-         bag.add(bagEntry);
-         Assert.assertNotEquals(bagEntry, bag.borrow(100, TimeUnit.MILLISECONDS));
+         catch (IllegalStateException e) {
+            Assert.assertTrue(new String(baos.toByteArray()).contains("ignoring add()"));
+         }
+   
+         Assert.assertNotNull(notinuse.toString());
       }
-      catch (IllegalStateException e) {
-         Assert.assertTrue(new String(baos.toByteArray()).contains("ignoring add()"));
-      }
-
-      Assert.assertNotNull(notinuse.toString());
    }
 }

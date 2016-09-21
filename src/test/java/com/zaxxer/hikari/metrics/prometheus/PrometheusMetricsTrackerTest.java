@@ -44,33 +44,34 @@ public class PrometheusMetricsTrackerTest {
       String[] labelNames = {"pool"};
       String[] labelValues = {poolName};
 
-      HikariDataSource hikariDataSource = new HikariDataSource(config);
-      Connection connection = hikariDataSource.getConnection();
-      try {
-         hikariDataSource.getConnection();
-      } catch (SQLTransientConnectionException ignored) {
-      }
-      connection.close();
+      try (HikariDataSource hikariDataSource = new HikariDataSource(config)) {
+         try (Connection connection = hikariDataSource.getConnection()) {
+            try (Connection connection2 = hikariDataSource.getConnection()) {
+            }
+            catch (SQLTransientConnectionException ignored) {
+            }
+         }
 
-      assertThat(CollectorRegistry.defaultRegistry.getSampleValue(
-         "hikaricp_connection_timeout_count",
-         labelNames,
-         labelValues), is(1.0));
-      assertThat(CollectorRegistry.defaultRegistry.getSampleValue(
-         "hikaricp_connection_acquired_nanos_count",
-         labelNames,
-         labelValues), is(equalTo(1.0)));
-      assertTrue(CollectorRegistry.defaultRegistry.getSampleValue(
-         "hikaricp_connection_acquired_nanos_sum",
-         labelNames,
-         labelValues) > 0.0);
-      assertThat(CollectorRegistry.defaultRegistry.getSampleValue(
-         "hikaricp_connection_usage_millis_count",
-         labelNames,
-         labelValues), is(equalTo(1.0)));
-      assertTrue(CollectorRegistry.defaultRegistry.getSampleValue(
-         "hikaricp_connection_usage_millis_sum",
-         labelNames,
-         labelValues) > 0.0);
+         assertThat(CollectorRegistry.defaultRegistry.getSampleValue(
+            "hikaricp_connection_timeout_count",
+            labelNames,
+            labelValues), is(1.0));
+         assertThat(CollectorRegistry.defaultRegistry.getSampleValue(
+            "hikaricp_connection_acquired_nanos_count",
+            labelNames,
+            labelValues), is(equalTo(1.0)));
+         assertTrue(CollectorRegistry.defaultRegistry.getSampleValue(
+            "hikaricp_connection_acquired_nanos_sum",
+            labelNames,
+            labelValues) > 0.0);
+         assertThat(CollectorRegistry.defaultRegistry.getSampleValue(
+            "hikaricp_connection_usage_millis_count",
+            labelNames,
+            labelValues), is(equalTo(1.0)));
+         assertTrue(CollectorRegistry.defaultRegistry.getSampleValue(
+            "hikaricp_connection_usage_millis_sum",
+            labelNames,
+            labelValues) > 0.0);
+      }
    }
 }

@@ -68,40 +68,41 @@ public class ShutdownTest
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      final HikariDataSource ds = new HikariDataSource(config);
-      HikariPool pool = TestElf.getPool(ds);
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         HikariPool pool = TestElf.getPool(ds);
 
-      Thread[] threads = new Thread[10];
-      for (int i = 0; i < 10; i++) {
-         threads[i] = new Thread() {
-            @Override
-            public void run()
-            {
-               try {
-                  if (ds.getConnection() != null) {
-                     UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(1));
+         Thread[] threads = new Thread[10];
+         for (int i = 0; i < 10; i++) {
+            threads[i] = new Thread() {
+               @Override
+               public void run()
+               {
+                  try {
+                     if (ds.getConnection() != null) {
+                        UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(1));
+                     }
+                  }
+                  catch (SQLException e) {
                   }
                }
-               catch (SQLException e) {
-               }
-            }
-         };
-         threads[i].setDaemon(true);
+            };
+            threads[i].setDaemon(true);
+         }
+         for (int i = 0; i < 10; i++) {
+            threads[i].start();
+         }
+
+         UtilityElf.quietlySleep(1800L);
+
+         Assert.assertTrue("Total connection count not as expected, ", pool.getTotalConnections() > 0);
+
+         ds.close();
+
+         Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
+         Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
+         Assert.assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
+         Assert.assertTrue(ds.isClosed());
       }
-      for (int i = 0; i < 10; i++) {
-         threads[i].start();
-      }
-
-      UtilityElf.quietlySleep(1800L);
-
-      Assert.assertTrue("Total connection count not as expected, ", pool.getTotalConnections() > 0);
-
-      ds.close();
-
-      Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
-      Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
-      Assert.assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
-      Assert.assertTrue(ds.isClosed());
    }
 
    @Test
@@ -118,19 +119,20 @@ public class ShutdownTest
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      HikariDataSource ds = new HikariDataSource(config);
-      HikariPool pool = TestElf.getPool(ds);
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         HikariPool pool = TestElf.getPool(ds);
 
-      UtilityElf.quietlySleep(1200L);
+         UtilityElf.quietlySleep(1200L);
 
-      Assert.assertTrue("Total connection count not as expected, ", pool.getTotalConnections() > 0);
+         Assert.assertTrue("Total connection count not as expected, ", pool.getTotalConnections() > 0);
 
-      ds.close();
+         ds.close();
 
-      Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
-      Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
-      Assert.assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
-      Assert.assertTrue(ds.toString().startsWith("HikariDataSource (") && ds.toString().endsWith(")"));
+         Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
+         Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
+         Assert.assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
+         Assert.assertTrue(ds.toString().startsWith("HikariDataSource (") && ds.toString().endsWith(")"));
+      }
    }
 
    @Test
@@ -147,18 +149,19 @@ public class ShutdownTest
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      HikariDataSource ds = new HikariDataSource(config);
-      HikariPool pool = TestElf.getPool(ds);
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         HikariPool pool = TestElf.getPool(ds);
 
-      UtilityElf.quietlySleep(1200L);
+         UtilityElf.quietlySleep(1200L);
 
-      Assert.assertTrue("Total connection count not as expected, ", pool.getTotalConnections() == 5);
+         Assert.assertTrue("Total connection count not as expected, ", pool.getTotalConnections() == 5);
 
-      ds.close();
+         ds.close();
 
-      Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
-      Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
-      Assert.assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
+         Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
+         Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
+         Assert.assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
+      }
    }
 
    @Test
@@ -173,18 +176,18 @@ public class ShutdownTest
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      HikariDataSource ds = new HikariDataSource(config);
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         UtilityElf.quietlySleep(500L);
 
-      UtilityElf.quietlySleep(500L);
+         ds.close();
 
-      ds.close();
+         long startTime = ClockSource.INSTANCE.currentTime();
+         while (ClockSource.INSTANCE.elapsedMillis(startTime) < TimeUnit.SECONDS.toMillis(5) && threadCount() > 0) {
+            UtilityElf.quietlySleep(250);
+         }
 
-      long startTime = ClockSource.INSTANCE.currentTime();
-      while (ClockSource.INSTANCE.elapsedMillis(startTime) < TimeUnit.SECONDS.toMillis(5) && threadCount() > 0) {
-         UtilityElf.quietlySleep(250);
+         Assert.assertSame("Unreleased connections after shutdown", 0, TestElf.getPool(ds).getTotalConnections());
       }
-
-      Assert.assertSame("Unreleased connections after shutdown", 0, TestElf.getPool(ds).getTotalConnections());
    }
 
    @Test
@@ -199,42 +202,43 @@ public class ShutdownTest
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      HikariDataSource ds = new HikariDataSource(config);
-      HikariPool pool = TestElf.getPool(ds);
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         HikariPool pool = TestElf.getPool(ds);
 
-      Connection[] connections = new Connection[5];
-      for (int i = 0; i < 5; i++) {
-         connections[i] = ds.getConnection();
+         Connection[] connections = new Connection[5];
+         for (int i = 0; i < 5; i++) {
+            connections[i] = ds.getConnection();
+         }
+
+         Assert.assertTrue("Total connection count not as expected, ", pool.getTotalConnections() == 5);
+
+         ds.close();
+
+         Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
+         Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
+         Assert.assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
       }
-
-      Assert.assertTrue("Total connection count not as expected, ", pool.getTotalConnections() == 5);
-
-      ds.close();
-
-      Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
-      Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
-      Assert.assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
    }
 
    @Test
    public void testAfterShutdown() throws Exception
    {
-       HikariConfig config = new HikariConfig();
-       config.setMinimumIdle(0);
-       config.setMaximumPoolSize(5);
-       config.setInitializationFailFast(true);
-       config.setConnectionTestQuery("VALUES 1");
-       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      HikariConfig config = new HikariConfig();
+      config.setMinimumIdle(0);
+      config.setMaximumPoolSize(5);
+      config.setInitializationFailFast(true);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-       HikariDataSource ds = new HikariDataSource(config);
-       ds.close();
-       try
-       {
-           ds.getConnection();
-       }
-       catch (SQLException e) {
-          Assert.assertTrue(e.getMessage().contains("has been closed."));
-       }
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         ds.close();
+         try {
+            ds.getConnection();
+         }
+         catch (SQLException e) {
+            Assert.assertTrue(e.getMessage().contains("has been closed."));
+         }
+      }
    }
 
    @Test
@@ -250,7 +254,7 @@ public class ShutdownTest
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
-      StubConnection.slowCreate = true;
+         StubConnection.slowCreate = true;
          UtilityElf.quietlySleep(3000L);
       }
    }
@@ -268,64 +272,64 @@ public class ShutdownTest
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       for (int i = 0; i < 4; i++) {
-         final HikariDataSource ds = new HikariDataSource(config);
-         Thread t = new Thread() {
-            @Override
-            public void run() {
-               Connection connection = null;
-               try {
-                  connection = ds.getConnection();
-                  for (int i = 0; i < 10; i++) {
-                     Connection connection2 = null;
-                     try {
-                        connection2 = ds.getConnection();
-                        PreparedStatement stmt = connection2.prepareStatement("SOMETHING");
-                        UtilityElf.quietlySleep(20);
-                        stmt.getMaxFieldSize();
-                     }
-                     catch (SQLException e) {
+         try (final HikariDataSource ds = new HikariDataSource(config)) {
+            Thread t = new Thread() {
+               @Override
+               public void run()
+               {
+                  try (Connection connection = ds.getConnection()) {
+                     for (int i = 0; i < 10; i++) {
+                        Connection connection2 = null;
                         try {
-                           if (connection2 != null) {
-                              connection2.close();
-                           }
+                           connection2 = ds.getConnection();
+                           PreparedStatement stmt = connection2.prepareStatement("SOMETHING");
+                           UtilityElf.quietlySleep(20);
+                           stmt.getMaxFieldSize();
                         }
-                        catch (SQLException e2) {
-                           if (e2.getMessage().contains("shutdown") || e2.getMessage().contains("evicted")) {
-                              break;
+                        catch (SQLException e) {
+                           try {
+                              if (connection2 != null) {
+                                 connection2.close();
+                              }
+                           }
+                           catch (SQLException e2) {
+                              if (e2.getMessage().contains("shutdown") || e2.getMessage().contains("evicted")) {
+                                 break;
+                              }
                            }
                         }
                      }
                   }
+                  catch (Exception e) {
+                     Assert.fail(e.getMessage());
+                  }
+                  finally {
+                     ds.close();
+                  }
                }
-               catch (Exception e) {
-                  Assert.fail(e.getMessage());
-               }
-               finally {
-                  try { connection.close(); } catch (SQLException e) { e.printStackTrace(); }
-                  ds.close();
-               }
-            }
-         };
-         t.start();
+            };
+            t.start();
 
-         Thread t2 = new Thread() {
-            @Override
-            public void run() {
-               UtilityElf.quietlySleep(100);
-               try {
-                  ds.close();
+            Thread t2 = new Thread() {
+               @Override
+               public void run()
+               {
+                  UtilityElf.quietlySleep(100);
+                  try {
+                     ds.close();
+                  }
+                  catch (IllegalStateException e) {
+                     Assert.fail(e.getMessage());
+                  }
                }
-               catch (IllegalStateException e) {
-                  Assert.fail(e.getMessage());
-               }
-            }
-         };
-         t2.start();
+            };
+            t2.start();
 
-         t.join();
-         t2.join();
+            t.join();
+            t2.join();
 
-         ds.close();
+            ds.close();
+         }
       }
    }
 

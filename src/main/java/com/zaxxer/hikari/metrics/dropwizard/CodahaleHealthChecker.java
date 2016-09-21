@@ -100,18 +100,11 @@ public final class CodahaleHealthChecker
       @Override
       protected Result check() throws Exception
       {
-         Connection connection = null;
-         try {
-            connection = pool.getConnection(checkTimeoutMs);
+         try (Connection connection = pool.getConnection(checkTimeoutMs)) {
             return Result.healthy();
          }
          catch (SQLException e) {
             return Result.unhealthy(e);
-         }
-         finally {
-            if (connection != null) {
-               connection.close();
-            }
          }
       }
    }

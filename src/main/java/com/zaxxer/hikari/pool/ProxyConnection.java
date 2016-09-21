@@ -146,24 +146,24 @@ public abstract class ProxyConnection implements Connection
       return poolEntry;
    }
 
-   final SQLException checkException(final SQLException sqle)
+   final SQLException checkException(SQLException sqle)
    {
-      final String sqlState = sqle.getSQLState();
-      if (sqlState != null && delegate != ClosedConnection.CLOSED_CONNECTION) {
-         if (sqlState.startsWith("08") || ERROR_STATES.contains(sqlState) || ERROR_CODES.contains(sqle.getErrorCode())) { // broken connection
+      SQLException nse = sqle;
+      for (int depth = 0; delegate != ClosedConnection.CLOSED_CONNECTION && nse != null && depth < 10; depth++) {
+         final String sqlState = nse.getSQLState();
+         if (sqlState != null && sqlState.startsWith("08") || ERROR_STATES.contains(sqlState) || ERROR_CODES.contains(nse.getErrorCode())) {
+            // broken connection
             LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
-                        poolEntry.getPoolName(), delegate, sqlState, sqle.getErrorCode(), sqle);
+                        poolEntry.getPoolName(), delegate, sqlState, nse.getErrorCode(), nse);
             leakTask.cancel();
             poolEntry.evict("(connection is broken)");
             delegate = ClosedConnection.CLOSED_CONNECTION;
          }
          else {
-            final SQLException nse = sqle.getNextException();
-            if (nse != null && nse != sqle) {
-               checkException(nse);
-            }
+            nse = nse.getNextException();
          }
       }
+
       return sqle;
    }
 
@@ -199,11 +199,8 @@ public abstract class ProxyConnection implements Connection
       final int size = openStatements.size();
       if (size > 0) {
          for (int i = 0; i < size && delegate != ClosedConnection.CLOSED_CONNECTION; i++) {
-            try {
-               final Statement statement = openStatements.get(i);
-               if (statement != null) {
-                  statement.close();
-               }
+            try (Statement statement = openStatements.get(i)) {
+               // automatic resource cleanup
             }
             catch (SQLException e) {
                checkException(e);

@@ -20,7 +20,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Comparator;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,19 +37,20 @@ import com.zaxxer.hikari.util.FastList;
 final class PoolEntry implements IConcurrentBagEntry
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(PoolEntry.class);
+   private static final AtomicIntegerFieldUpdater<PoolEntry> stateUpdater;
 
    static final Comparator<PoolEntry> LASTACCESS_COMPARABLE;
 
    Connection connection;
    long lastAccessed;
    long lastBorrowed;
+   private volatile int state;
    private volatile boolean evict;
 
    private volatile ScheduledFuture<?> endOfLife;
 
    private final FastList<Statement> openStatements;
    private final HikariPool hikariPool;
-   private final AtomicInteger state;
 
    private final boolean isReadOnly;
    private final boolean isAutoCommit;
@@ -62,6 +63,8 @@ final class PoolEntry implements IConcurrentBagEntry
             return Long.compare(entryOne.lastAccessed, entryTwo.lastAccessed);
          }
       };
+
+      stateUpdater = AtomicIntegerFieldUpdater.newUpdater(PoolEntry.class, "state");
    }
 
    PoolEntry(final Connection connection, final PoolBase pool, final boolean isReadOnly, final boolean isAutoCommit)
@@ -70,7 +73,6 @@ final class PoolEntry implements IConcurrentBagEntry
       this.hikariPool = (HikariPool) pool;
       this.isReadOnly = isReadOnly;
       this.isAutoCommit = isAutoCommit;
-      this.state = new AtomicInteger();
       this.lastAccessed = ClockSource.INSTANCE.currentTime();
       this.openStatements = new FastList<>(Statement.class, 16);
    }
@@ -150,21 +152,21 @@ final class PoolEntry implements IConcurrentBagEntry
    @Override
    public int getState()
    {
-      return state.get();
+      return stateUpdater.get(this);
    }
 
    /** {@inheritDoc} */
    @Override
    public boolean compareAndSet(int expect, int update)
    {
-      return state.compareAndSet(expect, update);
+      return stateUpdater.compareAndSet(this, expect, update);
    }
 
    /** {@inheritDoc} */
    @Override
-   public void lazySet(int update)
+   public void setState(int update)
    {
-      state.lazySet(update);
+      stateUpdater.set(this, update);
    }
 
    Connection close()
@@ -182,7 +184,7 @@ final class PoolEntry implements IConcurrentBagEntry
 
    private String stateToString()
    {
-      switch (state.get()) {
+      switch (state) {
       case STATE_IN_USE:
          return "IN_USE";
       case STATE_NOT_IN_USE:
