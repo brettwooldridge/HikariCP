@@ -293,7 +293,7 @@ This is a design philosophy.  The HikariCP design aesthetic is Minimalism.  In k
 
 #### Statement Cache
 
-Many connection pools, including Apache DBCP, Vibur, CP30 and others offer ``PreparedStatement`` caching.
+Many connection pools, including Apache DBCP, Vibur, c3p0 and others offer ``PreparedStatement`` caching.
 HikariCP does not.  Why?
 
 At the connection pool layer ``PreparedStatements`` can only be cached *per connection*.  If your application
