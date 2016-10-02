@@ -348,8 +348,14 @@ abstract class PoolBase
          return connection;
       }
       catch (Exception e) {
+         if (connection != null) {
+            quietlyCloseConnection(connection, "(Failed to create/setup connection)");
+         }
+         else if (getLastConnectionFailure() == null) {
+            LOGGER.debug("{} - Failed to create/setup connection: {}", poolName, e.getMessage());
+         }
+
          lastConnectionFailure.set(e);
-         quietlyCloseConnection(connection, "(Failed to create/set connection)");
          throw e;
       }
    }
