@@ -18,6 +18,8 @@ package com.zaxxer.hikari.metrics.prometheus;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.mocks.StubConnection;
+
 import io.prometheus.client.CollectorRegistry;
 import org.junit.Test;
 
@@ -32,13 +34,17 @@ public class HikariCPCollectorTest {
       HikariConfig config = new HikariConfig();
       config.setPoolName("no_connection");
       config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
-      config.setJdbcUrl("jdbc:h2:mem:");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
+      StubConnection.slowCreate = true;
       try (HikariDataSource ds = new HikariDataSource(config)) {
          assertThat(getValue("hikaricp_active_connections", "no_connection"), is(0.0));
          assertThat(getValue("hikaricp_idle_connections", "no_connection"), is(0.0));
          assertThat(getValue("hikaricp_pending_threads", "no_connection"), is(0.0));
          assertThat(getValue("hikaricp_connections", "no_connection"), is(0.0));
+      }
+      finally {
+         StubConnection.slowCreate = false;
       }
    }
 
@@ -46,13 +52,17 @@ public class HikariCPCollectorTest {
    public void noConnectionWithoutPoolName() throws Exception {
       HikariConfig config = new HikariConfig();
       config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
-      config.setJdbcUrl("jdbc:h2:mem:");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
+      StubConnection.slowCreate = true;
       try (HikariDataSource ds = new HikariDataSource(config)) {
          assertThat(getValue("hikaricp_active_connections", "HikariPool-1"), is(0.0));
          assertThat(getValue("hikaricp_idle_connections", "HikariPool-1"), is(0.0));
          assertThat(getValue("hikaricp_pending_threads", "HikariPool-1"), is(0.0));
          assertThat(getValue("hikaricp_connections", "HikariPool-1"), is(0.0));
+      }
+      finally {
+         StubConnection.slowCreate = false;
       }
    }
 
@@ -61,15 +71,20 @@ public class HikariCPCollectorTest {
       HikariConfig config = new HikariConfig();
       config.setPoolName("connection1");
       config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
-      config.setJdbcUrl("jdbc:h2:mem:");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      config.setMaximumPoolSize(1);
 
+      StubConnection.slowCreate = true;
       try (HikariDataSource ds = new HikariDataSource(config);
-           Connection connection1 = ds.getConnection()) {
+         Connection connection1 = ds.getConnection()) {
 
          assertThat(getValue("hikaricp_active_connections", "connection1"), is(1.0));
          assertThat(getValue("hikaricp_idle_connections", "connection1"), is(0.0));
          assertThat(getValue("hikaricp_pending_threads", "connection1"), is(0.0));
          assertThat(getValue("hikaricp_connections", "connection1"), is(1.0));
+      }
+      finally {
+         StubConnection.slowCreate = false;
       }
    }
 
@@ -78,9 +93,10 @@ public class HikariCPCollectorTest {
       HikariConfig config = new HikariConfig();
       config.setPoolName("connectionClosed");
       config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
-      config.setJdbcUrl("jdbc:h2:mem:");
-      config.setMaximumPoolSize(20);
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      config.setMaximumPoolSize(1);
 
+      StubConnection.slowCreate = true;
       try (HikariDataSource ds = new HikariDataSource(config)) {
          try (Connection connection1 = ds.getConnection()) {
             // close immediately
@@ -90,6 +106,9 @@ public class HikariCPCollectorTest {
          assertThat(getValue("hikaricp_idle_connections", "connectionClosed"), is(1.0));
          assertThat(getValue("hikaricp_pending_threads", "connectionClosed"), is(0.0));
          assertThat(getValue("hikaricp_connections", "connectionClosed"), is(1.0));
+      }
+      finally {
+         StubConnection.slowCreate = false;
       }
    }
 
