@@ -48,7 +48,7 @@
       <maven.release.version>2.5.3</maven.release.version>
       <metrics.version>3.1.2</metrics.version>
       <simpleclient.version>0.0.16</simpleclient.version>
-      <mockito.version>1.10.19</mockito.version>
+      <mockito.version>2.1.0</mockito.version>
       <pax.exam.version>4.9.1</pax.exam.version>
       <pax.url.version>2.4.7</pax.url.version>
       <slf4j.version>1.7.21</slf4j.version>
