@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadLocalRandom;
@@ -86,6 +87,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private final SuspendResumeLock suspendResumeLock;
 
    private MetricsTrackerDelegate metricsTracker;
+   private ScheduledFuture<?> houseKeeperTask;
 
    /**
     * Construct a HikariPool with the specified configuration.
@@ -128,7 +130,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
       this.leakTask = new ProxyLeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
-      this.houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L, HOUSEKEEPING_PERIOD_MS, MILLISECONDS);
+      this.houseKeeperTask = this.houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L, HOUSEKEEPING_PERIOD_MS, MILLISECONDS);
    }
 
    /**
@@ -200,6 +202,11 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
          LOGGER.info("{} - Close initiated...", poolName);
          logPoolState("Before closing ");
+
+         if (houseKeeperTask != null) {
+            houseKeeperTask.cancel(false);
+            houseKeeperTask = null;
+         }
 
          softEvictConnections();
 
