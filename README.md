@@ -85,6 +85,8 @@ HikariCP comes with *sane* defaults that perform well in most deployments withou
 
 <sup>&#128206;</sup>&nbsp;*HikariCP uses milliseconds for all time values.*
 
+&#128680;&nbsp;HikariCP relies heavily on accurate high-resolution timers for both performance and reliability. It is *imperative* that your server is synchronized with a time-source such as an NTP server. *Especially* if your server is running within a virtual machine.  *Do not rely on hypervisor settings to "synchronize" the clock of the virtual machine. Configure time-source synchronization inside the virtual machine.*  If you come asking for support on an issue that turns out to be caused by lack time synchronization, you will be taunted publicly on Twitter.
+
 ##### Essentials
 
 &#128288;``dataSourceClassName``<br/>
