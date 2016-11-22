@@ -30,6 +30,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -146,14 +147,14 @@ abstract class PoolBase
             if (isUseJdbc4Validation) {
                return connection.isValid((int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
             }
-   
+
             setNetworkTimeout(connection, validationTimeout);
-   
+
             try (Statement statement = connection.createStatement()) {
                if (isNetworkTimeoutSupported != TRUE) {
                   setQueryTimeout(statement, (int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
                }
-   
+
                statement.execute(config.getConnectionTestQuery());
             }
          }
@@ -241,7 +242,7 @@ abstract class PoolBase
    /**
     * Register MBeans for HikariConfig and HikariPool.
     *
-    * @param pool a HikariPool instance
+    * @param hikariPool a HikariPool instance
     */
    void registerMBeans(final HikariPool hikariPool)
    {
@@ -298,7 +299,6 @@ abstract class PoolBase
    /**
     * Create/initialize the underlying DataSource.
     *
-    * @return a DataSource instance
     */
    private void initializeDataSource()
    {
@@ -389,6 +389,11 @@ abstract class PoolBase
       }
 
       executeSql(connection, config.getConnectionInitSql(), true);
+
+      Consumer<Connection> connectionInitializer = config.getConnectionInitializer();
+      if (connectionInitializer != null) {
+         connectionInitializer.accept(connection);
+      }
 
       setNetworkTimeout(connection, networkTimeout);
    }
@@ -641,7 +646,7 @@ abstract class PoolBase
 
       /**
        * @param poolEntry
-       * @param now
+       * @param startTime
        */
       void recordBorrowStats(final PoolEntry poolEntry, final long startTime)
       {
