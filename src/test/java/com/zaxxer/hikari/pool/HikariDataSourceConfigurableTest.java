@@ -8,7 +8,6 @@ import org.junit.Test;
 
 /**
  * @author iobestar
- * @since 23.11.2016. 17:45
  */
 public class HikariDataSourceConfigurableTest
 {
