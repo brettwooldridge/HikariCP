@@ -13,7 +13,6 @@ import java.util.logging.Logger;
 
 /**
  * @author iobestar
- * @since 23.11.2016. 17:46
  */
 public class ConfigurableDataSource implements DataSource, HikariDataSourceConfigurable {
 
