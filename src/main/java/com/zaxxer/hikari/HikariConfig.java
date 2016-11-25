@@ -83,6 +83,7 @@ public class HikariConfig implements HikariConfigMXBean
    private boolean isAutoCommit;
    private boolean isReadOnly;
    private boolean isInitializationFailFast;
+   private long initializationMaxAttempts;
    private boolean isIsolateInternalQueries;
    private boolean isRegisterMbeans;
    private boolean isAllowPoolSuspension;
@@ -112,6 +113,7 @@ public class HikariConfig implements HikariConfigMXBean
 
       isAutoCommit = true;
       isInitializationFailFast = true;
+      initializationMaxAttempts = 1;
 
       String systemProp = System.getProperty("hikaricp.configurationFile");
       if (systemProp != null) {
@@ -413,6 +415,24 @@ public class HikariConfig implements HikariConfigMXBean
    public void setInitializationFailFast(boolean failFast)
    {
       isInitializationFailFast = failFast;
+   }
+
+   /**
+    * Get maximum number of connection attemts, that will be performed during startup.
+    *
+    * @return Number of attempts to get initail connection.
+    */
+   public long getInitializationMaxAttempts() {
+      return initializationMaxAttempts;
+   }
+
+   /**
+    * Set maximum number of connection attempts, that will be performed during startup.
+    *
+    * @param initializationMaxAttempts Maximum number of connection attempts during startup.
+    */
+   public void setInitializationMaxAttempts(long initializationMaxAttempts) {
+      this.initializationMaxAttempts = initializationMaxAttempts;
    }
 
    public boolean isIsolateInternalQueries()
