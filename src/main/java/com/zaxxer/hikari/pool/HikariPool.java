@@ -508,13 +508,22 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private void checkFailFast()
    {
       if (config.isInitializationFailFast()) {
-         try (Connection connection = newConnection()) {
-            if (!connection.getAutoCommit()) {
-               connection.commit();
+         for (int i = 0; i < config.getInitializationMaxAttempts(); i++) {
+            try (Connection connection = newConnection()) {
+               if (!connection.getAutoCommit()) {
+                  connection.commit();
+               }
+               return;
             }
-         }
-         catch (Throwable e) {
-            throw new PoolInitializationException(e);
+            catch (Throwable e) {
+               if (i == config.getInitializationMaxAttempts() - 1) {
+                  throw new PoolInitializationException(e);
+               }
+               else {
+                  LOGGER.error("Error connecting during startup. Attempt #" + i);
+                  quietlySleep(100L);
+               }
+            }
          }
       }
    }
@@ -664,6 +673,16 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       public PoolInitializationException(Throwable t)
       {
          super("Failed to initialize pool: " + t.getMessage(), t);
+      }
+
+      /**
+       * Construct an exception, with a message.
+       *
+       * @param message Exceptiion message
+       */
+      public PoolInitializationException(String message)
+      {
+         super(message);
       }
    }
 }
