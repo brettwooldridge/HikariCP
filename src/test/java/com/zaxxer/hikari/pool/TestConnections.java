@@ -114,7 +114,7 @@ public class TestConnections
       config.setMaximumPoolSize(1);
       config.setConnectionTimeout(2500);
       config.setConnectionTestQuery("VALUES 1");
-      config.setInitializationFailFast(false);
+      config.setInitializationFailTimeout(Long.MAX_VALUE);
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "100");
@@ -268,7 +268,7 @@ public class TestConnections
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(4);
       config.setConnectionTimeout(1000);
-      config.setInitializationFailFast(false);
+      config.setInitializationFailTimeout(Long.MAX_VALUE);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -328,7 +328,7 @@ public class TestConnections
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(4);
       config.setConnectionTimeout(20000);
-      config.setInitializationFailFast(true);
+      config.setInitializationFailTimeout(0);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -503,14 +503,19 @@ public class TestConnections
       config.setInitializationFailTimeout(TimeUnit.SECONDS.toMillis(2));
       config.setDataSource(stubDataSource);
 
-      try (HikariDataSource ds = new HikariDataSource(config); Connection c = ds.getConnection()) {
-         Assert.fail("getConnection() should have failed");
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         try (Connection c = ds.getConnection()) {
+            Assert.fail("getConnection() should have failed");
+         }
+         catch (SQLException e) {
+            Assert.assertSame("Bad query or something.", e.getNextException().getMessage());
+         }
       }
-      catch (SQLException e) {
-         Assert.assertSame("Bad query or something.", e.getNextException().getMessage());
+      catch (PoolInitializationException e) {
+         Assert.assertSame("Bad query or something.", e.getCause().getMessage());
       }
       
-      config.setInitializationFailFast(true);
+      config.setInitializationFailTimeout(0);
       try (HikariDataSource ds = new HikariDataSource(config)) {
          Assert.fail("Initialization should have failed");
       }

@@ -44,7 +44,7 @@ public class ConnectionRaceConditionTest
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(10);
-      config.setInitializationFailFast(false);
+      config.setInitializationFailTimeout(Long.MAX_VALUE);
       config.setConnectionTimeout(2500);
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 

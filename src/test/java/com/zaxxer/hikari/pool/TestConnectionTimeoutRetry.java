@@ -74,7 +74,7 @@ public class TestConnectionTimeoutRetry
       config.setMaximumPoolSize(1);
       config.setConnectionTimeout(2800);
       config.setValidationTimeout(2800);
-      config.setInitializationFailFast(true);
+      config.setInitializationFailTimeout(0);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
