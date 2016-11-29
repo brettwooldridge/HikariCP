@@ -77,7 +77,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", MILLISECONDS.toMillis(500));
    private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", SECONDS.toMillis(30));
 
-   private final PoolEntryCreator POOL_ENTRY_CREATOR = new PoolEntryCreator();
+   private final PoolEntryCreator POOL_FILLER_ENTRY_CREATOR = new PoolEntryCreator(false);
+   private final PoolEntryCreator POOL_USER_ENTRY_CREATOR = new PoolEntryCreator(true);
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
    private final ScheduledThreadPoolExecutor houseKeepingExecutorService;
@@ -300,7 +301,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    @Override
    public Future<Boolean> addBagItem()
    {
-      return addConnectionExecutor.submit(POOL_ENTRY_CREATOR);
+      return addConnectionExecutor.submit(POOL_USER_ENTRY_CREATOR);
    }
 
    // ***********************************************************************
@@ -469,7 +470,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       final int connectionsToAdd = Math.min(config.getMaximumPoolSize() - getTotalConnections(), config.getMinimumIdle() - getIdleConnections())
                                    - addConnectionExecutor.getQueue().size();
       for (int i = 0; i < connectionsToAdd; i++) {
-         addBagItem();
+         addConnectionExecutor.submit(POOL_FILLER_ENTRY_CREATOR);
       }
 
       if (connectionsToAdd > 0 && LOGGER.isDebugEnabled()) {
@@ -578,11 +579,30 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
     */
    private class PoolEntryCreator implements Callable<Boolean>
    {
+      private final boolean onlyAddIfWaiters;
+
+      /**
+       * Connections are always created by the dedicated connection adding pool. In some cases we are trying to fill the pool and don't care
+       * how many waiters there are. In most cases the connections are being added to pool because we have threads waiting for a connection to use.
+       * There are two conditions that will wake them up, a new connection being added to the pool or an older connection being returned to pool. It
+       * is common in some bursty workloads that alot of threads will try to get a connection at same time. They will all request a connection to
+       * be created but then may actually be satisfied with an older connection. In that case we don't need to actually make another connection
+       * since no one is waiting for it. This flag controls whether this particular connection create request should check to see that there is actually
+       * at least 1 waiter that needs a new connection.
+       *
+       * @param onlyAddIfWaiters false if filling minimum pool size or true if a waiter requested this connection be made but may be satisfied by an
+       *                         older connection
+       */
+      public PoolEntryCreator(boolean onlyAddIfWaiters) {
+         this.onlyAddIfWaiters = onlyAddIfWaiters;
+      }
+
       @Override
       public Boolean call() throws Exception
       {
          long sleepBackoff = 250L;
-         while (poolState == POOL_NORMAL && getTotalConnections() < config.getMaximumPoolSize()) {
+         while (poolState == POOL_NORMAL && getTotalConnections() < config.getMaximumPoolSize() &&
+            (!onlyAddIfWaiters || connectionBag.getPendingQueue() > 0)) {
             final PoolEntry poolEntry = createPoolEntry();
             if (poolEntry != null) {
                connectionBag.add(poolEntry);
