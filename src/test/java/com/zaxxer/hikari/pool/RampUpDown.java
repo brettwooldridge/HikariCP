@@ -44,6 +44,9 @@ public class RampUpDown
            ds.setIdleTimeout(1000);
            HikariPool pool = TestElf.getPool(ds);
 
+           // wait two housekeeping periods so we don't fail if this part of test runs too quickly
+           Thread.sleep(500);
+
            Assert.assertSame("Total connections not as expected", 5, pool.getTotalConnections());
 
            Connection[] connections = new Connection[ds.getMaximumPoolSize()];

@@ -78,6 +78,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", SECONDS.toMillis(30));
 
    private final PoolEntryCreator POOL_ENTRY_CREATOR = new PoolEntryCreator();
+   private final PoolEntryCreator NOOP_POOL_ENTRY_CREATOR = new NoopPoolEntryCreator();
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
    private final ScheduledThreadPoolExecutor houseKeepingExecutorService;
@@ -300,7 +301,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    @Override
    public Future<Boolean> addBagItem()
    {
-      return addConnectionExecutor.submit(POOL_ENTRY_CREATOR);
+      final int connectionsToAdd = connectionBag.getPendingQueue() - addConnectionExecutor.getQueue().size();
+      return addConnectionExecutor.submit( (connectionsToAdd > 0) ? POOL_ENTRY_CREATOR : NOOP_POOL_ENTRY_CREATOR);
    }
 
    // ***********************************************************************
@@ -469,7 +471,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       final int connectionsToAdd = Math.min(config.getMaximumPoolSize() - getTotalConnections(), config.getMinimumIdle() - getIdleConnections())
                                    - addConnectionExecutor.getQueue().size();
       for (int i = 0; i < connectionsToAdd; i++) {
-         addBagItem();
+         addConnectionExecutor.submit(POOL_ENTRY_CREATOR);
       }
 
       if (connectionsToAdd > 0 && LOGGER.isDebugEnabled()) {
@@ -596,6 +598,19 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          // Pool is suspended or shutdown or at max size
          return Boolean.FALSE;
       }
+   }
+
+   /**
+    * A no-op pool entry creator, used when there appears to be enough pending create tasks to
+    * cover the threads waiting for connections.
+    */
+   private class NoopPoolEntryCreator extends PoolEntryCreator
+   {
+      @Override
+      public Boolean call() throws Exception
+      {
+         return Boolean.FALSE;
+      }      
    }
 
    /**

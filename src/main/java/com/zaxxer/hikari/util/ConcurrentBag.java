@@ -316,7 +316,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     */
    public int getPendingQueue()
    {
-      return synchronizer.getQueueLength();
+      return waiters.get();
    }
 
    /**
