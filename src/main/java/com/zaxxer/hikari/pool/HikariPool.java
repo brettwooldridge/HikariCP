@@ -455,7 +455,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       }
       catch (Exception e) {
          if (poolState == POOL_NORMAL) {
-            LOGGER.debug("{} - Cannot acquire connection from data source", poolName, e);
+            LOGGER.debug("{} - Cannot acquire connection from data source", poolName, (e instanceof ConnectionSetupException ? e.getCause() : e));
          }
          return null;
       }
@@ -508,26 +508,24 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
     */
    private void checkFailFast()
    {
-      if (config.getInitializationFailTimeout() == 0) {
-         return;
-      }
-
       final long startTime = clockSource.currentTime();
-      boolean acquired = false;
       Throwable throwable = new SQLTimeoutException("HikariCP was unable to initialize connections in pool " + poolName);
       do {
          try (Connection connection = newConnection()) {
-            acquired = true;
             if (!connection.getAutoCommit()) {
                connection.commit();
             }
             return;
          }
+         catch (ConnectionSetupException e) {
+            throwable = e.getCause();
+            break;
+         }
          catch (Throwable t) {
             throwable = t;
             quietlySleep(1000L);
          }
-      } while (!acquired && clockSource.elapsedMillis(startTime) < config.getInitializationFailTimeout());
+      } while (clockSource.elapsedMillis(startTime) < config.getInitializationFailTimeout());
 
       throw new PoolInitializationException(throwable);
    }

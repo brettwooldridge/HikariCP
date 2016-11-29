@@ -38,7 +38,7 @@ public class UnwrapTest
         HikariConfig config = new HikariConfig();
         config.setMinimumIdle(1);
         config.setMaximumPoolSize(1);
-        config.setInitializationFailFast(true);
+        config.setInitializationFailTimeout(0);
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -60,7 +60,7 @@ public class UnwrapTest
        HikariConfig config = new HikariConfig();
        config.setMinimumIdle(1);
        config.setMaximumPoolSize(1);
-       config.setInitializationFailFast(true);
+       config.setInitializationFailTimeout(0);
        config.setConnectionTestQuery("VALUES 1");
        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
