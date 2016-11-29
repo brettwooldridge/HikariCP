@@ -27,6 +27,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
 import java.sql.SQLTransientConnectionException;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -507,16 +508,28 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
     */
    private void checkFailFast()
    {
-      if (config.isInitializationFailFast()) {
+      if (config.getInitializationFailTimeout() == 0) {
+         return;
+      }
+
+      final long startTime = clockSource.currentTime();
+      boolean acquired = false;
+      Throwable throwable = new SQLTimeoutException("HikariCP was unable to initialize connections in pool " + poolName);
+      do {
          try (Connection connection = newConnection()) {
+            acquired = true;
             if (!connection.getAutoCommit()) {
                connection.commit();
             }
+            return;
          }
-         catch (Throwable e) {
-            throw new PoolInitializationException(e);
+         catch (Throwable t) {
+            throwable = t;
+            quietlySleep(1000L);
          }
-      }
+      } while (!acquired && clockSource.elapsedMillis(startTime) < config.getInitializationFailTimeout());
+
+      throw new PoolInitializationException(throwable);
    }
 
    private void softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
