@@ -515,6 +515,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             if (!connection.getAutoCommit()) {
                connection.commit();
             }
+            LOGGER.info("Initialization of Connection is complete!");
             return;
          }
          catch (ConnectionSetupException e) {
@@ -525,6 +526,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             throwable = t;
             quietlySleep(1000L);
          }
+         long remainingMillisUntilTimeout = config.getInitializationFailTimeout() - clockSource.elapsedMillis(startTime);
+         LOGGER.warn("Could not aquire connection during initialization. Will retry for {} milliseconds more.", remainingMillisUntilTimeout);
       } while (clockSource.elapsedMillis(startTime) < config.getInitializationFailTimeout());
 
       throw new PoolInitializationException(throwable);
