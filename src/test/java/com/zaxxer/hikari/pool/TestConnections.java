@@ -500,7 +500,7 @@ public class TestConnections
       config.setMaximumPoolSize(2);
       config.setConnectionTimeout(TimeUnit.SECONDS.toMillis(3));
       config.setConnectionTestQuery("VALUES 1");
-      config.setInitializationFailFast(false);
+      config.setInitializationFailTimeout(TimeUnit.SECONDS.toMillis(2));
       config.setDataSource(stubDataSource);
 
       try (HikariDataSource ds = new HikariDataSource(config); Connection c = ds.getConnection()) {

@@ -69,6 +69,7 @@ public class HikariConfig implements HikariConfigMXBean
 
    // Properties NOT changeable at runtime
    //
+   private long initializationFailTimeout;
    private String catalog;
    private String connectionInitSql;
    private String connectionTestQuery;
@@ -394,11 +395,41 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
+    * Get the pool initialization failure timeout.
+    *
+    * @return the number of milliseconds before the pool initialization fails
+    */
+   public long getInitializationFailTimeout()
+   {
+      return initializationFailTimeout;
+   }
+
+   /**
+    * Set the pool initialization failure timeout.  A value of 0 (default) fails immediately.
+    * The minimum value is 1000ms (1 second).
+    * 
+    * @param initializationFailTimeout the number of milliseconds before the
+    *        pool initialization fails
+    */
+   public void setInitializationFailTimeout(long initializationFailTimeout)
+   {
+      if (initializationFailTimeout < 0L) {
+         initializationFailTimeout = 0L;
+      }
+      else if (initializationFailTimeout < 1000L) {
+         initializationFailTimeout = 1000L;
+      }
+
+      this.initializationFailTimeout = initializationFailTimeout;
+   }
+
+   /**
     * Get whether or not the construction of the pool should throw an exception
     * if the minimum number of connections cannot be created.
     *
     * @return whether or not initialization should fail on error immediately
     */
+   @Deprecated
    public boolean isInitializationFailFast()
    {
       return isInitializationFailFast;
@@ -410,9 +441,14 @@ public class HikariConfig implements HikariConfigMXBean
     *
     * @param failFast true if the pool should fail if the minimum connections cannot be created
     */
+   @Deprecated
    public void setInitializationFailFast(boolean failFast)
    {
       isInitializationFailFast = failFast;
+      LOGGER.warn("The initializationFailFast propery is deprecated, see initializationFailTimeout");
+      if (!failFast) {
+         initializationFailTimeout = Long.MAX_VALUE;
+      }
    }
 
    public boolean isIsolateInternalQueries()
