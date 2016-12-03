@@ -57,7 +57,7 @@ public class TestMetrics
       config.setMaximumPoolSize(1);
       config.setMetricRegistry(metricRegistry);
       config.setInitializationFailTimeout(Long.MAX_VALUE);
-      config.setPoolName("test");
+      config.setPoolName("testMetricWait");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
@@ -87,8 +87,8 @@ public class TestMetrics
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(1);
       config.setMetricRegistry(metricRegistry);
-      config.setInitializationFailTimeout(Long.MAX_VALUE);
-      config.setPoolName("test");
+      config.setInitializationFailTimeout(0);
+      config.setPoolName("testMetricUsage");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
@@ -101,7 +101,7 @@ public class TestMetrics
             @Override
             public boolean matches(String name, Metric metric)
             {
-               return "test.pool.Usage".equals(MetricRegistry.name("test", "pool", "Usage"));
+               return name.equals(MetricRegistry.name("testMetricUsage", "pool", "Usage"));
             }
          }).values().iterator().next();
 

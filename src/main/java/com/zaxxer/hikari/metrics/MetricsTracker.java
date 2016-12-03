@@ -39,6 +39,10 @@ public class MetricsTracker implements AutoCloseable
    {
    }
 
+   public void recordConnectionCreatedMillis(long connectionCreatedMillis)
+   {
+   }
+
    @Override
    public void close()
    {
