@@ -146,14 +146,14 @@ abstract class PoolBase
             if (isUseJdbc4Validation) {
                return connection.isValid((int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
             }
-   
+
             setNetworkTimeout(connection, validationTimeout);
-   
+
             try (Statement statement = connection.createStatement()) {
                if (isNetworkTimeoutSupported != TRUE) {
                   setQueryTimeout(statement, (int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
                }
-   
+
                statement.execute(config.getConnectionTestQuery());
             }
          }
@@ -380,22 +380,22 @@ abstract class PoolBase
          else {
             setNetworkTimeout(connection, validationTimeout);
          }
-   
+
          connection.setReadOnly(isReadOnly);
          connection.setAutoCommit(isAutoCommit);
-   
+
          checkDriverSupport(connection);
-   
+
          if (transactionIsolation != defaultTransactionIsolation) {
             connection.setTransactionIsolation(transactionIsolation);
          }
-   
+
          if (catalog != null) {
             connection.setCatalog(catalog);
          }
-   
+
          executeSql(connection, config.getConnectionInitSql(), true);
-   
+
          setNetworkTimeout(connection, networkTimeout);
       }
       catch (SQLException e) {
@@ -659,6 +659,11 @@ abstract class PoolBase
          tracker.recordConnectionUsageMillis(poolEntry.getMillisSinceBorrowed());
       }
 
+      void recordConnectionCreated(long connectionCreatedMillis)
+      {
+         tracker.recordConnectionCreatedMillis(connectionCreatedMillis);
+      }
+
       /**
        * @param poolEntry
        * @param now
@@ -701,6 +706,12 @@ abstract class PoolBase
 
       @Override
       void recordConnectionTimeout()
+      {
+         // no-op
+      }
+
+      @Override
+      void recordConnectionCreated(long connectionCreatedMillis)
       {
          // no-op
       }
