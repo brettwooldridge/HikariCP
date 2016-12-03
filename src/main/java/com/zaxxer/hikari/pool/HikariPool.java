@@ -88,7 +88,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private final ProxyLeakTask leakTask;
    private final SuspendResumeLock suspendResumeLock;
 
-   private MetricsTrackerDelegate metricsTracker;
    private ScheduledFuture<?> houseKeeperTask;
 
    /**
@@ -530,6 +529,18 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       } while (clockSource.elapsedMillis(startTime) < config.getInitializationFailTimeout());
 
       throw new PoolInitializationException(throwable);
+   }
+
+   @Override
+   Connection newConnection() throws Exception {
+      // only need this override so we can record the connect time, could move whole newConnection function up?
+      final long now = ClockSource.INSTANCE.currentTime();
+      Connection c = super.newConnection();
+      if (metricsTracker != null) {
+         // tracker will be null during failFast check
+         metricsTracker.recordConnectionCreated(ClockSource.INSTANCE.elapsedMillis(now));
+      }
+      return c;
    }
 
    private void softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)

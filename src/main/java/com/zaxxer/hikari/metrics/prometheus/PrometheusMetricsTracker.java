@@ -20,12 +20,15 @@ import com.zaxxer.hikari.metrics.MetricsTracker;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Summary;
 
-class PrometheusMetricsTracker extends MetricsTracker {
+class PrometheusMetricsTracker extends MetricsTracker
+{
    private final Counter.Child connectionTimeoutCounter;
    private final Summary.Child elapsedAcquiredSummary;
    private final Summary.Child elapsedBorrowedSummary;
+   private final Summary.Child elapsedCreationSummary;
 
-   PrometheusMetricsTracker(String poolName) {
+   PrometheusMetricsTracker(String poolName)
+   {
       super();
 
       Counter counter = Counter.build()
@@ -39,30 +42,46 @@ class PrometheusMetricsTracker extends MetricsTracker {
       Summary elapsedAcquiredSummary = Summary.build()
          .name("hikaricp_connection_acquired_nanos")
          .labelNames("pool")
-         .help("Connection acquired time")
+         .help("Connection acquired time (ns)")
          .register();
       this.elapsedAcquiredSummary = elapsedAcquiredSummary.labels(poolName);
 
       Summary elapsedBorrowedSummary = Summary.build()
          .name("hikaricp_connection_usage_millis")
          .labelNames("pool")
-         .help("Connection usage")
+         .help("Connection usage (ms)")
          .register();
       this.elapsedBorrowedSummary = elapsedBorrowedSummary.labels(poolName);
+
+      Summary elapsedCreationSummary = Summary.build()
+            .name("hikaricp_connection_creation_millis")
+            .labelNames("pool")
+            .help("Connection creation (ms)")
+            .register();
+      this.elapsedCreationSummary = elapsedCreationSummary.labels(poolName);
    }
 
    @Override
-   public void recordConnectionAcquiredNanos(long elapsedAcquiredNanos) {
+   public void recordConnectionAcquiredNanos(long elapsedAcquiredNanos)
+   {
       elapsedAcquiredSummary.observe(elapsedAcquiredNanos);
    }
 
    @Override
-   public void recordConnectionUsageMillis(long elapsedBorrowedMillis) {
+   public void recordConnectionUsageMillis(long elapsedBorrowedMillis)
+   {
       elapsedBorrowedSummary.observe(elapsedBorrowedMillis);
    }
 
    @Override
-   public void recordConnectionTimeout() {
+   public void recordConnectionCreatedMillis(long connectionCreatedMillis)
+   {
+      elapsedCreationSummary.observe(connectionCreatedMillis);
+   }
+
+   @Override
+   public void recordConnectionTimeout()
+   {
       connectionTimeoutCounter.inc();
    }
 }

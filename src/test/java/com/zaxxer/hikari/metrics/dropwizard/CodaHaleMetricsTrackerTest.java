@@ -28,6 +28,7 @@ public class CodaHaleMetricsTrackerTest {
 
       verify(mockMetricRegistry).remove("mypool.pool.Wait");
       verify(mockMetricRegistry).remove("mypool.pool.Usage");
+      verify(mockMetricRegistry).remove("mypool.pool.ConnectionCreation");
       verify(mockMetricRegistry).remove("mypool.pool.ConnectionTimeoutRate");
       verify(mockMetricRegistry).remove("mypool.pool.TotalConnections");
       verify(mockMetricRegistry).remove("mypool.pool.IdleConnections");
