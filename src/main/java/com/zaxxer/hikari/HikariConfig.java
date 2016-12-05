@@ -413,11 +413,13 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setInitializationFailTimeout(long initializationFailTimeout)
    {
-      if (initializationFailTimeout < 0L) {
+      if (initializationFailTimeout <= 0L) {
          initializationFailTimeout = 0L;
+         isInitializationFailFast = true;
       }
       else if (initializationFailTimeout < 1000L) {
          initializationFailTimeout = 1000L;
+         isInitializationFailFast = false;
       }
 
       this.initializationFailTimeout = initializationFailTimeout;
