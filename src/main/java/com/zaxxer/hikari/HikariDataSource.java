@@ -67,8 +67,9 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       configuration.validate();
       configuration.copyState(this);
 
-      LOGGER.info("{} - Started.", configuration.getPoolName());
+      LOGGER.info("{} - Starting...", configuration.getPoolName());
       pool = fastPathPool = new HikariPool(this);
+      LOGGER.info("{} - Start completed.", configuration.getPoolName());
    }
 
    /** {@inheritDoc} */
@@ -90,8 +91,9 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
             result = pool;
             if (result == null) {
                validate();
-               LOGGER.info("{} - Started.", getPoolName());
+               LOGGER.info("{} - Starting...", getPoolName());
                pool = result = new HikariPool(this);
+               LOGGER.info("{} - Start completed.", getPoolName());
             }
          }
       }
@@ -301,10 +303,12 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       HikariPool p = pool;
       if (p != null) {
          try {
+            LOGGER.info("{} - Shutdown initiated...", getPoolName());
             p.shutdown();
+            LOGGER.info("{} - Shutdown completed.", getPoolName());
          }
          catch (InterruptedException e) {
-            LOGGER.warn("Interrupted during closing", e);
+            LOGGER.warn("{} - Interrupted during closing", getPoolName(), e);
             Thread.currentThread().interrupt();
          }
       }
