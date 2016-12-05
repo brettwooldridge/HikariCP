@@ -31,6 +31,7 @@ import java.sql.SQLTimeoutException;
 import java.sql.SQLTransientConnectionException;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
@@ -301,7 +302,11 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    public Future<Boolean> addBagItem()
    {
       final int connectionsToAdd = connectionBag.getPendingQueue() - addConnectionExecutor.getQueue().size();
-      return addConnectionExecutor.submit( (connectionsToAdd > 0) ? POOL_ENTRY_CREATOR : NOOP_POOL_ENTRY_CREATOR);
+      if (connectionsToAdd > 0) {
+         return addConnectionExecutor.submit(POOL_ENTRY_CREATOR);
+      }
+
+      return CompletableFuture.completedFuture(Boolean.TRUE);
    }
 
    // ***********************************************************************
@@ -451,7 +456,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             }, lifetime, MILLISECONDS));
          }
 
-         LOGGER.debug("{} - Added connection {}", poolName, poolEntry.connection);
          return poolEntry;
       }
       catch (Exception e) {
@@ -599,6 +603,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             final PoolEntry poolEntry = createPoolEntry();
             if (poolEntry != null) {
                connectionBag.add(poolEntry);
+               LOGGER.debug("{} - Added connection {}", poolName, poolEntry.connection);
                return Boolean.TRUE;
             }
 

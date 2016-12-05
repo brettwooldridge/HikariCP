@@ -43,7 +43,7 @@ public class ConnectionPoolSizeVsThreadsTest {
       {
          final int threadCount = 50;
          final Counts counts = testPoolSize(2, 100, threadCount, 1, 0, 20);
-         Assert.assertEquals(threadCount, counts.getTotal(), 2);
+         Assert.assertEquals(threadCount, counts.getTotal(), 5);
       }
 //      {
 //         final int threadCount = 2;
