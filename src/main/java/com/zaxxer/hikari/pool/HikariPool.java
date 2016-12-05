@@ -79,7 +79,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", SECONDS.toMillis(30));
 
    private final PoolEntryCreator POOL_ENTRY_CREATOR = new PoolEntryCreator();
-   private final PoolEntryCreator NOOP_POOL_ENTRY_CREATOR = new NoopPoolEntryCreator();
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
    private final ScheduledThreadPoolExecutor houseKeepingExecutorService;
@@ -614,19 +613,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          // Pool is suspended or shutdown or at max size
          return Boolean.FALSE;
       }
-   }
-
-   /**
-    * A no-op pool entry creator, used when there appears to be enough pending create tasks to
-    * cover the threads waiting for connections.
-    */
-   private class NoopPoolEntryCreator extends PoolEntryCreator
-   {
-      @Override
-      public Boolean call() throws Exception
-      {
-         return Boolean.FALSE;
-      }      
    }
 
    /**
