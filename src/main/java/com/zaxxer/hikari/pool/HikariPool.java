@@ -201,8 +201,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             return;
          }
 
-         LOGGER.info("{} - Close initiated...", poolName);
-         logPoolState("Before closing ");
+         logPoolState("Before shutdown ");
 
          if (houseKeeperTask != null) {
             houseKeeperTask.cancel(false);
@@ -240,10 +239,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          closeConnectionExecutor.awaitTermination(5L, SECONDS);
       }
       finally {
-         logPoolState("After closing ");
+         logPoolState("After shutdown ");
          unregisterMBeans();
          metricsTracker.close();
-         LOGGER.info("{} - Closed.", poolName);
       }
    }
 
