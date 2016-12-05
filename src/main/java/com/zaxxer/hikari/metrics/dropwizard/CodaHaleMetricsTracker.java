@@ -31,12 +31,14 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    private final String poolName;
    private final Timer connectionObtainTimer;
    private final Histogram connectionUsage;
+   private final Histogram connectionEstablishing;
    private final Meter connectionTimeoutMeter;
    private final MetricRegistry registry;
 
    private static final String METRIC_CATEGORY = "pool";
    private static final String METRIC_NAME_WAIT = "Wait";
    private static final String METRIC_NAME_USAGE = "Usage";
+   private static final String METRIC_NAME_CONNECT = "Connect";
    private static final String METRIC_NAME_TIMEOUT_RATE = "ConnectionTimeoutRate";
    private static final String METRIC_NAME_TOTAL_CONNECTIONS = "TotalConnections";
    private static final String METRIC_NAME_IDLE_CONNECTIONS = "IdleConnections";
@@ -49,6 +51,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
       this.registry = registry;
       this.connectionObtainTimer = registry.timer(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_WAIT));
       this.connectionUsage = registry.histogram(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_USAGE));
+      this.connectionEstablishing = registry.histogram(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_CONNECT));
       this.connectionTimeoutMeter = registry.meter(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_TIMEOUT_RATE));
 
       registry.register(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_TOTAL_CONNECTIONS),
@@ -90,6 +93,7 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    {
       registry.remove(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_WAIT));
       registry.remove(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_USAGE));
+      registry.remove(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_CONNECT));
       registry.remove(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_TIMEOUT_RATE));
       registry.remove(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_TOTAL_CONNECTIONS));
       registry.remove(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_IDLE_CONNECTIONS));
@@ -115,6 +119,11 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
    public void recordConnectionTimeout()
    {
       connectionTimeoutMeter.mark();
+   }
+
+   @Override
+   public void recordConnectionCreatedMillis(long connectionCreatedMillis) {
+      connectionEstablishing.update(connectionCreatedMillis);
    }
 
    public Timer getConnectionAcquisitionTimer()
