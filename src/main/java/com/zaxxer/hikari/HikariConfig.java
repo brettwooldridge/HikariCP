@@ -395,9 +395,11 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Get the pool initialization failure timeout.
+    * Get the pool initialization failure timeout.  See {@code #setInitializationFailTimeout(long)}
+    * for details.
     *
     * @return the number of milliseconds before the pool initialization fails
+    * @see HikariConfig#setInitializationFailTimeout(long)
     */
    public long getInitializationFailTimeout()
    {
@@ -405,22 +407,29 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Set the pool initialization failure timeout.  A value of 0 (default) fails immediately.
-    * The minimum value is 1000ms (1 second).
+    * Set the pool initialization failure timeout.
+    * <ul>
+    *   <li>Any value less than zero will <i>not</i>  not block the calling thread
+    *       in the case that a connection cannot be obtained. The pool will start
+    *       and continue to try to obtain connections in the background.  This can
+    *       mean that callers to {@code DataSource#getConnection()} may encounter
+    *       exceptions.</li>
+    *   <li>Any value greater than or equal to zero will be treated as a timeout for
+    *       pool initialization.  The calling thread will be blocked from continuing
+    *       until a successful connection to the database, or until the timeout is
+    *       reached.  If the timeout is reached, then a {@code PoolInitializationException}
+    *       will be thrown. 
+    * </ul>
+    * Note that this timeout does not override the {@code connectionTimeout} or
+    * {@code validationTimeout}; they will be honored before this timeout is applied.
     * 
     * @param initializationFailTimeout the number of milliseconds before the
-    *        pool initialization fails
+    *        pool initialization fails, or a negative value to skip the initialization
+    *        check.
     */
    public void setInitializationFailTimeout(long initializationFailTimeout)
    {
-      if (initializationFailTimeout <= 0L) {
-         initializationFailTimeout = 0L;
-         isInitializationFailFast = true;
-      }
-      else if (initializationFailTimeout < 1000L) {
-         initializationFailTimeout = 1000L;
-         isInitializationFailFast = false;
-      }
+      isInitializationFailFast = (initializationFailTimeout >= 0L);
 
       this.initializationFailTimeout = initializationFailTimeout;
    }

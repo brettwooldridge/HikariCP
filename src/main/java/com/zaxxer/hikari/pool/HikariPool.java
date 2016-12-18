@@ -520,8 +520,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             return;
          }
          catch (ConnectionSetupException e) {
-            throwable = e.getCause();
-            break;
+            throw new PoolInitializationException(e.getCause());
          }
          catch (Throwable t) {
             throwable = t;
@@ -529,7 +528,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          }
       } while (clockSource.elapsedMillis(startTime) < config.getInitializationFailTimeout());
 
-      throw new PoolInitializationException(throwable);
+      if (config.getInitializationFailTimeout() >= 0) {
+         throw new PoolInitializationException(throwable);
+      }
    }
 
    @Override
