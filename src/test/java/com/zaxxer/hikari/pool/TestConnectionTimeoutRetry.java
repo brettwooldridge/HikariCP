@@ -93,8 +93,9 @@ public class TestConnectionTimeoutRetry
 
          long start = ClockSource.INSTANCE.currentTime();
          try {
-            Connection connection = ds.getConnection();
-            connection.close();
+            try (Connection connection = ds.getConnection()) {
+               // close immediately
+            }
 
             long elapsed = ClockSource.INSTANCE.elapsedMillis(start);
             Assert.assertTrue("Connection returned too quickly, something is wrong.", elapsed > 250);
@@ -142,8 +143,9 @@ public class TestConnectionTimeoutRetry
 
          long start = ClockSource.INSTANCE.currentTime();
          try {
-            Connection connection3 = ds.getConnection();
-            connection3.close();
+            try (Connection connection3 = ds.getConnection()) {
+               // close immediately
+            }
 
             long elapsed = ClockSource.INSTANCE.elapsedMillis(start);
             Assert.assertTrue("Waited too long to get a connection.", (elapsed >= 700) && (elapsed < 950));
@@ -191,8 +193,9 @@ public class TestConnectionTimeoutRetry
          stubDataSource.setThrowException(new SQLException("Connection refused"));
 
          try {
-            Connection connection2 = ds.getConnection();
-            connection2.close();
+            try (Connection connection2 = ds.getConnection()) {
+               // close immediately
+            }
 
             long elapsed = ClockSource.INSTANCE.elapsedMillis(start);
             Assert.assertTrue("Waited too long to get a connection.", (elapsed >= 250) && (elapsed < config.getConnectionTimeout()));
@@ -229,26 +232,20 @@ public class TestConnectionTimeoutRetry
          TestElf.setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
 
          HikariPool pool = TestElf.getPool(ds);
-         Connection connection1 = ds.getConnection();
-         Connection connection2 = ds.getConnection();
-         Connection connection3 = ds.getConnection();
-         Connection connection4 = ds.getConnection();
-         Connection connection5 = ds.getConnection();
-         Connection connection6 = ds.getConnection();
-         Connection connection7 = ds.getConnection();
-
-         Thread.sleep(1300);
-
-         Assert.assertSame("Total connections not as expected", 10, pool.getTotalConnections());
-         Assert.assertSame("Idle connections not as expected", 3, pool.getIdleConnections());
-
-         connection1.close();
-         connection2.close();
-         connection3.close();
-         connection4.close();
-         connection5.close();
-         connection6.close();
-         connection7.close();
+         try (
+            Connection connection1 = ds.getConnection();
+            Connection connection2 = ds.getConnection();
+            Connection connection3 = ds.getConnection();
+            Connection connection4 = ds.getConnection();
+            Connection connection5 = ds.getConnection();
+            Connection connection6 = ds.getConnection();
+            Connection connection7 = ds.getConnection()) {
+   
+            Thread.sleep(1300);
+   
+            Assert.assertSame("Total connections not as expected", 10, pool.getTotalConnections());
+            Assert.assertSame("Idle connections not as expected", 3, pool.getIdleConnections());
+         }
 
          Assert.assertSame("Total connections not as expected", 10, pool.getTotalConnections());
          Assert.assertSame("Idle connections not as expected", 10, pool.getIdleConnections());

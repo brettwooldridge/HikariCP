@@ -223,95 +223,96 @@ public class TestProxies
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
-         Connection conn = ds.getConnection();
-         StubConnection stubConnection = conn.unwrap(StubConnection.class);
-         stubConnection.throwException = true;
-
-         try {
-            conn.setTransactionIsolation(Connection.TRANSACTION_NONE);
-            Assert.fail();
-         }
-         catch (SQLException e) {
-            // pass
-         }
-
-         try {
-            conn.isReadOnly();
-            Assert.fail();
-         }
-         catch (SQLException e) {
-            // pass
-         }
-
-         try {
-            conn.setReadOnly(false);
-            Assert.fail();
-         }
-         catch (SQLException e) {
-            // pass
-         }
-
-         try {
-            conn.setCatalog("");
-            Assert.fail();
-         }
-         catch (SQLException e) {
-            // pass
-         }
-
-         try {
-            conn.setAutoCommit(false);
-            Assert.fail();
-         }
-         catch (SQLException e) {
-            // pass
-         }
-
-         try {
-            conn.clearWarnings();
-            Assert.fail();
-         }
-         catch (SQLException e) {
-            // pass
-         }
-
-         try {
-            conn.isValid(0);
-            Assert.fail();
-         }
-         catch (SQLException e) {
-            // pass
-         }
-
-         try {
-            conn.isWrapperFor(getClass());
-            Assert.fail();
-         }
-         catch (SQLException e) {
-            // pass
-         }
-
-         try {
-            conn.unwrap(getClass());
-            Assert.fail();
-         }
-         catch (SQLException e) {
-            // pass
-         }
-
-         try {
-            conn.close();
-            Assert.fail();
-         }
-         catch (SQLException e) {
-            // pass
-         }
-
-         try {
-            Assert.assertFalse(conn.isValid(0));
-         }
-         catch (SQLException e) {
-            Assert.fail();
+         try (Connection conn = ds.getConnection()) {
+            StubConnection stubConnection = conn.unwrap(StubConnection.class);
+            stubConnection.throwException = true;
+   
+            try {
+               conn.setTransactionIsolation(Connection.TRANSACTION_NONE);
+               Assert.fail();
+            }
+            catch (SQLException e) {
+               // pass
+            }
+   
+            try {
+               conn.isReadOnly();
+               Assert.fail();
+            }
+            catch (SQLException e) {
+               // pass
+            }
+   
+            try {
+               conn.setReadOnly(false);
+               Assert.fail();
+            }
+            catch (SQLException e) {
+               // pass
+            }
+   
+            try {
+               conn.setCatalog("");
+               Assert.fail();
+            }
+            catch (SQLException e) {
+               // pass
+            }
+   
+            try {
+               conn.setAutoCommit(false);
+               Assert.fail();
+            }
+            catch (SQLException e) {
+               // pass
+            }
+   
+            try {
+               conn.clearWarnings();
+               Assert.fail();
+            }
+            catch (SQLException e) {
+               // pass
+            }
+   
+            try {
+               conn.isValid(0);
+               Assert.fail();
+            }
+            catch (SQLException e) {
+               // pass
+            }
+   
+            try {
+               conn.isWrapperFor(getClass());
+               Assert.fail();
+            }
+            catch (SQLException e) {
+               // pass
+            }
+   
+            try {
+               conn.unwrap(getClass());
+               Assert.fail();
+            }
+            catch (SQLException e) {
+               // pass
+            }
+   
+            try {
+               conn.close();
+               Assert.fail();
+            }
+            catch (SQLException e) {
+               // pass
+            }
+   
+            try {
+               Assert.assertFalse(conn.isValid(0));
+            }
+            catch (SQLException e) {
+               Assert.fail();
+            }
          }
       }
    }
