@@ -1,5 +1,22 @@
 HikariCP Changes
 
+Changes in 2.5.2
+
+ * issue 781 more technically accurate wording of pool startup and shutdown log messages.
+
+ * issue 774 fixed issue where spike load was causing creation of too many connections.
+
+ * issues 518/769 add new metric for tracking how long physical connection acquisition is
+   taking.  DropWizard histogram name "ConnectionCreation", and Prometheus summary name
+   "hikaricp_connection_creation_millis".
+
+ * issue 741 cancel HouseKeeper task on pool shutdown. If the ScheduledExecutor in use is
+   does not belong to HikariCP, this task would remain scheduled after shutdown, causing a
+   memory leak.
+
+ * issue 770 adding a new property initializationFailTimeout and deprecate configuration
+   property initializationFailFast.
+
 Changes in 2.5.1
 
  * issue 719 only reset lastConnectionFailure after a successful dataSource.getConnection()
