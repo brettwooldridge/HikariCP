@@ -44,11 +44,11 @@ class HikariCPCollector extends Collector {
       );
    }
 
-   private MetricFamilySamples createSample(String name, String helpMessage, double value) {
-      List<MetricFamilySamples.Sample> samples = Collections.singletonList(new MetricFamilySamples.Sample(name,
-         labelNames,
-         labelValues,
-         value));
+   private MetricFamilySamples createSample(String name, String helpMessage, double value)
+   {
+      List<MetricFamilySamples.Sample> samples = Collections.singletonList(
+         new MetricFamilySamples.Sample(name, labelNames, labelValues, value)
+      );
 
       return new MetricFamilySamples(name, Type.GAUGE, helpMessage, samples);
    }
