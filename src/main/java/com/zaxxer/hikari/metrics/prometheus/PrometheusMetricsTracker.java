@@ -17,6 +17,9 @@
 package com.zaxxer.hikari.metrics.prometheus;
 
 import com.zaxxer.hikari.metrics.MetricsTracker;
+
+import io.prometheus.client.Collector;
+import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Summary;
 
@@ -27,38 +30,54 @@ class PrometheusMetricsTracker extends MetricsTracker
    private final Summary.Child elapsedBorrowedSummary;
    private final Summary.Child elapsedCreationSummary;
 
-   PrometheusMetricsTracker(String poolName)
-   {
-      super();
+   private final Counter ctCounter;
+   private final Summary eaSummary;
+   private final Summary ebSummary;
+   private final Summary ecSummary;
+   private final Collector collector;
 
-      Counter counter = Counter.build()
+   PrometheusMetricsTracker(String poolName, Collector collector)
+   {
+      this.collector = collector;
+
+      ctCounter = Counter.build()
          .name("hikaricp_connection_timeout_count")
          .labelNames("pool")
          .help("Connection timeout count")
          .register();
 
-      this.connectionTimeoutCounter = counter.labels(poolName);
+      this.connectionTimeoutCounter = ctCounter.labels(poolName);
 
-      Summary elapsedAcquiredSummary = Summary.build()
+      eaSummary = Summary.build()
          .name("hikaricp_connection_acquired_nanos")
          .labelNames("pool")
          .help("Connection acquired time (ns)")
          .register();
-      this.elapsedAcquiredSummary = elapsedAcquiredSummary.labels(poolName);
+      this.elapsedAcquiredSummary = eaSummary.labels(poolName);
 
-      Summary elapsedBorrowedSummary = Summary.build()
+      ebSummary = Summary.build()
          .name("hikaricp_connection_usage_millis")
          .labelNames("pool")
          .help("Connection usage (ms)")
          .register();
-      this.elapsedBorrowedSummary = elapsedBorrowedSummary.labels(poolName);
+      this.elapsedBorrowedSummary = ebSummary.labels(poolName);
 
-      Summary elapsedCreationSummary = Summary.build()
+      ecSummary = Summary.build()
             .name("hikaricp_connection_creation_millis")
             .labelNames("pool")
             .help("Connection creation (ms)")
             .register();
-      this.elapsedCreationSummary = elapsedCreationSummary.labels(poolName);
+      this.elapsedCreationSummary = ecSummary.labels(poolName);
+   }
+
+   @Override
+   public void close()
+   {
+      CollectorRegistry.defaultRegistry.unregister(ctCounter);
+      CollectorRegistry.defaultRegistry.unregister(eaSummary);
+      CollectorRegistry.defaultRegistry.unregister(ebSummary);
+      CollectorRegistry.defaultRegistry.unregister(ecSummary);
+      CollectorRegistry.defaultRegistry.unregister(collector);
    }
 
    @Override
