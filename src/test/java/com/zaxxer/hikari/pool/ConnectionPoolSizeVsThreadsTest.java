@@ -16,13 +16,6 @@
 
 package com.zaxxer.hikari.pool;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.mocks.StubDataSource;
-import org.junit.Assert;
-import org.junit.Test;
-import org.slf4j.LoggerFactory;
-
 import java.sql.Connection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -30,6 +23,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.slf4j.LoggerFactory;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.mocks.StubDataSource;
 
 /**
  * @author Matthew Tambara (matthew.tambara@liferay.com)
@@ -123,19 +124,13 @@ public class ConnectionPoolSizeVsThreadsTest {
 
    private static class Counts {
       private final int total;
-      private final int active;
 
       public Counts(int total, int max) {
          this.total = total;
-         this.active = max;
       }
 
       public int getTotal() {
          return total;
-      }
-
-      public int getActive() {
-         return active;
       }
    }
 }

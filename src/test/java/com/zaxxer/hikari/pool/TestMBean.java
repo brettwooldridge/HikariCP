@@ -35,7 +35,8 @@ public class TestMBean
         config.setConnectionTestQuery("VALUES 1");
         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-        HikariDataSource ds = new HikariDataSource(config);
-        ds.close();
+        try (HikariDataSource ds = new HikariDataSource(config)) {
+           // Close immediately
+        }
     }
 }
