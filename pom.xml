@@ -43,14 +43,14 @@
       <felix.bundle.plugin.version>3.2.0</felix.bundle.plugin.version>
       <felix.version>5.6.1</felix.version>
       <hibernate.version>5.2.5.Final</hibernate.version>
-      <javassist.version>3.20.0-GA</javassist.version>
+      <javassist.version>3.21.0-GA</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>
       <maven.release.version>2.5.3</maven.release.version>
       <metrics.version>3.1.2</metrics.version>
       <simpleclient.version>0.0.19</simpleclient.version>
-      <mockito.version>2.2.28</mockito.version>
+      <mockito.version>2.3.0</mockito.version>
       <pax.exam.version>4.9.2</pax.exam.version>
-      <pax.url.version>2.5.1</pax.url.version>
+      <pax.url.version>2.5.2</pax.url.version>
       <slf4j.version>1.7.21</slf4j.version>
       <log4j.version>2.7</log4j.version>
       <commons.csv.version>1.4</commons.csv.version>
