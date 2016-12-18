@@ -379,7 +379,7 @@ instance using the default constructor and the properties file will be loaded.
 
 ### Popular DataSource Class Names
 
-We recommended using ``dataSourceClassName`` instead of ``jdbcUrl``, but both are acceptable.  We'll say that again, *both are acceptable*.
+We recommended using ``dataSourceClassName`` instead of ``jdbcUrl``, but either is acceptable.  We'll say that again, *either is acceptable*.
 
 &#9888;&nbsp;*Note: Spring Boot auto-configuration users, you need to use ``jdbcUrl``-based configuration.*
 
