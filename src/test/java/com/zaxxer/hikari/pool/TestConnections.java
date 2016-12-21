@@ -452,25 +452,44 @@ public class TestConnections
    }
 
    @Test
-   public void testInitializationFailure() throws SQLException
+   public void testInitializationFailure1() throws SQLException
    {
       StubDataSource stubDataSource = new StubDataSource();
       stubDataSource.setThrowException(new SQLException("Connection refused"));
 
       try (HikariDataSource ds = new HikariDataSource()) {
-         ds.setMinimumIdle(3);
-         ds.setMaximumPoolSize(3);
+         ds.setMinimumIdle(1);
+         ds.setMaximumPoolSize(1);
          ds.setConnectionTimeout(2500);
-         ds.setAllowPoolSuspension(true);
          ds.setConnectionTestQuery("VALUES 1");
          ds.setDataSource(stubDataSource);
 
          try (Connection c = ds.getConnection()) {
             Assert.fail("Initialization should have failed");
          }
-         catch (PoolInitializationException e) {
+         catch (SQLException e) {
             // passed
          }
+      }
+   }
+
+   @Test
+   public void testInitializationFailure2() throws SQLException
+   {
+      StubDataSource stubDataSource = new StubDataSource();
+      stubDataSource.setThrowException(new SQLException("Connection refused"));
+
+      HikariConfig config = new HikariConfig();
+      config.setMinimumIdle(1);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSource(stubDataSource);
+
+      try (HikariDataSource ds = new HikariDataSource(config);
+           Connection c = ds.getConnection()) {
+         Assert.fail("Initialization should have failed");
+      }
+      catch (PoolInitializationException e) {
+         // passed
       }
    }
 
