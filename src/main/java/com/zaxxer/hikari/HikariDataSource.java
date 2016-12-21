@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.pool.HikariPool;
+import com.zaxxer.hikari.pool.HikariPool.PoolInitializationException;
 
 /**
  * The HikariCP pooled DataSource.
@@ -92,7 +93,17 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
             if (result == null) {
                validate();
                LOGGER.info("{} - Starting...", getPoolName());
-               pool = result = new HikariPool(this);
+               try {
+                  pool = result = new HikariPool(this);
+               }
+               catch (PoolInitializationException pie) {
+                  if (pie.getCause() instanceof SQLException) {
+                     throw (SQLException) pie.getCause();
+                  }
+                  else {
+                     throw pie;
+                  }
+               }
                LOGGER.info("{} - Start completed.", getPoolName());
             }
          }

@@ -407,9 +407,12 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Set the pool initialization failure timeout.
+    * Set the pool initialization failure timeout.  This setting applies to pool
+    * initialization when {@link HikariDataSource} is constructed with a {@link HikariConfig},
+    * or when {@link HikariDataSource} is constructed using the no-arg constructor
+    * and {@link HikariDataSource#getConnection()} is called.
     * <ul>
-    *   <li>Any value less than zero will <i>not</i>  not block the calling thread
+    *   <li>Any value less than zero will <i>not</i>  block the calling thread
     *       in the case that a connection cannot be obtained. The pool will start
     *       and continue to try to obtain connections in the background.  This can
     *       mean that callers to {@code DataSource#getConnection()} may encounter
@@ -439,6 +442,7 @@ public class HikariConfig implements HikariConfigMXBean
     * if the minimum number of connections cannot be created.
     *
     * @return whether or not initialization should fail on error immediately
+    * @deprecated
     */
    @Deprecated
    public boolean isInitializationFailFast()
@@ -451,6 +455,7 @@ public class HikariConfig implements HikariConfigMXBean
     * if the minimum number of connections cannot be created.
     *
     * @param failFast true if the pool should fail if the minimum connections cannot be created
+    * @deprecated
     */
    @Deprecated
    public void setInitializationFailFast(boolean failFast)
