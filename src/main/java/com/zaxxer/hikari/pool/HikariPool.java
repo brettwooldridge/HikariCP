@@ -37,6 +37,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -91,7 +92,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private final ProxyLeakTask leakTask;
    private final SuspendResumeLock suspendResumeLock;
 
-   private ScheduledThreadPoolExecutor houseKeepingExecutorService;
+   private ScheduledExecutorService houseKeepingExecutorService;
    private ScheduledFuture<?> houseKeeperTask;
 
    /**
@@ -549,9 +550,10 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       if (config.getScheduledExecutorService() == null) {
          ThreadFactory threadFactory = config.getThreadFactory();
          threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory(poolName + " housekeeper", true);
-         this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
-         this.houseKeepingExecutorService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-         this.houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
+         ScheduledThreadPoolExecutor newScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
+         newScheduledThreadPoolExecutor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+         newScheduledThreadPoolExecutor.setRemoveOnCancelPolicy(true);
+         this.houseKeepingExecutorService = newScheduledThreadPoolExecutor;
       }
       else {
          this.houseKeepingExecutorService = config.getScheduledExecutorService();

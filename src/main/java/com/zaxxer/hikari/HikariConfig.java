@@ -25,7 +25,7 @@ import java.lang.reflect.Modifier;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 
 import javax.naming.InitialContext;
@@ -90,7 +90,7 @@ public class HikariConfig implements HikariConfigMXBean
    private DataSource dataSource;
    private Properties dataSourceProperties;
    private ThreadFactory threadFactory;
-   private ScheduledThreadPoolExecutor scheduledExecutor;
+   private ScheduledExecutorService scheduledExecutor;
    private MetricsTrackerFactory metricsTrackerFactory;
    private Object metricRegistry;
    private Object healthCheckRegistry;
@@ -718,7 +718,7 @@ public class HikariConfig implements HikariConfigMXBean
     *
     * @return the executor
     */
-   public ScheduledThreadPoolExecutor getScheduledExecutorService()
+   public ScheduledExecutorService getScheduledExecutorService()
    {
       return scheduledExecutor;
    }
@@ -728,7 +728,7 @@ public class HikariConfig implements HikariConfigMXBean
     *
     * @param executor the ScheduledExecutorService
     */
-   public void setScheduledExecutorService(ScheduledThreadPoolExecutor executor)
+   public void setScheduledExecutorService(ScheduledExecutorService executor)
    {
       this.scheduledExecutor = executor;
    }
