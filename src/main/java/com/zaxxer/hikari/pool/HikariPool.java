@@ -159,25 +159,32 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
       try {
          long timeout = hardTimeout;
+         PoolEntry poolEntry = null;
          do {
-            final PoolEntry poolEntry = connectionBag.borrow(timeout, MILLISECONDS);
-            if (poolEntry == null) {
-               break; // We timed out... break and throw exception
-            }
+            try {
+               poolEntry = connectionBag.borrow(timeout, MILLISECONDS);
+               if (poolEntry == null) {
+                  break; // We timed out... break and throw exception
+               }
 
-            final long now = clockSource.currentTime();
-            if (poolEntry.isMarkedEvicted() || (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
-               closeConnection(poolEntry, "(connection is evicted or dead)"); // Throw away the dead connection (passed max age or failed alive test)
-               timeout = hardTimeout - clockSource.elapsedMillis(startTime);
+               final long now = clockSource.currentTime();
+               if (poolEntry.isMarkedEvicted() || (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
+                  closeConnection(poolEntry, "(connection is evicted or dead)"); // Throw away the dead connection (passed max age or failed alive test)
+                  timeout = hardTimeout - clockSource.elapsedMillis(startTime);
+               }
+               else {
+                  metricsTracker.recordBorrowStats(poolEntry, startTime);
+                  return poolEntry.createProxyConnection(leakTask.schedule(poolEntry), now);
+               }
             }
-            else {
-               metricsTracker.recordBorrowStats(poolEntry, startTime);
-               return poolEntry.createProxyConnection(leakTask.schedule(poolEntry), now);
+            catch (InterruptedException e) {
+               if (poolEntry != null) {
+                  recycle(poolEntry);
+               }
+               Thread.currentThread().interrupt();
+               throw new SQLException(poolName + " - Interrupted during connection acquisition", e);
             }
          } while (timeout > 0L);
-      }
-      catch (InterruptedException e) {
-         throw new SQLException(poolName + " - Interrupted during connection acquisition", e);
       }
       finally {
          suspendResumeLock.release();
