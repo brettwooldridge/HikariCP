@@ -74,10 +74,10 @@ public final class FastList<T> implements List<T>, RandomAccess, Serializable
    @Override
    public boolean add(T element)
    {
-      try {
+      if (size < elementData.length) {
          elementData[size++] = element;
       }
-      catch (ArrayIndexOutOfBoundsException e) {
+      else {
          // overflow-conscious code
          final int oldCapacity = elementData.length;
          final int newCapacity = oldCapacity << 1;
@@ -332,30 +332,35 @@ public final class FastList<T> implements List<T>, RandomAccess, Serializable
    }
 
    /** {@inheritDoc} */
+   @Override
    public void forEach(Consumer<? super T> action)
    {
       throw new UnsupportedOperationException();
    }
 
    /** {@inheritDoc} */
+   @Override
    public Spliterator<T> spliterator()
    {
       throw new UnsupportedOperationException();
    }
 
    /** {@inheritDoc} */
+   @Override
    public boolean removeIf(Predicate<? super T> filter)
    {
       throw new UnsupportedOperationException();
    }
 
    /** {@inheritDoc} */
+   @Override
    public void replaceAll(UnaryOperator<T> operator)
    {
       throw new UnsupportedOperationException();
    }
 
    /** {@inheritDoc} */
+   @Override
    public void sort(Comparator<? super T> c)
    {
       throw new UnsupportedOperationException();
