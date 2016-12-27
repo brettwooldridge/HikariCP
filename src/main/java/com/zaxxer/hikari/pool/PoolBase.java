@@ -168,7 +168,7 @@ abstract class PoolBase
 
          return true;
       }
-      catch (SQLException e) {
+      catch (Exception e) {
          lastConnectionFailure.set(e);
          LOGGER.warn("{} - Failed to validate connection {} ({})", poolName, connection, e.getMessage());
          return false;
