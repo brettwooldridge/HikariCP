@@ -179,7 +179,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             }
             catch (InterruptedException e) {
                if (poolEntry != null) {
-                  recycle(poolEntry);
+                  poolEntry.recycle(startTime);
                }
                Thread.currentThread().interrupt();
                throw new SQLException(poolName + " - Interrupted during connection acquisition", e);
