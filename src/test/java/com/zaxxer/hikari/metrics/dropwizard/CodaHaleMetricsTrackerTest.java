@@ -1,13 +1,14 @@
 package com.zaxxer.hikari.metrics.dropwizard;
 
-import com.codahale.metrics.MetricRegistry;
+import static org.mockito.Mockito.verify;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
-import static org.mockito.Mockito.verify;
+import com.codahale.metrics.MetricRegistry;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CodaHaleMetricsTrackerTest {
@@ -35,5 +36,4 @@ public class CodaHaleMetricsTrackerTest {
       verify(mockMetricRegistry).remove("mypool.pool.ActiveConnections");
       verify(mockMetricRegistry).remove("mypool.pool.PendingConnections");
    }
-
 }
