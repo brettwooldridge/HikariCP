@@ -84,7 +84,7 @@ public final class FastList<T> implements List<T>, RandomAccess, Serializable
          @SuppressWarnings("unchecked")
          final T[] newElementData = (T[]) Array.newInstance(clazz, newCapacity);
          System.arraycopy(elementData, 0, newElementData, 0, oldCapacity);
-         newElementData[size] = element;
+         newElementData[size++] = element;
          elementData = newElementData;
       }
 
