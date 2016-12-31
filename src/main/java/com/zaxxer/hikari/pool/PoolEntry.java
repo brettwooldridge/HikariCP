@@ -44,7 +44,11 @@ final class PoolEntry implements IConcurrentBagEntry
    Connection connection;
    long lastAccessed;
    long lastBorrowed;
+
+   //should be used with -XX:-RestrictContended JVM arg
+   @sun.misc.Contended
    private volatile int state;
+
    private volatile boolean evict;
 
    private volatile ScheduledFuture<?> endOfLife;
