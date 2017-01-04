@@ -16,6 +16,13 @@
 
 package com.zaxxer.hikari.pool;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.mocks.StubDataSource;
+import org.junit.Assert;
+import org.junit.Test;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -23,14 +30,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-
-import org.junit.Assert;
-import org.junit.Test;
-import org.slf4j.LoggerFactory;
-
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.mocks.StubDataSource;
 
 /**
  * @author Matthew Tambara (matthew.tambara@liferay.com)
@@ -41,19 +40,33 @@ public class ConnectionPoolSizeVsThreadsTest {
 
    @Test
    public void testPoolSizeAboutSameSizeAsThreadCount() throws Exception {
-      {
-         final int threadCount = 50;
-         final Counts counts = testPoolSize(2, 100, threadCount, 1, 0, 20);
-         Assert.assertEquals(threadCount, counts.getTotal(), 5);
-      }
-//      {
-//         final int threadCount = 2;
-//         final Counts counts = testPoolSize(2, 100, threadCount, 1, 0, 20);
-//         Assert.assertEquals(threadCount, counts.getTotal());
-//      }
+      final int threadCount = 50;
+      final Counts counts = testPoolSize(2, 100, threadCount, 1, 0, 20, ITERATIONS, 1000);
+      // maxActive may never make it to threadCount but it shouldn't be any higher
+      Assert.assertEquals(threadCount, counts.getMaxActive() - 5, 5);
+      Assert.assertEquals(threadCount, counts.getMaxTotal(), 5);
    }
 
-   private Counts testPoolSize(int minIdle, int maxPoolSize, int threadCount, final int workTime, final int restTime, int connectionAcquisitionTime) throws Exception {
+   @Test
+   public void testSlowConnectionTimeBurstyWork() throws Exception {
+      // setup a bursty work load, 50 threads all needing to do around 100 units of work.
+      // Using a more realistic time for connection startup of 250 ms and only 5 seconds worth of work will mean that we end up finishing
+      // all of the work before we actually have setup 50 connections even though we have requested 50 connections
+      final int threadCount = 50;
+      final int workItems = threadCount * 100;
+      final int workTime = 0;
+      final int connectionAcquisitionTime = 250;
+      final Counts counts = testPoolSize(2, 100, threadCount, workTime, 0, connectionAcquisitionTime, workItems, 3000);
+
+      // hard to put exact bounds on how many thread we will use but we can put an upper bound on usage (if there was only one thread)
+      long totalWorkTime = workItems * workTime;
+      long connectionMax = totalWorkTime / connectionAcquisitionTime;
+      Assert.assertTrue(connectionMax <= counts.getMaxActive());
+      Assert.assertEquals(connectionMax, counts.getMaxTotal(), 2 + 2);
+   }
+
+   private Counts testPoolSize(int minIdle, int maxPoolSize, int threadCount, final int workTime, final int restTime,
+                               int connectionAcquisitionTime, int iterations, int postTestTime) throws Exception {
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(minIdle);
       config.setMaximumPoolSize(maxPoolSize);
@@ -70,9 +83,8 @@ public class ConnectionPoolSizeVsThreadsTest {
          stubDataSource.setConnectionAcquistionTime(connectionAcquisitionTime);
 
          ExecutorService threadPool = Executors.newFixedThreadPool(threadCount);
-         final int iterationCount = ITERATIONS;
-         final CountDownLatch allThreadsDone = new CountDownLatch(iterationCount);
-         for (int i = 0; i < iterationCount; i++) {
+         final CountDownLatch allThreadsDone = new CountDownLatch(iterations);
+         for (int i = 0; i < iterations; i++) {
             threadPool.submit(new Callable<Exception>() {
                /** {@inheritDoc} */
                @Override
@@ -80,11 +92,11 @@ public class ConnectionPoolSizeVsThreadsTest {
                   if (ref.get() == null) {
                      Connection c2;
                      try {
-                        if(restTime > 0) {
+                        if (restTime > 0) {
                            Thread.sleep(restTime);
                         }
                         c2 = ds.getConnection();
-                        if(workTime > 0) {
+                        if (workTime > 0) {
                            Thread.sleep(workTime);
                         }
                         c2.close();
@@ -100,12 +112,25 @@ public class ConnectionPoolSizeVsThreadsTest {
 
          HikariPool pool = TestElf.getPool(ds);
 
-         int maxTotal = pool.getTotalConnections();
-         int maxActive = pool.getActiveConnections();
-         while (allThreadsDone.getCount() > 0) {
+         // collect pool usage data while work is still being done
+         Counts underLoad = new Counts();
+         while (allThreadsDone.getCount() > 0 || pool.getTotalConnections() < minIdle) {
             Thread.sleep(100);
-            maxTotal = Math.max(pool.getTotalConnections(), maxTotal);
-            maxActive = Math.max(pool.getActiveConnections(), maxActive);
+            underLoad.updateMaxCounts(pool);
+         }
+
+         // wait for long enough any pending acquisitions have already been done
+         System.out.println("Test Over, waiting for post delay time: " + postTestTime);
+         Thread.sleep(connectionAcquisitionTime + workTime + restTime);
+
+         // collect pool data while there is no work to do.
+         Counts postLoad = new Counts();
+         if (postTestTime > 0) {
+            long doneTime = System.currentTimeMillis() + postTestTime;
+            while (System.currentTimeMillis() < doneTime) {
+               Thread.sleep(100);
+               postLoad.updateMaxCounts(pool);
+            }
          }
 
          allThreadsDone.await();
@@ -117,20 +142,44 @@ public class ConnectionPoolSizeVsThreadsTest {
             LoggerFactory.getLogger(ConnectionPoolSizeVsThreadsTest.class).error("Task failed", ref.get());
             Assert.fail("Task failed");
          }
+         System.out.println("Under Load " + underLoad.toString());
+         System.out.println("Idle After Work " + postLoad.toString());
 
-         return new Counts(maxTotal, maxActive);
+         // verify that the no connections created after the work has stopped
+         if (postTestTime > 0) {
+            if (postLoad.getMaxActive() != 0) {
+               Assert.fail("Max Active was greater than 0 after test was done");
+            }
+            int createdAfterWorkAllFinished = postLoad.getMaxTotal() - underLoad.getMaxTotal();
+            Assert.assertEquals("Connections were created when there was no waiting consumers", 0, createdAfterWorkAllFinished);
+         }
+         return underLoad;
       }
    }
 
    private static class Counts {
-      private final int total;
+      private int maxTotal = 0;
+      private int maxActive = 0;
 
-      public Counts(int total, int max) {
-         this.total = total;
+      public int getMaxTotal() {
+         return maxTotal;
       }
 
-      public int getTotal() {
-         return total;
+      public int getMaxActive() {
+         return maxActive;
+      }
+
+      public void updateMaxCounts(HikariPool pool) {
+         maxTotal = Math.max(pool.getTotalConnections(), maxTotal);
+         maxActive = Math.max(pool.getActiveConnections(), maxActive);
+      }
+
+      @Override
+      public String toString() {
+         return "Counts{" +
+            "maxTotal=" + maxTotal +
+            ", maxActive=" + maxActive +
+            '}';
       }
    }
 }
