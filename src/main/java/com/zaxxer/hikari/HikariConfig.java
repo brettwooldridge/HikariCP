@@ -900,11 +900,24 @@ public class HikariConfig implements HikariConfigMXBean
                dsProps.setProperty("password", "<masked>");
                value = dsProps;
             }
-            if (prop.contains("password")) {
+
+            if ("initializationFailTimeout".equals(prop) && initializationFailTimeout == Long.MAX_VALUE) {
+               value = "infinite";
+            }
+            else if ("transactionIsolation".equals(prop) && transactionIsolationName == null) {
+               value = "default";
+            }
+            else if (prop.matches("scheduledExecutorService|threadFactory") && value == null) {
+               value = "internal";
+            }
+            else if (prop.contains("password")) {
                value = "<masked>";
             }
             else if (value instanceof String) {
                value = "\"" + value + "\""; // quote to see lead/trailing spaces is any
+            }
+            else if (value == null) {
+               value = "none";
             }
             LOGGER.debug((prop + "................................................").substring(0, 32) + value);
          }
