@@ -36,7 +36,7 @@ public class StubDataSource implements DataSource
    private String password;
    private PrintWriter logWriter;
    private SQLException throwException;
-   private int connectionAcquistionTime = 0;
+   private long connectionAcquistionTime = 0;
    private int loginTimeout;
 
    public String getUser()
@@ -143,7 +143,7 @@ public class StubDataSource implements DataSource
       this.throwException = e;
    }
 
-   public void setConnectionAcquistionTime(int connectionAcquisitionTime) {
+   public void setConnectionAcquistionTime(long connectionAcquisitionTime) {
       this.connectionAcquistionTime = connectionAcquisitionTime;
    }
 }
