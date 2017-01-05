@@ -568,7 +568,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       public Boolean call() throws Exception
       {
          long sleepBackoff = 250L;
-         while (poolState == POOL_NORMAL && totalConnections.get() < config.getMaximumPoolSize()) {
+         while (poolState == POOL_NORMAL && shouldCreateAnotherConnection()) {
             final PoolEntry poolEntry = createPoolEntry();
             if (poolEntry != null) {
                totalConnections.incrementAndGet();
@@ -582,6 +582,13 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          }
          // Pool is suspended or shutdown or at max size
          return Boolean.FALSE;
+      }
+
+      private boolean shouldCreateAnotherConnection() {
+         // only create connections if we need another idle connection or have threads still waiting
+         // for a new connection, otherwise bail
+         return getTotalConnections() < config.getMaximumPoolSize() &&
+            (connectionBag.getPendingQueue() > 0 || getIdleConnections() < config.getMinimumIdle());
       }
    }
 

@@ -16,6 +16,9 @@
 
 package com.zaxxer.hikari.mocks;
 
+import com.zaxxer.hikari.pool.TestElf;
+import com.zaxxer.hikari.util.UtilityElf;
+
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -35,6 +38,7 @@ public class StubDataSource implements DataSource
    private PrintWriter logWriter;
    private SQLException throwException;
    private int loginTimeout;
+   private long connectionAcquistionTime;
 
    public String getUser()
    {
@@ -121,6 +125,9 @@ public class StubDataSource implements DataSource
       if (throwException != null) {
          throw throwException;
       }
+      if(connectionAcquistionTime > 0){
+         UtilityElf.quietlySleep(connectionAcquistionTime);
+      }
 
       return new StubConnection();
    }
@@ -135,5 +142,9 @@ public class StubDataSource implements DataSource
    public void setThrowException(SQLException e)
    {
       this.throwException = e;
+   }
+
+   public void setConnectionAcquistionTime(long connectionAcquistionTime) {
+      this.connectionAcquistionTime = connectionAcquistionTime;
    }
 }
