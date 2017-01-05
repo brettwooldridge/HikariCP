@@ -22,6 +22,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.util.Locale;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
@@ -107,6 +108,26 @@ public final class UtilityElf
       }
 
       LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<>(queueSize);
+      ThreadPoolExecutor executor = new ThreadPoolExecutor(1 /*core*/, 1 /*max*/, 5 /*keepalive*/, SECONDS, queue, threadFactory, policy);
+      executor.allowCoreThreadTimeOut(true);
+      return executor;
+   }
+
+   /**
+    * Create a ThreadPoolExecutor.
+    *
+    * @param queue the BlockingQueue to use
+    * @param threadName the thread name
+    * @param threadFactory an optional ThreadFactory
+    * @param policy the RejectedExecutionHandler policy
+    * @return a ThreadPoolExecutor
+    */
+   public static ThreadPoolExecutor createThreadPoolExecutor(final BlockingQueue<Runnable> queue, final String threadName, ThreadFactory threadFactory, final RejectedExecutionHandler policy)
+   {
+      if (threadFactory == null) {
+         threadFactory = new DefaultThreadFactory(threadName, true);
+      }
+
       ThreadPoolExecutor executor = new ThreadPoolExecutor(1 /*core*/, 1 /*max*/, 5 /*keepalive*/, SECONDS, queue, threadFactory, policy);
       executor.allowCoreThreadTimeOut(true);
       return executor;

@@ -22,6 +22,7 @@ import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_REMOVED;
 import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
+import static java.util.Collections.unmodifiableCollection;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -29,10 +30,13 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 import java.sql.SQLTransientConnectionException;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -78,6 +82,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", SECONDS.toMillis(30));
 
    private final PoolEntryCreator POOL_ENTRY_CREATOR = new PoolEntryCreator();
+   private final Collection<Runnable> addConnectionQueue;
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
    private final ScheduledThreadPoolExecutor houseKeepingExecutorService;
@@ -115,6 +120,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       registerMBeans(this);
 
       ThreadFactory threadFactory = config.getThreadFactory();
+      
+      LinkedBlockingQueue<Runnable> addConnectionQueue = new LinkedBlockingQueue<>(config.getMaximumPoolSize() + 1);
+      this.addConnectionQueue = unmodifiableCollection(addConnectionQueue);
       this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
       this.closeConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
@@ -304,7 +312,12 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    @Override
    public Future<Boolean> addBagItem()
    {
-      return addConnectionExecutor.submit(POOL_ENTRY_CREATOR);
+      final int connectionsToAdd = connectionBag.getPendingQueue() - addConnectionQueue.size();
+      if (connectionsToAdd > 0) {
+         return addConnectionExecutor.submit(POOL_ENTRY_CREATOR);
+      }
+
+      return CompletableFuture.completedFuture(Boolean.TRUE);
    }
 
    // ***********************************************************************
@@ -417,13 +430,10 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             LOGGER.warn("{} - Unexpected value of totalConnections={}", poolName, tc, new Exception());
          }
          final Connection connection = poolEntry.close();
-         closeConnectionExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-               quietlyCloseConnection(connection, closureReason);
-               if (poolState == POOL_NORMAL) {
-                  fillPool();
-               }
+         closeConnectionExecutor.execute(() -> {
+            quietlyCloseConnection(connection, closureReason);
+            if (poolState == POOL_NORMAL) {
+               fillPool();
             }
          });
       }
@@ -446,12 +456,9 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             // variance up to 2.5% of the maxlifetime
             final long variance = maxLifetime > 10_000 ? ThreadLocalRandom.current().nextLong( maxLifetime / 40 ) : 0;
             final long lifetime = maxLifetime - variance;
-            poolEntry.setFutureEol(houseKeepingExecutorService.schedule(new Runnable() {
-               @Override
-               public void run() {
-                  softEvictConnection(poolEntry, "(connection has passed maxLifetime)", false /* not owner */);
-               }
-            }, lifetime, MILLISECONDS));
+            poolEntry.setFutureEol(houseKeepingExecutorService.schedule( 
+               () -> softEvictConnection(poolEntry, "(connection has passed maxLifetime)", false /* not owner */),
+               lifetime, MILLISECONDS));
          }
 
          return poolEntry;
@@ -470,18 +477,13 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private synchronized void fillPool()
    {
       final int connectionsToAdd = Math.min(config.getMaximumPoolSize() - getTotalConnections(), config.getMinimumIdle() - getIdleConnections())
-                                   - addConnectionExecutor.getQueue().size();
+                                   - addConnectionQueue.size();
       for (int i = 0; i < connectionsToAdd; i++) {
          addConnectionExecutor.submit(POOL_ENTRY_CREATOR);
       }
 
       if (connectionsToAdd > 0 && LOGGER.isDebugEnabled()) {
-         addConnectionExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-               logPoolState("After adding ");
-            }
-         });
+         addConnectionExecutor.execute(() -> logPoolState("After adding "));
       }
    }
 
@@ -592,7 +594,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    /**
     * Creating and adding poolEntries (connections) to the pool.
     */
-   private class PoolEntryCreator implements Callable<Boolean>
+   private final class PoolEntryCreator implements Callable<Boolean>
    {
       @Override
       public Boolean call() throws Exception
