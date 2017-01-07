@@ -384,7 +384,7 @@ public class TestConnections
 
          pool.logPoolState("before check ");
          assertNull((ref.get() != null ? ref.get().toString() : ""), ref.get());
-         assertSame("StubConnection count not as expected", 4+1, StubConnection.count.get()); // 1st connection is in pool.initializeConnections()
+         assertSame("StubConnection count not as expected", 4, StubConnection.count.get());
       }
    }
 
@@ -561,7 +561,7 @@ public class TestConnections
    public void testPopulationSlowAcquisition() throws InterruptedException, SQLException
    {
       HikariConfig config = newHikariConfig();
-      config.setMaximumPoolSize(30);
+      config.setMaximumPoolSize(20);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -576,24 +576,24 @@ public class TestConnections
          SECONDS.sleep(2);
 
          HikariPool pool = getPool(ds);
-         assertSame("Total connections not as expected", 1, pool.getTotalConnections());
-         assertSame("Idle connections not as expected", 1, pool.getIdleConnections());
+         assertSame("Total connections not as expected", 2, pool.getTotalConnections());
+         assertSame("Idle connections not as expected", 2, pool.getIdleConnections());
 
          try (Connection connection = ds.getConnection()) {
             assertNotNull(connection);
    
-            SECONDS.sleep(30);
+            SECONDS.sleep(20);
    
-            assertSame("Second total connections not as expected", 30, pool.getTotalConnections());
-            assertSame("Second idle connections not as expected", 29, pool.getIdleConnections());
+            assertSame("Second total connections not as expected", 20, pool.getTotalConnections());
+            assertSame("Second idle connections not as expected", 19, pool.getIdleConnections());
          }
 
-         assertSame("Idle connections not as expected", 30, pool.getIdleConnections());
+         assertSame("Idle connections not as expected", 20, pool.getIdleConnections());
 
          SECONDS.sleep(5);
 
-         assertSame("Third total connections not as expected", 30, pool.getTotalConnections());
-         assertSame("Third idle connections not as expected", 30, pool.getIdleConnections());
+         assertSame("Third total connections not as expected", 20, pool.getTotalConnections());
+         assertSame("Third idle connections not as expected", 20, pool.getIdleConnections());
       }
       finally {
          StubConnection.slowCreate = false;

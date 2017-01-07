@@ -85,13 +85,13 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private final Collection<Runnable> addConnectionQueue;
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
-   private final ScheduledThreadPoolExecutor houseKeepingExecutorService;
 
    private final ConcurrentBag<PoolEntry> connectionBag;
 
    private final ProxyLeakTask leakTask;
    private final SuspendResumeLock suspendResumeLock;
 
+   private ScheduledThreadPoolExecutor houseKeepingExecutorService;
    private ScheduledFuture<?> houseKeeperTask;
 
    /**
@@ -106,8 +106,10 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       this.connectionBag = new ConcurrentBag<>(this);
       this.suspendResumeLock = config.isAllowPoolSuspension() ? new SuspendResumeLock() : SuspendResumeLock.FAUX_LOCK;
 
-      checkFailFast();
+      initializeHouseKeepingExecutorService();
 
+      checkFailFast();
+   
       if (config.getMetricsTrackerFactory() != null) {
          setMetricsTrackerFactory(config.getMetricsTrackerFactory());
       }
@@ -120,21 +122,11 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       registerMBeans(this);
 
       ThreadFactory threadFactory = config.getThreadFactory();
-      
+
       LinkedBlockingQueue<Runnable> addConnectionQueue = new LinkedBlockingQueue<>(config.getMaximumPoolSize() + 1);
       this.addConnectionQueue = unmodifiableCollection(addConnectionQueue);
       this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
       this.closeConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
-
-      if (config.getScheduledExecutorService() == null) {
-         threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory(poolName + " housekeeper", true);
-         this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
-         this.houseKeepingExecutorService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-         this.houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
-      }
-      else {
-         this.houseKeepingExecutorService = config.getScheduledExecutorService();
-      }
 
       this.leakTask = new ProxyLeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
@@ -227,10 +219,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          addConnectionExecutor.shutdown();
          addConnectionExecutor.awaitTermination(5L, SECONDS);
 
-         if (config.getScheduledExecutorService() == null) {
-            houseKeepingExecutorService.shutdown();
-            houseKeepingExecutorService.awaitTermination(5L, SECONDS);
-         }
+         destroyHouseKeepingExecutorService();
 
          connectionBag.close();
 
@@ -516,22 +505,33 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       final long startTime = clockSource.currentTime();
       Throwable throwable = new SQLTimeoutException("HikariCP was unable to initialize connections in pool " + poolName);
       do {
-         try (Connection connection = newConnection()) {
-            if (!connection.getAutoCommit()) {
-               connection.commit();
+         final PoolEntry poolEntry = createPoolEntry();
+         if (poolEntry != null) {
+            if (config.getMinimumIdle() > 0) {
+               connectionBag.add(poolEntry);
+               LOGGER.debug("{} - Added connection {}", poolName, poolEntry.connection);
             }
+            else {
+               final Connection connection = poolEntry.close();
+               quietlyCloseConnection(connection, "Initialization check complete and minimumIdle is zero");
+            }
+
             return;
          }
-         catch (ConnectionSetupException e) {
-            throw new PoolInitializationException(e.getCause());
-         }
-         catch (Throwable t) {
+         else {
+            final Throwable t = getLastConnectionFailure();
+            if (t instanceof ConnectionSetupException) {
+               destroyHouseKeepingExecutorService();
+               throw new PoolInitializationException(t.getCause());
+            }
+
             throwable = t;
             quietlySleep(1000L);
          }
       } while (clockSource.elapsedMillis(startTime) < config.getInitializationFailTimeout());
 
       if (config.getInitializationFailTimeout() >= 0) {
+         destroyHouseKeepingExecutorService();
          throw new PoolInitializationException(throwable);
       }
    }
@@ -541,6 +541,27 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       poolEntry.markEvicted();
       if (owner || connectionBag.reserve(poolEntry)) {
          closeConnection(poolEntry, reason);
+      }
+   }
+
+   private void initializeHouseKeepingExecutorService()
+   {
+      if (config.getScheduledExecutorService() == null) {
+         ThreadFactory threadFactory = config.getThreadFactory();
+         threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory(poolName + " housekeeper", true);
+         this.houseKeepingExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
+         this.houseKeepingExecutorService.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+         this.houseKeepingExecutorService.setRemoveOnCancelPolicy(true);
+      }
+      else {
+         this.houseKeepingExecutorService = config.getScheduledExecutorService();
+      }
+   }
+
+   private void destroyHouseKeepingExecutorService()
+   {
+      if (config.getScheduledExecutorService() == null) {
+         houseKeepingExecutorService.shutdownNow();
       }
    }
 

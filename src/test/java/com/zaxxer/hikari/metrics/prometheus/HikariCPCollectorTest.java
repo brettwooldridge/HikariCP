@@ -17,6 +17,7 @@
 package com.zaxxer.hikari.metrics.prometheus;
 
 import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -34,6 +35,7 @@ public class HikariCPCollectorTest {
    @Test
    public void noConnection() throws Exception {
       HikariConfig config = newHikariConfig();
+      config.setMinimumIdle(0);
       config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -52,6 +54,7 @@ public class HikariCPCollectorTest {
    @Test
    public void noConnectionWithoutPoolName() throws Exception {
       HikariConfig config = new HikariConfig();
+      config.setMinimumIdle(0);
       config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -77,6 +80,8 @@ public class HikariCPCollectorTest {
       StubConnection.slowCreate = true;
       try (HikariDataSource ds = new HikariDataSource(config);
          Connection connection1 = ds.getConnection()) {
+
+         quietlySleep(1000);
 
          assertThat(getValue("hikaricp_active_connections", "connection1"), is(1.0));
          assertThat(getValue("hikaricp_idle_connections", "connection1"), is(0.0));

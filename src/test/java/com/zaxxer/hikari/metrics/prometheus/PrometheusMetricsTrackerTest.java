@@ -38,16 +38,16 @@ public class PrometheusMetricsTrackerTest {
       HikariConfig config = newHikariConfig();
       config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
       config.setJdbcUrl("jdbc:h2:mem:");
-      config.setMaximumPoolSize(1);
+      config.setMaximumPoolSize(2);
       config.setConnectionTimeout(250);
-
       
       String[] labelNames = {"pool"};
       String[] labelValues = {config.getPoolName()};
 
       try (HikariDataSource hikariDataSource = new HikariDataSource(config)) {
-         try (Connection connection = hikariDataSource.getConnection()) {
-            try (Connection connection2 = hikariDataSource.getConnection()) {
+         try (Connection connection1 = hikariDataSource.getConnection();
+              Connection connection2 = hikariDataSource.getConnection()) {
+            try (Connection connection3 = hikariDataSource.getConnection()) {
             }
             catch (SQLTransientConnectionException ignored) {
             }
@@ -60,7 +60,7 @@ public class PrometheusMetricsTrackerTest {
          assertThat(CollectorRegistry.defaultRegistry.getSampleValue(
             "hikaricp_connection_acquired_nanos_count",
             labelNames,
-            labelValues), is(equalTo(1.0)));
+            labelValues), is(equalTo(2.0)));
          assertTrue(CollectorRegistry.defaultRegistry.getSampleValue(
             "hikaricp_connection_acquired_nanos_sum",
             labelNames,
@@ -68,7 +68,7 @@ public class PrometheusMetricsTrackerTest {
          assertThat(CollectorRegistry.defaultRegistry.getSampleValue(
             "hikaricp_connection_usage_millis_count",
             labelNames,
-            labelValues), is(equalTo(1.0)));
+            labelValues), is(equalTo(2.0)));
          assertTrue(CollectorRegistry.defaultRegistry.getSampleValue(
             "hikaricp_connection_usage_millis_sum",
             labelNames,
