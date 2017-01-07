@@ -16,6 +16,11 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.pool.TestElf.getPool;
+import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
+import static org.junit.Assert.assertSame;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -28,9 +33,9 @@ import com.zaxxer.hikari.HikariDataSource;
 public class RampUpDown
 {
     @Test
-    public void rampUpDownTest() throws SQLException, InterruptedException
+    public void rampUpDownTest() throws SQLException
     {
-        HikariConfig config = new HikariConfig();
+        HikariConfig config = newHikariConfig();
         config.setMinimumIdle(5);
         config.setMaximumPoolSize(60);
         config.setInitializationFailTimeout(0);
@@ -42,10 +47,10 @@ public class RampUpDown
         try (HikariDataSource ds = new HikariDataSource(config)) {
 
            ds.setIdleTimeout(1000);
-           HikariPool pool = TestElf.getPool(ds);
+           HikariPool pool = getPool(ds);
 
            // wait two housekeeping periods so we don't fail if this part of test runs too quickly
-           Thread.sleep(500);
+           quietlySleep(500);
 
            Assert.assertSame("Total connections not as expected", 5, pool.getTotalConnections());
 
@@ -55,16 +60,16 @@ public class RampUpDown
                connections[i] = ds.getConnection();
            }
 
-           Assert.assertSame("Total connections not as expected", 60, pool.getTotalConnections());
+           assertSame("Total connections not as expected", 60, pool.getTotalConnections());
 
            for (Connection connection : connections)
            {
                connection.close();
            }
 
-           Thread.sleep(2500);
+           quietlySleep(500);
 
-           Assert.assertSame("Total connections not as expected", 5, pool.getTotalConnections());
+           assertSame("Total connections not as expected", 5, pool.getTotalConnections());
         }
     }
 }

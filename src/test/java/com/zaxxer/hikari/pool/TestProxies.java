@@ -16,13 +16,18 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -35,7 +40,7 @@ public class TestProxies
    @Test
    public void testProxyCreation() throws SQLException
    {
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(1);
       config.setConnectionTestQuery("VALUES 1");
@@ -44,25 +49,25 @@ public class TestProxies
       try (HikariDataSource ds = new HikariDataSource(config)) {
          Connection conn = ds.getConnection();
 
-         Assert.assertNotNull(conn.createStatement(ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE));
-         Assert.assertNotNull(conn.createStatement(ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.HOLD_CURSORS_OVER_COMMIT));
-         Assert.assertNotNull(conn.prepareCall("some sql"));
-         Assert.assertNotNull(conn.prepareCall("some sql", ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE));
-         Assert.assertNotNull(conn.prepareCall("some sql", ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.HOLD_CURSORS_OVER_COMMIT));
-         Assert.assertNotNull(conn.prepareStatement("some sql", PreparedStatement.NO_GENERATED_KEYS));
-         Assert.assertNotNull(conn.prepareStatement("some sql", new int[3]));
-         Assert.assertNotNull(conn.prepareStatement("some sql", new String[3]));
-         Assert.assertNotNull(conn.prepareStatement("some sql", ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE));
-         Assert.assertNotNull(conn.prepareStatement("some sql", ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.HOLD_CURSORS_OVER_COMMIT));
-         Assert.assertNotNull(conn.toString());
+         assertNotNull(conn.createStatement(ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE));
+         assertNotNull(conn.createStatement(ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.HOLD_CURSORS_OVER_COMMIT));
+         assertNotNull(conn.prepareCall("some sql"));
+         assertNotNull(conn.prepareCall("some sql", ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE));
+         assertNotNull(conn.prepareCall("some sql", ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.HOLD_CURSORS_OVER_COMMIT));
+         assertNotNull(conn.prepareStatement("some sql", PreparedStatement.NO_GENERATED_KEYS));
+         assertNotNull(conn.prepareStatement("some sql", new int[3]));
+         assertNotNull(conn.prepareStatement("some sql", new String[3]));
+         assertNotNull(conn.prepareStatement("some sql", ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE));
+         assertNotNull(conn.prepareStatement("some sql", ResultSet.FETCH_FORWARD, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.HOLD_CURSORS_OVER_COMMIT));
+         assertNotNull(conn.toString());
 
-         Assert.assertTrue(conn.isWrapperFor(Connection.class));
-         Assert.assertTrue(conn.isValid(10));
-         Assert.assertFalse(conn.isClosed());
-         Assert.assertTrue(conn.unwrap(StubConnection.class) instanceof StubConnection);
+         assertTrue(conn.isWrapperFor(Connection.class));
+         assertTrue(conn.isValid(10));
+         assertFalse(conn.isClosed());
+         assertTrue(conn.unwrap(StubConnection.class) instanceof StubConnection);
          try {
             conn.unwrap(TestProxies.class);
-            Assert.fail();
+            fail();
          }
          catch (SQLException e) {
             // pass
@@ -73,7 +78,7 @@ public class TestProxies
    @Test
    public void testStatementProxy() throws SQLException
    {
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(1);
       config.setConnectionTestQuery("VALUES 1");
@@ -85,14 +90,14 @@ public class TestProxies
          PreparedStatement stmt = conn.prepareStatement("some sql");
          stmt.executeQuery();
          stmt.executeQuery("some sql");
-         Assert.assertFalse(stmt.isClosed());
-         Assert.assertNotNull(stmt.getGeneratedKeys());
-         Assert.assertNotNull(stmt.getResultSet());
-         Assert.assertNotNull(stmt.getConnection());
-         Assert.assertTrue(stmt.unwrap(StubStatement.class) instanceof StubStatement);
+         assertFalse(stmt.isClosed());
+         assertNotNull(stmt.getGeneratedKeys());
+         assertNotNull(stmt.getResultSet());
+         assertNotNull(stmt.getConnection());
+         assertTrue(stmt.unwrap(StubStatement.class) instanceof StubStatement);
          try {
             stmt.unwrap(TestProxies.class);
-            Assert.fail();
+            fail();
          }
          catch (SQLException e) {
             // pass
@@ -103,7 +108,7 @@ public class TestProxies
    @Test
    public void testStatementExceptions() throws SQLException
    {
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(1);
       config.setConnectionTimeout(TimeUnit.SECONDS.toMillis(1));
@@ -117,7 +122,7 @@ public class TestProxies
 
          try {
             conn.createStatement();
-            Assert.fail();
+            fail();
          }
          catch (SQLException e) {
             // pass
@@ -125,7 +130,7 @@ public class TestProxies
 
          try {
             conn.createStatement(0, 0);
-            Assert.fail();
+            fail();
          }
          catch (SQLException e) {
             // pass
@@ -133,7 +138,7 @@ public class TestProxies
 
          try {
             conn.createStatement(0, 0, 0);
-            Assert.fail();
+            fail();
          }
          catch (SQLException e) {
             // pass
@@ -141,7 +146,7 @@ public class TestProxies
 
          try {
             conn.prepareCall("");
-            Assert.fail();
+            fail();
          }
          catch (SQLException e) {
             // pass
@@ -149,7 +154,7 @@ public class TestProxies
 
          try {
             conn.prepareCall("", 0, 0);
-            Assert.fail();
+            fail();
          }
          catch (SQLException e) {
             // pass
@@ -157,7 +162,7 @@ public class TestProxies
 
          try {
             conn.prepareCall("", 0, 0, 0);
-            Assert.fail();
+            fail();
          }
          catch (SQLException e) {
             // pass
@@ -165,7 +170,7 @@ public class TestProxies
 
          try {
             conn.prepareStatement("");
-            Assert.fail();
+            fail();
          }
          catch (SQLException e) {
             // pass
@@ -173,7 +178,7 @@ public class TestProxies
 
          try {
             conn.prepareStatement("", 0);
-            Assert.fail();
+            fail();
          }
          catch (SQLException e) {
             // pass
@@ -181,7 +186,7 @@ public class TestProxies
 
          try {
             conn.prepareStatement("", new int[0]);
-            Assert.fail();
+            fail();
          }
          catch (SQLException e) {
             // pass
@@ -189,7 +194,7 @@ public class TestProxies
 
          try {
             conn.prepareStatement("", new String[0]);
-            Assert.fail();
+            fail();
          }
          catch (SQLException e) {
             // pass
@@ -197,7 +202,7 @@ public class TestProxies
 
          try {
             conn.prepareStatement("", 0, 0);
-            Assert.fail();
+            fail();
          }
          catch (SQLException e) {
             // pass
@@ -205,7 +210,7 @@ public class TestProxies
 
          try {
             conn.prepareStatement("", 0, 0, 0);
-            Assert.fail();
+            fail();
          }
          catch (SQLException e) {
             // pass
@@ -216,7 +221,7 @@ public class TestProxies
    @Test
    public void testOtherExceptions() throws SQLException
    {
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(1);
       config.setConnectionTestQuery("VALUES 1");
@@ -229,7 +234,7 @@ public class TestProxies
    
             try {
                conn.setTransactionIsolation(Connection.TRANSACTION_NONE);
-               Assert.fail();
+               fail();
             }
             catch (SQLException e) {
                // pass
@@ -237,7 +242,7 @@ public class TestProxies
    
             try {
                conn.isReadOnly();
-               Assert.fail();
+               fail();
             }
             catch (SQLException e) {
                // pass
@@ -245,7 +250,7 @@ public class TestProxies
    
             try {
                conn.setReadOnly(false);
-               Assert.fail();
+               fail();
             }
             catch (SQLException e) {
                // pass
@@ -253,7 +258,7 @@ public class TestProxies
    
             try {
                conn.setCatalog("");
-               Assert.fail();
+               fail();
             }
             catch (SQLException e) {
                // pass
@@ -261,7 +266,7 @@ public class TestProxies
    
             try {
                conn.setAutoCommit(false);
-               Assert.fail();
+               fail();
             }
             catch (SQLException e) {
                // pass
@@ -269,7 +274,7 @@ public class TestProxies
    
             try {
                conn.clearWarnings();
-               Assert.fail();
+               fail();
             }
             catch (SQLException e) {
                // pass
@@ -277,7 +282,7 @@ public class TestProxies
    
             try {
                conn.isValid(0);
-               Assert.fail();
+               fail();
             }
             catch (SQLException e) {
                // pass
@@ -285,7 +290,7 @@ public class TestProxies
    
             try {
                conn.isWrapperFor(getClass());
-               Assert.fail();
+               fail();
             }
             catch (SQLException e) {
                // pass
@@ -293,7 +298,7 @@ public class TestProxies
    
             try {
                conn.unwrap(getClass());
-               Assert.fail();
+               fail();
             }
             catch (SQLException e) {
                // pass
@@ -301,17 +306,17 @@ public class TestProxies
    
             try {
                conn.close();
-               Assert.fail();
+               fail();
             }
             catch (SQLException e) {
                // pass
             }
    
             try {
-               Assert.assertFalse(conn.isValid(0));
+               assertFalse(conn.isValid(0));
             }
             catch (SQLException e) {
-               Assert.fail();
+               fail();
             }
          }
       }

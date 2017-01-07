@@ -16,6 +16,13 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.pool.TestElf.getPool;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -23,7 +30,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,7 +43,7 @@ public class ExceptionTest
    @Before
    public void setup()
    {
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(2);
       config.setConnectionTestQuery("VALUES 1");
@@ -56,42 +62,42 @@ public class ExceptionTest
    public void testException1() throws SQLException
    {
       try (Connection connection = ds.getConnection()) {
-         Assert.assertNotNull(connection);
+         assertNotNull(connection);
 
          PreparedStatement statement = connection.prepareStatement("SELECT some, thing FROM somewhere WHERE something=?");
-         Assert.assertNotNull(statement);
+         assertNotNull(statement);
 
          ResultSet resultSet = statement.executeQuery();
-         Assert.assertNotNull(resultSet);
+         assertNotNull(resultSet);
 
          try {
             statement.getMaxFieldSize();
-            Assert.fail();
+            fail();
          }
          catch (Exception e) {
-            Assert.assertSame(SQLException.class, e.getClass());
+            assertSame(SQLException.class, e.getClass());
          }
       }
 
-      HikariPool pool = TestElf.getPool(ds);
-      Assert.assertTrue("Total (3) connections not as expected", pool.getTotalConnections() >= 0);
-      Assert.assertTrue("Idle (3) connections not as expected", pool.getIdleConnections() >= 0);
+      HikariPool pool = getPool(ds);
+      assertTrue("Total (3) connections not as expected", pool.getTotalConnections() >= 0);
+      assertTrue("Idle (3) connections not as expected", pool.getIdleConnections() >= 0);
    }
 
    @Test
    public void testUseAfterStatementClose() throws SQLException
    {
       Connection connection = ds.getConnection();
-      Assert.assertNotNull(connection);
+      assertNotNull(connection);
 
       try (Statement statement = connection.prepareStatement("SELECT some, thing FROM somewhere WHERE something=?")) {
          statement.close();
          statement.getMoreResults();
 
-         Assert.fail();
+         fail();
       }
       catch (SQLException e) {
-         Assert.assertSame("Connection is closed", e.getMessage());
+         assertSame("Connection is closed", e.getMessage());
       }
    }
 
@@ -99,14 +105,14 @@ public class ExceptionTest
    public void testUseAfterClose() throws SQLException
    {
       try (Connection connection = ds.getConnection()) {
-         Assert.assertNotNull(connection);
+         assertNotNull(connection);
          connection.close();
 
          try (Statement statement = connection.prepareStatement("SELECT some, thing FROM somewhere WHERE something=?")) {
-            Assert.fail();
+            fail();
          }
          catch (SQLException e) {
-            Assert.assertSame("Connection is closed", e.getMessage());
+            assertSame("Connection is closed", e.getMessage());
          }
       }
    }

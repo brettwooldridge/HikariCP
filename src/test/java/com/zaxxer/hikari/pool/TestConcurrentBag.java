@@ -16,13 +16,20 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.pool.TestElf.getPool;
+import static com.zaxxer.hikari.pool.TestElf.setSlf4jTargetStream;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -43,7 +50,7 @@ public class TestConcurrentBag
    @BeforeClass
    public static void setup()
    {
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(2);
       config.setInitializationFailTimeout(0);
@@ -51,7 +58,7 @@ public class TestConcurrentBag
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       ds = new HikariDataSource(config);
-      pool = TestElf.getPool(ds);
+      pool = getPool(ds);
    }
 
    @AfterClass
@@ -71,7 +78,7 @@ public class TestConcurrentBag
                }
             })
           ) {
-         Assert.assertEquals(0, bag.values(8).size());
+         assertEquals(0, bag.values(8).size());
    
          PoolEntry reserved = pool.newPoolEntry();
          bag.add(reserved);
@@ -79,7 +86,7 @@ public class TestConcurrentBag
    
          PoolEntry inuse = pool.newPoolEntry();
          bag.add(inuse);
-         bag.borrow(2, TimeUnit.MILLISECONDS); // in use
+         bag.borrow(2, MILLISECONDS); // in use
    
          PoolEntry notinuse = pool.newPoolEntry();
          bag.add(notinuse); // not in use
@@ -88,31 +95,31 @@ public class TestConcurrentBag
    
          ByteArrayOutputStream baos = new ByteArrayOutputStream();
          PrintStream ps = new PrintStream(baos, true);
-         TestElf.setSlf4jTargetStream(ConcurrentBag.class, ps);
+         setSlf4jTargetStream(ConcurrentBag.class, ps);
    
          bag.requite(reserved);
    
          bag.remove(notinuse);
-         Assert.assertTrue(new String(baos.toByteArray()).contains("not borrowed or reserved"));
+         assertTrue(new String(baos.toByteArray()).contains("not borrowed or reserved"));
    
          bag.unreserve(notinuse);
-         Assert.assertTrue(new String(baos.toByteArray()).contains("was not reserved"));
+         assertTrue(new String(baos.toByteArray()).contains("was not reserved"));
    
          bag.remove(inuse);
          bag.remove(inuse);
-         Assert.assertTrue(new String(baos.toByteArray()).contains("not borrowed or reserved"));
+         assertTrue(new String(baos.toByteArray()).contains("not borrowed or reserved"));
    
          bag.close();
          try {
             PoolEntry bagEntry = pool.newPoolEntry();
             bag.add(bagEntry);
-            Assert.assertNotEquals(bagEntry, bag.borrow(100, TimeUnit.MILLISECONDS));
+            assertNotEquals(bagEntry, bag.borrow(100, MILLISECONDS));
          }
          catch (IllegalStateException e) {
-            Assert.assertTrue(new String(baos.toByteArray()).contains("ignoring add()"));
+            assertTrue(new String(baos.toByteArray()).contains("ignoring add()"));
          }
    
-         Assert.assertNotNull(notinuse.toString());
+         assertNotNull(notinuse.toString());
       }
    }
 }

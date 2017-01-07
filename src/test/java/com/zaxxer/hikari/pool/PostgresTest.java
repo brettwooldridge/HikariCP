@@ -16,6 +16,13 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.pool.TestElf.getPool;
+import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,7 +31,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
 import org.junit.Before;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -43,7 +49,7 @@ public class PostgresTest
    //@Test
    public void testCase1() throws Exception
    {
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(3);
       config.setMaximumPoolSize(10);
       config.setConnectionTimeout(3000);
@@ -60,7 +66,7 @@ public class PostgresTest
                public void run() {
                   try (Connection connection = ds.getConnection()) {
                      System.err.println("Obtained connection " + connection);
-                     UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis((long)(10 + (Math.random() * 20))));
+                     quietlySleep(TimeUnit.SECONDS.toMillis((long)(10 + (Math.random() * 20))));
                   }
                   catch (SQLException e) {
                      e.printStackTrace();
@@ -70,15 +76,15 @@ public class PostgresTest
             t.setDaemon(true);
             t.start();
 
-            UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis((long)((Math.random() * 20))));
-         } while (ClockSource.INSTANCE.elapsedMillis(start) < TimeUnit.MINUTES.toMillis(15));
+            quietlySleep(TimeUnit.SECONDS.toMillis((long)((Math.random() * 20))));
+         } while (ClockSource.INSTANCE.elapsedMillis(start) < MINUTES.toMillis(15));
       }
    }
 
    //@Test
    public void testCase2() throws Exception
    {
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(3);
       config.setMaximumPoolSize(10);
       config.setConnectionTimeout(1000);
@@ -93,24 +99,24 @@ public class PostgresTest
             System.err.println("\nGot a connection, and released it.  Now, enable the firewall.");
          }
 
-         TestElf.getPool(ds).logPoolState();
-         UtilityElf.quietlySleep(5000L);
+         getPool(ds).logPoolState();
+         quietlySleep(5000L);
 
          System.err.println("\nNow attempting another getConnection(), expecting a timeout...");
 
          long start = ClockSource.INSTANCE.currentTime();
          try (Connection conn = ds.getConnection()) {
             System.err.println("\nOpps, got a connection.  Did you enable the firewall? " + conn);
-            Assert.fail("Opps, got a connection.  Did you enable the firewall?");
+            fail("Opps, got a connection.  Did you enable the firewall?");
          }
          catch (SQLException e)
          {
-            Assert.assertTrue("Timeout less than expected " + ClockSource.INSTANCE.elapsedMillis(start) + "ms", ClockSource.INSTANCE.elapsedMillis(start) > 5000);
+            assertTrue("Timeout less than expected " + ClockSource.INSTANCE.elapsedMillis(start) + "ms", ClockSource.INSTANCE.elapsedMillis(start) > 5000);
          }
 
          System.err.println("\nOk, so far so good.  Now, disable the firewall again.  Attempting connection in 5 seconds...");
-         UtilityElf.quietlySleep(5000L);
-         TestElf.getPool(ds).logPoolState();
+         quietlySleep(5000L);
+         getPool(ds).logPoolState();
 
          try (Connection conn = ds.getConnection()) {
             System.err.println("\nGot a connection, and released it.");
@@ -123,7 +129,7 @@ public class PostgresTest
    //@Test
    public void testCase3() throws Exception
    {
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(3);
       config.setMaximumPoolSize(10);
       config.setConnectionTimeout(1000);
@@ -146,19 +152,19 @@ public class PostgresTest
             }.start();
          }
 
-         UtilityElf.quietlySleep(5000L);
+         quietlySleep(5000L);
 
          System.err.println("Now, bring the DB online.  Checking pool in 15 seconds.");
-         UtilityElf.quietlySleep(15000L);
+         quietlySleep(15000L);
 
-         TestElf.getPool(ds).logPoolState();
+         getPool(ds).logPoolState();
       }
    }
 
    // @Test
    public void testCase4() throws Exception
    {
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(15);
       config.setConnectionTimeout(10000);

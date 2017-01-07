@@ -16,6 +16,12 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.util.Properties;
@@ -23,7 +29,6 @@ import java.util.Set;
 
 import javax.sql.DataSource;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -39,8 +44,8 @@ public class TestPropertySetter
       HikariConfig config = new HikariConfig(propfile1);
       config.validate();
 
-      Assert.assertEquals(5, config.getMinimumIdle());
-      Assert.assertEquals("SELECT 1", config.getConnectionTestQuery());
+      assertEquals(5, config.getMinimumIdle());
+      assertEquals("SELECT 1", config.getConnectionTestQuery());
    }
 
    @Test
@@ -59,7 +64,7 @@ public class TestPropertySetter
    @Test
    public void testObjectProperty() throws Exception
    {
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
       PrintWriter writer = new PrintWriter(new ByteArrayOutputStream());
       config.addDataSourceProperty("logWriter", writer);
@@ -68,7 +73,7 @@ public class TestPropertySetter
       DataSource dataSource = (DataSource) clazz.newInstance();
       PropertyElf.setTargetFromProperties(dataSource, config.getDataSourceProperties());
 
-      Assert.assertSame(PrintWriter.class, dataSource.getLogWriter().getClass());
+      assertSame(PrintWriter.class, dataSource.getLogWriter().getClass());
    }
 
    @Test
@@ -88,7 +93,7 @@ public class TestPropertySetter
    public void testGetPropertyNames() throws Exception
    {
       Set<String> propertyNames = PropertyElf.getPropertyNames(HikariConfig.class);
-      Assert.assertTrue(propertyNames.contains("dataSourceClassName"));
+      assertTrue(propertyNames.contains("dataSourceClassName"));
    }
 
    @Test
@@ -98,7 +103,7 @@ public class TestPropertySetter
          Properties props = new Properties();
          props.put("what", "happened");
          PropertyElf.setTargetFromProperties(new HikariConfig(), props);
-         Assert.fail();
+         fail();
       }
       catch (RuntimeException e) {
       }

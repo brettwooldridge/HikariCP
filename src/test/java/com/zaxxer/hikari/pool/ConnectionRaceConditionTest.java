@@ -16,6 +16,10 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.pool.TestElf.setSlf4jLogLevel;
+import static org.junit.Assert.fail;
+
 import java.sql.Connection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -25,7 +29,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.logging.log4j.Level;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
@@ -44,14 +47,14 @@ public class ConnectionRaceConditionTest
    @Test
    public void testRaceCondition() throws Exception
    {
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(10);
       config.setInitializationFailTimeout(Long.MAX_VALUE);
       config.setConnectionTimeout(2500);
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      TestElf.setSlf4jLogLevel(ConcurrentBag.class, Level.INFO);
+      setSlf4jLogLevel(ConcurrentBag.class, Level.INFO);
 
       final AtomicReference<Exception> ref = new AtomicReference<>(null);
 
@@ -84,7 +87,7 @@ public class ConnectionRaceConditionTest
 
          if (ref.get() != null) {
             LoggerFactory.getLogger(ConnectionRaceConditionTest.class).error("Task failed", ref.get());
-            Assert.fail("Task failed");
+            fail("Task failed");
          }
       }
       catch (Exception e) {
@@ -97,7 +100,7 @@ public class ConnectionRaceConditionTest
    {
       System.getProperties().remove("com.zaxxer.hikari.housekeeping.periodMs");
 
-      TestElf.setSlf4jLogLevel(HikariPool.class, Level.WARN);
-      TestElf.setSlf4jLogLevel(ConcurrentBag.class, Level.WARN);
+      setSlf4jLogLevel(HikariPool.class, Level.WARN);
+      setSlf4jLogLevel(ConcurrentBag.class, Level.WARN);
    }
 }

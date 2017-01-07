@@ -16,6 +16,7 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.pool.TestElf.getPool;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static java.util.concurrent.Executors.newFixedThreadPool;
@@ -97,7 +98,7 @@ public class ConnectionPoolSizeVsThreadsTest {
                   minIdle, maxPoolSize, threadCount, workTimeMs, restTimeMs, connectionAcquisitionTimeMs, iterations, postTestTimeMs);
 
       final ClockSource clockSource = ClockSource.INSTANCE;
-      final HikariConfig config = new HikariConfig();
+      final HikariConfig config = newHikariConfig();
       config.setMinimumIdle(minIdle);
       config.setMaximumPoolSize(maxPoolSize);
       config.setInitializationFailTimeout(Long.MAX_VALUE);
