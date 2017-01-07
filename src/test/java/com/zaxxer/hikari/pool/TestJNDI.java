@@ -15,13 +15,17 @@
  */
 package com.zaxxer.hikari.pool;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import javax.naming.Context;
 import javax.naming.Name;
 import javax.naming.NamingException;
 import javax.naming.RefAddr;
 import javax.naming.Reference;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.osjava.sj.jndi.AbstractContext;
 
@@ -47,8 +51,8 @@ public class TestJNDI
       Context nameCtx = new BogusContext();
 
       try (HikariDataSource ds = (HikariDataSource) jndi.getObjectInstance(ref, null, nameCtx, null)) {
-         Assert.assertNotNull(ds);
-         Assert.assertEquals("foo", ds.getUsername());
+         assertNotNull(ds);
+         assertEquals("foo", ds.getUsername());
       }
    }
 
@@ -69,8 +73,8 @@ public class TestJNDI
       Context nameCtx = new BogusContext2();
 
       try (HikariDataSource ds = (HikariDataSource) jndi.getObjectInstance(ref, null, nameCtx, null)) {
-         Assert.assertNotNull(ds);
-         Assert.assertEquals("foo", ds.getUsername());
+         assertNotNull(ds);
+         assertEquals("foo", ds.getUsername());
       }
    }
 
@@ -83,10 +87,10 @@ public class TestJNDI
       ref.add(new BogusRef("dataSourceJNDI", "java:comp/env/HikariDS"));
       try {
          jndi.getObjectInstance(ref, null, null, null);
-         Assert.fail();
+         fail();
       }
       catch (RuntimeException e) {
-         Assert.assertTrue(e.getMessage().contains("JNDI context does not found"));
+         assertTrue(e.getMessage().contains("JNDI context does not found"));
       }
    }
 
@@ -101,7 +105,9 @@ public class TestJNDI
       @Override
       public Object lookup(String name) throws NamingException
       {
-         return new HikariDataSource();
+         final HikariDataSource ds = new HikariDataSource();
+         ds.setPoolName("TestJNDI");
+         return ds;
       }
    }
 

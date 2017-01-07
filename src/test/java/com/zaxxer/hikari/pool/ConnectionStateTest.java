@@ -16,12 +16,18 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.pool.TestElf.newHikariDataSource;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -33,7 +39,7 @@ public class ConnectionStateTest
    @Test
    public void testAutoCommit() throws SQLException
    {
-      try (HikariDataSource ds = new HikariDataSource()) {
+      try (HikariDataSource ds = newHikariDataSource()) {
          ds.setAutoCommit(true);
          ds.setMinimumIdle(1);
          ds.setMaximumPoolSize(1);
@@ -49,7 +55,7 @@ public class ConnectionStateTest
             connection.setAutoCommit(false);
             connection.close();
 
-            Assert.assertTrue(unwrap.getAutoCommit());
+            assertTrue(unwrap.getAutoCommit());
          }
       }
    }
@@ -57,7 +63,7 @@ public class ConnectionStateTest
    @Test
    public void testTransactionIsolation() throws SQLException
    {
-      try (HikariDataSource ds = new HikariDataSource()) {
+      try (HikariDataSource ds = newHikariDataSource()) {
          ds.setTransactionIsolation("TRANSACTION_READ_COMMITTED");
          ds.setMinimumIdle(1);
          ds.setMaximumPoolSize(1);
@@ -69,7 +75,7 @@ public class ConnectionStateTest
             connection.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
             connection.close();
 
-            Assert.assertEquals(Connection.TRANSACTION_READ_COMMITTED, unwrap.getTransactionIsolation());
+            assertEquals(Connection.TRANSACTION_READ_COMMITTED, unwrap.getTransactionIsolation());
          }
       }
    }
@@ -77,19 +83,19 @@ public class ConnectionStateTest
    @Test
    public void testIsolation() throws Exception
    {
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
       config.setTransactionIsolation("TRANSACTION_REPEATABLE_READ");
       config.validate();
 
       int transactionIsolation = UtilityElf.getTransactionIsolation(config.getTransactionIsolation());
-      Assert.assertSame(Connection.TRANSACTION_REPEATABLE_READ, transactionIsolation);
+      assertSame(Connection.TRANSACTION_REPEATABLE_READ, transactionIsolation);
    }
 
    @Test
    public void testReadOnly() throws Exception
    {
-      try (HikariDataSource ds = new HikariDataSource()) {
+      try (HikariDataSource ds = newHikariDataSource()) {
          ds.setCatalog("test");
          ds.setMinimumIdle(1);
          ds.setMaximumPoolSize(1);
@@ -101,7 +107,7 @@ public class ConnectionStateTest
             connection.setReadOnly(true);
             connection.close();
 
-            Assert.assertFalse(unwrap.isReadOnly());
+            assertFalse(unwrap.isReadOnly());
          }
       }
    }
@@ -109,7 +115,7 @@ public class ConnectionStateTest
    @Test
    public void testCatalog() throws SQLException
    {
-      try (HikariDataSource ds = new HikariDataSource()) {
+      try (HikariDataSource ds = newHikariDataSource()) {
          ds.setCatalog("test");
          ds.setMinimumIdle(1);
          ds.setMaximumPoolSize(1);
@@ -121,7 +127,7 @@ public class ConnectionStateTest
             connection.setCatalog("other");
             connection.close();
 
-            Assert.assertEquals("test", unwrap.getCatalog());
+            assertEquals("test", unwrap.getCatalog());
          }
       }
    }
@@ -129,7 +135,7 @@ public class ConnectionStateTest
    @Test
    public void testCommitTracking() throws SQLException
    {
-      try (HikariDataSource ds = new HikariDataSource()) {
+      try (HikariDataSource ds = newHikariDataSource()) {
          ds.setAutoCommit(false);
          ds.setMinimumIdle(1);
          ds.setMaximumPoolSize(1);
@@ -139,25 +145,25 @@ public class ConnectionStateTest
          try (Connection connection = ds.getConnection()) {
             Statement statement = connection.createStatement();
             statement.execute("SELECT something");
-            Assert.assertTrue(TestElf.getConnectionCommitDirtyState(connection));
+            assertTrue(TestElf.getConnectionCommitDirtyState(connection));
 
             connection.commit();
-            Assert.assertFalse(TestElf.getConnectionCommitDirtyState(connection));
+            assertFalse(TestElf.getConnectionCommitDirtyState(connection));
 
             statement.execute("SELECT something", Statement.NO_GENERATED_KEYS);
-            Assert.assertTrue(TestElf.getConnectionCommitDirtyState(connection));
+            assertTrue(TestElf.getConnectionCommitDirtyState(connection));
 
             connection.rollback();
-            Assert.assertFalse(TestElf.getConnectionCommitDirtyState(connection));
+            assertFalse(TestElf.getConnectionCommitDirtyState(connection));
 
             ResultSet resultSet = statement.executeQuery("SELECT something");
-            Assert.assertTrue(TestElf.getConnectionCommitDirtyState(connection));
+            assertTrue(TestElf.getConnectionCommitDirtyState(connection));
 
             connection.rollback(null);
-            Assert.assertFalse(TestElf.getConnectionCommitDirtyState(connection));
+            assertFalse(TestElf.getConnectionCommitDirtyState(connection));
 
             resultSet.updateRow();
-            Assert.assertTrue(TestElf.getConnectionCommitDirtyState(connection));
+            assertTrue(TestElf.getConnectionCommitDirtyState(connection));
          }
       }
    }

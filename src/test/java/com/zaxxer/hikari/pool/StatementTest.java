@@ -16,12 +16,16 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.pool.TestElf.getPool;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,7 +39,7 @@ public class StatementTest
    @Before
    public void setup()
    {
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(2);
       config.setConnectionTestQuery("VALUES 1");
@@ -55,22 +59,22 @@ public class StatementTest
    {
       ds.getConnection().close();
 
-      HikariPool pool = TestElf.getPool(ds);
-      Assert.assertTrue("Total connections not as expected", pool.getTotalConnections() >= 1);
-      Assert.assertTrue("Idle connections not as expected", pool.getIdleConnections() >= 1);
+      HikariPool pool = getPool(ds);
+      assertTrue("Total connections not as expected", pool.getTotalConnections() >= 1);
+      assertTrue("Idle connections not as expected", pool.getIdleConnections() >= 1);
 
       try (Connection connection = ds.getConnection()) {
-         Assert.assertNotNull(connection);
+         assertNotNull(connection);
 
-         Assert.assertTrue("Total connections not as expected", pool.getTotalConnections() >= 1);
-         Assert.assertTrue("Idle connections not as expected", pool.getIdleConnections() >= 0);
+         assertTrue("Total connections not as expected", pool.getTotalConnections() >= 1);
+         assertTrue("Idle connections not as expected", pool.getIdleConnections() >= 0);
 
          Statement statement = connection.createStatement();
-         Assert.assertNotNull(statement);
+         assertNotNull(statement);
 
          connection.close();
 
-         Assert.assertTrue(statement.isClosed());
+         assertTrue(statement.isClosed());
       }
    }
 
@@ -78,17 +82,17 @@ public class StatementTest
    public void testAutoStatementClose() throws SQLException
    {
       try (Connection connection = ds.getConnection()) {
-         Assert.assertNotNull(connection);
+         assertNotNull(connection);
 
          Statement statement1 = connection.createStatement();
-         Assert.assertNotNull(statement1);
+         assertNotNull(statement1);
          Statement statement2 = connection.createStatement();
-         Assert.assertNotNull(statement2);
+         assertNotNull(statement2);
 
          connection.close();
 
-         Assert.assertTrue(statement1.isClosed());
-         Assert.assertTrue(statement2.isClosed());
+         assertTrue(statement1.isClosed());
+         assertTrue(statement2.isClosed());
       }
    }
 

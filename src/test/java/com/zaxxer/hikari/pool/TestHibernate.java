@@ -16,11 +16,14 @@
 
 package com.zaxxer.hikari.pool;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
 import java.sql.Connection;
 import java.util.Properties;
 
 import org.hibernate.service.UnknownUnwrapTypeException;
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.zaxxer.hikari.hibernate.HikariConnectionProvider;
@@ -39,12 +42,12 @@ public class TestHibernate
       Connection connection = provider.getConnection();
       provider.closeConnection(connection);
 
-      Assert.assertNotNull(provider.unwrap(HikariConnectionProvider.class));
-      Assert.assertFalse(provider.supportsAggressiveRelease());
+      assertNotNull(provider.unwrap(HikariConnectionProvider.class));
+      assertFalse(provider.supportsAggressiveRelease());
 
       try {
          provider.unwrap(TestHibernate.class);
-         Assert.fail("Expected exception");
+         fail("Expected exception");
       }
       catch (UnknownUnwrapTypeException e) {
       }

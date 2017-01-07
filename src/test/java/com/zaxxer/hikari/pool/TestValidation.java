@@ -15,11 +15,16 @@
  */
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.pool.TestElf.setSlf4jTargetStream;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -33,9 +38,9 @@ public class TestValidation
    public void validateLoadProperties()
    {
       System.setProperty("hikaricp.configurationFile", "/propfile1.properties");
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       System.clearProperty("hikaricp.configurationFile");
-      Assert.assertEquals(5, config.getMinimumIdle());
+      assertEquals(5, config.getMinimumIdle());
    }
 
    @Test
@@ -46,7 +51,7 @@ public class TestValidation
          config.validate();
       }
       catch (IllegalArgumentException ise) {
-         Assert.assertTrue(ise.getMessage().contains("property file"));
+         assertTrue(ise.getMessage().contains("property file"));
       }
    }
 
@@ -54,12 +59,12 @@ public class TestValidation
    public void validateMissingDS()
    {
       try {
-         HikariConfig config = new HikariConfig();
+         HikariConfig config = newHikariConfig();
          config.validate();
-         Assert.fail();
+         fail();
       }
       catch (IllegalArgumentException ise) {
-         Assert.assertTrue(ise.getMessage().contains("dataSource or dataSourceClassName or jdbcUrl is required."));
+         assertTrue(ise.getMessage().contains("dataSource or dataSourceClassName or jdbcUrl is required."));
       }
    }
 
@@ -67,13 +72,13 @@ public class TestValidation
    public void validateMissingUrl()
    {
       try {
-         HikariConfig config = new HikariConfig();
+         HikariConfig config = newHikariConfig();
          config.setDriverClassName("com.zaxxer.hikari.mocks.StubDriver");
          config.validate();
-         Assert.fail();
+         fail();
       }
       catch (IllegalArgumentException ise) {
-         Assert.assertTrue(ise.getMessage().contains("jdbcUrl is required with driverClassName"));
+         assertTrue(ise.getMessage().contains("jdbcUrl is required with driverClassName"));
       }
    }
 
@@ -81,13 +86,13 @@ public class TestValidation
    public void validateDriverAndUrl()
    {
       try {
-         HikariConfig config = new HikariConfig();
+         HikariConfig config = newHikariConfig();
          config.setDriverClassName("com.zaxxer.hikari.mocks.StubDriver");
          config.setJdbcUrl("jdbc:stub");
          config.validate();
       }
       catch (Throwable t) {
-          Assert.fail(t.getMessage());
+          fail(t.getMessage());
       }
    }
 
@@ -95,13 +100,13 @@ public class TestValidation
    public void validateBadDriver()
    {
       try {
-         HikariConfig config = new HikariConfig();
+         HikariConfig config = newHikariConfig();
          config.setDriverClassName("invalid");
          config.validate();
-         Assert.fail();
+         fail();
       }
       catch (RuntimeException ise) {
-         Assert.assertTrue(ise.getMessage().contains("class of driverClassName "));
+         assertTrue(ise.getMessage().contains("class of driverClassName "));
       }
    }
 
@@ -109,12 +114,12 @@ public class TestValidation
    public void validateInvalidConnectionTimeout()
    {
       try {
-         HikariConfig config = new HikariConfig();
+         HikariConfig config = newHikariConfig();
          config.setConnectionTimeout(10L);
-         Assert.fail();
+         fail();
       }
       catch (IllegalArgumentException ise) {
-         Assert.assertTrue(ise.getMessage().contains("connectionTimeout cannot be less than 250ms"));
+         assertTrue(ise.getMessage().contains("connectionTimeout cannot be less than 250ms"));
       }
    }
 
@@ -122,12 +127,12 @@ public class TestValidation
    public void validateInvalidValidationTimeout()
    {
       try {
-         HikariConfig config = new HikariConfig();
+         HikariConfig config = newHikariConfig();
          config.setValidationTimeout(10L);
-         Assert.fail();
+         fail();
       }
       catch (IllegalArgumentException ise) {
-         Assert.assertTrue(ise.getMessage().contains("validationTimeout cannot be less than 250ms"));
+         assertTrue(ise.getMessage().contains("validationTimeout cannot be less than 250ms"));
       }
    }
 
@@ -135,12 +140,12 @@ public class TestValidation
    public void validateInvalidIdleTimeout()
    {
       try {
-         HikariConfig config = new HikariConfig();
+         HikariConfig config = newHikariConfig();
          config.setIdleTimeout(-1L);
-         Assert.fail("negative idle timeout accepted");
+         fail("negative idle timeout accepted");
       }
       catch (IllegalArgumentException ise) {
-         Assert.assertTrue(ise.getMessage().contains("idleTimeout cannot be negative"));
+         assertTrue(ise.getMessage().contains("idleTimeout cannot be negative"));
       }
    }
 
@@ -149,13 +154,13 @@ public class TestValidation
    {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       PrintStream ps = new PrintStream(baos, true);
-      TestElf.setSlf4jTargetStream(HikariConfig.class, ps);
+      setSlf4jTargetStream(HikariConfig.class, ps);
 
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
       config.setIdleTimeout(TimeUnit.SECONDS.toMillis(5));
       config.validate();
-      Assert.assertTrue(new String(baos.toByteArray()).contains("less than 10000ms"));
+      assertTrue(new String(baos.toByteArray()).contains("less than 10000ms"));
    }
 
    @Test
@@ -163,28 +168,28 @@ public class TestValidation
    {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       PrintStream ps = new PrintStream(baos, true);
-      TestElf.setSlf4jTargetStream(HikariConfig.class, ps);
+      setSlf4jTargetStream(HikariConfig.class, ps);
 
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
       config.setMaxLifetime(TimeUnit.MINUTES.toMillis(2));
       config.setIdleTimeout(TimeUnit.MINUTES.toMillis(3));
       config.validate();
 
       String s = new String(baos.toByteArray());
-      Assert.assertTrue("idleTimeout is close to or more than maxLifetime, disabling it." + s + "*", s.contains("is close to or more than maxLifetime"));
+      assertTrue("idleTimeout is close to or more than maxLifetime, disabling it." + s + "*", s.contains("is close to or more than maxLifetime"));
    }
 
    @Test
    public void validateInvalidMinIdle()
    {
       try {
-         HikariConfig config = new HikariConfig();
+         HikariConfig config = newHikariConfig();
          config.setMinimumIdle(-1);
-         Assert.fail();
+         fail();
       }
       catch (IllegalArgumentException ise) {
-         Assert.assertTrue(ise.getMessage().contains("minimumIdle cannot be negative"));
+         assertTrue(ise.getMessage().contains("minimumIdle cannot be negative"));
       }
    }
 
@@ -192,12 +197,12 @@ public class TestValidation
    public void validateInvalidMaxPoolSize()
    {
       try {
-         HikariConfig config = new HikariConfig();
+         HikariConfig config = newHikariConfig();
          config.setMaximumPoolSize(0);
-         Assert.fail();
+         fail();
       }
       catch (IllegalArgumentException ise) {
-         Assert.assertTrue(ise.getMessage().contains("maxPoolSize cannot be less than 1"));
+         assertTrue(ise.getMessage().contains("maxPoolSize cannot be less than 1"));
       }
    }
 
@@ -205,13 +210,13 @@ public class TestValidation
    public void validateInvalidLifetime()
    {
       try {
-         HikariConfig config = new HikariConfig();
+         HikariConfig config = newHikariConfig();
          config.setConnectionTimeout(Integer.MAX_VALUE);
          config.setIdleTimeout(1000L);
          config.setMaxLifetime(-1L);
          config.setLeakDetectionThreshold(1000L);
          config.validate();
-         Assert.fail();
+         fail();
       }
       catch (IllegalArgumentException ise) {
          // pass
@@ -222,10 +227,10 @@ public class TestValidation
    public void validateInvalidLeakDetection()
    {
       try {
-         HikariConfig config = new HikariConfig();
+         HikariConfig config = newHikariConfig();
          config.setLeakDetectionThreshold(1000L);
          config.validate();
-         Assert.fail();
+         fail();
       }
       catch (IllegalArgumentException ise) {
       // pass
@@ -236,10 +241,10 @@ public class TestValidation
    public void validateZeroConnectionTimeout()
    {
       try {
-         HikariConfig config = new HikariConfig();
+         HikariConfig config = newHikariConfig();
          config.setConnectionTimeout(0);
          config.validate();
-         Assert.assertEquals(Integer.MAX_VALUE, config.getConnectionTimeout());
+         assertEquals(Integer.MAX_VALUE, config.getConnectionTimeout());
       }
       catch (IllegalArgumentException ise) {
          // pass

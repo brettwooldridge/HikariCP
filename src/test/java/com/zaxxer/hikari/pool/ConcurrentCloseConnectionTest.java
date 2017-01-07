@@ -16,10 +16,8 @@
 
 package com.zaxxer.hikari.pool;
 
-import com.zaxxer.hikari.HikariConfig;
-import org.junit.Test;
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 
-import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
@@ -29,6 +27,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.junit.Test;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
 /**
  * @author Matthew Tambara (matthew.tambara@liferay.com)
  */
@@ -37,7 +40,7 @@ public class ConcurrentCloseConnectionTest
    @Test
    public void testConcurrentClose() throws Exception
    {
-	  HikariConfig config = new HikariConfig();
+	  HikariConfig config = newHikariConfig();
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
 	  try (HikariDataSource ds = new HikariDataSource(config);

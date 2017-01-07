@@ -15,6 +15,8 @@
  */
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+
 import java.sql.SQLException;
 
 import org.junit.Test;
@@ -27,7 +29,7 @@ public class TestMBean
     @Test
     public void testMBeanRegistration() throws SQLException
     {
-        HikariConfig config = new HikariConfig();
+        HikariConfig config = newHikariConfig();
         config.setMinimumIdle(0);
         config.setMaximumPoolSize(1);
         config.setRegisterMbeans(true);

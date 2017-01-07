@@ -16,18 +16,21 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static org.junit.Assert.assertEquals;
+
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.util.UtilityElf;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 
 /**
  * @author Martin Stříž (striz@raynet.cz)
@@ -50,7 +53,7 @@ public class HouseKeeperCleanupTest
    @Test
    public void testHouseKeeperCleanupWithCustomExecutor() throws Exception
    {
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(10);
       config.setInitializationFailTimeout(Long.MAX_VALUE);
@@ -58,17 +61,17 @@ public class HouseKeeperCleanupTest
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
       config.setScheduledExecutorService(executor);
 
-      HikariConfig config2 = new HikariConfig();
+      HikariConfig config2 = newHikariConfig();
       config.copyState(config2);
 
       try (
          final HikariDataSource ds1 = new HikariDataSource(config);
          final HikariDataSource ds2 = new HikariDataSource(config2)
       ) {
-         Assert.assertEquals("Scheduled tasks count not as expected, ", 2, executor.getQueue().size());
+         assertEquals("Scheduled tasks count not as expected, ", 2, executor.getQueue().size());
       }
 
-      Assert.assertEquals("Scheduled tasks count not as expected, ", 0, executor.getQueue().size());
+      assertEquals("Scheduled tasks count not as expected, ", 0, executor.getQueue().size());
    }
 
    @After

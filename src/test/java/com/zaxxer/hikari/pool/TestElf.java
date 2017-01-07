@@ -130,6 +130,34 @@ public final class TestElf
       }
    }
 
+   public static HikariConfig newHikariConfig()
+   {
+      final StackTraceElement callerStackTrace = Thread.currentThread().getStackTrace()[2];
+
+      String poolName = callerStackTrace.getMethodName();
+      if ("setup".equals(poolName)) {
+         poolName = callerStackTrace.getClassName();
+      }
+
+      final HikariConfig config = new HikariConfig();
+      config.setPoolName(poolName);
+      return config;
+   }
+
+   public static HikariDataSource newHikariDataSource()
+   {
+      final StackTraceElement callerStackTrace = Thread.currentThread().getStackTrace()[2];
+
+      String poolName = callerStackTrace.getMethodName();
+      if ("setup".equals(poolName)) {
+         poolName = callerStackTrace.getClassName();
+      }
+
+      final HikariDataSource ds = new HikariDataSource();
+      ds.setPoolName(poolName);
+      return ds;
+   }
+
    private static class StringAppender extends AbstractAppender
    {
       private PrintStream stream;

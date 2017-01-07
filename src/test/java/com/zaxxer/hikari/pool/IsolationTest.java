@@ -16,10 +16,13 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.TestElf.newHikariDataSource;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.zaxxer.hikari.HikariDataSource;
@@ -29,7 +32,7 @@ public class IsolationTest
    @Test
    public void testIsolation() throws SQLException
    {
-      try (HikariDataSource ds = new HikariDataSource()) {
+      try (HikariDataSource ds = newHikariDataSource()) {
          ds.setMinimumIdle(1);
          ds.setMaximumPoolSize(1);
          ds.setIsolateInternalQueries(true);
@@ -41,8 +44,8 @@ public class IsolationTest
             try (Connection connection2 = ds.getConnection()) {
                connection2.close();
 
-               Assert.assertNotSame(connection, connection2);
-               Assert.assertSame(connection.unwrap(Connection.class), connection2.unwrap(Connection.class));
+               assertNotSame(connection, connection2);
+               assertSame(connection.unwrap(Connection.class), connection2.unwrap(Connection.class));
             }
          }
       }
@@ -51,7 +54,7 @@ public class IsolationTest
    @Test
    public void testNonIsolation() throws SQLException
    {
-      try (HikariDataSource ds = new HikariDataSource()) {
+      try (HikariDataSource ds = newHikariDataSource()) {
          ds.setMinimumIdle(1);
          ds.setMaximumPoolSize(1);
          ds.setIsolateInternalQueries(false);
@@ -63,7 +66,7 @@ public class IsolationTest
             try (Connection connection2 = ds.getConnection()) {
                connection2.close();
 
-               Assert.assertSame(connection.unwrap(Connection.class), connection2.unwrap(Connection.class));
+               assertSame(connection.unwrap(Connection.class), connection2.unwrap(Connection.class));
             }
          }
       }

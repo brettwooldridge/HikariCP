@@ -16,11 +16,19 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.pool.TestElf.getPool;
+import static com.zaxxer.hikari.pool.TestElf.setSlf4jLogLevel;
+import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.concurrent.TimeUnit;
 
+import org.apache.logging.log4j.Level;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -31,7 +39,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.UtilityElf;
-import org.apache.logging.log4j.Level;
 
 /**
  * @author Brett Wooldridge
@@ -41,16 +48,16 @@ public class ShutdownTest
    @Before
    public void beforeTest()
    {
-      TestElf.setSlf4jLogLevel(PoolBase.class, Level.DEBUG);
-      TestElf.setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
+      setSlf4jLogLevel(PoolBase.class, Level.DEBUG);
+      setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
       StubConnection.count.set(0);
    }
 
    @After
    public void afterTest()
    {
-      TestElf.setSlf4jLogLevel(PoolBase.class, Level.WARN);
-      TestElf.setSlf4jLogLevel(HikariPool.class, Level.WARN);
+      setSlf4jLogLevel(PoolBase.class, Level.WARN);
+      setSlf4jLogLevel(HikariPool.class, Level.WARN);
       StubConnection.slowCreate = false;
    }
 
@@ -61,7 +68,7 @@ public class ShutdownTest
 
       StubConnection.slowCreate = true;
 
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(10);
       config.setInitializationFailTimeout(Long.MAX_VALUE);
@@ -69,7 +76,7 @@ public class ShutdownTest
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
-         HikariPool pool = TestElf.getPool(ds);
+         HikariPool pool = getPool(ds);
 
          Thread[] threads = new Thread[10];
          for (int i = 0; i < 10; i++) {
@@ -79,7 +86,7 @@ public class ShutdownTest
                {
                   try {
                      if (ds.getConnection() != null) {
-                        UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(1));
+                        quietlySleep(SECONDS.toMillis(1));
                      }
                   }
                   catch (SQLException e) {
@@ -92,27 +99,27 @@ public class ShutdownTest
             threads[i].start();
          }
 
-         UtilityElf.quietlySleep(1800L);
+         quietlySleep(1800L);
 
-         Assert.assertTrue("Total connection count not as expected, ", pool.getTotalConnections() > 0);
+         assertTrue("Total connection count not as expected, ", pool.getTotalConnections() > 0);
 
          ds.close();
 
-         Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
-         Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
-         Assert.assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
-         Assert.assertTrue(ds.isClosed());
+         assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
+         assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
+         assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
+         assertTrue(ds.isClosed());
       }
    }
 
    @Test
    public void testShutdown2() throws SQLException
    {
-      Assert.assertSame("StubConnection count not as expected", 0, StubConnection.count.get());
+      assertSame("StubConnection count not as expected", 0, StubConnection.count.get());
 
       StubConnection.slowCreate = true;
 
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(10);
       config.setMaximumPoolSize(10);
       config.setInitializationFailTimeout(0);
@@ -120,29 +127,29 @@ public class ShutdownTest
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
-         HikariPool pool = TestElf.getPool(ds);
+         HikariPool pool = getPool(ds);
 
-         UtilityElf.quietlySleep(1200L);
+         quietlySleep(1200L);
 
-         Assert.assertTrue("Total connection count not as expected, ", pool.getTotalConnections() > 0);
+         assertTrue("Total connection count not as expected, ", pool.getTotalConnections() > 0);
 
          ds.close();
 
-         Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
-         Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
-         Assert.assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
-         Assert.assertTrue(ds.toString().startsWith("HikariDataSource (") && ds.toString().endsWith(")"));
+         assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
+         assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
+         assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
+         assertTrue(ds.toString().startsWith("HikariDataSource (") && ds.toString().endsWith(")"));
       }
    }
 
    @Test
    public void testShutdown3() throws SQLException
    {
-      Assert.assertSame("StubConnection count not as expected", 0, StubConnection.count.get());
+      assertSame("StubConnection count not as expected", 0, StubConnection.count.get());
 
       StubConnection.slowCreate = false;
 
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(5);
       config.setMaximumPoolSize(5);
       config.setInitializationFailTimeout(0);
@@ -150,17 +157,17 @@ public class ShutdownTest
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
-         HikariPool pool = TestElf.getPool(ds);
+         HikariPool pool = getPool(ds);
 
-         UtilityElf.quietlySleep(1200L);
+         quietlySleep(1200L);
 
-         Assert.assertTrue("Total connection count not as expected, ", pool.getTotalConnections() == 5);
+         assertTrue("Total connection count not as expected, ", pool.getTotalConnections() == 5);
 
          ds.close();
 
-         Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
-         Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
-         Assert.assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
+         assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
+         assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
+         assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
       }
    }
 
@@ -169,7 +176,7 @@ public class ShutdownTest
    {
       StubConnection.slowCreate = true;
 
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(10);
       config.setMaximumPoolSize(10);
       config.setInitializationFailTimeout(Long.MAX_VALUE);
@@ -177,16 +184,16 @@ public class ShutdownTest
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
-         UtilityElf.quietlySleep(500L);
+         quietlySleep(500L);
 
          ds.close();
 
          long startTime = ClockSource.INSTANCE.currentTime();
-         while (ClockSource.INSTANCE.elapsedMillis(startTime) < TimeUnit.SECONDS.toMillis(5) && threadCount() > 0) {
-            UtilityElf.quietlySleep(250);
+         while (ClockSource.INSTANCE.elapsedMillis(startTime) < SECONDS.toMillis(5) && threadCount() > 0) {
+            quietlySleep(250);
          }
 
-         Assert.assertSame("Unreleased connections after shutdown", 0, TestElf.getPool(ds).getTotalConnections());
+         assertSame("Unreleased connections after shutdown", 0, getPool(ds).getTotalConnections());
       }
    }
 
@@ -195,7 +202,7 @@ public class ShutdownTest
    {
       Assert.assertSame("StubConnection count not as expected", 0, StubConnection.count.get());
 
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(5);
       config.setMaximumPoolSize(5);
       config.setInitializationFailTimeout(0);
@@ -203,7 +210,7 @@ public class ShutdownTest
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
-         HikariPool pool = TestElf.getPool(ds);
+         HikariPool pool = getPool(ds);
 
          Connection[] connections = new Connection[5];
          for (int i = 0; i < 5; i++) {
@@ -223,7 +230,7 @@ public class ShutdownTest
    @Test
    public void testAfterShutdown() throws Exception
    {
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(5);
       config.setInitializationFailTimeout(0);
@@ -244,7 +251,7 @@ public class ShutdownTest
    @Test
    public void testShutdownDuringInit() throws Exception
    {
-      final HikariConfig config = new HikariConfig();
+      final HikariConfig config = newHikariConfig();
       config.setMinimumIdle(5);
       config.setMaximumPoolSize(5);
       config.setConnectionTimeout(1000);
@@ -262,7 +269,7 @@ public class ShutdownTest
    @Test
    public void testThreadedShutdown() throws Exception
    {
-      final HikariConfig config = new HikariConfig();
+      final HikariConfig config = newHikariConfig();
       config.setMinimumIdle(5);
       config.setMaximumPoolSize(5);
       config.setConnectionTimeout(1000);

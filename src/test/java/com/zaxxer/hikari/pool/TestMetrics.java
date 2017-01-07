@@ -16,13 +16,19 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.pool.TestElf.newHikariDataSource;
+import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeFalse;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Test;
 
 import com.codahale.metrics.Histogram;
@@ -52,12 +58,11 @@ public class TestMetrics
    {
       MetricRegistry metricRegistry = new MetricRegistry();
 
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(1);
       config.setMetricRegistry(metricRegistry);
       config.setInitializationFailTimeout(Long.MAX_VALUE);
-      config.setPoolName("testMetricWait");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
@@ -68,27 +73,26 @@ public class TestMetrics
             @Override
             public boolean matches(String name, Metric metric)
             {
-               return "test.pool.Wait".equals(MetricRegistry.name("test", "pool", "Wait"));
+               return "testMetricWait.pool.Wait".equals(MetricRegistry.name("testMetricWait", "pool", "Wait"));
             }
          }).values().iterator().next();
 
-         Assert.assertEquals(1, timer.getCount());
-         Assert.assertTrue(timer.getMeanRate() > 0.0);
+         assertEquals(1, timer.getCount());
+         assertTrue(timer.getMeanRate() > 0.0);
       }
    }
 
    @Test
    public void testMetricUsage() throws SQLException
    {
-      Assume.assumeFalse(Os.isFamily(Os.FAMILY_WINDOWS));
+      assumeFalse(Os.isFamily(Os.FAMILY_WINDOWS));
       MetricRegistry metricRegistry = new MetricRegistry();
 
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(1);
       config.setMetricRegistry(metricRegistry);
       config.setInitializationFailTimeout(0);
-      config.setPoolName("testMetricUsage");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
@@ -105,9 +109,9 @@ public class TestMetrics
             }
          }).values().iterator().next();
 
-         Assert.assertEquals(1, histo.getCount());
+         assertEquals(1, histo.getCount());
          double seventyFifth = histo.getSnapshot().get75thPercentile();
-         Assert.assertTrue("Seventy-fith percentile less than 250ms: " + seventyFifth, seventyFifth >= 250.0);
+         assertTrue("Seventy-fith percentile less than 250ms: " + seventyFifth, seventyFifth >= 250.0);
       }
    }
 
@@ -117,17 +121,16 @@ public class TestMetrics
       MetricRegistry metricRegistry = new MetricRegistry();
       HealthCheckRegistry healthRegistry = new HealthCheckRegistry();
 
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMaximumPoolSize(10);
       config.setMetricRegistry(metricRegistry);
       config.setHealthCheckRegistry(healthRegistry);
-      config.setPoolName("test");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
       config.addHealthCheckProperty("connectivityCheckTimeoutMs", "1000");
       config.addHealthCheckProperty("expected99thPercentileMs", "100");
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
-         UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(2));
+         quietlySleep(TimeUnit.SECONDS.toMillis(2));
 
          try (Connection connection = ds.getConnection()) {
             // close immediately
@@ -139,18 +142,18 @@ public class TestMetrics
 
          SortedMap<String, Result> healthChecks = healthRegistry.runHealthChecks();
 
-         Result connectivityResult = healthChecks.get("test.pool.ConnectivityCheck");
-         Assert.assertTrue(connectivityResult.isHealthy());
+         Result connectivityResult = healthChecks.get("testHealthChecks.pool.ConnectivityCheck");
+         assertTrue(connectivityResult.isHealthy());
 
-         Result slaResult = healthChecks.get("test.pool.Connection99Percent");
-         Assert.assertTrue(slaResult.isHealthy());
+         Result slaResult = healthChecks.get("testHealthChecks.pool.Connection99Percent");
+         assertTrue(slaResult.isHealthy());
       }
    }
 
    @Test
    public void testSetters1() throws Exception
    {
-      try (HikariDataSource ds = new HikariDataSource()) {
+      try (HikariDataSource ds = newHikariDataSource()) {
          ds.setMaximumPoolSize(1);
          ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
    
@@ -168,13 +171,13 @@ public class TestMetrics
    
             // and never again...
             ds.setMetricRegistry(metricRegistry);
-            Assert.fail("Should not have been allowed to set registry after pool started");
+            fail("Should not have been allowed to set registry after pool started");
          }
          catch (IllegalStateException ise) {
             // pass
             try {
                ds.setHealthCheckRegistry(healthRegistry);
-               Assert.fail("Should not have been allowed to set registry after pool started");
+               fail("Should not have been allowed to set registry after pool started");
             }
             catch (IllegalStateException ise2) {
                // pass
@@ -186,7 +189,7 @@ public class TestMetrics
    @Test
    public void testSetters2() throws Exception
    {
-      try (HikariDataSource ds = new HikariDataSource()) {
+      try (HikariDataSource ds = newHikariDataSource()) {
          ds.setMaximumPoolSize(1);
          ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
    
@@ -204,7 +207,7 @@ public class TestMetrics
    
             // after the pool is started, we cannot set it any more
             ds.setMetricRegistry(metricRegistry);
-            Assert.fail("Should not have been allowed to set registry after pool started");
+            fail("Should not have been allowed to set registry after pool started");
          }
          catch (IllegalStateException ise) {
             // pass
@@ -215,7 +218,7 @@ public class TestMetrics
    @Test
    public void testSetters3() throws Exception
    {
-      try (HikariDataSource ds = new HikariDataSource()) {
+      try (HikariDataSource ds = newHikariDataSource()) {
          ds.setMaximumPoolSize(1);
          ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
    
@@ -229,14 +232,14 @@ public class TestMetrics
    
             // and never again...
             ds.setMetricsTrackerFactory(metricsTrackerFactory);
-            Assert.fail("Should not have been allowed to set metricsTrackerFactory after pool started");
+            fail("Should not have been allowed to set metricsTrackerFactory after pool started");
          }
          catch (IllegalStateException ise) {
             // pass
             try {
                // and never again... (even when calling another method)
                ds.setMetricRegistry(metricRegistry);
-               Assert.fail("Should not have been allowed to set registry after pool started");
+               fail("Should not have been allowed to set registry after pool started");
             }
             catch (IllegalStateException ise2) {
                // pass
@@ -248,7 +251,7 @@ public class TestMetrics
    @Test
    public void testSetters4() throws Exception
    {
-      try (HikariDataSource ds = new HikariDataSource()) {
+      try (HikariDataSource ds = newHikariDataSource()) {
          ds.setMaximumPoolSize(1);
          ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
    
@@ -263,7 +266,7 @@ public class TestMetrics
    
             // after the pool is started, we cannot set it any more
             ds.setMetricRegistry(metricRegistry);
-            Assert.fail("Should not have been allowed to set registry after pool started");
+            fail("Should not have been allowed to set registry after pool started");
          }
          catch (IllegalStateException ise) {
             // pass
@@ -274,7 +277,7 @@ public class TestMetrics
    @Test
    public void testSetters5() throws Exception
    {
-      try (HikariDataSource ds = new HikariDataSource()) {
+      try (HikariDataSource ds = newHikariDataSource()) {
          ds.setMaximumPoolSize(1);
          ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
    
@@ -290,7 +293,7 @@ public class TestMetrics
    
             // after the pool is started, we cannot set it any more
             ds.setMetricsTrackerFactory(metricsTrackerFactory);
-            Assert.fail("Should not have been allowed to set registry factory after pool started");
+            fail("Should not have been allowed to set registry factory after pool started");
          }
          catch (IllegalStateException ise) {
             // pass
