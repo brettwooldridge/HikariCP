@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLTransientConnectionException;
 import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -62,6 +63,7 @@ public class TestConnections
    }
 
    @Test
+   @SuppressWarnings("resource")
    public void testCreate() throws SQLException
    {
       HikariConfig config = new HikariConfig();
@@ -109,6 +111,7 @@ public class TestConnections
    }
 
    @Test
+   @SuppressWarnings("resource")
    public void testMaxLifetime() throws Exception
    {
       HikariConfig config = new HikariConfig();
@@ -165,6 +168,7 @@ public class TestConnections
    }
 
    @Test
+   @SuppressWarnings("resource")
    public void testMaxLifetime2() throws Exception
    {
       HikariConfig config = new HikariConfig();
@@ -217,6 +221,7 @@ public class TestConnections
    }
 
    @Test
+   @SuppressWarnings("resource")
    public void testDoubleClose() throws Exception
    {
       HikariConfig config = new HikariConfig();
@@ -262,6 +267,7 @@ public class TestConnections
    }
 
    @Test
+   @SuppressWarnings("resource")
    public void testBackfill() throws Exception
    {
       HikariConfig config = new HikariConfig();
@@ -323,6 +329,7 @@ public class TestConnections
    }
 
    @Test
+   @SuppressWarnings("resource")
    public void testMaximumPoolLimit() throws Exception
    {
       HikariConfig config = new HikariConfig();
@@ -376,6 +383,7 @@ public class TestConnections
    }
 
    @Test
+   @SuppressWarnings("resource")
    public void testOldDriver() throws Exception
    {
       HikariConfig config = new HikariConfig();
@@ -403,6 +411,7 @@ public class TestConnections
    }
 
    @Test
+   @SuppressWarnings("resource")
    public void testSuspendResume() throws Exception
    {
       HikariConfig config = new HikariConfig();
@@ -518,6 +527,7 @@ public class TestConnections
    }
 
    @Test
+   @SuppressWarnings("resource")
    public void testPopulationSlowAcquisition() throws InterruptedException, SQLException
    {
       HikariConfig config = new HikariConfig();
@@ -558,6 +568,26 @@ public class TestConnections
       }
       finally {
          StubConnection.slowCreate = false;
+      }
+   }
+
+   @Test
+   public void testMinimumIdleZero() throws SQLException
+   {
+      HikariConfig config = new HikariConfig();
+      config.setPoolName("minimumIdleZero");
+      config.setMinimumIdle(0);
+      config.setMaximumPoolSize(5);
+      config.setConnectionTimeout(1000L);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      try (HikariDataSource ds = new HikariDataSource(config);
+           Connection connection = ds.getConnection()) {
+         // passed
+      }
+      catch (SQLTransientConnectionException sqle) {
+         Assert.fail("Failed to obtain connection");
       }
    }
 }
