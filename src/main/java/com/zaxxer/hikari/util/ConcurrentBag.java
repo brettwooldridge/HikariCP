@@ -194,7 +194,10 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
          threadLocalList.add(weakThreadLocals ? new WeakReference<>(bagEntry) : bagEntry);
       }
 
-      synchronizer.signal();
+      //connection can be stolen already by another thread, so call signal() cause unnecessary thread unparking and context switch
+      if (bagEntry.getState() == STATE_NOT_IN_USE) {
+         synchronizer.signal();
+      }
    }
 
    /**
@@ -210,7 +213,10 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       }
 
       sharedList.add(bagEntry);
-      synchronizer.signal();
+
+      if (bagEntry.getState() == STATE_NOT_IN_USE) {
+         synchronizer.signal();
+      }
    }
 
    /**
@@ -301,7 +307,9 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    public void unreserve(final T bagEntry)
    {
       if (bagEntry.compareAndSet(STATE_RESERVED, STATE_NOT_IN_USE)) {
-         synchronizer.signal();
+         if (bagEntry.getState() == STATE_NOT_IN_USE) {
+            synchronizer.signal();
+         }
       }
       else {
          LOGGER.warn("Attempt to relinquish an object to the bag that was not reserved: {}", bagEntry);
