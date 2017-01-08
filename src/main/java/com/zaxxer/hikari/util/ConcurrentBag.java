@@ -188,13 +188,15 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    public void requite(final T bagEntry)
    {
       bagEntry.setState(STATE_NOT_IN_USE);
-
+      
+      if (waiters.get() != 0) {
+         synchronizer.signal();
+      }
+      
       final List<Object> threadLocalList = threadList.get();
       if (threadLocalList != null) {
          threadLocalList.add(weakThreadLocals ? new WeakReference<>(bagEntry) : bagEntry);
       }
-
-      synchronizer.signal();
    }
 
    /**
