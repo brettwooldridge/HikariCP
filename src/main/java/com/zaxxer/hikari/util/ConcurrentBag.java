@@ -79,7 +79,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       int getState();
    }
 
-   public interface IBagStateListener
+   public static interface IBagStateListener
    {
       Future<Boolean> addBagItem();
    }
