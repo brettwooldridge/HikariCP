@@ -98,16 +98,10 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       this.sharedList = new CopyOnWriteArrayList<>();
       this.synchronizer = new QueuedSequenceSynchronizer();
       if (weakThreadLocals) {
-         this.threadList = new ThreadLocal<>();
+         this.threadList = ThreadLocal.withInitial(() -> new ArrayList<>(16));
       }
       else {
-         this.threadList = new ThreadLocal<List<Object>>() {
-            @Override
-            protected List<Object> initialValue()
-            {
-               return new FastList<>(IConcurrentBagEntry.class, 16);
-            }
-         };
+         this.threadList = ThreadLocal.withInitial(() -> new FastList<>(IConcurrentBagEntry.class, 16));
       }
    }
 
@@ -124,11 +118,6 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    {
       // Try the thread-local list first
       List<Object> list = threadList.get();
-      if (weakThreadLocals && list == null) {
-         list = new ArrayList<>(16);
-         threadList.set(list);
-      }
-
       for (int i = list.size() - 1; i >= 0; i--) {
          final Object entry = list.remove(i);
          @SuppressWarnings("unchecked")
@@ -194,9 +183,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       }
       
       final List<Object> threadLocalList = threadList.get();
-      if (threadLocalList != null) {
-         threadLocalList.add(weakThreadLocals ? new WeakReference<>(bagEntry) : bagEntry);
-      }
+      threadLocalList.add(weakThreadLocals ? new WeakReference<>(bagEntry) : bagEntry);
    }
 
    /**
