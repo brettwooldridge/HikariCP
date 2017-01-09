@@ -39,7 +39,7 @@ final class PoolEntry implements IConcurrentBagEntry
    private static final Logger LOGGER = LoggerFactory.getLogger(PoolEntry.class);
    private static final AtomicIntegerFieldUpdater<PoolEntry> stateUpdater;
 
-   static final Comparator<PoolEntry> LASTACCESS_COMPARABLE;
+   static final Comparator<PoolEntry> LASTACCESS_REVERSE_COMPARABLE;
 
    Connection connection;
    long lastAccessed;
@@ -57,10 +57,10 @@ final class PoolEntry implements IConcurrentBagEntry
 
    static
    {
-      LASTACCESS_COMPARABLE = new Comparator<PoolEntry>() {
+      LASTACCESS_REVERSE_COMPARABLE = new Comparator<PoolEntry>() {
          @Override
          public int compare(final PoolEntry entryOne, final PoolEntry entryTwo) {
-            return Long.compare(entryOne.lastAccessed, entryTwo.lastAccessed);
+            return Long.compare(entryTwo.lastAccessed, entryOne.lastAccessed);
          }
       };
 

@@ -135,7 +135,7 @@ public class TomcatConcurrentBagLeakTest
 
       public void createConcurrentBag() throws InterruptedException
       {
-         try (ConcurrentBag<PoolEntry> bag = new ConcurrentBag<>(() -> CompletableFuture.completedFuture(Boolean.TRUE))) {
+         try (ConcurrentBag<PoolEntry> bag = new ConcurrentBag<>((x) -> CompletableFuture.completedFuture(Boolean.TRUE))) {
 
             PoolEntry entry = new PoolEntry();
             bag.add(entry);

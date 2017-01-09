@@ -16,8 +16,8 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.pool.TestElf.getPool;
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.pool.TestElf.setSlf4jTargetStream;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
@@ -27,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -36,7 +36,6 @@ import org.junit.Test;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.util.ConcurrentBag;
-import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 
 /**
  *
@@ -70,14 +69,7 @@ public class TestConcurrentBag
    @Test
    public void testConcurrentBag() throws Exception
    {
-      try (ConcurrentBag<PoolEntry> bag = new ConcurrentBag<>(new IBagStateListener() {
-               @Override
-               public Future<Boolean> addBagItem()
-               {
-                  return null;
-               }
-            })
-          ) {
+      try (ConcurrentBag<PoolEntry> bag = new ConcurrentBag<>((x) -> CompletableFuture.completedFuture(Boolean.TRUE))) {
          assertEquals(0, bag.values(8).size());
    
          PoolEntry reserved = pool.newPoolEntry();
