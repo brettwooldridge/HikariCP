@@ -85,7 +85,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
 
    public static interface IBagStateListener
    {
-      Future<Boolean> addBagItem();
+      Future<Boolean> addBagItem(int waiting);
    }
 
    /**
@@ -132,16 +132,19 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       }
 
       // Otherwise, scan the shared list ... then poll the handoff queue
-      waiters.incrementAndGet();
+      final int waiting = waiters.incrementAndGet();
       try {
-         // scan the shared list
          for (T bagEntry : sharedList) {
             if (bagEntry.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
+               // If we may have stolen another waiter's connection, request another bag add.
+               if (waiters.get() > 1) {
+                  listener.addBagItem(waiting - 1);
+               }
                return bagEntry;
             }
          }
-         
-         listener.addBagItem();
+
+         listener.addBagItem(waiting);
          
          timeout = timeUnit.toNanos(timeout);
          do {
@@ -224,10 +227,6 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       final boolean removed = sharedList.remove(bagEntry);
       if (!removed && !closed) {
          LOGGER.warn("Attempt to remove an object from the bag that does not exist: {}", bagEntry);
-      }
-
-      if (waiters.get() > 0) {
-         listener.addBagItem();
       }
 
       return removed;
