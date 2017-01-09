@@ -159,8 +159,8 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       try {
          long timeout = hardTimeout;
          PoolEntry poolEntry = null;
-         do {
-            try {
+         try {
+            do {
                poolEntry = connectionBag.borrow(timeout, MILLISECONDS);
                if (poolEntry == null) {
                   break; // We timed out... break and throw exception
@@ -175,15 +175,15 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                   metricsTracker.recordBorrowStats(poolEntry, startTime);
                   return poolEntry.createProxyConnection(leakTask.schedule(poolEntry), now);
                }
+            } while (timeout > 0L);
+         }
+         catch (InterruptedException e) {
+            if (poolEntry != null) {
+               poolEntry.recycle(startTime);
             }
-            catch (InterruptedException e) {
-               if (poolEntry != null) {
-                  poolEntry.recycle(startTime);
-               }
-               Thread.currentThread().interrupt();
-               throw new SQLException(poolName + " - Interrupted during connection acquisition", e);
-            }
-         } while (timeout > 0L);
+            Thread.currentThread().interrupt();
+            throw new SQLException(poolName + " - Interrupted during connection acquisition", e);
+         }
       }
       finally {
          suspendResumeLock.release();
