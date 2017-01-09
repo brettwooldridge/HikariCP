@@ -412,10 +412,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    final void closeConnection(final PoolEntry poolEntry, final String closureReason)
    {
       if (connectionBag.remove(poolEntry)) {
-         final int tc = getTotalConnections();
-         if (tc < 0) {
-            LOGGER.warn("{} - Unexpected value of totalConnections={}", poolName, tc, new Exception());
-         }
          final Connection connection = poolEntry.close();
          closeConnectionExecutor.execute(() -> {
             quietlyCloseConnection(connection, closureReason);
