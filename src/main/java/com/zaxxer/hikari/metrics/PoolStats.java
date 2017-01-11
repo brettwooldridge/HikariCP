@@ -16,9 +16,10 @@
 
 package com.zaxxer.hikari.metrics;
 
-import java.util.concurrent.atomic.AtomicLong;
+import static com.zaxxer.hikari.util.ClockSource.currentTime;
+import static com.zaxxer.hikari.util.ClockSource.plusMillis;
 
-import com.zaxxer.hikari.util.ClockSource;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
@@ -26,7 +27,6 @@ import com.zaxxer.hikari.util.ClockSource;
  */
 public abstract class PoolStats
 {
-   private final ClockSource clock;
    private final AtomicLong reloadAt;
    private final long timeoutMs;
 
@@ -39,7 +39,6 @@ public abstract class PoolStats
    {
       this.timeoutMs = timeoutMs;
       this.reloadAt = new AtomicLong();
-      this.clock = ClockSource.INSTANCE;
    }
    
    public int getTotalConnections()
@@ -83,12 +82,12 @@ public abstract class PoolStats
    private boolean shouldLoad()
    {
       for (; ; ) {
-          final long now = clock.currentTime();
+          final long now = currentTime();
           final long reloadTime = reloadAt.get();
           if (reloadTime > now) {
               return false;
           }
-          else if (reloadAt.compareAndSet(reloadTime, clock.plusMillis(now, timeoutMs))) {
+          else if (reloadAt.compareAndSet(reloadTime, plusMillis(now, timeoutMs))) {
               return true;
           }
       }

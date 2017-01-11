@@ -16,9 +16,11 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.pool.TestElf.getPool;
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.pool.TestElf.setSlf4jLogLevel;
+import static com.zaxxer.hikari.util.ClockSource.currentTime;
+import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertSame;
@@ -37,7 +39,6 @@ import org.junit.Test;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.mocks.StubConnection;
-import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.UtilityElf;
 
 /**
@@ -188,8 +189,8 @@ public class ShutdownTest
 
          ds.close();
 
-         long startTime = ClockSource.INSTANCE.currentTime();
-         while (ClockSource.INSTANCE.elapsedMillis(startTime) < SECONDS.toMillis(5) && threadCount() > 0) {
+         long startTime = currentTime();
+         while (elapsedMillis(startTime) < SECONDS.toMillis(5) && threadCount() > 0) {
             quietlySleep(250);
          }
 

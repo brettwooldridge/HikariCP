@@ -16,6 +16,8 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.util.ClockSource.currentTime;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -33,7 +35,6 @@ import java.util.concurrent.Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.FastList;
 
 /**
@@ -52,7 +53,6 @@ public abstract class ProxyConnection implements Connection
    private static final Logger LOGGER;
    private static final Set<String> ERROR_STATES;
    private static final Set<Integer> ERROR_CODES;
-   private static final ClockSource clockSource;
 
    protected Connection delegate;
 
@@ -73,7 +73,6 @@ public abstract class ProxyConnection implements Connection
    // static initializer
    static {
       LOGGER = LoggerFactory.getLogger(ProxyConnection.class);
-      clockSource = ClockSource.INSTANCE;
 
       ERROR_STATES = new HashSet<>();
       ERROR_STATES.add("57P01"); // ADMIN SHUTDOWN
@@ -175,7 +174,7 @@ public abstract class ProxyConnection implements Connection
    final void markCommitStateDirty()
    {
       if (isAutoCommit) {
-         lastAccess = clockSource.currentTime();
+         lastAccess = currentTime();
       }
       else {
          isCommitStateDirty = true;
@@ -230,13 +229,13 @@ public abstract class ProxyConnection implements Connection
          try {
             if (isCommitStateDirty && !isAutoCommit) {
                delegate.rollback();
-               lastAccess = clockSource.currentTime();
+               lastAccess = currentTime();
                LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.getPoolName(), delegate);
             }
 
             if (dirtyBits != 0) {
                poolEntry.resetConnectionState(this, dirtyBits);
-               lastAccess = clockSource.currentTime();
+               lastAccess = currentTime();
             }
 
             delegate.clearWarnings();
@@ -351,7 +350,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.commit();
       isCommitStateDirty = false;
-      lastAccess = clockSource.currentTime();
+      lastAccess = currentTime();
    }
 
    /** {@inheritDoc} */
@@ -360,7 +359,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.rollback();
       isCommitStateDirty = false;
-      lastAccess = clockSource.currentTime();
+      lastAccess = currentTime();
    }
 
    /** {@inheritDoc} */
@@ -369,7 +368,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.rollback(savepoint);
       isCommitStateDirty = false;
-      lastAccess = clockSource.currentTime();
+      lastAccess = currentTime();
    }
 
    /** {@inheritDoc} */

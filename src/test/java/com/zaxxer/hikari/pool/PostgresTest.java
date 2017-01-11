@@ -16,8 +16,10 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.pool.TestElf.getPool;
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.util.ClockSource.currentTime;
+import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.junit.Assert.assertTrue;
@@ -35,7 +37,6 @@ import org.junit.Before;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.UtilityElf;
 
 /**
@@ -60,7 +61,7 @@ public class PostgresTest
       config.setUsername("brettw");
 
       try (final HikariDataSource ds = new HikariDataSource(config)) {
-         final long start = ClockSource.INSTANCE.currentTime();
+         final long start = currentTime();
          do {
             Thread t = new Thread() {
                public void run() {
@@ -77,7 +78,7 @@ public class PostgresTest
             t.start();
 
             quietlySleep(TimeUnit.SECONDS.toMillis((long)((Math.random() * 20))));
-         } while (ClockSource.INSTANCE.elapsedMillis(start) < MINUTES.toMillis(15));
+         } while (elapsedMillis(start) < MINUTES.toMillis(15));
       }
    }
 
@@ -104,14 +105,14 @@ public class PostgresTest
 
          System.err.println("\nNow attempting another getConnection(), expecting a timeout...");
 
-         long start = ClockSource.INSTANCE.currentTime();
+         long start = currentTime();
          try (Connection conn = ds.getConnection()) {
             System.err.println("\nOpps, got a connection.  Did you enable the firewall? " + conn);
             fail("Opps, got a connection.  Did you enable the firewall?");
          }
          catch (SQLException e)
          {
-            assertTrue("Timeout less than expected " + ClockSource.INSTANCE.elapsedMillis(start) + "ms", ClockSource.INSTANCE.elapsedMillis(start) > 5000);
+            assertTrue("Timeout less than expected " + elapsedMillis(start) + "ms", elapsedMillis(start) > 5000);
          }
 
          System.err.println("\nOk, so far so good.  Now, disable the firewall again.  Attempting connection in 5 seconds...");
@@ -183,7 +184,7 @@ public class PostgresTest
             threads.add(new Thread() {
                public void run() {
                   UtilityElf.quietlySleep((long)(Math.random() * 2500L));
-                  final long start = ClockSource.INSTANCE.currentTime();
+                  final long start = currentTime();
                   do {
                      try (Connection conn = ds.getConnection(); Statement stmt = conn.createStatement()) {
                         try (ResultSet rs = stmt.executeQuery("SELECT * FROM device WHERE device_id=0 ORDER BY device_id LIMIT 1 OFFSET 0")) {
@@ -197,7 +198,7 @@ public class PostgresTest
                      }
 
                      // UtilityElf.quietlySleep(10L); //Math.max(50L, (long)(Math.random() * 250L)));
-                  } while (ClockSource.INSTANCE.elapsedMillis(start) < TimeUnit.MINUTES.toMillis(5));
+                  } while (elapsedMillis(start) < TimeUnit.MINUTES.toMillis(5));
                }
             });
          }
