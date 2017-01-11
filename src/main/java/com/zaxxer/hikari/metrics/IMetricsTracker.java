@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013,2014 Brett Wooldridge
+ * Copyright (C) 2017 Brett Wooldridge
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,19 @@
 
 package com.zaxxer.hikari.metrics;
 
-public interface MetricsTrackerFactory
+/**
+ * @author Brett Wooldridge
+ */
+public interface IMetricsTracker extends AutoCloseable
 {
-   /**
-    * Create an instance of an IMetricsTracker.
-    *
-    * @param poolName the name of the pool
-    * @param poolStats a PoolStats instance to use
-    * @return a IMetricsTracker implementation instance
-    */
-   IMetricsTracker create(String poolName, PoolStats poolStats);
+   default void recordConnectionCreatedMillis(long connectionCreatedMillis) {}
+
+   default void recordConnectionAcquiredNanos(final long elapsedAcquiredNanos) {}
+
+   default void recordConnectionUsageMillis(final long elapsedBorrowedMillis) {}
+
+   default void recordConnectionTimeout() {}
+
+   @Override
+   default void close() {}
 }

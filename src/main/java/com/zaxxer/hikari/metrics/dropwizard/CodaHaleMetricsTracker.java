@@ -23,10 +23,10 @@ import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.zaxxer.hikari.metrics.MetricsTracker;
+import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.metrics.PoolStats;
 
-public final class CodaHaleMetricsTracker extends MetricsTracker
+public final class CodaHaleMetricsTracker implements IMetricsTracker
 {
    private final String poolName;
    private final Timer connectionObtainTimer;

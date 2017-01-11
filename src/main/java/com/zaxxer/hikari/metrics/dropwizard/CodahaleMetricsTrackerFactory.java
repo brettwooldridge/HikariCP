@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013,2014 Brett Wooldridge
+ * Copyright (C) 2013 Brett Wooldridge
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 package com.zaxxer.hikari.metrics.dropwizard;
 
 import com.codahale.metrics.MetricRegistry;
-import com.zaxxer.hikari.metrics.MetricsTracker;
+import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.PoolStats;
 
@@ -36,7 +36,7 @@ public final class CodahaleMetricsTrackerFactory implements MetricsTrackerFactor
    }
 
    @Override
-   public MetricsTracker create(String poolName, PoolStats poolStats)
+   public IMetricsTracker create(String poolName, PoolStats poolStats)
    {
       return new CodaHaleMetricsTracker(poolName, poolStats, registry);
    }

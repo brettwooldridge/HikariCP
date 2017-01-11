@@ -16,15 +16,6 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_AUTOCOMMIT;
-import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_CATALOG;
-import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_ISOLATION;
-import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_NETTIMEOUT;
-import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_READONLY;
-import static com.zaxxer.hikari.util.ClockSource.currentTime;
-import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
-import static com.zaxxer.hikari.util.ClockSource.elapsedNanos;
-import static com.zaxxer.hikari.util.UtilityElf.createInstance;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -48,11 +39,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.metrics.MetricsTracker;
+import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyElf;
 import com.zaxxer.hikari.util.UtilityElf;
 import com.zaxxer.hikari.util.UtilityElf.DefaultThreadFactory;
+
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_AUTOCOMMIT;
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_CATALOG;
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_ISOLATION;
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_NETTIMEOUT;
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_READONLY;
+import static com.zaxxer.hikari.util.ClockSource.currentTime;
+import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
+import static com.zaxxer.hikari.util.ClockSource.elapsedNanos;
+import static com.zaxxer.hikari.util.UtilityElf.createInstance;
 
 abstract class PoolBase
 {
@@ -62,7 +63,7 @@ abstract class PoolBase
    protected final String poolName;
    protected long connectionTimeout;
    protected long validationTimeout;
-   protected MetricsTrackerDelegate metricsTracker;
+   protected IMetricsTrackerDelegate metricsTracker;
 
    private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout"};
    private static final int UNINITIALIZED = -1;
@@ -639,23 +640,57 @@ abstract class PoolBase
       }
    }
 
+   static interface IMetricsTrackerDelegate extends AutoCloseable
+   {
+      default void recordConnectionUsage(PoolEntry poolEntry) {}
+
+      default void recordConnectionCreated(long connectionCreatedMillis) {}
+
+      default void recordBorrowStats(final PoolEntry poolEntry, final long startTime) {}
+
+      default void recordConnectionTimeout() {}
+
+      @Override
+      default void close() {}
+   }
+
    /**
     * A class that delegates to a MetricsTracker implementation.  The use of a delegate
     * allows us to use the NopMetricsTrackerDelegate when metrics are disabled, which in
     * turn allows the JIT to completely optimize away to callsites to record metrics.
     */
-   static class MetricsTrackerDelegate implements AutoCloseable
+   static class MetricsTrackerDelegate implements IMetricsTrackerDelegate
    {
-      final MetricsTracker tracker;
+      final IMetricsTracker tracker;
 
-      protected MetricsTrackerDelegate()
-      {
-         this.tracker = null;
-      }
-
-      MetricsTrackerDelegate(MetricsTracker tracker)
+      MetricsTrackerDelegate(IMetricsTracker tracker)
       {
          this.tracker = tracker;
+      }
+
+      @Override
+      public void recordConnectionUsage(final PoolEntry poolEntry)
+      {
+         tracker.recordConnectionUsageMillis(poolEntry.getMillisSinceBorrowed());
+      }
+
+      @Override
+      public void recordConnectionCreated(long connectionCreatedMillis)
+      {
+         tracker.recordConnectionCreatedMillis(connectionCreatedMillis);
+      }
+
+      @Override
+      public void recordBorrowStats(final PoolEntry poolEntry, final long startTime)
+      {
+         final long now = currentTime();
+         poolEntry.lastBorrowed = now;
+         tracker.recordConnectionAcquiredNanos(elapsedNanos(startTime, now));
+      }
+
+      @Override
+      public void recordConnectionTimeout() {
+         tracker.recordConnectionTimeout();
       }
 
       @Override
@@ -663,67 +698,11 @@ abstract class PoolBase
       {
          tracker.close();
       }
-
-      void recordConnectionUsage(final PoolEntry poolEntry)
-      {
-         tracker.recordConnectionUsageMillis(poolEntry.getMillisSinceBorrowed());
-      }
-
-      void recordConnectionCreated(long connectionCreatedMillis)
-      {
-         tracker.recordConnectionCreatedMillis(connectionCreatedMillis);
-      }
-
-      /**
-       * @param poolEntry
-       * @param now
-       */
-      void recordBorrowStats(final PoolEntry poolEntry, final long startTime)
-      {
-         final long now = currentTime();
-         poolEntry.lastBorrowed = now;
-         tracker.recordConnectionAcquiredNanos(elapsedNanos(startTime, now));
-      }
-
-      void recordConnectionTimeout() {
-         tracker.recordConnectionTimeout();
-      }
    }
 
    /**
-    * A no-op implementation of the MetricsTrackerDelegate that is used when metrics capture is
+    * A no-op implementation of the IMetricsTrackerDelegate that is used when metrics capture is
     * disabled.
     */
-   static final class NopMetricsTrackerDelegate extends MetricsTrackerDelegate
-   {
-      @Override
-      void recordConnectionUsage(final PoolEntry poolEntry)
-      {
-         // no-op
-      }
-
-      @Override
-      public void close()
-      {
-         // no-op
-      }
-
-      @Override
-      void recordBorrowStats(final PoolEntry poolEntry, final long startTime)
-      {
-         // no-op
-      }
-
-      @Override
-      void recordConnectionTimeout()
-      {
-         // no-op
-      }
-
-      @Override
-      void recordConnectionCreated(long connectionCreatedMillis)
-      {
-         // no-op
-      }
-   }
+   static final class NopMetricsTrackerDelegate implements IMetricsTrackerDelegate {}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013, 2014 Brett Wooldridge
+ * Copyright (C) 2013 Brett Wooldridge
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@
 
 package com.zaxxer.hikari.metrics.prometheus;
 
-import com.zaxxer.hikari.metrics.MetricsTracker;
+import com.zaxxer.hikari.metrics.IMetricsTracker;
 
 import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Summary;
 
-class PrometheusMetricsTracker extends MetricsTracker
+class PrometheusMetricsTracker implements IMetricsTracker
 {
    private final Counter.Child connectionTimeoutCounter;
    private final Summary.Child elapsedAcquiredSummary;
