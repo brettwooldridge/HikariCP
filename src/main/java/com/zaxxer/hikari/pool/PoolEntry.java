@@ -15,6 +15,10 @@
  */
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.util.ClockSource.currentTime;
+import static com.zaxxer.hikari.util.ClockSource.elapsedDisplayString;
+import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -25,7 +29,6 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry;
 import com.zaxxer.hikari.util.FastList;
 
@@ -73,7 +76,7 @@ final class PoolEntry implements IConcurrentBagEntry
       this.hikariPool = (HikariPool) pool;
       this.isReadOnly = isReadOnly;
       this.isAutoCommit = isAutoCommit;
-      this.lastAccessed = ClockSource.INSTANCE.currentTime();
+      this.lastAccessed = currentTime();
       this.openStatements = new FastList<>(Statement.class, 16);
    }
 
@@ -131,16 +134,16 @@ final class PoolEntry implements IConcurrentBagEntry
    /** Returns millis since lastBorrowed */
    long getMillisSinceBorrowed()
    {
-      return ClockSource.INSTANCE.elapsedMillis(lastBorrowed);
+      return elapsedMillis(lastBorrowed);
    }
 
    /** {@inheritDoc} */
    @Override
    public String toString()
    {
-      final long now = ClockSource.INSTANCE.currentTime();
+      final long now = currentTime();
       return connection
-         + ", accessed " + ClockSource.INSTANCE.elapsedDisplayString(lastAccessed, now) + " ago, "
+         + ", accessed " + elapsedDisplayString(lastAccessed, now) + " ago, "
          + stateToString();
    }
 

@@ -15,6 +15,8 @@
  */
 package com.zaxxer.hikari.util;
 
+import static com.zaxxer.hikari.util.ClockSource.currentTime;
+import static com.zaxxer.hikari.util.ClockSource.elapsedNanos;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_REMOVED;
@@ -137,7 +139,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
          for (T bagEntry : sharedList) {
             if (bagEntry.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
                // If we may have stolen another waiter's connection, request another bag add.
-               if (waiters.get() > 1) {
+               if (waiting > 1) {
                   listener.addBagItem(waiting - 1);
                }
                return bagEntry;
@@ -148,13 +150,13 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
          
          timeout = timeUnit.toNanos(timeout);
          do {
-            final long start = ClockSource.INSTANCE.currentTime();
+            final long start = currentTime();
             final T bagEntry = handoffQueue.poll(timeout, NANOSECONDS);
             if (bagEntry == null || bagEntry.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
                return bagEntry;
             }
 
-            timeout -= ClockSource.INSTANCE.elapsedNanos(start);
+            timeout -= elapsedNanos(start);
          } while (timeout > 10_000);
 
          return null;

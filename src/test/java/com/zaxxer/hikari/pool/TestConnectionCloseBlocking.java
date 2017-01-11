@@ -20,6 +20,8 @@
 package com.zaxxer.hikari.pool;
 
 import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.util.ClockSource.currentTime;
+import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertTrue;
@@ -36,7 +38,6 @@ import org.mockito.stubbing.Answer;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.mocks.MockDataSource;
-import com.zaxxer.hikari.util.ClockSource;
 
 /**
  * Test for cases when db network connectivity goes down and close is called on existing connections. By default Hikari
@@ -55,7 +56,7 @@ public class TestConnectionCloseBlocking {
       config.setConnectionTimeout(1500);
       config.setDataSource(new CustomMockDataSource());
 
-      long start = ClockSource.INSTANCE.currentTime();
+      long start = currentTime();
       try (HikariDataSource ds = new HikariDataSource(config);
             Connection connection = ds.getConnection()) {
             
@@ -69,10 +70,10 @@ public class TestConnectionCloseBlocking {
    
             // on physical connection close we sleep 2 seconds
             try (Connection connection2 = ds.getConnection()) {   
-               assertTrue("Waited longer than timeout", (ClockSource.INSTANCE.elapsedMillis(start) < config.getConnectionTimeout()));
+               assertTrue("Waited longer than timeout", (elapsedMillis(start) < config.getConnectionTimeout()));
             }
       } catch (SQLException e) {
-         assertTrue("getConnection failed because close connection took longer than timeout", (ClockSource.INSTANCE.elapsedMillis(start) < config.getConnectionTimeout()));
+         assertTrue("getConnection failed because close connection took longer than timeout", (elapsedMillis(start) < config.getConnectionTimeout()));
       }
    }
 

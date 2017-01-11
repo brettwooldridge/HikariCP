@@ -16,10 +16,12 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.pool.TestElf.getPool;
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.pool.TestElf.setSlf4jLogLevel;
 import static com.zaxxer.hikari.pool.TestElf.setSlf4jTargetStream;
+import static com.zaxxer.hikari.util.ClockSource.currentTime;
+import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
 import static java.lang.Thread.sleep;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertNotNull;
@@ -44,7 +46,6 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.mocks.StubDataSource;
-import com.zaxxer.hikari.util.ClockSource;
 
 public class TestConnectionTimeoutRetry
 {
@@ -63,13 +64,13 @@ public class TestConnectionTimeoutRetry
          StubDataSource stubDataSource = ds.unwrap(StubDataSource.class);
          stubDataSource.setThrowException(new SQLException("Connection refused"));
 
-         long start = ClockSource.INSTANCE.currentTime();
+         long start = currentTime();
          try (Connection connection = ds.getConnection()) {
             connection.close();
             fail("Should not have been able to get a connection.");
          }
          catch (SQLException e) {
-            long elapsed = ClockSource.INSTANCE.elapsedMillis(start);
+            long elapsed = elapsedMillis(start);
             long timeout = config.getConnectionTimeout();
             assertTrue("Didn't wait long enough for timeout", (elapsed >= timeout));
          }
@@ -101,13 +102,13 @@ public class TestConnectionTimeoutRetry
             }
          }, 300, TimeUnit.MILLISECONDS);
 
-         long start = ClockSource.INSTANCE.currentTime();
+         long start = currentTime();
          try {
             try (Connection connection = ds.getConnection()) {
                // close immediately
             }
 
-            long elapsed = ClockSource.INSTANCE.elapsedMillis(start);
+            long elapsed = elapsedMillis(start);
             assertTrue("Connection returned too quickly, something is wrong.", elapsed > 250);
             assertTrue("Waited too long to get a connection.", elapsed < config.getConnectionTimeout());
          }
@@ -151,13 +152,13 @@ public class TestConnectionTimeoutRetry
             }
          }, 800, MILLISECONDS);
 
-         long start = ClockSource.INSTANCE.currentTime();
+         long start = currentTime();
          try {
             try (Connection connection3 = ds.getConnection()) {
                // close immediately
             }
 
-            long elapsed = ClockSource.INSTANCE.elapsedMillis(start);
+            long elapsed = elapsedMillis(start);
             assertTrue("Waited too long to get a connection.", (elapsed >= 700) && (elapsed < 950));
          }
          catch (SQLException e) {
@@ -183,7 +184,7 @@ public class TestConnectionTimeoutRetry
       try (HikariDataSource ds = new HikariDataSource(config)) {
          final Connection connection1 = ds.getConnection();
 
-         long start = ClockSource.INSTANCE.currentTime();
+         long start = currentTime();
 
          ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
          scheduler.schedule(new Runnable() {
@@ -207,7 +208,7 @@ public class TestConnectionTimeoutRetry
                // close immediately
             }
 
-            long elapsed = ClockSource.INSTANCE.elapsedMillis(start);
+            long elapsed = elapsedMillis(start);
             assertTrue("Waited too long to get a connection.", (elapsed >= 250) && (elapsed < config.getConnectionTimeout()));
          }
          catch (SQLException e) {

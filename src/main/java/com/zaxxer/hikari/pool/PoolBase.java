@@ -16,6 +16,15 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_AUTOCOMMIT;
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_CATALOG;
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_ISOLATION;
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_NETTIMEOUT;
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_READONLY;
+import static com.zaxxer.hikari.util.ClockSource.currentTime;
+import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
+import static com.zaxxer.hikari.util.ClockSource.elapsedNanos;
+import static com.zaxxer.hikari.util.UtilityElf.createInstance;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -40,18 +49,10 @@ import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.metrics.MetricsTracker;
-import com.zaxxer.hikari.util.ClockSource;
 import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyElf;
 import com.zaxxer.hikari.util.UtilityElf;
 import com.zaxxer.hikari.util.UtilityElf.DefaultThreadFactory;
-
-import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_AUTOCOMMIT;
-import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_CATALOG;
-import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_ISOLATION;
-import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_NETTIMEOUT;
-import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_READONLY;
-import static com.zaxxer.hikari.util.UtilityElf.createInstance;
 
 abstract class PoolBase
 {
@@ -334,7 +335,7 @@ abstract class PoolBase
     */
    Connection newConnection() throws Exception
    {
-      final long start = ClockSource.INSTANCE.currentTime();
+      final long start = currentTime();
 
       Connection connection = null;
       try {
@@ -369,7 +370,7 @@ abstract class PoolBase
       finally {
          // tracker will be null during failFast check
          if (metricsTracker != null) {
-            metricsTracker.recordConnectionCreated(ClockSource.INSTANCE.elapsedMillis(start));
+            metricsTracker.recordConnectionCreated(elapsedMillis(start));
          }
       }
    }
@@ -679,9 +680,9 @@ abstract class PoolBase
        */
       void recordBorrowStats(final PoolEntry poolEntry, final long startTime)
       {
-         final long now = ClockSource.INSTANCE.currentTime();
+         final long now = currentTime();
          poolEntry.lastBorrowed = now;
-         tracker.recordConnectionAcquiredNanos(ClockSource.INSTANCE.elapsedNanos(startTime, now));
+         tracker.recordConnectionAcquiredNanos(elapsedNanos(startTime, now));
       }
 
       void recordConnectionTimeout() {

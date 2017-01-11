@@ -16,8 +16,10 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.pool.TestElf.getPool;
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.util.ClockSource.currentTime;
+import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -37,7 +39,6 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.mocks.StubDataSource;
-import com.zaxxer.hikari.util.ClockSource;
 
 /**
  * @author Matthew Tambara (matthew.tambara@liferay.com)
@@ -97,7 +98,6 @@ public class ConnectionPoolSizeVsThreadsTest {
       LOGGER.info("Starting test (minIdle={}, maxPoolSize={}, threadCount={}, workTimeMs={}, restTimeMs={}, connectionAcquisitionTimeMs={}, iterations={}, postTestTimeMs={})",
                   minIdle, maxPoolSize, threadCount, workTimeMs, restTimeMs, connectionAcquisitionTimeMs, iterations, postTestTimeMs);
 
-      final ClockSource clockSource = ClockSource.INSTANCE;
       final HikariConfig config = newHikariConfig();
       config.setMinimumIdle(minIdle);
       config.setMaximumPoolSize(maxPoolSize);
@@ -145,8 +145,8 @@ public class ConnectionPoolSizeVsThreadsTest {
 
          // collect pool data while there is no work to do.
          final Counts postLoad = new Counts();
-         final long start = clockSource.currentTime();
-         while (clockSource.elapsedMillis(start) < postTestTimeMs) {
+         final long start = currentTime();
+         while (elapsedMillis(start) < postTestTimeMs) {
             quietlySleep(50);
             postLoad.updateMaxCounts(pool);
          }
