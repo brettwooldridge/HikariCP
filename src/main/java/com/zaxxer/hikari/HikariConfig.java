@@ -16,6 +16,10 @@
 
 package com.zaxxer.hikari;
 
+import static com.zaxxer.hikari.util.UtilityElf.getNullIfEmpty;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -26,6 +30,7 @@ import java.security.AccessControlException;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 
@@ -41,11 +46,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.util.PropertyElf;
-
-import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.concurrent.TimeUnit.SECONDS;
-
-import static com.zaxxer.hikari.util.UtilityElf.getNullIfEmpty;
 
 public class HikariConfig implements HikariConfigMXBean
 {
@@ -93,7 +93,7 @@ public class HikariConfig implements HikariConfigMXBean
    private DataSource dataSource;
    private Properties dataSourceProperties;
    private ThreadFactory threadFactory;
-   private ScheduledThreadPoolExecutor scheduledExecutor;
+   private ScheduledExecutorService scheduledExecutor;
    private MetricsTrackerFactory metricsTrackerFactory;
    private Object metricRegistry;
    private Object healthCheckRegistry;
@@ -721,7 +721,29 @@ public class HikariConfig implements HikariConfigMXBean
     *
     * @return the executor
     */
+   @Deprecated
    public ScheduledThreadPoolExecutor getScheduledExecutorService()
+   {
+      return (ScheduledThreadPoolExecutor) scheduledExecutor;
+   }
+
+   /**
+    * Set the ScheduledExecutorService used for housekeeping.
+    *
+    * @param executor the ScheduledExecutorService
+    */
+   @Deprecated
+   public void setScheduledExecutorService(ScheduledThreadPoolExecutor executor)
+   {
+      this.scheduledExecutor = executor;
+   }
+
+   /**
+    * Get the ScheduledExecutorService used for housekeeping.
+    *
+    * @return the executor
+    */
+   public ScheduledExecutorService getScheduledExecutor()
    {
       return scheduledExecutor;
    }
@@ -731,11 +753,11 @@ public class HikariConfig implements HikariConfigMXBean
     *
     * @param executor the ScheduledExecutorService
     */
-   public void setScheduledExecutorService(ScheduledThreadPoolExecutor executor)
+   public void setScheduledExecutor(ScheduledExecutorService executor)
    {
       this.scheduledExecutor = executor;
    }
-
+   
    public String getTransactionIsolation()
    {
       return transactionIsolationName;
