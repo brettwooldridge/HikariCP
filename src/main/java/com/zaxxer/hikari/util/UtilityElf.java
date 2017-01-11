@@ -16,6 +16,7 @@
 
 package com.zaxxer.hikari.util;
 
+import static java.lang.Thread.currentThread;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.lang.reflect.Constructor;
@@ -44,7 +45,7 @@ public final class UtilityElf
    }
 
    /**
-    * Sleep and transform an InterruptedException into a RuntimeException.
+    * Sleep and suppress InterruptedException (but re-signal it).
     *
     * @param millis the number of milliseconds to sleep
     */
@@ -55,6 +56,7 @@ public final class UtilityElf
       }
       catch (InterruptedException e) {
          // I said be quiet!
+         currentThread().interrupt();
       }
    }
 
