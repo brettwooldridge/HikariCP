@@ -513,8 +513,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          else {
             final Throwable t = getLastConnectionFailure();
             if (t instanceof ConnectionSetupException) {
-               destroyHouseKeepingExecutorService();
-               throw new PoolInitializationException(t.getCause());
+               throwPoolInitializationException(t.getCause());
             }
 
             throwable = t;
@@ -523,9 +522,15 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       } while (elapsedMillis(startTime) < config.getInitializationFailTimeout());
 
       if (config.getInitializationFailTimeout() >= 0) {
-         destroyHouseKeepingExecutorService();
-         throw new PoolInitializationException(throwable);
+         throwPoolInitializationException(throwable);
       }
+   }
+
+   private void throwPoolInitializationException(Throwable t)
+   {
+      LOGGER.error("{} - Exception during pool initialization.", poolName, t);
+      destroyHouseKeepingExecutorService();
+      throw new PoolInitializationException(t);      
    }
 
    private void softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
