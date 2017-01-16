@@ -313,7 +313,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     *
     * @return the number of threads waiting for items from the bag
     */
-   public int getPendingQueue()
+   public int getWaitingThreadCount()
    {
       return waiters.get();
    }

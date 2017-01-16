@@ -16,6 +16,10 @@
 
 package com.zaxxer.hikari.pool;
 
+import static java.util.Collections.unmodifiableCollection;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import static com.zaxxer.hikari.pool.PoolEntry.LASTACCESS_REVERSE_COMPARABLE;
 import static com.zaxxer.hikari.util.ClockSource.currentTime;
 import static com.zaxxer.hikari.util.ClockSource.elapsedDisplayString;
@@ -23,12 +27,8 @@ import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
 import static com.zaxxer.hikari.util.ClockSource.plusMillis;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
-import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_REMOVED;
 import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
-import static java.util.Collections.unmodifiableCollection;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -111,7 +111,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       initializeHouseKeepingExecutorService();
 
       checkFailFast();
-   
+
       if (config.getMetricsTrackerFactory() != null) {
          setMetricsTrackerFactory(config.getMetricsTrackerFactory());
       }
@@ -303,7 +303,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    @Override
    public Future<Boolean> addBagItem(final int waiting)
    {
-      final boolean shouldAdd = waiting - addConnectionQueue.size() != 0;
+      final boolean shouldAdd = waiting - addConnectionQueue.size() > 0;
       if (shouldAdd) {
          return addConnectionExecutor.submit(POOL_ENTRY_CREATOR);
       }
@@ -333,14 +333,14 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    @Override
    public final int getTotalConnections()
    {
-      return connectionBag.size() - connectionBag.getCount(STATE_REMOVED);
+      return connectionBag.size();
    }
 
    /** {@inheritDoc} */
    @Override
    public final int getThreadsAwaitingConnection()
    {
-      return connectionBag.getPendingQueue();
+      return connectionBag.getWaitingThreadCount();
    }
 
    /** {@inheritDoc} */
@@ -441,7 +441,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             // variance up to 2.5% of the maxlifetime
             final long variance = maxLifetime > 10_000 ? ThreadLocalRandom.current().nextLong( maxLifetime / 40 ) : 0;
             final long lifetime = maxLifetime - variance;
-            poolEntry.setFutureEol(houseKeepingExecutorService.schedule( 
+            poolEntry.setFutureEol(houseKeepingExecutorService.schedule(
                () -> softEvictConnection(poolEntry, "(connection has passed maxLifetime)", false /* not owner */),
                lifetime, MILLISECONDS));
          }
@@ -530,7 +530,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    {
       LOGGER.error("{} - Exception during pool initialization.", poolName, t);
       destroyHouseKeepingExecutorService();
-      throw new PoolInitializationException(t);      
+      throw new PoolInitializationException(t);
    }
 
    private void softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
@@ -636,7 +636,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          // only create connections if we need another idle connection or have threads still waiting
          // for a new connection, otherwise bail
          return getTotalConnections() < config.getMaximumPoolSize() &&
-            (connectionBag.getPendingQueue() > 0 || getIdleConnections() < config.getMinimumIdle());
+            (connectionBag.getWaitingThreadCount() > 0 || getIdleConnections() < config.getMinimumIdle());
       }
    }
 
