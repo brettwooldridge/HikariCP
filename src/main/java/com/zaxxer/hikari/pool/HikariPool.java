@@ -303,7 +303,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    @Override
    public Future<Boolean> addBagItem(final int waiting)
    {
-      final boolean shouldAdd = waiting - addConnectionQueue.size() > 0;
+      final boolean shouldAdd = waiting - addConnectionQueue.size() >= 0; // Yes, >= is intentional.
       if (shouldAdd) {
          return addConnectionExecutor.submit(POOL_ENTRY_CREATOR);
       }
