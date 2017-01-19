@@ -1,21 +1,26 @@
 HikariCP Changes
 
-Changes in 2.5.2
+Changes in 2.6.0
 
- * issue 781 more technically accurate wording of pool startup and shutdown log messages.
+ * issue 793 add new HikariConfig method, setScheduledExecutor(ScheduledExecutorService),
+   and deprecate method setScheduledExecutorService(ScheduledThreadPoolExecutor). It is
+   unfortunate that the deprecated method has the more accurate name, but its signature
+   cannot be changed without breaking binary compatibility.
 
- * issue 774 fixed issue where spike load was causing creation of too many connections.
+ * issue 770 adding a new property initializationFailTimeout and deprecate configuration
+   property initializationFailFast.
+
+ * issue 774 significantly improve spike load handling.
 
  * issues 518/769 add new metric for tracking how long physical connection acquisition is
    taking.  DropWizard histogram name "ConnectionCreation", and Prometheus summary name
    "hikaricp_connection_creation_millis".
 
- * issue 741 cancel HouseKeeper task on pool shutdown. If the ScheduledExecutor in use is
-   does not belong to HikariCP, this task would remain scheduled after shutdown, causing a
+ * issue 741 cancel HouseKeeper task on pool shutdown. If the ScheduledExecutor being used
+   did not belong to HikariCP, this task would remain scheduled after shutdown, causing a
    memory leak.
 
- * issue 770 adding a new property initializationFailTimeout and deprecate configuration
-   property initializationFailFast.
+ * issue 781 more technically accurate wording of pool startup and shutdown log messages.
 
 Changes in 2.5.1
 
@@ -54,7 +59,7 @@ Changes in 2.4.8
  * Added Connection.commit() call to the fail-fast initialization for databases that
    automatically start a new Connection in a transaction and throw an exception on close
    if it is not committed.
- 
+
  * feature 694: report if a previously reported leaked connection is returned to the pool
 
  * issue 689: log a warning if default transaction isolation level cannot be detected.
@@ -75,7 +80,7 @@ Changes in 2.4.7
    problems in some locales such as Turkish.
 
  * pull 632: added support for Prometheus metrics tracker.
- 
+
  * issue 650: detect Amazon Redshift connection refused error codes.
 
 Changes in 2.4.6
@@ -93,14 +98,14 @@ Changes in 2.4.5
 
  * issue 596: fix bug that occurs when minimumIdle is set to 0, but maximumPoolSize is
    not explicitly set.
- 
+
  * issue 594: fix incompatibility with various libraries caused by storing a non-String
    object in System properties.
 
  * issue 593: improve logging when network timeout is not supported by the driver
 
  * issue 591: improve thread-safety of Statement proxies
- 
+
 Changes in 2.4.4
 
  * Generate unique sequential pool names, even across container classloaders to avoid
