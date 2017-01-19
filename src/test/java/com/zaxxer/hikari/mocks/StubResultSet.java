@@ -129,7 +129,7 @@ public class StubResultSet implements ResultSet
     @Override
     public float getFloat(int columnIndex) throws SQLException
     {
-        throw new SQLException("No reason", "08999");
+        throw new SQLException("Simulated disconnection error", "08999");
     }
 
     /** {@inheritDoc} */

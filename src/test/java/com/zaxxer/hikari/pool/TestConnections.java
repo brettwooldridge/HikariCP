@@ -515,7 +515,7 @@ public class TestConnections
          @Override
          public Statement createStatement() throws SQLException
          {
-            throw new SQLException("Bad query or something.");
+            throw new SQLException("Simulated exception in createStatement()");
          }
       }
 
@@ -541,11 +541,11 @@ public class TestConnections
             fail("getConnection() should have failed");
          }
          catch (SQLException e) {
-            assertSame("Bad query or something.", e.getNextException().getMessage());
+            assertSame("Simulated exception in createStatement()", e.getNextException().getMessage());
          }
       }
       catch (PoolInitializationException e) {
-         assertSame("Bad query or something.", e.getCause().getMessage());
+         assertSame("Simulated exception in createStatement()", e.getCause().getMessage());
       }
       
       config.setInitializationFailTimeout(0);

@@ -510,23 +510,21 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             }
             else {
                final Connection connection = poolEntry.close();
-               quietlyCloseConnection(connection, "Initialization check complete and minimumIdle is zero");
+               quietlyCloseConnection(connection, "(initialization check complete and minimumIdle is zero)");
             }
 
             return;
          }
-         else {
-            final Throwable t = getLastConnectionFailure();
-            if (t instanceof ConnectionSetupException) {
-               throwPoolInitializationException(t.getCause());
-            }
 
-            throwable = t;
-            quietlySleep(1000L);
+         throwable = getLastConnectionFailure();
+         if (throwable instanceof ConnectionSetupException) {
+            throwPoolInitializationException(throwable.getCause());
          }
+
+         quietlySleep(1000L);
       } while (elapsedMillis(startTime) < config.getInitializationFailTimeout());
 
-      if (config.getInitializationFailTimeout() >= 0) {
+      if (config.getInitializationFailTimeout() > 0) {
          throwPoolInitializationException(throwable);
       }
    }

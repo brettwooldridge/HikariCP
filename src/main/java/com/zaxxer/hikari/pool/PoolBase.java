@@ -353,19 +353,14 @@ abstract class PoolBase
          return connection;
       }
       catch (Exception e) {
-         Exception cause = e;
-         if (e instanceof ConnectionSetupException) {
-            cause = (Exception) e.getCause();
-         }
-
          if (connection != null) {
             quietlyCloseConnection(connection, "(Failed to create/setup connection)");
          }
          else if (getLastConnectionFailure() == null) {
-            LOGGER.debug("{} - Failed to create/setup connection: {}", poolName, cause.getMessage());
+            LOGGER.debug("{} - Failed to create/setup connection: {}", poolName, e.getMessage());
          }
 
-         lastConnectionFailure.set(cause);
+         lastConnectionFailure.set(e);
          throw e;
       }
       finally {
@@ -431,7 +426,7 @@ abstract class PoolBase
             }
          }
          catch (Throwable e) {
-            LOGGER.error("{} - Failed to execute" + (isUseJdbc4Validation ? " isValid() for connection, configure" : "") + " connection test query. ({})", poolName, e.getMessage());
+            LOGGER.error("{} - Failed to execute" + (isUseJdbc4Validation ? " isValid() for connection, configure" : "") + " connection test query ({}).", poolName, e.getMessage());
             throw e;
          }
 
@@ -442,7 +437,7 @@ abstract class PoolBase
             }
          }
          catch (SQLException e) {
-            LOGGER.warn("{} - Default transaction isolation level detection failed. ({})", poolName, e.getMessage());
+            LOGGER.warn("{} - Default transaction isolation level detection failed ({}).", poolName, e.getMessage());
          }
          finally {
             isValidChecked = true;
