@@ -68,7 +68,7 @@ public class StubPreparedStatement extends StubStatement implements PreparedStat
     @Override
     public int getMaxFieldSize() throws SQLException
     {
-        throw new SQLException("No reason", "08999");
+        throw new SQLException("Simulated disconnection error", "08999");
     }
 
     /** {@inheritDoc} */
