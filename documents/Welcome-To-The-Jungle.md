@@ -6,7 +6,9 @@ HikariCP has over 100K users, so from time to time we are approached with challe
 ### The Challenge
 The user has an environment where connection creation is expensive, on the order of 150ms; and yet queries typically execute in ~2ms.  Long connection setup times can be the result of various factors, alone or in combination: DNS resolution times, encrypted connections with strong encryption (2048/4096 bit), external authentication, database server load, etc.
 
-*Generally speaking, for the best performance in response to spike demands, HikariCP recommends a fixed-size pool.* Unfortunately, the user's application is also in an environment where many other applications are connected to the same database, and therefore dynamically-sized pools are desirable -- where idle applications are allowed to give some of up their connections.  The user is running the application with HikariCP configured as ``minimumIdle=5``.
+*Generally speaking, for the best performance in response to spike demands, HikariCP recommends a fixed-size pool.*
+
+Unfortunately, the user's application is also in an environment where many other applications are connected to the same database, and therefore dynamically-sized pools are desirable -- where idle applications are allowed to give some of up their connections.  The user is running the application with HikariCP configured as ``minimumIdle=5``.
 
 In this environment, the application has periods of quiet, as well as sudden spikes of requests, and periods of sustained activity.  The combination of high connection setup times, a dynamically-sized pool requirement, and spike demands is just about the worst case scenario for a connection pool.
 
