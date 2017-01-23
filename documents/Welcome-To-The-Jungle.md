@@ -1,12 +1,12 @@
-<img width="360" align="left" src="https://github.com/brettwooldridge/HikariCP/wiki/welcome-to-the-jungle.jpg">
+<img width="340" height="240" align="left" src="https://github.com/brettwooldridge/HikariCP/wiki/welcome-to-the-jungle.jpg">
 Microbenchmarks are great at measuring performance "in the small"; for example, measuring the performance of individual methods. But good results do not necessarily translate into macro-scale performance.  Real world access patterns and demand loads often run into deeper, systemic, architectural design issues that cannot be discerned at the micro level.
 
-HikariCP has hundreds of thousands of users, so from time to time we are approached with challenges encountered "in the wild".  Recently, one such challenge led to a deeper investigation: ***Spike Demand***.
+HikariCP has over 100K users, so from time to time we are approached with challenges encountered "in the wild".  Recently, one such challenge led to a deeper investigation: ***Spike Demand***.
 
 ### The Challenge
 The user has an environment where connection creation is expensive, on the order of 150ms; and yet queries typically execute in ~2ms.  Long connection setup times can be the result of various factors, alone or in combination: DNS resolution times, encrypted connections with strong encryption (2048/4096 bit), external authentication, database server load, etc.
 
-Generally speaking, for the best performance in response to spike demands, HikariCP recommends a fixed-size pool. Unfortunately, the user's application is also in an environment where many other applications are connected to the same database, and therefore dynamically-sized pools are desirable -- where idle applications are allowed to give some of up their connections.  The user is running the application with HikariCP configured as ``minimumIdle=5``.
+*Generally speaking, for the best performance in response to spike demands, HikariCP recommends a fixed-size pool.* Unfortunately, the user's application is also in an environment where many other applications are connected to the same database, and therefore dynamically-sized pools are desirable -- where idle applications are allowed to give some of up their connections.  The user is running the application with HikariCP configured as ``minimumIdle=5``.
 
 In this environment, the application has periods of quiet, as well as sudden spikes of requests, and periods of sustained activity.  The combination of high connection setup times, a dynamically-sized pool requirement, and spike demands is just about the worst case scenario for a connection pool.
 
