@@ -68,7 +68,8 @@ Looking at the HikariCP graph, we couldn't have wished for a better profile; it'
 
 HikariCP's profile in this case, and the reason for the difference observed between other pools, is the result of our Prime Directive:
 
-💡 **User threads should only ever block on the** ***pool itself***.<sup>1</sup> &nbsp;<sub><sup>1</sup>&nbsp;to the greatest degree possible</sub>
+💡 **User threads should only ever block on the** ***pool itself***.<sup>1</sup><br>
+<img width="32px" src="https://github.com/brettwooldridge/HikariCP/wiki/space60x1.gif"><sub><sup>1</sup>&nbsp;to the greatest extent possible.</sub>
 
 What does this mean?  Consider this hypothetical scenario:
 
