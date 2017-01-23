@@ -414,6 +414,10 @@ Note Play 2.4 now uses HikariCP by default.  A new plugin has come up for the th
 
 A new Clojure wrapper has been created by [tomekw](https://github.com/tomekw) and can be [found here](https://github.com/tomekw/hikari-cp).
 
+### JRuby Wrapper
+
+A new JRuby wrapper has been created by [tomekw](https://github.com/tomekw) and can be [found here](https://github.com/tomekw/hucpa).
+
 ----------------------------------------------------
 
 ### Support <sup><sup>&#128172;</sup></sup>
