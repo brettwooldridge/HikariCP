@@ -57,6 +57,8 @@ Where ``150`` is the connection establishment time, ``<pool>`` is one of *hikari
 --------------------
 [![](https://github.com/brettwooldridge/HikariCP/wiki/Vibur-Spike.png)](https://github.com/brettwooldridge/HikariCP/wiki/Vibur-Spike.png)
 
+<sup>* Note that the times provided in the raw data is the number of microseconds (μs) since the start of the test.</sup>
+
 --------------------
 #### Apache DBCP vs HikariCP
 In case you missed the *time-scale* in the graphs above, here is a properly scaled comparable; Apache DBCP on top, HikariCP on the bottom.
