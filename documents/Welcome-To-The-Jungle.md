@@ -42,17 +42,17 @@ bash$ ./spiketest.sh 150 <pool> 50
 ```
 Where ``150`` is the connection establishment time, ``<pool>`` is one of *hikari*, *dbcp2*, *vibur*, or *c3p0*, and ``50`` is the number of threads/requests.  Note that *c3p0* was dropped from the analysis here, as its run time was ~120x that of HikariCP.
 
-#### HikariCP (v2.6.0)
+#### HikariCP (v2.6.0) <sub><sup><a href="https://github.com/brettwooldridge/HikariCP/wiki/Spike-Hikari-data.txt">raw data</a></sup></sub>
 
 --------------------
 [![](https://github.com/brettwooldridge/HikariCP/wiki/Hikari-Spike.png)](https://github.com/brettwooldridge/HikariCP/wiki/Hikari-Spike.png)
 
-#### Apache DBCP (v2.1.1)
+#### Apache DBCP (v2.1.1) <sub><sup><a href="https://github.com/brettwooldridge/HikariCP/wiki/Spike-DBCP2-data.txt">raw data</a></sup></sub>
 
 --------------------
 [![](https://github.com/brettwooldridge/HikariCP/wiki/DBCP2-Spike.png)](https://github.com/brettwooldridge/HikariCP/wiki/DBCP2-Spike.png)
 
-#### Vibur DBCP (v16.1)
+#### Vibur DBCP (v16.1) <sub><sup><a href="https://github.com/brettwooldridge/HikariCP/wiki/Spike-Vibur-data.txt">raw data</a></sup></sub>
 
 --------------------
 [![](https://github.com/brettwooldridge/HikariCP/wiki/Vibur-Spike.png)](https://github.com/brettwooldridge/HikariCP/wiki/Vibur-Spike.png)
