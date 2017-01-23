@@ -85,3 +85,6 @@ Both Apache and Vibur ended the run with 45 connections, while HikariCP ended th
 We know what you are thinking, *"What if the load had been sustained?"*&nbsp;&nbsp;The answer is: HikariCP also would have ramped up.
 
 In point of fact, as soon as the pool hit zero available connections, right around 800μs into the run, HikariCP began requesting connections to be added to the pool asynchronously.  If the metrics had continued to be collected past the end of the spike -- out beyond 150ms -- you would observe that an additional connection is indeed added to the pool.  But *only one*, because HikariCP employs *elision logic*; at that point HikariCP would also realize that there is actually no more pending demand, and the remaining connection acquisitions would be elided.
+
+### Conclusion
+This scenario represents only *one* of many access patterns. HikariCP will continue to research *and innovate* in the connection pool space when presented with challenging problems encountered in real world deployments.  As always, thank you for your patronage.
