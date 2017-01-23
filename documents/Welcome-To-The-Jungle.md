@@ -80,7 +80,7 @@ What does this mean?  Consider this hypothetical scenario:
 If the thread is directed to create a new connection, and that connection takes 150ms to establish, what happens if one of the five in-use connections is returned to the pool?  That available connection cannot be utilized, because the thread that could utilize it is blocked on another resource (not the pool).
 
 ---------------------
-Both Apache and Vibur ended the run with 45 connections, while HikariCP ended the run with 5.  This has major and measurable effects for real world deployments.
+Both Apache and Vibur ended the run with 45 connections, while HikariCP ended the run with 5.  This has major and measurable effects for real world deployments.  That is 40 additional connections that are not available to other applications, and 40 additional threads and associated memory structures in the database.
 
 We know what you are thinking, *"What if the load had been sustained?"*&nbsp;&nbsp;The answer is: HikariCP also would have ramped up.
 
