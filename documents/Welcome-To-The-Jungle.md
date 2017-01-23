@@ -40,8 +40,6 @@ bash$ ./spiketest.sh 150 <pool> 50
 ```
 Where ``150`` is the connection establishment time, ``<pool>`` is one of *hikari*, *dbcp2*, *vibur*, or *c3p0*, and ``50`` is the number of threads/requests.  Note that *c3p0* was dropped from the analysis here, as its run time was ~120x that of HikariCP.
 
-👉 *Click the graphs to view unscaled versions.*
-
 #### HikariCP (v2.6.0)
 
 --------------------
@@ -59,7 +57,7 @@ Where ``150`` is the connection establishment time, ``<pool>`` is one of *hikari
 
 --------------------
 #### Apache DBCP vs HikariCP
-In case you missed the time-scale in the graphs above, here is a properly scaled comparable; Apache DBCP on top, HikariCP on the bottom.
+In case you missed the *time-scale* in the graphs above, here is a properly scaled comparable; Apache DBCP on top, HikariCP on the bottom.
 
 [![](https://github.com/brettwooldridge/HikariCP/wiki/Spike-Compare.png)](https://github.com/brettwooldridge/HikariCP/wiki/Spike-Compare.png)
 
@@ -70,7 +68,7 @@ Looking at the HikariCP graph, we couldn't have wished for a better profile; it'
 
 HikariCP's profile in this case, and the reason for the difference observed between other pools, is the result of our Prime Directive:
 
-💡 **User threads should only ever block on the** ***pool itself***. <sub>(to the greatest degree possible)</sub>
+💡 **User threads should only ever block on the** ***pool itself***.<sup>1</sup> &nbsp;<sub><sup>1</sup>&nbsp;to the greatest degree possible</sub>
 
 What does this mean?  Consider this hypothetical scenario:
 
@@ -83,4 +81,4 @@ Both Apache and Vibur ended the run with 45 connections, while HikariCP ended th
 
 We know what you are thinking, *"What if the load had been sustained?"*&nbsp;&nbsp;The answer is: HikariCP also would have ramped up.
 
-In point of fact, as soon as the pool hit zero available connections, right around 800μs into the run, HikariCP began requesting connections to be added to the pool asynchronously.  If the metrics had continued to be collected past the end of the spike -- out beyond 150ms -- you would observe that an additional connection is indeed added to the pool.  But *only one*, because HikariCP employs *elision logic*; at that point HikariCP would also realize that there is actually no more pending demand, and the remaining connection attempts would be elided.
+In point of fact, as soon as the pool hit zero available connections, right around 800μs into the run, HikariCP began requesting connections to be added to the pool asynchronously.  If the metrics had continued to be collected past the end of the spike -- out beyond 150ms -- you would observe that an additional connection is indeed added to the pool.  But *only one*, because HikariCP employs *elision logic*; at that point HikariCP would also realize that there is actually no more pending demand, and the remaining connection acquisitions would be elided.
