@@ -7,7 +7,7 @@ Changes in 2.6.0
    unfortunate that the deprecated method has the more accurate name, but its signature
    cannot be changed without breaking binary compatibility.
 
- * issue 770 adding a new property initializationFailTimeout and deprecate configuration
+ * issue 770 add a new property initializationFailTimeout, and deprecate configuration
    property initializationFailFast.
 
  * issue 774 significantly improve spike load handling.
@@ -39,6 +39,17 @@ Changes in 2.5.0
    now called "HikariCP-java7".
 
  * HikariCP 2.5.0 and HikariCP-java7 2.4.8 have identical functionality.
+
+Changes in 2.4.10
+
+ * issue 770 add a new property initializationFailTimeout, and deprecate configuration
+   property initializationFailFast.
+
+ * issue 774 significantly improve spike load handling.
+
+ * issue 741 cancel HouseKeeper task on pool shutdown. If the ScheduledExecutor being used
+   did not belong to HikariCP, this task would remain scheduled after shutdown, causing a
+   memory leak.
 
 Changes in 2.4.9
 
