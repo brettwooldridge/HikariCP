@@ -5,7 +5,7 @@
 [![][license img]][license]
 [![][Maven Central img]][Maven Central]
 
-Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC connection pool.  At roughly 90Kb, the library is very light.  Read about [how we do it here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).
+Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC connection pool.  At roughly 130Kb, the library is very light.  Read about [how we do it here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).
 
 &nbsp;&nbsp;&nbsp;<sup>**"Simplicity is prerequisite for reliability."**<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- *Edsger Dijkstra*</sup>
@@ -17,7 +17,7 @@ _Java 8 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>2.5.1</version>
+        <version>2.6.0</version>
     </dependency>
 ```
 _Java 7 maven artifact (*maintenance mode*):_
@@ -25,7 +25,7 @@ _Java 7 maven artifact (*maintenance mode*):_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP-java7</artifactId>
-        <version>2.4.9</version>
+        <version>2.4.10</version>
     </dependency>
 ```
 _Java 6 maven artifact (*maintenance mode*):_
@@ -39,13 +39,12 @@ _Java 6 maven artifact (*maintenance mode*):_
 Or [download from here](http://search.maven.org/#search%7Cga%7C1%7Ccom.zaxxer.hikaricp).
 
 ----------------------------------------------------
-[![](https://github.com/brettwooldridge/HikariCP/wiki/LudicrousBlog.png)](http://brettwooldridge.github.io/HikariCP/ludicrous.html)
 
 ##### JMH Benchmarks
 
-Microbenchmarks were created to isolate and measure the overhead of pools using the [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/) developed by the Oracle JVM performance team. You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
+Microbenchmarks were created to isolate and measure the overhead of pools using the [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/). You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
 
-![](https://github.com/brettwooldridge/HikariCP/wiki/HikariCP-bench-2.4.0.png)
+![](https://github.com/brettwooldridge/HikariCP/wiki/HikariCP-bench-2.6.0.png)
 
  * One *Connection Cycle* is defined as single ``DataSource.getConnection()``/``Connection.close()``.
    * In *Unconstrained* benchmark, connections > threads.
@@ -53,8 +52,11 @@ Microbenchmarks were created to isolate and measure the overhead of pools using 
  * One *Statement Cycle* is defined as single ``Connection.prepareStatement()``, ``Statement.execute()``, ``Statement.close()``.
 
 <sup>
-<sup>1</sup> Versions: HikariCP 2.4.0, commons-dbcp2 2.1, Tomcat 8.0.23, Vibur 3.0, c3p0 0.9.5.1, Java 8u45 <br/>
-<sup>2</sup> Java options: -server -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -Xmx512m <br/>
+<sup>1</sup> Versions: HikariCP 2.6.0, commons-dbcp2 2.1.1, Tomcat 8.0.24, Vibur 16.1, c3p0 0.9.5.2, Java 8u111 <br/>
+<sup>2</sup> Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz <br/>
+<sup>3</sup> Uncontended benchmark: 32 threads/32 connections, Contended benchmark: 32 threads, 16 connections <br/>
+<sup>4</sup> Apache Tomcat fails to complete the Statement benchmark when the ``StatementFinalizer`` is used.  Disabling it is an unfair comparison to other pools. <br/>
+<sup>5</sup> Apache DBCP fails to complete the Statemet benchmark reliably due to excessive garbage collection times.
 </sup>
 
 ----------------------------------------------------
@@ -207,11 +209,15 @@ in logging and JMX management consoles to identify pools and pool configurations
 
 ##### Infrequently used
 
-&#9989;``initializationFailFast``<br/>
+&#8986;``initializationFailTimeout``<br/>
 This property controls whether the pool will "fail fast" if the pool cannot be seeded with
-initial connections successfully.  If you want your application to start *even when* the
-database is down/unavailable, set this property to ``false``.
-*Default: true*
+an initial connection successfully.  Any positive number is taken to be the number of 
+milliseconds to attempt to acquire an initial connection; the application thread will be 
+blocked during this period.  If a connection cannot be acquired before this timeout occurs,
+an exception will be thrown.  This timeout is applied *after* the ``connectionTimeout``
+period.  If you want your application to start *even when* the database is down/unavailable,
+set this property to ``0``.
+*Default: 1*
 
 &#10062;``isolateInternalQueries``<br/>
 This property determines whether HikariCP isolates internal pool queries, such as the
