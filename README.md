@@ -60,26 +60,29 @@ Microbenchmarks were created to isolate and measure the overhead of pools using 
 </sup>
 
 ----------------------------------------------------
-##### User Testimonials
+#### Analyses
 
-[![](https://github.com/brettwooldridge/HikariCP/wiki/tweet3.png)](https://twitter.com/jkuipers)<br/>
-[![](https://github.com/brettwooldridge/HikariCP/wiki/tweet1.png)](https://twitter.com/steve_objectify)<br/>
-[![](https://github.com/brettwooldridge/HikariCP/wiki/tweet2.png)](https://twitter.com/brettemeyer)<br/>
-[![](https://github.com/brettwooldridge/HikariCP/wiki/tweet4.png)](https://twitter.com/dgomesbr)
+#### Spike Demand Pool Comparison
+Read about various pool spike demand handling [here](https://github.com/brettwooldridge/HikariCP/blob/dev/documents/Welcome-To-The-Jungle.md).
 
-In the words of the guys over at [Edulify](https://edulify.com), *"HikariCP is supposed to be the fastest connection pool in Java land. But we did not start to use it because of speed, but because of its reliability.  Here is a cool graph that shows connections opened to PostgreSQL.  As you can see, the pool is way more stable. Also it is keeping its size at the minimum since we deploy it."*
+[![](https://github.com/brettwooldridge/HikariCP/wiki/Spike-Hikari.png)](https://github.com/brettwooldridge/HikariCP/blob/dev/documents/Welcome-To-The-Jungle.md)
 
-![](https://github.com/brettwooldridge/HikariCP/wiki/HikariVsBone.png)
+#### You're [probably] doing it wrong.
+AKA ["What you probably didn't know about connection pool sizing"](https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing).  Read on to find out.
 
-----------------------------------------------------
 #### WIX Engineering Analysis
 We'd like to thank the guys over at WIX for the unsolicited and deep write-up about HikariCP on their [engineering blog](http://engineering.wix.com/2015/04/28/how-does-hikaricp-compare-to-other-connection-pools/).  Take a look if you have time.
 
 #### Failure: Pools behaving badly
 Read our interesting ["Database down" pool challenge](https://github.com/brettwooldridge/HikariCP/wiki/Bad-Behavior:-Handling-Database-Down).
 
-#### You're [probably] doing it wrong.
-AKA ["What you probably didn't know about connection pool sizing"](https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing).  Read on to find out.
+----------------------------------------------------
+##### User Testimonials
+
+[![](https://github.com/brettwooldridge/HikariCP/wiki/tweet3.png)](https://twitter.com/jkuipers)<br/>
+[![](https://github.com/brettwooldridge/HikariCP/wiki/tweet1.png)](https://twitter.com/steve_objectify)<br/>
+[![](https://github.com/brettwooldridge/HikariCP/wiki/tweet2.png)](https://twitter.com/brettemeyer)<br/>
+[![](https://github.com/brettwooldridge/HikariCP/wiki/tweet4.png)](https://twitter.com/dgomesbr)
 
 ------------------------------
 #### Configuration (knobs, baby!)
