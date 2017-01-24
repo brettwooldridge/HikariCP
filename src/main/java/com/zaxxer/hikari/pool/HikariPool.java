@@ -32,9 +32,8 @@ import java.sql.SQLTransientConnectionException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -42,6 +41,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -536,7 +537,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private void initializeHouseKeepingExecutorService()
    {
       if (config.getScheduledExecutorService() == null) {
-         final ThreadFactory threadFactory = Optional.ofNullable(config.getThreadFactory()).orElse(new DefaultThreadFactory(poolName + " housekeeper", true));
+         final ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory(poolName + " housekeeper", true);
          final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
          executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
          executor.setRemoveOnCancelPolicy(true);
@@ -709,6 +710,49 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       public PoolInitializationException(Throwable t)
       {
          super("Failed to initialize pool: " + t.getMessage(), t);
+      }
+   }
+
+   // Mimic the Java 8 version of java.util.concurrent.CompletableFuture
+   public static class CompletableFuture<T> implements Future<T>
+   {
+      private T result;
+
+      @Override
+      public boolean cancel(boolean mayInterruptIfRunning)
+      {
+         return false;
+      }
+
+      public static <U> Future<U> completedFuture(U value)
+      {
+         CompletableFuture<U> f = new CompletableFuture<U>();
+         f.result = value;
+         return f;
+      }
+
+      @Override
+      public boolean isCancelled()
+      {
+         return false;
+      }
+
+      @Override
+      public boolean isDone()
+      {
+         return true;
+      }
+
+      @Override
+      public T get() throws InterruptedException, ExecutionException
+      {
+         return result;
+      }
+
+      @Override
+      public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException
+      {
+         return result;
       }
    }
 }

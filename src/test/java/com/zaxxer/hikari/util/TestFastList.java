@@ -14,16 +14,20 @@
  * limitations under the License.
 */
 
-package com.zaxxer.hikari.pool;
+package com.zaxxer.hikari.util;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Iterator;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.zaxxer.hikari.mocks.StubStatement;
-import com.zaxxer.hikari.util.FastList;
 
 public class TestFastList
 {
@@ -42,10 +46,10 @@ public class TestFastList
 
         for (int i = 0; i < 32; i++)
         {
-            Assert.assertNotNull("Element " + i + " was null but should be " + verifyList.get(i), list.get(0));
+            assertNotNull("Element " + i + " was null but should be " + verifyList.get(i), list.get(0));
             int size = list.size();
             list.remove(verifyList.get(i));
-            Assert.assertSame(size - 1, list.size());
+            assertSame(size - 1, list.size());
         }
     }
 
@@ -64,10 +68,10 @@ public class TestFastList
 
         for (int i = 31; i >= 0; i--)
         {
-            Assert.assertNotNull("Element " + i, list.get(i));
+            assertNotNull("Element " + i, list.get(i));
             int size = list.size();
             list.remove(verifyList.get(i));
-            Assert.assertSame(size - 1, list.size());
+            assertSame(size - 1, list.size());
         }
     }
 
@@ -86,9 +90,25 @@ public class TestFastList
 
         for (int i = 0; i < 100; i++)
         {
-            Assert.assertNotNull("Element " + i, list.get(i));
-            Assert.assertSame(verifyList.get(i), list.get(i));
+            assertNotNull("Element " + i, list.get(i));
+            assertSame(verifyList.get(i), list.get(i));
         }
+    }
+
+    @Test
+    public void testIterator()
+    {
+       FastList<Statement> list = new FastList<>(Statement.class);
+       for (int i = 0; i < 100; i++)
+       {
+           StubStatement statement = new StubStatement(null);
+           list.add(statement);
+       }
+
+       Iterator<Statement> iter = list.iterator();
+       for (int i = 0;  i < list.size(); i++) {
+          assertSame(list.get(i), iter.next());
+       }
     }
 
     @Test
@@ -101,9 +121,9 @@ public class TestFastList
            list.add(statement);
        }
 
-       Assert.assertNotEquals(0, list.size());
+       assertNotEquals(0, list.size());
        list.clear();
-       Assert.assertEquals(0, list.size());
+       assertEquals(0, list.size());
     }
 
     @Test
@@ -119,8 +139,8 @@ public class TestFastList
            last = statement;
        }
 
-       Assert.assertEquals(last, list.removeLast());
-       Assert.assertEquals(99, list.size());
+       assertEquals(last, list.removeLast());
+       assertEquals(99, list.size());
     }
 
     @Test

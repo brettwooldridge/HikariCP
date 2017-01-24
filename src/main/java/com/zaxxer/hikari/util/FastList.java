@@ -19,16 +19,11 @@ package com.zaxxer.hikari.util;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.RandomAccess;
-import java.util.Spliterator;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
 
 /**
  * Fast list without range checking.
@@ -230,6 +225,11 @@ public final class FastList<T> implements List<T>, RandomAccess, Serializable
 
             throw new NoSuchElementException("No more elements in FastList"); 
          }
+
+         @Override
+         public void remove()
+         {
+         }
       };
    }
 
@@ -327,36 +327,6 @@ public final class FastList<T> implements List<T>, RandomAccess, Serializable
    /** {@inheritDoc} */
    @Override
    public Object clone()
-   {
-      throw new UnsupportedOperationException();
-   }
-
-   /** {@inheritDoc} */
-   public void forEach(Consumer<? super T> action)
-   {
-      throw new UnsupportedOperationException();
-   }
-
-   /** {@inheritDoc} */
-   public Spliterator<T> spliterator()
-   {
-      throw new UnsupportedOperationException();
-   }
-
-   /** {@inheritDoc} */
-   public boolean removeIf(Predicate<? super T> filter)
-   {
-      throw new UnsupportedOperationException();
-   }
-
-   /** {@inheritDoc} */
-   public void replaceAll(UnaryOperator<T> operator)
-   {
-      throw new UnsupportedOperationException();
-   }
-
-   /** {@inheritDoc} */
-   public void sort(Comparator<? super T> c)
    {
       throw new UnsupportedOperationException();
    }
