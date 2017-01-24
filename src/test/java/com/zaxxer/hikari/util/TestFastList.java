@@ -14,7 +14,7 @@
  * limitations under the License.
 */
 
-package com.zaxxer.hikari.pool;
+package com.zaxxer.hikari.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -23,11 +23,11 @@ import static org.junit.Assert.assertSame;
 
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import org.junit.Test;
 
 import com.zaxxer.hikari.mocks.StubStatement;
-import com.zaxxer.hikari.util.FastList;
 
 public class TestFastList
 {
@@ -93,6 +93,22 @@ public class TestFastList
             assertNotNull("Element " + i, list.get(i));
             assertSame(verifyList.get(i), list.get(i));
         }
+    }
+
+    @Test
+    public void testIterator()
+    {
+       FastList<Statement> list = new FastList<>(Statement.class);
+       for (int i = 0; i < 100; i++)
+       {
+           StubStatement statement = new StubStatement(null);
+           list.add(statement);
+       }
+
+       Iterator<Statement> iter = list.iterator();
+       for (int i = 0;  i < list.size(); i++) {
+          assertSame(list.get(i), iter.next());
+       }
     }
 
     @Test
