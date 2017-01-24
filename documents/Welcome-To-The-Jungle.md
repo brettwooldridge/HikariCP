@@ -45,17 +45,17 @@ Where ``150`` is the connection establishment time, ``<pool>`` is one of *hikari
 #### HikariCP (v2.6.0) <sub><sup><a href="https://github.com/brettwooldridge/HikariCP/wiki/Spike-Hikari-data.txt">raw data</a></sup></sub>
 
 --------------------
-[![](https://github.com/brettwooldridge/HikariCP/wiki/Hikari-Spike.png)](https://github.com/brettwooldridge/HikariCP/wiki/Hikari-Spike.png)
+[![](https://github.com/brettwooldridge/HikariCP/wiki/Spike-Hikari.png)](https://github.com/brettwooldridge/HikariCP/wiki/Spike-Hikari.png)
 
 #### Apache DBCP (v2.1.1) <sub><sup><a href="https://github.com/brettwooldridge/HikariCP/wiki/Spike-DBCP2-data.txt">raw data</a></sup></sub>
 
 --------------------
-[![](https://github.com/brettwooldridge/HikariCP/wiki/DBCP2-Spike.png)](https://github.com/brettwooldridge/HikariCP/wiki/DBCP2-Spike.png)
+[![](https://github.com/brettwooldridge/HikariCP/wiki/Spike-DBCP2.png)](https://github.com/brettwooldridge/HikariCP/wiki/Spike-DBCP2.png)
 
 #### Vibur DBCP (v16.1) <sub><sup><a href="https://github.com/brettwooldridge/HikariCP/wiki/Spike-Vibur-data.txt">raw data</a></sup></sub>
 
 --------------------
-[![](https://github.com/brettwooldridge/HikariCP/wiki/Vibur-Spike.png)](https://github.com/brettwooldridge/HikariCP/wiki/Vibur-Spike.png)
+[![](https://github.com/brettwooldridge/HikariCP/wiki/Spike-Vibur.png)](https://github.com/brettwooldridge/HikariCP/wiki/Spike-Vibur.png)
 
 <sup>* Note that the times provided in the raw data is the number of microseconds (μs) since the start of the test.</sup>
 
