@@ -16,7 +16,6 @@
 
 package com.zaxxer.hikari.mocks;
 
-import com.zaxxer.hikari.pool.TestElf;
 import com.zaxxer.hikari.util.UtilityElf;
 
 import java.io.PrintWriter;

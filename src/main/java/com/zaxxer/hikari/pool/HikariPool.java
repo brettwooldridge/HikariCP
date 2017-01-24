@@ -19,7 +19,6 @@ package com.zaxxer.hikari.pool;
 import static com.zaxxer.hikari.pool.PoolEntry.LASTACCESS_COMPARABLE;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
-import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_REMOVED;
 import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static java.util.Collections.unmodifiableCollection;
@@ -41,7 +40,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,8 +79,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", MILLISECONDS.toMillis(500));
    private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", SECONDS.toMillis(30));
 
-   private final PoolEntryCreator POOL_ENTRY_CREATOR = new PoolEntryCreator();
-   private final AtomicInteger totalConnections;
+   private final PoolEntryCreator POOL_ENTRY_CREATOR = new PoolEntryCreator(null);
    private final Collection<Runnable> addConnectionQueue;
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
@@ -105,7 +102,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       super(config);
 
       this.connectionBag = new ConcurrentBag<>(this);
-      this.totalConnections = new AtomicInteger();
       this.suspendResumeLock = config.isAllowPoolSuspension() ? new SuspendResumeLock() : SuspendResumeLock.FAUX_LOCK;
 
       checkFailFast();
@@ -125,7 +121,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
       LinkedBlockingQueue<Runnable> addConnectionQueue = new LinkedBlockingQueue<>(config.getMaximumPoolSize() + 1);
       this.addConnectionQueue = unmodifiableCollection(addConnectionQueue);
-      this.addConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
+      this.addConnectionExecutor = createThreadPoolExecutor(addConnectionQueue, poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
       this.closeConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
       if (config.getScheduledExecutorService() == null) {
@@ -302,10 +298,10 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    /** {@inheritDoc} */
    @Override
-   public Future<Boolean> addBagItem()
+   public Future<Boolean> addBagItem(final int waiting)
    {
-      final int connectionsToAdd = connectionBag.getPendingQueue() - addConnectionQueue.size();
-      if (connectionsToAdd > 0) {
+	  final boolean shouldAdd = waiting - addConnectionQueue.size() >= 0; // Yes, >= is intentional.
+      if (shouldAdd) {
          return addConnectionExecutor.submit(POOL_ENTRY_CREATOR);
       }
 
@@ -334,14 +330,14 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    @Override
    public final int getTotalConnections()
    {
-      return connectionBag.size() - connectionBag.getCount(STATE_REMOVED);
+      return connectionBag.size();
    }
 
    /** {@inheritDoc} */
    @Override
    public final int getThreadsAwaitingConnection()
    {
-      return connectionBag.getPendingQueue();
+      return connectionBag.getWaitingThreadCount();
    }
 
    /** {@inheritDoc} */
@@ -417,10 +413,6 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    final void closeConnection(final PoolEntry poolEntry, final String closureReason)
    {
       if (connectionBag.remove(poolEntry)) {
-         final int tc = totalConnections.decrementAndGet();
-         if (tc < 0) {
-            LOGGER.warn("{} - Unexpected value of totalConnections={}", poolName, tc, new Exception());
-         }
          final Connection connection = poolEntry.close();
          closeConnectionExecutor.execute(new Runnable() {
             @Override
@@ -472,19 +464,10 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
     */
    private void fillPool()
    {
-      final int connectionsToAdd = Math.min(config.getMaximumPoolSize() - totalConnections.get(), config.getMinimumIdle() - getIdleConnections())
+      final int connectionsToAdd = Math.min(config.getMaximumPoolSize() - getTotalConnections(), config.getMinimumIdle() - getIdleConnections())
                                    - addConnectionQueue.size();
       for (int i = 0; i < connectionsToAdd; i++) {
-         addConnectionExecutor.submit(POOL_ENTRY_CREATOR);
-      }
-
-      if (connectionsToAdd > 0 && LOGGER.isDebugEnabled()) {
-         addConnectionExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-               logPoolState("After adding ");
-            }
-         });
+    	 addConnectionExecutor.submit((i < connectionsToAdd - 1) ? POOL_ENTRY_CREATOR : new PoolEntryCreator("After adding "));
       }
    }
 
@@ -502,9 +485,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             quietlyCloseConnection(connection, "(connection aborted during shutdown)");
          }
          finally {
-            if (connectionBag.remove(poolEntry)) {
-               totalConnections.decrementAndGet();
-            }
+            connectionBag.remove(poolEntry);
          }
       }
    }
@@ -574,8 +555,15 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    /**
     * Creating and adding poolEntries (connections) to the pool.
     */
-   private class PoolEntryCreator implements Callable<Boolean>
+   private final class PoolEntryCreator implements Callable<Boolean>
    {
+      private final String afterPrefix;
+
+      PoolEntryCreator(String afterPrefix)
+      {
+         this.afterPrefix = afterPrefix;
+      }
+
       @Override
       public Boolean call() throws Exception
       {
@@ -583,8 +571,11 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          while (poolState == POOL_NORMAL && shouldCreateAnotherConnection()) {
             final PoolEntry poolEntry = createPoolEntry();
             if (poolEntry != null) {
-               totalConnections.incrementAndGet();
                connectionBag.add(poolEntry);
+               LOGGER.debug("{} - Added connection {}", poolName, poolEntry.connection);
+               if (afterPrefix != null) {
+                  logPoolState(afterPrefix);
+               }
                return Boolean.TRUE;
             }
 
@@ -600,7 +591,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          // only create connections if we need another idle connection or have threads still waiting
          // for a new connection, otherwise bail
          return getTotalConnections() < config.getMaximumPoolSize() &&
-            (connectionBag.getPendingQueue() > 0 || getIdleConnections() < config.getMinimumIdle());
+            (connectionBag.getWaitingThreadCount() > 0 || getIdleConnections() < config.getMinimumIdle());
       }
    }
 

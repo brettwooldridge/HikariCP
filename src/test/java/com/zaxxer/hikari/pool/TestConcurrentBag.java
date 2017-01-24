@@ -65,7 +65,7 @@ public class TestConcurrentBag
    {
       try (ConcurrentBag<PoolEntry> bag = new ConcurrentBag<>(new IBagStateListener() {
                @Override
-               public Future<Boolean> addBagItem()
+               public Future<Boolean> addBagItem(int waiting)
                {
                   return null;
                }
