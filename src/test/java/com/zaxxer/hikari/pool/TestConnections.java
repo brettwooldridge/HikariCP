@@ -16,7 +16,11 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.pool.TestElf.newHikariDataSource;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -336,7 +340,7 @@ public class TestConnections
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(4);
       config.setConnectionTimeout(20000);
-      config.setInitializationFailFast(true);
+      config.setInitializationFailTimeout(0);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -378,7 +382,7 @@ public class TestConnections
 
          pool.logPoolState("before check ");
          Assert.assertNull((ref.get() != null ? ref.get().toString() : ""), ref.get());
-         Assert.assertSame("StubConnection count not as expected", 4+1, StubConnection.count.get()); // 1st connection is in pool.initializeConnections()
+         Assert.assertSame("StubConnection count not as expected", 4, StubConnection.count.get());
       }
    }
 
@@ -459,25 +463,44 @@ public class TestConnections
    }
 
    @Test
-   public void testInitializationFailure() throws SQLException
+   public void testInitializationFailure1() throws SQLException
    {
       StubDataSource stubDataSource = new StubDataSource();
       stubDataSource.setThrowException(new SQLException("Connection refused"));
 
-      try (HikariDataSource ds = new HikariDataSource()) {
-         ds.setMinimumIdle(3);
-         ds.setMaximumPoolSize(3);
+      try (HikariDataSource ds = newHikariDataSource()) {
+         ds.setMinimumIdle(1);
+         ds.setMaximumPoolSize(1);
          ds.setConnectionTimeout(2500);
-         ds.setAllowPoolSuspension(true);
          ds.setConnectionTestQuery("VALUES 1");
          ds.setDataSource(stubDataSource);
 
          try (Connection c = ds.getConnection()) {
-            Assert.fail("Initialization should have failed");
+            fail("Initialization should have failed");
          }
-         catch (PoolInitializationException e) {
+         catch (SQLException e) {
             // passed
          }
+      }
+   }
+
+   @Test
+   public void testInitializationFailure2() throws SQLException
+   {
+      StubDataSource stubDataSource = new StubDataSource();
+      stubDataSource.setThrowException(new SQLException("Connection refused"));
+
+      HikariConfig config = newHikariConfig();
+      config.setMinimumIdle(1);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSource(stubDataSource);
+
+      try (HikariDataSource ds = new HikariDataSource(config);
+           Connection c = ds.getConnection()) {
+         fail("Initialization should have failed");
+      }
+      catch (PoolInitializationException e) {
+         // passed
       }
    }
 
@@ -489,7 +512,7 @@ public class TestConnections
          @Override
          public Statement createStatement() throws SQLException
          {
-            throw new SQLException("Bad query or something.");
+            throw new SQLException("Simulated exception in createStatement()");
          }
       }
 
@@ -502,24 +525,29 @@ public class TestConnections
          }
       };
 
-      HikariConfig config = new HikariConfig();
+      HikariConfig config = newHikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(2);
       config.setConnectionTimeout(TimeUnit.SECONDS.toMillis(3));
       config.setConnectionTestQuery("VALUES 1");
-      config.setInitializationFailFast(false);
+      config.setInitializationFailTimeout(TimeUnit.SECONDS.toMillis(2));
       config.setDataSource(stubDataSource);
 
-      try (HikariDataSource ds = new HikariDataSource(config); Connection c = ds.getConnection()) {
-         Assert.fail("getConnection() should have failed");
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         try (Connection c = ds.getConnection()) {
+            fail("getConnection() should have failed");
+         }
+         catch (SQLException e) {
+            assertSame("Simulated exception in createStatement()", e.getNextException().getMessage());
+         }
       }
-      catch (SQLException e) {
-         Assert.assertSame("Bad query or something.", e.getNextException().getMessage());
+      catch (PoolInitializationException e) {
+         assertSame("Simulated exception in createStatement()", e.getCause().getMessage());
       }
       
-      config.setInitializationFailFast(true);
+      config.setInitializationFailTimeout(0);
       try (HikariDataSource ds = new HikariDataSource(config)) {
-         Assert.fail("Initialization should have failed");
+         fail("Initialization should have failed");
       }
       catch (PoolInitializationException e) {
          // passed
@@ -532,7 +560,7 @@ public class TestConnections
    {
       HikariConfig config = new HikariConfig();
       config.setPoolName("SlowAcquisition");
-      config.setMaximumPoolSize(30);
+      config.setMaximumPoolSize(20);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -547,24 +575,24 @@ public class TestConnections
          TimeUnit.SECONDS.sleep(2);
 
          HikariPool pool = TestElf.getPool(ds);
-         Assert.assertSame("Total connections not as expected", 1, pool.getTotalConnections());
-         Assert.assertSame("Idle connections not as expected", 1, pool.getIdleConnections());
+         Assert.assertSame("Total connections not as expected", 2, pool.getTotalConnections());
+         Assert.assertSame("Idle connections not as expected", 2, pool.getIdleConnections());
 
          Connection connection = ds.getConnection();
          Assert.assertNotNull(connection);
 
-         TimeUnit.SECONDS.sleep(30);
+         TimeUnit.SECONDS.sleep(20);
 
-         Assert.assertSame("Second total connections not as expected", 30, pool.getTotalConnections());
-         Assert.assertSame("Second idle connections not as expected", 29, pool.getIdleConnections());
+         Assert.assertSame("Second total connections not as expected", 20, pool.getTotalConnections());
+         Assert.assertSame("Second idle connections not as expected", 19, pool.getIdleConnections());
          connection.close();
 
-         Assert.assertSame("Idle connections not as expected", 30, pool.getIdleConnections());
+         Assert.assertSame("Idle connections not as expected", 20, pool.getIdleConnections());
 
          TimeUnit.SECONDS.sleep(5);
 
-         Assert.assertSame("Third total connections not as expected", 30, pool.getTotalConnections());
-         Assert.assertSame("Third idle connections not as expected", 30, pool.getIdleConnections());
+         Assert.assertSame("Third total connections not as expected", 20, pool.getTotalConnections());
+         Assert.assertSame("Third idle connections not as expected", 20, pool.getIdleConnections());
       }
       finally {
          StubConnection.slowCreate = false;

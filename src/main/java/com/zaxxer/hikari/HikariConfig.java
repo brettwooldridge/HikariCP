@@ -69,6 +69,7 @@ public class HikariConfig implements HikariConfigMXBean
 
    // Properties NOT changeable at runtime
    //
+   private long initializationFailTimeout;
    private String catalog;
    private String connectionInitSql;
    private String connectionTestQuery;
@@ -82,7 +83,6 @@ public class HikariConfig implements HikariConfigMXBean
    private String username;
    private boolean isAutoCommit;
    private boolean isReadOnly;
-   private boolean isInitializationFailFast;
    private boolean isIsolateInternalQueries;
    private boolean isRegisterMbeans;
    private boolean isAllowPoolSuspension;
@@ -109,9 +109,8 @@ public class HikariConfig implements HikariConfigMXBean
       connectionTimeout = CONNECTION_TIMEOUT;
       validationTimeout = VALIDATION_TIMEOUT;
       idleTimeout = IDLE_TIMEOUT;
-
+      initializationFailTimeout = 1;
       isAutoCommit = true;
-      isInitializationFailFast = true;
 
       String systemProp = System.getProperty("hikaricp.configurationFile");
       if (systemProp != null) {
@@ -394,14 +393,57 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
+    * Get the pool initialization failure timeout.  See {@code #setInitializationFailTimeout(long)}
+    * for details.
+    *
+    * @return the number of milliseconds before the pool initialization fails
+    * @see HikariConfig#setInitializationFailTimeout(long)
+    */
+   public long getInitializationFailTimeout()
+   {
+      return initializationFailTimeout;
+   }
+
+   /**
+    * Set the pool initialization failure timeout.  This setting applies to pool
+    * initialization when {@link HikariDataSource} is constructed with a {@link HikariConfig},
+    * or when {@link HikariDataSource} is constructed using the no-arg constructor
+    * and {@link HikariDataSource#getConnection()} is called.
+    * <ul>
+    *   <li>Any value of zero or less will <i>not</i>  block the calling thread in the
+    *       case that a connection cannot be obtained. The pool will start and
+    *       continue to try to obtain connections in the background.  This can mean
+    *       that callers to {@code DataSource#getConnection()} may encounter
+    *       exceptions.</li>
+    *   <li>Any value greater than zero will be treated as a timeout for pool initialization.
+    *       The calling thread will be blocked from continuing until a successful connection
+    *       to the database, or until the timeout is reached. If the timeout is reached, then
+    *       a {@code PoolInitializationException} will be thrown.  A timeout value of
+    *       {@link Long#MAX_VALUE} is effectively infinite. 
+    * </ul>
+    * Note that this timeout does not override the {@code connectionTimeout} or
+    * {@code validationTimeout}; they will be honored before this timeout is applied.  The
+    * default value is one millisecond.
+    * 
+    * @param initializationFailTimeout the number of milliseconds before the
+    *        pool initialization fails, or 0 or less to skip the initialization
+    *        check.
+    */
+   public void setInitializationFailTimeout(long initializationFailTimeout)
+   {
+      this.initializationFailTimeout = initializationFailTimeout;
+   }
+
+   /**
     * Get whether or not the construction of the pool should throw an exception
     * if the minimum number of connections cannot be created.
     *
     * @return whether or not initialization should fail on error immediately
     */
+   @Deprecated
    public boolean isInitializationFailFast()
    {
-      return isInitializationFailFast;
+	   return initializationFailTimeout > 0;
    }
 
    /**
@@ -410,9 +452,12 @@ public class HikariConfig implements HikariConfigMXBean
     *
     * @param failFast true if the pool should fail if the minimum connections cannot be created
     */
+   @Deprecated
    public void setInitializationFailFast(boolean failFast)
    {
-      isInitializationFailFast = failFast;
+	   LOGGER.warn("The initializationFailFast propery is deprecated, see initializationFailTimeout");
+
+	   initializationFailTimeout = (failFast ? 1 : 0);
    }
 
    public boolean isIsolateInternalQueries()
@@ -848,11 +893,27 @@ public class HikariConfig implements HikariConfigMXBean
                dsProps.setProperty("password", "<masked>");
                value = dsProps;
             }
-            if (prop.contains("password")) {
+
+            if ("initializationFailTimeout".equals(prop) && initializationFailTimeout == Long.MAX_VALUE) {
+               value = "infinite";
+            }
+            if ("initializationFailTimeout".equals(prop) && initializationFailTimeout <= 0) {
+                value = "none";
+             }
+            else if ("transactionIsolation".equals(prop) && transactionIsolationName == null) {
+               value = "default";
+            }
+            else if (prop.matches("scheduledExecutorService|threadFactory") && value == null) {
+               value = "internal";
+            }
+            else if (prop.contains("password")) {
                value = "<masked>";
             }
             else if (value instanceof String) {
                value = "\"" + value + "\""; // quote to see lead/trailing spaces is any
+            }
+            else if (value == null) {
+               value = "none";
             }
             LOGGER.debug((prop + "................................................").substring(0, 32) + value);
          }

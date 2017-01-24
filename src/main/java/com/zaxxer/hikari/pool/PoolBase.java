@@ -348,8 +348,14 @@ abstract class PoolBase
          return connection;
       }
       catch (Exception e) {
+         if (connection != null) {
+            quietlyCloseConnection(connection, "(Failed to create/setup connection)");
+         }
+         else if (getLastConnectionFailure() == null) {
+            LOGGER.debug("{} - Failed to create/setup connection: {}", poolName, e.getMessage());
+         }
+
          lastConnectionFailure.set(e);
-         quietlyCloseConnection(connection, "(Failed to create/set connection)");
          throw e;
       }
    }
@@ -360,31 +366,36 @@ abstract class PoolBase
     * @param connection a Connection
     * @throws SQLException thrown from driver
     */
-   private void setupConnection(final Connection connection) throws SQLException
+   private void setupConnection(final Connection connection) throws ConnectionSetupException
    {
-      if (networkTimeout == UNINITIALIZED) {
-         networkTimeout = getAndSetNetworkTimeout(connection, validationTimeout);
+      try {
+         if (networkTimeout == UNINITIALIZED) {
+            networkTimeout = getAndSetNetworkTimeout(connection, validationTimeout);
+         }
+         else {
+            setNetworkTimeout(connection, validationTimeout);
+         }
+
+         connection.setReadOnly(isReadOnly);
+         connection.setAutoCommit(isAutoCommit);
+
+         checkDriverSupport(connection);
+
+         if (transactionIsolation != defaultTransactionIsolation) {
+            connection.setTransactionIsolation(transactionIsolation);
+         }
+
+         if (catalog != null) {
+            connection.setCatalog(catalog);
+         }
+
+         executeSql(connection, config.getConnectionInitSql(), true);
+
+         setNetworkTimeout(connection, networkTimeout);
       }
-      else {
-         setNetworkTimeout(connection, validationTimeout);
+      catch (SQLException e) {
+         throw new ConnectionSetupException(e);
       }
-
-      connection.setReadOnly(isReadOnly);
-      connection.setAutoCommit(isAutoCommit);
-
-      checkDriverSupport(connection);
-
-      if (transactionIsolation != defaultTransactionIsolation) {
-         connection.setTransactionIsolation(transactionIsolation);
-      }
-
-      if (catalog != null) {
-         connection.setCatalog(catalog);
-      }
-
-      executeSql(connection, config.getConnectionInitSql(), true);
-
-      setNetworkTimeout(connection, networkTimeout);
    }
 
    /**
@@ -583,6 +594,16 @@ abstract class PoolBase
    // ***********************************************************************
    //                      Private Static Classes
    // ***********************************************************************
+
+   static class ConnectionSetupException extends Exception
+   {
+      private static final long serialVersionUID = 929872118275916521L;
+
+      public ConnectionSetupException(Throwable t)
+      {
+         super(t);
+      }
+   }
 
    /**
     * Special executor used only to work around a MySQL issue that has not been addressed.
