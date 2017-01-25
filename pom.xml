@@ -256,6 +256,7 @@
                      <!-- Sets the name of the property containing the settings for JaCoCo runtime agent. -->
                      <propertyName>surefireArgLine</propertyName>
                      <excludes>
+                        <exclude>**/com/zaxxer/hikari/util/JavassistProxyFactory*</exclude>
                         <exclude>**/com/zaxxer/hikari/pool/HikariProxy*</exclude>
                         <exclude>**/com/zaxxer/hikari/metrics/**</exclude>
                      </excludes>
