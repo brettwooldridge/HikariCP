@@ -6,7 +6,7 @@ cache:
 jdk:
   - oraclejdk8
 
-install: rm -rf /home/travis/.m2/repository/*
+install: /bin/true
 
 script:
   - mvn install -Dskip.unit.tests=true -Dmaven.javadoc.skip=true -V -B
