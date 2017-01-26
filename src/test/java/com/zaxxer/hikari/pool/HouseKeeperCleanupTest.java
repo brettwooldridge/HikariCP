@@ -59,7 +59,7 @@ public class HouseKeeperCleanupTest
       config.setInitializationFailTimeout(Long.MAX_VALUE);
       config.setConnectionTimeout(2500);
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-      config.setScheduledExecutorService(executor);
+      config.setScheduledExecutor(executor);
 
       HikariConfig config2 = newHikariConfig();
       config.copyState(config2);
