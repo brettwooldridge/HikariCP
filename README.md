@@ -47,8 +47,6 @@ Microbenchmarks were created to isolate and measure the overhead of pools using 
 ![](https://github.com/brettwooldridge/HikariCP/wiki/HikariCP-bench-2.6.0.png)
 
  * One *Connection Cycle* is defined as single ``DataSource.getConnection()``/``Connection.close()``.
-   * In *Unconstrained* benchmark, connections > threads.
-   * In *Constrained* benchmark, threads > connections (2:1).
  * One *Statement Cycle* is defined as single ``Connection.prepareStatement()``, ``Statement.execute()``, ``Statement.close()``.
 
 <sup>
