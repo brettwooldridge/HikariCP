@@ -2,6 +2,9 @@ HikariCP Changes
 
 Changes in 2.6.0
 
+ * Redesign of the contention code path resulting in doubling contended throughput; now
+   contended pool access retains 98% of the uncontended throughput.
+ 
  * issue 793 add new HikariConfig method, setScheduledExecutor(ScheduledExecutorService),
    and deprecate method setScheduledExecutorService(ScheduledThreadPoolExecutor). It is
    unfortunate that the deprecated method has the more accurate name, but its signature
@@ -41,6 +44,9 @@ Changes in 2.5.0
  * HikariCP 2.5.0 and HikariCP-java7 2.4.8 have identical functionality.
 
 Changes in 2.4.10
+
+ * Redesign of the contention code path resulting in doubling contended throughput; now
+   contended pool access retains 98% of the uncontended throughput.
 
  * issue 770 add a new property initializationFailTimeout, and deprecate configuration
    property initializationFailFast.
