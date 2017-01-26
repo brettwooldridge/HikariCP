@@ -410,23 +410,32 @@ public class HikariConfig implements HikariConfigMXBean
     * or when {@link HikariDataSource} is constructed using the no-arg constructor
     * and {@link HikariDataSource#getConnection()} is called.
     * <ul>
-    *   <li>Any value of zero or less will <i>not</i>  block the calling thread in the
-    *       case that a connection cannot be obtained. The pool will start and
-    *       continue to try to obtain connections in the background.  This can mean
-    *       that callers to {@code DataSource#getConnection()} may encounter
-    *       exceptions.</li>
     *   <li>Any value greater than zero will be treated as a timeout for pool initialization.
     *       The calling thread will be blocked from continuing until a successful connection
     *       to the database, or until the timeout is reached.  If the timeout is reached, then
-    *       a {@code PoolInitializationException} will be thrown. 
+    *       a {@code PoolInitializationException} will be thrown. </li>
+    *   <li>A value of zero will <i>not</i>  prevent the pool from starting in the
+    *       case that a connection cannot be obtained. However, upon start the pool will
+    *       attempt to obtain a connection and validate that the {@code connectionTestQuery}
+    *       and {@code connectionInitSql} are valid.  If those validations fail, an exception
+    *       will be thrown.  If a connection cannot be obtained, the validation is skipped
+    *       and the the pool will start and continue to try to obtain connections in the
+    *       background.  This can mean that callers to {@code DataSource#getConnection()} may
+    *       encounter exceptions. </li>
+    *   <li>A value less than zero will <i>not</i> bypass any connection attempt and
+    *       validation during startup, and therefore the pool will start immediately.  The
+    *       pool will continue to try to obtain connections in the background. This can mean
+    *       that callers to {@code DataSource#getConnection()} may encounter exceptions. </li>
     * </ul>
-    * Note that this timeout does not override the {@code connectionTimeout} or
-    * {@code validationTimeout}; they will be honored before this timeout is applied.  The
-    * default value is one millisecond.
+    * Note that if this timeout value is greater than or equal to zero (0), and therefore an
+    * initial connection validation is performed, this timeout does not override the
+    * {@code connectionTimeout} or {@code validationTimeout}; they will be honored before this
+    * timeout is applied.  The default value is one millisecond.
     * 
     * @param initializationFailTimeout the number of milliseconds before the
-    *        pool initialization fails, or 0 or less to skip the initialization
-    *        check.
+    *        pool initialization fails, or 0 to validate connection setup but continue with
+    *        pool start, or less than zero to skip all initialization checks and start the
+    *        pool without delay.
     */
    public void setInitializationFailTimeout(long initializationFailTimeout)
    {
@@ -458,7 +467,7 @@ public class HikariConfig implements HikariConfigMXBean
    {
       LOGGER.warn("The initializationFailFast propery is deprecated, see initializationFailTimeout");
       
-      initializationFailTimeout = (failFast ? 1 : 0);
+      initializationFailTimeout = (failFast ? 1 : -1);
    }
 
    public boolean isIsolateInternalQueries()

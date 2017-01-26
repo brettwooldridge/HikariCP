@@ -16,10 +16,6 @@
 
 package com.zaxxer.hikari.pool;
 
-import static java.util.Collections.unmodifiableCollection;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-
 import static com.zaxxer.hikari.pool.PoolEntry.LASTACCESS_REVERSE_COMPARABLE;
 import static com.zaxxer.hikari.util.ClockSource.currentTime;
 import static com.zaxxer.hikari.util.ClockSource.elapsedDisplayString;
@@ -29,10 +25,12 @@ import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
 import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
+import static java.util.Collections.unmodifiableCollection;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.SQLTimeoutException;
 import java.sql.SQLTransientConnectionException;
 import java.util.Collection;
 import java.util.Optional;
@@ -499,8 +497,12 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     */
    private void checkFailFast()
    {
+      final long initializationTimeout = config.getInitializationFailTimeout();
+      if (initializationTimeout < 0) {
+         return;
+      }
+
       final long startTime = currentTime();
-      Throwable throwable = new SQLTimeoutException("HikariCP was unable to initialize connections in pool " + poolName);
       do {
          final PoolEntry poolEntry = createPoolEntry();
          if (poolEntry != null) {
@@ -509,23 +511,21 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                LOGGER.debug("{} - Added connection {}", poolName, poolEntry.connection);
             }
             else {
-               final Connection connection = poolEntry.close();
-               quietlyCloseConnection(connection, "(initialization check complete and minimumIdle is zero)");
+               quietlyCloseConnection(poolEntry.close(), "(initialization check complete and minimumIdle is zero)");
             }
 
             return;
          }
 
-         throwable = getLastConnectionFailure();
-         if (throwable instanceof ConnectionSetupException) {
-            throwPoolInitializationException(throwable.getCause());
+         if (getLastConnectionFailure() instanceof ConnectionSetupException) {
+            throwPoolInitializationException(getLastConnectionFailure().getCause());
          }
 
          quietlySleep(1000L);
-      } while (elapsedMillis(startTime) < config.getInitializationFailTimeout());
+      } while (elapsedMillis(startTime) < initializationTimeout);
 
-      if (config.getInitializationFailTimeout() > 0) {
-         throwPoolInitializationException(throwable);
+      if (initializationTimeout > 0) {
+         throwPoolInitializationException(getLastConnectionFailure());
       }
    }
 
