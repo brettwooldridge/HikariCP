@@ -83,6 +83,10 @@ We'd like to thank the guys over at WIX for the unsolicited and deep write-up ab
 Read our interesting ["Database down" pool challenge](https://github.com/brettwooldridge/HikariCP/wiki/Bad-Behavior:-Handling-Database-Down).
 
 ----------------------------------------------------
+#### "Imitation Is The Sincerest Form Of Plagiarism" - <sub><sup>anonymous</sup></sub>
+Open source software like HikariCP, like any product, competes in the free market.  We get it.  We understand that product advancements, once public, are often co-opted.  And we understand that ideas can arise from the zeitgeist; simultaneously and independently.  But the timeline of innovation, particularly in open source projects, is also clear and we want our users to understand the direction of flow of innovation in our space.  It could be demoralizing to see the result of hundreds of hours of thought and research co-opted so easily, and perhaps that is inherent in a free marketplace, but we are not demoralized.  *We are motivated; to widen the gap.*
+
+----------------------------------------------------
 ##### User Testimonials
 
 [![](https://github.com/brettwooldridge/HikariCP/wiki/tweet3.png)](https://twitter.com/jkuipers)<br/>
@@ -308,6 +312,8 @@ allows you to set the instance of the ``java.util.concurrent.ScheduledExecutorSe
 be used for various internally scheduled tasks.  If supplying HikariCP with a ``ScheduledThreadPoolExecutor``
 instance, it is recommended that ``setRemoveOnCancelPolicy(true)`` is used.
 *Default: none*
+
+----------------------------------------------------
 
 #### Missing Knobs
 
