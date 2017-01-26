@@ -75,14 +75,14 @@ HikariCP's profile in this case, and the reason for the difference observed betw
 💡 **User threads should only ever block on the** ***pool itself***.<sup>1</sup><br>
 <img width="32px" src="https://github.com/brettwooldridge/HikariCP/wiki/space60x1.gif"><sub><sup>1</sup>&nbsp;to the greatest extent possible.</sub>
 
-What does this mean?  Consider this hypothetical scenario:
+What does this mean?  We'll tell you what it *doesn't* mean.  Consider this hypothetical scenario:
 
 > There is a pool with five (5) connections in use, and zero (0) idle connections. A new thread comes in requesting a connection.
 
 If the thread is directed to create a new connection, and that connection takes 150ms to establish, what happens if one of the five in-use connections is returned to the pool?  That available connection cannot be utilized, because the thread that could utilize it is blocked on another resource (not the pool).
 
 ---------------------
-Both Apache and Vibur ended the run with 45 connections, while HikariCP ended the run with 5.  This has major and measurable effects for real world deployments.  That is 40 additional connections that are not available to other applications, and 40 additional threads and associated memory structures in the database.
+Both Apache and Vibur ended the run with 45 connections, while HikariCP ended the run with 5 (technically six, see below).  This has major and measurable effects for real world deployments.  That is 40 additional connections that are not available to other applications, and 40 additional threads and associated memory structures in the database.
 
 We know what you are thinking, *"What if the load had been sustained?"*&nbsp;&nbsp;The answer is: HikariCP also would have ramped up.
 
