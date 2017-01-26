@@ -25,6 +25,7 @@ import java.lang.reflect.Modifier;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 
@@ -89,7 +90,7 @@ public class HikariConfig implements HikariConfigMXBean
    private DataSource dataSource;
    private Properties dataSourceProperties;
    private ThreadFactory threadFactory;
-   private ScheduledThreadPoolExecutor scheduledExecutor;
+   private ScheduledExecutorService scheduledExecutor;
    private MetricsTrackerFactory metricsTrackerFactory;
    private Object metricRegistry;
    private Object healthCheckRegistry;
@@ -410,24 +411,32 @@ public class HikariConfig implements HikariConfigMXBean
     * or when {@link HikariDataSource} is constructed using the no-arg constructor
     * and {@link HikariDataSource#getConnection()} is called.
     * <ul>
-    *   <li>Any value of zero or less will <i>not</i>  block the calling thread in the
-    *       case that a connection cannot be obtained. The pool will start and
-    *       continue to try to obtain connections in the background.  This can mean
-    *       that callers to {@code DataSource#getConnection()} may encounter
-    *       exceptions.</li>
     *   <li>Any value greater than zero will be treated as a timeout for pool initialization.
     *       The calling thread will be blocked from continuing until a successful connection
-    *       to the database, or until the timeout is reached. If the timeout is reached, then
-    *       a {@code PoolInitializationException} will be thrown.  A timeout value of
-    *       {@link Long#MAX_VALUE} is effectively infinite. 
+    *       to the database, or until the timeout is reached.  If the timeout is reached, then
+    *       a {@code PoolInitializationException} will be thrown. </li>
+    *   <li>A value of zero will <i>not</i>  prevent the pool from starting in the
+    *       case that a connection cannot be obtained. However, upon start the pool will
+    *       attempt to obtain a connection and validate that the {@code connectionTestQuery}
+    *       and {@code connectionInitSql} are valid.  If those validations fail, an exception
+    *       will be thrown.  If a connection cannot be obtained, the validation is skipped
+    *       and the the pool will start and continue to try to obtain connections in the
+    *       background.  This can mean that callers to {@code DataSource#getConnection()} may
+    *       encounter exceptions. </li>
+    *   <li>A value less than zero will <i>not</i> bypass any connection attempt and
+    *       validation during startup, and therefore the pool will start immediately.  The
+    *       pool will continue to try to obtain connections in the background. This can mean
+    *       that callers to {@code DataSource#getConnection()} may encounter exceptions. </li>
     * </ul>
-    * Note that this timeout does not override the {@code connectionTimeout} or
-    * {@code validationTimeout}; they will be honored before this timeout is applied.  The
-    * default value is one millisecond.
+    * Note that if this timeout value is greater than or equal to zero (0), and therefore an
+    * initial connection validation is performed, this timeout does not override the
+    * {@code connectionTimeout} or {@code validationTimeout}; they will be honored before this
+    * timeout is applied.  The default value is one millisecond.
     * 
     * @param initializationFailTimeout the number of milliseconds before the
-    *        pool initialization fails, or 0 or less to skip the initialization
-    *        check.
+    *        pool initialization fails, or 0 to validate connection setup but continue with
+    *        pool start, or less than zero to skip all initialization checks and start the
+    *        pool without delay.
     */
    public void setInitializationFailTimeout(long initializationFailTimeout)
    {
@@ -439,6 +448,7 @@ public class HikariConfig implements HikariConfigMXBean
     * if the minimum number of connections cannot be created.
     *
     * @return whether or not initialization should fail on error immediately
+    * @deprecated see {@code #getInitializationFailTimeout()
     */
    @Deprecated
    public boolean isInitializationFailFast()
@@ -451,13 +461,14 @@ public class HikariConfig implements HikariConfigMXBean
     * if the minimum number of connections cannot be created.
     *
     * @param failFast true if the pool should fail if the minimum connections cannot be created
+    * @deprecated see {@code #setInitializationFailTimeout(long)
     */
    @Deprecated
    public void setInitializationFailFast(boolean failFast)
    {
 	   LOGGER.warn("The initializationFailFast propery is deprecated, see initializationFailTimeout");
 
-	   initializationFailTimeout = (failFast ? 1 : 0);
+	   initializationFailTimeout = (failFast ? 1 : -1);
    }
 
    public boolean isIsolateInternalQueries()
@@ -711,7 +722,29 @@ public class HikariConfig implements HikariConfigMXBean
     *
     * @return the executor
     */
+   @Deprecated
    public ScheduledThreadPoolExecutor getScheduledExecutorService()
+   {
+      return (ScheduledThreadPoolExecutor) scheduledExecutor;
+   }
+
+   /**
+    * Set the ScheduledExecutorService used for housekeeping.
+    *
+    * @param executor the ScheduledExecutorService
+    */
+   @Deprecated
+   public void setScheduledExecutorService(ScheduledThreadPoolExecutor executor)
+   {
+      this.scheduledExecutor = executor;
+   }
+
+   /**
+    * Get the ScheduledExecutorService used for housekeeping.
+    *
+    * @return the executor
+    */
+   public ScheduledExecutorService getScheduledExecutor()
    {
       return scheduledExecutor;
    }
@@ -721,11 +754,11 @@ public class HikariConfig implements HikariConfigMXBean
     *
     * @param executor the ScheduledExecutorService
     */
-   public void setScheduledExecutorService(ScheduledThreadPoolExecutor executor)
+   public void setScheduledExecutor(ScheduledExecutorService executor)
    {
       this.scheduledExecutor = executor;
    }
-
+   
    public String getTransactionIsolation()
    {
       return transactionIsolationName;

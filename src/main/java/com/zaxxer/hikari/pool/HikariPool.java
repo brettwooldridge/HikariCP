@@ -27,7 +27,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.SQLTimeoutException;
 import java.sql.SQLTransientConnectionException;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,6 +36,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadLocalRandom;
@@ -86,7 +86,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
    private final Collection<Runnable> addConnectionQueue;
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
-   private ScheduledThreadPoolExecutor houseKeepingExecutorService;
+   private ScheduledExecutorService houseKeepingExecutorService;
 
    private final ConcurrentBag<PoolEntry> connectionBag;
 
@@ -489,8 +489,12 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
     */
    private void checkFailFast()
    {
+      final long initializationTimeout = config.getInitializationFailTimeout();
+      if (initializationTimeout < 0) {
+         return;
+      }
+
       final long startTime = clockSource.currentTime();
-      Throwable throwable = new SQLTimeoutException("HikariCP was unable to initialize connections in pool " + poolName);
       do {
          final PoolEntry poolEntry = createPoolEntry();
          if (poolEntry != null) {
@@ -499,23 +503,21 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                LOGGER.debug("{} - Added connection {}", poolName, poolEntry.connection);
             }
             else {
-               final Connection connection = poolEntry.close();
-               quietlyCloseConnection(connection, "(initialization check complete and minimumIdle is zero)");
+               quietlyCloseConnection(poolEntry.close(), "(initialization check complete and minimumIdle is zero)");
             }
 
             return;
          }
 
-         throwable = getLastConnectionFailure();
-         if (throwable instanceof ConnectionSetupException) {
-            throwPoolInitializationException(throwable.getCause());
+         if (getLastConnectionFailure() instanceof ConnectionSetupException) {
+            throwPoolInitializationException(getLastConnectionFailure().getCause());
          }
 
          quietlySleep(1000L);
-      } while (clockSource.elapsedMillis(startTime) < config.getInitializationFailTimeout());
+      } while (clockSource.elapsedMillis(startTime) < initializationTimeout);
 
-      if (config.getInitializationFailTimeout() > 0) {
-         throwPoolInitializationException(throwable);
+      if (initializationTimeout > 0) {
+         throwPoolInitializationException(getLastConnectionFailure());
       }
    }
 
@@ -536,7 +538,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
 
    private void initializeHouseKeepingExecutorService()
    {
-      if (config.getScheduledExecutorService() == null) {
+      if (config.getScheduledExecutor() == null) {
          final ThreadFactory threadFactory = config.getThreadFactory() != null ? config.getThreadFactory() : new DefaultThreadFactory(poolName + " housekeeper", true);
          final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
          executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
@@ -544,13 +546,13 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
          this.houseKeepingExecutorService = executor;
       }
       else {
-         this.houseKeepingExecutorService = config.getScheduledExecutorService();
+         this.houseKeepingExecutorService = config.getScheduledExecutor();
       }
    }
 
    private void destroyHouseKeepingExecutorService()
    {
-      if (config.getScheduledExecutorService() == null) {
+      if (config.getScheduledExecutor() == null) {
          houseKeepingExecutorService.shutdownNow();
       }
    }
