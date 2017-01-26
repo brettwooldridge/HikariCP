@@ -82,6 +82,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", SECONDS.toMillis(30));
 
    private final PoolEntryCreator POOL_ENTRY_CREATOR = new PoolEntryCreator(null);
+   private final PoolEntryCreator POST_FILL_POOL_ENTRY_CREATOR = new PoolEntryCreator("After adding ");
    private final Collection<Runnable> addConnectionQueue;
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
@@ -467,7 +468,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       final int connectionsToAdd = Math.min(config.getMaximumPoolSize() - getTotalConnections(), config.getMinimumIdle() - getIdleConnections())
                                    - addConnectionQueue.size();
       for (int i = 0; i < connectionsToAdd; i++) {
-         addConnectionExecutor.submit((i < connectionsToAdd - 1) ? POOL_ENTRY_CREATOR : new PoolEntryCreator("After adding "));
+         addConnectionExecutor.submit((i < connectionsToAdd - 1) ? POOL_ENTRY_CREATOR : POST_FILL_POOL_ENTRY_CREATOR);
       }
    }
 
@@ -605,11 +606,11 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     */
    private final class PoolEntryCreator implements Callable<Boolean>
    {
-      private final String afterPrefix;
+      private final String loggingPrefix;
 
-      PoolEntryCreator(String afterPrefix)
+      PoolEntryCreator(String loggingPrefix)
       {
-         this.afterPrefix = afterPrefix;
+         this.loggingPrefix = loggingPrefix;
       }
 
       @Override
@@ -621,8 +622,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             if (poolEntry != null) {
                connectionBag.add(poolEntry);
                LOGGER.debug("{} - Added connection {}", poolName, poolEntry.connection);
-               if (afterPrefix != null) {
-                  logPoolState(afterPrefix);
+               if (loggingPrefix != null) {
+                  logPoolState(loggingPrefix);
                }
                return Boolean.TRUE;
             }
