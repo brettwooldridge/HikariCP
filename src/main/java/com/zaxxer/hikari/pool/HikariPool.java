@@ -446,7 +446,11 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             final long variance = maxLifetime > 10_000 ? ThreadLocalRandom.current().nextLong( maxLifetime / 40 ) : 0;
             final long lifetime = maxLifetime - variance;
             poolEntry.setFutureEol(houseKeepingExecutorService.schedule(
-               () -> softEvictConnection(poolEntry, "(connection has passed maxLifetime)", false /* not owner */),
+               () -> {
+                  if (softEvictConnection(poolEntry, "(connection has passed maxLifetime)", false /* not owner */)) {
+                     addBagItem(connectionBag.getWaitingThreadCount());
+                  }
+               },
                lifetime, MILLISECONDS));
          }
 
@@ -537,12 +541,15 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       throw new PoolInitializationException(t);
    }
 
-   private void softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
+   private boolean softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
    {
       poolEntry.markEvicted();
       if (owner || connectionBag.reserve(poolEntry)) {
          closeConnection(poolEntry, reason);
+         return true;
       }
+
+      return false;
    }
 
    private void initializeHouseKeepingExecutorService()
