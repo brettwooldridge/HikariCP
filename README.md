@@ -56,7 +56,7 @@ Microbenchmarks were created to isolate and measure the overhead of pools using 
 <sup>2</sup> Intel Core i7-3770 CPU @ 3.40GHz <br/>
 <sup>3</sup> Uncontended benchmark: 32 threads/32 connections, Contended benchmark: 32 threads, 16 connections <br/>
 <sup>4</sup> Apache Tomcat fails to complete the Statement benchmark when the ``StatementFinalizer`` is used.  Disabling it is an unfair comparison to other pools. <br/>
-<sup>5</sup> Apache DBCP fails to complete the Statemet benchmark reliably due to excessive garbage collection times.
+<sup>5</sup> Apache DBCP fails to complete the Statement benchmark reliably due to excessive garbage collection times.
 </sup>
 
 ----------------------------------------------------
@@ -164,12 +164,11 @@ allowed value is 10000ms (10 seconds).
 *Default: 600000 (10 minutes)*
 
 &#8986;``maxLifetime``<br/>
-This property controls the maximum lifetime of a connection in the pool.  When a connection
-reaches this timeout it will be retired from the pool, subject to a maximum variation of +30
-seconds.  An in-use connection will never be retired, only when it is closed will it then be
-removed.  **We strongly recommend setting this value, and it should be at least 30 seconds less
-than any database-level connection timeout.**  A value of 0 indicates no maximum lifetime 
-(infinite lifetime), subject of course to the ``idleTimeout`` setting.
+This property controls the maximum lifetime of a connection in the pool.  An in-use connection will
+never be retired, only when it is closed will it then be removed.  **We strongly recommend setting
+this value, and it should be at least 30 seconds less than any database or infrastructure imposed
+connection time limit.**  A value of 0 indicates no maximum lifetime (infinite lifetime), subject of
+course to the ``idleTimeout`` setting.
 *Default: 1800000 (30 minutes)*
 
 &#128288;``connectionTestQuery``<br/>
@@ -301,6 +300,13 @@ This property is only available via programmatic configuration or IoC container.
 allows you to set the instance of the ``java.util.concurrent.ThreadFactory`` that will be used
 for creating all threads used by the pool. It is needed in some restricted execution environments
 where threads can only be created through a ``ThreadFactory`` provided by the application container.
+*Default: none*
+
+&#10145;``scheduledExecutor``<br/>
+This property is only available via programmatic configuration or IoC container.  This property
+allows you to set the instance of the ``java.util.concurrent.ScheduledExecutorService`` that will
+be used for various internally scheduled tasks.  If supplying HikariCP with a ``ScheduledThreadPoolExecutor``
+instance, it is recommended that ``setRemoveOnCancelPolicy(true)`` is used.
 *Default: none*
 
 #### Missing Knobs
