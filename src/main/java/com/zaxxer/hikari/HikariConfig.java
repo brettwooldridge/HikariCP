@@ -448,7 +448,7 @@ public class HikariConfig implements HikariConfigMXBean
     * if the minimum number of connections cannot be created.
     *
     * @return whether or not initialization should fail on error immediately
-    * @deprecated see {@code #getInitializationFailTimeout()
+    * @deprecated see {@code #getInitializationFailTimeout()}
     */
    @Deprecated
    public boolean isInitializationFailFast()
@@ -461,7 +461,7 @@ public class HikariConfig implements HikariConfigMXBean
     * if the minimum number of connections cannot be created.
     *
     * @param failFast true if the pool should fail if the minimum connections cannot be created
-    * @deprecated see {@code #setInitializationFailTimeout(long)
+    * @deprecated see {@code #setInitializationFailTimeout(long)}
     */
    @Deprecated
    public void setInitializationFailFast(boolean failFast)

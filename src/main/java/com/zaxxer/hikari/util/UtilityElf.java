@@ -37,7 +37,10 @@ import java.util.regex.Pattern;
 public final class UtilityElf
 {
    /**
+    * Check whether the provided String is empty or {@code null} and return a
+    * {@code null} in either case, otherwise return the trimmed String.
     *
+    * @param text the String to check for emptiness
     * @return null if string is null or empty
    */
    public static String getNullIfEmpty(final String text)

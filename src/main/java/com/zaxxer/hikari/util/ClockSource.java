@@ -110,7 +110,7 @@ public interface ClockSource
 
    /**
     * Get the TimeUnit the ClockSource is denominated in.
-    * @return
+    * @return the internal TimeUnit used by the ClockSource
     */
    TimeUnit getSourceTimeUnit();
 
