@@ -154,6 +154,10 @@ public final class JavassistProxyFactory
                continue;
             }
 
+            if (isDefaultMethod(intf, intfCt, intfMethod)) {
+               continue;
+            }
+
             // Track what methods we've added
             methods.add(signature);
 
@@ -164,7 +168,7 @@ public final class JavassistProxyFactory
 
             // If the super-Proxy has concrete methods (non-abstract), transform the call into a simple super.method() call
             CtMethod superMethod = superCt.getMethod(intfMethod.getName(), intfMethod.getSignature());
-            if ((superMethod.getModifiers() & Modifier.ABSTRACT) != Modifier.ABSTRACT && !isDefaultMethod(intf, intfCt, intfMethod)) {
+            if ((superMethod.getModifiers() & Modifier.ABSTRACT) != Modifier.ABSTRACT) {
                modifiedBody = modifiedBody.replace("((cast) ", "");
                modifiedBody = modifiedBody.replace("delegate", "super");
                modifiedBody = modifiedBody.replace("super)", "super");
