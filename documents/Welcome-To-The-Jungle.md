@@ -40,7 +40,7 @@ The code was run as follows:
 ```
 bash$ ./spiketest.sh 150 <pool> 50
 ```
-Where ``150`` is the connection establishment time, ``<pool>`` is one of *hikari*, *dbcp2*, *vibur*, or *c3p0*, and ``50`` is the number of threads/requests.  Note that *c3p0* was dropped from the analysis here, as its run time was ~120x that of HikariCP.
+Where ``150`` is the connection establishment time, ``<pool>`` is one of [*hikari*, *dbcp2*, *vibur*, *tomcat*, *c3p0*], and ``50`` is the number of threads/requests.  Note that *c3p0* was dropped from the analysis here, as its run time was ~120x that of HikariCP.
 
 #### HikariCP (v2.6.0) <sub><sup><a href="https://github.com/brettwooldridge/HikariCP/wiki/Spike-Hikari-data.txt">raw data</a></sup></sub>
 
@@ -51,6 +51,11 @@ Where ``150`` is the connection establishment time, ``<pool>`` is one of *hikari
 
 --------------------
 [![](https://github.com/brettwooldridge/HikariCP/wiki/Spike-DBCP2.png)](https://github.com/brettwooldridge/HikariCP/wiki/Spike-DBCP2.png)
+
+#### Apache Tomcat (v8.0.24) <sub><sup><a href="https://github.com/brettwooldridge/HikariCP/wiki/Spike-Tomcat-data.txt">raw data</a></sup></sub>
+
+--------------------
+[![](https://github.com/brettwooldridge/HikariCP/wiki/Spike-Tomcat.png)](https://github.com/brettwooldridge/HikariCP/wiki/Spike-Tomcat.png)
 
 #### Vibur DBCP (v16.1) <sub><sup><a href="https://github.com/brettwooldridge/HikariCP/wiki/Spike-Vibur-data.txt">raw data</a></sup></sub>
 
@@ -66,9 +71,9 @@ In case you missed the *time-scale* in the graphs above, here is a properly scal
 [![](https://github.com/brettwooldridge/HikariCP/wiki/Spike-Compare.png)](https://github.com/brettwooldridge/HikariCP/wiki/Spike-Compare.png)
 
 ### Commentary
-We'll start by saying that we are not going to comment on the implementation specifics of Apache or Vibur, but you may be able to draw inferences by our comments regarding HikariCP.
+We'll start by saying that we are not going to comment on the implementation specifics of the other pools, but you may be able to draw inferences by our comments regarding HikariCP.
 
-Looking at the HikariCP graph, we couldn't have wished for a better profile; it's about as close to perfect efficiency as we could expect.  It is interesting, though not surprising, that the Apache and Vibur profiles are so similar to each other; even though arrived at via completely different implementations.
+Looking at the HikariCP graph, we couldn't have wished for a better profile; it's about as close to perfect efficiency as we could expect.  It is interesting, though not surprising, that the other pool profiles are so similar to each other. Even though arrived at via different implementations, they are the result of a *conventional* or *obvious* approach to pool design.
 
 HikariCP's profile in this case, and the reason for the difference observed between other pools, is the result of our Prime Directive:
 
