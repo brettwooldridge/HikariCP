@@ -485,7 +485,7 @@ Please perform changes and submit pull requests from the ``dev`` branch instead 
 [Dependency Status img]:https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0/badge.svg?style=flat
 
 [license]:LICENSE
-[license img]:https://img.shields.io/badge/License-Apache%202-blue.svg
+[license img]:https://img.shields.io/badge/license-Apache%202-blue.svg
 
 [Maven Central]:https://maven-badges.herokuapp.com/maven-central/com.zaxxer/HikariCP
 [Maven Central img]:https://maven-badges.herokuapp.com/maven-central/com.zaxxer/HikariCP/badge.svg
