@@ -53,8 +53,8 @@ Microbenchmarks were created to isolate and measure the overhead of pools using 
 <sup>1</sup> Versions: HikariCP 2.6.0, commons-dbcp2 2.1.1, Tomcat 8.0.24, Vibur 16.1, c3p0 0.9.5.2, Java 8u111 <br/>
 <sup>2</sup> Intel Core i7-3770 CPU @ 3.40GHz <br/>
 <sup>3</sup> Uncontended benchmark: 32 threads/32 connections, Contended benchmark: 32 threads, 16 connections <br/>
-<sup>4</sup> Apache Tomcat fails to complete the Statement benchmark when the ``StatementFinalizer`` is used.  Disabling it is an unfair comparison to other pools. <br/>
-<sup>5</sup> Apache DBCP fails to complete the Statement benchmark reliably due to excessive garbage collection times.
+<sup>4</sup> Apache Tomcat fails to complete the Statement benchmark when the ``StatementFinalizer`` is used due to excessive garbage collection times. <br/>
+<sup>5</sup> Apache DBCP fails to complete the Statement benchmark due to excessive garbage collection times.
 </sup>
 
 ----------------------------------------------------
