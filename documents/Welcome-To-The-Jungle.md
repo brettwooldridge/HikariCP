@@ -62,7 +62,7 @@ Where ``150`` is the connection establishment time, ``<pool>`` is one of [*hikar
 --------------------
 [![](https://github.com/brettwooldridge/HikariCP/wiki/Spike-Vibur.png)](https://github.com/brettwooldridge/HikariCP/wiki/Spike-Vibur.png)
 
-<sup>* Note that the times provided in the raw data is the number of microseconds (μs) since the start of the test.</sup>
+<sup>* Note that the times provided in the raw data is the number of microseconds (μs) since the start of the test. For graphing purposes, raw data for each pool was trimmed such that the first entry has 0 requests enqueued, and the last entry has all connections completed. </sup>
 
 --------------------
 #### Apache DBCP vs HikariCP
