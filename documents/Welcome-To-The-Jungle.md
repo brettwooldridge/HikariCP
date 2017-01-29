@@ -80,18 +80,21 @@ HikariCP's profile in this case, and the reason for the difference observed betw
 💡 **User threads should only ever block on the** ***pool itself***.<sup>1</sup><br>
 <img width="32px" src="https://github.com/brettwooldridge/HikariCP/wiki/space60x1.gif"><sub><sup>1</sup>&nbsp;to the greatest extent possible.</sub>
 
-What does this mean?  We'll tell you what it *doesn't* mean.  Consider this hypothetical scenario:
+Consider this hypothetical scenario:
+```
+There is a pool with five connections in-use, and zero idle (available) connections. Then, a new thread
+comes in requesting a connection.
+```
+"How the the prime directive apply in this case?"  We'll answer with a question of our own:
 
-> There is a pool with five (5) connections in use, and zero (0) idle connections. A new thread comes in requesting a connection.
-
-If the thread is directed to create a new connection, and that connection takes 150ms to establish, what happens if one of the five in-use connections is returned to the pool?  That available connection cannot be utilized, because the thread that could utilize it is blocked on another resource (not the pool).
+> If the thread is directed to create a new connection, and that connection takes 150ms to establish, what happens if one of the five in-use connections is returned to the pool?
 
 ---------------------
-Both Apache and Vibur ended the run with 45 connections, while HikariCP ended the run with 5 (technically six, see below).  This has major and measurable effects for real world deployments.  That is 40 additional connections that are not available to other applications, and 40 additional threads and associated memory structures in the database.
+Both Apache DBCP2 and Vibur ended the run with 45 connections, Apache Tomcat (inexplicably) with 40 connections, while HikariCP ended the run with 5 (technically six, see below).  This has major and measurable effects for real world deployments.  That is 35-40 additional connections that are not available to other applications, and 35-40 additional threads and associated memory structures in the database.
 
 We know what you are thinking, *"What if the load had been sustained?"*&nbsp;&nbsp;The answer is: HikariCP also would have ramped up.
 
 In point of fact, as soon as the pool hit zero available connections, right around 800μs into the run, HikariCP began requesting connections to be added to the pool asynchronously.  If the metrics had continued to be collected past the end of the spike -- out beyond 150ms -- you would observe that an additional connection is indeed added to the pool.  But *only one*, because HikariCP employs *elision logic*; at that point HikariCP would also realize that there is actually no more pending demand, and the remaining connection acquisitions would be elided.
 
-### Conclusion
-This scenario represents only *one* of many access patterns. HikariCP will continue to research *and innovate* in the connection pool space when presented with challenging problems encountered in real world deployments.  As always, thank you for your patronage.
+### Epilog
+This scenario represents only *one* of many access patterns. HikariCP will continue to research *and innovate* when presented with challenging problems encountered in real world deployments.  As always, thank you for your patronage.
