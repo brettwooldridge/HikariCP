@@ -40,7 +40,7 @@ Or [download from here](http://search.maven.org/#search%7Cga%7C1%7Ccom.zaxxer.hi
 
 ----------------------------------------------------
 
-##### JMH Benchmarks
+##### JMH Benchmarks :checkered_flag:
 
 Microbenchmarks were created to isolate and measure the overhead of pools using the [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/). You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
 
@@ -58,7 +58,7 @@ Microbenchmarks were created to isolate and measure the overhead of pools using 
 </sup>
 
 ----------------------------------------------------
-#### Analyses
+#### Analyses :microscope:
 
 #### Spike Demand Pool Comparison
 <a href="https://github.com/brettwooldridge/HikariCP/blob/dev/documents/Welcome-To-The-Jungle.md"><img width="400" align="right" src="https://github.com/brettwooldridge/HikariCP/wiki/Spike-Hikari.png"></a>
