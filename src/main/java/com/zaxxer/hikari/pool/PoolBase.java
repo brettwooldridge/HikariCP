@@ -35,6 +35,7 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.sql.DataSource;
 
+import com.zaxxer.hikari.HikariDataSourceConfigurable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -316,6 +317,10 @@ abstract class PoolBase
       if (dsClassName != null && dataSource == null) {
          dataSource = createInstance(dsClassName, DataSource.class);
          PropertyElf.setTargetFromProperties(dataSource, dataSourceProperties);
+
+         if (dataSource instanceof HikariDataSourceConfigurable) {
+            ((HikariDataSourceConfigurable) dataSource).configure(config);
+         }
       }
       else if (jdbcUrl != null && dataSource == null) {
          dataSource = new DriverDataSource(jdbcUrl, driverClassName, dataSourceProperties, username, password);
