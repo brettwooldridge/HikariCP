@@ -107,7 +107,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       this.connectionBag = new ConcurrentBag<>(this);
       this.suspendResumeLock = config.isAllowPoolSuspension() ? new SuspendResumeLock() : SuspendResumeLock.FAUX_LOCK;
 
-      initializeHouseKeepingExecutorService();
+      this.houseKeepingExecutorService = initializeHouseKeepingExecutorService();
 
       checkFailFast();
 
@@ -131,7 +131,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
       this.leakTask = new ProxyLeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
-      this.houseKeeperTask = this.houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L, HOUSEKEEPING_PERIOD_MS, MILLISECONDS);
+      this.houseKeeperTask = houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L, HOUSEKEEPING_PERIOD_MS, MILLISECONDS);
    }
 
    /**
@@ -423,6 +423,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       }
    }
 
+   @SuppressWarnings("unused")
    int[] getPoolStateCounts()
    {
       return connectionBag.getStateCounts();
@@ -552,17 +553,17 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       return false;
    }
 
-   private void initializeHouseKeepingExecutorService()
+   private ScheduledExecutorService initializeHouseKeepingExecutorService()
    {
       if (config.getScheduledExecutor() == null) {
          final ThreadFactory threadFactory = Optional.ofNullable(config.getThreadFactory()).orElse(new DefaultThreadFactory(poolName + " housekeeper", true));
          final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
          executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
          executor.setRemoveOnCancelPolicy(true);
-         this.houseKeepingExecutorService = executor;
+         return executor;
       }
       else {
-         this.houseKeepingExecutorService = config.getScheduledExecutor();
+         return config.getScheduledExecutor();
       }
    }
 
@@ -697,7 +698,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                   .sorted(LASTACCESS_REVERSE_COMPARABLE)
                   .skip(config.getMinimumIdle())
                   .filter(p -> elapsedMillis(p.lastAccessed, now) > idleTimeout)
-                  .filter(p -> connectionBag.reserve(p))
+                  .filter(connectionBag::reserve)
                   .forEachOrdered(p -> closeConnection(p, "(connection has passed idleTimeout)"));
             }
 

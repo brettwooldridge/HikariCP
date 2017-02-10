@@ -47,7 +47,9 @@ final class PoolEntry implements IConcurrentBagEntry
    Connection connection;
    long lastAccessed;
    long lastBorrowed;
-   private volatile int state;
+
+   @SuppressWarnings("FieldCanBeLocal")
+   private volatile int state = 0;
    private volatile boolean evict;
 
    private volatile ScheduledFuture<?> endOfLife;
@@ -60,12 +62,7 @@ final class PoolEntry implements IConcurrentBagEntry
 
    static
    {
-      LASTACCESS_REVERSE_COMPARABLE = new Comparator<PoolEntry>() {
-         @Override
-         public int compare(final PoolEntry entryOne, final PoolEntry entryTwo) {
-            return Long.compare(entryTwo.lastAccessed, entryOne.lastAccessed);
-         }
-      };
+      LASTACCESS_REVERSE_COMPARABLE = (entryOne, entryTwo) -> Long.compare(entryTwo.lastAccessed, entryOne.lastAccessed);
 
       stateUpdater = AtomicIntegerFieldUpdater.newUpdater(PoolEntry.class, "state");
    }
@@ -94,7 +91,9 @@ final class PoolEntry implements IConcurrentBagEntry
    }
 
    /**
-    * @param endOfLife
+    * Set the end of life {@link ScheduledFuture}.
+    *
+    * @param endOfLife this PoolEntry/Connection's end of life {@link ScheduledFuture}
     */
    void setFutureEol(final ScheduledFuture<?> endOfLife)
    {

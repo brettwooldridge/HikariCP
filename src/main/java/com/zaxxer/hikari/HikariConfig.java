@@ -45,6 +45,7 @@ import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.util.PropertyElf;
 
+@SuppressWarnings({"SameParameterValue", "unused"})
 public class HikariConfig implements HikariConfigMXBean
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariConfig.class);
@@ -55,7 +56,7 @@ public class HikariConfig implements HikariConfigMXBean
    private static final long MAX_LIFETIME = MINUTES.toMillis(30);
    private static final int DEFAULT_POOL_SIZE = 10;
 
-   private static boolean unitTest;
+   private static boolean unitTest = false;
 
    // Properties changeable at runtime through the MBean
    //
@@ -176,8 +177,7 @@ public class HikariConfig implements HikariConfigMXBean
    /**
     * Set the SQL query to be executed to test the validity of connections. Using
     * the JDBC4 <code>Connection.isValid()</code> method to test connection validity can
-    * be more efficient on some databases and is recommended.  See
-    * {@link HikariConfig#setJdbc4ConnectionTest(boolean)}.
+    * be more efficient on some databases and is recommended.
     *
     * @param connectionTestQuery a SQL query string
     */
@@ -431,7 +431,7 @@ public class HikariConfig implements HikariConfigMXBean
     * initial connection validation is performed, this timeout does not override the
     * {@code connectionTimeout} or {@code validationTimeout}; they will be honored before this
     * timeout is applied.  The default value is one millisecond.
-    * 
+    *
     * @param initializationFailTimeout the number of milliseconds before the
     *        pool initialization fails, or 0 to validate connection setup but continue with
     *        pool start, or less than zero to skip all initialization checks and start the
@@ -466,7 +466,7 @@ public class HikariConfig implements HikariConfigMXBean
    public void setInitializationFailFast(boolean failFast)
    {
       LOGGER.warn("The initializationFailFast propery is deprecated, see initializationFailTimeout");
-      
+
       initializationFailTimeout = (failFast ? 1 : -1);
    }
 
@@ -528,15 +528,7 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       if (metricRegistry != null) {
-         if (metricRegistry instanceof String) {
-            try {
-               InitialContext initCtx = new InitialContext();
-               metricRegistry = initCtx.lookup((String) metricRegistry);
-            }
-            catch (NamingException e) {
-               throw new IllegalArgumentException(e);
-            }
-         }
+         metricRegistry = getObjectOrPerformJndiLookup(metricRegistry);
 
          if (!(metricRegistry instanceof MetricRegistry)) {
             throw new IllegalArgumentException("Class must be an instance of com.codahale.metrics.MetricRegistry");
@@ -544,6 +536,20 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       this.metricRegistry = metricRegistry;
+   }
+
+   private Object getObjectOrPerformJndiLookup(Object object)
+   {
+      if (object instanceof String) {
+         try {
+            InitialContext initCtx = new InitialContext();
+            return initCtx.lookup((String) object);
+         }
+         catch (NamingException e) {
+            throw new IllegalArgumentException(e);
+         }
+      }
+      return object;
    }
 
    /**
@@ -564,15 +570,7 @@ public class HikariConfig implements HikariConfigMXBean
    public void setHealthCheckRegistry(Object healthCheckRegistry)
    {
       if (healthCheckRegistry != null) {
-         if (healthCheckRegistry instanceof String) {
-            try {
-               InitialContext initCtx = new InitialContext();
-               healthCheckRegistry = initCtx.lookup((String) healthCheckRegistry);
-            }
-            catch (NamingException e) {
-               throw new IllegalArgumentException(e);
-            }
-         }
+         healthCheckRegistry = getObjectOrPerformJndiLookup(healthCheckRegistry);
 
          if (!(healthCheckRegistry instanceof HealthCheckRegistry)) {
             throw new IllegalArgumentException("Class must be an instance of com.codahale.metrics.health.HealthCheckRegistry");
@@ -757,7 +755,7 @@ public class HikariConfig implements HikariConfigMXBean
    {
       this.scheduledExecutor = executor;
    }
-   
+
    public String getTransactionIsolation()
    {
       return transactionIsolationName;
@@ -816,6 +814,7 @@ public class HikariConfig implements HikariConfigMXBean
       this.threadFactory = threadFactory;
    }
 
+   @SuppressWarnings("StatementWithEmptyBody")
    public void validate()
    {
       if (poolName == null) {
@@ -852,7 +851,8 @@ public class HikariConfig implements HikariConfigMXBean
             LOGGER.warn("{} - using dataSourceClassName and ignoring jdbcUrl.", poolName);
          }
       }
-      else if (jdbcUrl != null) {
+      else if (jdbcUrl != null || dataSourceJndiName != null) {
+         // ok
       }
       else if (driverClassName != null) {
          LOGGER.error("{} - jdbcUrl is required with driverClassName.", poolName);
@@ -913,6 +913,7 @@ public class HikariConfig implements HikariConfigMXBean
       }
    }
 
+   @SuppressWarnings("StatementWithEmptyBody")
    private void logConfiguration()
    {
       LOGGER.debug("{} - configuration:", poolName);
@@ -947,12 +948,12 @@ public class HikariConfig implements HikariConfigMXBean
             LOGGER.debug((prop + "................................................").substring(0, 32) + value);
          }
          catch (Exception e) {
-            continue;
+            // continue
          }
       }
    }
 
-   protected void loadProperties(String propertyFileName)
+   private void loadProperties(String propertyFileName)
    {
       final File propFile = new File(propertyFileName);
       try (final InputStream is = propFile.isFile() ? new FileInputStream(propFile) : this.getClass().getResourceAsStream(propertyFileName)) {

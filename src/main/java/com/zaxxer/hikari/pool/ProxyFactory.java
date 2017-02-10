@@ -30,6 +30,7 @@ import com.zaxxer.hikari.util.FastList;
  *
  * @author Brett Wooldridge
  */
+@SuppressWarnings("unused")
 public final class ProxyFactory
 {
    private ProxyFactory()
@@ -39,13 +40,13 @@ public final class ProxyFactory
 
    /**
     * Create a proxy for the specified {@link Connection} instance.
-    * @param poolEntry
-    * @param connection
-    * @param openStatements
-    * @param leakTask
-    * @param now
-    * @param isReadOnly
-    * @param isAutoCommit
+    * @param poolEntry the PoolEntry holding pool state
+    * @param connection the raw database Connection
+    * @param openStatements a reusable list to track open Statement instances
+    * @param leakTask the ProxyLeakTask for this connection
+    * @param now the current timestamp
+    * @param isReadOnly the default readOnly state of the connection
+    * @param isAutoCommit the default autoCommit state of the connection
     * @return a proxy that wraps the specified {@link Connection}
     */
    static ProxyConnection getProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final long now, final boolean isReadOnly, final boolean isAutoCommit)

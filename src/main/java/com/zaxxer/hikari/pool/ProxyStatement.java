@@ -20,7 +20,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Wrapper;
 
 /**
  * This is the proxy class for java.sql.Statement.
@@ -30,17 +29,18 @@ import java.sql.Wrapper;
 public abstract class ProxyStatement implements Statement
 {
    protected final ProxyConnection connection;
-   protected final Statement delegate;
+   final Statement delegate;
 
    private boolean isClosed;
    private ResultSet proxyResultSet;
 
-   protected ProxyStatement(ProxyConnection connection, Statement statement)
+   ProxyStatement(ProxyConnection connection, Statement statement)
    {
       this.connection = connection;
       this.delegate = statement;
    }
 
+   @SuppressWarnings("unused")
    final SQLException checkException(SQLException e)
    {
       return connection.checkException(e);
@@ -51,10 +51,7 @@ public abstract class ProxyStatement implements Statement
    public final String toString()
    {
       final String delegateToString = delegate.toString();
-      return new StringBuilder(64 + delegateToString.length())
-         .append(this.getClass().getSimpleName()).append('@').append(System.identityHashCode(this))
-         .append(" wrapping ")
-         .append(delegateToString).toString();
+      return this.getClass().getSimpleName() + '@' + System.identityHashCode(this) + " wrapping " + delegateToString;
    }
 
    // **********************************************************************
@@ -231,7 +228,7 @@ public abstract class ProxyStatement implements Statement
       if (iface.isInstance(delegate)) {
          return (T) delegate;
       }
-      else if (delegate instanceof Wrapper) {
+      else if (delegate != null) {
           return delegate.unwrap(iface);
       }
 

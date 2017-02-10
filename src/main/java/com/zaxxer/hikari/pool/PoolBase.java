@@ -33,8 +33,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.sql.DataSource;
 
+import com.zaxxer.hikari.pool.HikariPool.PoolInitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,9 +64,9 @@ abstract class PoolBase
 
    protected final HikariConfig config;
    protected final String poolName;
-   protected long connectionTimeout;
-   protected long validationTimeout;
-   protected IMetricsTrackerDelegate metricsTracker;
+   long connectionTimeout;
+   long validationTimeout;
+   IMetricsTrackerDelegate metricsTracker;
 
    private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout"};
    private static final int UNINITIALIZED = -1;
@@ -244,7 +247,7 @@ abstract class PoolBase
    /**
     * Register MBeans for HikariConfig and HikariPool.
     *
-    * @param pool a HikariPool instance
+    * @param hikariPool a HikariPool instance
     */
    void registerMBeans(final HikariPool hikariPool)
    {
@@ -300,8 +303,6 @@ abstract class PoolBase
 
    /**
     * Create/initialize the underlying DataSource.
-    *
-    * @return a DataSource instance
     */
    private void initializeDataSource()
    {
@@ -310,6 +311,7 @@ abstract class PoolBase
       final String password = config.getPassword();
       final String dsClassName = config.getDataSourceClassName();
       final String driverClassName = config.getDriverClassName();
+      final String dataSourceJNDI = config.getDataSourceJNDI();
       final Properties dataSourceProperties = config.getDataSourceProperties();
 
       DataSource dataSource = config.getDataSource();
@@ -319,6 +321,14 @@ abstract class PoolBase
       }
       else if (jdbcUrl != null && dataSource == null) {
          dataSource = new DriverDataSource(jdbcUrl, driverClassName, dataSourceProperties, username, password);
+      }
+      else if (dataSourceJNDI != null && dataSource == null) {
+         try {
+            InitialContext ic = new InitialContext();
+            dataSource = (DataSource) ic.lookup(dataSourceJNDI);
+         } catch (NamingException e) {
+            throw new PoolInitializationException(e);
+         }
       }
 
       if (dataSource != null) {
@@ -334,7 +344,7 @@ abstract class PoolBase
     *
     * @return a Connection connection
     */
-   Connection newConnection() throws Exception
+   private Connection newConnection() throws Exception
    {
       final long start = currentTime();
 
@@ -375,7 +385,7 @@ abstract class PoolBase
     * Setup a connection initial state.
     *
     * @param connection a Connection
-    * @throws SQLException thrown from driver
+    * @throws ConnectionSetupException thrown if any exception is encountered
     */
    private void setupConnection(final Connection connection) throws ConnectionSetupException
    {
@@ -610,7 +620,7 @@ abstract class PoolBase
    {
       private static final long serialVersionUID = 929872118275916521L;
 
-      public ConnectionSetupException(Throwable t)
+      ConnectionSetupException(Throwable t)
       {
          super(t);
       }
@@ -635,7 +645,7 @@ abstract class PoolBase
       }
    }
 
-   static interface IMetricsTrackerDelegate extends AutoCloseable
+   interface IMetricsTrackerDelegate extends AutoCloseable
    {
       default void recordConnectionUsage(PoolEntry poolEntry) {}
 

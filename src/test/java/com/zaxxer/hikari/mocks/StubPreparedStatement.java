@@ -45,7 +45,7 @@ import java.util.Calendar;
  */
 public class StubPreparedStatement extends StubStatement implements PreparedStatement
 {
-    public StubPreparedStatement(Connection connection)
+    StubPreparedStatement(Connection connection)
     {
         super(connection);
     }
