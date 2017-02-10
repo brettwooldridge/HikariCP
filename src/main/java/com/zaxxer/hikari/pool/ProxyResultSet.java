@@ -19,7 +19,6 @@ package com.zaxxer.hikari.pool;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Wrapper;
 
 /**
  * This is the proxy class for java.sql.ResultSet.
@@ -30,7 +29,7 @@ public abstract class ProxyResultSet implements ResultSet
 {
    protected final ProxyConnection connection;
    protected final ProxyStatement statement;
-   protected final ResultSet delegate;
+   final ResultSet delegate;
 
    protected ProxyResultSet(ProxyConnection connection, ProxyStatement statement, ResultSet resultSet)
    {
@@ -39,6 +38,7 @@ public abstract class ProxyResultSet implements ResultSet
       this.delegate = resultSet;
    }
 
+   @SuppressWarnings("unused")
    final SQLException checkException(SQLException e)
    {
       return connection.checkException(e);
@@ -48,10 +48,7 @@ public abstract class ProxyResultSet implements ResultSet
    @Override
    public String toString()
    {
-      return new StringBuilder(64)
-         .append(this.getClass().getSimpleName()).append('@').append(System.identityHashCode(this))
-         .append(" wrapping ")
-         .append(delegate).toString();
+      return this.getClass().getSimpleName() + '@' + System.identityHashCode(this) + " wrapping " + delegate;
    }
 
    // **********************************************************************
@@ -97,7 +94,7 @@ public abstract class ProxyResultSet implements ResultSet
       if (iface.isInstance(delegate)) {
          return (T) delegate;
       }
-      else if (delegate instanceof Wrapper) {
+      else if (delegate != null) {
           return delegate.unwrap(iface);
       }
 

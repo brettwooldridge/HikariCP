@@ -19,7 +19,6 @@ package com.zaxxer.hikari.pool;
 import static com.zaxxer.hikari.util.ClockSource.currentTime;
 
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -54,6 +53,7 @@ public abstract class ProxyConnection implements Connection
    private static final Set<String> ERROR_STATES;
    private static final Set<Integer> ERROR_CODES;
 
+   @SuppressWarnings("WeakerAccess")
    protected Connection delegate;
 
    private final PoolEntry poolEntry;
@@ -101,10 +101,7 @@ public abstract class ProxyConnection implements Connection
    @Override
    public final String toString()
    {
-      return new StringBuilder(64)
-         .append(this.getClass().getSimpleName()).append('@').append(System.identityHashCode(this))
-         .append(" wrapping ")
-         .append(delegate).toString();
+      return this.getClass().getSimpleName() + '@' + System.identityHashCode(this) + " wrapping " + delegate;
    }
 
    // ***********************************************************************
@@ -186,23 +183,27 @@ public abstract class ProxyConnection implements Connection
       leakTask.cancel();
    }
 
-   private final synchronized <T extends Statement> T trackStatement(final T statement)
+   private synchronized <T extends Statement> T trackStatement(final T statement)
    {
       openStatements.add(statement);
 
       return statement;
    }
 
-   private final void closeStatements()
+   private void closeStatements()
    {
       final int size = openStatements.size();
       if (size > 0) {
          for (int i = 0; i < size && delegate != ClosedConnection.CLOSED_CONNECTION; i++) {
             try (Statement statement = openStatements.get(i)) {
-               // automatic resource cleanup
+               statement.close();
             }
             catch (SQLException e) {
-               checkException(e);
+               LOGGER.warn("{} - Connection {} marked as broken because of an exception closing open statements during Connection.close()",
+                           poolEntry.getPoolName(), delegate);
+               leakTask.cancel();
+               poolEntry.evict("(exception closing Statements during Connection.close())");
+               delegate = ClosedConnection.CLOSED_CONNECTION;
             }
          }
 
@@ -449,24 +450,19 @@ public abstract class ProxyConnection implements Connection
 
       private static Connection getClosedConnection()
       {
-         InvocationHandler handler = new InvocationHandler() {
-
-            @Override
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
-            {
-               final String methodName = method.getName();
-               if ("abort".equals(methodName)) {
-                  return Void.TYPE;
-               }
-               else if ("isValid".equals(methodName)) {
-                  return Boolean.FALSE;
-               }
-               else if ("toString".equals(methodName)) {
-                  return ClosedConnection.class.getCanonicalName();
-               }
-
-               throw new SQLException("Connection is closed");
+         InvocationHandler handler = (proxy, method, args) -> {
+            final String methodName = method.getName();
+            if ("abort".equals(methodName)) {
+               return Void.TYPE;
             }
+            else if ("isValid".equals(methodName)) {
+               return Boolean.FALSE;
+            }
+            else if ("toString".equals(methodName)) {
+               return ClosedConnection.class.getCanonicalName();
+            }
+
+            throw new SQLException("Connection is closed");
          };
 
          return (Connection) Proxy.newProxyInstance(Connection.class.getClassLoader(), new Class[] { Connection.class }, handler);

@@ -19,7 +19,6 @@ package com.zaxxer.hikari.pool;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.sql.Connection;
-import java.util.HashMap;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.Appender;
@@ -56,20 +55,7 @@ public final class TestElf
       }
    }
 
-   @SuppressWarnings("unchecked")
-   public static HashMap<Object, HikariPool> getMultiPool(HikariDataSource ds)
-   {
-      try {
-         Field field = ds.getClass().getDeclaredField("multiPool");
-         field.setAccessible(true);
-         return (HashMap<Object, HikariPool>) field.get(ds);
-      }
-      catch (Exception e) {
-         throw new RuntimeException(e);
-      }
-   }
-
-   public static boolean getConnectionCommitDirtyState(Connection connection)
+   static boolean getConnectionCommitDirtyState(Connection connection)
    {
       try {
          Field field = ProxyConnection.class.getDeclaredField("isCommitStateDirty");
@@ -81,7 +67,7 @@ public final class TestElf
       }
    }
 
-   public static void setConfigUnitTest(boolean unitTest)
+   static void setConfigUnitTest(boolean unitTest)
    {
       try {
          Field field = HikariConfig.class.getDeclaredField("unitTest");
@@ -93,7 +79,7 @@ public final class TestElf
       }
    }
 
-   public static void setSlf4jTargetStream(Class<?> clazz, PrintStream stream)
+   static void setSlf4jTargetStream(Class<?> clazz, PrintStream stream)
    {
       try {
          Log4jLogger log4Jlogger = (Log4jLogger) LoggerFactory.getLogger(clazz);
@@ -114,7 +100,7 @@ public final class TestElf
       }
    }
 
-   public static void setSlf4jLogLevel(Class<?> clazz, Level logLevel)
+   static void setSlf4jLogLevel(Class<?> clazz, Level logLevel)
    {
       try {
          Log4jLogger log4Jlogger = (Log4jLogger) LoggerFactory.getLogger(clazz);
@@ -144,7 +130,7 @@ public final class TestElf
       return config;
    }
 
-   public static HikariDataSource newHikariDataSource()
+   static HikariDataSource newHikariDataSource()
    {
       final StackTraceElement callerStackTrace = Thread.currentThread().getStackTrace()[2];
 

@@ -15,23 +15,29 @@
  */
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.pool.TestElf.newHikariDataSource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import javax.naming.Context;
+import javax.naming.InitialContext;
 import javax.naming.Name;
 import javax.naming.NamingException;
 import javax.naming.RefAddr;
 import javax.naming.Reference;
 
+import com.zaxxer.hikari.HikariConfig;
 import org.junit.Test;
 import org.osjava.sj.jndi.AbstractContext;
 
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariJNDIFactory;
 import com.zaxxer.hikari.mocks.StubDataSource;
+
+import java.sql.Connection;
 
 public class TestJNDI
 {
@@ -91,6 +97,27 @@ public class TestJNDI
       }
       catch (RuntimeException e) {
          assertTrue(e.getMessage().contains("JNDI context does not found"));
+      }
+   }
+
+   @Test
+   public void testJndiLookup4() throws Exception
+   {
+      System.setProperty(Context.INITIAL_CONTEXT_FACTORY, "org.osjava.sj.memory.MemoryContextFactory");
+      System.setProperty("org.osjava.sj.jndi.shared", "true");
+      InitialContext ic = new InitialContext();
+
+      StubDataSource ds = new StubDataSource();
+
+      Context subcontext = ic.createSubcontext("java:/comp/env/jdbc");
+      subcontext.bind("java:/comp/env/jdbc/myDS", ds);
+
+      HikariConfig config = newHikariConfig();
+      config.setDataSourceJNDI("java:/comp/env/jdbc/myDS");
+
+      try (HikariDataSource hds = new HikariDataSource(config);
+           Connection conn = hds.getConnection()) {
+         assertNotNull(conn);
       }
    }
 
