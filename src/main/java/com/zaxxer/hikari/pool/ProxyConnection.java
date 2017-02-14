@@ -190,13 +190,14 @@ public abstract class ProxyConnection implements Connection
       return statement;
    }
 
+   @SuppressWarnings("EmptyTryBlock")
    private void closeStatements()
    {
       final int size = openStatements.size();
       if (size > 0) {
          for (int i = 0; i < size && delegate != ClosedConnection.CLOSED_CONNECTION; i++) {
             try (Statement statement = openStatements.get(i)) {
-               statement.close();
+               // automatic resource cleanup
             }
             catch (SQLException e) {
                LOGGER.warn("{} - Connection {} marked as broken because of an exception closing open statements during Connection.close()",
