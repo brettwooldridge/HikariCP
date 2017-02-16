@@ -60,7 +60,7 @@ public class PrometheusMetricsTrackerTest {
          assertThat(CollectorRegistry.defaultRegistry.getSampleValue(
             "hikaricp_connection_acquired_nanos_count",
             labelNames,
-            labelValues), is(equalTo(2.0)));
+            labelValues), is(equalTo(3.0)));
          assertTrue(CollectorRegistry.defaultRegistry.getSampleValue(
             "hikaricp_connection_acquired_nanos_sum",
             labelNames,
