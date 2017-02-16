@@ -651,6 +651,8 @@ abstract class PoolBase
 
       default void recordConnectionCreated(long connectionCreatedMillis) {}
 
+      default void recordBorrowTimeoutStats(long startTime) {}
+
       default void recordBorrowStats(final PoolEntry poolEntry, final long startTime) {}
 
       default void recordConnectionTimeout() {}
@@ -683,6 +685,12 @@ abstract class PoolBase
       public void recordConnectionCreated(long connectionCreatedMillis)
       {
          tracker.recordConnectionCreatedMillis(connectionCreatedMillis);
+      }
+
+      @Override
+      public void recordBorrowTimeoutStats(long startTime)
+      {
+         tracker.recordConnectionAcquiredNanos(elapsedNanos(startTime));
       }
 
       @Override

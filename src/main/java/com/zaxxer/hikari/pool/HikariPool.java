@@ -164,6 +164,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             do {
                poolEntry = connectionBag.borrow(timeout, MILLISECONDS);
                if (poolEntry == null) {
+                  metricsTracker.recordBorrowTimeoutStats(startTime);
                   break; // We timed out... break and throw exception
                }
 
