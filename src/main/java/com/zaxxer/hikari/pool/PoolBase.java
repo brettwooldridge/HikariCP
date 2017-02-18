@@ -448,10 +448,12 @@ abstract class PoolBase
          }
          catch (SQLException e) {
             LOGGER.warn("{} - Default transaction isolation level detection failed ({}).", poolName, e.getMessage());
+            if (e.getSQLState() != null && !e.getSQLState().startsWith("08")) {
+               throw e;
+            }
          }
-         finally {
-            isValidChecked = true;
-         }
+
+         isValidChecked = true;
       }
    }
 
