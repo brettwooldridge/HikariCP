@@ -164,7 +164,6 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             do {
                poolEntry = connectionBag.borrow(timeout, MILLISECONDS);
                if (poolEntry == null) {
-                  metricsTracker.recordBorrowTimeoutStats(startTime);
                   break; // We timed out... break and throw exception
                }
 
@@ -178,6 +177,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                   return poolEntry.createProxyConnection(leakTask.schedule(poolEntry), now);
                }
             } while (timeout > 0L);
+
+            metricsTracker.recordBorrowTimeoutStats(startTime);
          }
          catch (InterruptedException e) {
             if (poolEntry != null) {
