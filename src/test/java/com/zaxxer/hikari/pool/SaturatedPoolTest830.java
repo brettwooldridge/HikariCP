@@ -148,6 +148,7 @@ outer:   while (true) {
       }
       finally {
          StubStatement.setSimulatedQueryTime(0);
+         StubConnection.slowCreate = false;
          System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
          setSlf4jLogLevel(HikariPool.class, Level.INFO);
       }
