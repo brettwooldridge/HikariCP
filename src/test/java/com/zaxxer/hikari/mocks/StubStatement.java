@@ -16,6 +16,8 @@
 
 package com.zaxxer.hikari.mocks;
 
+import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -30,11 +32,17 @@ import java.sql.Statement;
 public class StubStatement implements Statement
 {
    public static volatile boolean oldDriver;
+
+   private static volatile long simulatedQueryTime;
    private boolean closed;
    private Connection connection;
 
    public StubStatement(Connection connection) {
       this.connection = connection;
+   }
+
+   public static void setSimulatedQueryTime(long time) {
+      simulatedQueryTime = time;
    }
 
    /** {@inheritDoc} */
@@ -168,6 +176,9 @@ public class StubStatement implements Statement
    public boolean execute(String sql) throws SQLException
    {
       checkClosed();
+      if (simulatedQueryTime > 0) {
+         quietlySleep(simulatedQueryTime);
+      }
       return false;
    }
 

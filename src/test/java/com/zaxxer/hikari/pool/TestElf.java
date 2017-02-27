@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.util.ConcurrentBag;
 
 /**
  * Utility methods for testing.
@@ -49,6 +50,18 @@ public final class TestElf
          Field field = ds.getClass().getDeclaredField("pool");
          field.setAccessible(true);
          return (HikariPool) field.get(ds);
+      }
+      catch (Exception e) {
+         throw new RuntimeException(e);
+      }
+   }
+
+   static ConcurrentBag<?> getConcurrentBag(HikariDataSource ds)
+   {
+      try {
+         Field field = HikariPool.class.getDeclaredField("connectionBag");
+         field.setAccessible(true);
+         return (ConcurrentBag<?>) field.get(getPool(ds));
       }
       catch (Exception e) {
          throw new RuntimeException(e);
