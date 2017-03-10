@@ -1,5 +1,19 @@
 HikariCP Changes
 
+Changes in 2.6.1
+
+ * issue 821 if a disconnection class exception is thrown during initial connection
+   setup, do not set the flag that indicates that checkDriverSupport() is complete.
+
+ * issue 835 fix increased CPU consumption under heavy load caused by excessive
+   spinning in the ConcurrentBag.requite() method.
+
+ * issue 817 updated behavior of new initializationFailTimeout, please see the
+   official documentation for details.
+
+ * issue 742 add direct MXBean accessor methods to HikariDataSource for users who do 
+   not want run run JMX.
+
 Changes in 2.6.0
 
  * Redesign of the contention code path resulting in doubling contended throughput; now
