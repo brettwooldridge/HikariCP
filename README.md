@@ -225,8 +225,12 @@ an initial connection successfully.  Any positive number is taken to be the numb
 milliseconds to attempt to acquire an initial connection; the application thread will be 
 blocked during this period.  If a connection cannot be acquired before this timeout occurs,
 an exception will be thrown.  This timeout is applied *after* the ``connectionTimeout``
-period.  If you want your application to start *even when* the database is down/unavailable,
-set this property to ``0``.
+period.  If the value is zero (0), HikariCP will attempt to obtain and validate a connection.
+If a connection is obtained, but fails validation, an exception will be thrown and the pool
+not started.  However, if a connection cannot be obtained, the pool will start, but later 
+efforts to obtain a connection may fail.  A value less than zero will bypass any initial
+connection attempt, and the pool will start immediately while trying to obtain connections
+in the background.  Consequently, later efforts to obtain a connection may fail.
 *Default: 1*
 
 &#10062;``isolateInternalQueries``<br/>
