@@ -76,6 +76,9 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    private static final int POOL_SUSPENDED = 1;
    private static final int POOL_SHUTDOWN = 2;
 
+   private static final String EVICTED_CONNECTION_MESSAGE = "(connection was evicted)";
+   private static final String DEAD_CONNECTION_MESSAGE = "(connection is dead)";
+
    private volatile int poolState;
 
    private final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", MILLISECONDS.toMillis(500));
@@ -168,8 +171,10 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                }
 
                final long now = currentTime();
-               if (poolEntry.isMarkedEvicted() || (elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
-                  closeConnection(poolEntry, "(connection is evicted or dead)"); // Throw away the dead connection (passed max age or failed alive test)
+               boolean markedEvicted = poolEntry.isMarkedEvicted();
+               boolean dead = elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection);
+               if (markedEvicted || dead) {
+                  closeConnection(poolEntry, markedEvicted ? EVICTED_CONNECTION_MESSAGE : DEAD_CONNECTION_MESSAGE); // Throw away the dead connection (passed max age or failed alive test)
                   timeout = hardTimeout - elapsedMillis(startTime);
                }
                else {
