@@ -4,8 +4,9 @@
 <img width="240" valign="middle" src="http://design.jboss.org/hibernate/logo/final/hibernate_logo_whitebkg.svg">![][spacer]<img width="240" valign="middle" src="https://spring.io/img/spring-by-pivotal.png">![][spacer]<img width="240" valign="middle" src="https://jaxenter.com/wp-content/uploads/2013/02/slick.jpg">
 <img width="240" valign="middle" src="https://www.opennms.com/wp-content/uploads/2015/02/openNMSlogo-transparent-noninterlaced-150ppi.png">![][spacer]<img width="240" valign="middle" src="https://aries.apache.org/images/Arieslogo_Horizontal.gif">
 
-<sup>Images on this page are Trademarked and Copyrighted by their respective rights holders.</sup><br>
-<sup>Images on this page are used without express permission, and do not constitute an endorsement of HikariCP. If you are a trademark or copyright holder and wish an image
-to be removed from this page, please open a request in the issue tracker.</sup>
+<p>
+<sup>:pencil2:Images on this page are Trademarked and Copyrighted by their respective rights holders.</sup><br/>
+
+<sup>:pencil2:Images on this page are used without express permission, and do not constitute an endorsement of HikariCP. If you are a trademark or copyright holder and wish an image to be removed from this page, please open a request in the issue tracker.</sup>
 
 [spacer]: https://github.com/brettwooldridge/HikariCP/wiki/space60x1.gif
