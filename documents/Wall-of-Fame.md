@@ -4,7 +4,7 @@
 
 <img width="240" valign="middle" src="https://logo-png.com/logopng/splunk-logo.png">![][spacer]<img width="240" valign="middle" src="https://www.surpasshosting.com/images/comodo_logo.png">![][spacer]<img width="240" valign="middle" src="https://www.ca.com/content/dam/ca/us/images/company/ca-logo-b-w.jpg">
 
-<img width="300" valign="middle" src="http://fiware-cosmos.readthedocs.io/en/r4_fiware/user_and_programmer_manual/streaming/images/storm_logo.png">![][spacer]<img width="240" valign="middle" src="https://image.slidesharecdn.com/apachehive-151229131013/95/apache-hive-1-638.jpg?cb=1451394627">![][spacer]<img width="240" valign="middle" src="http://design.jboss.org/hibernate/logo/final/hibernate_logo_whitebkg.svg">
+<img width="260" valign="middle" src="http://fiware-cosmos.readthedocs.io/en/r4_fiware/user_and_programmer_manual/streaming/images/storm_logo.png">![][spacer]<img width="240" valign="middle" src="https://image.slidesharecdn.com/apachehive-151229131013/95/apache-hive-1-638.jpg?cb=1451394627">![][spacer]<img width="240" valign="middle" src="http://design.jboss.org/hibernate/logo/final/hibernate_logo_whitebkg.svg">
 
 <img width="240" valign="middle" src="https://spring.io/img/spring-by-pivotal.png">![][spacer]<img width="240" valign="middle" src="https://jaxenter.com/wp-content/uploads/2013/02/slick.jpg">![][spacer]<img width="240" valign="middle" src="https://www.opennms.com/wp-content/uploads/2015/02/openNMSlogo-transparent-noninterlaced-150ppi.png">
 
