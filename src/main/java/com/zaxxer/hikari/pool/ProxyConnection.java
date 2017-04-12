@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Savepoint;
@@ -344,6 +345,14 @@ public abstract class ProxyConnection implements Connection
    public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException
    {
       return ProxyFactory.getProxyPreparedStatement(this, trackStatement(delegate.prepareStatement(sql, columnNames)));
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public DatabaseMetaData getMetaData() throws SQLException
+   {
+      markCommitStateDirty();
+      return delegate.getMetaData();
    }
 
    /** {@inheritDoc} */
