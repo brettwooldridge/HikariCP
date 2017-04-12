@@ -27,8 +27,10 @@ class HikariCPCollector extends Collector {
    private final PoolStats poolStats;
    private final List<String> labelNames;
    private final List<String> labelValues;
+   private final String poolName;
 
    HikariCPCollector(String poolName, PoolStats poolStats) {
+      this.poolName=poolName;
       this.poolStats = poolStats;
       this.labelNames = Collections.singletonList("pool");
       this.labelValues = Collections.singletonList(poolName);
@@ -50,6 +52,6 @@ class HikariCPCollector extends Collector {
          new MetricFamilySamples.Sample(name, labelNames, labelValues, value)
       );
 
-      return new MetricFamilySamples(name, Type.GAUGE, helpMessage, samples);
+      return new MetricFamilySamples(poolName, Type.GAUGE, helpMessage, samples);
    }
 }
