@@ -20,6 +20,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
@@ -90,6 +91,9 @@ abstract class PoolBase
    private final AtomicReference<Throwable> lastConnectionFailure;
 
    private volatile boolean isValidChecked;
+   private boolean isUsePingValidation;
+
+   private Method ping;
 
    PoolBase(final HikariConfig config)
    {
@@ -150,6 +154,10 @@ abstract class PoolBase
       try {
          try {
             if (isUseJdbc4Validation) {
+               if (isUsePingValidation) {
+                  return testConnectionAliveByPing(connection, (int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
+               }
+
                return connection.isValid((int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
             }
 
@@ -178,6 +186,16 @@ abstract class PoolBase
          LOGGER.warn("{} - Failed to validate connection {} ({})", poolName, connection, e.getMessage());
          return false;
       }
+   }
+
+   boolean testConnectionAliveByPing(Connection connection, int timeout) throws SQLException {
+      try {
+         this.ping.invoke(connection, new Object[] {Boolean.valueOf(true), timeout});
+      } catch (Exception e) {
+         return false;
+      }
+
+      return true;
    }
 
    Throwable getLastConnectionFailure()
@@ -336,7 +354,25 @@ abstract class PoolBase
          createNetworkTimeoutExecutor(dataSource, dsClassName, jdbcUrl);
       }
 
+      this.isUsePingValidation = shouldUsePingValidation(dataSource, dsClassName, jdbcUrl);
       this.dataSource = dataSource;
+   }
+
+   private boolean shouldUsePingValidation(final DataSource dataSource, final String dsClassName, final String jdbcUrl)
+   {
+      if ((dsClassName != null && dsClassName.contains("Mysql")) ||
+          (jdbcUrl != null && jdbcUrl.contains("mysql")) ||
+          (dataSource != null && dataSource.getClass().getName().contains("Mysql"))) {
+         try {
+            this.ping = UtilityElf.getMethod("com.mysql.jdbc.MySQLConnection", "pingInternal", new Class[] {Boolean.TYPE, Integer.TYPE});
+            return true;
+         }
+         catch (Exception e) {
+            // Ignore
+         }
+      }
+
+      return false;
    }
 
    /**

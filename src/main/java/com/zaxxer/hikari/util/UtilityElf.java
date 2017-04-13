@@ -21,6 +21,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.util.Locale;
 import java.util.concurrent.BlockingQueue;
@@ -191,5 +192,34 @@ public final class UtilityElf
          thread.setDaemon(daemon);
          return thread;
       }
+   }
+
+   public static Class<?> loadClass(String className) {
+      Class clazz = null;
+
+      if (className == null) {
+         return null;
+      }
+
+      try {
+         return Class.forName(className);
+      } catch (ClassNotFoundException e) {
+         ClassLoader ctxClassLoader = Thread.currentThread().getContextClassLoader();
+
+         if (ctxClassLoader != null) {
+            try {
+               clazz = ctxClassLoader.loadClass(className);
+            } catch (ClassNotFoundException ex) {
+            }
+         }
+      }
+
+      return clazz;
+   }
+
+   public static Method getMethod(String className, String methodName, Class[] classes) throws Exception {
+      Class<?> clazz = loadClass(className);
+
+      return clazz.getMethod(methodName, classes);
    }
 }
