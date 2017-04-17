@@ -149,27 +149,29 @@ abstract class PoolBase
    {
       try {
          try {
-            if (isUseJdbc4Validation) {
-               return connection.isValid((int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
-            }
-
             setNetworkTimeout(connection, validationTimeout);
+
+            final long validationSeconds = (int) Math.max(1000L, validationTimeout) / 1000;
+
+            if (isUseJdbc4Validation) {
+               return connection.isValid((int) validationSeconds);
+            }
 
             try (Statement statement = connection.createStatement()) {
                if (isNetworkTimeoutSupported != TRUE) {
-                  setQueryTimeout(statement, (int) MILLISECONDS.toSeconds(Math.max(1000L, validationTimeout)));
+                  setQueryTimeout(statement, (int) validationSeconds);
                }
 
                statement.execute(config.getConnectionTestQuery());
             }
          }
          finally {
+            setNetworkTimeout(connection, networkTimeout);
+
             if (isIsolateInternalQueries && !isAutoCommit) {
                connection.rollback();
             }
          }
-
-         setNetworkTimeout(connection, networkTimeout);
 
          return true;
       }
