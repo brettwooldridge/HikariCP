@@ -44,8 +44,6 @@ import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.dropwizard.CodahaleMetricsTrackerFactory;
 import com.zaxxer.hikari.util.UtilityElf;
 
-import shaded.org.codehaus.plexus.interpolation.os.Os;
-
 /**
  * Test HikariCP/CodaHale metrics integration.
  *
@@ -85,7 +83,7 @@ public class TestMetrics
    @Test
    public void testMetricUsage() throws SQLException
    {
-      assumeFalse(Os.isFamily(Os.FAMILY_WINDOWS));
+      assumeFalse(System.getProperty("os.name").contains("Windows"));
       MetricRegistry metricRegistry = new MetricRegistry();
 
       HikariConfig config = newHikariConfig();
@@ -156,19 +154,19 @@ public class TestMetrics
       try (HikariDataSource ds = newHikariDataSource()) {
          ds.setMaximumPoolSize(1);
          ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-   
+
          MetricRegistry metricRegistry = new MetricRegistry();
          HealthCheckRegistry healthRegistry = new HealthCheckRegistry();
-   
+
          try {
             try (Connection connection = ds.getConnection()) {
                // close immediately
             }
-   
+
             // After the pool as started, we can only set them once...
             ds.setMetricRegistry(metricRegistry);
             ds.setHealthCheckRegistry(healthRegistry);
-   
+
             // and never again...
             ds.setMetricRegistry(metricRegistry);
             fail("Should not have been allowed to set registry after pool started");
@@ -192,19 +190,19 @@ public class TestMetrics
       try (HikariDataSource ds = newHikariDataSource()) {
          ds.setMaximumPoolSize(1);
          ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-   
+
          MetricRegistry metricRegistry = new MetricRegistry();
          HealthCheckRegistry healthRegistry = new HealthCheckRegistry();
-   
+
          ds.setMetricRegistry(metricRegistry);
          ds.setHealthCheckRegistry(healthRegistry);
-   
+
          // before the pool is started, we can set it any number of times...
          ds.setMetricRegistry(metricRegistry);
          ds.setHealthCheckRegistry(healthRegistry);
-   
+
          try (Connection connection = ds.getConnection()) {
-   
+
             // after the pool is started, we cannot set it any more
             ds.setMetricRegistry(metricRegistry);
             fail("Should not have been allowed to set registry after pool started");
@@ -221,15 +219,15 @@ public class TestMetrics
       try (HikariDataSource ds = newHikariDataSource()) {
          ds.setMaximumPoolSize(1);
          ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-   
+
          MetricRegistry metricRegistry = new MetricRegistry();
          MetricsTrackerFactory metricsTrackerFactory = new CodahaleMetricsTrackerFactory(metricRegistry);
-   
+
          try (Connection connection = ds.getConnection()) {
-   
+
             // After the pool as started, we can only set them once...
             ds.setMetricsTrackerFactory(metricsTrackerFactory);
-   
+
             // and never again...
             ds.setMetricsTrackerFactory(metricsTrackerFactory);
             fail("Should not have been allowed to set metricsTrackerFactory after pool started");
@@ -254,16 +252,16 @@ public class TestMetrics
       try (HikariDataSource ds = newHikariDataSource()) {
          ds.setMaximumPoolSize(1);
          ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-   
+
          MetricRegistry metricRegistry = new MetricRegistry();
-   
+
          // before the pool is started, we can set it any number of times using either setter
          ds.setMetricRegistry(metricRegistry);
          ds.setMetricRegistry(metricRegistry);
          ds.setMetricRegistry(metricRegistry);
-   
+
          try (Connection connection = ds.getConnection()) {
-   
+
             // after the pool is started, we cannot set it any more
             ds.setMetricRegistry(metricRegistry);
             fail("Should not have been allowed to set registry after pool started");
@@ -280,17 +278,17 @@ public class TestMetrics
       try (HikariDataSource ds = newHikariDataSource()) {
          ds.setMaximumPoolSize(1);
          ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-   
+
          MetricRegistry metricRegistry = new MetricRegistry();
          MetricsTrackerFactory metricsTrackerFactory = new CodahaleMetricsTrackerFactory(metricRegistry);
-   
+
          // before the pool is started, we can set it any number of times using either setter
          ds.setMetricsTrackerFactory(metricsTrackerFactory);
          ds.setMetricsTrackerFactory(metricsTrackerFactory);
          ds.setMetricsTrackerFactory(metricsTrackerFactory);
-   
+
          try (Connection connection = ds.getConnection()) {
-   
+
             // after the pool is started, we cannot set it any more
             ds.setMetricsTrackerFactory(metricsTrackerFactory);
             fail("Should not have been allowed to set registry factory after pool started");

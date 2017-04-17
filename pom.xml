@@ -194,6 +194,12 @@
       </dependency>
       <dependency>
          <groupId>org.ops4j.pax.exam</groupId>
+         <artifactId>pax-exam-link-assembly</artifactId>
+         <version>${pax.exam.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.ops4j.pax.exam</groupId>
          <artifactId>pax-exam-link-mvn</artifactId>
          <version>${pax.exam.version}</version>
          <scope>test</scope>
@@ -362,10 +368,14 @@
                <version>2.19.1</version>
                <configuration>
                   <!-- Sets the VM argument line used when unit tests are run. -->
-                  <argLine>${surefireArgLine}</argLine>
+                  <argLine>${surefireArgLine}
+                     --add-opens java.base/java.net=ALL-UNNAMED
+                     --add-opens java.base/java.security=ALL-UNNAMED
+                     --add-exports java.base/sun.net.www.protocol.http=ALL-UNNAMED
+                     --add-exports java.base/sun.net.www.protocol.https=ALL-UNNAMED</argLine>
                   <!-- Skips unit tests if the value of skip.unit.tests property is true -->
                   <skipTests>${skip.unit.tests}</skipTests>
-                  <reuseForks>false</reuseForks>
+                  <reuseForks>true</reuseForks>
                </configuration>
             </plugin>
 
