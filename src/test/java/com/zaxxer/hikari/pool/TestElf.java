@@ -44,6 +44,10 @@ public final class TestElf
       // default constructor
    }
 
+   public static boolean isJava9() {
+      return System.getProperty("java.version").startsWith("9");
+   }
+
    public static HikariPool getPool(HikariDataSource ds)
    {
       try {
