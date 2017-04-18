@@ -1,13 +1,36 @@
-language: java
 sudo: false
+language: java
+
+before_script:
+  - if [[ "x$JDK" == *'x9'* ]]; then remove_dir_from_path $JAVA_HOME/bin; export JAVA_HOME=/usr/lib/jvm/java-9-oracle; export PATH=$JAVA_HOME/bin:$PATH; java -Xmx32m -version; fi
+
+script:
+  - export JDK8_HOME=$(jdk_switcher home oraclejdk8)
+  - export JDK9_HOME=/usr/lib/jvm/java-9-oracle
+  - test -d "${JDK9_HOME}" || export JDK9_HOME=$(jdk_switcher home oraclejdk8)
+
+before_cache:
+  # No sense in caching current build artifacts
+  - rm -rf $HOME/.m2/repository/com/zaxxer
+
 cache:
   directories:
     - $HOME/.m2/repository
-jdk:
-  - oraclejdk8
+
+matrix:
+  fast_finish: true
+  include:
+    - jdk: oraclejdk8
+    - jdk: oraclejdk8 # this will be overridden by before_script above
+      addons:
+        apt:
+          packages:
+            - oracle-java9-installer
+      env:
+        - JDK=9
 
 install: /bin/true
 
 script:
   - mvn install -Dskip.unit.tests=true -Dmaven.javadoc.skip=true -V -B
-  - mvn test coveralls:report -V -P coverage 
+  - mvn test coveralls:report -V -P coverage
