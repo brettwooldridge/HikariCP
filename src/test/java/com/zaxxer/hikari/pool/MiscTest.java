@@ -102,7 +102,7 @@ public class MiscTest
       try (PrintStream ps = new PrintStream(baos, true)) {
          setSlf4jTargetStream(Class.forName("com.zaxxer.hikari.pool.ProxyLeakTask"), ps);
          setConfigUnitTest(true);
-   
+
          HikariConfig config = newHikariConfig();
          config.setMinimumIdle(0);
          config.setMaximumPoolSize(4);
@@ -110,11 +110,11 @@ public class MiscTest
          config.setMetricRegistry(null);
          config.setLeakDetectionThreshold(TimeUnit.SECONDS.toMillis(1));
          config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-   
+
          try (HikariDataSource ds = new HikariDataSource(config)) {
             setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
             getPool(ds).logPoolState();
-   
+
             try (Connection connection = ds.getConnection()) {
                quietlySleep(SECONDS.toMillis(4));
                connection.close();
@@ -128,6 +128,7 @@ public class MiscTest
          finally
          {
             setConfigUnitTest(false);
+            setSlf4jLogLevel(HikariPool.class, Level.INFO);
          }
       }
    }

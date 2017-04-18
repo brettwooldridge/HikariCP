@@ -251,9 +251,9 @@ public class TestConnectionTimeoutRetry
             Connection connection5 = ds.getConnection();
             Connection connection6 = ds.getConnection();
             Connection connection7 = ds.getConnection()) {
-   
+
             sleep(1300);
-   
+
             assertSame("Total connections not as expected", 10, pool.getTotalConnections());
             assertSame("Idle connections not as expected", 3, pool.getIdleConnections());
          }
@@ -273,5 +273,6 @@ public class TestConnectionTimeoutRetry
    public void after()
    {
       System.getProperties().remove("com.zaxxer.hikari.housekeeping.periodMs");
+      setSlf4jLogLevel(HikariPool.class, Level.INFO);
    }
 }
