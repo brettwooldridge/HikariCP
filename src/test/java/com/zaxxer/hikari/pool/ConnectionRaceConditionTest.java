@@ -51,7 +51,7 @@ public class ConnectionRaceConditionTest
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(10);
       config.setInitializationFailTimeout(Long.MAX_VALUE);
-      config.setConnectionTimeout(2500);
+      config.setConnectionTimeout(5000);
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       setSlf4jLogLevel(ConcurrentBag.class, Level.INFO);
