@@ -41,6 +41,7 @@
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <sureFireOptions9></sureFireOptions9>
       <sureFireForks9>false</sureFireForks9>
+      <coverallsSkip9>false</coverallsSkip9>
 
       <felix.bundle.plugin.version>3.3.0</felix.bundle.plugin.version>
       <felix.version>5.6.2</felix.version>
@@ -434,6 +435,7 @@
                --add-exports java.base/sun.net.www.protocol.https=ALL-UNNAMED
             </sureFireOptions9>
             <sureFireForks9>true</sureFireForks9>
+            <coverallsSkip9>true</coverallsSkip9>
          </properties>
       </profile>
 
@@ -455,6 +457,9 @@
                         <inherited>false</inherited>
                      </execution>
                   </executions>
+                  <configuration>
+                     <coveralls.skip>${coverallsSkip9}</coveralls.skip>
+                  </configuration>
                </plugin>
             </plugins>
          </build>
