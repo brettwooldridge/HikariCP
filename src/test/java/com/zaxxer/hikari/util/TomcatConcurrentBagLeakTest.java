@@ -16,11 +16,12 @@
 
 package com.zaxxer.hikari.util;
 
-import static com.zaxxer.hikari.pool.TestElf.isJava9;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assume.assumeTrue;
+import com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runners.MethodSorters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -28,18 +29,16 @@ import java.lang.ref.Reference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.Collection;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
 
-import com.zaxxer.hikari.pool.TestElf;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry;
+import static com.zaxxer.hikari.pool.TestElf.isJava9;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * @author Brett Wooldridge
@@ -136,12 +135,15 @@ public class TomcatConcurrentBagLeakTest
       }
    }
 
+   @SuppressWarnings("unused")
    public static class FauxWebContext
    {
       private static final Logger log = LoggerFactory.getLogger(FauxWebContext.class);
 
+      @SuppressWarnings("WeakerAccess")
       public Exception failureException;
 
+      @SuppressWarnings("unused")
       public void createConcurrentBag() throws InterruptedException
       {
          try (ConcurrentBag<PoolEntry> bag = new ConcurrentBag<>((x) -> CompletableFuture.completedFuture(Boolean.TRUE))) {
@@ -178,19 +180,19 @@ public class TomcatConcurrentBagLeakTest
             Method expungeStaleEntriesMethod = tlmClass.getDeclaredMethod("expungeStaleEntries");
             expungeStaleEntriesMethod.setAccessible(true);
 
-            for (int i = 0; i < threads.length; i++) {
+            for (Thread thread : threads) {
                Object threadLocalMap;
-               if (threads[i] != null) {
+               if (thread != null) {
 
                   // Clear the first map
-                  threadLocalMap = threadLocalsField.get(threads[i]);
+                  threadLocalMap = threadLocalsField.get(thread);
                   if (null != threadLocalMap) {
                      expungeStaleEntriesMethod.invoke(threadLocalMap);
                      checkThreadLocalMapForLeaks(threadLocalMap, tableField);
                   }
 
                   // Clear the second map
-                  threadLocalMap = inheritableThreadLocalsField.get(threads[i]);
+                  threadLocalMap = inheritableThreadLocalsField.get(thread);
                   if (null != threadLocalMap) {
                      expungeStaleEntriesMethod.invoke(threadLocalMap);
                      checkThreadLocalMapForLeaks(threadLocalMap, tableField);
@@ -199,7 +201,7 @@ public class TomcatConcurrentBagLeakTest
             }
          }
          catch (Throwable t) {
-            log.warn("Failed to check for ThreadLocal references for web application [{}]", t);
+            log.warn("Failed to check for ThreadLocal references for web application [{}]", getContextName(), t);
             failureException = new Exception();
          }
       }
@@ -221,8 +223,7 @@ public class TomcatConcurrentBagLeakTest
          if (map != null) {
             Object[] table = (Object[]) internalTableField.get(map);
             if (table != null) {
-               for (int j = 0; j < table.length; j++) {
-                  Object obj = table[j];
+               for (Object obj : table) {
                   if (obj != null) {
                      boolean keyLoadedByWebapp = false;
                      boolean valueLoadedByWebapp = false;
@@ -245,8 +246,7 @@ public class TomcatConcurrentBagLeakTest
                            args[1] = getPrettyClassName(key.getClass());
                            try {
                               args[2] = key.toString();
-                           }
-                           catch (Exception e) {
+                           } catch (Exception e) {
                               log.warn("Unable to determine string representation of key of type [{}]", args[1], e);
                               args[2] = "Unknown";
                            }
@@ -255,8 +255,7 @@ public class TomcatConcurrentBagLeakTest
                            args[3] = getPrettyClassName(value.getClass());
                            try {
                               args[4] = value.toString();
-                           }
-                           catch (Exception e) {
+                           } catch (Exception e) {
                               log.warn("webappClassLoader.checkThreadLocalsForLeaks.badValue {}", args[3], e);
                               args[4] = "Unknown";
                            }
@@ -264,21 +263,19 @@ public class TomcatConcurrentBagLeakTest
 
                         if (valueLoadedByWebapp) {
                            log.error("The web application [{}] created a ThreadLocal with key " +
-                                     "(value [{}]) and a value of type [{}] (value [{}]) but failed to remove " +
-                                     "it when the web application was stopped. Threads are going to be renewed " +
-                                     "over time to try and avoid a probable memory leak.", args);
+                              "(value [{}]) and a value of type [{}] (value [{}]) but failed to remove " +
+                              "it when the web application was stopped. Threads are going to be renewed " +
+                              "over time to try and avoid a probable memory leak.", args);
                            failureException = new Exception();
-                        }
-                        else if (value == null) {
+                        } else if (value == null) {
                            log.debug("The web application [{}] created a ThreadLocal with key of type [{}] " +
-                                      "(value [{}]). The ThreadLocal has been correctly set to null and the " +
-                                      "key will be removed by GC.", args);
+                              "(value [{}]). The ThreadLocal has been correctly set to null and the " +
+                              "key will be removed by GC.", args);
                            failureException = new Exception();
-                        }
-                        else {
+                        } else {
                            log.debug("The web application [{}] created a ThreadLocal with key of type [{}] " +
-                                     "(value [{}]) and a value of type [{}] (value [{}]). Since keys are only " +
-                                     "weakly held by the ThreadLocal Map this is not a memory leak.", args);
+                              "(value [{}]) and a value of type [{}] (value [{}]). Since keys are only " +
+                              "weakly held by the ThreadLocal Map this is not a memory leak.", args);
                            failureException = new Exception();
                         }
                      }
@@ -288,9 +285,45 @@ public class TomcatConcurrentBagLeakTest
          }
       }
 
-      private boolean loadedByThisOrChild(Object key)
-      {
-         return key.getClass().getClassLoader() == this.getClass().getClassLoader();
+      /**
+       * @param o object to test, may be null
+       * @return <code>true</code> if o has been loaded by the current classloader
+       * or one of its descendants.
+       */
+      private boolean loadedByThisOrChild(Object o) {
+         if (o == null) {
+            return false;
+         }
+
+         Class<?> clazz;
+         if (o instanceof Class) {
+            clazz = (Class<?>) o;
+         } else {
+            clazz = o.getClass();
+         }
+
+         ClassLoader cl = clazz.getClassLoader();
+         while (cl != null) {
+            if (cl == this.getClass().getClassLoader()) {
+               return true;
+            }
+            cl = cl.getParent();
+         }
+
+         if (o instanceof Collection<?>) {
+            Iterator<?> iter = ((Collection<?>) o).iterator();
+            try {
+               while (iter.hasNext()) {
+                  Object entry = iter.next();
+                  if (loadedByThisOrChild(entry)) {
+                     return true;
+                  }
+               }
+            } catch (ConcurrentModificationException e) {
+               log.warn("Failed to check for ThreadLocal references for web application [{}]", getContextName(), e);
+            }
+         }
+         return false;
       }
 
       /*

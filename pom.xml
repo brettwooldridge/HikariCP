@@ -372,7 +372,7 @@
                   <argLine>${surefireArgLine} ${sureFireOptions9}</argLine>
                   <!-- Skips unit tests if the value of skip.unit.tests property is true -->
                   <skipTests>${skip.unit.tests}</skipTests>
-                  <reuseForks>true</reuseForks>
+                  <reuseForks>false</reuseForks>
                </configuration>
             </plugin>
 
