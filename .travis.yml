@@ -3,6 +3,7 @@ language: java
 
 before_script:
   - if [[ "x$JDK" == *'x9'* ]]; then remove_dir_from_path $JAVA_HOME/bin; export JAVA_HOME=/usr/lib/jvm/java-9-oracle; export PATH=$JAVA_HOME/bin:$PATH; java -Xmx32m -version; fi
+  - if [[ "x$JDK" != *'x9'* ]]; then export COVERALLS=coveralls:report; fi
 
 script:
   - export JDK8_HOME=$(jdk_switcher home oraclejdk8)
@@ -33,4 +34,4 @@ install: /bin/true
 
 script:
   - mvn package -Dskip.unit.tests=true -Dmaven.javadoc.skip=true -V -B
-  - mvn test coveralls:report -V -Dcoveralls
+  - mvn test $COVERALLS -V -Dcoveralls

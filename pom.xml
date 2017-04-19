@@ -440,12 +440,6 @@
 
       <profile>
          <id>coverage</id>
-         <activation>
-            <jdk>1.8</jdk>
-            <property>
-               <name>coveralls</name>
-            </property>
-         </activation>
          <build>
             <plugins>
                <plugin>
