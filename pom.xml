@@ -40,6 +40,7 @@
    <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <sureFireOptions9></sureFireOptions9>
+      <sureFireForks9>false</sureFireForks9>
 
       <felix.bundle.plugin.version>3.3.0</felix.bundle.plugin.version>
       <felix.version>5.6.2</felix.version>
@@ -372,7 +373,7 @@
                   <argLine>${surefireArgLine} ${sureFireOptions9}</argLine>
                   <!-- Skips unit tests if the value of skip.unit.tests property is true -->
                   <skipTests>${skip.unit.tests}</skipTests>
-                  <reuseForks>false</reuseForks>
+                  <reuseForks>${sureFireForks9}</reuseForks>
                </configuration>
             </plugin>
 
@@ -432,6 +433,7 @@
                --add-exports java.base/sun.net.www.protocol.http=ALL-UNNAMED
                --add-exports java.base/sun.net.www.protocol.https=ALL-UNNAMED
             </sureFireOptions9>
+            <sureFireForks9>true</sureFireForks9>
          </properties>
       </profile>
 
