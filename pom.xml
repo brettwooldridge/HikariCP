@@ -455,11 +455,11 @@
                            <goal>jacoco</goal>
                         </goals>
                         <inherited>false</inherited>
+                        <configuration>
+                           <coveralls.skip>${coverallsSkip9}</coveralls.skip>
+                        </configuration>
                      </execution>
                   </executions>
-                  <configuration>
-                     <coveralls.skip>${coverallsSkip9}</coveralls.skip>
-                  </configuration>
                </plugin>
             </plugins>
          </build>
