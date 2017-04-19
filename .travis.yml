@@ -34,4 +34,4 @@ install: /bin/true
 
 script:
   - mvn package -Dskip.unit.tests=true -Dmaven.javadoc.skip=true -V -B
-  - mvn test $COVERALLS -V -Dcoveralls
+  - mvn test $COVERALLS -V -P coverage
