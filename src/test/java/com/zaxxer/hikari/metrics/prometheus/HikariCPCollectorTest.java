@@ -60,10 +60,11 @@ public class HikariCPCollectorTest {
 
       StubConnection.slowCreate = true;
       try (HikariDataSource ds = new HikariDataSource(config)) {
-         assertThat(getValue("hikaricp_active_connections", "HikariPool-1"), is(0.0));
-         assertThat(getValue("hikaricp_idle_connections", "HikariPool-1"), is(0.0));
-         assertThat(getValue("hikaricp_pending_threads", "HikariPool-1"), is(0.0));
-         assertThat(getValue("hikaricp_connections", "HikariPool-1"), is(0.0));
+         String poolName = ds.getHikariConfigMXBean().getPoolName();
+         assertThat(getValue("hikaricp_active_connections", poolName), is(0.0));
+         assertThat(getValue("hikaricp_idle_connections", poolName), is(0.0));
+         assertThat(getValue("hikaricp_pending_threads", poolName), is(0.0));
+         assertThat(getValue("hikaricp_connections", poolName), is(0.0));
       }
       finally {
          StubConnection.slowCreate = false;
@@ -105,7 +106,7 @@ public class HikariCPCollectorTest {
          try (Connection connection1 = ds.getConnection()) {
             // close immediately
          }
-         
+
          assertThat(getValue("hikaricp_active_connections", "connectionClosed"), is(0.0));
          assertThat(getValue("hikaricp_idle_connections", "connectionClosed"), is(1.0));
          assertThat(getValue("hikaricp_pending_threads", "connectionClosed"), is(0.0));
