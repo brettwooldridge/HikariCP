@@ -1,6 +1,30 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
+   <properties>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <sureFireOptions9></sureFireOptions9>
+      <sureFireForks9>false</sureFireForks9>
+      <artifact.classifier></artifact.classifier>
+
+      <felix.bundle.plugin.version>3.3.0</felix.bundle.plugin.version>
+      <felix.version>5.6.2</felix.version>
+      <hibernate.version>5.2.9.Final</hibernate.version>
+      <javassist.version>3.21.0-GA</javassist.version>
+      <jndi.version>0.11.4.1</jndi.version>
+      <maven.release.version>2.5.3</maven.release.version>
+      <metrics.version>3.2.2</metrics.version>
+      <simpleclient.version>0.0.21</simpleclient.version>
+      <mockito.version>2.7.22</mockito.version>
+      <pax.exam.version>4.10.0</pax.exam.version>
+      <pax.url.version>2.5.2</pax.url.version>
+      <slf4j.version>1.7.25</slf4j.version>
+      <log4j.version>2.8.2</log4j.version>
+      <commons.csv.version>1.4</commons.csv.version>
+      <h2.version>1.4.194</h2.version>
+      <junit.version>4.12</junit.version>
+   </properties>
+
    <groupId>com.zaxxer</groupId>
    <artifactId>HikariCP</artifactId>
    <version>2.6.2-SNAPSHOT</version>
@@ -36,29 +60,6 @@
          <email>brett.wooldridge@gmail.com</email>
       </developer>
    </developers>
-
-   <properties>
-      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-      <sureFireOptions9></sureFireOptions9>
-      <sureFireForks9>false</sureFireForks9>
-
-      <felix.bundle.plugin.version>3.3.0</felix.bundle.plugin.version>
-      <felix.version>5.6.2</felix.version>
-      <hibernate.version>5.2.9.Final</hibernate.version>
-      <javassist.version>3.21.0-GA</javassist.version>
-      <jndi.version>0.11.4.1</jndi.version>
-      <maven.release.version>2.5.3</maven.release.version>
-      <metrics.version>3.2.2</metrics.version>
-      <simpleclient.version>0.0.21</simpleclient.version>
-      <mockito.version>2.7.22</mockito.version>
-      <pax.exam.version>4.10.0</pax.exam.version>
-      <pax.url.version>2.5.2</pax.url.version>
-      <slf4j.version>1.7.25</slf4j.version>
-      <log4j.version>2.8.2</log4j.version>
-      <commons.csv.version>1.4</commons.csv.version>
-      <h2.version>1.4.194</h2.version>
-      <junit.version>4.12</junit.version>
-   </properties>
 
    <parent>
       <groupId>org.sonatype.oss</groupId>
@@ -297,6 +298,7 @@
             <version>${felix.bundle.plugin.version}</version>
             <extensions>true</extensions>
             <configuration>
+               <classifier>${artifact.classifier}</classifier>
                <instructions>
                   <Bundle-Name>HikariCP</Bundle-Name>
                   <Export-Package>
@@ -434,7 +436,7 @@
                --add-exports java.base/sun.net.www.protocol.https=ALL-UNNAMED
             </sureFireOptions9>
             <sureFireForks9>true</sureFireForks9>
-            <coverallsSkip9>true</coverallsSkip9>
+            <artifact.classifier>java9</artifact.classifier>
          </properties>
       </profile>
 
