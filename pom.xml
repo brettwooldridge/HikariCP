@@ -363,7 +363,7 @@
                <version>${maven.release.version}</version>
                <configuration>
                   <autoVersionSubmodules>true</autoVersionSubmodules>
-                  <tagNameFormat>HikariCP-@{project.version}</tagNameFormat>
+                  <tagNameFormat>HikariCP-@{project.version}-${artifact.classifier}</tagNameFormat>
                </configuration>
             </plugin>
 
