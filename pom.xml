@@ -26,7 +26,7 @@
    </properties>
 
    <groupId>com.zaxxer</groupId>
-   <artifactId>HikariCP</artifactId>
+   <artifactId>HikariCP${artifact.classifier}</artifactId>
    <version>2.6.1-SNAPSHOT</version>
    <packaging>bundle</packaging>
 
@@ -298,7 +298,6 @@
             <version>${felix.bundle.plugin.version}</version>
             <extensions>true</extensions>
             <configuration>
-               <classifier>${artifact.classifier}</classifier>
                <instructions>
                   <Bundle-Name>HikariCP</Bundle-Name>
                   <Export-Package>
@@ -328,7 +327,7 @@
                      org.hibernate.service;resolution:=optional,
                      org.hibernate.service.spi;resolution:=optional
                   </Import-Package>
-                  <Bundle-Version>${project.version}.${artifact.classifier}</Bundle-Version>
+                  <Bundle-Version>${project.version}${artifact.classifier}</Bundle-Version>
                   <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
                   <DynamicImport-Package>*</DynamicImport-Package>
                </instructions>
@@ -363,7 +362,7 @@
                <version>${maven.release.version}</version>
                <configuration>
                   <autoVersionSubmodules>true</autoVersionSubmodules>
-                  <tagNameFormat>HikariCP-@{project.version}-${artifact.classifier}</tagNameFormat>
+                  <tagNameFormat>HikariCP-@{project.version}${artifact.classifier}</tagNameFormat>
                </configuration>
             </plugin>
 
@@ -437,7 +436,7 @@
                --add-exports java.base/sun.net.www.protocol.https=ALL-UNNAMED
             </sureFireOptions9>
             <sureFireForks9>true</sureFireForks9>
-            <artifact.classifier>java9ea</artifact.classifier>
+            <artifact.classifier>-java9ea</artifact.classifier>
          </properties>
       </profile>
 
