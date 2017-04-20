@@ -437,7 +437,7 @@
                --add-exports java.base/sun.net.www.protocol.https=ALL-UNNAMED
             </sureFireOptions9>
             <sureFireForks9>true</sureFireForks9>
-            <artifact.classifier>java9</artifact.classifier>
+            <artifact.classifier>java9ea</artifact.classifier>
          </properties>
       </profile>
 
