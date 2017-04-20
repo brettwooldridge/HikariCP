@@ -328,6 +328,7 @@
                      org.hibernate.service;resolution:=optional,
                      org.hibernate.service.spi;resolution:=optional
                   </Import-Package>
+                  <Bundle-Version>${project.version}.${artifact.classifier}</Bundle-Version>
                   <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
                   <DynamicImport-Package>*</DynamicImport-Package>
                </instructions>
