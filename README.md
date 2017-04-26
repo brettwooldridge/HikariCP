@@ -107,7 +107,7 @@ HikariCP comes with *sane* defaults that perform well in most deployments withou
 
 <sup>&#128206;</sup>&nbsp;*HikariCP uses milliseconds for all time values.*
 
-&#128680;&nbsp;HikariCP relies heavily on accurate high-resolution timers for both performance and reliability. It is *imperative* that your server is synchronized with a time-source such as an NTP server. *Especially* if your server is running within a virtual machine.  *Do not rely on hypervisor settings to "synchronize" the clock of the virtual machine. Configure time-source synchronization inside the virtual machine.*  If you come asking for support on an issue that turns out to be caused by lack time synchronization, you will be taunted publicly on Twitter.
+&#128680;&nbsp;HikariCP relies on accurate timers for both performance and reliability. It is *imperative* that your server is synchronized with a time-source such as an NTP server. *Especially* if your server is running within a virtual machine.  Why? [Read more here.](https://dba.stackexchange.com/questions/171002/choice-of-connection-pooling-library-for-vm-deploys/171020) *Do not rely on hypervisor settings to "synchronize" the clock of the virtual machine. Configure time-source synchronization inside the virtual machine.*   If you come asking for support on an issue that turns out to be caused by lack time synchronization, you will be taunted publicly on Twitter.
 
 ##### Essentials
 
@@ -363,7 +363,7 @@ good options.
 
 ### Initialization
 
-You can use the ``HikariConfig`` class like so:
+You can use the ``HikariConfig`` class like so<sup>1</sup>:
 ```java
 HikariConfig config = new HikariConfig();
 config.setJdbcUrl("jdbc:mysql://localhost:3306/simpsons");
@@ -375,6 +375,8 @@ config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 
 HikariDataSource ds = new HikariDataSource(config);
 ```
+&nbsp;<sup><sup>1</sup> MySQL-specific example, do not copy verbatim.</sup>
+
 or directly instantiate a ``HikariDataSource`` like so:
 ```java
 HikariDataSource ds = new HikariDataSource();
@@ -421,7 +423,7 @@ We recommended using ``dataSourceClassName`` instead of ``jdbcUrl``, but either 
 
 &#9888;&nbsp;*Note: Spring Boot auto-configuration users, you need to use ``jdbcUrl``-based configuration.*
 
-&#9888;&nbsp;MysqlDataSource is known to be broken, use ``jdbcUrl`` configuration instead.
+&#9888;&nbsp;MySQL and MariaDB DataSources are known to be broken with respect to network timeout support. Use ``jdbcUrl`` configuration instead.
 
 Here is a list of JDBC *DataSource* classes for popular databases:
 
@@ -434,8 +436,8 @@ Here is a list of JDBC *DataSource* classes for popular databases:
 | IBM DB2          | IBM JCC      | com.ibm.db2.jcc.DB2SimpleDataSource |
 | IBM Informix     | IBM Informix | com.informix.jdbcx.IfxDataSource |
 | MS SQL Server    | Microsoft    | com.microsoft.sqlserver.jdbc.SQLServerDataSource |
-| MySQL            | Connector/J  | ~~com.mysql.jdbc.jdbc2.optional.MysqlDataSource~~ |
-| MySQL/MariaDB    | MariaDB      | org.mariadb.jdbc.MySQLDataSource |
+| ~~MySQL~~        | Connector/J  | ~~com.mysql.jdbc.jdbc2.optional.MysqlDataSource~~ |
+| ~~MySQL/MariaDB~~ | MariaDB     | ~~org.mariadb.jdbc.MySQLDataSource~~ |
 | Oracle           | Oracle       | oracle.jdbc.pool.OracleDataSource |
 | OrientDB         | OrientDB     | com.orientechnologies.orient.jdbc.OrientDataSource |
 | PostgreSQL       | pgjdbc-ng    | com.impossibl.postgres.jdbc.PGDataSource |
