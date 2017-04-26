@@ -117,7 +117,7 @@ public class HikariCPCollectorTest {
    }
 
    @Test
-   public void testThatProperRegistryIsUsed() {
+   public void checkRegistry() {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
       CollectorRegistry customRegistry = new CollectorRegistry();
@@ -126,19 +126,19 @@ public class HikariCPCollectorTest {
 
       StubConnection.slowCreate = true;
       try (HikariDataSource ds = new HikariDataSource(config)) {
-         assertThat(getValue("hikaricp_active_connections", "noConnection", customRegistry), is(0.0));
-         assertThat(getValue("hikaricp_active_connections", "noConnection"), is(nullValue()));
+         assertThat(getValue("hikaricp_active_connections", "checkRegistry", customRegistry), is(0.0));
+         assertThat(getValue("hikaricp_active_connections", "checkRegistry"), is(nullValue()));
       }
       finally {
          StubConnection.slowCreate = false;
       }
    }
 
-   private double getValue(String name, String poolName) {
+   private Double getValue(String name, String poolName) {
      return this.getValue(name, poolName, CollectorRegistry.defaultRegistry);
    }
 
-   private double getValue(String name, String poolName, CollectorRegistry registry) {
+   private Double getValue(String name, String poolName, CollectorRegistry registry) {
       String[] labelNames = {"pool"};
       String[] labelValues = {poolName};
       return registry.getSampleValue(name, labelNames, labelValues);
