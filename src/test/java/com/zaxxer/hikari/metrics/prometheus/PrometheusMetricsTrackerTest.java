@@ -19,20 +19,20 @@ package com.zaxxer.hikari.metrics.prometheus;
 import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import io.prometheus.client.CollectorRegistry;
+import org.junit.Test;
 
 import java.sql.Connection;
 import java.sql.SQLTransientConnectionException;
 
-import org.junit.Test;
-
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-
-import io.prometheus.client.CollectorRegistry;
-
 public class PrometheusMetricsTrackerTest {
+
    @Test
    public void recordConnectionTimeout() throws Exception {
       HikariConfig config = newHikariConfig();
@@ -40,7 +40,7 @@ public class PrometheusMetricsTrackerTest {
       config.setJdbcUrl("jdbc:h2:mem:");
       config.setMaximumPoolSize(2);
       config.setConnectionTimeout(250);
-      
+
       String[] labelNames = {"pool"};
       String[] labelValues = {config.getPoolName()};
 
@@ -73,6 +73,30 @@ public class PrometheusMetricsTrackerTest {
             "hikaricp_connection_usage_millis_sum",
             labelNames,
             labelValues) > 0.0);
+      }
+   }
+
+   @Test
+   public void testThatTheProperRegistryIsUsed() throws Exception {
+      HikariConfig config = newHikariConfig();
+      CollectorRegistry customRegistry = new CollectorRegistry();
+      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(customRegistry));
+      config.setJdbcUrl("jdbc:h2:mem:");
+      config.setMaximumPoolSize(2);
+      config.setConnectionTimeout(250);
+
+      String[] labelNames = {"pool"};
+      String[] labelValues = {config.getPoolName()};
+
+      try (HikariDataSource hikariDataSource = new HikariDataSource(config)) {
+         assertThat(customRegistry.getSampleValue(
+            "hikaricp_connection_timeout_count",
+            labelNames,
+            labelValues), is(0.0));
+         assertThat(CollectorRegistry.defaultRegistry.getSampleValue(
+             "hikaricp_connection_usage_millis_sum",
+             labelNames,
+             labelValues), is(nullValue()));
       }
    }
 }
