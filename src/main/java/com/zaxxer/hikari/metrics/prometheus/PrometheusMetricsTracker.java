@@ -34,17 +34,20 @@ class PrometheusMetricsTracker implements IMetricsTracker
    private final Summary eaSummary;
    private final Summary ebSummary;
    private final Summary ecSummary;
-   private final Collector collector;
 
-   PrometheusMetricsTracker(String poolName, Collector collector)
+   private final Collector collector;
+   private final CollectorRegistry registry;
+
+   PrometheusMetricsTracker(String poolName, Collector collector, CollectorRegistry registry)
    {
       this.collector = collector;
+      this.registry = registry;
 
       ctCounter = Counter.build()
          .name("hikaricp_connection_timeout_count")
          .labelNames("pool")
          .help("Connection timeout count")
-         .register();
+         .register(registry);
 
       this.connectionTimeoutCounter = ctCounter.labels(poolName);
 
@@ -52,32 +55,32 @@ class PrometheusMetricsTracker implements IMetricsTracker
          .name("hikaricp_connection_acquired_nanos")
          .labelNames("pool")
          .help("Connection acquired time (ns)")
-         .register();
+         .register(registry);
       this.elapsedAcquiredSummary = eaSummary.labels(poolName);
 
       ebSummary = Summary.build()
          .name("hikaricp_connection_usage_millis")
          .labelNames("pool")
          .help("Connection usage (ms)")
-         .register();
+         .register(registry);
       this.elapsedBorrowedSummary = ebSummary.labels(poolName);
 
       ecSummary = Summary.build()
             .name("hikaricp_connection_creation_millis")
             .labelNames("pool")
             .help("Connection creation (ms)")
-            .register();
+            .register(registry);
       this.elapsedCreationSummary = ecSummary.labels(poolName);
    }
 
    @Override
    public void close()
    {
-      CollectorRegistry.defaultRegistry.unregister(ctCounter);
-      CollectorRegistry.defaultRegistry.unregister(eaSummary);
-      CollectorRegistry.defaultRegistry.unregister(ebSummary);
-      CollectorRegistry.defaultRegistry.unregister(ecSummary);
-      CollectorRegistry.defaultRegistry.unregister(collector);
+      registry.unregister(ctCounter);
+      registry.unregister(eaSummary);
+      registry.unregister(ebSummary);
+      registry.unregister(ecSummary);
+      registry.unregister(collector);
    }
 
    @Override
