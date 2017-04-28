@@ -60,12 +60,4 @@ public abstract class ProxyPreparedStatement extends ProxyStatement implements P
       connection.markCommitStateDirty();
       return ((PreparedStatement) delegate).executeUpdate();
    }
-
-   /** {@inheritDoc} */
-   @Override
-   public long executeLargeUpdate() throws SQLException
-   {
-      connection.markCommitStateDirty();
-      return ((PreparedStatement) delegate).executeLargeUpdate();
-   }
 }
