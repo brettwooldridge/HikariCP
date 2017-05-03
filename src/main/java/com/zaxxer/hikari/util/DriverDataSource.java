@@ -66,12 +66,28 @@ public final class DriverDataSource implements DataSource
 
          if (driver == null) {
             LOGGER.warn("Registered driver with driverClassName={} was not found, trying direct instantiation.", driverClassName);
+            Class<?> driverClass = null;
             try {
-               Class<?> driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
-               driver = (Driver) driverClass.newInstance();
+               driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
+               LOGGER.info("Driver class found in the Hikari classes classloader {}", this.getClass().getClassLoader());
+            } catch (ClassNotFoundException e) {
+               if (this.getClass().getClassLoader() != Thread.currentThread().getContextClassLoader()) {
+                  try {
+                     driverClass = Thread.currentThread().getContextClassLoader().loadClass(driverClassName);
+                     LOGGER.info("Driver class found in Thread context class loader {}", Thread.currentThread().getContextClassLoader());
+                  } catch (ClassNotFoundException e1) {
+                     LOGGER.error("Failed to load class of driverClassName {} in either of HikariConfig class loader {} or Thread context classloader {}", driverClassName, this.getClass().getClassLoader(), Thread.currentThread().getContextClassLoader());
+                  }
+               } else {
+                  LOGGER.error("Failed to load class of driverClassName {} in HikariConfig class loader {}", driverClassName, this.getClass().getClassLoader());
+               }
             }
-            catch (Exception e) {
-               LOGGER.warn("Failed to create instance of driver class {}, trying jdbcUrl resolution", driverClassName, e);
+            if (driverClass != null) {
+               try {
+                  driver = (Driver) driverClass.newInstance();
+               } catch (Exception e) {
+                  LOGGER.warn("Failed to create instance of driver class {}, trying jdbcUrl resolution", driverClassName, e);
+               }
             }
          }
       }
