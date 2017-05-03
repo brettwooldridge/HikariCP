@@ -16,7 +16,6 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.pool.PoolEntry.LASTACCESS_REVERSE_COMPARABLE;
 import static com.zaxxer.hikari.util.ClockSource.currentTime;
 import static com.zaxxer.hikari.util.ClockSource.elapsedDisplayString;
 import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
@@ -33,11 +32,11 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -302,14 +301,14 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
    /** {@inheritDoc} */
    @Override
-   public Future<Boolean> addBagItem(final int waiting)
+   public void addBagItem(final int waiting)
    {
       final boolean shouldAdd = waiting - addConnectionQueue.size() >= 0; // Yes, >= is intentional.
       if (shouldAdd) {
-         return addConnectionExecutor.submit(POOL_ENTRY_CREATOR);
+         addConnectionExecutor.submit(POOL_ENTRY_CREATOR);
       }
 
-      return CompletableFuture.completedFuture(Boolean.TRUE);
+      CompletableFuture.completedFuture(Boolean.TRUE);
    }
 
    // ***********************************************************************
@@ -694,14 +693,16 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                logPoolState("Before cleanup ");
                afterPrefix = "After cleanup  ";
 
-               connectionBag
-                  .values(STATE_NOT_IN_USE)
-                  .stream()
-                  .sorted(LASTACCESS_REVERSE_COMPARABLE)
-                  .skip(config.getMinimumIdle())
-                  .filter(p -> elapsedMillis(p.lastAccessed, now) > idleTimeout)
-                  .filter(connectionBag::reserve)
-                  .forEachOrdered(p -> closeConnection(p, "(connection has passed idleTimeout)"));
+               final List<PoolEntry> notInUse = connectionBag.values(STATE_NOT_IN_USE);
+               int removed = 0;
+               for (PoolEntry entry : notInUse) {
+                  if (elapsedMillis(entry.lastAccessed, now) > idleTimeout && connectionBag.reserve(entry)) {
+                     closeConnection(entry, "(connection has passed idleTimeout)");
+                     if (++removed > config.getMinimumIdle()) {
+                        break;
+                     }
+                  }
+               }
             }
 
             logPoolState(afterPrefix);

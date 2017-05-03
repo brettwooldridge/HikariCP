@@ -29,9 +29,9 @@ import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_RES
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -76,7 +76,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
 
    private final SynchronousQueue<T> handoffQueue;
 
-   public static interface IConcurrentBagEntry
+   public interface IConcurrentBagEntry
    {
       int STATE_NOT_IN_USE = 0;
       int STATE_IN_USE = 1;
@@ -88,9 +88,9 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       int getState();
    }
 
-   public static interface IBagStateListener
+   public interface IBagStateListener
    {
-      Future<Boolean> addBagItem(int waiting);
+      void addBagItem(int waiting);
    }
 
    /**
@@ -262,7 +262,9 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     */
    public List<T> values(final int state)
    {
-      return sharedList.stream().filter(e -> e.getState() == state).collect(Collectors.toList());
+      final List<T> list = sharedList.stream().filter(e -> e.getState() == state).collect(Collectors.toList());
+      Collections.reverse(list);
+      return list;
    }
 
    /**

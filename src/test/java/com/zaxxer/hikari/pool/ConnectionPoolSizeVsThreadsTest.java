@@ -45,9 +45,9 @@ import com.zaxxer.hikari.mocks.StubDataSource;
  */
 public class ConnectionPoolSizeVsThreadsTest {
 
-   public static final Logger LOGGER = LoggerFactory.getLogger(ConnectionPoolSizeVsThreadsTest.class);
+   private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionPoolSizeVsThreadsTest.class);
 
-   public static final int ITERATIONS = 50_000;
+   private static final int ITERATIONS = 50_000;
 
    @Test
    public void testPoolSizeAboutSameSizeAsThreadCount() throws Exception {
