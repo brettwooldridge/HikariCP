@@ -15,22 +15,18 @@
  */
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.util.ClockSource.currentTime;
-import static com.zaxxer.hikari.util.ClockSource.elapsedDisplayString;
-import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
+import com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry;
+import com.zaxxer.hikari.util.FastList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Comparator;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry;
-import com.zaxxer.hikari.util.FastList;
+import static com.zaxxer.hikari.util.ClockSource.*;
 
 /**
  * Entry used in the ConcurrentBag to track Connection instances.
@@ -41,8 +37,6 @@ final class PoolEntry implements IConcurrentBagEntry
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(PoolEntry.class);
    private static final AtomicIntegerFieldUpdater<PoolEntry> stateUpdater;
-
-   static final Comparator<PoolEntry> LASTACCESS_REVERSE_COMPARABLE;
 
    Connection connection;
    long lastAccessed;
@@ -62,8 +56,6 @@ final class PoolEntry implements IConcurrentBagEntry
 
    static
    {
-      LASTACCESS_REVERSE_COMPARABLE = (entryOne, entryTwo) -> Long.compare(entryTwo.lastAccessed, entryOne.lastAccessed);
-
       stateUpdater = AtomicIntegerFieldUpdater.newUpdater(PoolEntry.class, "state");
    }
 
