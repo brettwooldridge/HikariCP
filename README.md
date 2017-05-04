@@ -184,7 +184,7 @@ course to the ``idleTimeout`` setting.
 
 &#128288;``connectionTestQuery``<br/>
 **If your driver supports JDBC4 we strongly recommend not setting this property.** This is for 
-"legacy" databases that do not support the JDBC4 ``Connection.isValid() API``.  This is the query that
+"legacy" drivers that do not support the JDBC4 ``Connection.isValid() API``.  This is the query that
 will be executed just before a connection is given to you from the pool to validate that the 
 connection to the database is still alive. *Again, try running the pool without this property,
 HikariCP will log an error if your driver is not JDBC4 compliant to let you know.*
