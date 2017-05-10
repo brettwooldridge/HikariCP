@@ -43,8 +43,7 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory
    }
 
    @Override
-   public IMetricsTracker create(String poolName, PoolStats poolStats)
-   {
+   public IMetricsTracker create(String poolName, PoolStats poolStats) {
       Collector collector = new HikariCPCollector(poolName, poolStats).register(registry);
       return new PrometheusMetricsTracker(poolName, collector, registry);
    }
