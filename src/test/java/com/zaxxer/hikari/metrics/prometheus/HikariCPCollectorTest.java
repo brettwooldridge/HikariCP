@@ -19,16 +19,17 @@ package com.zaxxer.hikari.metrics.prometheus;
 import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
+
+import java.sql.Connection;
+
+import org.junit.Test;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.mocks.StubConnection;
-import io.prometheus.client.CollectorRegistry;
-import org.junit.Test;
 
-import java.sql.Connection;
+import io.prometheus.client.CollectorRegistry;
 
 public class HikariCPCollectorTest {
    @Test
@@ -116,32 +117,10 @@ public class HikariCPCollectorTest {
       }
    }
 
-   @Test
-   public void checkRegistry() {
-      HikariConfig config = newHikariConfig();
-      config.setMinimumIdle(0);
-      CollectorRegistry customRegistry = new CollectorRegistry();
-      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(customRegistry));
-      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-
-      StubConnection.slowCreate = true;
-      try (HikariDataSource ds = new HikariDataSource(config)) {
-         assertThat(getValue("hikaricp_active_connections", "checkRegistry", customRegistry), is(0.0));
-         assertThat(getValue("hikaricp_active_connections", "checkRegistry"), is(nullValue()));
-      }
-      finally {
-         StubConnection.slowCreate = false;
-      }
-   }
-
-   private Double getValue(String name, String poolName) {
-     return this.getValue(name, poolName, CollectorRegistry.defaultRegistry);
-   }
-
-   private Double getValue(String name, String poolName, CollectorRegistry registry) {
+   private double getValue(String name, String poolName) {
       String[] labelNames = {"pool"};
       String[] labelValues = {poolName};
-      return registry.getSampleValue(name, labelNames, labelValues);
+      return CollectorRegistry.defaultRegistry.getSampleValue(name, labelNames, labelValues);
    }
 
 }
