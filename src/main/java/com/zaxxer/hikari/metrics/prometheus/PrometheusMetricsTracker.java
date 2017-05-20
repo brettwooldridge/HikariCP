@@ -17,93 +17,76 @@
 package com.zaxxer.hikari.metrics.prometheus;
 
 import com.zaxxer.hikari.metrics.IMetricsTracker;
-
 import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Summary;
+import java.util.concurrent.TimeUnit;
 
 class PrometheusMetricsTracker implements IMetricsTracker
 {
-   private final Counter.Child connectionTimeoutCounter;
-   private final Summary.Child elapsedAcquiredSummary;
-   private final Summary.Child elapsedBorrowedSummary;
-   private final Summary.Child elapsedCreationSummary;
+   private static final Counter CONNECTION_TIMEOUT_COUNTER = Counter.build()
+      .name("hikaricp_connection_timeout_total")
+      .labelNames("pool")
+      .help("Connection timeout total count")
+      .register();
+   private static final Summary ELAPSED_ACQUIRED_SUMMARY = Summary.build()
+      .name("hikaricp_connection_acquired_nanos")
+      .labelNames("pool")
+      .help("Connection acquired time (ns)")
+      .register();
+   private static final Summary ELAPSED_BORROWED_SUMMARY = Summary.build()
+      .name("hikaricp_connection_usage_millis")
+      .labelNames("pool")
+      .help("Connection usage (ms)")
+      .register();
+   private static final Summary ELAPSED_CREATION_SUMMARY = Summary.build()
+      .name("hikaricp_connection_creation_millis")
+      .labelNames("pool")
+      .help("Connection creation (ms)")
+      .register();
 
-   private final Counter ctCounter;
-   private final Summary eaSummary;
-   private final Summary ebSummary;
-   private final Summary ecSummary;
-
+   private final Counter.Child connectionTimeoutCounterChild;
+   private final Summary.Child elapsedAcquiredSummaryChild;
+   private final Summary.Child elapsedBorrowedSummaryChild;
+   private final Summary.Child elapsedCreationSummaryChild;
    private final Collector collector;
-   private final CollectorRegistry registry;
 
-   PrometheusMetricsTracker(String poolName, Collector collector, CollectorRegistry registry)
-   {
+   PrometheusMetricsTracker(String poolName, Collector collector) {
       this.collector = collector;
-      this.registry = registry;
-
-      ctCounter = Counter.build()
-         .name("hikaricp_connection_timeout_count")
-         .labelNames("pool")
-         .help("Connection timeout count")
-         .register(registry);
-
-      this.connectionTimeoutCounter = ctCounter.labels(poolName);
-
-      eaSummary = Summary.build()
-         .name("hikaricp_connection_acquired_nanos")
-         .labelNames("pool")
-         .help("Connection acquired time (ns)")
-         .register(registry);
-      this.elapsedAcquiredSummary = eaSummary.labels(poolName);
-
-      ebSummary = Summary.build()
-         .name("hikaricp_connection_usage_millis")
-         .labelNames("pool")
-         .help("Connection usage (ms)")
-         .register(registry);
-      this.elapsedBorrowedSummary = ebSummary.labels(poolName);
-
-      ecSummary = Summary.build()
-            .name("hikaricp_connection_creation_millis")
-            .labelNames("pool")
-            .help("Connection creation (ms)")
-            .register(registry);
-      this.elapsedCreationSummary = ecSummary.labels(poolName);
+      this.connectionTimeoutCounterChild = CONNECTION_TIMEOUT_COUNTER.labels(poolName);
+      this.elapsedAcquiredSummaryChild = ELAPSED_ACQUIRED_SUMMARY.labels(poolName);
+      this.elapsedBorrowedSummaryChild = ELAPSED_BORROWED_SUMMARY.labels(poolName);
+      this.elapsedCreationSummaryChild = ELAPSED_CREATION_SUMMARY.labels(poolName);
    }
 
    @Override
    public void close()
    {
-      registry.unregister(ctCounter);
-      registry.unregister(eaSummary);
-      registry.unregister(ebSummary);
-      registry.unregister(ecSummary);
-      registry.unregister(collector);
+      CollectorRegistry.defaultRegistry.unregister(collector);
    }
 
    @Override
    public void recordConnectionAcquiredNanos(long elapsedAcquiredNanos)
    {
-      elapsedAcquiredSummary.observe(elapsedAcquiredNanos);
+      elapsedAcquiredSummaryChild.observe(elapsedAcquiredNanos);
    }
 
    @Override
    public void recordConnectionUsageMillis(long elapsedBorrowedMillis)
    {
-      elapsedBorrowedSummary.observe(elapsedBorrowedMillis);
+      elapsedBorrowedSummaryChild.observe(elapsedBorrowedMillis);
    }
 
    @Override
    public void recordConnectionCreatedMillis(long connectionCreatedMillis)
    {
-      elapsedCreationSummary.observe(connectionCreatedMillis);
+      elapsedCreationSummaryChild.observe(connectionCreatedMillis);
    }
 
    @Override
    public void recordConnectionTimeout()
    {
-      connectionTimeoutCounter.inc();
+      connectionTimeoutCounterChild.inc();
    }
 }
