@@ -10,7 +10,7 @@
       <felix.bundle.plugin.version>3.3.0</felix.bundle.plugin.version>
       <felix.version>5.6.2</felix.version>
       <hibernate.version>5.2.9.Final</hibernate.version>
-      <javassist.version>3.21.0-GA</javassist.version>
+      <javassist.version>3.22.0-CR1</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>
       <maven.release.version>2.5.3</maven.release.version>
       <metrics.version>3.2.2</metrics.version>
@@ -369,7 +369,7 @@
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-surefire-plugin</artifactId>
-               <version>2.19.1</version>
+               <version>2.20</version>
                <configuration>
                   <!-- Sets the VM argument line used when unit tests are run. -->
                   <argLine>${surefireArgLine} ${sureFireOptions9}</argLine>
@@ -429,12 +429,12 @@
             <jdk>[9,)</jdk>
          </activation>
          <properties>
-            <sureFireOptions9>
-               --add-opens java.base/java.net=ALL-UNNAMED
-               --add-opens java.base/java.security=ALL-UNNAMED
-               --add-exports java.base/sun.net.www.protocol.http=ALL-UNNAMED
-               --add-exports java.base/sun.net.www.protocol.https=ALL-UNNAMED
-            </sureFireOptions9>
+            <!-- sureFireOptions9>
+               -add-opens java.base/java.net=ALL-UNNAMED
+               -add-opens java.base/java.security=ALL-UNNAMED
+               -add-exports java.base/sun.net.www.protocol.http=ALL-UNNAMED
+               -add-exports java.base/sun.net.www.protocol.https=ALL-UNNAMED
+            </sureFireOptions9 -->
             <sureFireForks9>true</sureFireForks9>
             <artifact.classifier>java9</artifact.classifier>
          </properties>

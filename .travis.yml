@@ -1,8 +1,11 @@
 sudo: false
 language: java
 
+dist:
+  - trusty
+
 before_script:
-  - if [[ "x$JDK" == *'x9'* ]]; then remove_dir_from_path $JAVA_HOME/bin; export JAVA_HOME=/usr/lib/jvm/java-9-oracle; export PATH=$JAVA_HOME/bin:$PATH; java -Xmx32m -version; fi
+  - if [[ "x$JDK" == *'x9'* ]]; then export MAVEN_SKIP_RC=true; fi
   - if [[ "x$JDK" != *'x9'* ]]; then export COVERALLS=coveralls:report; fi
 
 script:
@@ -22,11 +25,7 @@ matrix:
   fast_finish: true
   include:
     - jdk: oraclejdk8
-    - jdk: oraclejdk8 # this will be overridden by before_script above
-      addons:
-        apt:
-          packages:
-            - oracle-java9-installer
+    - jdk: oraclejdk9
       env:
         - JDK=9
 
