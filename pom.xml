@@ -404,7 +404,7 @@
                <version>2.10.4</version>
                <configuration>
                   <show>public</show>
-                  <!-- excludePackageNames>com.zaxxer.hikari.*</excludePackageNames -->
+                  <excludePackageNames>com.zaxxer.hikari.hibernate:com.zaxxer.hikari.metrics.*:com.zaxxer.hikari.pool:com.zaxxer.hikari.util</excludePackageNames>
                   <attach>true</attach>
                   <maxmemory>1024m</maxmemory>
                </configuration>
