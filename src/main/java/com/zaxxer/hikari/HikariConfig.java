@@ -314,13 +314,32 @@ public class HikariConfig implements HikariConfigMXBean
 
    public void setDriverClassName(String driverClassName)
    {
+      Class<?> driverClass = null;
       try {
-         Class<?> driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
+         driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
+         LOGGER.debug("Driver class found in the HikariConfig class classloader {}", this.getClass().getClassLoader());
+      } catch (ClassNotFoundException e) {
+         ClassLoader threadContextClassLoader = Thread.currentThread().getContextClassLoader();
+         if (threadContextClassLoader != null && threadContextClassLoader != this.getClass().getClassLoader()) {
+            try {
+               driverClass = threadContextClassLoader.loadClass(driverClassName);
+               LOGGER.debug("Driver class found in Thread context class loader {}", threadContextClassLoader);
+            } catch (ClassNotFoundException e1) {
+               LOGGER.error("Failed to load class of driverClassName {} in either of HikariConfig class classloader {} or Thread context classloader {}", driverClassName, this.getClass().getClassLoader(), threadContextClassLoader);
+            }
+         } else {
+            LOGGER.error("Failed to load class of driverClassName {} in HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
+         }
+      }
+      if (driverClass == null) {
+         throw new RuntimeException("Failed to load class of driverClassName [" + driverClassName + "] in either of HikariConfig class loader or Thread context classloader");
+      }
+      try {
          driverClass.newInstance();
          this.driverClassName = driverClassName;
       }
       catch (Exception e) {
-         throw new RuntimeException("Failed to load class of driverClassName " + driverClassName, e);
+         throw new RuntimeException("Failed to instantiate class " + driverClassName, e);
       }
    }
 
@@ -432,7 +451,7 @@ public class HikariConfig implements HikariConfigMXBean
     * initial connection validation is performed, this timeout does not override the
     * {@code connectionTimeout} or {@code validationTimeout}; they will be honored before this
     * timeout is applied.  The default value is one millisecond.
-    * 
+    *
     * @param initializationFailTimeout the number of milliseconds before the
     *        pool initialization fails, or 0 to validate connection setup but continue with
     *        pool start, or less than zero to skip all initialization checks and start the
@@ -758,7 +777,7 @@ public class HikariConfig implements HikariConfigMXBean
    {
       this.scheduledExecutor = executor;
    }
-   
+
    public String getTransactionIsolation()
    {
       return transactionIsolationName;
