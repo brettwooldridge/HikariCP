@@ -66,12 +66,29 @@ public final class DriverDataSource implements DataSource
 
          if (driver == null) {
             LOGGER.warn("Registered driver with driverClassName={} was not found, trying direct instantiation.", driverClassName);
+            Class<?> driverClass = null;
             try {
-               Class<?> driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
-               driver = (Driver) driverClass.newInstance();
+               driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
+               LOGGER.debug("Driver class found in the HikariConfig class classloader {}", this.getClass().getClassLoader());
+            } catch (ClassNotFoundException e) {
+               ClassLoader threadContextClassLoader = Thread.currentThread().getContextClassLoader();
+               if (threadContextClassLoader != null && threadContextClassLoader != this.getClass().getClassLoader()) {
+                  try {
+                     driverClass = threadContextClassLoader.loadClass(driverClassName);
+                     LOGGER.debug("Driver class found in Thread context class loader {}", threadContextClassLoader);
+                  } catch (ClassNotFoundException e1) {
+                     LOGGER.warn("Failed to load class of driverClassName {} in either of HikariConfig class classloader {} or Thread context classloader {}", driverClassName, this.getClass().getClassLoader(), threadContextClassLoader);
+                  }
+               } else {
+                  LOGGER.warn("Failed to load class of driverClassName {} in HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
+               }
             }
-            catch (Exception e) {
-               LOGGER.warn("Failed to create instance of driver class {}, trying jdbcUrl resolution", driverClassName, e);
+            if (driverClass != null) {
+               try {
+                  driver = (Driver) driverClass.newInstance();
+               } catch (Exception e) {
+                  LOGGER.warn("Failed to create instance of driver class {}, trying jdbcUrl resolution", driverClassName, e);
+               }
             }
          }
       }
