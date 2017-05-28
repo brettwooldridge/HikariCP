@@ -71,6 +71,11 @@ Changes in 2.5.0
 
  * HikariCP 2.5.0 and HikariCP-java7 2.4.8 have identical functionality.
 
+Changes in 2.4.12
+
+ * issue 878 search for driverClass in both HikariCP class classloader and Thread Context
+   ClassLoader
+
 Changes in 2.4.11
 
  * issue 793 add new HikariConfig method, setScheduledExecutor(ScheduledExecutorService),
