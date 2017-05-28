@@ -193,10 +193,10 @@ HikariCP will log an error if your driver is not JDBC4 compliant to let you know
 
 &#128290;``minimumIdle``<br/>
 This property controls the minimum number of *idle connections* that HikariCP tries to maintain
-in the pool.  If the idle connections dip below this value, HikariCP will make a best effort to
-add additional connections quickly and efficiently.  However, for maximum performance and
-responsiveness to spike demands, we recommend *not* setting this value and instead allowing
-HikariCP to act as a *fixed size* connection pool.
+in the pool.  If the idle connections dip below this value and total connections in the pool are less than ``maximumPoolSize``,
+HikariCP will make a best effort to add additional connections quickly and efficiently.
+However, for maximum performance and responsiveness to spike demands,
+we recommend *not* setting this value and instead allowing HikariCP to act as a *fixed size* connection pool.
 *Default: same as maximumPoolSize*
 
 &#128290;``maximumPoolSize``<br/>
