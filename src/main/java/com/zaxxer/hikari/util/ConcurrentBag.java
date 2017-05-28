@@ -336,13 +336,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     */
    public int getCount(final int state)
    {
-      int count = 0;
-      for (IConcurrentBagEntry e : sharedList) {
-         if (e.getState() == state) {
-            count++;
-         }
-      }
-      return count;
+      return (int) sharedList.stream().filter(e -> e.getState() == state).count();
    }
 
    public int[] getStateCounts()
