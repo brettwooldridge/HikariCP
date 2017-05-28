@@ -35,7 +35,7 @@ _Java 7 maven artifact (*maintenance mode*):_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP-java7</artifactId>
-        <version>2.4.11</version>
+        <version>2.4.12</version>
     </dependency>
 ```
 _Java 6 maven artifact (*maintenance mode*):_
