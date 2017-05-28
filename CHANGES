@@ -1,5 +1,33 @@
 HikariCP Changes
 
+Changes in 2.4.12
+
+ * issue 878 search for driverClass in both HikariCP class classloader and Thread Context
+   ClassLoader
+
+Changes in 2.4.11
+
+ * issue 793 add new HikariConfig method, setScheduledExecutor(ScheduledExecutorService),
+   and deprecate method setScheduledExecutorService(ScheduledThreadPoolExecutor). It is
+   unfortunate that the deprecated method has the more accurate name, but its signature
+   cannot be changed without breaking binary compatibility.
+
+ * issue 600 ignore Java 8 default methods when generating proxy classes for Java 7.
+
+Changes in 2.4.10
+
+ * Redesign of the contention code path resulting in doubling contended throughput; now
+   contended pool access retains 98% of the uncontended throughput.
+
+ * issue 770 add a new property initializationFailTimeout, and deprecate configuration
+   property initializationFailFast.
+
+ * issue 774 significantly improve spike load handling.
+
+ * issue 741 cancel HouseKeeper task on pool shutdown. If the ScheduledExecutor being used
+   did not belong to HikariCP, this task would remain scheduled after shutdown, causing a
+   memory leak.
+
 Changes in 2.4.9
 
  * issue 719 only reset lastConnectionFailure after a successful dataSource.getConnection()
