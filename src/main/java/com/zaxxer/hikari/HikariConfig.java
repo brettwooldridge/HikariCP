@@ -955,6 +955,9 @@ public class HikariConfig implements HikariConfigMXBean
             else if (prop.matches("scheduledExecutorService|threadFactory") && value == null) {
                value = "internal";
             }
+            else if (prop.contains("jdbcUrl") && value instanceof String) {
+               value = ((String)value).replaceAll("([?&;]password=)[^&#;]*(.*)", "$1<masked>$2");
+            }
             else if (prop.contains("password")) {
                value = "<masked>";
             }
