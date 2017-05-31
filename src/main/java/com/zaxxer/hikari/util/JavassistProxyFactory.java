@@ -43,6 +43,8 @@ import javassist.LoaderClassPath;
 import javassist.Modifier;
 import javassist.NotFoundException;
 import javassist.bytecode.ClassFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class generates the proxy objects for {@link Connection}, {@link Statement},
@@ -54,6 +56,8 @@ import javassist.bytecode.ClassFile;
  */
 public final class JavassistProxyFactory
 {
+   private static final Logger LOGGER = LoggerFactory.getLogger(JavassistProxyFactory.class);
+
    private static ClassPool classPool;
 
    public static void main(String... args)
@@ -83,7 +87,7 @@ public final class JavassistProxyFactory
 
    private static void modifyProxyFactory() throws Exception
    {
-      System.out.println("Generating method bodies for com.zaxxer.hikari.proxy.ProxyFactory");
+      LOGGER.info("Generating method bodies for com.zaxxer.hikari.proxy.ProxyFactory");
 
       String packageName = ProxyConnection.class.getPackage().getName();
       CtClass proxyCt = classPool.getCtClass("com.zaxxer.hikari.pool.ProxyFactory");
@@ -124,7 +128,7 @@ public final class JavassistProxyFactory
       CtClass targetCt = classPool.makeClass(newClassName, superCt);
       targetCt.setModifiers(Modifier.FINAL);
 
-      System.out.println("Generating " + newClassName);
+      LOGGER.info("Generating " + newClassName);
 
       targetCt.setModifiers(Modifier.PUBLIC);
 
