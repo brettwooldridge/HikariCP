@@ -171,7 +171,7 @@ This property controls the maximum amount of time that a connection is allowed t
 pool.  **This setting only applies when ``minimumIdle`` is defined to be less than ``maximumPoolSize``.**
 Whether a connection is retired as idle or not is subject to a maximum variation of +30
 seconds, and average variation of +15 seconds.  A connection will never be retired as idle *before*
-this timeout.  A value of 0 means that idle connections are never removed from the pool.  The mimimum
+this timeout.  A value of 0 means that idle connections are never removed from the pool.  The minimum
 allowed value is 10000ms (10 seconds).
 *Default: 600000 (10 minutes)*
 
