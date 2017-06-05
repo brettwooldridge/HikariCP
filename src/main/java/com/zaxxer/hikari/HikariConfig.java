@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
@@ -125,6 +126,14 @@ public class HikariConfig implements HikariConfigMXBean
     * @param properties the name of the property file
     */
    public HikariConfig(Properties properties)
+   {
+      this((Map<?, ?>) properties);
+   }
+
+   /**
+    * Construct a HikariConfig from the specified properties object.
+    */
+   public HikariConfig(Map<?, ?> properties)
    {
       this();
       PropertyElf.setTargetFromProperties(this, properties);
