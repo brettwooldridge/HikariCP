@@ -1,5 +1,10 @@
 HikariCP Changes
 
+Changes in 2.6.3
+
+ * issue 878 load driver class from ThreadContext classloader if it is not found
+   via the regular classloader.
+
 Changes in 2.6.2
 
  * issue 890 add support for Prometheus metrics and multiple HikariCP pools.
