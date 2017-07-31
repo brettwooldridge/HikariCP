@@ -94,6 +94,22 @@ public interface HikariConfigMXBean
    void setLeakDetectionThreshold(long leakDetectionThresholdMs);
 
    /**
+    * This property controls if a connection should be forcibly closed after the leak detection threshold, i.e. the
+    * connection has been borrowed for too long.
+    *
+    * @return if connections should be forcibly closed after the leak detection threshold
+    */
+   boolean getLeakDetectionForceClose();
+
+   /**
+    * This property controls if a connection should be forcibly closed after the leak detection threshold, i.e. the
+    * connection has been borrowed for too long.
+    *
+    * @param leakDetectionForceClose if connections should be forcibly closed after the leak detection threshold
+    */
+   void setLeakDetectionForceClose(boolean leakDetectionForceClose);
+
+   /**
     * This property controls the maximum lifetime of a connection in the pool. When a connection reaches this
     * timeout, even if recently used, it will be retired from the pool. An in-use connection will never be
     * retired, only when it is idle will it be removed.

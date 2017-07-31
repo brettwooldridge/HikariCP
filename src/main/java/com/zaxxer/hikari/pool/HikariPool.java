@@ -128,7 +128,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       this.addConnectionExecutor = createThreadPoolExecutor(addConnectionQueue, poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
       this.closeConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
-      this.leakTaskFactory = new ProxyLeakTaskFactory(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
+      this.leakTaskFactory = new ProxyLeakTaskFactory(config.getLeakDetectionThreshold(), config.getLeakDetectionForceClose(), houseKeepingExecutorService);
 
       this.houseKeeperTask = houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L, HOUSEKEEPING_PERIOD_MS, MILLISECONDS);
    }
@@ -173,7 +173,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                }
                else {
                   metricsTracker.recordBorrowStats(poolEntry, startTime);
-                  return poolEntry.createProxyConnection(leakTaskFactory.schedule(poolEntry), now);
+                  return poolEntry.createProxyConnection(leakTaskFactory.schedule(this, poolEntry), now);
                }
             } while (timeout > 0L);
 
@@ -667,7 +667,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             // refresh timeouts in case they changed via MBean
             connectionTimeout = config.getConnectionTimeout();
             validationTimeout = config.getValidationTimeout();
-            leakTaskFactory.updateLeakDetectionThreshold(config.getLeakDetectionThreshold());
+            leakTaskFactory.updateLeakDetectionConfiguration(config.getLeakDetectionThreshold(), config.getLeakDetectionForceClose());
 
             final long idleTimeout = config.getIdleTimeout();
             final long now = currentTime();

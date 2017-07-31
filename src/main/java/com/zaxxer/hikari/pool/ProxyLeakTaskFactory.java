@@ -28,26 +28,29 @@ class ProxyLeakTaskFactory
 {
    private ScheduledExecutorService executorService;
    private long leakDetectionThreshold;
+   private boolean leakDetectionForceClose;
 
-   ProxyLeakTaskFactory(final long leakDetectionThreshold, final ScheduledExecutorService executorService)
+   ProxyLeakTaskFactory(final long leakDetectionThreshold, final boolean leakDetectionForceClose, final ScheduledExecutorService executorService)
    {
       this.executorService = executorService;
       this.leakDetectionThreshold = leakDetectionThreshold;
+      this.leakDetectionForceClose = leakDetectionForceClose;
    }
 
-   ProxyLeakTask schedule(final PoolEntry poolEntry)
+   ProxyLeakTask schedule(HikariPool pool, final PoolEntry poolEntry)
    {
-      return (leakDetectionThreshold == 0) ? ProxyLeakTask.NO_LEAK : scheduleNewTask(poolEntry);
+      return (leakDetectionThreshold == 0) ? ProxyLeakTask.NO_LEAK : scheduleNewTask(pool, poolEntry);
    }
 
-   void updateLeakDetectionThreshold(final long leakDetectionThreshold)
+   void updateLeakDetectionConfiguration(final long leakDetectionThreshold, final boolean leakDetectionForceClose)
    {
       this.leakDetectionThreshold = leakDetectionThreshold;
+      this.leakDetectionForceClose = leakDetectionForceClose;
    }
 
-   private ProxyLeakTask scheduleNewTask(PoolEntry poolEntry) {
-      ProxyLeakTask task = new ProxyLeakTask(poolEntry);
-      task.schedule(executorService, leakDetectionThreshold);
+   private ProxyLeakTask scheduleNewTask(HikariPool pool, PoolEntry poolEntry) {
+      ProxyLeakTask task = new ProxyLeakTask(pool, poolEntry);
+      task.schedule(executorService, leakDetectionThreshold, leakDetectionForceClose);
 
       return task;
    }

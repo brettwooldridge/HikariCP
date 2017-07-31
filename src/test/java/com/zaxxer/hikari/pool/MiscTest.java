@@ -117,8 +117,51 @@ public class MiscTest
 
             try (Connection connection = ds.getConnection()) {
                quietlySleep(SECONDS.toMillis(4));
+               assertEquals("Expected connection to stay active despite suspected leak", 1, getPool(ds).getActiveConnections());
                connection.close();
                quietlySleep(SECONDS.toMillis(1));
+               ps.close();
+               String s = new String(baos.toByteArray());
+               assertNotNull("Exception string was null", s);
+               assertTrue("Expected exception to contain 'Connection leak detection' but contains *" + s + "*", s.contains("Connection leak detection"));
+            }
+         }
+         finally
+         {
+            setConfigUnitTest(false);
+            setSlf4jLogLevel(HikariPool.class, Level.INFO);
+         }
+      }
+   }
+
+   @Test
+   public void testLeakDetectionWithForcedClose() throws Exception
+   {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      try (PrintStream ps = new PrintStream(baos, true)) {
+         setSlf4jTargetStream(Class.forName("com.zaxxer.hikari.pool.ProxyLeakTask"), ps);
+         setConfigUnitTest(true);
+
+         HikariConfig config = newHikariConfig();
+         config.setMinimumIdle(1);
+         config.setMaximumPoolSize(4);
+         config.setThreadFactory(Executors.defaultThreadFactory());
+         config.setMetricRegistry(null);
+         config.setLeakDetectionThreshold(TimeUnit.SECONDS.toMillis(1));
+         config.setLeakDetectionForceClose(true);
+         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+         try (HikariDataSource ds = new HikariDataSource(config)) {
+            setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
+            getPool(ds).logPoolState();
+
+            try (Connection connection = ds.getConnection()) {
+               quietlySleep(SECONDS.toMillis(4));
+               assertEquals(1, getPool(ds).getTotalConnections());
+               assertEquals("Expected connection to be closed because of suspected leak", 0, getPool(ds).getActiveConnections());
+               quietlySleep(SECONDS.toMillis(1));
+               assertEquals(1, getPool(ds).getTotalConnections());
+               assertEquals("Expected a new idle connection to replace the leaked one", 1, getPool(ds).getIdleConnections());
                ps.close();
                String s = new String(baos.toByteArray());
                assertNotNull("Exception string was null", s);

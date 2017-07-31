@@ -35,15 +35,17 @@ class ProxyLeakTask implements Runnable
    static final ProxyLeakTask NO_LEAK;
 
    private ScheduledFuture<?> scheduledFuture;
-   private String connectionName;
+   private HikariPool pool;
+   private PoolEntry poolEntry;
    private Exception exception;
+   private boolean forceClose;
    private boolean isLeaked;
 
    static
    {
       NO_LEAK = new ProxyLeakTask() {
          @Override
-         void schedule(ScheduledExecutorService executorService, long leakDetectionThreshold) {}
+         void schedule(ScheduledExecutorService executorService, long leakDetectionThreshold, boolean forceClose) {}
 
          @Override
          public void run() {}
@@ -53,18 +55,20 @@ class ProxyLeakTask implements Runnable
       };
    }
 
-   ProxyLeakTask(final PoolEntry poolEntry)
+   ProxyLeakTask(final HikariPool pool, final PoolEntry poolEntry)
    {
       this.exception = new Exception("Apparent connection leak detected");
-      this.connectionName = poolEntry.connection.toString();
+      this.pool = pool;
+      this.poolEntry = poolEntry;
    }
 
    private ProxyLeakTask()
    {
    }
 
-   void schedule(ScheduledExecutorService executorService, long leakDetectionThreshold)
+   void schedule(ScheduledExecutorService executorService, long leakDetectionThreshold, boolean forceClose)
    {
+      this.forceClose = forceClose;
       scheduledFuture = executorService.schedule(this, leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
@@ -79,14 +83,17 @@ class ProxyLeakTask implements Runnable
       System.arraycopy(stackTrace, 5, trace, 0, trace.length);
 
       exception.setStackTrace(trace);
-      LOGGER.warn("Connection leak detection triggered for {}, stack trace follows", connectionName, exception);
+      LOGGER.warn("Connection leak detection triggered for {}, stack trace follows", poolEntry.connection, exception);
+      if(forceClose) {
+         pool.closeConnection(poolEntry, "(connection leak detected)");
+      }
    }
 
    void cancel()
    {
       scheduledFuture.cancel(false);
       if (isLeaked) {
-         LOGGER.info("Previously reported leaked connection {} was returned to the pool (unleaked)", connectionName);
+         LOGGER.info("Previously reported leaked connection {} was returned to the pool (unleaked)", poolEntry.connection);
       }
    }
 }
