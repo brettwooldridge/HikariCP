@@ -88,7 +88,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
    private final ConcurrentBag<PoolEntry> connectionBag;
 
-   private final ProxyLeakTask leakTask;
+   private final ProxyLeakTaskFactory leakTaskFactory;
    private final SuspendResumeLock suspendResumeLock;
 
    private ScheduledExecutorService houseKeepingExecutorService;
@@ -128,7 +128,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       this.addConnectionExecutor = createThreadPoolExecutor(addConnectionQueue, poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
       this.closeConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
-      this.leakTask = new ProxyLeakTask(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
+      this.leakTaskFactory = new ProxyLeakTaskFactory(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
       this.houseKeeperTask = houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L, HOUSEKEEPING_PERIOD_MS, MILLISECONDS);
    }
@@ -173,7 +173,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                }
                else {
                   metricsTracker.recordBorrowStats(poolEntry, startTime);
-                  return poolEntry.createProxyConnection(leakTask.schedule(poolEntry), now);
+                  return poolEntry.createProxyConnection(leakTaskFactory.schedule(poolEntry), now);
                }
             } while (timeout > 0L);
 
@@ -667,7 +667,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             // refresh timeouts in case they changed via MBean
             connectionTimeout = config.getConnectionTimeout();
             validationTimeout = config.getValidationTimeout();
-            leakTask.updateLeakDetectionThreshold(config.getLeakDetectionThreshold());
+            leakTaskFactory.updateLeakDetectionThreshold(config.getLeakDetectionThreshold());
 
             final long idleTimeout = config.getIdleTimeout();
             final long now = currentTime();
