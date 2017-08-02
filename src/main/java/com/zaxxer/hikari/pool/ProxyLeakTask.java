@@ -32,10 +32,8 @@ import org.slf4j.LoggerFactory;
 class ProxyLeakTask implements Runnable
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(ProxyLeakTask.class);
-   private static final ProxyLeakTask NO_LEAK;
+   static final ProxyLeakTask NO_LEAK;
 
-   private ScheduledExecutorService executorService;
-   private long leakDetectionThreshold;
    private ScheduledFuture<?> scheduledFuture;
    private String connectionName;
    private Exception exception;
@@ -45,35 +43,29 @@ class ProxyLeakTask implements Runnable
    {
       NO_LEAK = new ProxyLeakTask() {
          @Override
+         void schedule(ScheduledExecutorService executorService, long leakDetectionThreshold) {}
+
+         @Override
+         public void run() {}
+
+         @Override
          public void cancel() {}
       };
    }
 
-   ProxyLeakTask(final long leakDetectionThreshold, final ScheduledExecutorService executorService)
-   {
-      this.executorService = executorService;
-      this.leakDetectionThreshold = leakDetectionThreshold;
-   }
-
-   private ProxyLeakTask(final ProxyLeakTask parent, final PoolEntry poolEntry)
+   ProxyLeakTask(final PoolEntry poolEntry)
    {
       this.exception = new Exception("Apparent connection leak detected");
       this.connectionName = poolEntry.connection.toString();
-      scheduledFuture = parent.executorService.schedule(this, parent.leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
    private ProxyLeakTask()
    {
    }
-   
-   ProxyLeakTask schedule(final PoolEntry bagEntry)
-   {
-      return (leakDetectionThreshold == 0) ? NO_LEAK : new ProxyLeakTask(this, bagEntry);
-   }
 
-   void updateLeakDetectionThreshold(final long leakDetectionThreshold)
+   void schedule(ScheduledExecutorService executorService, long leakDetectionThreshold)
    {
-      this.leakDetectionThreshold = leakDetectionThreshold;
+      scheduledFuture = executorService.schedule(this, leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
    /** {@inheritDoc} */
