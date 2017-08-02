@@ -64,6 +64,7 @@ public class HikariConfig implements HikariConfigMXBean
    private volatile long validationTimeout;
    private volatile long idleTimeout;
    private volatile long leakDetectionThreshold;
+   private volatile boolean leakDetectionForceClose;
    private volatile long maxLifetime;
    private volatile int maxPoolSize;
    private volatile int minIdle;
@@ -646,6 +647,20 @@ public class HikariConfig implements HikariConfigMXBean
    public void setLeakDetectionThreshold(long leakDetectionThresholdMs)
    {
       this.leakDetectionThreshold = leakDetectionThresholdMs;
+   }
+
+
+   /** {@inheritDoc} */
+   @Override
+   public boolean getLeakDetectionForceClose()
+   {
+      return leakDetectionForceClose;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public void setLeakDetectionForceClose(boolean leakDetectionForceClose) {
+      this.leakDetectionForceClose = leakDetectionForceClose;
    }
 
    /** {@inheritDoc} */

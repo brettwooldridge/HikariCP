@@ -303,6 +303,12 @@ message is logged indicating a possible connection leak.  A value of 0 means lea
 is disabled.  Lowest acceptable value for enabling leak detection is 2000 (2 seconds).
 *Default: 0*
 
+&#10062;``leakDetectionForceClose``<br/>
+This property controls if a connection should be forcibly closed after the leak detection threshold,
+i.e. the connection has been borrowed for too long. If the connection is unexpectedly used again
+you will get a ``SQLException``: "Already closed" or equivalent.
+*Default: false*
+
 &#10145;``dataSource``<br/>
 This property is only available via programmatic configuration or IoC container.  This property
 allows you to directly set the instance of the ``DataSource`` to be wrapped by the pool, rather than
