@@ -376,7 +376,7 @@ config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 
 HikariDataSource ds = new HikariDataSource(config);
 ```
-&nbsp;<sup><sup>1</sup> MySQL-specific example, do not copy verbatim.</sup>
+&nbsp;<sup><sup>1</sup> MySQL-specific example, DO NOT COPY VERBATIM.</sup>
 
 or directly instantiate a ``HikariDataSource`` like so:
 ```java
@@ -418,13 +418,16 @@ There is also a System property available, ``hikaricp.configurationFile``, that 
 location of a properties file.  If you intend to use this option, construct a ``HikariConfig`` or ``HikariDataSource``
 instance using the default constructor and the properties file will be loaded.
 
+### Performance Tips
+[MySQL Performnace Tips](https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration)
+
 ### Popular DataSource Class Names
 
 We recommended using ``dataSourceClassName`` instead of ``jdbcUrl``, but either is acceptable.  We'll say that again, *either is acceptable*.
 
 &#9888;&nbsp;*Note: Spring Boot auto-configuration users, you need to use ``jdbcUrl``-based configuration.*
 
-&#9888;&nbsp;MySQL and MariaDB DataSources are known to be broken with respect to network timeout support. Use ``jdbcUrl`` configuration instead.
+&#9888;&nbsp;The MySQL DataSource is known to be broken with respect to network timeout support. Use ``jdbcUrl`` configuration instead.
 
 Here is a list of JDBC *DataSource* classes for popular databases:
 
@@ -438,7 +441,7 @@ Here is a list of JDBC *DataSource* classes for popular databases:
 | IBM Informix     | IBM Informix | com.informix.jdbcx.IfxDataSource |
 | MS SQL Server    | Microsoft    | com.microsoft.sqlserver.jdbc.SQLServerDataSource |
 | ~~MySQL~~        | Connector/J  | ~~com.mysql.jdbc.jdbc2.optional.MysqlDataSource~~ |
-| ~~MySQL/MariaDB~~ | MariaDB     | ~~org.mariadb.jdbc.MySQLDataSource~~ |
+| MySQL/MariaDB    | MariaDB      | org.mariadb.jdbc.MySQLDataSource |
 | Oracle           | Oracle       | oracle.jdbc.pool.OracleDataSource |
 | OrientDB         | OrientDB     | com.orientechnologies.orient.jdbc.OrientDataSource |
 | PostgreSQL       | pgjdbc-ng    | com.impossibl.postgres.jdbc.PGDataSource |
