@@ -16,6 +16,7 @@
 
 package com.zaxxer.hikari.pool;
 
+import static com.zaxxer.hikari.pool.ProxyConnection.DIRTY_BIT_SCHEMA;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -68,7 +69,7 @@ abstract class PoolBase
    long validationTimeout;
    IMetricsTrackerDelegate metricsTracker;
 
-   private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout"};
+   private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout", "schema"};
    private static final int UNINITIALIZED = -1;
    private static final int TRUE = 1;
    private static final int FALSE = 0;
@@ -82,6 +83,7 @@ abstract class PoolBase
    private DataSource dataSource;
 
    private final String catalog;
+   private final String schema;
    private final boolean isReadOnly;
    private final boolean isAutoCommit;
 
@@ -97,6 +99,7 @@ abstract class PoolBase
 
       this.networkTimeout = UNINITIALIZED;
       this.catalog = config.getCatalog();
+      this.schema = config.getSchema();
       this.isReadOnly = config.isReadOnly();
       this.isAutoCommit = config.isAutoCommit();
       this.transactionIsolation = UtilityElf.getTransactionIsolation(config.getTransactionIsolation());
@@ -228,6 +231,11 @@ abstract class PoolBase
       if ((dirtyBits & DIRTY_BIT_NETTIMEOUT) != 0 && proxyConnection.getNetworkTimeoutState() != networkTimeout) {
          setNetworkTimeout(connection, networkTimeout);
          resetBits |= DIRTY_BIT_NETTIMEOUT;
+      }
+
+      if ((dirtyBits & DIRTY_BIT_SCHEMA) != 0 && schema != null && !schema.equals(proxyConnection.getSchemaState())) {
+         connection.setSchema(schema);
+         resetBits |= DIRTY_BIT_SCHEMA;
       }
 
       if (resetBits != 0 && LOGGER.isDebugEnabled()) {
@@ -410,6 +418,10 @@ abstract class PoolBase
 
          if (catalog != null) {
             connection.setCatalog(catalog);
+         }
+
+         if (schema != null) {
+            connection.setSchema(schema);
          }
 
          executeSql(connection, config.getConnectionInitSql(), true);

@@ -80,6 +80,7 @@ public class HikariConfig implements HikariConfigMXBean
    private String jdbcUrl;
    private String password;
    private String poolName;
+   private String schema;
    private String transactionIsolationName;
    private String username;
    private boolean isAutoCommit;
@@ -778,6 +779,22 @@ public class HikariConfig implements HikariConfigMXBean
    public String getTransactionIsolation()
    {
       return transactionIsolationName;
+   }
+
+   /**
+    * Get the default schema name to be set on connections.
+    *
+    * @return the default schema name
+    */
+   public String getSchema() {
+      return schema;
+   }
+
+   /**
+    * Set the default schema name to be set on connections.
+    */
+   public void setSchema(String schema) {
+      this.schema = schema;
    }
 
    /**
