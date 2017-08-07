@@ -30,6 +30,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.management.MBeanServer;
@@ -247,6 +248,15 @@ abstract class PoolBase
    {
       if (netTimeoutExecutor instanceof ThreadPoolExecutor) {
          ((ThreadPoolExecutor) netTimeoutExecutor).shutdownNow();
+      }
+   }
+
+   long getLoginTimeout()
+   {
+      try {
+         return (dataSource != null) ? dataSource.getLoginTimeout() : SECONDS.toSeconds(5);
+      } catch (SQLException e) {
+         return SECONDS.toSeconds(5);
       }
    }
 
