@@ -94,21 +94,21 @@ public class PrometheusMetricsTrackerTest {
             "hikaricp_connection_timeout_total",
             labelNames,
             labelValues1), is(0.0));
-      }
 
-      HikariConfig config2 = newHikariConfig();
-      config2.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
-      config2.setPoolName("second");
-      config2.setJdbcUrl("jdbc:h2:mem:");
-      config2.setMaximumPoolSize(4);
-      config2.setConnectionTimeout(250);
-      String[] labelValues2 = {config2.getPoolName()};
+         HikariConfig config2 = newHikariConfig();
+         config2.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
+         config2.setPoolName("second");
+         config2.setJdbcUrl("jdbc:h2:mem:");
+         config2.setMaximumPoolSize(4);
+         config2.setConnectionTimeout(250);
+         String[] labelValues2 = {config2.getPoolName()};
 
-      try (HikariDataSource ignored = new HikariDataSource(config2)) {
-         assertThat(CollectorRegistry.defaultRegistry.getSampleValue(
-            "hikaricp_connection_timeout_total",
-            labelNames,
-            labelValues2), is(0.0));
+         try (HikariDataSource ignored2 = new HikariDataSource(config2)) {
+            assertThat(CollectorRegistry.defaultRegistry.getSampleValue(
+               "hikaricp_connection_timeout_total",
+               labelNames,
+               labelValues2), is(0.0));
+         }
       }
    }
 }

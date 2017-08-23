@@ -19,7 +19,6 @@ package com.zaxxer.hikari.metrics.prometheus;
 import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.PoolStats;
-import io.prometheus.client.Collector;
 
 /**
  * <pre>{@code
@@ -27,11 +26,23 @@ import io.prometheus.client.Collector;
  * config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
  * }</pre>
  */
-public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory
-{
+public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
+
+   private static HikariCPCollector collector;
+
    @Override
    public IMetricsTracker create(String poolName, PoolStats poolStats) {
-      Collector collector = new HikariCPCollector(poolName, poolStats).register();
-      return new PrometheusMetricsTracker(poolName, collector);
+      getCollector().add(poolName, poolStats);
+      return new PrometheusMetricsTracker(poolName);
+   }
+
+   /**
+    * initialize and register collector if it isn't initialized yet
+    */
+   private HikariCPCollector getCollector() {
+      if (collector == null) {
+         collector = new HikariCPCollector().register();
+      }
+      return collector;
    }
 }
