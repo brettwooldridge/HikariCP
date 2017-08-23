@@ -199,7 +199,7 @@ public abstract class ProxyConnection implements Connection
    }
 
    @SuppressWarnings("EmptyTryBlock")
-   private void closeStatements()
+   private synchronized void closeStatements()
    {
       final int size = openStatements.size();
       if (size > 0) {
@@ -216,9 +216,7 @@ public abstract class ProxyConnection implements Connection
             }
          }
 
-         synchronized (this) {
-            openStatements.clear();
-         }
+         openStatements.clear();
       }
    }
 
