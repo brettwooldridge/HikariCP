@@ -50,20 +50,12 @@ class PrometheusMetricsTracker implements IMetricsTracker
    private final Summary.Child elapsedAcquiredSummaryChild;
    private final Summary.Child elapsedBorrowedSummaryChild;
    private final Summary.Child elapsedCreationSummaryChild;
-   private final Collector collector;
 
-   PrometheusMetricsTracker(String poolName, Collector collector) {
-      this.collector = collector;
+   PrometheusMetricsTracker(String poolName) {
       this.connectionTimeoutCounterChild = CONNECTION_TIMEOUT_COUNTER.labels(poolName);
       this.elapsedAcquiredSummaryChild = ELAPSED_ACQUIRED_SUMMARY.labels(poolName);
       this.elapsedBorrowedSummaryChild = ELAPSED_BORROWED_SUMMARY.labels(poolName);
       this.elapsedCreationSummaryChild = ELAPSED_CREATION_SUMMARY.labels(poolName);
-   }
-
-   @Override
-   public void close()
-   {
-      CollectorRegistry.defaultRegistry.unregister(collector);
    }
 
    @Override
