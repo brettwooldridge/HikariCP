@@ -33,6 +33,8 @@ public interface HikariPoolMXBean
 
    void softEvictConnections();
 
+   void reinitializeDataSource();
+
    void suspendPool();
 
    void resumePool();
