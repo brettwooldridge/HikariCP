@@ -14,6 +14,7 @@
       <jndi.version>0.11.4.1</jndi.version>
       <maven.release.version>2.5.3</maven.release.version>
       <metrics.version>3.2.2</metrics.version>
+      <micrometer.version>0.10.0.RELEASE</micrometer.version>
       <simpleclient.version>0.0.22</simpleclient.version>
       <mockito.version>2.8.9</mockito.version>
       <pax.exam.version>4.11.0</pax.exam.version>
@@ -124,6 +125,18 @@
          <artifactId>javassist</artifactId>
          <version>${javassist.version}</version>
          <optional>true</optional>
+      </dependency>
+      <dependency>
+         <groupId>io.micrometer</groupId>
+         <artifactId>micrometer-core</artifactId>
+         <version>${micrometer.version}</version>
+         <optional>true</optional>
+      </dependency>
+      <dependency>
+         <groupId>org.postgresql</groupId>
+         <artifactId>postgresql</artifactId>
+         <version>42.1.4.jre7</version>
+         <scope>test</scope>
       </dependency>
       <dependency>
          <groupId>org.hibernate</groupId>
@@ -321,6 +334,7 @@
                      javax.sql.rowset.spi,
                      com.codahale.metrics;resolution:=optional,
                      com.codahale.metrics.health;resolution:=optional,
+                     io.micrometer.core.instrument;resolution:=optional,
                      org.slf4j;version="[1.6,2)",
                      org.hibernate;resolution:=optional,
                      org.hibernate.cfg;resolution:=optional,

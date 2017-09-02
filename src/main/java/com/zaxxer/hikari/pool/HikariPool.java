@@ -45,6 +45,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import com.zaxxer.hikari.metrics.micrometer.MicrometerMetricsTrackerFactory;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -270,8 +272,11 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
    public void setMetricRegistry(Object metricRegistry)
    {
-      if (metricRegistry != null) {
+      if (metricRegistry instanceof MetricRegistry) {
          setMetricsTrackerFactory(new CodahaleMetricsTrackerFactory((MetricRegistry) metricRegistry));
+      }
+      else if (metricRegistry instanceof MeterRegistry) {
+         setMetricsTrackerFactory(new MicrometerMetricsTrackerFactory((MeterRegistry) metricRegistry));
       }
       else {
          setMetricsTrackerFactory(null);
