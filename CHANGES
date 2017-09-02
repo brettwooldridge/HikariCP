@@ -1,10 +1,23 @@
 HikariCP Changes
 
+Changes in 2.7.0
+
+ * added support for micrometer metrics (currently Alpha-level support).
+
+ * issue 905 mask JDBC password in URLs
+
+ * issue 940 fix Prometheus metric collector for multiple data config
+
+ * issue 941 add support for setting a default schema
+
+ * issue 955 fix possible race condition when Statements are closed on different
+   threads from which they were created.
+
 Changes in 2.6.3
 
  * issue 878 load driver class from ThreadContext classloader if it is not found
    via the regular classloader.
-
+
 Changes in 2.6.2
 
  * issue 890 add support for Prometheus metrics and multiple HikariCP pools.
