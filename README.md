@@ -419,7 +419,7 @@ location of a properties file.  If you intend to use this option, construct a ``
 instance using the default constructor and the properties file will be loaded.
 
 ### Performance Tips
-[MySQL Performnace Tips](https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration)
+[MySQL Performance Tips](https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration)
 
 ### Popular DataSource Class Names
 
