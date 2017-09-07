@@ -9,6 +9,14 @@ Changes in 2.7.1
    intended to cause parkNanos() to be called every 256 iterations. Thanks to @ztkmkoo
    for finding this.
 
+Changes in 2.4.13
+
+ * backport more efficient contention handling in ConcurrentBag.requite from 2.6.x
+   branch.
+
+ * issue 955 fix possible race condition when Statements are closed on different
+   threads from which they were created.
+
 Changes in 2.7.0
 
  * added support for micrometer metrics (currently Alpha-level support).
