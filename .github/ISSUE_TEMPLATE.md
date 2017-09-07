@@ -6,4 +6,4 @@ Database        : PostgreSQL|MySQL|...
 Driver version  : x.x.x
 ```
 -----------------------------------------------------------------------------------------
-*Have you searched the CLOSED issues already? How about checked [stackoverflow](https://stackoverflow.com/search?q=HikariCP)?*
+*Have you searched the CLOSED issues already? How about checking [stackoverflow](https://stackoverflow.com/search?q=HikariCP)?*
