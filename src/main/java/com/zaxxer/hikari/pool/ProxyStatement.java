@@ -65,11 +65,14 @@ public abstract class ProxyStatement implements Statement
    @Override
    public final void close() throws SQLException
    {
-      if (isClosed) {
-         return;
+      synchronized (this) {
+         if (isClosed) {
+            return;
+         }
+
+         isClosed = true;
       }
 
-      isClosed = true;
       connection.untrackStatement(delegate);
 
       try {

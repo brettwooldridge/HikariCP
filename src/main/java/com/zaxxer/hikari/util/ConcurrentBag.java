@@ -19,7 +19,10 @@ import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_REMOVED;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_RESERVED;
+
 import static java.lang.Thread.yield;
+import static java.util.concurrent.locks.LockSupport.parkNanos;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 import java.lang.ref.WeakReference;
@@ -156,7 +159,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
          }
 
          listener.addBagItem(waiting);
-         
+
          timeout = timeUnit.toNanos(timeout);
          do {
             final long start = CLOCK.currentTime();
@@ -188,11 +191,16 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    {
       bagEntry.setState(STATE_NOT_IN_USE);
 
-      while (waiters.get() > 0) {
-         if (handoffQueue.offer(bagEntry)) {
+      for (int i = 0; waiters.get() > 0; i++) {
+         if (bagEntry.getState() != STATE_NOT_IN_USE || handoffQueue.offer(bagEntry)) {
             return;
          }
-         yield();
+         else if ((i & 0xff) == 0xff) {
+            parkNanos(MICROSECONDS.toNanos(10));
+         }
+         else {
+            yield();
+         }
       }
 
       final List<Object> threadLocalList = threadList.get();

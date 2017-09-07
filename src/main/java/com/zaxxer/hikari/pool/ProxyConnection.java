@@ -187,14 +187,14 @@ public abstract class ProxyConnection implements Connection
       leakTask.cancel();
    }
 
-   private final synchronized <T extends Statement> T trackStatement(final T statement)
+   private synchronized <T extends Statement> T trackStatement(final T statement)
    {
       openStatements.add(statement);
 
       return statement;
    }
 
-   private final void closeStatements()
+   private synchronized void closeStatements()
    {
       final int size = openStatements.size();
       if (size > 0) {
@@ -207,9 +207,7 @@ public abstract class ProxyConnection implements Connection
             }
          }
 
-         synchronized (this) {
-            openStatements.clear();
-         }
+         openStatements.clear();
       }
    }
 
