@@ -186,7 +186,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
          if (bagEntry.getState() != STATE_NOT_IN_USE || handoffQueue.offer(bagEntry)) {
             return;
          }
-         else if ((i & 0x100) == 0x100) {
+         else if ((i & 0xff) == 0xff) {
             parkNanos(MICROSECONDS.toNanos(10));
          }
          else {
