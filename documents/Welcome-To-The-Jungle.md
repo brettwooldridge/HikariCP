@@ -85,7 +85,7 @@ Consider this hypothetical scenario:
 There is a pool with five connections in-use, and zero idle (available) connections. Then, a new thread
 comes in requesting a connection.
 ```
-"How the the prime directive apply in this case?"  We'll answer with a question of our own:
+"How does the prime directive apply in this case?"  We'll answer with a question of our own:
 
 > If the thread is directed to create a new connection, and that connection takes 150ms to establish, what happens if one of the five in-use connections is returned to the pool?
 
