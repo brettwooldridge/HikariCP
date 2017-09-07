@@ -1,5 +1,14 @@
 HikariCP Changes
 
+Changes in 2.7.1
+
+ * issue 968 Wrong label order in MicrometerMetricsTracker for the connection usage
+   metric.
+
+ * issue 967 incorrect bitwise operator value in ConcurrentBag.requite method
+   intended to cause parkNanos() to be called every 256 iterations. Thanks to @ztkmkoo
+   for finding this.
+
 Changes in 2.7.0
 
  * added support for micrometer metrics (currently Alpha-level support).
