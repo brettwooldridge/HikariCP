@@ -497,8 +497,8 @@ Please perform changes and submit pull requests from the ``dev`` branch instead 
 [Build Status]:https://travis-ci.org/brettwooldridge/HikariCP
 [Build Status img]:https://travis-ci.org/brettwooldridge/HikariCP.svg?branch=dev
 
-[Coverage Status]:https://coveralls.io/r/brettwooldridge/HikariCP?branch=dev
-[Coverage Status img]:https://coveralls.io/repos/brettwooldridge/HikariCP/badge.svg?branch=dev
+[Coverage Status]:https://codecov.io/gh/brettwooldridge/HikariCP
+[Coverage Status img]:https://codecov.io/gh/brettwooldridge/HikariCP/branch/dev/graph/badge.svg
 
 [Dependency Status]:https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0
 [Dependency Status img]:https://www.versioneye.com/user/projects/551ce51c3661f1bee50004e0/badge.svg?style=flat
