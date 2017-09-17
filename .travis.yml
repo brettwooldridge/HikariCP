@@ -33,3 +33,6 @@ install: /bin/true
 
 script:
   - mvn package -Dmaven.javadoc.skip=true -V -B
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
