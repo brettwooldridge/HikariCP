@@ -16,6 +16,8 @@
 
 package com.zaxxer.hikari.util;
 
+import com.zaxxer.hikari.pool.TestElf;
+import com.zaxxer.hikari.pool.TestElf.FauxWebClassLoader;
 import com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -23,12 +25,9 @@ import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.DataInputStream;
-import java.io.IOException;
 import java.lang.ref.Reference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.net.URL;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -80,37 +79,6 @@ public class TomcatConcurrentBagLeakTest
       assertNotNull(ex);
    }
 
-   static class FauxWebClassLoader extends ClassLoader
-   {
-      static final byte[] classBytes = new byte[16_000];
-
-      @Override
-      public Class<?> loadClass(String name) throws ClassNotFoundException
-      {
-         if (name.startsWith("java") || name.startsWith("org")) {
-            return super.loadClass(name, true);
-         }
-
-         final String resourceName = "/" + name.replace('.', '/') + ".class";
-         final URL resource = this.getClass().getResource(resourceName);
-         try (DataInputStream is = new DataInputStream(resource.openStream())) {
-            int read = 0;
-            while (read < classBytes.length) {
-               final int rc = is.read(classBytes, read, classBytes.length - read);
-               if (rc == -1) {
-                  break;
-               }
-               read += rc;
-            }
-
-            return defineClass(name, classBytes, 0, read);
-         }
-         catch (IOException e) {
-            throw new ClassNotFoundException(name);
-         }
-      }
-   }
-
    public static class PoolEntry implements IConcurrentBagEntry
    {
       private int state;
@@ -143,7 +111,7 @@ public class TomcatConcurrentBagLeakTest
       @SuppressWarnings("WeakerAccess")
       public Exception failureException;
 
-      @SuppressWarnings("unused")
+      @SuppressWarnings({"unused", "ResultOfMethodCallIgnored"})
       public void createConcurrentBag() throws InterruptedException
       {
          try (ConcurrentBag<PoolEntry> bag = new ConcurrentBag<>((x) -> CompletableFuture.completedFuture(Boolean.TRUE))) {
