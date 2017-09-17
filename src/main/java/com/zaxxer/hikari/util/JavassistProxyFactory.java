@@ -55,12 +55,17 @@ import javassist.bytecode.ClassFile;
 public final class JavassistProxyFactory
 {
    private static ClassPool classPool;
+   private static String genDirectory = "";
 
    public static void main(String... args)
    {
       classPool = new ClassPool();
       classPool.importPackage("java.sql");
       classPool.appendClassPath(new LoaderClassPath(JavassistProxyFactory.class.getClassLoader()));
+
+      if (args.length > 0) {
+         genDirectory = args[0];
+      }
 
       try {
          // Cast is not needed for these
@@ -110,7 +115,7 @@ public final class JavassistProxyFactory
          }
       }
 
-      proxyCt.writeFile("target/classes");
+      proxyCt.writeFile(genDirectory + "target/classes");
    }
 
    /**
@@ -189,8 +194,8 @@ public final class JavassistProxyFactory
          }
       }
 
-      targetCt.getClassFile().setMajorVersion(ClassFile.JAVA_7);
-      targetCt.writeFile("target/classes");
+      targetCt.getClassFile().setMajorVersion(ClassFile.JAVA_8);
+      targetCt.writeFile(genDirectory + "target/classes");
    }
 
    private static boolean isThrowsSqlException(CtMethod method)
