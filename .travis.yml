@@ -6,7 +6,6 @@ dist:
 
 before_script:
   - if [[ "x$JDK" == *'x9'* ]]; then export MAVEN_SKIP_RC=true; fi
-  - if [[ "x$JDK" != *'x9'* ]]; then export COVERALLS=coveralls:report; fi
 
 script:
   - export JDK8_HOME=$(jdk_switcher home oraclejdk8)
