@@ -8,21 +8,22 @@
       <artifact.classifier />
 
       <felix.bundle.plugin.version>3.3.0</felix.bundle.plugin.version>
-      <felix.version>5.6.2</felix.version>
+      <felix.version>5.6.8</felix.version>
       <hibernate.version>5.2.10.Final</hibernate.version>
       <javassist.version>3.22.0-CR1</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>
       <maven.release.version>2.5.3</maven.release.version>
-      <metrics.version>3.2.2</metrics.version>
+      <metrics.version>3.2.4</metrics.version>
       <micrometer.version>0.10.0.RELEASE</micrometer.version>
-      <simpleclient.version>0.0.22</simpleclient.version>
-      <mockito.version>2.8.9</mockito.version>
+      <simpleclient.version>0.0.26</simpleclient.version>
+      <mockito.version>2.10.0</mockito.version>
       <pax.exam.version>4.11.0</pax.exam.version>
       <pax.url.version>2.5.2</pax.url.version>
+      <postgresql.version>42.1.4</postgresql.version>
       <slf4j.version>1.7.25</slf4j.version>
-      <log4j.version>2.8.2</log4j.version>
-      <commons.csv.version>1.4</commons.csv.version>
-      <h2.version>1.4.195</h2.version>
+      <log4j.version>2.9.0</log4j.version>
+      <commons.csv.version>1.5</commons.csv.version>
+      <h2.version>1.4.196</h2.version>
       <junit.version>4.12</junit.version>
    </properties>
 
@@ -135,7 +136,7 @@
       <dependency>
          <groupId>org.postgresql</groupId>
          <artifactId>postgresql</artifactId>
-         <version>42.1.4.jre7</version>
+         <version>${postgresql.version}</version>
          <scope>test</scope>
       </dependency>
       <dependency>
@@ -362,7 +363,7 @@
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-compiler-plugin</artifactId>
-               <version>3.6.1</version>
+               <version>3.7.0</version>
                <extensions>true</extensions>
                <configuration>
                   <source>1.8</source>
