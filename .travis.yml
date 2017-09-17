@@ -32,5 +32,4 @@ matrix:
 install: /bin/true
 
 script:
-  - mvn package -Dskip.unit.tests=true -Dmaven.javadoc.skip=true -V -B
-  - mvn test $COVERALLS -V -P coverage
+  - mvn package -Dmaven.javadoc.skip=true -V -B
