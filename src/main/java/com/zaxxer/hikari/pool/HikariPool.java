@@ -82,6 +82,9 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    private final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", MILLISECONDS.toMillis(500));
    private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", SECONDS.toMillis(30));
 
+   private static final String EVICTED_CONNECTION_MESSAGE = "(connection was evicted)";
+   private static final String DEAD_CONNECTION_MESSAGE = "(connection is dead)";
+
    private final PoolEntryCreator POOL_ENTRY_CREATOR = new PoolEntryCreator(null);
    private final PoolEntryCreator POST_FILL_POOL_ENTRY_CREATOR = new PoolEntryCreator("After adding ");
    private final Collection<Runnable> addConnectionQueue;
@@ -157,37 +160,34 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    {
       suspendResumeLock.acquire();
       final long startTime = currentTime();
-
+      PoolEntry poolEntry = null;
       try {
          long timeout = hardTimeout;
-         PoolEntry poolEntry = null;
-         try {
-            do {
-               poolEntry = connectionBag.borrow(timeout, MILLISECONDS);
-               if (poolEntry == null) {
-                  break; // We timed out... break and throw exception
-               }
-
-               final long now = currentTime();
-               if (poolEntry.isMarkedEvicted() || (elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
-                  closeConnection(poolEntry, "(connection is evicted or dead)"); // Throw away the dead connection (passed max age or failed alive test)
-                  timeout = hardTimeout - elapsedMillis(startTime);
-               }
-               else {
-                  metricsTracker.recordBorrowStats(poolEntry, startTime);
-                  return poolEntry.createProxyConnection(leakTaskFactory.schedule(poolEntry), now);
-               }
-            } while (timeout > 0L);
-
-            metricsTracker.recordBorrowTimeoutStats(startTime);
-         }
-         catch (InterruptedException e) {
-            if (poolEntry != null) {
-               poolEntry.recycle(startTime);
+         do {
+            poolEntry = connectionBag.borrow(timeout, MILLISECONDS);
+            if (poolEntry == null) {
+               break; // We timed out... break and throw exception
             }
-            Thread.currentThread().interrupt();
-            throw new SQLException(poolName + " - Interrupted during connection acquisition", e);
+
+            final long now = currentTime();
+            if (poolEntry.isMarkedEvicted() || (elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
+               closeConnection(poolEntry, poolEntry.isMarkedEvicted() ? EVICTED_CONNECTION_MESSAGE : DEAD_CONNECTION_MESSAGE); // Throw away the dead connection (passed max age or failed alive test)
+               timeout = hardTimeout - elapsedMillis(startTime);
+            }
+            else {
+               metricsTracker.recordBorrowStats(poolEntry, startTime);
+               return poolEntry.createProxyConnection(leakTaskFactory.schedule(poolEntry), now);
+            }
+         } while (timeout > 0L);
+
+         metricsTracker.recordBorrowTimeoutStats(startTime);
+      }
+      catch (InterruptedException e) {
+         if (poolEntry != null) {
+            poolEntry.recycle(startTime);
          }
+         Thread.currentThread().interrupt();
+         throw new SQLException(poolName + " - Interrupted during connection acquisition", e);
       }
       finally {
          suspendResumeLock.release();
