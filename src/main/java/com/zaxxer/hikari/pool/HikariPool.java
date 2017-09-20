@@ -272,10 +272,10 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
    public void setMetricRegistry(Object metricRegistry)
    {
-      if (metricRegistry.getClass().getName().equals("com.codahale.metrics.MetricRegistry")) {
+      if (metricRegistry.getClass().getName().contains("MetricRegistry")) {
          setMetricsTrackerFactory(new CodahaleMetricsTrackerFactory((MetricRegistry) metricRegistry));
       }
-      else if (metricRegistry.getClass().getName().equals("io.micrometer.core.instrument.MeterRegistry")) {
+      else if (metricRegistry.getClass().getName().contains("MeterRegistry")) {
          setMetricsTrackerFactory(new MicrometerMetricsTrackerFactory((MeterRegistry) metricRegistry));
       }
       else {
