@@ -106,7 +106,7 @@ public class TestValidation
          fail();
       }
       catch (RuntimeException ise) {
-         assertTrue(ise.getMessage().contains("class of driverClassName "));
+         assertTrue(ise.getMessage().startsWith("Failed to load driver class invalid "));
       }
    }
 
