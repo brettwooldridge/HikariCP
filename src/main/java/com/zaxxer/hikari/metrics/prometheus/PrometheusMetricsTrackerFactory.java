@@ -19,6 +19,7 @@ package com.zaxxer.hikari.metrics.prometheus;
 import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.PoolStats;
+import io.prometheus.client.CollectorRegistry;
 
 /**
  * <pre>{@code
@@ -30,6 +31,11 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
 
    private static HikariCPCollector collector;
 
+   /**
+    * custom registry
+    */
+   private static CollectorRegistry registry;
+
    @Override
    public IMetricsTracker create(String poolName, PoolStats poolStats) {
       getCollector().add(poolName, poolStats);
@@ -37,11 +43,22 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
    }
 
    /**
+    * set custom registry
+    * @since 2.7.2
+    * @param registry custom registry
+    */
+   public static void setRegistry(CollectorRegistry registry) {
+      PrometheusMetricsTrackerFactory.registry = registry;
+   }
+
+   /**
     * initialize and register collector if it isn't initialized yet
     */
    private HikariCPCollector getCollector() {
       if (collector == null) {
-         collector = new HikariCPCollector().register();
+         HikariCPCollector collector = new HikariCPCollector();
+         //use custom collectorRegistry if it has been set
+         PrometheusMetricsTrackerFactory.collector = registry != null ? collector.register(registry) : collector.register();
       }
       return collector;
    }
