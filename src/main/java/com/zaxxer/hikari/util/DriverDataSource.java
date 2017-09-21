@@ -67,22 +67,27 @@ public final class DriverDataSource implements DataSource
          if (driver == null) {
             LOGGER.warn("Registered driver with driverClassName={} was not found, trying direct instantiation.", driverClassName);
             Class<?> driverClass = null;
+            ClassLoader threadContextClassLoader = Thread.currentThread().getContextClassLoader();
             try {
-               driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
-               LOGGER.debug("Driver class found in the HikariConfig class classloader {}", this.getClass().getClassLoader());
-            } catch (ClassNotFoundException e) {
-               ClassLoader threadContextClassLoader = Thread.currentThread().getContextClassLoader();
-               if (threadContextClassLoader != null && threadContextClassLoader != this.getClass().getClassLoader()) {
+               if (threadContextClassLoader != null) {
                   try {
                      driverClass = threadContextClassLoader.loadClass(driverClassName);
-                     LOGGER.debug("Driver class found in Thread context class loader {}", threadContextClassLoader);
-                  } catch (ClassNotFoundException e1) {
-                     LOGGER.warn("Failed to load class of driverClassName {} in either of HikariConfig class classloader {} or Thread context classloader {}", driverClassName, this.getClass().getClassLoader(), threadContextClassLoader);
+                     LOGGER.debug("Driver class {} found in Thread context class loader {}", driverClassName, threadContextClassLoader);
                   }
-               } else {
-                  LOGGER.warn("Failed to load class of driverClassName {} in HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
+                  catch (ClassNotFoundException e) {
+                     LOGGER.debug("Driver class {} not found in Thread context class loader {}, trying classloader {}",
+                                  driverClassName, threadContextClassLoader, this.getClass().getClassLoader());
+                  }
                }
+
+               if (driverClass == null) {
+                  driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
+                  LOGGER.debug("Driver class {} found in the HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
+               }
+            } catch (ClassNotFoundException e) {
+               LOGGER.debug("Failed to load driver class {} from HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
             }
+
             if (driverClass != null) {
                try {
                   driver = (Driver) driverClass.newInstance();
