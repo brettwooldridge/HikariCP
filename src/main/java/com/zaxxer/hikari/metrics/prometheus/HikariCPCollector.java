@@ -18,19 +18,24 @@ package com.zaxxer.hikari.metrics.prometheus;
 
 import com.zaxxer.hikari.metrics.PoolStats;
 import io.prometheus.client.Collector;
+import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.GaugeMetricFamily;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
-class HikariCPCollector extends Collector {
+public class HikariCPCollector extends Collector {
 
    private static final List<String> LABEL_NAMES = Collections.singletonList("pool");
 
    private final Map<String, PoolStats> poolStatsMap = new ConcurrentHashMap<>();
+
+   private static final Set<CollectorRegistry> registered = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
    @Override
    public List<MetricFamilySamples> collect() {
@@ -52,12 +57,33 @@ class HikariCPCollector extends Collector {
    }
 
    private GaugeMetricFamily createGauge(String metric, String help,
-      Function<PoolStats, Integer> metricValueFunction) {
+                                         Function<PoolStats, Integer> metricValueFunction) {
       GaugeMetricFamily metricFamily = new GaugeMetricFamily(metric, help, LABEL_NAMES);
       poolStatsMap.forEach((k, v) -> metricFamily.addMetric(
          Collections.singletonList(k),
          metricValueFunction.apply(v)
       ));
       return metricFamily;
+   }
+
+   @Override
+   public <T extends Collector> T register() {
+      if (registered.contains(CollectorRegistry.defaultRegistry)) {
+         return (T) this;
+      } else {
+         registered.add(CollectorRegistry.defaultRegistry);
+         return super.register();
+      }
+
+   }
+
+   @Override
+   public <T extends Collector> T register(CollectorRegistry registry) {
+      if (registered.contains(registry)) {
+         return (T) this;
+      } else {
+         registered.add(registry);
+         return super.register(registry);
+      }
    }
 }

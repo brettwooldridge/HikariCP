@@ -17,11 +17,13 @@
 package com.zaxxer.hikari.metrics.prometheus;
 
 import com.zaxxer.hikari.metrics.IMetricsTracker;
-import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Summary;
-import java.util.concurrent.TimeUnit;
+
+import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 class PrometheusMetricsTracker implements IMetricsTracker
 {
@@ -29,29 +31,38 @@ class PrometheusMetricsTracker implements IMetricsTracker
       .name("hikaricp_connection_timeout_total")
       .labelNames("pool")
       .help("Connection timeout total count")
-      .register();
+      .create();
    private static final Summary ELAPSED_ACQUIRED_SUMMARY = Summary.build()
       .name("hikaricp_connection_acquired_nanos")
       .labelNames("pool")
       .help("Connection acquired time (ns)")
-      .register();
+      .create();
    private static final Summary ELAPSED_BORROWED_SUMMARY = Summary.build()
       .name("hikaricp_connection_usage_millis")
       .labelNames("pool")
       .help("Connection usage (ms)")
-      .register();
+      .create();
    private static final Summary ELAPSED_CREATION_SUMMARY = Summary.build()
       .name("hikaricp_connection_creation_millis")
       .labelNames("pool")
       .help("Connection creation (ms)")
-      .register();
+      .create();
+
+   private static final Set<CollectorRegistry> registered = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
    private final Counter.Child connectionTimeoutCounterChild;
    private final Summary.Child elapsedAcquiredSummaryChild;
    private final Summary.Child elapsedBorrowedSummaryChild;
    private final Summary.Child elapsedCreationSummaryChild;
 
-   PrometheusMetricsTracker(String poolName) {
+   PrometheusMetricsTracker(String poolName, CollectorRegistry registry) {
+      if (!registered.contains(registry)) {
+         CONNECTION_TIMEOUT_COUNTER.register(registry);
+         ELAPSED_ACQUIRED_SUMMARY.register(registry);
+         ELAPSED_BORROWED_SUMMARY.register(registry);
+         ELAPSED_CREATION_SUMMARY.register(registry);
+         registered.add(registry);
+      }
       this.connectionTimeoutCounterChild = CONNECTION_TIMEOUT_COUNTER.labels(poolName);
       this.elapsedAcquiredSummaryChild = ELAPSED_ACQUIRED_SUMMARY.labels(poolName);
       this.elapsedBorrowedSummaryChild = ELAPSED_BORROWED_SUMMARY.labels(poolName);

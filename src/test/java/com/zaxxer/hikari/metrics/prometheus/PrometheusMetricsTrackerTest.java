@@ -111,4 +111,55 @@ public class PrometheusMetricsTrackerTest {
          }
       }
    }
+
+   @Test
+   public void testMultiplePoolNameAndMultipleCollector() throws Exception {
+      String[] labelNames = {"pool"};
+
+      HikariConfig config = newHikariConfig();
+      CollectorRegistry customRegistry = new CollectorRegistry();
+      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(customRegistry));
+      config.setPoolName("first");
+      config.setJdbcUrl("jdbc:h2:mem:");
+      config.setMaximumPoolSize(2);
+      config.setConnectionTimeout(250);
+      String[] labelValues1 = {config.getPoolName()};
+
+      try (HikariDataSource ignored = new HikariDataSource(config)) {
+         assertThat(customRegistry.getSampleValue(
+            "hikaricp_connection_timeout_total",
+            labelNames,
+            labelValues1), is(0.0));
+
+         HikariConfig config2 = newHikariConfig();
+         config2.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(customRegistry));
+         config2.setPoolName("second");
+         config2.setJdbcUrl("jdbc:h2:mem:");
+         config2.setMaximumPoolSize(4);
+         config2.setConnectionTimeout(250);
+         String[] labelValues2 = {config2.getPoolName()};
+
+         try (HikariDataSource ignored2 = new HikariDataSource(config2)) {
+            assertThat(customRegistry.getSampleValue(
+               "hikaricp_connection_timeout_total",
+               labelNames,
+               labelValues2), is(0.0));
+         }
+
+         HikariConfig config3 = newHikariConfig();
+         config3.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
+         config3.setPoolName("third");
+         config3.setJdbcUrl("jdbc:h2:mem:");
+         config3.setMaximumPoolSize(4);
+         config3.setConnectionTimeout(250);
+         String[] labelValues3 = {config3.getPoolName()};
+
+         try (HikariDataSource ignored3 = new HikariDataSource(config3)) {
+            assertThat(CollectorRegistry.defaultRegistry.getSampleValue(
+               "hikaricp_connection_timeout_total",
+               labelNames,
+               labelValues3), is(0.0));
+         }
+      }
+   }
 }

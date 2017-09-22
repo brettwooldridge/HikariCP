@@ -22,33 +22,73 @@ import com.zaxxer.hikari.metrics.PoolStats;
 import io.prometheus.client.CollectorRegistry;
 
 /**
+ * <p>
+ * Use default CollectorRegistry and default HikariCPCollector:
  * <pre>{@code
  * HikariConfig config = new HikariConfig();
  * config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
  * }</pre>
+ * </p>
+ * <p>
+ * Use provided CollectorRegistry and default HikariCPCollector:
+ * <pre>{@code
+ * HikariConfig config = new HikariConfig();
+ * config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(registry));
+ * }</pre>
+ * </p>
+ * <p>
+ * Use provided CollectorRegistry and provided HikariCPCollector:
+ * <pre>{@code
+ * HikariConfig config = new HikariConfig();
+ * config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(registry, collector));
+ * }</pre>
+ * </p>
  */
 public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
 
-   private static HikariCPCollector collector;
+   private HikariCPCollector collector;
+   private CollectorRegistry registry;
+
+   private static HikariCPCollector globalCollector;
 
    /**
-    * custom registry
+    * If nothing is provided, use {@link CollectorRegistry.defaultRegistry} and {@link globalCollector} as default
     */
-   private static CollectorRegistry registry;
+   public PrometheusMetricsTrackerFactory() {
+      this(CollectorRegistry.defaultRegistry);
+   }
+
+   /**
+    * If a CollectorRegistry is provided, use provided CollectorRegistry and {@link globalCollector} as default
+    */
+   public PrometheusMetricsTrackerFactory(CollectorRegistry registry) {
+      if (globalCollector == null) {
+         synchronized (PrometheusMetricsTrackerFactory.class) {
+            if (globalCollector == null) {
+               globalCollector = new HikariCPCollector();
+            }
+         }
+      }
+      this.registry = registry;
+      this.collector = globalCollector.register(registry);
+   }
+
+   /**
+    * If both a CollectorRegistry and a Collector are provided, use provided CollectorRegistry and Collector
+    */
+   public PrometheusMetricsTrackerFactory(CollectorRegistry registry, HikariCPCollector collector) {
+      this.registry = registry;
+      this.collector = collector.register(registry);
+   }
 
    @Override
    public IMetricsTracker create(String poolName, PoolStats poolStats) {
       getCollector().add(poolName, poolStats);
-      return new PrometheusMetricsTracker(poolName);
+      return new PrometheusMetricsTracker(poolName, registry);
    }
 
-   /**
-    * set custom registry
-    * @since 2.7.2
-    * @param registry custom registry
-    */
-   public static void setRegistry(CollectorRegistry registry) {
-      PrometheusMetricsTrackerFactory.registry = registry;
+   public static void setGlobalCollector(HikariCPCollector globalCollector) {
+      PrometheusMetricsTrackerFactory.globalCollector = globalCollector;
    }
 
    /**
@@ -56,9 +96,12 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
     */
    private HikariCPCollector getCollector() {
       if (collector == null) {
-         HikariCPCollector collector = new HikariCPCollector();
-         //use custom collectorRegistry if it has been set
-         PrometheusMetricsTrackerFactory.collector = registry != null ? collector.register(registry) : collector.register();
+         if (globalCollector == null) {
+            collector = globalCollector = new HikariCPCollector();
+            //use custom collectorRegistry if it has been set
+         } else {
+            collector = globalCollector;
+         }
       }
       return collector;
    }
