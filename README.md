@@ -311,6 +311,11 @@ frameworks. When this property is specified, the ``dataSourceClassName`` propert
 DataSource-specific properties will be ignored.
 *Default: none*
 
+&#128288;``schema``<br/>
+This property sets the default *schema* for databases that support the concept of schemas.
+If this property is not specified, the default schema defined by the JDBC driver is used.
+*Default: driver default*
+
 &#10145;``threadFactory``<br/>
 This property is only available via programmatic configuration or IoC container.  This property
 allows you to set the instance of the ``java.util.concurrent.ThreadFactory`` that will be used
