@@ -81,14 +81,14 @@ class ProxyLeakTask implements Runnable
       System.arraycopy(stackTrace, 5, trace, 0, trace.length);
 
       exception.setStackTrace(trace);
-      LOGGER.warn("Connection leak detection triggered for {} from thread {}, stack trace follows", connectionName, threadName, exception);
+      LOGGER.warn("Connection leak detection triggered for {} on thread {}, stack trace follows", connectionName, threadName, exception);
    }
 
    void cancel()
    {
       scheduledFuture.cancel(false);
       if (isLeaked) {
-         LOGGER.info("Previously reported leaked connection {} from thread {} was returned to the pool (unleaked)", connectionName, threadName);
+         LOGGER.info("Previously reported leaked connection {} on thread {} was returned to the pool (unleaked)", connectionName, threadName);
       }
    }
 }
