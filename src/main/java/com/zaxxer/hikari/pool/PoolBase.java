@@ -152,38 +152,38 @@ abstract class PoolBase
    boolean isConnectionAlive(final Connection connection)
    {
       try {
-         try {
-            setNetworkTimeout(connection, validationTimeout);
+         setNetworkTimeout(connection, validationTimeout);
 
-            final long validationSeconds = (int) Math.max(1000L, validationTimeout) / 1000;
+         final int validationSeconds = (int) Math.max(1000L, validationTimeout) / 1000;
 
-            if (isUseJdbc4Validation) {
-               return connection.isValid((int) validationSeconds);
-            }
-
+         boolean valid = true;
+         if (isUseJdbc4Validation) {
+            valid = connection.isValid(validationSeconds);
+         }
+         else {
             try (Statement statement = connection.createStatement()) {
-               if (isNetworkTimeoutSupported != TRUE) {
-                  setQueryTimeout(statement, (int) validationSeconds);
+               if (isNetworkTimeoutSupported == FALSE) {
+                  setQueryTimeout(statement, validationSeconds);
                }
 
                statement.execute(config.getConnectionTestQuery());
-            }
-         }
-         finally {
-            setNetworkTimeout(connection, networkTimeout);
+             }
+          }
 
-            if (isIsolateInternalQueries && !isAutoCommit) {
-               connection.rollback();
-            }
-         }
+          if (valid) {
+             if (isIsolateInternalQueries && !isAutoCommit) {
+                connection.rollback();
+             }
 
-         return true;
+             setNetworkTimeout(connection, networkTimeout);
+             return true;
+          }
       }
       catch (Exception e) {
          lastConnectionFailure.set(e);
          LOGGER.warn("{} - Failed to validate connection {} ({})", poolName, connection, e.getMessage());
-         return false;
       }
+      return false;
    }
 
    Throwable getLastConnectionFailure()
