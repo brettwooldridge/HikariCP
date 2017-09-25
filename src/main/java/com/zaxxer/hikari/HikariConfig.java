@@ -33,12 +33,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.security.AccessControlException;
 import java.util.Properties;
-import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static com.zaxxer.hikari.util.UtilityElf.getNullIfEmpty;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -49,6 +49,7 @@ public class HikariConfig implements HikariConfigMXBean
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariConfig.class);
 
+   private static final char[] ID_CHARACTERS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
    private static final long CONNECTION_TIMEOUT = SECONDS.toMillis(30);
    private static final long VALIDATION_TIMEOUT = SECONDS.toMillis(5);
    private static final long IDLE_TIMEOUT = MINUTES.toMillis(10);
@@ -1029,16 +1030,16 @@ public class HikariConfig implements HikariConfigMXBean
       } catch (AccessControlException e) {
          // The SecurityManager didn't allow us to read/write system properties
          // so just generate a random pool number instead
-         Random random = new Random();
-         StringBuilder buf = new StringBuilder(prefix);
+         final ThreadLocalRandom random = ThreadLocalRandom.current();
+         final StringBuilder buf = new StringBuilder(prefix);
 
-         while (buf.length() < prefix.length() + 4) {
-            buf.append(Long.toString(Math.abs(random.nextLong()), Character.MAX_RADIX));
+         for (int i = 0; i < 4; i++) {
+            buf.append(ID_CHARACTERS[random.nextInt(62)]);
          }
-         String name = buf.toString().substring(0, prefix.length() + 4);
-         LOGGER.info("{} - assigned random pool name (security manager prevented access to system properties)", name);
 
-         return name;
+         LOGGER.info("assigned random pool name '{}' (security manager prevented access to system properties)", buf);
+
+         return buf.toString();
       }
    }
 
