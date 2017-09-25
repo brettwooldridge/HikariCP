@@ -49,7 +49,7 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
    private HikariCPCollector collector;
    private CollectorRegistry registry;
 
-   private static HikariCPCollector globalCollector;
+   private static volatile HikariCPCollector globalCollector;
 
    /**
     * If nothing is provided, use {@link CollectorRegistry.defaultRegistry} and {@link globalCollector} as default
@@ -97,11 +97,13 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
    private HikariCPCollector getCollector() {
       if (collector == null) {
          if (globalCollector == null) {
-            collector = globalCollector = new HikariCPCollector();
-            //use custom collectorRegistry if it has been set
-         } else {
-            collector = globalCollector;
+            synchronized (PrometheusMetricsTrackerFactory.class) {
+               if (globalCollector == null) {
+                  globalCollector = new HikariCPCollector();
+               }
+            }
          }
+         collector = globalCollector;
       }
       return collector;
    }

@@ -23,6 +23,7 @@ import io.prometheus.client.GaugeMetricFamily;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,7 +36,7 @@ public class HikariCPCollector extends Collector {
 
    private final Map<String, PoolStats> poolStatsMap = new ConcurrentHashMap<>();
 
-   private static final Set<CollectorRegistry> registered = Collections.newSetFromMap(new ConcurrentHashMap<>());
+   private static final Set<CollectorRegistry> registered = new HashSet<>();
 
    @Override
    public List<MetricFamilySamples> collect() {
@@ -68,22 +69,25 @@ public class HikariCPCollector extends Collector {
 
    @Override
    public <T extends Collector> T register() {
-      if (registered.contains(CollectorRegistry.defaultRegistry)) {
-         return (T) this;
-      } else {
-         registered.add(CollectorRegistry.defaultRegistry);
-         return super.register();
+      synchronized (registered) {
+         if (registered.contains(CollectorRegistry.defaultRegistry)) {
+            return (T) this;
+         } else {
+            registered.add(CollectorRegistry.defaultRegistry);
+            return super.register();
+         }
       }
-
    }
 
    @Override
    public <T extends Collector> T register(CollectorRegistry registry) {
-      if (registered.contains(registry)) {
-         return (T) this;
-      } else {
-         registered.add(registry);
-         return super.register(registry);
+      synchronized (registered) {
+         if (registered.contains(registry)) {
+            return (T) this;
+         } else {
+            registered.add(registry);
+            return super.register(registry);
+         }
       }
    }
 }

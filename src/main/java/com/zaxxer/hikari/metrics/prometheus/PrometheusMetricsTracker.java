@@ -21,12 +21,10 @@ import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Summary;
 
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
-class PrometheusMetricsTracker implements IMetricsTracker
-{
+class PrometheusMetricsTracker implements IMetricsTracker {
    private static final Counter CONNECTION_TIMEOUT_COUNTER = Counter.build()
       .name("hikaricp_connection_timeout_total")
       .labelNames("pool")
@@ -48,7 +46,7 @@ class PrometheusMetricsTracker implements IMetricsTracker
       .help("Connection creation (ms)")
       .create();
 
-   private static final Set<CollectorRegistry> registered = Collections.newSetFromMap(new ConcurrentHashMap<>());
+   private static final Set<CollectorRegistry> registered = new HashSet<>();
 
    private final Counter.Child connectionTimeoutCounterChild;
    private final Summary.Child elapsedAcquiredSummaryChild;
@@ -56,12 +54,14 @@ class PrometheusMetricsTracker implements IMetricsTracker
    private final Summary.Child elapsedCreationSummaryChild;
 
    PrometheusMetricsTracker(String poolName, CollectorRegistry registry) {
-      if (!registered.contains(registry)) {
-         CONNECTION_TIMEOUT_COUNTER.register(registry);
-         ELAPSED_ACQUIRED_SUMMARY.register(registry);
-         ELAPSED_BORROWED_SUMMARY.register(registry);
-         ELAPSED_CREATION_SUMMARY.register(registry);
-         registered.add(registry);
+      synchronized (registered) {
+         if (!registered.contains(registry)) {
+            CONNECTION_TIMEOUT_COUNTER.register(registry);
+            ELAPSED_ACQUIRED_SUMMARY.register(registry);
+            ELAPSED_BORROWED_SUMMARY.register(registry);
+            ELAPSED_CREATION_SUMMARY.register(registry);
+            registered.add(registry);
+         }
       }
       this.connectionTimeoutCounterChild = CONNECTION_TIMEOUT_COUNTER.labels(poolName);
       this.elapsedAcquiredSummaryChild = ELAPSED_ACQUIRED_SUMMARY.labels(poolName);
@@ -70,26 +70,22 @@ class PrometheusMetricsTracker implements IMetricsTracker
    }
 
    @Override
-   public void recordConnectionAcquiredNanos(long elapsedAcquiredNanos)
-   {
+   public void recordConnectionAcquiredNanos(long elapsedAcquiredNanos) {
       elapsedAcquiredSummaryChild.observe(elapsedAcquiredNanos);
    }
 
    @Override
-   public void recordConnectionUsageMillis(long elapsedBorrowedMillis)
-   {
+   public void recordConnectionUsageMillis(long elapsedBorrowedMillis) {
       elapsedBorrowedSummaryChild.observe(elapsedBorrowedMillis);
    }
 
    @Override
-   public void recordConnectionCreatedMillis(long connectionCreatedMillis)
-   {
+   public void recordConnectionCreatedMillis(long connectionCreatedMillis) {
       elapsedCreationSummaryChild.observe(connectionCreatedMillis);
    }
 
    @Override
-   public void recordConnectionTimeout()
-   {
+   public void recordConnectionTimeout() {
       connectionTimeoutCounterChild.inc();
    }
 }
