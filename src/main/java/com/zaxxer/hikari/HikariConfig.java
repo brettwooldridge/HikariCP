@@ -40,7 +40,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import static com.zaxxer.hikari.util.UtilityElf.getNullIfEmpty;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -55,7 +54,6 @@ public class HikariConfig implements HikariConfigMXBean
    private static final long IDLE_TIMEOUT = MINUTES.toMillis(10);
    private static final long MAX_LIFETIME = MINUTES.toMillis(30);
    private static final int DEFAULT_POOL_SIZE = 10;
-   private static final AtomicInteger poolNumberCounter = new AtomicInteger(1);
 
    private static boolean unitTest = false;
 
