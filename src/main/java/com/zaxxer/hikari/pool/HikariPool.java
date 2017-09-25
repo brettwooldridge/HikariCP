@@ -181,11 +181,9 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          } while (timeout > 0L);
 
          metricsTracker.recordBorrowTimeoutStats(startTime);
+         metricsTracker.recordConnectionTimeout();
       }
       catch (InterruptedException e) {
-         if (poolEntry != null) {
-            poolEntry.recycle(startTime);
-         }
          Thread.currentThread().interrupt();
          throw new SQLException(poolName + " - Interrupted during connection acquisition", e);
       }
@@ -596,7 +594,6 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    private SQLException createTimeoutException(long startTime)
    {
       logPoolState("Timeout failure ");
-      metricsTracker.recordConnectionTimeout();
 
       String sqlState = null;
       final Throwable originalException = getLastConnectionFailure();
