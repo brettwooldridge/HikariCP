@@ -862,7 +862,7 @@ public class HikariConfig implements HikariConfigMXBean
    public void validate()
    {
       if (poolName == null) {
-         poolName = "HikariPool-" + generatePoolNumber();
+         poolName = generatePoolName();
       }
       else if (isRegisterMbeans && poolName.contains(":")) {
          throw new IllegalArgumentException("poolName cannot contain ':' when used with JMX");
@@ -1018,19 +1018,29 @@ public class HikariConfig implements HikariConfigMXBean
       }
    }
 
-   private int generatePoolNumber()
+   private String generatePoolName()
    {
+      final String prefix = "HikariPool-";
       try {
          // Pool number is global to the VM to avoid overlapping pool numbers in classloader scoped environments
          synchronized (System.getProperties()) {
-            final int next = Integer.getInteger("com.zaxxer.hikari.pool_number", 0) + 1;
-            System.setProperty("com.zaxxer.hikari.pool_number", String.valueOf(next));
-            return next;
+            final String next = String.valueOf(Integer.getInteger("com.zaxxer.hikari.pool_number", 0) + 1);
+            System.setProperty("com.zaxxer.hikari.pool_number", next);
+            return prefix + next;
          }
       } catch (AccessControlException e) {
          // The SecurityManager didn't allow us to read/write system properties
          // so just generate a random pool number instead
-         return new Random().nextInt(100000);
+         Random random = new Random();
+         StringBuilder buf = new StringBuilder(prefix);
+
+         while (buf.length() < prefix.length() + 4) {
+            buf.append(Long.toString(Math.abs(random.nextLong()), Character.MAX_RADIX));
+         }
+         String name = buf.toString().substring(0, prefix.length() + 4);
+         LOGGER.info("{} - assigned random pool name (security manager prevented access to system properties)", name);
+
+         return name;
       }
    }
 
