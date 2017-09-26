@@ -30,7 +30,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.management.MBeanServer;
@@ -155,15 +154,15 @@ abstract class PoolBase
          try {
             setNetworkTimeout(connection, validationTimeout);
 
-            final long validationSeconds = (int) Math.max(1000L, validationTimeout) / 1000;
+            final int validationSeconds = (int) Math.max(1000L, validationTimeout) / 1000;
 
             if (isUseJdbc4Validation) {
-               return connection.isValid((int) validationSeconds);
+               return connection.isValid(validationSeconds);
             }
 
             try (Statement statement = connection.createStatement()) {
                if (isNetworkTimeoutSupported != TRUE) {
-                  setQueryTimeout(statement, (int) validationSeconds);
+                  setQueryTimeout(statement, validationSeconds);
                }
 
                statement.execute(config.getConnectionTestQuery());
