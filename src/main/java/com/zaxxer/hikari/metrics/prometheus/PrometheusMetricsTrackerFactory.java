@@ -62,13 +62,7 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
     * If a CollectorRegistry is provided, use provided CollectorRegistry and {@link globalCollector} as default
     */
    public PrometheusMetricsTrackerFactory(CollectorRegistry registry) {
-      if (globalCollector == null) {
-         synchronized (PrometheusMetricsTrackerFactory.class) {
-            if (globalCollector == null) {
-               globalCollector = new HikariCPCollector();
-            }
-         }
-      }
+      checkGlobalCollector();
       this.registry = registry;
       this.collector = globalCollector.register(registry);
    }
@@ -96,15 +90,19 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
     */
    private HikariCPCollector getCollector() {
       if (collector == null) {
-         if (globalCollector == null) {
-            synchronized (PrometheusMetricsTrackerFactory.class) {
-               if (globalCollector == null) {
-                  globalCollector = new HikariCPCollector();
-               }
-            }
-         }
+         checkGlobalCollector();
          collector = globalCollector;
       }
       return collector;
+   }
+
+   private void checkGlobalCollector() {
+      if (globalCollector == null) {
+         synchronized (PrometheusMetricsTrackerFactory.class) {
+            if (globalCollector == null) {
+               globalCollector = new HikariCPCollector();
+            }
+         }
+      }
    }
 }
