@@ -696,13 +696,11 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                afterPrefix = "After cleanup  ";
 
                final List<PoolEntry> notInUse = connectionBag.values(STATE_NOT_IN_USE);
-               int removed = 0;
+               int toRemove = notInUse.size() - config.getMinimumIdle();
                for (PoolEntry entry : notInUse) {
-                  if (elapsedMillis(entry.lastAccessed, now) > idleTimeout && connectionBag.reserve(entry)) {
+                  if (toRemove > 0 && elapsedMillis(entry.lastAccessed, now) > idleTimeout && connectionBag.reserve(entry)) {
                      closeConnection(entry, "(connection has passed idleTimeout)");
-                     if (++removed > config.getMinimumIdle()) {
-                        break;
-                     }
+                     toRemove--;
                   }
                }
             }
