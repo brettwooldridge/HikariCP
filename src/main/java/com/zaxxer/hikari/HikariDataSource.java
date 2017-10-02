@@ -66,7 +66,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    public HikariDataSource(HikariConfig configuration)
    {
       configuration.validate();
-      configuration.copyState(this);
+      configuration.copyStateTo(this);
 
       LOGGER.info("{} - Starting...", configuration.getPoolName());
       pool = fastPathPool = new HikariPool(this);

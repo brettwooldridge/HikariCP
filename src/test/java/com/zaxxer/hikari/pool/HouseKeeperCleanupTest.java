@@ -62,7 +62,7 @@ public class HouseKeeperCleanupTest
       config.setScheduledExecutor(executor);
 
       HikariConfig config2 = newHikariConfig();
-      config.copyState(config2);
+      config.copyStateTo(config2);
 
       try (
          final HikariDataSource ds1 = new HikariDataSource(config);
