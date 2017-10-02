@@ -1,5 +1,20 @@
 HikariCP Changes
 
+Changes in 2.7.2
+
+ * issue 983 fix logic that determines how many idle connections can be removed, without
+   violating the minimumIdle contract.
+
+ * pull 987 add thread name to leak detection messages.
+
+ * issue 982 fix classloader order, try the ThreadContext classloader before other
+   classloaders.
+
+ * pull 977 log better messages when connection is evicted.
+
+ * fallback to four digit random pool suffix when SecurityManager prevents writing
+   to system properties for the purpose of JVM-wide unique pool identifiers.
+
 Changes in 2.7.1
 
  * issue 968 Wrong label order in MicrometerMetricsTracker for the connection usage
