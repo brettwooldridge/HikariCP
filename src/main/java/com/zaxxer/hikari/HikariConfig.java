@@ -1043,7 +1043,26 @@ public class HikariConfig implements HikariConfigMXBean
       }
    }
 
+   /**
+    * Deprecated, use {@link #copyStateTo(HikariConfig)}.
+    * <p>
+    * Copies the state of {@code this} into {@code other}.
+    *</p>
+    *
+    * @param other Other {@link HikariConfig} to copy the state to.
+    */
+   @Deprecated
    public void copyState(HikariConfig other)
+   {
+      copyStateTo(other);
+   }
+
+   /**
+    * Copies the state of {@code this} into {@code other}.
+    *
+    * @param other Other {@link HikariConfig} to copy the state to.
+    */
+   public void copyStateTo(HikariConfig other)
    {
       for (Field field : HikariConfig.class.getDeclaredFields()) {
          if (!Modifier.isFinal(field.getModifiers())) {
