@@ -124,6 +124,10 @@ public class TestFastList
        assertNotEquals(0, list.size());
        list.clear();
        assertEquals(0, list.size());
+       // also check that all elements are now null
+       for (int i = 0; i < 100; i++) {
+           assertEquals(null, list.get(i));
+       }
     }
 
     @Test
