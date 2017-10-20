@@ -446,7 +446,7 @@ Here is a list of JDBC *DataSource* classes for popular databases:
 | IBM Informix     | IBM Informix | com.informix.jdbcx.IfxDataSource |
 | MS SQL Server    | Microsoft    | com.microsoft.sqlserver.jdbc.SQLServerDataSource |
 | ~~MySQL~~        | Connector/J  | ~~com.mysql.jdbc.jdbc2.optional.MysqlDataSource~~ |
-| MySQL/MariaDB    | MariaDB      | org.mariadb.jdbc.MySQLDataSource |
+| MariaDB          | MariaDB      | org.mariadb.jdbc.MariaDbDataSource |
 | Oracle           | Oracle       | oracle.jdbc.pool.OracleDataSource |
 | OrientDB         | OrientDB     | com.orientechnologies.orient.jdbc.OrientDataSource |
 | PostgreSQL       | pgjdbc-ng    | com.impossibl.postgres.jdbc.PGDataSource |
