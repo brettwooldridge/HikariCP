@@ -78,6 +78,7 @@ public abstract class ProxyConnection implements Connection
       LOGGER = LoggerFactory.getLogger(ProxyConnection.class);
 
       ERROR_STATES = new HashSet<>();
+      ERROR_STATES.add("0A000"); // FEATURE UNSUPPORTED
       ERROR_STATES.add("57P01"); // ADMIN SHUTDOWN
       ERROR_STATES.add("57P02"); // CRASH SHUTDOWN
       ERROR_STATES.add("57P03"); // CANNOT CONNECT NOW
