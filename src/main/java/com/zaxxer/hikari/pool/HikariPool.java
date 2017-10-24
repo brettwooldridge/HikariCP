@@ -16,6 +16,39 @@
 
 package com.zaxxer.hikari.pool;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.health.HealthCheckRegistry;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariPoolMXBean;
+import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
+import com.zaxxer.hikari.metrics.PoolStats;
+import com.zaxxer.hikari.metrics.dropwizard.CodahaleHealthChecker;
+import com.zaxxer.hikari.metrics.dropwizard.CodahaleMetricsTrackerFactory;
+import com.zaxxer.hikari.metrics.micrometer.MicrometerMetricsTrackerFactory;
+import com.zaxxer.hikari.util.ConcurrentBag;
+import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
+import com.zaxxer.hikari.util.SuspendResumeLock;
+import com.zaxxer.hikari.util.UtilityElf.DefaultThreadFactory;
+import io.micrometer.core.instrument.MeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.SQLTransientConnectionException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.ThreadPoolExecutor;
+
 import static com.zaxxer.hikari.util.ClockSource.currentTime;
 import static com.zaxxer.hikari.util.ClockSource.elapsedDisplayString;
 import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
@@ -27,41 +60,6 @@ import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.SQLTransientConnectionException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.ThreadPoolExecutor;
-
-import com.zaxxer.hikari.metrics.micrometer.MicrometerMetricsTrackerFactory;
-import io.micrometer.core.instrument.MeterRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.health.HealthCheckRegistry;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariPoolMXBean;
-import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
-import com.zaxxer.hikari.metrics.PoolStats;
-import com.zaxxer.hikari.metrics.dropwizard.CodahaleHealthChecker;
-import com.zaxxer.hikari.metrics.dropwizard.CodahaleMetricsTrackerFactory;
-import com.zaxxer.hikari.util.ConcurrentBag;
-import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
-import com.zaxxer.hikari.util.SuspendResumeLock;
-import com.zaxxer.hikari.util.UtilityElf.DefaultThreadFactory;
 
 /**
  * This is the primary connection pool class that provides the basic
@@ -85,7 +83,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    private static final String EVICTED_CONNECTION_MESSAGE = "(connection was evicted)";
    private static final String DEAD_CONNECTION_MESSAGE = "(connection is dead)";
 
-   private final PoolEntryCreator POOL_ENTRY_CREATOR = new PoolEntryCreator(null);
+   private final PoolEntryCreator POOL_ENTRY_CREATOR = new PoolEntryCreator(null /*logging prefix*/);
    private final PoolEntryCreator POST_FILL_POOL_ENTRY_CREATOR = new PoolEntryCreator("After adding ");
    private final Collection<Runnable> addConnectionQueue;
    private final ThreadPoolExecutor addConnectionExecutor;
@@ -96,7 +94,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    private final ProxyLeakTaskFactory leakTaskFactory;
    private final SuspendResumeLock suspendResumeLock;
 
-   private ScheduledExecutorService houseKeepingExecutorService;
+   private final ScheduledExecutorService houseKeepingExecutorService;
    private ScheduledFuture<?> houseKeeperTask;
 
    /**
@@ -171,7 +169,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
             final long now = currentTime();
             if (poolEntry.isMarkedEvicted() || (elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
-               closeConnection(poolEntry, poolEntry.isMarkedEvicted() ? EVICTED_CONNECTION_MESSAGE : DEAD_CONNECTION_MESSAGE); // Throw away the dead connection (passed max age or failed alive test)
+               closeConnection(poolEntry, poolEntry.isMarkedEvicted() ? EVICTED_CONNECTION_MESSAGE : DEAD_CONNECTION_MESSAGE);
                timeout = hardTimeout - elapsedMillis(startTime);
             }
             else {
@@ -181,6 +179,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          } while (timeout > 0L);
 
          metricsTracker.recordBorrowTimeoutStats(startTime);
+         throw createTimeoutException(startTime);
       }
       catch (InterruptedException e) {
          Thread.currentThread().interrupt();
@@ -189,8 +188,6 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       finally {
          suspendResumeLock.release();
       }
-
-      throw createTimeoutException(startTime);
    }
 
    /**
@@ -204,7 +201,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       try {
          poolState = POOL_SHUTDOWN;
 
-         if (addConnectionExecutor == null) {
+         if (addConnectionExecutor == null) { // pool never started
             return;
          }
 
@@ -250,9 +247,9 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    }
 
    /**
-    * Evict a connection from the pool.
+    * Evict a Connection from the pool.
     *
-    * @param connection the connection to evict
+    * @param connection the Connection to evict (actually a {@link ProxyConnection})
     */
    public void evictConnection(Connection connection)
    {
@@ -267,6 +264,12 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       }
    }
 
+   /**
+    * Set a metrics registry to be used when registering metrics collectors.  The HikariDataSource prevents this
+    * method from being called more than once.
+    *
+    * @param metricRegistry the metrics registry instance to use
+    */
    public void setMetricRegistry(Object metricRegistry)
    {
       if (metricRegistry != null && metricRegistry.getClass().getName().contains("MetricRegistry")) {
@@ -280,6 +283,11 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       }
    }
 
+   /**
+    * Set the MetricsTrackerFactory to be used to create the IMetricsTracker instance used by the pool.
+    *
+    * @param metricsTrackerFactory an instance of a class that subclasses MetricsTrackerFactory
+    */
    public void setMetricsTrackerFactory(MetricsTrackerFactory metricsTrackerFactory)
    {
       if (metricsTrackerFactory != null) {
@@ -290,6 +298,12 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       }
    }
 
+   /**
+    * Set the health check registry to be used when registering health checks.  Currently only Codahale health
+    * checks are supported.
+    *
+    * @param healthCheckRegistry the health check registry instance to use
+    */
    public void setHealthCheckRegistry(Object healthCheckRegistry)
    {
       if (healthCheckRegistry != null) {
@@ -309,8 +323,6 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       if (shouldAdd) {
          addConnectionExecutor.submit(POOL_ENTRY_CREATOR);
       }
-
-      CompletableFuture.completedFuture(Boolean.TRUE);
    }
 
    // ***********************************************************************
@@ -432,12 +444,14 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       return connectionBag.getStateCounts();
    }
 
+
    // ***********************************************************************
    //                           Private methods
    // ***********************************************************************
 
    /**
-    * Creating new poolEntry.
+    * Creating new poolEntry.  If maxLifetime is configured, create a future End-of-life task with 2.5% variance from
+    * the maxLifetime time to ensure there is no massive die-off of Connections in the pool.
     */
    private PoolEntry createPoolEntry()
    {
@@ -461,7 +475,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          return poolEntry;
       }
       catch (Exception e) {
-         if (poolState == POOL_NORMAL) {
+         if (poolState == POOL_NORMAL) { // we check POOL_NORMAL to avoid a flood of messages if shutdown() is running concurrently
             LOGGER.debug("{} - Cannot acquire connection from data source", poolName, (e instanceof ConnectionSetupException ? e.getCause() : e));
          }
          return null;
@@ -482,6 +496,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
    /**
     * Attempt to abort or close active connections.
+    *
+    * @param assassinExecutor the ExecutorService to pass to Connection.abort()
     */
    private void abortActiveConnections(final ExecutorService assassinExecutor)
    {
@@ -503,6 +519,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     * If initializationFailFast is configured, check that we have DB connectivity.
     *
     * @throws PoolInitializationException if fails to create or validate connection
+    * @see HikariConfig#setInitializationFailTimeout(long)
     */
    private void checkFailFast()
    {
@@ -530,7 +547,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             throwPoolInitializationException(getLastConnectionFailure().getCause());
          }
 
-         quietlySleep(1000L);
+         quietlySleep(SECONDS.toMillis(1));
       } while (elapsedMillis(startTime) < initializationTimeout);
 
       if (initializationTimeout > 0) {
@@ -538,6 +555,12 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       }
    }
 
+   /**
+    * Log the Throwable that caused pool initialization to fail, and then throw a PoolInitializationException with
+    * that cause attached.
+    *
+    * @param t the Throwable that caused the pool to fail to initialize (possibly null)
+    */
    private void throwPoolInitializationException(Throwable t)
    {
       LOGGER.error("{} - Exception during pool initialization.", poolName, t);
@@ -545,6 +568,19 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       throw new PoolInitializationException(t);
    }
 
+   /**
+    * "Soft" evict a Connection (/PoolEntry) from the pool.  If this method is being called by the user directly
+    * through {@link com.zaxxer.hikari.HikariDataSource#evictConnection(Connection)} then {@code owner} is {@code true}.
+    *
+    * If the caller is the owner, or if the Connection is idle (i.e. can be "reserved" in the {@link ConcurrentBag}),
+    * then we can close the connection immediately.  Otherwise, we leave it "marked" for eviction so that it is evicted
+    * the next time someone tries to acquire it from the pool.
+    *
+    * @param poolEntry the PoolEntry (/Connection) to "soft" evict from the pool
+    * @param reason the reason that the connection is being evicted
+    * @param owner true if the caller is the owner of the connection, false otherwise
+    * @return true if the connection was evicted (closed), false if it was merely marked for eviction
+    */
    private boolean softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
    {
       poolEntry.markEvicted();
@@ -556,6 +592,13 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       return false;
    }
 
+   /**
+    * Create/initialize the Housekeeping service {@link ScheduledExecutorService}.  If the user specified an Executor
+    * to be used in the {@link HikariConfig}, then we use that.  If no Executor was specified (typical), then create
+    * an Executor and configure it.
+    *
+    * @return either the user specified {@link ScheduledExecutorService}, or the one we created
+    */
    private ScheduledExecutorService initializeHouseKeepingExecutorService()
    {
       if (config.getScheduledExecutor() == null) {
@@ -570,6 +613,9 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       }
    }
 
+   /**
+    * Destroy (/shutdown) the Housekeeping service Executor, if it was the one that we created.
+    */
    private void destroyHouseKeepingExecutorService()
    {
       if (config.getScheduledExecutor() == null) {
@@ -577,6 +623,11 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       }
    }
 
+   /**
+    * Create a PoolStats instance that will be used by metrics tracking, with a pollable resolution of 1 second.
+    *
+    * @return a PoolStats instance
+    */
    private PoolStats getPoolStats()
    {
       return new PoolStats(SECONDS.toMillis(1)) {
@@ -590,6 +641,18 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       };
    }
 
+   /**
+    * Create a timeout exception (specifically, {@link SQLTransientConnectionException}) to be thrown, because a
+    * timeout occurred when trying to acquire a Connection from the pool.  If there was an underlying cause for the
+    * timeout, e.g. a SQLException thrown by the driver while trying to create a new Connection, then use the
+    * SQL State from that exception as our own and additionally set that exception as the "next" SQLException inside
+    * of our exception.
+    *
+    * As a side-effect, log the timeout failure at DEBUG, and record the timeout failure in the metrics tracker.
+    *
+    * @param startTime the start time (timestamp) of the acquisition attempt
+    * @return a SQLException to be thrown from {@link #getConnection()}
+    */
    private SQLException createTimeoutException(long startTime)
    {
       logPoolState("Timeout failure ");
@@ -607,6 +670,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
       return connectionException;
    }
+
 
    // ***********************************************************************
    //                      Non-anonymous Inner-classes
@@ -647,9 +711,13 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          return Boolean.FALSE;
       }
 
+      /**
+       * We only create connections if we need another idle connection or have threads still waiting
+       * for a new connection.  Otherwise we bail out of the request to create.
+       *
+       * @return true if we should create a connection, false if the need has disappeared
+       */
       private boolean shouldCreateAnotherConnection() {
-         // only create connections if we need another idle connection or have threads still waiting
-         // for a new connection, otherwise bail
          return getTotalConnections() < config.getMaximumPoolSize() &&
             (connectionBag.getWaitingThreadCount() > 0 || getIdleConnections() < config.getMinimumIdle());
       }
@@ -680,7 +748,6 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                            poolName, elapsedDisplayString(previous, now));
                previous = now;
                softEvictConnections();
-               fillPool();
                return;
             }
             else if (now > plusMillis(previous, (3 * HOUSEKEEPING_PERIOD_MS) / 2)) {
