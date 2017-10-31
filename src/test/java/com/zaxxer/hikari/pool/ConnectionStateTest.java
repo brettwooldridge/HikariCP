@@ -22,12 +22,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import com.zaxxer.hikari.mocks.StubConnection;
+import com.zaxxer.hikari.mocks.StubDataSource;
 import org.junit.Test;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -165,6 +168,53 @@ public class ConnectionStateTest
             resultSet.updateRow();
             assertTrue(TestElf.getConnectionCommitDirtyState(connection));
          }
+      }
+   }
+
+   @Test
+   public void testFailedRollbackResetsProxy() throws SQLException
+   {
+      try (HikariDataSource ds = newHikariDataSource()) {
+         ds.setAutoCommit(true);
+         ds.setMinimumIdle(1);
+         ds.setMaximumPoolSize(1);
+         ds.setConnectionTestQuery("VALUES 1");
+         ds.setDataSourceClassName(RollbackResetTestDataSource.class.getName());
+
+         boolean caught = false;
+         try (Connection connection = ds.getConnection()) {
+            Connection unwrap = connection.unwrap(Connection.class);
+            Statement statement = connection.createStatement();
+            connection.setAutoCommit(false);
+
+            statement.executeUpdate("INSERT INTO something (foo) VALUES (1)");
+
+            assertFalse(unwrap.getAutoCommit());
+         } catch (SQLException e) {
+            caught = true;
+         }
+         if (!caught) {
+            fail();
+         }
+
+         try (Connection connection = ds.getConnection()) {
+            Connection unwrap = connection.unwrap(Connection.class);
+            assertTrue(unwrap.getAutoCommit());
+         }
+      }
+   }
+
+   public static class RollbackResetTestDataSource extends StubDataSource {
+      @Override
+      public Connection getConnection() throws SQLException {
+         return new RollbackResetTestConnection();
+      }
+   }
+
+   private static class RollbackResetTestConnection extends StubConnection {
+      @Override
+      public void rollback() throws SQLException {
+         throw new SQLException();
       }
    }
 }
