@@ -178,8 +178,9 @@ allowed value is 10000ms (10 seconds).
 
 &#8986;``maxLifetime``<br/>
 This property controls the maximum lifetime of a connection in the pool.  An in-use connection will
-never be retired, only when it is closed will it then be removed.  **We strongly recommend setting
-this value, and it should be at least 30 seconds less than any database or infrastructure imposed
+never be retired, only when it is closed will it then be removed.  On a connection-by-connection
+basis, minor negative attenuation is applied to avoid mass-extinction in the pool.  **We strongly recommend
+setting this value, and it should be at least 30 seconds less than any database or infrastructure imposed
 connection time limit.**  A value of 0 indicates no maximum lifetime (infinite lifetime), subject of
 course to the ``idleTimeout`` setting.
 *Default: 1800000 (30 minutes)*
