@@ -1,5 +1,12 @@
 HikariCP Changes
 
+Changes in 2.7.3
+
+ * issue 1003 added PostgreSQL SQL State 0A000 to list of unrecoverable states calling
+   for eviction.
+
+ * pull 1002 updated micrometer support due to API changes in their release candidate.
+
 Changes in 2.7.2
 
  * issue 983 fix logic that determines how many idle connections can be removed, without
