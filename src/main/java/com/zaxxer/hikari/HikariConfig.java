@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.security.AccessControlException;
+import java.sql.Connection;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
@@ -631,7 +632,7 @@ public class HikariConfig implements HikariConfigMXBean
 
    /**
     * Determine whether internal pool queries, principally aliveness checks, will be isolated in their own transaction
-    * (via {@link java.sql.Connection#rollback())}.  Defaults to {@code false}.
+    * via {@link Connection#rollback()}.  Defaults to {@code false}.
     *
     * @return {@code true} if internal pool queries are isolated, {@code false} if not
     */
@@ -642,7 +643,7 @@ public class HikariConfig implements HikariConfigMXBean
 
    /**
     * Configure whether internal pool queries, principally aliveness checks, will be isolated in their own transaction
-    * (via {@link java.sql.Connection#rollback())}.  Defaults to {@code false}.
+    * via {@link Connection#rollback()}.  Defaults to {@code false}.
     *
     * @param isolate {@code true} if internal pool queries should be isolated, {@code false} if not
     */
