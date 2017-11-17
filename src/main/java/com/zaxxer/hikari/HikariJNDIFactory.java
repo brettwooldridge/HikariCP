@@ -40,31 +40,26 @@ import com.zaxxer.hikari.util.PropertyElf;
 public class HikariJNDIFactory implements ObjectFactory
 {
    @Override
-   synchronized public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment) throws Exception
-   {
+   synchronized public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment) throws Exception {
       // We only know how to deal with <code>javax.naming.Reference</code> that specify a class name of "javax.sql.DataSource"
-      if (!(obj instanceof Reference)) {
+      if (obj instanceof Reference && "javax.sql.DataSource".equals(((Reference) obj).getClassName())) {
+         Reference ref = (Reference) obj;
+         Set<String> hikariPropSet = PropertyElf.getPropertyNames(HikariConfig.class);
+
+         Properties properties = new Properties();
+         Enumeration<RefAddr> enumeration = ref.getAll();
+         while (enumeration.hasMoreElements()) {
+            RefAddr element = enumeration.nextElement();
+            String type = element.getType();
+            if (type.startsWith("dataSource.") || hikariPropSet.contains(type)) {
+               properties.setProperty(type, element.getContent().toString());
+            }
+         }
+         return createDataSource(properties, nameCtx);
+      }
+      else {
          return null;
       }
-
-      Reference ref = (Reference) obj;
-      if (!"javax.sql.DataSource".equals(ref.getClassName())) {
-         throw new NamingException(ref.getClassName() + " is not a valid class name/type for this JNDI factory.");
-      }
-
-      Set<String> hikariPropSet = PropertyElf.getPropertyNames(HikariConfig.class);
-
-      Properties properties = new Properties();
-      Enumeration<RefAddr> enumeration = ref.getAll();
-      while (enumeration.hasMoreElements()) {
-         RefAddr element = enumeration.nextElement();
-         String type = element.getType();
-         if (type.startsWith("dataSource.") || hikariPropSet.contains(type)) {
-            properties.setProperty(type, element.getContent().toString());
-         }
-      }
-
-      return createDataSource(properties, nameCtx);
    }
 
    private DataSource createDataSource(final Properties properties, final Context context) throws NamingException
