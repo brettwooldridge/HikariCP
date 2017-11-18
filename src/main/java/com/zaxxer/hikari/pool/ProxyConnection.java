@@ -236,18 +236,21 @@ public abstract class ProxyConnection implements Connection
          leakTask.cancel();
 
          try {
-            if (isCommitStateDirty && !isAutoCommit) {
-               delegate.rollback();
-               lastAccess = currentTime();
-               LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.getPoolName(), delegate);
+            try {
+               if (isCommitStateDirty && !isAutoCommit) {
+                  delegate.rollback();
+                  lastAccess = currentTime();
+                  LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.getPoolName(), delegate);
+               }
             }
+            finally {
+               if (dirtyBits != 0) {
+                  poolEntry.resetConnectionState(this, dirtyBits);
+                  lastAccess = currentTime();
+               }
 
-            if (dirtyBits != 0) {
-               poolEntry.resetConnectionState(this, dirtyBits);
-               lastAccess = currentTime();
+               delegate.clearWarnings();
             }
-
-            delegate.clearWarnings();
          }
          catch (SQLException e) {
             // when connections are aborted, exceptions are often thrown that should not reach the application
