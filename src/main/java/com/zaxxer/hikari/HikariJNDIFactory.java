@@ -57,7 +57,9 @@ public class HikariJNDIFactory implements ObjectFactory
          }
          return createDataSource(properties, nameCtx);
       }
-      return null;
+      else {
+         return null;
+      }
    }
 
    private DataSource createDataSource(final Properties properties, final Context context) throws NamingException
