@@ -40,7 +40,8 @@ import com.zaxxer.hikari.util.PropertyElf;
 public class HikariJNDIFactory implements ObjectFactory
 {
    @Override
-   synchronized public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment) throws Exception {
+   synchronized public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment) throws Exception
+   {
       // We only know how to deal with <code>javax.naming.Reference</code> that specify a class name of "javax.sql.DataSource"
       if (obj instanceof Reference && "javax.sql.DataSource".equals(((Reference) obj).getClassName())) {
          Reference ref = (Reference) obj;
