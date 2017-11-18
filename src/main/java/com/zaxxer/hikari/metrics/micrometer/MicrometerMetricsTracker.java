@@ -6,8 +6,6 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import io.micrometer.core.instrument.stats.hist.Histogram;
-import io.micrometer.core.instrument.stats.quantile.WindowSketchQuantiles;
 
 import java.util.concurrent.TimeUnit;
 
@@ -41,19 +39,19 @@ public class MicrometerMetricsTracker implements IMetricsTracker
    {
       this.connectionObtainTimer = Timer.builder(METRIC_NAME_WAIT)
          .description("Connection acquire time")
-         .quantiles(WindowSketchQuantiles.quantiles(0.5, 0.95).create())
+         .publishPercentiles(0.95)
          .tags(METRIC_CATEGORY, poolName)
          .register(meterRegistry);
 
       this.connectionCreation = Timer.builder(METRIC_NAME_CONNECT)
          .description("Connection creation time")
-         .quantiles(WindowSketchQuantiles.quantiles(0.5, 0.95).create())
+         .publishPercentiles(0.95)
          .tags(METRIC_CATEGORY, poolName)
          .register(meterRegistry);
 
       this.connectionUsage = Timer.builder(METRIC_NAME_USAGE)
          .description("Connection usage time")
-         .quantiles(WindowSketchQuantiles.quantiles(0.5, 0.95).create())
+         .publishPercentiles(0.95)
          .tags(METRIC_CATEGORY, poolName)
          .register(meterRegistry);
 
