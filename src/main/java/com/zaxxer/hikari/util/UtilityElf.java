@@ -36,6 +36,11 @@ import java.util.concurrent.ThreadPoolExecutor;
 public final class UtilityElf
 {
    /**
+    * A constant for SQL Server's Snapshot isolation level
+    */
+   private static final int SQL_SERVER_SNAPSHOT_ISOLATION_LEVEL = 4096;
+
+   /**
     *
     * @return null if string is null or empty
    */
@@ -162,6 +167,7 @@ public final class UtilityElf
                case Connection.TRANSACTION_REPEATABLE_READ:
                case Connection.TRANSACTION_SERIALIZABLE:
                case Connection.TRANSACTION_NONE:
+               case SQL_SERVER_SNAPSHOT_ISOLATION_LEVEL: // a specific isolation level for SQL server only
                   return level;
                default:
                   throw new IllegalArgumentException();
