@@ -1,5 +1,12 @@
 HikariCP Changes
 
+Changes in 2.7.4
+
+ * pull 1026 Added a support for SQL Server's specific isolation level (SNAPSHOT).
+
+ * issue 926/pull 1022 HikariJNDIFactory should not throw a NamingException or else
+   cascading to other object factories cannot occur.
+
 Changes in 2.7.3
 
  * issue 1003 added PostgreSQL SQL State 0A000 to list of unrecoverable states calling
