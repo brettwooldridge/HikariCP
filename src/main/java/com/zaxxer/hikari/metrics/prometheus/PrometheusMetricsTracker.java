@@ -17,11 +17,8 @@
 package com.zaxxer.hikari.metrics.prometheus;
 
 import com.zaxxer.hikari.metrics.IMetricsTracker;
-import io.prometheus.client.Collector;
-import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Summary;
-import java.util.concurrent.TimeUnit;
 
 class PrometheusMetricsTracker implements IMetricsTracker
 {
