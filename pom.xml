@@ -311,6 +311,7 @@
             <configuration>
                <classifier>${artifact.classifier}</classifier>
                <instructions>
+                  <Automatic-Module-Name>com.zaxxer.hikari</Automatic-Module-Name>
                   <Bundle-Name>HikariCP</Bundle-Name>
                   <Export-Package>
                      com.zaxxer.hikari,
