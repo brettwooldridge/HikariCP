@@ -30,6 +30,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.management.MBeanServer;
@@ -38,6 +39,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
+import com.zaxxer.hikari.metrics.PoolStats;
 import com.zaxxer.hikari.pool.HikariPool.PoolInitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -693,16 +695,29 @@ abstract class PoolBase
     */
    static class MetricsTrackerDelegate implements IMetricsTrackerDelegate
    {
-      final IMetricsTracker tracker;
+      private static final AtomicIntegerFieldUpdater<MetricsTrackerDelegate> activeUpdater;
+      private static final AtomicIntegerFieldUpdater<MetricsTrackerDelegate> maxActiveUpdater;
 
-      MetricsTrackerDelegate(IMetricsTracker tracker)
+      final IMetricsTracker tracker;
+      final PoolStats poolStats;
+      volatile int activeCount;
+      volatile int maxActiveCount;
+
+      static {
+         activeUpdater = AtomicIntegerFieldUpdater.newUpdater(MetricsTrackerDelegate.class, "activeCount");
+         maxActiveUpdater = AtomicIntegerFieldUpdater.newUpdater(MetricsTrackerDelegate.class, "maxActiveCount");
+      }
+
+      MetricsTrackerDelegate(IMetricsTracker tracker, PoolStats poolStats)
       {
          this.tracker = tracker;
+         this.poolStats = poolStats;
       }
 
       @Override
       public void recordConnectionUsage(final PoolEntry poolEntry)
       {
+         activeUpdater.decrementAndGet(this);
          tracker.recordConnectionUsageMillis(poolEntry.getMillisSinceBorrowed());
       }
 
@@ -723,6 +738,15 @@ abstract class PoolBase
       {
          final long now = currentTime();
          poolEntry.lastBorrowed = now;
+
+         final int active = activeUpdater.incrementAndGet(this);
+         final int maxActive = maxActiveUpdater.get(this);
+         if (active > maxActive) {
+            if (maxActive < maxActiveUpdater.getAndUpdate(this, (current) -> (active > current) ? active : current)) {
+               poolStats.setPeakActiveConnections(active);
+            }
+         }
+
          tracker.recordConnectionAcquiredNanos(elapsedNanos(startTime, now));
       }
 
