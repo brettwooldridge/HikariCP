@@ -112,12 +112,9 @@ public interface HikariConfigMXBean
    void setMaxLifetime(long maxLifetimeMs);
 
    /**
-    * The property controls the maximum size that the pool is allowed to reach, including both idle and in-use
-    * connections. Basically this value will determine the maximum number of actual connections to the database
-    * backend.
-    * <p>
-    * When the pool reaches this size, and no idle connections are available, calls to getConnection() will
-    * block for up to connectionTimeout milliseconds before timing out.
+    * The property controls the minimum number of idle connections that HikariCP tries to maintain in the pool,
+    * including both idle and in-use connections. If the idle connections dip below this value, HikariCP will
+    * make a best effort to restore them quickly and efficiently.
     *
     * @return the minimum number of connections in the pool
     */
