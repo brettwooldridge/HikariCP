@@ -363,8 +363,9 @@ and will negatively impact your application performance compared to driver-provi
 
 Like Statement caching, most major database vendors support statement logging through
 properties of their own driver.  This includes Oracle, MySQL, Derby, MSSQL, and others.  Some
-even support slow query logging.  For those few databases that do not support it, [log4jdbc](https://github.com/arthurblake/log4jdbc) or [jdbcdslog-exp](https://code.google.com/p/jdbcdslog-exp/) are
-good options.
+even support slow query logging.  For those few databases that do not support it, several options are available.
+We have received [a report that p6spy works well](https://github.com/brettwooldridge/HikariCP/issues/57#issuecomment-354647631),
+and also note the availability of [log4jdbc](https://github.com/arthurblake/log4jdbc) and [jdbcdslog-exp](https://code.google.com/p/jdbcdslog-exp/).
 
 ----------------------------------------------------
 
