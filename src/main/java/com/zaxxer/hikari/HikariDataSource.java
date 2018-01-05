@@ -47,7 +47,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    private volatile HikariPool pool;
 
    /**
-    * Default constructor.  Setters are be used to configure the pool.  Using
+    * Default constructor.  Setters are used to configure the pool.  Using
     * this constructor vs. {@link #HikariDataSource(HikariConfig)} will
     * result in {@link #getConnection()} performance that is slightly lower
     * due to lazy initialization checks.
