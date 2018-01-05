@@ -22,6 +22,7 @@ import static com.zaxxer.hikari.pool.TestElf.getPool;
 import static com.zaxxer.hikari.pool.TestElf.setConfigUnitTest;
 import static com.zaxxer.hikari.pool.TestElf.setSlf4jLogLevel;
 import static com.zaxxer.hikari.pool.TestElf.setSlf4jTargetStream;
+import static com.zaxxer.hikari.pool.TestElf.unsealDataSource;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
@@ -102,17 +103,17 @@ public class TestConnections
 
             assertNotNull(connection);
             assertNotNull(statement);
-   
+
             assertSame("Total connections not as expected", 1, pool.getTotalConnections());
             assertSame("Idle connections not as expected", 0, pool.getIdleConnections());
-   
+
             statement.setInt(1, 0);
 
             try (ResultSet resultSet = statement.executeQuery()) {
                assertNotNull(resultSet);
-      
+
                assertFalse(resultSet.next());
-            }   
+            }
          }
 
          assertSame("Total connections not as expected", 1, pool.getTotalConnections());
@@ -134,7 +135,7 @@ public class TestConnections
       System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "100");
 
       setConfigUnitTest(true);
-      try (HikariDataSource ds = new HikariDataSource(config)) {
+      try (HikariDataSource ds = unsealDataSource(new HikariDataSource(config))) {
          System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
 
          ds.setMaxLifetime(700);
@@ -149,7 +150,7 @@ public class TestConnections
          try (Connection connection = ds.getConnection()) {
             unwrap = connection.unwrap(Connection.class);
             assertNotNull(connection);
-   
+
             assertSame("Second total connections not as expected", 1, pool.getTotalConnections());
             assertSame("Second idle connections not as expected", 0, pool.getIdleConnections());
          }
@@ -191,7 +192,7 @@ public class TestConnections
       System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "100");
 
       setConfigUnitTest(true);
-      try (HikariDataSource ds = new HikariDataSource(config)) {
+      try (HikariDataSource ds = unsealDataSource(new HikariDataSource(config))) {
          ds.setMaxLifetime(700);
 
          HikariPool pool = getPool(ds);
@@ -203,7 +204,7 @@ public class TestConnections
          try (Connection connection = ds.getConnection()) {
             unwrap = connection.unwrap(Connection.class);
             assertNotNull(connection);
-   
+
             assertSame("Second total connections not as expected", 1, pool.getTotalConnections());
             assertSame("Second idle connections not as expected", 0, pool.getIdleConnections());
          }
@@ -356,30 +357,26 @@ public class TestConnections
 
          Thread[] threads = new Thread[20];
          for (int i = 0; i < threads.length; i++) {
-            threads[i] = new Thread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  try {
-                     pool.logPoolState("Before acquire ");
-                     try (Connection connection = ds.getConnection()) {
-                        pool.logPoolState("After  acquire ");
-                        quietlySleep(500);
-                     }
+            threads[i] = new Thread(() -> {
+               try {
+                  pool.logPoolState("Before acquire ");
+                  try (Connection ignored = ds.getConnection()) {
+                     pool.logPoolState("After  acquire ");
+                     quietlySleep(500);
                   }
-                  catch (Exception e) {
-                     ref.set(e);
-                  }
+               }
+               catch (Exception e) {
+                  ref.set(e);
                }
             });
          }
 
-         for (int i = 0; i < threads.length; i++) {
-            threads[i].start();
+         for (Thread thread : threads) {
+            thread.start();
          }
 
-         for (int i = 0; i < threads.length; i++) {
-            threads[i].join();
+         for (Thread thread : threads) {
+            thread.join();
          }
 
          pool.logPoolState("before check ");
@@ -389,6 +386,7 @@ public class TestConnections
    }
 
    @Test
+   @SuppressWarnings("EmptyTryBlock")
    public void testOldDriver() throws Exception
    {
       HikariConfig config = newHikariConfig();
@@ -403,12 +401,12 @@ public class TestConnections
       try (HikariDataSource ds = new HikariDataSource(config)) {
          quietlySleep(500);
 
-         try (Connection connection = ds.getConnection()) {
+         try (Connection ignored = ds.getConnection()) {
             // close
          }
 
          quietlySleep(500);
-         try (Connection connection = ds.getConnection()) {
+         try (Connection ignored = ds.getConnection()) {
             // close
          }
       }
@@ -435,26 +433,22 @@ public class TestConnections
             quietlySleep(50);
          }
 
-         Thread t = new Thread(new Runnable() {
-            @Override
-            public void run()
-            {
-               try {
-                  ds.getConnection();
-                  ds.getConnection();
-               }
-               catch (Exception e) {
-                  fail();
-               }
+         Thread t = new Thread(() -> {
+            try {
+               ds.getConnection();
+               ds.getConnection();
+            }
+            catch (Exception e) {
+               fail();
             }
          });
 
-         try (Connection c3 = ds.getConnection()) {
+         try (Connection ignored = ds.getConnection()) {
             assertEquals(2, pool.getIdleConnections());
-   
+
             pool.suspendPool();
             t.start();
-   
+
             quietlySleep(500);
             assertEquals(2, pool.getIdleConnections());
          }
@@ -466,7 +460,7 @@ public class TestConnections
    }
 
    @Test
-   public void testInitializationFailure1() throws SQLException
+   public void testInitializationFailure1()
    {
       StubDataSource stubDataSource = new StubDataSource();
       stubDataSource.setThrowException(new SQLException("Connection refused"));
@@ -478,7 +472,7 @@ public class TestConnections
          ds.setConnectionTestQuery("VALUES 1");
          ds.setDataSource(stubDataSource);
 
-         try (Connection c = ds.getConnection()) {
+         try (Connection ignored = ds.getConnection()) {
             fail("Initialization should have failed");
          }
          catch (SQLException e) {
@@ -499,7 +493,7 @@ public class TestConnections
       config.setDataSource(stubDataSource);
 
       try (HikariDataSource ds = new HikariDataSource(config);
-           Connection c = ds.getConnection()) {
+           Connection ignored = ds.getConnection()) {
          fail("Initialization should have failed");
       }
       catch (PoolInitializationException e) {
@@ -522,7 +516,7 @@ public class TestConnections
       StubDataSource stubDataSource = new StubDataSource() {
          /** {@inheritDoc} */
          @Override
-         public Connection getConnection() throws SQLException
+         public Connection getConnection()
          {
             return new BadConnection();
          }
@@ -537,7 +531,7 @@ public class TestConnections
       config.setDataSource(stubDataSource);
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
-         try (Connection c = ds.getConnection()) {
+         try (Connection ignored = ds.getConnection()) {
             fail("getConnection() should have failed");
          }
          catch (SQLException e) {
@@ -547,9 +541,9 @@ public class TestConnections
       catch (PoolInitializationException e) {
          assertSame("Simulated exception in createStatement()", e.getCause().getMessage());
       }
-      
+
       config.setInitializationFailTimeout(0);
-      try (HikariDataSource ds = new HikariDataSource(config)) {
+      try (HikariDataSource ignored = new HikariDataSource(config)) {
          fail("Initialization should have failed");
       }
       catch (PoolInitializationException e) {
@@ -568,7 +562,7 @@ public class TestConnections
       System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "1000");
 
       StubConnection.slowCreate = true;
-      try (HikariDataSource ds = new HikariDataSource(config)) {
+      try (HikariDataSource ds = unsealDataSource(new HikariDataSource(config))) {
          System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
 
          ds.setIdleTimeout(3000);
@@ -581,9 +575,9 @@ public class TestConnections
 
          try (Connection connection = ds.getConnection()) {
             assertNotNull(connection);
-   
+
             SECONDS.sleep(20);
-   
+
             assertSame("Second total connections not as expected", 20, pool.getTotalConnections());
             assertSame("Second idle connections not as expected", 19, pool.getIdleConnections());
          }
@@ -601,6 +595,7 @@ public class TestConnections
    }
 
    @Test
+   @SuppressWarnings("EmptyTryBlock")
    public void testMinimumIdleZero() throws SQLException
    {
       HikariConfig config = newHikariConfig();
@@ -611,7 +606,7 @@ public class TestConnections
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       try (HikariDataSource ds = new HikariDataSource(config);
-           Connection connection = ds.getConnection()) {
+           Connection ignored = ds.getConnection()) {
          // passed
       }
       catch (SQLTransientConnectionException sqle) {

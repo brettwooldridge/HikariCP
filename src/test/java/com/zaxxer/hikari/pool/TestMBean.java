@@ -30,12 +30,13 @@ import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
 import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.pool.TestElf.unsealDataSource;
 import static org.junit.Assert.assertEquals;
 
 public class TestMBean
 {
    @Test
-   public void testMBeanRegistration() throws SQLException {
+   public void testMBeanRegistration() {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(1);
@@ -44,9 +45,7 @@ public class TestMBean
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      try (HikariDataSource ds = new HikariDataSource(config)) {
-         // Close immediately
-      }
+      new HikariDataSource(config).close();
    }
 
    @Test
@@ -61,7 +60,7 @@ public class TestMBean
 
       System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "100");
 
-      try (HikariDataSource ds = new HikariDataSource(config)) {
+      try (HikariDataSource ds = unsealDataSource(new HikariDataSource(config))) {
 
          ds.setIdleTimeout(3000);
 
@@ -74,7 +73,7 @@ public class TestMBean
          assertEquals(0, hikariPoolMXBean.getActiveConnections());
          assertEquals(3, hikariPoolMXBean.getIdleConnections());
 
-         try (Connection connection = ds.getConnection()) {
+         try (Connection ignored = ds.getConnection()) {
             assertEquals(1, hikariPoolMXBean.getActiveConnections());
 
             TimeUnit.SECONDS.sleep(1);
