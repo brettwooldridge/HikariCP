@@ -47,10 +47,14 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    private volatile HikariPool pool;
 
    /**
-    * Default constructor.  Setters be used to configure the pool.  Using
+    * Default constructor.  Setters are be used to configure the pool.  Using
     * this constructor vs. {@link #HikariDataSource(HikariConfig)} will
     * result in {@link #getConnection()} performance that is slightly lower
     * due to lazy initialization checks.
+    *
+    * The first call to {@link #getConnection()} starts the pool.  Once the pool
+    * is started, the configuration is "sealed" and no further configuration
+    * changes are possible -- except via {@link HikariConfigMXBean}.
     */
    public HikariDataSource()
    {
@@ -59,7 +63,12 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    }
 
    /**
-    * Construct a HikariDataSource with the specified configuration.
+    * Construct a HikariDataSource with the specified configuration.  The
+    * {@link HikariConfig} is copied and the pool is started by invoking this
+    * constructor.
+    *
+    * The {@link HikariConfig} can be modified without affecting the HikariDataSource
+    * and used to initialize another HikariDataSource instance.
     *
     * @param configuration a HikariConfig instance
     */
@@ -67,6 +76,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    {
       configuration.validate();
       configuration.copyStateTo(this);
+      this.seal();
 
       LOGGER.info("{} - Starting...", configuration.getPoolName());
       pool = fastPathPool = new HikariPool(this);
@@ -95,6 +105,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
                LOGGER.info("{} - Starting...", getPoolName());
                try {
                   pool = result = new HikariPool(this);
+                  this.seal();
                }
                catch (PoolInitializationException pie) {
                   if (pie.getCause() instanceof SQLException) {
@@ -277,7 +288,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
 
    /**
     * Get the {@code HikariConfigMXBean} for this HikariDataSource instance.
-    * 
+    *
     * @return the {@code HikariConfigMXBean} instance.
     */
    public HikariConfigMXBean getHikariConfigMXBean()

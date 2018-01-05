@@ -98,6 +98,8 @@ public class HikariConfig implements HikariConfigMXBean
    private Object healthCheckRegistry;
    private Properties healthCheckProperties;
 
+   private volatile boolean sealed;
+
    /**
     * Default constructor
     */
@@ -161,6 +163,8 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setConnectionTimeout(long connectionTimeoutMs)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       if (connectionTimeoutMs == 0) {
          this.connectionTimeout = Integer.MAX_VALUE;
       }
@@ -183,6 +187,8 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setIdleTimeout(long idleTimeoutMs)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       if (idleTimeoutMs < 0) {
          throw new IllegalArgumentException("idleTimeout cannot be negative");
       }
@@ -200,6 +206,8 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setLeakDetectionThreshold(long leakDetectionThresholdMs)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.leakDetectionThreshold = leakDetectionThresholdMs;
    }
 
@@ -214,6 +222,8 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setMaxLifetime(long maxLifetimeMs)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.maxLifetime = maxLifetimeMs;
    }
 
@@ -228,6 +238,8 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setMaximumPoolSize(int maxPoolSize)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       if (maxPoolSize < 1) {
          throw new IllegalArgumentException("maxPoolSize cannot be less than 1");
       }
@@ -245,6 +257,8 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setMinimumIdle(int minIdle)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       if (minIdle < 0) {
          throw new IllegalArgumentException("minimumIdle cannot be negative");
       }
@@ -267,6 +281,8 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setPassword(String password)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.password = password;
    }
 
@@ -288,6 +304,8 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setUsername(String username)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.username = username;
    }
 
@@ -302,6 +320,8 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setValidationTimeout(long validationTimeoutMs)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       if (validationTimeoutMs < 250) {
          throw new IllegalArgumentException("validationTimeout cannot be less than 250ms");
       }
@@ -330,6 +350,8 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setCatalog(String catalog)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.catalog = catalog;
    }
 
@@ -352,6 +374,8 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setConnectionTestQuery(String connectionTestQuery)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.connectionTestQuery = connectionTestQuery;
    }
 
@@ -375,6 +399,8 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setConnectionInitSql(String connectionInitSql)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.connectionInitSql = connectionInitSql;
    }
 
@@ -397,6 +423,8 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setDataSource(DataSource dataSource)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.dataSource = dataSource;
    }
 
@@ -417,6 +445,8 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setDataSourceClassName(String className)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.dataSourceClassName = className;
    }
 
@@ -435,6 +465,8 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void addDataSourceProperty(String propertyName, Object value)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       dataSourceProperties.put(propertyName, value);
    }
 
@@ -445,6 +477,8 @@ public class HikariConfig implements HikariConfigMXBean
 
    public void setDataSourceJNDI(String jndiDataSource)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.dataSourceJndiName = jndiDataSource;
    }
 
@@ -455,6 +489,8 @@ public class HikariConfig implements HikariConfigMXBean
 
    public void setDataSourceProperties(Properties dsProperties)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       dataSourceProperties.putAll(dsProperties);
    }
 
@@ -465,6 +501,8 @@ public class HikariConfig implements HikariConfigMXBean
 
    public void setDriverClassName(String driverClassName)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       Class<?> driverClass = null;
       ClassLoader threadContextClassLoader = Thread.currentThread().getContextClassLoader();
       try {
@@ -507,6 +545,8 @@ public class HikariConfig implements HikariConfigMXBean
 
    public void setJdbcUrl(String jdbcUrl)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.jdbcUrl = jdbcUrl;
    }
 
@@ -527,6 +567,8 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setAutoCommit(boolean isAutoCommit)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.isAutoCommit = isAutoCommit;
    }
 
@@ -549,6 +591,8 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setAllowPoolSuspension(boolean isAllowPoolSuspension)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.isAllowPoolSuspension = isAllowPoolSuspension;
    }
 
@@ -599,6 +643,8 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setInitializationFailTimeout(long initializationFailTimeout)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.initializationFailTimeout = initializationFailTimeout;
    }
 
@@ -625,6 +671,8 @@ public class HikariConfig implements HikariConfigMXBean
    @Deprecated
    public void setInitializationFailFast(boolean failFast)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       LOGGER.warn("The initializationFailFast propery is deprecated, see initializationFailTimeout");
 
       initializationFailTimeout = (failFast ? 1 : -1);
@@ -649,6 +697,8 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setIsolateInternalQueries(boolean isolate)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.isIsolateInternalQueries = isolate;
    }
 
@@ -661,6 +711,8 @@ public class HikariConfig implements HikariConfigMXBean
    @Deprecated
    public void setJdbc4ConnectionTest(boolean useIsValid)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       LOGGER.warn("The jdbcConnectionTest property is now deprecated, see the documentation for connectionTestQuery");
    }
 
@@ -671,6 +723,8 @@ public class HikariConfig implements HikariConfigMXBean
 
    public void setMetricsTrackerFactory(MetricsTrackerFactory metricsTrackerFactory)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       if (metricRegistry != null) {
          throw new IllegalStateException("cannot use setMetricsTrackerFactory() and setMetricRegistry() together");
       }
@@ -695,6 +749,8 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setMetricRegistry(Object metricRegistry)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       if (metricsTrackerFactory != null) {
          throw new IllegalStateException("cannot use setMetricRegistry() and setMetricsTrackerFactory() together");
       }
@@ -730,6 +786,8 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setHealthCheckRegistry(Object healthCheckRegistry)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       if (healthCheckRegistry != null) {
          healthCheckRegistry = getObjectOrPerformJndiLookup(healthCheckRegistry);
 
@@ -748,11 +806,15 @@ public class HikariConfig implements HikariConfigMXBean
 
    public void setHealthCheckProperties(Properties healthCheckProperties)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.healthCheckProperties.putAll(healthCheckProperties);
    }
 
    public void addHealthCheckProperty(String key, String value)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       healthCheckProperties.setProperty(key, value);
    }
 
@@ -773,6 +835,8 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setReadOnly(boolean readOnly)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.isReadOnly = readOnly;
    }
 
@@ -794,6 +858,8 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setRegisterMbeans(boolean register)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.isRegisterMbeans = register;
    }
 
@@ -812,6 +878,8 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setPoolName(String poolName)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.poolName = poolName;
    }
 
@@ -834,6 +902,8 @@ public class HikariConfig implements HikariConfigMXBean
    @Deprecated
    public void setScheduledExecutorService(ScheduledThreadPoolExecutor executor)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.scheduledExecutor = executor;
    }
 
@@ -854,6 +924,8 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setScheduledExecutor(ScheduledExecutorService executor)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.scheduledExecutor = executor;
    }
 
@@ -874,7 +946,10 @@ public class HikariConfig implements HikariConfigMXBean
    /**
     * Set the default schema name to be set on connections.
     */
-   public void setSchema(String schema) {
+   public void setSchema(String schema)
+   {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.schema = schema;
    }
 
@@ -887,6 +962,8 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setTransactionIsolation(String isolationLevel)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.transactionIsolationName = isolationLevel;
    }
 
@@ -907,7 +984,14 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setThreadFactory(ThreadFactory threadFactory)
    {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
+
       this.threadFactory = threadFactory;
+   }
+
+   protected void seal()
+   {
+      this.sealed = true;
    }
 
    /**
