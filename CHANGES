@@ -6,6 +6,8 @@ Changes in 2.7.5
    proxied Statement class returning a driver-native ResultSet instance from getGeneratedKeys()
    instead of returning a HikariCP proxied ResultSet.
 
+ * pull 1058 enable quantiles on Prometheus metrics.
+
  * pull 1055 fixed incorrect JavaDoc for HikariConfigMXBean.getMinimumIdle() method.
 
  * issue 1045/pull 1047 added Automatic-Module-Name to jar manifest to ensure that the Java 8
