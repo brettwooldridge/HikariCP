@@ -225,6 +225,22 @@ public abstract class ProxyStatement implements Statement
 
    /** {@inheritDoc} */
    @Override
+   public ResultSet getGeneratedKeys() throws SQLException
+   {
+      ResultSet resultSet = delegate.getGeneratedKeys();
+      if (resultSet != null) {
+         if (proxyResultSet == null || ((ProxyResultSet) proxyResultSet).delegate != resultSet) {
+            proxyResultSet = ProxyFactory.getProxyResultSet(connection, this, resultSet);
+         }
+      }
+      else {
+         proxyResultSet = null;
+      }
+      return proxyResultSet;
+   }
+
+   /** {@inheritDoc} */
+   @Override
    @SuppressWarnings("unchecked")
    public final <T> T unwrap(Class<T> iface) throws SQLException
    {

@@ -97,6 +97,24 @@ public class StatementTest
    }
 
    @Test
+   public void testStatementResultSetProxyClose() throws SQLException {
+      try (Connection connection = ds.getConnection()) {
+         assertNotNull(connection);
+
+         Statement statement1 = connection.createStatement();
+         assertNotNull(statement1);
+         Statement statement2 = connection.createStatement();
+         assertNotNull(statement2);
+
+         statement1.getResultSet().getStatement().close();
+         statement2.getGeneratedKeys().getStatement().close();
+
+         assertTrue(statement1.isClosed());
+         assertTrue(statement2.isClosed());
+      }
+   }
+
+   @Test
    public void testDoubleStatementClose() throws SQLException
    {
       try (Connection connection = ds.getConnection();
