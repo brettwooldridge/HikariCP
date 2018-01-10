@@ -21,14 +21,6 @@ _Java 8 maven artifact:_
         <version>2.7.5</version>
     </dependency>
 ```
-_Java 9 Early Access maven artifact:_
-```xml
-    <dependency>
-        <groupId>com.zaxxer</groupId>
-        <artifactId>HikariCP-java9ea</artifactId>
-        <version>2.6.1</version>
-    </dependency>
-```
 _Java 7 maven artifact (*maintenance mode*):_
 ```xml
     <dependency>
