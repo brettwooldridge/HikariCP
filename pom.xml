@@ -14,7 +14,7 @@
       <jndi.version>0.11.4.1</jndi.version>
       <maven.release.version>2.5.3</maven.release.version>
       <metrics.version>3.2.4</metrics.version>
-      <micrometer.version>1.0.0-rc.3</micrometer.version>
+      <micrometer.version>1.0.0-rc.6</micrometer.version>
       <simpleclient.version>0.0.26</simpleclient.version>
       <mockito.version>2.10.0</mockito.version>
       <pax.exam.version>4.11.0</pax.exam.version>
@@ -366,6 +366,7 @@
                <configuration>
                   <source>1.8</source>
                   <target>1.8</target>
+                  <compilerArgs>-Xlint</compilerArgs>
                </configuration>
             </plugin>
 

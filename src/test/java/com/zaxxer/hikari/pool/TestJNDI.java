@@ -15,29 +15,25 @@
  */
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
-import static com.zaxxer.hikari.pool.TestElf.newHikariDataSource;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.HikariJNDIFactory;
+import com.zaxxer.hikari.mocks.StubDataSource;
+import org.junit.Test;
+import org.osjava.sj.jndi.AbstractContext;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.Name;
-import javax.naming.NamingException;
 import javax.naming.RefAddr;
 import javax.naming.Reference;
-
-import com.zaxxer.hikari.HikariConfig;
-import org.junit.Test;
-import org.osjava.sj.jndi.AbstractContext;
-
-import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.HikariJNDIFactory;
-import com.zaxxer.hikari.mocks.StubDataSource;
-
 import java.sql.Connection;
+
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class TestJNDI
 {
@@ -121,16 +117,17 @@ public class TestJNDI
       }
    }
 
+   @SuppressWarnings("unchecked")
    private class BogusContext extends AbstractContext
    {
       @Override
-      public Context createSubcontext(Name name) throws NamingException
+      public Context createSubcontext(Name name)
       {
          return null;
       }
 
       @Override
-      public Object lookup(String name) throws NamingException
+      public Object lookup(String name)
       {
          final HikariDataSource ds = new HikariDataSource();
          ds.setPoolName("TestJNDI");
@@ -138,16 +135,17 @@ public class TestJNDI
       }
    }
 
+   @SuppressWarnings("unchecked")
    private class BogusContext2 extends AbstractContext
    {
       @Override
-      public Context createSubcontext(Name name) throws NamingException
+      public Context createSubcontext(Name name)
       {
          return null;
       }
 
       @Override
-      public Object lookup(String name) throws NamingException
+      public Object lookup(String name)
       {
          return new StubDataSource();
       }

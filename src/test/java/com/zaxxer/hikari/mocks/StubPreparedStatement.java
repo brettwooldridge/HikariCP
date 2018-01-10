@@ -43,6 +43,7 @@ import java.util.Calendar;
  *
  * @author Brett Wooldridge
  */
+@SuppressWarnings("RedundantThrows")
 public class StubPreparedStatement extends StubStatement implements PreparedStatement
 {
     StubPreparedStatement(Connection connection)
@@ -439,6 +440,7 @@ public class StubPreparedStatement extends StubStatement implements PreparedStat
 
     /** {@inheritDoc} */
     @Override
+    @SuppressWarnings("deprecation")
     public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException
     {
     }
