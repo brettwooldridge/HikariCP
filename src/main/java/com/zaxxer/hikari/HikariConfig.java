@@ -1026,6 +1026,8 @@ public class HikariConfig implements HikariConfigMXBean
             }
          }
       }
+
+      other.sealed = false;
    }
 
    // ***********************************************************************
