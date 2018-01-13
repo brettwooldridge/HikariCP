@@ -1,5 +1,10 @@
 HikariCP Changes
 
+Changes in 2.7.6
+
+ * issue 1064 fixed regression where HikariConfig.copyStateTo() propagated the "sealed" status
+   of the source configuration to the target configuration -- preventing further changes.
+
 Changes in 2.7.5
 
  * issue 1061/pull 1062 fixed compatibility issue with requery.io caused by HikariCP's
@@ -13,6 +18,9 @@ Changes in 2.7.5
  * issue 1045/pull 1047 added Automatic-Module-Name to jar manifest to ensure that the Java 8
    library plays well with the Java 9 module system.
 
+ * introduced the concept of a "sealed" configuration.  Once a pool is started, attempts to
+   alter its configuration outside of the HikariConfigMXBean will result in an IllegalStateException.
+   
 Changes in 2.7.4
 
  * pull 1026 added support for SQL Server's specific isolation level (SNAPSHOT).
