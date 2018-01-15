@@ -16,6 +16,8 @@
 
 package com.zaxxer.hikari.util;
 
+import java.sql.SQLException;
+import java.sql.SQLTransientException;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -33,7 +35,7 @@ public class SuspendResumeLock
 
       @Override
       public void release() {}
-      
+
       @Override
       public void suspend() {}
 
@@ -57,8 +59,12 @@ public class SuspendResumeLock
       acquisitionSemaphore = (createSemaphore ? new Semaphore(MAX_PERMITS, true) : null);
    }
 
-   public void acquire()
+   public void acquire() throws SQLException
    {
+      if (Boolean.getBoolean("com.zaxxer.hikari.throwIfSuspended")) {
+         throw new SQLTransientException("The pool is currently suspended and configured to throw exceptions upon acquisition");
+      }
+
       acquisitionSemaphore.acquireUninterruptibly();
    }
 
