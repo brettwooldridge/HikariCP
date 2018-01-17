@@ -61,11 +61,13 @@ public class SuspendResumeLock
 
    public void acquire() throws SQLException
    {
+      if (acquisitionSemaphore.tryAcquire()) {
+         return;
+      }
+
       if (Boolean.getBoolean("com.zaxxer.hikari.throwIfSuspended")) {
          throw new SQLTransientException("The pool is currently suspended and configured to throw exceptions upon acquisition");
       }
-
-      acquisitionSemaphore.acquireUninterruptibly();
    }
 
    public void release()
