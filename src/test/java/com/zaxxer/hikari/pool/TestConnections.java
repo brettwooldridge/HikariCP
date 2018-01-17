@@ -39,6 +39,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
+import java.sql.SQLTransientException;
 import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -456,6 +457,58 @@ public class TestConnections
          pool.resumePool();
          quietlySleep(500);
          assertEquals(1, pool.getIdleConnections());
+      }
+   }
+
+   @Test
+   public void testSuspendResumeWithThrow() throws Exception
+   {
+      HikariConfig config = newHikariConfig();
+      config.setMinimumIdle(3);
+      config.setMaximumPoolSize(3);
+      config.setConnectionTimeout(2500);
+      config.setAllowPoolSuspension(true);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      System.setProperty("com.zaxxer.hikari.throwIfSuspended", "true");
+      try (final HikariDataSource ds = new HikariDataSource(config)) {
+         HikariPool pool = getPool(ds);
+         while (pool.getTotalConnections() < 3) {
+            quietlySleep(50);
+         }
+
+         AtomicReference<Exception> exception = new AtomicReference<>();
+         Thread t = new Thread(() -> {
+            try {
+               ds.getConnection();
+               ds.getConnection();
+            }
+            catch (Exception e) {
+               exception.set(e);
+            }
+         });
+
+         try (Connection ignored = ds.getConnection()) {
+            assertEquals(2, pool.getIdleConnections());
+
+            pool.suspendPool();
+            t.start();
+
+            quietlySleep(500);
+            assertEquals(SQLTransientException.class, exception.get().getClass());
+            assertEquals(2, pool.getIdleConnections());
+         }
+
+         assertEquals(3, pool.getIdleConnections());
+         pool.resumePool();
+
+         try (Connection ignored = ds.getConnection()) {
+            assertEquals(2, pool.getIdleConnections());
+         }
+      }
+      finally {
+         System.getProperties().remove("com.zaxxer.hikari.throwIfSuspended");
       }
    }
 
