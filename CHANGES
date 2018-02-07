@@ -1,5 +1,10 @@
 HikariCP Changes
 
+Changes in 2.7.7
+
+ * fixed issue whereby configuration through the HikariConfigMXBean could not be altered due
+   to the sealed configuration change introduced in 2.7.5.
+
 Changes in 2.7.6
 
  * issue 1064 fixed regression where HikariConfig.copyStateTo() propagated the "sealed" status
