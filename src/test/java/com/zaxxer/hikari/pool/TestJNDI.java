@@ -22,18 +22,12 @@ import com.zaxxer.hikari.mocks.StubDataSource;
 import org.junit.Test;
 import org.osjava.sj.jndi.AbstractContext;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.Name;
-import javax.naming.RefAddr;
-import javax.naming.Reference;
+import javax.naming.*;
 import java.sql.Connection;
 
+import static com.zaxxer.hikari.pool.TestElf.getUnsealedConfig;
 import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class TestJNDI
 {
@@ -54,7 +48,7 @@ public class TestJNDI
 
       try (HikariDataSource ds = (HikariDataSource) jndi.getObjectInstance(ref, null, nameCtx, null)) {
          assertNotNull(ds);
-         assertEquals("foo", ds.getUsername());
+         assertEquals("foo", getUnsealedConfig(ds).getUsername());
       }
    }
 
@@ -76,7 +70,7 @@ public class TestJNDI
 
       try (HikariDataSource ds = (HikariDataSource) jndi.getObjectInstance(ref, null, nameCtx, null)) {
          assertNotNull(ds);
-         assertEquals("foo", ds.getUsername());
+         assertEquals("foo", getUnsealedConfig(ds).getUsername());
       }
    }
 

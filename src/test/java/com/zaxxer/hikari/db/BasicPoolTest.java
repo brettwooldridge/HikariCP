@@ -29,7 +29,7 @@ import java.sql.Statement;
 
 import static com.zaxxer.hikari.pool.TestElf.getPool;
 import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
-import static com.zaxxer.hikari.pool.TestElf.unsealDataSource;
+import static com.zaxxer.hikari.pool.TestElf.getUnsealedConfig;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
@@ -76,14 +76,14 @@ public class BasicPoolTest
 
       System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "1000");
 
-      try (HikariDataSource ds = unsealDataSource(new HikariDataSource(config))) {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
          System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
 
          SECONDS.sleep(1);
 
          HikariPool pool = getPool(ds);
 
-         ds.setIdleTimeout(3000);
+         getUnsealedConfig(ds).setIdleTimeout(3000);
 
          assertEquals("Total connections not as expected", 5, pool.getTotalConnections());
          assertEquals("Idle connections not as expected", 5, pool.getIdleConnections());
@@ -117,14 +117,14 @@ public class BasicPoolTest
 
       System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "1000");
 
-      try (HikariDataSource ds = unsealDataSource(new HikariDataSource(config))) {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
          System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
 
          SECONDS.sleep(1);
 
          HikariPool pool = getPool(ds);
 
-         ds.setIdleTimeout(3000);
+         getUnsealedConfig(ds).setIdleTimeout(3000);
 
          assertEquals("Total connections not as expected", 50, pool.getTotalConnections());
          assertEquals("Idle connections not as expected", 50, pool.getIdleConnections());

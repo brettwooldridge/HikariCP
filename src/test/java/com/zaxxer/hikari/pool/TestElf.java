@@ -16,13 +16,9 @@
 
 package com.zaxxer.hikari.pool;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.lang.reflect.Field;
-import java.net.URL;
-import java.sql.Connection;
-
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.util.ConcurrentBag;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LogEvent;
@@ -32,9 +28,12 @@ import org.apache.logging.log4j.core.layout.CsvLogEventLayout;
 import org.apache.logging.slf4j.Log4jLogger;
 import org.slf4j.LoggerFactory;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.util.ConcurrentBag;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.lang.reflect.Field;
+import java.net.URL;
+import java.sql.Connection;
 
 /**
  * Utility methods for testing.
@@ -75,13 +74,18 @@ public final class TestElf
       }
    }
 
-   public static HikariDataSource unsealDataSource(final HikariDataSource ds)
+   public static HikariConfig getUnsealedConfig(final HikariDataSource ds)
    {
       try {
+         HikariPool pool = getPool(ds);
+         Field configField = PoolBase.class.getDeclaredField("config");
+         configField.setAccessible(true);
+         HikariConfig config = (HikariConfig) configField.get(pool);
+
          Field field = HikariConfig.class.getDeclaredField("sealed");
          field.setAccessible(true);
-         field.setBoolean(ds, false);
-         return ds;
+         field.setBoolean(config, false);
+         return config;
       }
       catch (Exception e) {
          throw new RuntimeException(e);

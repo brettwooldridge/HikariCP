@@ -16,45 +16,25 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
-import static com.zaxxer.hikari.pool.TestElf.newHikariDataSource;
-import static com.zaxxer.hikari.pool.TestElf.getPool;
-import static com.zaxxer.hikari.pool.TestElf.setConfigUnitTest;
-import static com.zaxxer.hikari.pool.TestElf.setSlf4jLogLevel;
-import static com.zaxxer.hikari.pool.TestElf.setSlf4jTargetStream;
-import static com.zaxxer.hikari.pool.TestElf.unsealDataSource;
-import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLTransientConnectionException;
-import java.sql.SQLTransientException;
-import java.sql.Statement;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.apache.logging.log4j.Level;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.mocks.StubDataSource;
 import com.zaxxer.hikari.mocks.StubStatement;
 import com.zaxxer.hikari.pool.HikariPool.PoolInitializationException;
+import org.apache.logging.log4j.Level;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.sql.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static com.zaxxer.hikari.pool.TestElf.*;
+import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.junit.Assert.*;
 
 /**
  * @author Brett Wooldridge
@@ -136,10 +116,10 @@ public class TestConnections
       System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "100");
 
       setConfigUnitTest(true);
-      try (HikariDataSource ds = unsealDataSource(new HikariDataSource(config))) {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
          System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
 
-         ds.setMaxLifetime(700);
+         getUnsealedConfig(ds).setMaxLifetime(700);
 
          HikariPool pool = getPool(ds);
 
@@ -193,8 +173,8 @@ public class TestConnections
       System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "100");
 
       setConfigUnitTest(true);
-      try (HikariDataSource ds = unsealDataSource(new HikariDataSource(config))) {
-         ds.setMaxLifetime(700);
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         getUnsealedConfig(ds).setMaxLifetime(700);
 
          HikariPool pool = getPool(ds);
          assertSame("Total connections not as expected", 0, pool.getTotalConnections());
@@ -615,10 +595,10 @@ public class TestConnections
       System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "1000");
 
       StubConnection.slowCreate = true;
-      try (HikariDataSource ds = unsealDataSource(new HikariDataSource(config))) {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
          System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
 
-         ds.setIdleTimeout(3000);
+         getUnsealedConfig(ds).setIdleTimeout(3000);
 
          SECONDS.sleep(2);
 

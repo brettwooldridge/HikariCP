@@ -16,6 +16,7 @@
 package com.zaxxer.hikari.pool;
 
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariConfigMXBean;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariPoolMXBean;
 import org.junit.Test;
@@ -29,8 +30,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
+import static com.zaxxer.hikari.pool.TestElf.getUnsealedConfig;
 import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
-import static com.zaxxer.hikari.pool.TestElf.unsealDataSource;
 import static org.junit.Assert.assertEquals;
 
 public class TestMBean
@@ -60,9 +61,9 @@ public class TestMBean
 
       System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "100");
 
-      try (HikariDataSource ds = unsealDataSource(new HikariDataSource(config))) {
+      try (HikariDataSource ds = new HikariDataSource(config)) {
 
-         ds.setIdleTimeout(3000);
+         getUnsealedConfig(ds).setIdleTimeout(3000);
 
          TimeUnit.SECONDS.sleep(1);
 
@@ -91,6 +92,24 @@ public class TestMBean
       }
       finally {
          System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
+      }
+   }
+
+   @Test(expected = IllegalStateException.class)
+   public void testMBeanChange() {
+      HikariConfig config = newHikariConfig();
+      config.setMinimumIdle(3);
+      config.setMaximumPoolSize(5);
+      config.setRegisterMbeans(true);
+      config.setConnectionTimeout(2800);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         HikariConfigMXBean hikariConfigMXBean = ds.getHikariConfigMXBean();
+         hikariConfigMXBean.setIdleTimeout(3000);
+
+         ds.setIdleTimeout(1000);
       }
    }
 }

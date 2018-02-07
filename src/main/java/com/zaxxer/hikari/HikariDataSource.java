@@ -16,21 +16,19 @@
 
 package com.zaxxer.hikari;
 
+import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
+import com.zaxxer.hikari.pool.HikariPool;
+import com.zaxxer.hikari.pool.HikariPool.PoolInitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.sql.DataSource;
 import java.io.Closeable;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.sql.DataSource;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
-import com.zaxxer.hikari.pool.HikariPool;
-import com.zaxxer.hikari.pool.HikariPool.PoolInitializationException;
 
 /**
  * The HikariCP pooled DataSource.
@@ -75,11 +73,12 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    public HikariDataSource(HikariConfig configuration)
    {
       configuration.validate();
-      configuration.copyStateTo(this);
+      final HikariConfig copy = new HikariConfig();
+      configuration.copyStateTo(copy);
       this.seal();
 
       LOGGER.info("{} - Starting...", configuration.getPoolName());
-      pool = fastPathPool = new HikariPool(this);
+      pool = fastPathPool = new HikariPool(copy);
       LOGGER.info("{} - Start completed.", configuration.getPoolName());
    }
 
@@ -104,8 +103,11 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
                validate();
                LOGGER.info("{} - Starting...", getPoolName());
                try {
-                  pool = result = new HikariPool(this);
+                  final HikariConfig copy = new HikariConfig();
+                  this.copyStateTo(copy);
                   this.seal();
+
+                  pool = result = new HikariPool(copy);
                }
                catch (PoolInitializationException pie) {
                   if (pie.getCause() instanceof SQLException) {
@@ -293,7 +295,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
     */
    public HikariConfigMXBean getHikariConfigMXBean()
    {
-      return this;
+      return (fastPathPool != null) ? fastPathPool.config : pool.config;
    }
 
    /**
