@@ -325,8 +325,12 @@ abstract class PoolBase
 
       DataSource dataSource = config.getDataSource();
       if (dsClassName != null && dataSource == null) {
+         final Properties extendedDataSourceProperties = PropertyElf.copyProperties(dataSourceProperties);
          dataSource = createInstance(dsClassName, DataSource.class);
-         PropertyElf.setTargetFromProperties(dataSource, dataSourceProperties);
+         extendedDataSourceProperties.setProperty("url", jdbcUrl);
+         extendedDataSourceProperties.setProperty("user", username);
+         extendedDataSourceProperties.setProperty("passwords", password);
+         PropertyElf.setTargetFromProperties(dataSource, extendedDataSourceProperties);
       }
       else if (jdbcUrl != null && dataSource == null) {
          dataSource = new DriverDataSource(jdbcUrl, driverClassName, dataSourceProperties, username, password);
