@@ -298,4 +298,35 @@ public class TestMetrics
          }
       }
    }
+
+   @Test(expected = IllegalArgumentException.class)
+   public void testFakeMetricRegistryThrowsIllegalArgumentException()
+   {
+      try (HikariDataSource ds = newHikariDataSource()) {
+         ds.setMaximumPoolSize(1);
+         ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+         FakeMetricRegistry metricRegistry = new FakeMetricRegistry();
+
+         ds.setMetricRegistry(metricRegistry);
+      }
+   }
+
+   private static class FakeMetricRegistry {}
+
+   @Test
+   public void testMetricRegistrySubclassIsAllowed()
+   {
+      try (HikariDataSource ds = newHikariDataSource()) {
+         ds.setMaximumPoolSize(1);
+         ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+         ds.setMetricRegistry(new MetricRegistry() {
+            @Override
+            public Timer timer(String name) {
+               return super.timer(name);
+            }
+         });
+      }
+   }
 }
