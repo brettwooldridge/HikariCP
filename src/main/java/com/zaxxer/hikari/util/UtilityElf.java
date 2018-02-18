@@ -66,6 +66,21 @@ public final class UtilityElf
    }
 
    /**
+    * Checks whether an object is an instance of given type without throwing exception when the class is not loaded.
+    * @param obj the object to check
+    * @param className String class
+    * @return true if object is assignable from the type, false otherwise or when the class cannot be loaded
+    */
+   public static boolean safeIsAssignableFrom(Object obj, String className) {
+      try {
+         Class<?> clazz = Class.forName(className);
+         return clazz.isAssignableFrom(obj.getClass());
+      } catch (ClassNotFoundException ignored) {
+         return false;
+      }
+   }
+
+   /**
     * Create and instance of the specified class using the constructor matching the specified
     * arguments.
     *

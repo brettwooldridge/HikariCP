@@ -42,6 +42,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static com.zaxxer.hikari.util.UtilityElf.getNullIfEmpty;
+import static com.zaxxer.hikari.util.UtilityElf.safeIsAssignableFrom;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -758,8 +759,8 @@ public class HikariConfig implements HikariConfigMXBean
       if (metricRegistry != null) {
          metricRegistry = getObjectOrPerformJndiLookup(metricRegistry);
 
-         if (!(metricRegistry.getClass().getName().contains("MetricRegistry"))
-             && !(metricRegistry.getClass().getName().contains("MeterRegistry"))) {
+         if (!safeIsAssignableFrom(metricRegistry, "com.codahale.metrics.MetricRegistry")
+             && !(safeIsAssignableFrom(metricRegistry, "io.micrometer.core.instrument.MeterRegistry"))) {
             throw new IllegalArgumentException("Class must be instance of com.codahale.metrics.MetricRegistry or io.micrometer.core.instrument.MeterRegistry");
          }
       }
