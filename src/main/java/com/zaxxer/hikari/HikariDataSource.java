@@ -224,6 +224,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
 
    /** {@inheritDoc} */
    @Override
+   @Deprecated
    public void setMetricRegistry(Object metricRegistry)
    {
       boolean isAlreadySet = getMetricRegistry() != null;

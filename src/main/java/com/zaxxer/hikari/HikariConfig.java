@@ -747,7 +747,9 @@ public class HikariConfig implements HikariConfigMXBean
     * Set a MetricRegistry instance to use for registration of metrics used by HikariCP.
     *
     * @param metricRegistry the MetricRegistry instance to use
+    * @deprecated use {@link #setMetricsTrackerFactory(MetricsTrackerFactory)}
     */
+   @Deprecated
    public void setMetricRegistry(Object metricRegistry)
    {
       if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");

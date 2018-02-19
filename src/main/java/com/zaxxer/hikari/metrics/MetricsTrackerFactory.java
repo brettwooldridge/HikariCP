@@ -16,6 +16,11 @@
 
 package com.zaxxer.hikari.metrics;
 
+import com.codahale.metrics.MetricRegistry;
+import com.zaxxer.hikari.metrics.dropwizard.CodahaleMetricsTrackerFactory;
+import com.zaxxer.hikari.metrics.micrometer.MicrometerMetricsTrackerFactory;
+import io.micrometer.core.instrument.MeterRegistry;
+
 public interface MetricsTrackerFactory
 {
    /**
@@ -26,4 +31,13 @@ public interface MetricsTrackerFactory
     * @return a IMetricsTracker implementation instance
     */
    IMetricsTracker create(String poolName, PoolStats poolStats);
+
+   static MetricsTrackerFactory from(MetricRegistry metricRegistry) {
+      return new CodahaleMetricsTrackerFactory(metricRegistry);
+   }
+
+   static MetricsTrackerFactory from(MeterRegistry meterRegistry) {
+      return new MicrometerMetricsTrackerFactory(meterRegistry);
+   }
+
 }
