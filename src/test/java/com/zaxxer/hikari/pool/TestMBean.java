@@ -95,7 +95,7 @@ public class TestMBean
       }
    }
 
-   @Test(expected = IllegalStateException.class)
+   @Test
    public void testMBeanChange() {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(3);
@@ -109,7 +109,7 @@ public class TestMBean
          HikariConfigMXBean hikariConfigMXBean = ds.getHikariConfigMXBean();
          hikariConfigMXBean.setIdleTimeout(3000);
 
-         ds.setIdleTimeout(1000);
+         assertEquals(3000, ds.getIdleTimeout());
       }
    }
 }

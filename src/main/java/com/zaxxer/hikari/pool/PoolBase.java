@@ -54,10 +54,10 @@ abstract class PoolBase
    private final Logger LOGGER = LoggerFactory.getLogger(PoolBase.class);
 
    public final HikariConfig config;
+   public IMetricsTrackerDelegate metricsTracker;
    protected final String poolName;
    long connectionTimeout;
    long validationTimeout;
-   IMetricsTrackerDelegate metricsTracker;
 
    private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout", "schema"};
    private static final int UNINITIALIZED = -1;

@@ -30,6 +30,8 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.zaxxer.hikari.pool.HikariPool.POOL_NORMAL;
+
 /**
  * The HikariCP pooled DataSource.
  *
@@ -52,7 +54,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
     *
     * The first call to {@link #getConnection()} starts the pool.  Once the pool
     * is started, the configuration is "sealed" and no further configuration
-    * changes are possible -- except via {@link HikariConfigMXBean}.
+    * changes are possible -- except via {@link HikariConfigMXBean} methods.
     */
    public HikariDataSource()
    {
@@ -73,14 +75,18 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    public HikariDataSource(HikariConfig configuration)
    {
       configuration.validate();
-      final HikariConfig copy = new HikariConfig();
-      configuration.copyStateTo(copy);
-      this.seal();
+      configuration.copyStateTo(this);
 
       LOGGER.info("{} - Starting...", configuration.getPoolName());
-      pool = fastPathPool = new HikariPool(copy);
+      pool = fastPathPool = new HikariPool(this);
       LOGGER.info("{} - Start completed.", configuration.getPoolName());
+
+      this.seal();
    }
+
+   // ***********************************************************************
+   //                          DataSource methods
+   // ***********************************************************************
 
    /** {@inheritDoc} */
    @Override
@@ -103,11 +109,8 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
                validate();
                LOGGER.info("{} - Starting...", getPoolName());
                try {
-                  final HikariConfig copy = new HikariConfig();
-                  this.copyStateTo(copy);
+                  pool = result = new HikariPool(this);
                   this.seal();
-
-                  pool = result = new HikariPool(copy);
                }
                catch (PoolInitializationException pie) {
                   if (pie.getCause() instanceof SQLException) {
@@ -222,6 +225,10 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       return false;
    }
 
+   // ***********************************************************************
+   //                        HikariConfigMXBean methods
+   // ***********************************************************************
+
    /** {@inheritDoc} */
    @Override
    public void setMetricRegistry(Object metricRegistry)
@@ -276,6 +283,20 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       }
    }
 
+   // ***********************************************************************
+   //                        HikariCP-specific methods
+   // ***********************************************************************
+
+   /**
+    * Returns {@code true} if the pool as been started and is not suspended or shutdown.
+    *
+    * @return {@code true} if the pool as been started and is not suspended or shutdown.
+    */
+   public boolean isRunning()
+   {
+      return pool != null && pool.poolState == POOL_NORMAL;
+   }
+
    /**
     * Get the {@code HikariPoolMXBean} for this HikariDataSource instance.  If this method is called on
     * a {@code HikariDataSource} that has been constructed without a {@code HikariConfig} instance,
@@ -295,7 +316,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
     */
    public HikariConfigMXBean getHikariConfigMXBean()
    {
-      return (fastPathPool != null) ? fastPathPool.config : pool.config;
+      return this;
    }
 
    /**
