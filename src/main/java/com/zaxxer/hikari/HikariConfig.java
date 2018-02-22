@@ -149,18 +149,6 @@ public class HikariConfig implements HikariConfigMXBean
       loadProperties(propertyFileName);
    }
 
-   /**
-    * Determine whether this configuration has been sealed (because the pool as started
-    * to use it.  Use the {@link HikariConfigMXBean} methods to alter supported methods
-    * at runtime.
-    *
-    * @return true if the configuration is sealed.
-    */
-   public boolean isSealed()
-   {
-      return sealed;
-   }
-
    // ***********************************************************************
    //                       HikariConfigMXBean methods
    // ***********************************************************************
