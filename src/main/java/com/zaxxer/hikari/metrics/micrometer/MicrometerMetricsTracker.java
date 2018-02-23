@@ -39,19 +39,16 @@ public class MicrometerMetricsTracker implements IMetricsTracker
    {
       this.connectionObtainTimer = Timer.builder(METRIC_NAME_WAIT)
          .description("Connection acquire time")
-         .publishPercentiles(0.95)
          .tags(METRIC_CATEGORY, poolName)
          .register(meterRegistry);
 
       this.connectionCreation = Timer.builder(METRIC_NAME_CONNECT)
          .description("Connection creation time")
-         .publishPercentiles(0.95)
          .tags(METRIC_CATEGORY, poolName)
          .register(meterRegistry);
 
       this.connectionUsage = Timer.builder(METRIC_NAME_USAGE)
          .description("Connection usage time")
-         .publishPercentiles(0.95)
          .tags(METRIC_CATEGORY, poolName)
          .register(meterRegistry);
 
