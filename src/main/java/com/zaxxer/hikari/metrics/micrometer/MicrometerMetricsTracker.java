@@ -9,18 +9,42 @@ import io.micrometer.core.instrument.Timer;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * {@link IMetricsTracker Metrics tracker} for Micrometer.
+ * HikariCP metrics can be configured in your application by applying a
+ * {@link io.micrometer.core.instrument.config.MeterFilter MeterFilter} to metrics starting with
+ * {@link #HIKARI_METRIC_NAME_PREFIX}. For example, to configure client-side calculated percentiles:
+ *
+ * <blockquote><pre>
+ *     new MeterFilter() {
+ *       &#064;Override
+ *       public DistributionStatisticConfig configure(Meter.Id id, DistributionStatisticConfig config) {
+ *         if (id.getName().startsWith(MicrometerMetricsTracker.HIKARI_METRIC_NAME_PREFIX)) {
+ *           return DistributionStatisticConfig.builder()
+ *               .percentiles(0.5, 0.95)
+ *               .build()
+ *               .merge(config);
+ *            }
+ *         return config;
+ *         }
+ *      };
+ * </pre></blockquote>
+ */
 public class MicrometerMetricsTracker implements IMetricsTracker
 {
-   private static final String METRIC_CATEGORY = "pool";
-   private static final String METRIC_NAME_WAIT = "hikaricp.connections.acquire";
-   private static final String METRIC_NAME_USAGE = "hikaricp.connections.usage";
-   private static final String METRIC_NAME_CONNECT = "hikaricp.connections.creation";
+   /** Prefix used for all HikariCP metric names. */
+   public static final String HIKARI_METRIC_NAME_PREFIX = "hikaricp";
 
-   private static final String METRIC_NAME_TIMEOUT_RATE = "hikaricp.connections.timeout";
-   private static final String METRIC_NAME_TOTAL_CONNECTIONS = "hikaricp.connections";
-   private static final String METRIC_NAME_IDLE_CONNECTIONS = "hikaricp.connections.idle";
-   private static final String METRIC_NAME_ACTIVE_CONNECTIONS = "hikaricp.connections.active";
-   private static final String METRIC_NAME_PENDING_CONNECTIONS = "hikaricp.connections.pending";
+   private static final String METRIC_CATEGORY = "pool";
+   private static final String METRIC_NAME_WAIT = HIKARI_METRIC_NAME_PREFIX + ".connections.acquire";
+   private static final String METRIC_NAME_USAGE = HIKARI_METRIC_NAME_PREFIX + ".connections.usage";
+   private static final String METRIC_NAME_CONNECT = HIKARI_METRIC_NAME_PREFIX + ".connections.creation";
+
+   private static final String METRIC_NAME_TIMEOUT_RATE = HIKARI_METRIC_NAME_PREFIX + ".connections.timeout";
+   private static final String METRIC_NAME_TOTAL_CONNECTIONS = HIKARI_METRIC_NAME_PREFIX + ".connections";
+   private static final String METRIC_NAME_IDLE_CONNECTIONS = HIKARI_METRIC_NAME_PREFIX + ".connections.idle";
+   private static final String METRIC_NAME_ACTIVE_CONNECTIONS = HIKARI_METRIC_NAME_PREFIX + ".connections.active";
+   private static final String METRIC_NAME_PENDING_CONNECTIONS = HIKARI_METRIC_NAME_PREFIX + ".connections.pending";
 
    private final Timer connectionObtainTimer;
    private final Counter connectionTimeoutCounter;
