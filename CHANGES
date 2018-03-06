@@ -1,5 +1,14 @@
 HikariCP Changes
 
+Changes in 2.7.8
+
+ * fixed 1095 fix breakage caused by sealed configuration with respect to special handling for the
+   metricsRegistry and metricsTrackerFactory properties, which are allowed to be altered *once*
+   after the pool has started (even after the configuration is sealed).
+
+ * pull 1089 allowing anonymous subclasses of MetricRegistry. Changed checks for metrics libraries
+   from a class name check to the assignableFrom() API.
+
 Changes in 2.7.7
 
  * fixed issue whereby configuration through the HikariConfigMXBean could not be altered due
