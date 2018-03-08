@@ -34,9 +34,13 @@ public class MicrometerMetricsTracker implements IMetricsTracker
    private final Gauge activeConnectionGauge;
    @SuppressWarnings({"FieldCanBeLocal", "unused"})
    private final Gauge pendingConnectionGauge;
+   @SuppressWarnings({"FieldCanBeLocal", "unused"})
+   private final PoolStats poolStats;
 
    MicrometerMetricsTracker(final String poolName, final PoolStats poolStats, final MeterRegistry meterRegistry)
    {
+      this.poolStats = poolStats;
+
       this.connectionObtainTimer = Timer.builder(METRIC_NAME_WAIT)
          .description("Connection acquire time")
          .publishPercentiles(0.95)
