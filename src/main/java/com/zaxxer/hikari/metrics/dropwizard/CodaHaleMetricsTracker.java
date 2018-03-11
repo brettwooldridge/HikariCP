@@ -44,6 +44,8 @@ public final class CodaHaleMetricsTracker implements IMetricsTracker
    private static final String METRIC_NAME_IDLE_CONNECTIONS = "IdleConnections";
    private static final String METRIC_NAME_ACTIVE_CONNECTIONS = "ActiveConnections";
    private static final String METRIC_NAME_PENDING_CONNECTIONS = "PendingConnections";
+   private static final String METRIC_NAME_MAX_CONNECTIONS = "MaxConnections";
+   private static final String METRIC_NAME_MIN_CONNECTIONS = "MinConnections";
 
    public CodaHaleMetricsTracker(final String poolName, final PoolStats poolStats, final MetricRegistry registry)
    {
@@ -85,6 +87,22 @@ public final class CodaHaleMetricsTracker implements IMetricsTracker
                               return poolStats.getPendingThreads();
                            }
                         });
+
+      registry.register(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_MAX_CONNECTIONS),
+                        new Gauge<Integer>() {
+                           @Override
+                           public Integer getValue() {
+                              return poolStats.getMaxConnections();
+                           }
+                        });
+
+      registry.register(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_MIN_CONNECTIONS),
+                        new Gauge<Integer>() {
+                           @Override
+                           public Integer getValue() {
+                              return poolStats.getMinConnections();
+                           }
+                        });
    }
 
    /** {@inheritDoc} */
@@ -99,6 +117,8 @@ public final class CodaHaleMetricsTracker implements IMetricsTracker
       registry.remove(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_IDLE_CONNECTIONS));
       registry.remove(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_ACTIVE_CONNECTIONS));
       registry.remove(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_PENDING_CONNECTIONS));
+      registry.remove(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_MAX_CONNECTIONS));
+      registry.remove(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_MIN_CONNECTIONS));
    }
 
    /** {@inheritDoc} */

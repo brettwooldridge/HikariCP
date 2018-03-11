@@ -45,6 +45,8 @@ public class HikariCPCollectorTest {
          assertThat(getValue("hikaricp_idle_connections", "noConnection"), is(0.0));
          assertThat(getValue("hikaricp_pending_threads", "noConnection"), is(0.0));
          assertThat(getValue("hikaricp_connections", "noConnection"), is(0.0));
+         assertThat(getValue("hikaricp_max_connections", "noConnection"), is(10.0));
+         assertThat(getValue("hikaricp_min_connections", "noConnection"), is(0.0));
       }
       finally {
          StubConnection.slowCreate = false;
@@ -65,6 +67,8 @@ public class HikariCPCollectorTest {
          assertThat(getValue("hikaricp_idle_connections", poolName), is(0.0));
          assertThat(getValue("hikaricp_pending_threads", poolName), is(0.0));
          assertThat(getValue("hikaricp_connections", poolName), is(0.0));
+         assertThat(getValue("hikaricp_max_connections", poolName), is(10.0));
+         assertThat(getValue("hikaricp_min_connections", poolName), is(0.0));
       }
       finally {
          StubConnection.slowCreate = false;
@@ -88,6 +92,8 @@ public class HikariCPCollectorTest {
          assertThat(getValue("hikaricp_idle_connections", "connection1"), is(0.0));
          assertThat(getValue("hikaricp_pending_threads", "connection1"), is(0.0));
          assertThat(getValue("hikaricp_connections", "connection1"), is(1.0));
+         assertThat(getValue("hikaricp_max_connections", "connection1"), is(1.0));
+         assertThat(getValue("hikaricp_min_connections", "connection1"), is(1.0));
       }
       finally {
          StubConnection.slowCreate = false;
@@ -111,6 +117,8 @@ public class HikariCPCollectorTest {
          assertThat(getValue("hikaricp_idle_connections", "connectionClosed"), is(1.0));
          assertThat(getValue("hikaricp_pending_threads", "connectionClosed"), is(0.0));
          assertThat(getValue("hikaricp_connections", "connectionClosed"), is(1.0));
+         assertThat(getValue("hikaricp_max_connections", "connectionClosed"), is(1.0));
+         assertThat(getValue("hikaricp_min_connections", "connectionClosed"), is(1.0));
       }
       finally {
          StubConnection.slowCreate = false;

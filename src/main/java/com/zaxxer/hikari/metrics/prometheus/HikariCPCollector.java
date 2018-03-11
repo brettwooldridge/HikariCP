@@ -42,7 +42,11 @@ class HikariCPCollector extends Collector {
          createGauge("hikaricp_pending_threads", "Pending threads",
             PoolStats::getPendingThreads),
          createGauge("hikaricp_connections", "The number of current connections",
-            PoolStats::getTotalConnections)
+            PoolStats::getTotalConnections),
+         createGauge("hikaricp_max_connections", "Max connections",
+            PoolStats::getMaxConnections),
+         createGauge("hikaricp_min_connections", "Min connections",
+            PoolStats::getMinConnections)
       );
    }
 

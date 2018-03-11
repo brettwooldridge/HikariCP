@@ -33,6 +33,8 @@ public class MicrometerMetricsTrackerTest {
       Assert.assertNotNull(mockMeterRegistry.find("IdleConnections"));
       Assert.assertNotNull(mockMeterRegistry.find("ActiveConnections"));
       Assert.assertNotNull(mockMeterRegistry.find("PendingConnections"));
+      Assert.assertNotNull(mockMeterRegistry.find("MaxConnections"));
+      Assert.assertNotNull(mockMeterRegistry.find("MinConnections"));
 
       testee.close();
    }

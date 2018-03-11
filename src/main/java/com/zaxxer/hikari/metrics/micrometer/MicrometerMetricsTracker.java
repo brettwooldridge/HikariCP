@@ -21,6 +21,8 @@ public class MicrometerMetricsTracker implements IMetricsTracker
    private static final String METRIC_NAME_IDLE_CONNECTIONS = "hikaricp.connections.idle";
    private static final String METRIC_NAME_ACTIVE_CONNECTIONS = "hikaricp.connections.active";
    private static final String METRIC_NAME_PENDING_CONNECTIONS = "hikaricp.connections.pending";
+   private static final String METRIC_NAME_MAX_CONNECTIONS = "hikaricp.connections.max";
+   private static final String METRIC_NAME_MIN_CONNECTIONS = "hikaricp.connections.min";
 
    private final Timer connectionObtainTimer;
    private final Counter connectionTimeoutCounter;
@@ -34,6 +36,10 @@ public class MicrometerMetricsTracker implements IMetricsTracker
    private final Gauge activeConnectionGauge;
    @SuppressWarnings({"FieldCanBeLocal", "unused"})
    private final Gauge pendingConnectionGauge;
+   @SuppressWarnings({"FieldCanBeLocal", "unused"})
+   private final Gauge maxConnectionGauge;
+   @SuppressWarnings({"FieldCanBeLocal", "unused"})
+   private final Gauge minConnectionGauge;
    @SuppressWarnings({"FieldCanBeLocal", "unused"})
    private final PoolStats poolStats;
 
@@ -81,6 +87,16 @@ public class MicrometerMetricsTracker implements IMetricsTracker
 
       this.pendingConnectionGauge = Gauge.builder(METRIC_NAME_PENDING_CONNECTIONS, poolStats, PoolStats::getPendingThreads)
          .description("Pending threads")
+         .tags(METRIC_CATEGORY, poolName)
+         .register(meterRegistry);
+
+      this.maxConnectionGauge = Gauge.builder(METRIC_NAME_MAX_CONNECTIONS, poolStats, PoolStats::getMaxConnections)
+         .description("Max connections")
+         .tags(METRIC_CATEGORY, poolName)
+         .register(meterRegistry);
+
+      this.minConnectionGauge = Gauge.builder(METRIC_NAME_MIN_CONNECTIONS, poolStats, PoolStats::getMinConnections)
+         .description("Min connections")
          .tags(METRIC_CATEGORY, poolName)
          .register(meterRegistry);
 
