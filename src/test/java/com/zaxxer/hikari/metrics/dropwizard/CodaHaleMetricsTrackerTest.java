@@ -35,5 +35,7 @@ public class CodaHaleMetricsTrackerTest {
       verify(mockMetricRegistry).remove("mypool.pool.IdleConnections");
       verify(mockMetricRegistry).remove("mypool.pool.ActiveConnections");
       verify(mockMetricRegistry).remove("mypool.pool.PendingConnections");
+      verify(mockMetricRegistry).remove("mypool.pool.MaxConnections");
+      verify(mockMetricRegistry).remove("mypool.pool.MinConnections");
    }
 }
