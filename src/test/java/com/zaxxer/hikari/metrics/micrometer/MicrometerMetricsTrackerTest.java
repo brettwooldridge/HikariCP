@@ -33,6 +33,8 @@ public class MicrometerMetricsTrackerTest {
       Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections.idle").tag("pool", "mypool").gauge());
       Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections.active").tag("pool", "mypool").gauge());
       Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections.pending").tag("pool", "mypool").gauge());
+      Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections.max").tag("pool", "mypool").gauge());
+      Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections.min").tag("pool", "mypool").gauge());
 
       testee.close();
    }
