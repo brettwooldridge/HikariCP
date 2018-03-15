@@ -25,14 +25,14 @@ public class MicrometerMetricsTrackerTest {
 
    @Test
    public void close() throws Exception {
-      Assert.assertNotNull(mockMeterRegistry.find("Wait"));
-      Assert.assertNotNull(mockMeterRegistry.find("Usage"));
-      Assert.assertNotNull(mockMeterRegistry.find("ConnectionCreation"));
-      Assert.assertNotNull(mockMeterRegistry.find("ConnectionTimeoutRate"));
-      Assert.assertNotNull(mockMeterRegistry.find("TotalConnections"));
-      Assert.assertNotNull(mockMeterRegistry.find("IdleConnections"));
-      Assert.assertNotNull(mockMeterRegistry.find("ActiveConnections"));
-      Assert.assertNotNull(mockMeterRegistry.find("PendingConnections"));
+      Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections.acquire").tag("pool", "mypool").timer());
+      Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections.usage").tag("pool", "mypool").timer());
+      Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections.creation").tag("pool", "mypool").timer());
+      Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections.timeout").tag("pool", "mypool").counter());
+      Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections").tag("pool", "mypool").gauge());
+      Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections.idle").tag("pool", "mypool").gauge());
+      Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections.active").tag("pool", "mypool").gauge());
+      Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections.pending").tag("pool", "mypool").gauge());
 
       testee.close();
    }
