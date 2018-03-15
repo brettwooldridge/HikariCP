@@ -34,13 +34,15 @@ public abstract class PoolStats
    protected volatile int idleConnections;
    protected volatile int activeConnections;
    protected volatile int pendingThreads;
+   protected volatile int maxConnections;
+   protected volatile int minConnections;
 
    public PoolStats(final long timeoutMs)
    {
       this.timeoutMs = timeoutMs;
       this.reloadAt = new AtomicLong();
    }
-   
+
    public int getTotalConnections()
    {
       if (shouldLoad()) {
@@ -75,6 +77,22 @@ public abstract class PoolStats
       }
 
       return pendingThreads;
+   }
+
+   public int getMaxConnections() {
+      if (shouldLoad()) {
+         update();
+      }
+
+      return maxConnections;
+   }
+
+   public int getMinConnections() {
+      if (shouldLoad()) {
+         update();
+      }
+
+      return minConnections;
    }
 
    protected abstract void update();
