@@ -70,7 +70,7 @@ abstract class PoolBase
    private int defaultTransactionIsolation;
    private int transactionIsolation;
    private Executor netTimeoutExecutor;
-   private DataSource dataSource;
+   private AtomicReference<DataSource> dataSource;
 
    private final String catalog;
    private final String schema;
@@ -103,6 +103,7 @@ abstract class PoolBase
       this.connectionTimeout = config.getConnectionTimeout();
       this.validationTimeout = config.getValidationTimeout();
       this.lastConnectionFailure = new AtomicReference<>();
+      this.dataSource = new AtomicReference<>();
 
       initializeDataSource();
    }
@@ -182,7 +183,7 @@ abstract class PoolBase
 
    public DataSource getUnwrappedDataSource()
    {
-      return dataSource;
+      return dataSource.get();
    }
 
    // ***********************************************************************
@@ -243,7 +244,7 @@ abstract class PoolBase
    long getLoginTimeout()
    {
       try {
-         return (dataSource != null) ? dataSource.getLoginTimeout() : SECONDS.toSeconds(5);
+         return (dataSource != null) ? dataSource.get().getLoginTimeout() : SECONDS.toSeconds(5);
       } catch (SQLException e) {
          return SECONDS.toSeconds(5);
       }
@@ -313,7 +314,7 @@ abstract class PoolBase
    /**
     * Create/initialize the underlying DataSource.
     */
-   private void initializeDataSource()
+   void initializeDataSource()
    {
       final String jdbcUrl = config.getJdbcUrl();
       final String username = config.getUsername();
@@ -345,7 +346,7 @@ abstract class PoolBase
          createNetworkTimeoutExecutor(dataSource, dsClassName, jdbcUrl);
       }
 
-      this.dataSource = dataSource;
+      this.dataSource.set(dataSource);
    }
 
    /**
@@ -362,7 +363,7 @@ abstract class PoolBase
          String username = config.getUsername();
          String password = config.getPassword();
 
-         connection = (username == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
+         connection = (username == null) ? dataSource.get().getConnection() : dataSource.get().getConnection(username, password);
          if (connection == null) {
             throw new SQLTransientConnectionException("DataSource returned null unexpectedly");
          }
