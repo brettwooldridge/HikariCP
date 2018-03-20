@@ -135,6 +135,13 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       this.leakTaskFactory = new ProxyLeakTaskFactory(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
       this.houseKeeperTask = houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L, HOUSEKEEPING_PERIOD_MS, MILLISECONDS);
+
+      if (Boolean.getBoolean("com.zaxxer.hikari.blockUntilFilled") && config.getInitializationFailTimeout() > 1) {
+         final long startTime = currentTime();
+         while (elapsedMillis(startTime) < config.getInitializationFailTimeout() && getTotalConnections() < config.getMinimumIdle()) {
+            quietlySleep(MILLISECONDS.toMillis(100));
+         }
+      }
    }
 
    /**
@@ -692,7 +699,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       }
 
       @Override
-      public Boolean call() throws Exception
+      public Boolean call()
       {
          long sleepBackoff = 250L;
          while (poolState == POOL_NORMAL && shouldCreateAnotherConnection()) {
