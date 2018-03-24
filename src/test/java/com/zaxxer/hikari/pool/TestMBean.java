@@ -19,6 +19,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariConfigMXBean;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariPoolMXBean;
+import com.zaxxer.hikari.mocks.StubDataSource;
 import org.junit.Test;
 
 import javax.management.JMX;
@@ -32,7 +33,9 @@ import java.util.concurrent.TimeUnit;
 
 import static com.zaxxer.hikari.pool.TestElf.getUnsealedConfig;
 import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
+import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class TestMBean
 {
@@ -110,6 +113,45 @@ public class TestMBean
          hikariConfigMXBean.setIdleTimeout(3000);
 
          assertEquals(3000, ds.getIdleTimeout());
+      }
+   }
+
+   @Test
+   public void testMBeanConnectionTimeoutChange() throws SQLException {
+      HikariConfig config = newHikariConfig();
+      config.setMinimumIdle(1);
+      config.setMaximumPoolSize(2);
+      config.setRegisterMbeans(true);
+      config.setConnectionTimeout(2800);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "250");
+
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         HikariConfigMXBean hikariConfigMXBean = ds.getHikariConfigMXBean();
+         assertEquals(2800, hikariConfigMXBean.getConnectionTimeout());
+
+         final StubDataSource stubDataSource = ds.unwrap(StubDataSource.class);
+         // connection acquisition takes more than 0 ms in a real system
+         stubDataSource.setConnectionAcquistionTime(1200);
+
+         hikariConfigMXBean.setConnectionTimeout(1000);
+
+         quietlySleep(500);
+
+         try (Connection conn1 = ds.getConnection();
+              Connection conn2 = ds.getConnection()) {
+            fail("Connection should have timed out.");
+            conn1.close();
+            conn2.close();
+         }
+         catch (SQLException e) {
+            assertEquals(1000, ds.getConnectionTimeout());
+         }
+      }
+      finally {
+         System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
       }
    }
 }
