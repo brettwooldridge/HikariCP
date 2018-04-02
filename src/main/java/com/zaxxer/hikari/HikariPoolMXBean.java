@@ -16,24 +16,68 @@
 
 package com.zaxxer.hikari;
 
+import javax.sql.DataSource;
+
 /**
  * The javax.management MBean for a Hikari pool instance.
  *
  * @author Brett Wooldridge
  */
-public interface HikariPoolMXBean 
+public interface HikariPoolMXBean
 {
+   /**
+    * Get the number of currently idle connections in the pool.  The return value is extremely transient and is
+    * a point-in-time measurement.
+    *
+    * @return the current number of idle connections in the pool
+    */
    int getIdleConnections();
 
+   /**
+    * Get the number of currently active connections in the pool.  The return value is extremely transient and is
+    * a point-in-time measurement.
+    *
+    * @return the current number of active (in-use) connections in the pool
+    */
    int getActiveConnections();
 
+   /**
+    * Get the total number of connections currently in the pool.  The return value is transient and is a
+    * point-in-time measurement.
+    *
+    * @return the total number of connections in the pool
+    */
    int getTotalConnections();
 
+   /**
+    * Get the number of threads awaiting connections from the pool.  The return value is extremely transient and is
+    * a point-in-time measurement.
+    *
+    * @return the number of threads awaiting a connection from the pool
+    */
    int getThreadsAwaitingConnection();
 
+   /**
+    * Evict currently idle connections from the pool, and mark active (in-use) connection for eviction when they are
+    * return to the pool.
+    */
    void softEvictConnections();
 
+   /**
+    * Suspend the pool.  When the pool is suspended, threads calling {@link DataSource#getConnection()} will be
+    * blocked <i>with no timeout</i> until the pool is resumed via the {@link #resumePool()} method.
+    * <p/>
+    * This method has no effect unless the {@link HikariConfig#setAllowPoolSuspension(boolean)} method or equivalent
+    * property has been set to {@code true}.
+    */
    void suspendPool();
 
+   /**
+    * Resume the pool.  Enables connection borrowing to resume on a pool that has been suspended via the
+    * {@link #suspendPool()} method.
+    * <p/>
+    * This method has no effect unless the {@link HikariConfig#setAllowPoolSuspension(boolean)} method or equivalent
+    * property has been set to {@code true}.
+    */
    void resumePool();
 }

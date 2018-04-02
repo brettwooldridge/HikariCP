@@ -37,7 +37,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -632,36 +631,6 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Get whether or not the construction of the pool should throw an exception
-    * if the minimum number of connections cannot be created.
-    *
-    * @return whether or not initialization should fail on error immediately
-    * @deprecated
-    */
-   @Deprecated
-   public boolean isInitializationFailFast()
-   {
-      return initializationFailTimeout > 0;
-   }
-
-   /**
-    * Set whether or not the construction of the pool should throw an exception
-    * if the minimum number of connections cannot be created.
-    *
-    * @param failFast true if the pool should fail if the minimum connections cannot be created
-    * @deprecated
-    */
-   @Deprecated
-   public void setInitializationFailFast(boolean failFast)
-   {
-      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
-
-      LOGGER.warn("The initializationFailFast propery is deprecated, see initializationFailTimeout");
-
-      initializationFailTimeout = (failFast ? 1 : -1);
-   }
-
-   /**
     * Determine whether internal pool queries, principally aliveness checks, will be isolated in their own transaction
     * via {@link Connection#rollback()}.  Defaults to {@code false}.
     *
@@ -683,20 +652,6 @@ public class HikariConfig implements HikariConfigMXBean
       if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
 
       this.isIsolateInternalQueries = isolate;
-   }
-
-   @Deprecated
-   public boolean isJdbc4ConnectionTest()
-   {
-      return false;
-   }
-
-   @Deprecated
-   public void setJdbc4ConnectionTest(boolean useIsValid)
-   {
-      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
-
-      LOGGER.warn("The jdbcConnectionTest property is now deprecated, see the documentation for connectionTestQuery");
    }
 
    public MetricsTrackerFactory getMetricsTrackerFactory()
@@ -868,30 +823,6 @@ public class HikariConfig implements HikariConfigMXBean
     *
     * @return the executor
     */
-   @Deprecated
-   public ScheduledThreadPoolExecutor getScheduledExecutorService()
-   {
-      return (ScheduledThreadPoolExecutor) scheduledExecutor;
-   }
-
-   /**
-    * Set the ScheduledExecutorService used for housekeeping.
-    *
-    * @param executor the ScheduledExecutorService
-    */
-   @Deprecated
-   public void setScheduledExecutorService(ScheduledThreadPoolExecutor executor)
-   {
-      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
-
-      this.scheduledExecutor = executor;
-   }
-
-   /**
-    * Get the ScheduledExecutorService used for housekeeping.
-    *
-    * @return the executor
-    */
    public ScheduledExecutorService getScheduledExecutor()
    {
       return scheduledExecutor;
@@ -972,20 +903,6 @@ public class HikariConfig implements HikariConfigMXBean
    void seal()
    {
       this.sealed = true;
-   }
-
-   /**
-    * Deprecated, use {@link #copyStateTo(HikariConfig)}.
-    * <p>
-    * Copies the state of {@code this} into {@code other}.
-    *</p>
-    *
-    * @param other Other {@link HikariConfig} to copy the state to.
-    */
-   @Deprecated
-   public void copyState(HikariConfig other)
-   {
-      copyStateTo(other);
    }
 
    /**

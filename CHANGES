@@ -1,5 +1,36 @@
 HikariCP Changes
 
+Changes in 3.0.0
+
+ * Removed previously deprecated methods;
+     HikariConfig.copyState()
+     HikariConfig.getScheduledExecutorService()
+     HikariConfig.setScheduledExecutorService()
+     HikariConfig.isInitializationFailFast()
+     HikariConfig.setInitializationFailFast()
+     HikariConfig.isJdbc4ConnectionTest()
+     HikariConfig.setJdbc4ConnectionTest()
+
+     HikariDataSource.copyState()
+     HikariDataSource.getScheduledExecutorService()
+     HikariDataSource.setScheduledExecutorService()
+     HikariDataSource.suspendPool()
+     HikariDataSource.resumePool()
+     HikariDataSource.shutdown()
+     HikariDataSource.isInitializationFailFast()
+     HikariDataSource.setInitializationFailFast()
+     HikariDataSource.isJdbc4ConnectionTest()
+     HikariDataSource.setJdbc4ConnectionTest()
+
+ * pull 1110 add currently configured maxConnections and minConnections to pool metrics.
+
+ * pull 1100 remove hard-coded percentiles for Micrometer metrics.
+
+ * pull 1108 maintain a strong reference to PoolStats for Micrometer gauges to prevent premature
+   garbage collection.
+
+ * pull 1098 update to Micrometer 1.0.0.
+
 Changes in 2.7.8
 
  * fixed 1095 fix breakage caused by sealed configuration with respect to special handling for the
@@ -34,7 +65,7 @@ Changes in 2.7.5
 
  * introduced the concept of a "sealed" configuration.  Once a pool is started, attempts to
    alter its configuration outside of the HikariConfigMXBean will result in an IllegalStateException.
-   
+
 Changes in 2.7.4
 
  * pull 1026 added support for SQL Server's specific isolation level (SNAPSHOT).

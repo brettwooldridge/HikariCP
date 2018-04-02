@@ -335,37 +335,6 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    }
 
    /**
-    * Suspend allocation of connections from the pool.  All callers to <code>getConnection()</code>
-    * will block indefinitely until <code>resumePool()</code> is called.
-    *
-    * @deprecated Call the {@code HikariPoolMXBean#suspendPool()} method on the {@code HikariPoolMXBean}
-    *             obtained by {@code #getHikariPoolMXBean()} or JMX lookup.
-    */
-   @Deprecated
-   public void suspendPool()
-   {
-      HikariPool p;
-      if (!isClosed() && (p = pool) != null) {
-         p.suspendPool();
-      }
-   }
-
-   /**
-    * Resume allocation of connections from the pool.
-    *
-    * @deprecated Call the {@code HikariPoolMXBean#resumePool()} method on the {@code HikariPoolMXBean}
-    *             obtained by {@code #getHikariPoolMXBean()} or JMX lookup.
-    */
-   @Deprecated
-   public void resumePool()
-   {
-      HikariPool p;
-      if (!isClosed() && (p = pool) != null) {
-         p.resumePool();
-      }
-   }
-
-   /**
     * Shutdown the DataSource and its associated pool.
     */
    @Override
@@ -397,18 +366,6 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    public boolean isClosed()
    {
       return isShutdown.get();
-   }
-
-   /**
-    * Shutdown the DataSource and its associated pool.
-    *
-    * @deprecated This method has been deprecated, please use {@link #close()} instead
-    */
-   @Deprecated
-   public void shutdown()
-   {
-      LOGGER.warn("The shutdown() method has been deprecated, please use the close() method instead");
-      close();
    }
 
    /** {@inheritDoc} */
