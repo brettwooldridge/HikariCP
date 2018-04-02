@@ -66,7 +66,7 @@ public interface HikariPoolMXBean
    /**
     * Suspend the pool.  When the pool is suspended, threads calling {@link DataSource#getConnection()} will be
     * blocked <i>with no timeout</i> until the pool is resumed via the {@link #resumePool()} method.
-    * <p/>
+    * <br>
     * This method has no effect unless the {@link HikariConfig#setAllowPoolSuspension(boolean)} method or equivalent
     * property has been set to {@code true}.
     */
@@ -75,7 +75,7 @@ public interface HikariPoolMXBean
    /**
     * Resume the pool.  Enables connection borrowing to resume on a pool that has been suspended via the
     * {@link #suspendPool()} method.
-    * <p/>
+    * <br>
     * This method has no effect unless the {@link HikariConfig#setAllowPoolSuspension(boolean)} method or equivalent
     * property has been set to {@code true}.
     */

@@ -856,6 +856,8 @@ public class HikariConfig implements HikariConfigMXBean
 
    /**
     * Set the default schema name to be set on connections.
+    *
+    * @param schema the name of the default schema
     */
    public void setSchema(String schema)
    {
