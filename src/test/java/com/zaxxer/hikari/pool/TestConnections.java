@@ -22,12 +22,15 @@ import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.mocks.StubDataSource;
 import com.zaxxer.hikari.mocks.StubStatement;
 import com.zaxxer.hikari.pool.HikariPool.PoolInitializationException;
+import com.zaxxer.hikari.util.ConcurrentBag;
 import org.apache.logging.log4j.Level;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.lang.reflect.Field;
 import java.sql.*;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -644,6 +647,54 @@ public class TestConnections
       }
       catch (SQLTransientConnectionException sqle) {
          fail("Failed to obtain connection");
+      }
+   }
+
+
+   @Test
+   public void testIdleTimeoutReliability() throws NoSuchFieldException, IllegalAccessException
+   {
+      HikariConfig config = newHikariConfig();
+      config.setMinimumIdle(1);
+      config.setMaximumPoolSize(2);
+      config.setConnectionTimeout(2500);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setInitializationFailTimeout(Long.MAX_VALUE);
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "100");
+
+      setConfigUnitTest(true);
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
+
+         getUnsealedConfig(ds).setIdleTimeout(1500);
+         HikariPool pool = getPool(ds);
+
+         assertSame("Total connections not as expected", 1, pool.getTotalConnections());
+         assertSame("Idle connections not as expected", 1, pool.getIdleConnections());
+
+         Field connectionBagField = HikariPool.class.getDeclaredField("connectionBag");
+         connectionBagField.setAccessible(true);
+
+         ConcurrentBag<PoolEntry> firstConnectionBag = (ConcurrentBag<PoolEntry>) connectionBagField.get(pool);
+         List<PoolEntry> firstIdleConnections = firstConnectionBag.values();
+
+         quietlySleep(TimeUnit.SECONDS.toMillis(2));
+
+         assertSame("Second total connections not as expected", 1, pool.getTotalConnections());
+         assertSame("Second idle connections not as expected", 1, pool.getIdleConnections());
+
+         ConcurrentBag<PoolEntry> secondConnectionBag = (ConcurrentBag<PoolEntry>) connectionBagField.get(pool);
+         List<PoolEntry> secondIdleConnections = secondConnectionBag.values();
+
+         PoolEntry firstIdleConnection = firstIdleConnections.get(0);
+         PoolEntry secondIdleConnection = secondIdleConnections.get(0);
+
+         assertNotSame("Idle connections not as expected", firstIdleConnection,secondIdleConnection);
+
+      } finally {
+         setConfigUnitTest(false);
       }
    }
 }
