@@ -677,21 +677,21 @@ public class TestConnections
          Field connectionBagField = HikariPool.class.getDeclaredField("connectionBag");
          connectionBagField.setAccessible(true);
 
-         ConcurrentBag<PoolEntry> firstConnectionBag = (ConcurrentBag<PoolEntry>) connectionBagField.get(pool);
-         List<PoolEntry> firstIdleConnections = firstConnectionBag.values();
+         ConcurrentBag<PoolEntry> connectionBagBeforeIdleTimeout = (ConcurrentBag<PoolEntry>) connectionBagField.get(pool);
+         List<PoolEntry> connectionsBeforeIdleTimeout = connectionBagBeforeIdleTimeout.values();
 
          quietlySleep(TimeUnit.SECONDS.toMillis(2));
 
          assertSame("Second total connections not as expected", 1, pool.getTotalConnections());
          assertSame("Second idle connections not as expected", 1, pool.getIdleConnections());
 
-         ConcurrentBag<PoolEntry> secondConnectionBag = (ConcurrentBag<PoolEntry>) connectionBagField.get(pool);
-         List<PoolEntry> secondIdleConnections = secondConnectionBag.values();
+         ConcurrentBag<PoolEntry> connectionBagAfterIdleTimeout = (ConcurrentBag<PoolEntry>) connectionBagField.get(pool);
+         List<PoolEntry> connectionsAfterIdleTimeout = connectionBagAfterIdleTimeout.values();
 
-         PoolEntry firstIdleConnection = firstIdleConnections.get(0);
-         PoolEntry secondIdleConnection = secondIdleConnections.get(0);
+         PoolEntry connectionBeforeIdleTimeout = connectionsBeforeIdleTimeout.get(0);
+         PoolEntry connectionAfterIdleTimeout = connectionsAfterIdleTimeout.get(0);
 
-         assertNotSame("Idle connections not as expected", firstIdleConnection,secondIdleConnection);
+         assertNotSame("Idle connections not as expected", connectionBeforeIdleTimeout,connectionAfterIdleTimeout);
 
       } finally {
          setConfigUnitTest(false);
