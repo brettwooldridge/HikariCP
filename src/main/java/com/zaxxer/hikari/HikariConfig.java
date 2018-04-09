@@ -1030,6 +1030,10 @@ public class HikariConfig implements HikariConfigMXBean
       if (minIdle < 0 || minIdle > maxPoolSize) {
          minIdle = maxPoolSize;
       }
+
+      if (idleTimeout != IDLE_TIMEOUT && idleTimeout != 0 && minIdle == maxPoolSize) {
+         LOGGER.warn("{} - idleTimeout has been set but has no effect because the pool is operating as a fixed size pool.");
+      }
    }
 
    @SuppressWarnings("StatementWithEmptyBody")
