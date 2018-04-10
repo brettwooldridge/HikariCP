@@ -744,10 +744,11 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       public void run()
       {
          try {
-            // refresh timeouts in case they changed via MBean
+            // refresh values in case they changed via MBean
             connectionTimeout = config.getConnectionTimeout();
             validationTimeout = config.getValidationTimeout();
             leakTaskFactory.updateLeakDetectionThreshold(config.getLeakDetectionThreshold());
+            catalog = (config.getCatalog() != null && !config.getCatalog().equals(catalog)) ? config.getCatalog() : catalog;
 
             final long idleTimeout = config.getIdleTimeout();
             final long now = currentTime();

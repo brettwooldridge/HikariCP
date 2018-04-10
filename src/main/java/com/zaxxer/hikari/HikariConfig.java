@@ -61,6 +61,7 @@ public class HikariConfig implements HikariConfigMXBean
 
    // Properties changeable at runtime through the HikariConfigMXBean
    //
+   private volatile String catalog;
    private volatile long connectionTimeout;
    private volatile long validationTimeout;
    private volatile long idleTimeout;
@@ -74,7 +75,6 @@ public class HikariConfig implements HikariConfigMXBean
    // Properties NOT changeable at runtime
    //
    private long initializationFailTimeout;
-   private String catalog;
    private String connectionInitSql;
    private String connectionTestQuery;
    private String dataSourceClassName;
@@ -151,6 +151,21 @@ public class HikariConfig implements HikariConfigMXBean
    // ***********************************************************************
    //                       HikariConfigMXBean methods
    // ***********************************************************************
+
+   /** {@inheritDoc} */
+   @Override
+   public String getCatalog()
+   {
+      return catalog;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public void setCatalog(String catalog)
+   {
+      this.catalog = catalog;
+   }
+
 
    /** {@inheritDoc} */
    @Override
@@ -314,28 +329,6 @@ public class HikariConfig implements HikariConfigMXBean
    // ***********************************************************************
    //                     All other configuration methods
    // ***********************************************************************
-
-   /**
-    * Get the default catalog name to be set on connections.
-    *
-    * @return the default catalog name
-    */
-   public String getCatalog()
-   {
-      return catalog;
-   }
-
-   /**
-    * Set the default catalog name to be set on connections.
-    *
-    * @param catalog the catalog name, or null
-    */
-   public void setCatalog(String catalog)
-   {
-      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started.  Use HikariConfigMXBean for runtime changes.");
-
-      this.catalog = catalog;
-   }
 
    /**
     * Get the SQL query to be executed to test the validity of connections.

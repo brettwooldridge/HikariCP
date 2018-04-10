@@ -24,7 +24,7 @@ package com.zaxxer.hikari;
 public interface HikariConfigMXBean
 {
    /**
-    * Get the maximum number of milliseconds that a client will wait for a connection from the pool. If this 
+    * Get the maximum number of milliseconds that a client will wait for a connection from the pool. If this
     * time is exceeded without a connection becoming available, a SQLException will be thrown from
     * {@link javax.sql.DataSource#getConnection()}.
     *
@@ -58,7 +58,7 @@ public interface HikariConfigMXBean
    void setValidationTimeout(long validationTimeoutMs);
 
    /**
-    * This property controls the maximum amount of time (in milliseconds) that a connection is allowed to sit 
+    * This property controls the maximum amount of time (in milliseconds) that a connection is allowed to sit
     * idle in the pool. Whether a connection is retired as idle or not is subject to a maximum variation of +30
     * seconds, and average variation of +15 seconds. A connection will never be retired as idle before this timeout.
     * A value of 0 means that idle connections are never removed from the pool.
@@ -68,7 +68,7 @@ public interface HikariConfigMXBean
    long getIdleTimeout();
 
    /**
-    * This property controls the maximum amount of time (in milliseconds) that a connection is allowed to sit 
+    * This property controls the maximum amount of time (in milliseconds) that a connection is allowed to sit
     * idle in the pool. Whether a connection is retired as idle or not is subject to a maximum variation of +30
     * seconds, and average variation of +15 seconds. A connection will never be retired as idle before this timeout.
     * A value of 0 means that idle connections are never removed from the pool.
@@ -131,7 +131,7 @@ public interface HikariConfigMXBean
 
    /**
     * The property controls the maximum number of connections that HikariCP will keep in the pool,
-    * including both idle and in-use connections. 
+    * including both idle and in-use connections.
     *
     * @return the maximum number of connections in the pool
     */
@@ -167,11 +167,27 @@ public interface HikariConfigMXBean
     */
    void setUsername(String username);
 
-  
+
    /**
     * The name of the connection pool.
     *
     * @return the name of the connection pool
     */
    String getPoolName();
+
+   /**
+    * Get the default catalog name to be set on connections.
+    *
+    * @return the default catalog name
+    */
+   String getCatalog();
+
+   /**
+    * Set the default catalog name to be set on connections.
+    * <p>
+    * WARNING: THIS VALUE SHOULD ONLY BE CHANGED WHILE THE POOL IS SUSPENDED, AFTER CONNECTIONS HAVE BEEN EVICTED.
+    *
+    * @param catalog the catalog name, or null
+    */
+   void setCatalog(String catalog);
 }

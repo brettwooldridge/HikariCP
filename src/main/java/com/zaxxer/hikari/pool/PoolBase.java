@@ -55,7 +55,10 @@ abstract class PoolBase
 
    public final HikariConfig config;
    public IMetricsTrackerDelegate metricsTracker;
+
+   protected volatile String catalog;
    protected final String poolName;
+
    long connectionTimeout;
    long validationTimeout;
 
@@ -72,7 +75,6 @@ abstract class PoolBase
    private Executor netTimeoutExecutor;
    private DataSource dataSource;
 
-   private final String catalog;
    private final String schema;
    private final boolean isReadOnly;
    private final boolean isAutoCommit;
