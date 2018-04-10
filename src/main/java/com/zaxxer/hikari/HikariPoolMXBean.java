@@ -58,7 +58,7 @@ public interface HikariPoolMXBean
    int getThreadsAwaitingConnection();
 
    /**
-    * Evict currently idle connections from the pool, and mark active (in-use) connection for eviction when they are
+    * Evict currently idle connections from the pool, and mark active (in-use) connections for eviction when they are
     * returned to the pool.
     */
    void softEvictConnections();
