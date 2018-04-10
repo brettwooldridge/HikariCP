@@ -26,16 +26,24 @@ import javax.sql.DataSource;
 public interface HikariPoolMXBean
 {
    /**
-    * Get the number of currently idle connections in the pool.  The return value is extremely transient and is
-    * a point-in-time measurement.
+    * Get the number of currently idle connections in the pool.
+    * <p>
+    * The return value is extremely transient and is a point-in-time measurement.  Therefore, due to a time
+    * difference between invoking this method and {@link #getActiveConnections()}, it is possible for the sum
+    * of idle plus active connections to be either less than or greater than the value returned by
+    * {@link #getTotalConnections()}.
     *
     * @return the current number of idle connections in the pool
     */
    int getIdleConnections();
 
    /**
-    * Get the number of currently active connections in the pool.  The return value is extremely transient and is
-    * a point-in-time measurement.
+    * Get the number of currently active connections in the pool.
+    * <p>
+    * The return value is extremely transient and is a point-in-time measurement.  Therefore, due to a time
+    * difference between invoking this method and {@link #getIdleConnections()}, it is possible for the sum
+    * of idle plus active connections to be either less than or greater than the value returned by
+    * {@link #getTotalConnections()}.
     *
     * @return the current number of active (in-use) connections in the pool
     */
