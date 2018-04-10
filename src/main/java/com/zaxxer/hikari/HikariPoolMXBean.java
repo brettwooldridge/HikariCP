@@ -59,7 +59,7 @@ public interface HikariPoolMXBean
 
    /**
     * Evict currently idle connections from the pool, and mark active (in-use) connection for eviction when they are
-    * return to the pool.
+    * returned to the pool.
     */
    void softEvictConnections();
 
