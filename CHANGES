@@ -1,5 +1,11 @@
 HikariCP Changes
 
+Changes in 3.1.0
+
+ * Add get/setCatalog() to HikariConfigMXBean, allowing the catalog to be changed at runtime.
+   The catalog should only be changed while the pool is suspended, and after evicting existing
+   connections via HikariPoolMXBean.softEvictConnections().
+
 Changes in 3.0.0
 
  * Removed previously deprecated methods;
