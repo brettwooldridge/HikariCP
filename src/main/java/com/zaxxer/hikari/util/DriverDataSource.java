@@ -101,6 +101,7 @@ public final class DriverDataSource implements DataSource
       try {
          if (driver == null) {
             driver = DriverManager.getDriver(jdbcUrl);
+            LOGGER.debug("Loaded driver with class name {} for jdbcUrl={}", driver.getClass().getName(), jdbcUrl);
          }
          else if (!driver.acceptsURL(jdbcUrl)) {
             throw new RuntimeException("Driver " + driverClassName + " claims to not accept jdbcUrl, " + jdbcUrl);
