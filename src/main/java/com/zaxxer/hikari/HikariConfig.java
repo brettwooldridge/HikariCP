@@ -961,11 +961,6 @@ public class HikariConfig implements HikariConfigMXBean
       }
    }
 
-   private void checkIfSealed()
-   {
-      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started. Use HikariConfigMXBean for runtime changes.");
-   }
-
    private void validateNumerics()
    {
       if (maxLifetime != 0 && maxLifetime < SECONDS.toMillis(30)) {
@@ -1011,6 +1006,11 @@ public class HikariConfig implements HikariConfigMXBean
       if (idleTimeout != IDLE_TIMEOUT && idleTimeout != 0 && minIdle == maxPoolSize) {
          LOGGER.warn("{} - idleTimeout has been set but has no effect because the pool is operating as a fixed size pool.");
       }
+   }
+
+   private void checkIfSealed()
+   {
+      if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started. Use HikariConfigMXBean for runtime changes.");
    }
 
    @SuppressWarnings("StatementWithEmptyBody")
