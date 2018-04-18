@@ -98,17 +98,18 @@ public final class DriverDataSource implements DataSource
          }
       }
 
+      final String sanitizedUrl = jdbcUrl.replaceAll("([?&;]password=)[^&#;]*(.*)", "$1<masked>$2");
       try {
          if (driver == null) {
             driver = DriverManager.getDriver(jdbcUrl);
-            LOGGER.debug("Loaded driver with class name {} for jdbcUrl={}", driver.getClass().getName(), jdbcUrl);
+            LOGGER.debug("Loaded driver with class name {} for jdbcUrl={}", driver.getClass().getName(), sanitizedUrl);
          }
          else if (!driver.acceptsURL(jdbcUrl)) {
-            throw new RuntimeException("Driver " + driverClassName + " claims to not accept jdbcUrl, " + jdbcUrl);
+            throw new RuntimeException("Driver " + driverClassName + " claims to not accept jdbcUrl, " + sanitizedUrl);
          }
       }
       catch (SQLException e) {
-         throw new RuntimeException("Failed to get driver instance for jdbcUrl=" + jdbcUrl, e);
+         throw new RuntimeException("Failed to get driver instance for jdbcUrl=" + sanitizedUrl, e);
       }
    }
 
