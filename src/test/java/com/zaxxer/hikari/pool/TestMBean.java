@@ -143,8 +143,6 @@ public class TestMBean
          try (Connection conn1 = ds.getConnection();
               Connection conn2 = ds.getConnection()) {
             fail("Connection should have timed out.");
-            conn1.close();
-            conn2.close();
          }
          catch (SQLException e) {
             assertEquals(1000, ds.getConnectionTimeout());
