@@ -120,9 +120,18 @@ public final class DriverDataSource implements DataSource
    }
 
    @Override
-   public Connection getConnection(String username, String password) throws SQLException
+   public Connection getConnection(final String username, final String password) throws SQLException
    {
-      return getConnection();
+      final Properties cloned = (Properties) driverProperties.clone();
+      if (username != null) {
+         cloned.put("user", username);
+         cloned.put("username", username);
+      }
+      if (password != null) {
+         cloned.put("password", password);
+      }
+
+      return driver.connect(jdbcUrl, cloned);
    }
 
    @Override
