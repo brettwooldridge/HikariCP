@@ -125,7 +125,9 @@ public final class DriverDataSource implements DataSource
       final Properties cloned = (Properties) driverProperties.clone();
       if (username != null) {
          cloned.put("user", username);
-         cloned.put("username", username);
+         if (cloned.containsKey("username")) {
+            cloned.put("username", username);
+         }
       }
       if (password != null) {
          cloned.put("password", password);
