@@ -54,7 +54,7 @@ abstract class PoolBase
    private final Logger LOGGER = LoggerFactory.getLogger(PoolBase.class);
 
    public final HikariConfig config;
-   public IMetricsTrackerDelegate metricsTracker;
+   IMetricsTrackerDelegate metricsTracker;
 
    protected volatile String catalog;
    protected final String poolName;
@@ -172,7 +172,8 @@ abstract class PoolBase
       }
       catch (Exception e) {
          lastConnectionFailure.set(e);
-         LOGGER.warn("{} - Failed to validate connection {} ({})", poolName, connection, e.getMessage());
+         LOGGER.warn("{} - Failed to validate connection {} ({}). Possibly consider using a shorter maxLifetime value.",
+                     poolName, connection, e.getMessage());
          return false;
       }
    }
