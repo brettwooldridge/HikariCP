@@ -16,26 +16,18 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.util.ClockSource.currentTime;
+import com.zaxxer.hikari.util.FastList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Savepoint;
-import java.sql.Statement;
-import java.sql.Wrapper;
+import java.sql.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Executor;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.zaxxer.hikari.util.FastList;
+import static com.zaxxer.hikari.util.ClockSource.currentTime;
 
 /**
  * This is the proxy class for java.sql.Connection.
@@ -264,6 +256,7 @@ public abstract class ProxyConnection implements Connection
 
    /** {@inheritDoc} */
    @Override
+   @SuppressWarnings("RedundantThrows")
    public boolean isClosed() throws SQLException
    {
       return (delegate == ClosedConnection.CLOSED_CONNECTION);
@@ -447,7 +440,7 @@ public abstract class ProxyConnection implements Connection
    @Override
    public final boolean isWrapperFor(Class<?> iface) throws SQLException
    {
-      return iface.isInstance(delegate) || (delegate instanceof Wrapper && delegate.isWrapperFor(iface));
+      return iface.isInstance(delegate) || (delegate != null && delegate.isWrapperFor(iface));
    }
 
    /** {@inheritDoc} */
@@ -458,7 +451,7 @@ public abstract class ProxyConnection implements Connection
       if (iface.isInstance(delegate)) {
          return (T) delegate;
       }
-      else if (delegate instanceof Wrapper) {
+      else if (delegate != null) {
           return delegate.unwrap(iface);
       }
 
@@ -477,11 +470,17 @@ public abstract class ProxyConnection implements Connection
       {
          InvocationHandler handler = (proxy, method, args) -> {
             final String methodName = method.getName();
-            if ("abort".equals(methodName)) {
-               return Void.TYPE;
+            if ("isClosed".equals(methodName)) {
+               return Boolean.TRUE;
             }
             else if ("isValid".equals(methodName)) {
                return Boolean.FALSE;
+            }
+            if ("abort".equals(methodName)) {
+               return Void.TYPE;
+            }
+            if ("close".equals(methodName)) {
+               return Void.TYPE;
             }
             else if ("toString".equals(methodName)) {
                return ClosedConnection.class.getCanonicalName();
