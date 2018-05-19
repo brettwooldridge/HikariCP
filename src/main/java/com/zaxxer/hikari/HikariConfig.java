@@ -591,10 +591,10 @@ public class HikariConfig implements HikariConfigMXBean
     *       and the the pool will start and continue to try to obtain connections in the
     *       background.  This can mean that callers to {@code DataSource#getConnection()} may
     *       encounter exceptions. </li>
-    *   <li>A value less than zero will <i>not</i> bypass any connection attempt and
-    *       validation during startup, and therefore the pool will start immediately.  The
-    *       pool will continue to try to obtain connections in the background. This can mean
-    *       that callers to {@code DataSource#getConnection()} may encounter exceptions. </li>
+    *   <li>A value less than zero will bypass any connection attempt and validation during
+    *       startup, and therefore the pool will start immediately.  The pool will continue to
+    *       try to obtain connections in the background. This can mean that callers to
+    *       {@code DataSource#getConnection()} may encounter exceptions. </li>
     * </ul>
     * Note that if this timeout value is greater than or equal to zero (0), and therefore an
     * initial connection validation is performed, this timeout does not override the
@@ -916,6 +916,7 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       // treat empty property as null
+      //noinspection NonAtomicOperationOnVolatileField
       catalog = getNullIfEmpty(catalog);
       connectionInitSql = getNullIfEmpty(connectionInitSql);
       connectionTestQuery = getNullIfEmpty(connectionTestQuery);
