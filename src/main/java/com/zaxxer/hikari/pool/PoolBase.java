@@ -128,9 +128,10 @@ abstract class PoolBase
          try {
             LOGGER.debug("{} - Closing connection {}: {}", poolName, connection, closureReason);
             try {
-               setNetworkTimeout(connection, SECONDS.toMillis(15));
-            }
-            finally {
+               if (!connection.isClosed()) {
+                  setNetworkTimeout(connection, SECONDS.toMillis(15));
+               }
+            } finally {
                connection.close(); // continue with the close even if setNetworkTimeout() throws
             }
          }
