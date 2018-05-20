@@ -58,6 +58,7 @@ abstract class PoolBase
 
    protected volatile String catalog;
    protected final String poolName;
+   protected final AtomicReference<Throwable> lastConnectionFailure;
 
    long connectionTimeout;
    long validationTimeout;
@@ -81,7 +82,6 @@ abstract class PoolBase
 
    private final boolean isUseJdbc4Validation;
    private final boolean isIsolateInternalQueries;
-   private final AtomicReference<Throwable> lastConnectionFailure;
 
    private volatile boolean isValidChecked;
 
