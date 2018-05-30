@@ -1,5 +1,25 @@
 HikariCP Changes
 
+Changes in 3.2.0
+
+ * check connection closed condition before attempting to set network timeout to avoid spurios exceptions
+   in the log.
+
+ * updated validation failure message to include recommendation to check maxLifetime value.
+
+ * fixed 1141 do not throw SQLException when calling isClosed() or close() on a already closed unwrapped
+   Connection, as per JDBC specification.
+
+ * fixed 1137 support changing user/password at runtime for DriverDataSource-wrapped driver connections.
+
+ * fixed 1136 log loaded driver when using jdbcUrl.
+
+ * pull 1135 extract sealed pool check into independent method.
+
+ * fixed 1126 correct error in JavaDoc for HikariConfig.setInitializationFailTimeout().
+
+ * fixed 1114 removed unreachable code.
+
 Changes in 3.1.0
 
  * Add get/setCatalog() to HikariConfigMXBean, allowing the catalog to be changed at runtime.
