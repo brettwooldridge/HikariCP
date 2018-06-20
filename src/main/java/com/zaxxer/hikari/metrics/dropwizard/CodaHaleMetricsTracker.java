@@ -16,8 +16,6 @@
 
 package com.zaxxer.hikari.metrics.dropwizard;
 
-import java.util.concurrent.TimeUnit;
-
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
@@ -26,37 +24,39 @@ import com.codahale.metrics.Timer;
 import com.zaxxer.hikari.metrics.MetricsTracker;
 import com.zaxxer.hikari.metrics.PoolStats;
 
-public final class CodaHaleMetricsTracker extends MetricsTracker
-{
-   private final String poolName;
-   private final Timer connectionObtainTimer;
-   private final Histogram connectionUsage;
-   private final Meter connectionTimeoutMeter;
+import java.util.concurrent.TimeUnit;
+
+public final class CodaHaleMetricsTracker extends MetricsTracker {
+   private final String         poolName;
+   private final Timer          connectionObtainTimer;
+   private final Histogram      connectionUsage;
+   private final Meter          connectionTimeoutMeter;
    private final MetricRegistry registry;
 
-   public CodaHaleMetricsTracker(final String poolName, final PoolStats poolStats, final MetricRegistry registry)
-   {
+   public CodaHaleMetricsTracker(final String poolName, final PoolStats poolStats,
+                                 final MetricRegistry registry) {
       this.poolName = poolName;
       this.registry = registry;
       this.connectionObtainTimer = registry.timer(MetricRegistry.name(poolName, "pool", "Wait"));
       this.connectionUsage = registry.histogram(MetricRegistry.name(poolName, "pool", "Usage"));
-      this.connectionTimeoutMeter = registry.meter(MetricRegistry.name(poolName, "pool", "ConnectionTimeoutRate"));
+      this.connectionTimeoutMeter =
+         registry.meter(MetricRegistry.name(poolName, "pool", "ConnectionTimeoutRate"));
 
-      registry.register(MetricRegistry.name(poolName, "pool", "TotalConnections"),
-                        new Gauge<Integer>() {
-                           @Override
-                           public Integer getValue() {
-                              return poolStats.getTotalConnections();
-                           }
-                        });
+      registry
+         .register(MetricRegistry.name(poolName, "pool", "TotalConnections"), new Gauge<Integer>() {
+            @Override
+            public Integer getValue() {
+               return poolStats.getTotalConnections();
+            }
+         });
 
-      registry.register(MetricRegistry.name(poolName, "pool", "IdleConnections"),
-                        new Gauge<Integer>() {
-                           @Override
-                           public Integer getValue() {
-                              return poolStats.getIdleConnections();
-                           }
-                        });
+      registry
+         .register(MetricRegistry.name(poolName, "pool", "IdleConnections"), new Gauge<Integer>() {
+            @Override
+            public Integer getValue() {
+               return poolStats.getIdleConnections();
+            }
+         });
 
       registry.register(MetricRegistry.name(poolName, "pool", "ActiveConnections"),
                         new Gauge<Integer>() {
@@ -75,10 +75,11 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
                         });
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public void close()
-   {
+   public void close() {
       registry.remove(MetricRegistry.name(poolName, "pool", "Wait"));
       registry.remove(MetricRegistry.name(poolName, "pool", "Usage"));
       registry.remove(MetricRegistry.name(poolName, "pool", "TotalConnections"));
@@ -87,33 +88,32 @@ public final class CodaHaleMetricsTracker extends MetricsTracker
       registry.remove(MetricRegistry.name(poolName, "pool", "PendingConnections"));
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public void recordConnectionAcquiredNanos(final long elapsedAcquiredNanos)
-   {
+   public void recordConnectionAcquiredNanos(final long elapsedAcquiredNanos) {
       connectionObtainTimer.update(elapsedAcquiredNanos, TimeUnit.NANOSECONDS);
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public void recordConnectionUsageMillis(final long elapsedBorrowedMillis)
-   {
+   public void recordConnectionUsageMillis(final long elapsedBorrowedMillis) {
       connectionUsage.update(elapsedBorrowedMillis);
    }
 
    @Override
-   public void recordConnectionTimeout()
-   {
+   public void recordConnectionTimeout() {
       connectionTimeoutMeter.mark();
    }
 
-   public Timer getConnectionAcquisitionTimer()
-   {
+   public Timer getConnectionAcquisitionTimer() {
       return connectionObtainTimer;
    }
 
-   public Histogram getConnectionDurationHistogram()
-   {
+   public Histogram getConnectionDurationHistogram() {
       return connectionUsage;
    }
 }

@@ -24,7 +24,6 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 import javax.inject.Inject;
-
 import java.io.File;
 
 import static org.junit.Assert.assertNotNull;
@@ -35,57 +34,44 @@ import static org.ops4j.pax.exam.CoreOptions.*;
  * @author lburgazzoli
  */
 @RunWith(PaxExam.class)
-public class OSGiBundleTest
-{
-    @Inject
-    BundleContext context;
+public class OSGiBundleTest {
+   @Inject
+   BundleContext context;
 
-    @Configuration
-    public Option[] config()
-    {
-        return options(
-            systemProperty("org.osgi.framework.storage.clean").value("true"),
-            systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("WARN"),
-            mavenBundle("org.slf4j","slf4j-api","1.7.5"),
-            mavenBundle("org.slf4j","slf4j-simple","1.7.5").noStart(),
-            mavenBundle("org.javassist", "javassist", "3.19.0-GA"),
-            new File("target/classes").exists()
-                ?  bundle("reference:file:target/classes")
-                :  bundle("reference:file:../target/classes"),
-            junitBundles(),
-            cleanCaches()
-        );
-    }
+   @Configuration
+   public Option[] config() {
+      return options(systemProperty("org.osgi.framework.storage.clean").value("true"),
+                     systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("WARN"),
+                     mavenBundle("org.slf4j", "slf4j-api", "1.7.5"),
+                     mavenBundle("org.slf4j", "slf4j-simple", "1.7.5").noStart(),
+                     mavenBundle("org.javassist", "javassist", "3.19.0-GA"),
+                     new File("target/classes").exists() ? bundle("reference:file:target/classes") :
+                     bundle("reference:file:../target/classes"), junitBundles(), cleanCaches());
+   }
 
-    @Test
-    public void checkInject()
-    {
-        assertNotNull(context);
-    }
+   @Test
+   public void checkInject() {
+      assertNotNull(context);
+   }
 
-    @Test
-    public void checkBundle()
-    {
-        Boolean bundleFound = false;
-        Boolean bundleActive = false;
+   @Test
+   public void checkBundle() {
+      Boolean bundleFound  = false;
+      Boolean bundleActive = false;
 
-        Bundle[] bundles = context.getBundles();
-        for(Bundle bundle : bundles)
-        {
-            if(bundle != null)
-            {
-                if(bundle.getSymbolicName().equals("com.zaxxer.HikariCP"))
-                {
-                    bundleFound = true;
-                    if(bundle.getState() == Bundle.ACTIVE)
-                    {
-                        bundleActive = true;
-                    }
-                }
+      Bundle[] bundles = context.getBundles();
+      for (Bundle bundle : bundles) {
+         if (bundle != null) {
+            if (bundle.getSymbolicName().equals("com.zaxxer.HikariCP")) {
+               bundleFound = true;
+               if (bundle.getState() == Bundle.ACTIVE) {
+                  bundleActive = true;
+               }
             }
-        }
+         }
+      }
 
-        assertTrue(bundleFound);
-        assertTrue(bundleActive);
-    }
+      assertTrue(bundleFound);
+      assertTrue(bundleActive);
+   }
 }

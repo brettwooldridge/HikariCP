@@ -28,34 +28,33 @@ import java.util.concurrent.locks.AbstractQueuedLongSynchronizer;
  * <p>
  * A thread wishing to acquire a shared resource should: <br>
  * <ul>
- *   <li>Obtain the current sequence from the {@link #currentSequence()} method </li>
- *   <li>Call {@link #waitUntilSequenceExceeded(long, long)} with that sequence.  </li>
- *   <li>Upon receiving a <code>true</code> result from {@link #waitUntilSequenceExceeded(long, long)},
- *       the current sequence should again be obtained from the {@link #currentSequence()} method,
- *       and an attempt to acquire the resource should be made. </li>
- *   <li>If the shared resource cannot be acquired, the thread should again call 
- *       {@link #waitUntilSequenceExceeded(long, long)} with the previously obtained sequence. </li>
- *   <li>If <code>false</code> is received from {@link #waitUntilSequenceExceeded(long, long)}
- *       then a timeout has occurred. </li>
+ * <li>Obtain the current sequence from the {@link #currentSequence()} method </li>
+ * <li>Call {@link #waitUntilSequenceExceeded(long, long)} with that sequence.  </li>
+ * <li>Upon receiving a <code>true</code> result from
+ * {@link #waitUntilSequenceExceeded(long, long)},
+ * the current sequence should again be obtained from the {@link #currentSequence()} method,
+ * and an attempt to acquire the resource should be made. </li>
+ * <li>If the shared resource cannot be acquired, the thread should again call
+ * {@link #waitUntilSequenceExceeded(long, long)} with the previously obtained sequence. </li>
+ * <li>If <code>false</code> is received from {@link #waitUntilSequenceExceeded(long, long)}
+ * then a timeout has occurred. </li>
  * </ul>
  * <p>
  * When running on Java 8 and above, this class leverages the fact that when {@link LongAdder}
  * is monotonically increasing, and only {@link LongAdder#increment()} and {@link LongAdder#sum()}
  * are used, it can be relied on to be Sequentially Consistent.
  *
- * @see <a href="http://en.wikipedia.org/wiki/Sequential_consistency">Java Spec</a> 
  * @author Brett Wooldridge
+ * @see <a href="http://en.wikipedia.org/wiki/Sequential_consistency">Java Spec</a>
  */
-public final class QueuedSequenceSynchronizer
-{
-   private final Sequence sequence;
+public final class QueuedSequenceSynchronizer {
+   private final Sequence     sequence;
    private final Synchronizer synchronizer;
 
    /**
     * Default constructor
     */
-   public QueuedSequenceSynchronizer()
-   {
+   public QueuedSequenceSynchronizer() {
       this.synchronizer = new Synchronizer();
       this.sequence = Sequence.Factory.create();
    }
@@ -63,8 +62,7 @@ public final class QueuedSequenceSynchronizer
    /**
     * Signal any waiting threads.
     */
-   public void signal()
-   {
+   public void signal() {
       synchronizer.releaseShared(1);
    }
 
@@ -73,22 +71,21 @@ public final class QueuedSequenceSynchronizer
     *
     * @return the current sequence
     */
-   public long currentSequence()
-   {
+   public long currentSequence() {
       return sequence.get();
    }
 
    /**
     * Block the current thread until the current sequence exceeds the specified threshold, or
     * until the specified timeout is reached.
-    * 
-    * @param sequence the threshold the sequence must reach before this thread becomes unblocked
+    *
+    * @param sequence     the threshold the sequence must reach before this thread becomes unblocked
     * @param nanosTimeout a nanosecond timeout specifying the maximum time to wait
     * @return true if the threshold was reached, false if the wait timed out
     * @throws InterruptedException if the thread is interrupted while waiting
     */
-   public boolean waitUntilSequenceExceeded(long sequence, long nanosTimeout) throws InterruptedException
-   {
+   public boolean waitUntilSequenceExceeded(long sequence,
+                                            long nanosTimeout) throws InterruptedException {
       return synchronizer.tryAcquireSharedNanos(sequence, nanosTimeout);
    }
 
@@ -97,39 +94,41 @@ public final class QueuedSequenceSynchronizer
     *
     * @return true if there may be other threads waiting for a sequence threshold to be reached
     */
-   public boolean hasQueuedThreads()
-   {
+   public boolean hasQueuedThreads() {
       return synchronizer.hasQueuedThreads();
    }
 
    /**
-    * Returns an estimate of the number of threads waiting for a sequence threshold to be reached. The
-    * value is only an estimate because the number of threads may change dynamically while this method
-    * traverses internal data structures. This method is designed for use in monitoring system state,
+    * Returns an estimate of the number of threads waiting for a sequence threshold to be reached
+    * . The
+    * value is only an estimate because the number of threads may change dynamically while this
+    * method
+    * traverses internal data structures. This method is designed for use in monitoring system
+    * state,
     * not for synchronization control.
     *
     * @return the estimated number of threads waiting for a sequence threshold to be reached
     */
-   public int getQueueLength()
-   {
+   public int getQueueLength() {
       return synchronizer.getQueueLength();
    }
 
-   private final class Synchronizer extends AbstractQueuedLongSynchronizer
-   {
+   private final class Synchronizer extends AbstractQueuedLongSynchronizer {
       private static final long serialVersionUID = 104753538004341218L;
 
-      /** {@inheritDoc} */
+      /**
+       * {@inheritDoc}
+       */
       @Override
-      protected long tryAcquireShared(final long seq)
-      {
+      protected long tryAcquireShared(final long seq) {
          return sequence.get() - (seq + 1);
       }
 
-      /** {@inheritDoc} */
+      /**
+       * {@inheritDoc}
+       */
       @Override
-      protected boolean tryReleaseShared(final long unused)
-      {
+      protected boolean tryReleaseShared(final long unused) {
          sequence.increment();
          return true;
       }

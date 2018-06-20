@@ -1,22 +1,19 @@
 package com.zaxxer.hikari.pool;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.util.UtilityElf;
+import org.junit.Assert;
+import org.junit.Test;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.util.UtilityElf;
-
-public class ConnectionStateTest
-{
+public class ConnectionStateTest {
    @Test
-   public void testAutoCommit() throws SQLException
-   {
+   public void testAutoCommit() throws SQLException {
       try (HikariDataSource ds = new HikariDataSource()) {
          ds.setAutoCommit(true);
          ds.setMinimumIdle(1);
@@ -39,8 +36,7 @@ public class ConnectionStateTest
    }
 
    @Test
-   public void testTransactionIsolation() throws SQLException
-   {
+   public void testTransactionIsolation() throws SQLException {
       try (HikariDataSource ds = new HikariDataSource()) {
          ds.setTransactionIsolation("TRANSACTION_READ_COMMITTED");
          ds.setMinimumIdle(1);
@@ -53,26 +49,26 @@ public class ConnectionStateTest
             connection.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
             connection.close();
 
-            Assert.assertEquals(Connection.TRANSACTION_READ_COMMITTED, unwrap.getTransactionIsolation());
+            Assert.assertEquals(Connection.TRANSACTION_READ_COMMITTED,
+                                unwrap.getTransactionIsolation());
          }
       }
    }
 
    @Test
-   public void testIsolation() throws Exception
-   {
+   public void testIsolation() throws Exception {
       HikariConfig config = new HikariConfig();
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
       config.setTransactionIsolation("TRANSACTION_REPEATABLE_READ");
       config.validate();
 
-      int transactionIsolation = UtilityElf.getTransactionIsolation(config.getTransactionIsolation());
+      int transactionIsolation =
+         UtilityElf.getTransactionIsolation(config.getTransactionIsolation());
       Assert.assertSame(Connection.TRANSACTION_REPEATABLE_READ, transactionIsolation);
    }
 
    @Test
-   public void testReadOnly() throws Exception
-   {
+   public void testReadOnly() throws Exception {
       try (HikariDataSource ds = new HikariDataSource()) {
          ds.setCatalog("test");
          ds.setMinimumIdle(1);
@@ -91,8 +87,7 @@ public class ConnectionStateTest
    }
 
    @Test
-   public void testCatalog() throws SQLException
-   {
+   public void testCatalog() throws SQLException {
       try (HikariDataSource ds = new HikariDataSource()) {
          ds.setCatalog("test");
          ds.setMinimumIdle(1);
@@ -111,8 +106,7 @@ public class ConnectionStateTest
    }
 
    @Test
-   public void testCommitTracking() throws SQLException
-   {
+   public void testCommitTracking() throws SQLException {
       try (HikariDataSource ds = new HikariDataSource()) {
          ds.setAutoCommit(false);
          ds.setMinimumIdle(1);

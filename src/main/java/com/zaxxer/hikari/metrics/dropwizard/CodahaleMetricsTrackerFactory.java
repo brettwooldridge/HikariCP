@@ -21,23 +21,19 @@ import com.zaxxer.hikari.metrics.MetricsTracker;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.PoolStats;
 
-public final class CodahaleMetricsTrackerFactory implements MetricsTrackerFactory
-{
+public final class CodahaleMetricsTrackerFactory implements MetricsTrackerFactory {
    private final MetricRegistry registry;
 
-   public CodahaleMetricsTrackerFactory(MetricRegistry registry)
-   {
+   public CodahaleMetricsTrackerFactory(MetricRegistry registry) {
       this.registry = registry;
    }
 
-   public MetricRegistry getRegistry()
-   {
+   public MetricRegistry getRegistry() {
       return registry;
    }
 
    @Override
-   public MetricsTracker create(String poolName, PoolStats poolStats)
-   {
+   public MetricsTracker create(String poolName, PoolStats poolStats) {
       return new CodaHaleMetricsTracker(poolName, poolStats, registry);
    }
 }

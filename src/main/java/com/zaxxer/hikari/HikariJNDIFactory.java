@@ -16,10 +16,7 @@
 
 package com.zaxxer.hikari;
 
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Properties;
-import java.util.Set;
+import com.zaxxer.hikari.util.PropertyElf;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -29,36 +26,39 @@ import javax.naming.RefAddr;
 import javax.naming.Reference;
 import javax.naming.spi.ObjectFactory;
 import javax.sql.DataSource;
-
-import com.zaxxer.hikari.util.PropertyElf;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * A JNDI factory that produces HikariDataSource instances.
  *
  * @author Brett Wooldridge
  */
-public class HikariJNDIFactory implements ObjectFactory
-{
+public class HikariJNDIFactory implements ObjectFactory {
    @Override
-   synchronized public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment) throws Exception
-   {
-      // We only know how to deal with <code>javax.naming.Reference</code> that specify a class name of "javax.sql.DataSource"
+   synchronized public Object getObjectInstance(Object obj, Name name, Context nameCtx,
+                                                Hashtable<?, ?> environment) throws Exception {
+      // We only know how to deal with <code>javax.naming.Reference</code> that specify a class
+      // name of "javax.sql.DataSource"
       if (!(obj instanceof Reference)) {
          return null;
       }
 
       Reference ref = (Reference) obj;
       if (!"javax.sql.DataSource".equals(ref.getClassName())) {
-         throw new NamingException(ref.getClassName() + " is not a valid class name/type for this JNDI factory.");
+         throw new NamingException(
+            ref.getClassName() + " is not a valid class name/type for this JNDI factory.");
       }
 
       Set<String> hikariPropSet = PropertyElf.getPropertyNames(HikariConfig.class);
 
-      Properties properties = new Properties();
+      Properties           properties  = new Properties();
       Enumeration<RefAddr> enumeration = ref.getAll();
       while (enumeration.hasMoreElements()) {
          RefAddr element = enumeration.nextElement();
-         String type = element.getType();
+         String  type    = element.getType();
          if (type.startsWith("dataSource.") || hikariPropSet.contains(type)) {
             properties.setProperty(type, element.getContent().toString());
          }
@@ -67,8 +67,8 @@ public class HikariJNDIFactory implements ObjectFactory
       return createDataSource(properties, nameCtx);
    }
 
-   private DataSource createDataSource(final Properties properties, final Context context) throws NamingException
-   {
+   private DataSource createDataSource(final Properties properties,
+                                       final Context context) throws NamingException {
       String jndiName = properties.getProperty("dataSourceJNDI");
       if (jndiName != null) {
          return lookupJndiDataSource(properties, context, jndiName);
@@ -77,8 +77,8 @@ public class HikariJNDIFactory implements ObjectFactory
       return new HikariDataSource(new HikariConfig(properties));
    }
 
-   private DataSource lookupJndiDataSource(final Properties properties, final Context context, final String jndiName) throws NamingException
-   {
+   private DataSource lookupJndiDataSource(final Properties properties, final Context context,
+                                           final String jndiName) throws NamingException {
       if (context == null) {
          throw new RuntimeException("JNDI context does not found for dataSourceJNDI : " + jndiName);
       }

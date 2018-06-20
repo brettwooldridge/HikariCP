@@ -24,109 +24,119 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 
 /**
- *
  * @author Brett Wooldridge
  */
-public class StubStatement implements Statement
-{
-   public static volatile boolean oldDriver;
-   private boolean closed;
-   private Connection connection;
+public class StubStatement implements Statement {
+   public static volatile boolean    oldDriver;
+   private                boolean    closed;
+   private                Connection connection;
 
    public StubStatement(Connection connection) {
       this.connection = connection;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @SuppressWarnings("unchecked")
    @Override
-   public <T> T unwrap(Class<T> iface) throws SQLException
-   {
+   public <T> T unwrap(Class<T> iface) throws SQLException {
       checkClosed();
       return (T) this;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public boolean isWrapperFor(Class<?> iface) throws SQLException
-   {
+   public boolean isWrapperFor(Class<?> iface) throws SQLException {
       checkClosed();
       return false;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public ResultSet executeQuery(String sql) throws SQLException
-   {
+   public ResultSet executeQuery(String sql) throws SQLException {
       checkClosed();
       StubResultSet resultSet = new StubResultSet();
       return resultSet;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public int executeUpdate(String sql) throws SQLException
-   {
+   public int executeUpdate(String sql) throws SQLException {
       checkClosed();
       return 0;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public void close() throws SQLException
-   {
+   public void close() throws SQLException {
       closed = true;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public int getMaxFieldSize() throws SQLException
-   {
+   public int getMaxFieldSize() throws SQLException {
       checkClosed();
       return 0;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public void setMaxFieldSize(int max) throws SQLException
-   {
+   public void setMaxFieldSize(int max) throws SQLException {
       checkClosed();
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public int getMaxRows() throws SQLException
-   {
-      checkClosed();
-      return 0;
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public void setMaxRows(int max) throws SQLException
-   {
-      checkClosed();
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public void setEscapeProcessing(boolean enable) throws SQLException
-   {
-      checkClosed();
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public int getQueryTimeout() throws SQLException
-   {
+   public int getMaxRows() throws SQLException {
       checkClosed();
       return 0;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public void setQueryTimeout(int seconds) throws SQLException
-   {
+   public void setMaxRows(int max) throws SQLException {
+      checkClosed();
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public void setEscapeProcessing(boolean enable) throws SQLException {
+      checkClosed();
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public int getQueryTimeout() throws SQLException {
+      checkClosed();
+      return 0;
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public void setQueryTimeout(int seconds) throws SQLException {
       if (oldDriver) {
          throw new SQLFeatureNotSupportedException();
       }
@@ -134,252 +144,283 @@ public class StubStatement implements Statement
       checkClosed();
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public void cancel() throws SQLException
-   {
+   public void cancel() throws SQLException {
       checkClosed();
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public SQLWarning getWarnings() throws SQLException
-   {
+   public SQLWarning getWarnings() throws SQLException {
       checkClosed();
       return null;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public void clearWarnings() throws SQLException
-   {
+   public void clearWarnings() throws SQLException {
       checkClosed();
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public void setCursorName(String name) throws SQLException
-   {
+   public void setCursorName(String name) throws SQLException {
       checkClosed();
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public boolean execute(String sql) throws SQLException
-   {
+   public boolean execute(String sql) throws SQLException {
       checkClosed();
       return false;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public ResultSet getResultSet() throws SQLException
-   {
+   public ResultSet getResultSet() throws SQLException {
       checkClosed();
       return new StubResultSet();
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public int getUpdateCount() throws SQLException
-   {
+   public int getUpdateCount() throws SQLException {
       checkClosed();
       return 0;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public boolean getMoreResults() throws SQLException
-   {
+   public boolean getMoreResults() throws SQLException {
       checkClosed();
       return false;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public void setFetchDirection(int direction) throws SQLException
-   {
+   public void setFetchDirection(int direction) throws SQLException {
       checkClosed();
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public int getFetchDirection() throws SQLException
-   {
-      checkClosed();
-      return 0;
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public void setFetchSize(int rows) throws SQLException
-   {
-      checkClosed();
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public int getFetchSize() throws SQLException
-   {
+   public int getFetchDirection() throws SQLException {
       checkClosed();
       return 0;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public int getResultSetConcurrency() throws SQLException
-   {
+   public void setFetchSize(int rows) throws SQLException {
+      checkClosed();
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public int getFetchSize() throws SQLException {
       checkClosed();
       return 0;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public int getResultSetType() throws SQLException
-   {
+   public int getResultSetConcurrency() throws SQLException {
       checkClosed();
       return 0;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public void addBatch(String sql) throws SQLException
-   {
+   public int getResultSetType() throws SQLException {
+      checkClosed();
+      return 0;
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public void addBatch(String sql) throws SQLException {
       checkClosed();
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public void clearBatch() throws SQLException
-   {
+   public void clearBatch() throws SQLException {
       checkClosed();
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public int[] executeBatch() throws SQLException
-   {
+   public int[] executeBatch() throws SQLException {
       checkClosed();
       return null;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public Connection getConnection() throws SQLException
-   {
+   public Connection getConnection() throws SQLException {
       checkClosed();
       return connection;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public boolean getMoreResults(int current) throws SQLException
-   {
+   public boolean getMoreResults(int current) throws SQLException {
       checkClosed();
       return false;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public ResultSet getGeneratedKeys() throws SQLException
-   {
+   public ResultSet getGeneratedKeys() throws SQLException {
       checkClosed();
       return new StubResultSet();
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public int executeUpdate(String sql, int autoGeneratedKeys) throws SQLException
-   {
+   public int executeUpdate(String sql, int autoGeneratedKeys) throws SQLException {
       checkClosed();
       return 0;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public int executeUpdate(String sql, int[] columnIndexes) throws SQLException
-   {
+   public int executeUpdate(String sql, int[] columnIndexes) throws SQLException {
       checkClosed();
       return 0;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public int executeUpdate(String sql, String[] columnNames) throws SQLException
-   {
+   public int executeUpdate(String sql, String[] columnNames) throws SQLException {
       checkClosed();
       return 0;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public boolean execute(String sql, int autoGeneratedKeys) throws SQLException
-   {
+   public boolean execute(String sql, int autoGeneratedKeys) throws SQLException {
       checkClosed();
       return false;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public boolean execute(String sql, int[] columnIndexes) throws SQLException
-   {
+   public boolean execute(String sql, int[] columnIndexes) throws SQLException {
       checkClosed();
       return false;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public boolean execute(String sql, String[] columnNames) throws SQLException
-   {
+   public boolean execute(String sql, String[] columnNames) throws SQLException {
       checkClosed();
       return false;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public int getResultSetHoldability() throws SQLException
-   {
+   public int getResultSetHoldability() throws SQLException {
       checkClosed();
       return 0;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public boolean isClosed() throws SQLException
-   {
+   public boolean isClosed() throws SQLException {
       return closed;
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public void setPoolable(boolean poolable) throws SQLException
-   {
+   public void setPoolable(boolean poolable) throws SQLException {
       checkClosed();
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public boolean isPoolable() throws SQLException
-   {
+   public boolean isPoolable() throws SQLException {
       checkClosed();
       return false;
    }
 
-   /** {@inheritDoc} */
-   public void closeOnCompletion() throws SQLException
-   {
+   /**
+    * {@inheritDoc}
+    */
+   public void closeOnCompletion() throws SQLException {
       checkClosed();
    }
 
-   /** {@inheritDoc} */
-   public boolean isCloseOnCompletion() throws SQLException
-   {
+   /**
+    * {@inheritDoc}
+    */
+   public boolean isCloseOnCompletion() throws SQLException {
       checkClosed();
       return false;
    }
 
-   private void checkClosed() throws SQLException
-   {
+   private void checkClosed() throws SQLException {
       if (closed) {
          throw new SQLException("Statement is closed");
       }

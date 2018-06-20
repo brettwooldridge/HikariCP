@@ -28,8 +28,7 @@ import java.util.concurrent.atomic.LongAdder;
  * @author brettw
  */
 @SuppressWarnings("serial")
-public interface Sequence
-{
+public interface Sequence {
    /**
     * Increments the current sequence by one.
     */
@@ -45,21 +44,20 @@ public interface Sequence
    /**
     * Factory class used to create a platform-specific ClockSource.
     */
-   final class Factory
-   {
-      public static Sequence create()
-      {
+   final class Factory {
+      public static Sequence create() {
          try {
-            if (Sequence.class.getClassLoader().loadClass("java.util.concurrent.atomic.LongAdder") != null && !Boolean.getBoolean("com.zaxxer.hikari.useAtomicLongSequence")) {
+            if (
+               Sequence.class.getClassLoader().loadClass("java.util.concurrent.atomic.LongAdder") !=
+               null && !Boolean.getBoolean("com.zaxxer.hikari.useAtomicLongSequence")) {
                return new Java8Sequence();
             }
-         }
-         catch (ClassNotFoundException e) {
+         } catch (ClassNotFoundException e) {
             try {
-               Class<?> longAdderClass = Sequence.class.getClassLoader().loadClass("com.codahale.metrics.LongAdder");
+               Class<?> longAdderClass =
+                  Sequence.class.getClassLoader().loadClass("com.codahale.metrics.LongAdder");
                return new DropwizardSequence(longAdderClass);
-            }
-            catch (Exception e2) {
+            } catch (Exception e2) {
             }
          }
 
@@ -98,23 +96,19 @@ public interface Sequence
       }
 
       @Override
-      public void increment()
-      {
+      public void increment() {
          try {
             increment.invoke(longAdder);
-         }
-         catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new RuntimeException(e);
          }
       }
 
       @Override
-      public long get()
-      {
+      public long get() {
          try {
             return (Long) sum.invoke(longAdder);
-         }
-         catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new RuntimeException(e);
          }
       }

@@ -16,33 +16,29 @@
 
 package com.zaxxer.hikari.pool;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.util.ConcurrentBag;
+import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.util.ConcurrentBag;
-import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
- *
  * @author Brett Wooldridge
  */
-public class TestConcurrentBag
-{
+public class TestConcurrentBag {
    private static HikariDataSource ds;
-   private static HikariPool pool;
+   private static HikariPool       pool;
 
    @BeforeClass
-   public static void setup()
-   {
+   public static void setup() {
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(2);
@@ -55,18 +51,15 @@ public class TestConcurrentBag
    }
 
    @AfterClass
-   public static void teardown()
-   {
+   public static void teardown() {
       ds.close();
    }
 
    @Test
-   public void testConcurrentBag() throws Exception
-   {
+   public void testConcurrentBag() throws Exception {
       ConcurrentBag<PoolEntry> bag = new ConcurrentBag<>(new IBagStateListener() {
          @Override
-         public Future<Boolean> addBagItem()
-         {
+         public Future<Boolean> addBagItem() {
             return null;
          }
       });
@@ -86,7 +79,7 @@ public class TestConcurrentBag
       bag.dumpState();
 
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      PrintStream ps = new PrintStream(baos, true);
+      PrintStream           ps   = new PrintStream(baos, true);
       TestElf.setSlf4jTargetStream(ConcurrentBag.class, ps);
 
       bag.requite(reserved);
@@ -106,8 +99,7 @@ public class TestConcurrentBag
          PoolEntry bagEntry = pool.newPoolEntry();
          bag.add(bagEntry);
          Assert.assertNotEquals(bagEntry, bag.borrow(100, TimeUnit.MILLISECONDS));
-      }
-      catch (IllegalStateException e) {
+      } catch (IllegalStateException e) {
          Assert.assertTrue(new String(baos.toByteArray()).contains("ignoring add()"));
       }
 

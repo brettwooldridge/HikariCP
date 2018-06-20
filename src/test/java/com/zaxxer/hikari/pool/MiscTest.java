@@ -16,6 +16,13 @@
 
 package com.zaxxer.hikari.pool;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.util.UtilityElf;
+import org.apache.logging.log4j.Level;
+import org.junit.Assert;
+import org.junit.Test;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -24,22 +31,12 @@ import java.sql.SQLException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.logging.log4j.Level;
-import org.junit.Assert;
-import org.junit.Test;
-
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.util.UtilityElf;
-
 /**
  * @author Brett Wooldridge
  */
-public class MiscTest
-{
+public class MiscTest {
    @Test
-   public void testLogWriter() throws SQLException
-   {
+   public void testLogWriter() throws SQLException {
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(4);
@@ -52,42 +49,35 @@ public class MiscTest
          ds.setLogWriter(writer);
          Assert.assertSame(writer, ds.getLogWriter());
          Assert.assertEquals("test", config.getPoolName());
-      }
-      finally
-      {
+      } finally {
          TestElf.setConfigUnitTest(false);
       }
    }
 
    @Test
-   public void testInvalidIsolation()
-   {
+   public void testInvalidIsolation() {
       try {
          UtilityElf.getTransactionIsolation("INVALID");
          Assert.fail();
-      }
-      catch (Exception e) {
+      } catch (Exception e) {
          Assert.assertTrue(e instanceof IllegalArgumentException);
       }
    }
 
    @Test
-   public void testCreateInstance()
-   {
+   public void testCreateInstance() {
       try {
          UtilityElf.createInstance("invalid", null);
          Assert.fail();
-      }
-      catch (RuntimeException e) {
+      } catch (RuntimeException e) {
          Assert.assertTrue(e.getCause() instanceof ClassNotFoundException);
       }
    }
 
    @Test
-   public void testLeakDetection() throws Exception
-   {
+   public void testLeakDetection() throws Exception {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      PrintStream ps = new PrintStream(baos, true);
+      PrintStream           ps   = new PrintStream(baos, true);
       TestElf.setSlf4jTargetStream(Class.forName("com.zaxxer.hikari.pool.ProxyLeakTask"), ps);
       TestElf.setConfigUnitTest(true);
 
@@ -111,10 +101,10 @@ public class MiscTest
          ps.close();
          String s = new String(baos.toByteArray());
          Assert.assertNotNull("Exception string was null", s);
-         Assert.assertTrue("Expected exception to contain 'Connection leak detection' but contains *" + s + "*", s.contains("Connection leak detection"));
-      }
-      finally
-      {
+         Assert.assertTrue(
+            "Expected exception to contain 'Connection leak detection' but contains *" + s + "*",
+            s.contains("Connection leak detection"));
+      } finally {
          TestElf.setConfigUnitTest(false);
       }
    }

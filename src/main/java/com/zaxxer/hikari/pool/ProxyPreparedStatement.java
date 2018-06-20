@@ -25,10 +25,8 @@ import java.sql.SQLException;
  *
  * @author Brett Wooldridge
  */
-public abstract class ProxyPreparedStatement extends ProxyStatement implements PreparedStatement
-{
-   protected ProxyPreparedStatement(ProxyConnection connection, PreparedStatement statement)
-   {
+public abstract class ProxyPreparedStatement extends ProxyStatement implements PreparedStatement {
+   protected ProxyPreparedStatement(ProxyConnection connection, PreparedStatement statement) {
       super(connection, statement);
    }
 
@@ -36,35 +34,39 @@ public abstract class ProxyPreparedStatement extends ProxyStatement implements P
    //              Overridden java.sql.PreparedStatement Methods
    // **********************************************************************
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public boolean execute() throws SQLException
-   {
+   public boolean execute() throws SQLException {
       connection.markCommitStateDirty();
       return ((PreparedStatement) delegate).execute();
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public ResultSet executeQuery() throws SQLException
-   {
+   public ResultSet executeQuery() throws SQLException {
       connection.markCommitStateDirty();
       ResultSet resultSet = ((PreparedStatement) delegate).executeQuery();
-      return ProxyFactory.getProxyResultSet(connection, this, resultSet); 
+      return ProxyFactory.getProxyResultSet(connection, this, resultSet);
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public int executeUpdate() throws SQLException
-   {
+   public int executeUpdate() throws SQLException {
       connection.markCommitStateDirty();
       return ((PreparedStatement) delegate).executeUpdate();
    }
 
-   /** {@inheritDoc} */
+   /**
+    * {@inheritDoc}
+    */
    @Override
-   public long executeLargeUpdate() throws SQLException
-   {
+   public long executeLargeUpdate() throws SQLException {
       connection.markCommitStateDirty();
       return ((PreparedStatement) delegate).executeLargeUpdate();
    }

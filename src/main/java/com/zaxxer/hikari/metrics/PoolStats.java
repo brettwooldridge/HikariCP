@@ -16,34 +16,30 @@
 
 package com.zaxxer.hikari.metrics;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 import com.zaxxer.hikari.util.ClockSource;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
- *
  * @author Brett Wooldridge
  */
-public abstract class PoolStats
-{
+public abstract class PoolStats {
    private final ClockSource clock;
-   private final AtomicLong reloadAt;
-   private final long timeoutMs;
+   private final AtomicLong  reloadAt;
+   private final long        timeoutMs;
 
    protected volatile int totalConnections;
    protected volatile int idleConnections;
    protected volatile int activeConnections;
    protected volatile int pendingThreads;
 
-   public PoolStats(final long timeoutMs)
-   {
+   public PoolStats(final long timeoutMs) {
       this.timeoutMs = timeoutMs;
       this.reloadAt = new AtomicLong();
       this.clock = ClockSource.INSTANCE;
    }
-   
-   public int getTotalConnections()
-   {
+
+   public int getTotalConnections() {
       if (shouldLoad()) {
          update();
       }
@@ -51,8 +47,7 @@ public abstract class PoolStats
       return totalConnections;
    }
 
-   public int getIdleConnections()
-   {
+   public int getIdleConnections() {
       if (shouldLoad()) {
          update();
       }
@@ -60,8 +55,7 @@ public abstract class PoolStats
       return idleConnections;
    }
 
-   public int getActiveConnections()
-   {
+   public int getActiveConnections() {
       if (shouldLoad()) {
          update();
       }
@@ -69,8 +63,7 @@ public abstract class PoolStats
       return activeConnections;
    }
 
-   public int getPendingThreads()
-   {
+   public int getPendingThreads() {
       if (shouldLoad()) {
          update();
       }
@@ -80,17 +73,15 @@ public abstract class PoolStats
 
    protected abstract void update();
 
-   private boolean shouldLoad()
-   {
+   private boolean shouldLoad() {
       for (; ; ) {
-          final long now = clock.currentTime();
-          final long reloadTime = reloadAt.get();
-          if (reloadTime > now) {
-              return false;
-          }
-          else if (reloadAt.compareAndSet(reloadTime, clock.plusMillis(now, timeoutMs))) {
-              return true;
-          }
+         final long now        = clock.currentTime();
+         final long reloadTime = reloadAt.get();
+         if (reloadTime > now) {
+            return false;
+         } else if (reloadAt.compareAndSet(reloadTime, clock.plusMillis(now, timeoutMs))) {
+            return true;
+         }
       }
-  }
+   }
 }
