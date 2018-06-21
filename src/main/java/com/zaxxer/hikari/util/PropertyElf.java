@@ -90,13 +90,13 @@ public final class PropertyElf {
       try {
          String capitalized =
             "get" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
-         Method method      = target.getClass().getMethod(capitalized);
+         Method method = target.getClass().getMethod(capitalized);
          return method.invoke(target);
       } catch (Exception e) {
          try {
             String capitalized =
                "is" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
-            Method method      = target.getClass().getMethod(capitalized);
+            Method method = target.getClass().getMethod(capitalized);
             return method.invoke(target);
          } catch (Exception e2) {
             return null;

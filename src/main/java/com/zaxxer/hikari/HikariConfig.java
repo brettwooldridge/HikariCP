@@ -416,9 +416,8 @@ public class HikariConfig implements HikariConfigMXBean {
 
    @Deprecated
    public void setJdbc4ConnectionTest(boolean useIsValid) {
-      LOGGER.warn(
-         "The jdbcConnectionTest property is now deprecated, see the documentation for " +
-         "connectionTestQuery");
+      LOGGER.warn("The jdbcConnectionTest property is now deprecated, see the documentation for " +
+                  "connectionTestQuery");
    }
 
    public MetricsTrackerFactory getMetricsTrackerFactory() {
@@ -785,8 +784,7 @@ public class HikariConfig implements HikariConfigMXBean {
              (leakDetectionThreshold > maxLifetime && maxLifetime > 0)) {
             LOGGER.warn(
                "{} - leakDetectionThreshold is less than 2000ms or more than maxLifetime, " +
-               "disabling it.",
-               poolName);
+               "disabling it.", poolName);
             leakDetectionThreshold = 0;
          }
       }
@@ -855,6 +853,11 @@ public class HikariConfig implements HikariConfigMXBean {
       }
    }
 
+   /**
+    * 通过反射机制将config中的属性的值赋值在当前对象中的对应属性
+    *
+    * @param other
+    */
    public void copyState(HikariConfig other) {
       for (Field field : HikariConfig.class.getDeclaredFields()) {
          if (!Modifier.isFinal(field.getModifiers())) {

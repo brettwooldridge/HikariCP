@@ -104,9 +104,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
       }
 
       setHealthCheckRegistry(config.getHealthCheckRegistry());
-
       registerMBeans(this);
-
       checkFailFast();
 
       ThreadFactory threadFactory = config.getThreadFactory();
@@ -170,8 +168,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
             if (poolEntry.isMarkedEvicted() ||
                 (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS &&
                  !isConnectionAlive(poolEntry.connection))) {
-               closeConnection(poolEntry,
-                               "(connection is evicted or dead)"); // Throw away the dead
+               closeConnection(poolEntry, "(connection is evicted or dead)"); // Throw away the dead
                // connection (passed max age or failed alive test)
                timeout = hardTimeout - clockSource.elapsedMillis(startTime);
             } else {
@@ -591,8 +588,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
              clockSource.plusMillis(previous, HOUSEKEEPING_PERIOD_MS)) {
             LOGGER.warn(
                "{} - Retrograde clock change detected (housekeeper delta={}), soft-evicting " +
-               "connections from pool.",
-               clockSource.elapsedDisplayString(previous, now), poolName);
+               "connections from pool.", clockSource.elapsedDisplayString(previous, now), poolName);
             previous = now;
             softEvictConnections();
             fillPool();

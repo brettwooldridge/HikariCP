@@ -30,8 +30,7 @@ public class TestPropertySetter {
       HikariConfig config = new HikariConfig(propfile2);
       config.validate();
 
-      Class<?>   clazz      =
-         this.getClass().getClassLoader().loadClass(config.getDataSourceClassName());
+      Class<?> clazz = this.getClass().getClassLoader().loadClass(config.getDataSourceClassName());
       DataSource dataSource = (DataSource) clazz.newInstance();
       PropertyElf.setTargetFromProperties(dataSource, config.getDataSourceProperties());
    }
@@ -43,8 +42,7 @@ public class TestPropertySetter {
       PrintWriter writer = new PrintWriter(new ByteArrayOutputStream());
       config.addDataSourceProperty("logWriter", writer);
 
-      Class<?>   clazz      =
-         this.getClass().getClassLoader().loadClass(config.getDataSourceClassName());
+      Class<?> clazz = this.getClass().getClassLoader().loadClass(config.getDataSourceClassName());
       DataSource dataSource = (DataSource) clazz.newInstance();
       PropertyElf.setTargetFromProperties(dataSource, config.getDataSourceProperties());
 
@@ -58,8 +56,7 @@ public class TestPropertySetter {
       HikariConfig config = new HikariConfig(propfile3);
       config.validate();
 
-      Class<?>   clazz      =
-         this.getClass().getClassLoader().loadClass(config.getDataSourceClassName());
+      Class<?> clazz = this.getClass().getClassLoader().loadClass(config.getDataSourceClassName());
       DataSource dataSource = (DataSource) clazz.newInstance();
       PropertyElf.setTargetFromProperties(dataSource, config.getDataSourceProperties());
    }

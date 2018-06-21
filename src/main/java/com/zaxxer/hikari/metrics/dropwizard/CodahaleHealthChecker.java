@@ -59,9 +59,8 @@ public final class CodahaleHealthChecker {
     */
    public static void registerHealthChecks(final HikariPool pool, final HikariConfig hikariConfig,
                                            final HealthCheckRegistry registry) {
-      final Properties     healthCheckProperties = hikariConfig.getHealthCheckProperties();
-      final MetricRegistry metricRegistry        =
-         (MetricRegistry) hikariConfig.getMetricRegistry();
+      final Properties healthCheckProperties = hikariConfig.getHealthCheckProperties();
+      final MetricRegistry metricRegistry = (MetricRegistry) hikariConfig.getMetricRegistry();
 
       final long checkTimeoutMs = Long.parseLong(healthCheckProperties
                                                     .getProperty("connectivityCheckTimeoutMs",

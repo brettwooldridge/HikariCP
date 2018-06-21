@@ -207,7 +207,7 @@ public class TestMetrics {
       ds.setMaximumPoolSize(1);
       ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      MetricRegistry        metricRegistry        = new MetricRegistry();
+      MetricRegistry metricRegistry = new MetricRegistry();
       MetricsTrackerFactory metricsTrackerFactory =
          new CodahaleMetricsTrackerFactory(metricRegistry);
 
@@ -269,7 +269,7 @@ public class TestMetrics {
       ds.setMaximumPoolSize(1);
       ds.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      MetricRegistry        metricRegistry        = new MetricRegistry();
+      MetricRegistry metricRegistry = new MetricRegistry();
       MetricsTrackerFactory metricsTrackerFactory =
          new CodahaleMetricsTrackerFactory(metricRegistry);
 

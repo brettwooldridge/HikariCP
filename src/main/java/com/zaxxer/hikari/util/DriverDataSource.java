@@ -63,10 +63,8 @@ public final class DriverDataSource implements DataSource {
          }
 
          if (driver == null) {
-            LOGGER.warn(
-               "Registered driver with driverClassName={} was not found, trying direct " +
-               "instantiation.",
-               driverClassName);
+            LOGGER.warn("Registered driver with driverClassName={} was not found, trying direct " +
+                        "instantiation.", driverClassName);
             try {
                Class<?> driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
                driver = (Driver) driverClass.newInstance();

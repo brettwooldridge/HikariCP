@@ -227,7 +227,7 @@ abstract class PoolBase {
 
          final ObjectName beanConfigName =
             new ObjectName("com.zaxxer.hikari:type=PoolConfig (" + poolName + ")");
-         final ObjectName beanPoolName   =
+         final ObjectName beanPoolName =
             new ObjectName("com.zaxxer.hikari:type=Pool (" + poolName + ")");
          if (!mBeanServer.isRegistered(beanConfigName)) {
             mBeanServer.registerMBean(config, beanConfigName);
@@ -254,7 +254,7 @@ abstract class PoolBase {
 
          final ObjectName beanConfigName =
             new ObjectName("com.zaxxer.hikari:type=PoolConfig (" + poolName + ")");
-         final ObjectName beanPoolName   =
+         final ObjectName beanPoolName =
             new ObjectName("com.zaxxer.hikari:type=Pool (" + poolName + ")");
          if (mBeanServer.isRegistered(beanConfigName)) {
             mBeanServer.unregisterMBean(beanConfigName);
@@ -361,8 +361,7 @@ abstract class PoolBase {
             } catch (Throwable e) {
                LOGGER.error(
                   "{} - Failed to execute isValid() for connection, configure connection test " +
-                  "query. ({})",
-                  poolName, e.getMessage());
+                  "query. ({})", poolName, e.getMessage());
                throw e;
             }
          } else {
@@ -429,13 +428,11 @@ abstract class PoolBase {
                if (validationTimeout < SECONDS.toMillis(1)) {
                   LOGGER.warn(
                      "{} - A validationTimeout of less than 1 second cannot be honored on drivers" +
-                     " without setNetworkTimeout() support.",
-                     poolName);
+                     " without setNetworkTimeout() support.", poolName);
                } else if (validationTimeout % SECONDS.toMillis(1) != 0) {
                   LOGGER.warn(
                      "{} - A validationTimeout with fractional second granularity cannot be " +
-                     "honored on drivers without setNetworkTimeout() support.",
-                     poolName);
+                     "honored on drivers without setNetworkTimeout() support.", poolName);
                }
             }
          }
