@@ -38,7 +38,7 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
     * collector registry ({@code CollectorRegistry.defaultRegistry}).
     */
    public PrometheusMetricsTrackerFactory() {
-
+      this.collectorRegistry = CollectorRegistry.defaultRegistry;
    }
 
    /**
@@ -52,7 +52,7 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
    @Override
    public IMetricsTracker create(String poolName, PoolStats poolStats) {
       getCollector().add(poolName, poolStats);
-      return new PrometheusMetricsTracker(poolName);
+      return new PrometheusMetricsTracker(poolName, this.collectorRegistry);
    }
 
    /**
@@ -60,11 +60,7 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
     */
    private HikariCPCollector getCollector() {
       if (collector == null) {
-         if (this.collectorRegistry == null) {
-            collector = new HikariCPCollector().register();
-         } else {
-            collector = new HikariCPCollector().register(this.collectorRegistry);
-         }
+         collector = new HikariCPCollector().register(this.collectorRegistry);
       }
       return collector;
    }
