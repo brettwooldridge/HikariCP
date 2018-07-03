@@ -19,6 +19,7 @@ package com.zaxxer.hikari.metrics.prometheus;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.prometheus.client.CollectorRegistry;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -31,16 +32,22 @@ import static org.junit.Assert.assertThat;
 
 public class PrometheusMetricsTrackerTest {
 
-   private CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
+   private CollectorRegistry collectorRegistry;
 
    private static final String POOL_LABEL_NAME = "pool";
+
    private static final String QUANTILE_LABEL_NAME = "quantile";
    private static final String[] QUANTILE_LABEL_VALUES = new String[]{"0.5", "0.95", "0.99"};
+
+   @Before
+   public void setupCollectorRegistry(){
+      this.collectorRegistry = new CollectorRegistry();
+   }
 
    @Test
    public void recordConnectionTimeout() throws Exception {
       HikariConfig config = newHikariConfig();
-      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
+      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(collectorRegistry));
       config.setJdbcUrl("jdbc:h2:mem:");
       config.setMaximumPoolSize(2);
       config.setConnectionTimeout(250);
@@ -85,7 +92,7 @@ public class PrometheusMetricsTrackerTest {
       String[] labelNames = {POOL_LABEL_NAME};
 
       HikariConfig config = newHikariConfig();
-      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
+      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(collectorRegistry));
       config.setPoolName("first");
       config.setJdbcUrl("jdbc:h2:mem:");
       config.setMaximumPoolSize(2);
@@ -98,8 +105,9 @@ public class PrometheusMetricsTrackerTest {
             labelNames,
             labelValues1), is(0.0));
 
+         CollectorRegistry collectorRegistry2 = new CollectorRegistry();
          HikariConfig config2 = newHikariConfig();
-         config2.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
+         config2.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(collectorRegistry2));
          config2.setPoolName("second");
          config2.setJdbcUrl("jdbc:h2:mem:");
          config2.setMaximumPoolSize(4);
@@ -107,7 +115,7 @@ public class PrometheusMetricsTrackerTest {
          String[] labelValues2 = {config2.getPoolName()};
 
          try (HikariDataSource ignored2 = new HikariDataSource(config2)) {
-            assertThat(collectorRegistry.getSampleValue(
+            assertThat(collectorRegistry2.getSampleValue(
                "hikaricp_connection_timeout_total",
                labelNames,
                labelValues2), is(0.0));
@@ -117,7 +125,7 @@ public class PrometheusMetricsTrackerTest {
 
    private void checkSummaryMetricFamily(String metricName) {
       HikariConfig config = newHikariConfig();
-      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
+      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(collectorRegistry));
       config.setJdbcUrl("jdbc:h2:mem:");
 
       try (HikariDataSource ignored = new HikariDataSource(config)) {

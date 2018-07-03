@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 
 import java.sql.Connection;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -32,11 +33,20 @@ import com.zaxxer.hikari.mocks.StubConnection;
 import io.prometheus.client.CollectorRegistry;
 
 public class HikariCPCollectorTest {
+
+   private CollectorRegistry collectorRegistry;
+
+   @Before
+   public void setupCollectorRegistry(){
+      this.collectorRegistry = new CollectorRegistry();
+   }
+
+
    @Test
    public void noConnection() throws Exception {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
-      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
+      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(this.collectorRegistry));
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       StubConnection.slowCreate = true;
@@ -57,7 +67,7 @@ public class HikariCPCollectorTest {
    public void noConnectionWithoutPoolName() throws Exception {
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
-      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
+      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(this.collectorRegistry));
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
       StubConnection.slowCreate = true;
@@ -78,7 +88,7 @@ public class HikariCPCollectorTest {
    @Test
    public void connection1() throws Exception {
       HikariConfig config = newHikariConfig();
-      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
+      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(this.collectorRegistry));
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
       config.setMaximumPoolSize(1);
 
@@ -103,7 +113,7 @@ public class HikariCPCollectorTest {
    @Test
    public void connectionClosed() throws Exception {
       HikariConfig config = newHikariConfig();
-      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
+      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(this.collectorRegistry));
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
       config.setMaximumPoolSize(1);
 
@@ -128,7 +138,7 @@ public class HikariCPCollectorTest {
    private double getValue(String name, String poolName) {
       String[] labelNames = {"pool"};
       String[] labelValues = {poolName};
-      return CollectorRegistry.defaultRegistry.getSampleValue(name, labelNames, labelValues);
+      return this.collectorRegistry.getSampleValue(name, labelNames, labelValues);
    }
 
 }
