@@ -39,6 +39,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Supplier;
 
 import static com.zaxxer.hikari.util.UtilityElf.getNullIfEmpty;
 import static com.zaxxer.hikari.util.UtilityElf.safeIsAssignableFrom;
@@ -97,6 +98,7 @@ public class HikariConfig implements HikariConfigMXBean
    private Object metricRegistry;
    private Object healthCheckRegistry;
    private Properties healthCheckProperties;
+   private Supplier<String> passwordSupplier;
 
    private volatile boolean sealed;
 
@@ -269,12 +271,13 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Get the default password to use for DataSource.getConnection(username, password) calls.
+    * Get the password to use for DataSource.getConnection(username, password) calls.
+    * If {@link HikariConfig#passwordSupplier} is present, the password will be retrieved from it.
     * @return the password
     */
    public String getPassword()
    {
-      return password;
+      return passwordSupplier != null ? passwordSupplier.get() : password;
    }
 
    /**
@@ -284,7 +287,22 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setPassword(String password)
    {
+      if (passwordSupplier != null) {
+         throw new IllegalStateException("cannot use setPasswordSupplier() and setPassword() together");
+      }
       this.password = password;
+   }
+
+   /**
+    * Set a password {@link Supplier} to be used by {@link HikariConfig#getPassword()} for dynamically acquiring a password.
+    * @param passwordSupplier the password {@link Supplier}
+    */
+   public void setPasswordSupplier(Supplier<String> passwordSupplier)
+   {
+      if (password != null) {
+         throw new IllegalStateException("cannot use setPassword() and setPasswordSupplier() together");
+      }
+      this.passwordSupplier = passwordSupplier;
    }
 
    /**
