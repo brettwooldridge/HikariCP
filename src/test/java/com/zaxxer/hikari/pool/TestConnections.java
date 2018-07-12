@@ -585,6 +585,51 @@ public class TestConnections
    }
 
    @Test
+   public void testDataSourceRaisesErrorWhileInitializationTestQuery() throws SQLException
+   {
+      StubDataSourceWithErrorSwitch stubDataSource = new StubDataSourceWithErrorSwitch();
+      stubDataSource.setErrorOnConnection(true);
+
+      HikariConfig config = newHikariConfig();
+      config.setMinimumIdle(1);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSource(stubDataSource);
+
+      try (HikariDataSource ds = new HikariDataSource(config);
+         Connection ignored = ds.getConnection()) {
+         fail("Initialization should have failed");
+      }
+      catch (PoolInitializationException e) {
+         // passed
+      }
+   }
+
+   @Test
+   public void testDataSourceRaisesErrorAfterInitializationTestQuery()
+   {
+      StubDataSourceWithErrorSwitch stubDataSource = new StubDataSourceWithErrorSwitch();
+
+      HikariConfig config = newHikariConfig();
+      config.setMinimumIdle(0);
+      config.setMaximumPoolSize(2);
+      config.setConnectionTimeout(TimeUnit.SECONDS.toMillis(3));
+      config.setConnectionTestQuery("VALUES 1");
+      config.setInitializationFailTimeout(TimeUnit.SECONDS.toMillis(2));
+      config.setDataSource(stubDataSource);
+
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         // this will make datasource throws Error, which will become uncaught
+         stubDataSource.setErrorOnConnection(true);
+         try (Connection ignored = ds.getConnection()) {
+            fail("SQLException should occur!");
+         } catch (SQLException e) {
+            // request will get timed-out
+            assertTrue(e.getMessage().contains("request timed out"));
+         }
+      }
+   }
+
+   @Test
    public void testPopulationSlowAcquisition() throws InterruptedException, SQLException
    {
       HikariConfig config = newHikariConfig();
@@ -646,4 +691,23 @@ public class TestConnections
          fail("Failed to obtain connection");
       }
    }
+
+   class StubDataSourceWithErrorSwitch extends StubDataSource {
+      private boolean errorOnConnection = false;
+
+      /** {@inheritDoc} */
+      @Override
+      public Connection getConnection() throws SQLException {
+         if (!errorOnConnection) {
+            return new StubConnection();
+         }
+
+         throw new Error("Bad thing happens on datasource.");
+      }
+
+      public void setErrorOnConnection(boolean errorOnConnection) {
+         this.errorOnConnection = errorOnConnection;
+      }
+   }
+
 }
