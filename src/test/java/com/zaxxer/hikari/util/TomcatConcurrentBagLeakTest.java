@@ -230,7 +230,7 @@ public class TomcatConcurrentBagLeakTest
                         }
 
                         if (valueLoadedByWebapp) {
-                           log.error("The web application [{}] created a ThreadLocal with key " +
+                           log.error("The web application [{}] created a ThreadLocal with key of type [{}] " +
                               "(value [{}]) and a value of type [{}] (value [{}]) but failed to remove " +
                               "it when the web application was stopped. Threads are going to be renewed " +
                               "over time to try and avoid a probable memory leak.", args);
