@@ -146,7 +146,14 @@ public final class PropertyElf
             writeMethod.invoke(target, propValue.toString());
          }
          else {
-            writeMethod.invoke(target, propValue);
+            try {
+               LOGGER.debug("Try to create a new instance of \"{}\"", propValue.toString());
+               writeMethod.invoke(target, Class.forName(propValue.toString()).newInstance());
+            }
+            catch (InstantiationException | ClassNotFoundException e) {
+               LOGGER.debug("Class \"{}\" not found or could not instantiate it (Default constructor)", propValue.toString());
+               writeMethod.invoke(target, propValue);
+            }
          }
       }
       catch (Exception e) {
