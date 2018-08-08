@@ -148,7 +148,7 @@ public class MockDataSource implements DataSource
 //            public Void answer(InvocationOnMock invocation) throws Throwable {
 //                return null;
 //            }
-//        }).doThrow(new SQLException("Transaction already commited")).when(mockConnection).commit();
+//        }).doThrow(new SQLException("Transaction already committed")).when(mockConnection).commit();
 
         // Handle Connection.rollback()
 //        doAnswer(new Answer<Void>() {
