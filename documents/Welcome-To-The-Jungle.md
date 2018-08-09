@@ -27,7 +27,7 @@ The constraints are simple:
  * Connection establishment takes 150ms.
  * Query execution takes 2ms.
  * The maximum pool size is 50.
- * The minumum idle connections is 5.
+ * The minimum idle connections is 5.
 
 And the simulation is fairly simple:
  * Everything is quiet, and then ... Boom! ... 50 threads, at once, wanting a connection and to execute a query.
