@@ -18,6 +18,7 @@ package com.zaxxer.hikari.pool;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.HikariPoolMXBean;
 import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.mocks.StubDataSource;
 import com.zaxxer.hikari.mocks.StubStatement;
@@ -254,6 +255,48 @@ public class TestConnections
          assertEquals(1, pool.getTotalConnections());
          ds.evictConnection(connection);
          assertEquals(0, pool.getTotalConnections());
+      }
+   }
+
+   @Test
+   public void testEvictAllRefill() throws Exception {
+      HikariConfig config = newHikariConfig();
+      config.setMinimumIdle(5);
+      config.setMaximumPoolSize(10);
+      config.setConnectionTimeout(2500);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "100");
+
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         HikariPoolMXBean poolMXBean = ds.getHikariPoolMXBean();
+
+         while (poolMXBean.getIdleConnections() < 5) { // wait until the pool fills
+            quietlySleep(100);
+         }
+
+         // Get and evict all the idle connections
+         for (int i = 0; i < 5; i++) {
+            final Connection conn = ds.getConnection();
+            ds.evictConnection(conn);
+         }
+
+         assertTrue("Expected idle connections to be less than idle", poolMXBean.getIdleConnections() < 5);
+
+         // Wait a bit
+         quietlySleep(SECONDS.toMillis(2));
+
+         int count = 0;
+         while (poolMXBean.getIdleConnections() < 5 && count++ < 20) {
+            quietlySleep(100);
+         }
+
+         // Assert that the pool as returned to 5 connections
+         assertEquals("After eviction, refill did not reach expected 5 connections.", 5, poolMXBean.getIdleConnections());
+      }
+      finally {
+         System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
       }
    }
 
