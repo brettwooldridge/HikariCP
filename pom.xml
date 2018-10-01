@@ -366,7 +366,9 @@
                <configuration>
                   <source>1.8</source>
                   <target>1.8</target>
-                  <compilerArgs>-Xlint</compilerArgs>
+                  <compilerArgs>
+                     <arg>-Xlint</arg>
+                  </compilerArgs>
                </configuration>
             </plugin>
 
