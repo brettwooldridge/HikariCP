@@ -387,8 +387,6 @@
                <configuration>
                   <!-- Sets the VM argument line used when unit tests are run. -->
                   <argLine>${surefireArgLine} ${sureFireOptions9}</argLine>
-                  <!-- Skips unit tests if the value of skip.unit.tests property is true -->
-                  <skipTests>${skip.unit.tests}</skipTests>
                   <reuseForks>${sureFireForks9}</reuseForks>
                </configuration>
             </plugin>
