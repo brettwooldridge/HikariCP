@@ -23,8 +23,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -142,10 +142,7 @@ public final class JavassistProxyFactory
       }
 
       Set<String> methods = new HashSet<>();
-      Set<Class<?>> interfaces = getAllInterfaces(primaryInterface);
-      List<Class<?>> sortedInterfaces = new ArrayList<>(interfaces);
-      sortedInterfaces.sort(Comparator.comparing(Class::getName));
-      for (Class<?> intf : sortedInterfaces) {
+      for (Class<?> intf : getAllInterfaces(primaryInterface)) {
          CtClass intfCt = classPool.getCtClass(intf.getName());
          targetCt.addInterface(intfCt);
          for (CtMethod intfMethod : intfCt.getDeclaredMethods()) {
@@ -229,7 +226,7 @@ public final class JavassistProxyFactory
 
    private static Set<Class<?>> getAllInterfaces(Class<?> clazz)
    {
-      Set<Class<?>> interfaces = new HashSet<>();
+      Set<Class<?>> interfaces = new LinkedHashSet<>();
       for (Class<?> intf : clazz.getInterfaces()) {
          if (intf.getInterfaces().length > 0) {
             interfaces.addAll(getAllInterfaces(intf));
