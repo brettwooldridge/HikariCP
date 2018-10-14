@@ -23,8 +23,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -142,8 +142,7 @@ public final class JavassistProxyFactory
       }
 
       Set<String> methods = new HashSet<>();
-      Set<Class<?>> interfaces = getAllInterfaces(primaryInterface);
-      for (Class<?> intf : interfaces) {
+      for (Class<?> intf : getAllInterfaces(primaryInterface)) {
          CtClass intfCt = classPool.getCtClass(intf.getName());
          targetCt.addInterface(intfCt);
          for (CtMethod intfMethod : intfCt.getDeclaredMethods()) {
@@ -222,13 +221,13 @@ public final class JavassistProxyFactory
          paramTypes.add(toJavaClass(pt));
       }
 
-      return intf.getDeclaredMethod(intfMethod.getName(), paramTypes.toArray(new Class[paramTypes.size()])).toString().contains("default ");
+      return intf.getDeclaredMethod(intfMethod.getName(), paramTypes.toArray(new Class[0])).toString().contains("default ");
    }
 
    private static Set<Class<?>> getAllInterfaces(Class<?> clazz)
    {
-      Set<Class<?>> interfaces = new HashSet<>();
-      for (Class<?> intf : Arrays.asList(clazz.getInterfaces())) {
+      Set<Class<?>> interfaces = new LinkedHashSet<>();
+      for (Class<?> intf : clazz.getInterfaces()) {
          if (intf.getInterfaces().length > 0) {
             interfaces.addAll(getAllInterfaces(intf));
          }
