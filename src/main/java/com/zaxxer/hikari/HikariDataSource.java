@@ -30,7 +30,7 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.zaxxer.hikari.pool.HikariPool.POOL_SHUTDOWN;
+import static com.zaxxer.hikari.pool.HikariPool.POOL_NORMAL;
 
 /**
  * The HikariCP pooled DataSource.
@@ -294,7 +294,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
     */
    public boolean isRunning()
    {
-      return pool != null && pool.poolState != POOL_SHUTDOWN;
+      return pool != null && pool.poolState == POOL_NORMAL;
    }
 
    /**
