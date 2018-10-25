@@ -520,7 +520,7 @@ abstract class PoolBase
             isNetworkTimeoutSupported = TRUE;
             return originalTimeout;
          }
-         catch (Exception e) {
+         catch (Exception | AbstractMethodError e) {
             if (isNetworkTimeoutSupported == UNINITIALIZED) {
                isNetworkTimeoutSupported = FALSE;
 
