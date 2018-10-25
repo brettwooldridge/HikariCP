@@ -47,7 +47,7 @@ public final class CodaHaleMetricsTracker implements IMetricsTracker
    private static final String METRIC_NAME_MAX_CONNECTIONS = "MaxConnections";
    private static final String METRIC_NAME_MIN_CONNECTIONS = "MinConnections";
 
-   public CodaHaleMetricsTracker(final String poolName, final PoolStats poolStats, final MetricRegistry registry)
+   CodaHaleMetricsTracker(final String poolName, final PoolStats poolStats, final MetricRegistry registry)
    {
       this.poolName = poolName;
       this.registry = registry;
@@ -57,52 +57,22 @@ public final class CodaHaleMetricsTracker implements IMetricsTracker
       this.connectionTimeoutMeter = registry.meter(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_TIMEOUT_RATE));
 
       registry.register(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_TOTAL_CONNECTIONS),
-                        new Gauge<Integer>() {
-                           @Override
-                           public Integer getValue() {
-                              return poolStats.getTotalConnections();
-                           }
-                        });
+         (Gauge<Integer>) poolStats::getTotalConnections);
 
       registry.register(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_IDLE_CONNECTIONS),
-                        new Gauge<Integer>() {
-                           @Override
-                           public Integer getValue() {
-                              return poolStats.getIdleConnections();
-                           }
-                        });
+         (Gauge<Integer>) poolStats::getIdleConnections);
 
       registry.register(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_ACTIVE_CONNECTIONS),
-                        new Gauge<Integer>() {
-                           @Override
-                           public Integer getValue() {
-                              return poolStats.getActiveConnections();
-                           }
-                        });
+         (Gauge<Integer>) poolStats::getActiveConnections);
 
       registry.register(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_PENDING_CONNECTIONS),
-                        new Gauge<Integer>() {
-                           @Override
-                           public Integer getValue() {
-                              return poolStats.getPendingThreads();
-                           }
-                        });
+         (Gauge<Integer>) poolStats::getPendingThreads);
 
       registry.register(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_MAX_CONNECTIONS),
-                        new Gauge<Integer>() {
-                           @Override
-                           public Integer getValue() {
-                              return poolStats.getMaxConnections();
-                           }
-                        });
+         (Gauge<Integer>) poolStats::getMaxConnections);
 
       registry.register(MetricRegistry.name(poolName, METRIC_CATEGORY, METRIC_NAME_MIN_CONNECTIONS),
-                        new Gauge<Integer>() {
-                           @Override
-                           public Integer getValue() {
-                              return poolStats.getMinConnections();
-                           }
-                        });
+         (Gauge<Integer>) poolStats::getMinConnections);
    }
 
    /** {@inheritDoc} */

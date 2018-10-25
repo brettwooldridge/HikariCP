@@ -228,13 +228,8 @@ public abstract class ProxyStatement implements Statement
    public ResultSet getGeneratedKeys() throws SQLException
    {
       ResultSet resultSet = delegate.getGeneratedKeys();
-      if (resultSet != null) {
-         if (proxyResultSet == null || ((ProxyResultSet) proxyResultSet).delegate != resultSet) {
-            proxyResultSet = ProxyFactory.getProxyResultSet(connection, this, resultSet);
-         }
-      }
-      else {
-         proxyResultSet = null;
+      if (proxyResultSet == null || ((ProxyResultSet) proxyResultSet).delegate != resultSet) {
+         proxyResultSet = ProxyFactory.getProxyResultSet(connection, this, resultSet);
       }
       return proxyResultSet;
    }

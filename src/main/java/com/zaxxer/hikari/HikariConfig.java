@@ -471,20 +471,8 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
 
-      Class<?> driverClass = null;
-      ClassLoader threadContextClassLoader = Thread.currentThread().getContextClassLoader();
+      Class<?> driverClass = attemptFromContextLoader(driverClassName);
       try {
-         if (threadContextClassLoader != null) {
-            try {
-               driverClass = threadContextClassLoader.loadClass(driverClassName);
-               LOGGER.debug("Driver class {} found in Thread context class loader {}", driverClassName, threadContextClassLoader);
-            }
-            catch (ClassNotFoundException e) {
-               LOGGER.debug("Driver class {} not found in Thread context class loader {}, trying classloader {}",
-                            driverClassName, threadContextClassLoader, this.getClass().getClassLoader());
-            }
-         }
-
          if (driverClass == null) {
             driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
             LOGGER.debug("Driver class {} found in the HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
@@ -905,6 +893,22 @@ public class HikariConfig implements HikariConfigMXBean
    //                          Private methods
    // ***********************************************************************
 
+   private Class<?> attemptFromContextLoader(final String driverClassName) {
+      final ClassLoader threadContextClassLoader = Thread.currentThread().getContextClassLoader();
+      if (threadContextClassLoader != null) {
+         try {
+            final Class<?> driverClass = threadContextClassLoader.loadClass(driverClassName);
+            LOGGER.debug("Driver class {} found in Thread context class loader {}", driverClassName, threadContextClassLoader);
+            return driverClass;
+         } catch (ClassNotFoundException e) {
+            LOGGER.debug("Driver class {} not found in Thread context class loader {}, trying classloader {}",
+               driverClassName, threadContextClassLoader, this.getClass().getClassLoader());
+         }
+      }
+
+      return null;
+   }
+
    @SuppressWarnings("StatementWithEmptyBody")
    public void validate()
    {
@@ -1005,7 +1009,7 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       if (idleTimeout != IDLE_TIMEOUT && idleTimeout != 0 && minIdle == maxPoolSize) {
-         LOGGER.warn("{} - idleTimeout has been set but has no effect because the pool is operating as a fixed size pool.");
+         LOGGER.warn("{} - idleTimeout has been set but has no effect because the pool is operating as a fixed size pool.", poolName);
       }
    }
 
