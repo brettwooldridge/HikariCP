@@ -443,7 +443,8 @@ abstract class PoolBase
     * @param connection a Connection to check
     * @throws SQLException rethrown from the driver
     */
-   private void checkValidationSupport(final Connection connection) throws SQLException {
+   private void checkValidationSupport(final Connection connection) throws SQLException
+   {
       try {
          if (isUseJdbc4Validation) {
             connection.isValid(1);
@@ -452,7 +453,7 @@ abstract class PoolBase
             executeSql(connection, config.getConnectionTestQuery(), false);
          }
       }
-      catch (Exception e) {
+      catch (Exception | AbstractMethodError e) {
          logger.error("{} - Failed to execute{} connection test query ({}).", poolName, (isUseJdbc4Validation ? " isValid() for connection, configure" : ""), e.getMessage());
          throw e;
       }
@@ -464,7 +465,8 @@ abstract class PoolBase
     * @param connection a Connection to check
     * @throws SQLException rethrown from the driver
     */
-   private void checkDefaultIsolation(final Connection connection) throws SQLException {
+   private void checkDefaultIsolation(final Connection connection) throws SQLException
+   {
       try {
          defaultTransactionIsolation = connection.getTransactionIsolation();
          if (transactionIsolation == -1) {

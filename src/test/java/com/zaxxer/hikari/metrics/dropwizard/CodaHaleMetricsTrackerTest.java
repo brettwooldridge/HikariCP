@@ -2,6 +2,7 @@ package com.zaxxer.hikari.metrics.dropwizard;
 
 import static org.mockito.Mockito.verify;
 
+import com.zaxxer.hikari.metrics.PoolStats;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,8 +20,8 @@ public class CodaHaleMetricsTrackerTest {
    private CodaHaleMetricsTracker testee;
 
    @Before
-   public void setup(){
-      testee = new CodaHaleMetricsTracker("mypool", null, mockMetricRegistry);
+   public void setup() {
+      testee = new CodaHaleMetricsTracker("mypool", poolStats(), mockMetricRegistry);
    }
 
    @Test
@@ -37,5 +38,14 @@ public class CodaHaleMetricsTrackerTest {
       verify(mockMetricRegistry).remove("mypool.pool.PendingConnections");
       verify(mockMetricRegistry).remove("mypool.pool.MaxConnections");
       verify(mockMetricRegistry).remove("mypool.pool.MinConnections");
+   }
+
+   private PoolStats poolStats() {
+      return new PoolStats(0) {
+         @Override
+         protected void update() {
+            // do nothing
+         }
+      };
    }
 }

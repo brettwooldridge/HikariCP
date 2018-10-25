@@ -109,7 +109,8 @@ public final class JavassistProxyFactory
    /**
     *  Generate Javassist Proxy Classes
     */
-   private static <T> void generateProxyClass(Class<T> primaryInterface, String superClassName, String methodBody) throws Exception {
+   private static <T> void generateProxyClass(Class<T> primaryInterface, String superClassName, String methodBody) throws Exception
+   {
       String newClassName = superClassName.replaceAll("(.+)\\.(\\w+)", "$1.Hikari$2");
 
       CtClass superCt = classPool.getCtClass(superClassName);
@@ -200,7 +201,8 @@ public final class JavassistProxyFactory
       return false;
    }
 
-   private static boolean isDefaultMethod(Class<?> intf, CtMethod intfMethod) throws Exception {
+   private static boolean isDefaultMethod(Class<?> intf, CtMethod intfMethod) throws Exception
+   {
       List<Class<?>> paramTypes = new ArrayList<>();
 
       for (CtClass pt : intfMethod.getParameterTypes()) {

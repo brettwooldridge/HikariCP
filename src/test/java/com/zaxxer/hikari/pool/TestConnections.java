@@ -745,7 +745,7 @@ public class TestConnections
             return new StubConnection();
          }
 
-         throw new Error("Bad thing happens on datasource.");
+         throw new RuntimeException("Bad thing happens on datasource.");
       }
 
       public void setErrorOnConnection(boolean errorOnConnection) {
