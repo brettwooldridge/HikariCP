@@ -37,22 +37,22 @@ class PrometheusHistogramMetricsTracker implements IMetricsTracker
       .create();
 
    private static final Histogram ELAPSED_ACQUIRED_HISTOGRAM =
-      registerHistogram("hikaricp_connection_acquired_nanos", "Connection acquired time (ns)");
+      registerHistogram("hikaricp_connection_acquired_nanos", "Connection acquired time (ns)", 1_000);
 
    private static final Histogram ELAPSED_BORROWED_HISTOGRAM =
-      registerHistogram("hikaricp_connection_usage_millis", "Connection usage (ms)");
+      registerHistogram("hikaricp_connection_usage_millis", "Connection usage (ms)", 1);
 
    private static final Histogram ELAPSED_CREATION_HISTOGRAM =
-      registerHistogram("hikaricp_connection_creation_millis", "Connection creation (ms)");
+      registerHistogram("hikaricp_connection_creation_millis", "Connection creation (ms)", 1);
 
    private final Counter.Child connectionTimeoutCounterChild;
 
-   private static Histogram registerHistogram(String name, String help) {
+   private static Histogram registerHistogram(String name, String help, double bucketStart) {
       return Histogram.build()
          .name(name)
          .labelNames("pool")
          .help(help)
-         .exponentialBuckets(0.001, 2.0, 11)
+         .exponentialBuckets(bucketStart, 2.0, 11)
          .create();
    }
 
