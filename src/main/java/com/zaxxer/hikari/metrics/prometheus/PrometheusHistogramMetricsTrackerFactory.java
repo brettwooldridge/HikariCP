@@ -24,13 +24,10 @@ import io.prometheus.client.CollectorRegistry;
 /**
  * <pre>{@code
  * HikariConfig config = new HikariConfig();
- * config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory());
+ * config.setMetricsTrackerFactory(new PrometheusHistogramMetricsTrackerFactory());
  * }</pre>
- *
- * Note: the internal {@see io.prometheus.client.Summary} requires heavy locks. Consider using
- * {@see PrometheusHistogramMetricsTrackerFactory} if performance plays a role and you don't need the summary per se.
  */
-public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
+public class PrometheusHistogramMetricsTrackerFactory implements MetricsTrackerFactory {
 
    private HikariCPCollector collector;
 
@@ -40,7 +37,7 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
     * Default Constructor. The Hikari metrics are registered to the default
     * collector registry ({@code CollectorRegistry.defaultRegistry}).
     */
-   public PrometheusMetricsTrackerFactory() {
+   public PrometheusHistogramMetricsTrackerFactory() {
       this.collectorRegistry = CollectorRegistry.defaultRegistry;
    }
 
@@ -48,14 +45,14 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
     * Constructor that allows to pass in a {@link CollectorRegistry} to which the
     * Hikari metrics are registered.
     */
-   public PrometheusMetricsTrackerFactory(CollectorRegistry collectorRegistry) {
+   public PrometheusHistogramMetricsTrackerFactory(CollectorRegistry collectorRegistry) {
       this.collectorRegistry = collectorRegistry;
    }
 
    @Override
    public IMetricsTracker create(String poolName, PoolStats poolStats) {
       getCollector().add(poolName, poolStats);
-      return new PrometheusMetricsTracker(poolName, this.collectorRegistry);
+      return new PrometheusHistogramMetricsTracker(poolName, this.collectorRegistry);
    }
 
    /**
