@@ -37,8 +37,9 @@ class ProxyLeakTask implements Runnable
    private ScheduledFuture<?> scheduledFuture;
    private String connectionName;
    private Exception exception;
-   private String threadName; 
+   private String threadName;
    private boolean isLeaked;
+   private static final StackTraceElement[] NO_STACKTRACE = {};
 
    static
    {
@@ -51,6 +52,12 @@ class ProxyLeakTask implements Runnable
 
          @Override
          public void cancel() {}
+
+         @Override
+         public StackTraceElement[] getStackTrace()
+         {
+            return NO_STACKTRACE;
+         }
       };
    }
 
@@ -70,13 +77,18 @@ class ProxyLeakTask implements Runnable
       scheduledFuture = executorService.schedule(this, leakDetectionThreshold, TimeUnit.MILLISECONDS);
    }
 
+   public StackTraceElement[] getStackTrace()
+   {
+      return exception.getStackTrace();
+   }
+
    /** {@inheritDoc} */
    @Override
    public void run()
    {
       isLeaked = true;
 
-      final StackTraceElement[] stackTrace = exception.getStackTrace(); 
+      final StackTraceElement[] stackTrace = exception.getStackTrace();
       final StackTraceElement[] trace = new StackTraceElement[stackTrace.length - 5];
       System.arraycopy(stackTrace, 5, trace, 0, trace.length);
 

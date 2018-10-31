@@ -184,6 +184,17 @@ public abstract class ProxyConnection implements Connection
       leakTask.cancel();
    }
 
+   /**
+    * Returns the stacktrace location of where the connection was acquired. If leak detection is not endabled, will
+    * return an empty array.
+    *
+    * @return Array containing StackTraceElement generated when connection was acquired
+    */
+   public StackTraceElement[] getStackTrace()
+   {
+      return leakTask.getStackTrace();
+   }
+
    private synchronized <T extends Statement> T trackStatement(final T statement)
    {
       openStatements.add(statement);
