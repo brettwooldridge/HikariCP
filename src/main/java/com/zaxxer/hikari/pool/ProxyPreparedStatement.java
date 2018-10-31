@@ -27,9 +27,9 @@ import java.sql.SQLException;
  */
 public abstract class ProxyPreparedStatement extends ProxyStatement implements PreparedStatement
 {
-   ProxyPreparedStatement(ProxyConnection connection, PreparedStatement statement)
+   ProxyPreparedStatement(ProxyConnection connection, PreparedStatement statement, boolean optimizeFindColumn)
    {
-      super(connection, statement);
+      super(connection, statement, optimizeFindColumn);
    }
 
    // **********************************************************************
@@ -50,7 +50,7 @@ public abstract class ProxyPreparedStatement extends ProxyStatement implements P
    {
       connection.markCommitStateDirty();
       ResultSet resultSet = ((PreparedStatement) delegate).executeQuery();
-      return ProxyFactory.getProxyResultSet(connection, this, resultSet);
+      return ProxyFactory.getProxyResultSet(connection, this, resultSet, optimizeFindColumn);
    }
 
    /** {@inheritDoc} */

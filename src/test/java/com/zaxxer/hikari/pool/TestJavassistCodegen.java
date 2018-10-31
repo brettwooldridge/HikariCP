@@ -44,7 +44,8 @@ public class TestJavassistCodegen {
             null /*leakTask*/,
             0L /*now*/,
             Boolean.FALSE /*isReadOnly*/,
-            Boolean.FALSE /*isAutoCommit*/);
+            Boolean.FALSE /*isAutoCommit*/,
+            Boolean.FALSE /* optimizeFindColumn */ );
       Assert.assertNotNull(proxyConnection);
 
       Object proxyStatement = getMethod(proxyConnection.getClass(), "createStatement", 0)

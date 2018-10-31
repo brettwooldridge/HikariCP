@@ -17,8 +17,12 @@
 package com.zaxxer.hikari.pool;
 
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * This is the proxy class for java.sql.ResultSet.
@@ -30,12 +34,15 @@ public abstract class ProxyResultSet implements ResultSet
    protected final ProxyConnection connection;
    protected final ProxyStatement statement;
    final ResultSet delegate;
+   private final boolean optimizeFindColumn;
+   private Map<String, Integer> columnsByName;
 
-   protected ProxyResultSet(ProxyConnection connection, ProxyStatement statement, ResultSet resultSet)
+   protected ProxyResultSet(ProxyConnection connection, ProxyStatement statement, ResultSet resultSet, boolean optimizeFindColumn)
    {
       this.connection = connection;
       this.statement = statement;
       this.delegate = resultSet;
+      this.optimizeFindColumn = optimizeFindColumn;
    }
 
    @SuppressWarnings("unused")
@@ -84,6 +91,77 @@ public abstract class ProxyResultSet implements ResultSet
    {
       connection.markCommitStateDirty();
       delegate.deleteRow();
+   }
+
+
+   private static final SQLException NO_SUCH_COLUMN_EXCEPTION = new SQLException()
+   {
+      private static final long serialVersionUID = 4466502690997888852L;
+
+      @Override
+      public String getMessage()
+      {
+         return "Column is not in the ResultSet";
+      }
+
+      @Override
+      public synchronized Throwable fillInStackTrace()
+      {
+         return this;
+      }
+   };
+
+   private static final int NO_SUCH_COLUMN = 0;
+
+   @Override
+   public int findColumn( String columnName ) throws SQLException
+   {
+      if ( !optimizeFindColumn )
+      {
+         return delegate.findColumn(columnName);
+      }
+
+      int columnIndex = findColumnIndex( columnName );
+      if ( NO_SUCH_COLUMN == columnIndex )
+      {
+         throw NO_SUCH_COLUMN_EXCEPTION;
+      }
+      return columnIndex;
+   }
+
+   private int findColumnIndex( final String columnName ) throws SQLException
+   {
+      if ( null == columnName )
+      {
+         return NO_SUCH_COLUMN;
+      }
+      if ( null == columnsByName)
+      {
+         // We use getColumnName as it gives us direct access to the statement accessors in the case of the Oracle driver
+         // and means we can populate the map completely on the first call, avoiding the iteration behaviour of findColumn
+         ResultSetMetaData metaData = getMetaData();
+         int columnCount = metaData.getColumnCount();
+         columnsByName = new HashMap<>( columnCount * 2, 1.0f );
+         for ( int i = 0; i < columnCount; i++ )
+         {
+            int columnIndex = i + 1;
+            columnsByName.put( metaData.getColumnName( columnIndex ).toLowerCase( Locale.US ), columnIndex );
+         }
+      }
+      // Avoid a contains(String) call and toLowerCase to return as quickly as we can for the most likely case
+      Integer index = columnsByName.get( columnName );
+      if ( null != index )
+      {
+         return index;
+      }
+      // Attempt the lowercase version, caching the representation so we avoid the toLowerCase on the next attempt
+      index = columnsByName.get( columnName.toLowerCase( Locale.US ) );
+      if ( null != index )
+      {
+         columnsByName.put( columnName, index );
+         return index;
+      }
+      return NO_SUCH_COLUMN;
    }
 
    /** {@inheritDoc} */

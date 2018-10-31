@@ -53,18 +53,20 @@ final class PoolEntry implements IConcurrentBagEntry
 
    private final boolean isReadOnly;
    private final boolean isAutoCommit;
+   private final boolean optimizeFindColumn;
 
    static
    {
       stateUpdater = AtomicIntegerFieldUpdater.newUpdater(PoolEntry.class, "state");
    }
 
-   PoolEntry(final Connection connection, final PoolBase pool, final boolean isReadOnly, final boolean isAutoCommit)
+   PoolEntry(final Connection connection, final PoolBase pool, final boolean isReadOnly, final boolean isAutoCommit, final boolean optimizeFindColumn)
    {
       this.connection = connection;
       this.hikariPool = (HikariPool) pool;
       this.isReadOnly = isReadOnly;
       this.isAutoCommit = isAutoCommit;
+      this.optimizeFindColumn = optimizeFindColumn;
       this.lastAccessed = currentTime();
       this.openStatements = new FastList<>(Statement.class, 16);
    }
@@ -94,7 +96,7 @@ final class PoolEntry implements IConcurrentBagEntry
 
    Connection createProxyConnection(final ProxyLeakTask leakTask, final long now)
    {
-      return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, now, isReadOnly, isAutoCommit);
+      return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, now, isReadOnly, isAutoCommit, optimizeFindColumn);
    }
 
    void resetConnectionState(final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException

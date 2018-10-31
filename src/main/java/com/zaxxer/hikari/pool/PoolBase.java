@@ -79,6 +79,7 @@ abstract class PoolBase
    private final String schema;
    private final boolean isReadOnly;
    private final boolean isAutoCommit;
+   private final boolean optimizeFindColumn;
 
    private final boolean isUseJdbc4Validation;
    private final boolean isIsolateInternalQueries;
@@ -105,6 +106,7 @@ abstract class PoolBase
       this.connectionTimeout = config.getConnectionTimeout();
       this.validationTimeout = config.getValidationTimeout();
       this.lastConnectionFailure = new AtomicReference<>();
+      this.optimizeFindColumn = true;
 
       initializeDataSource();
    }
@@ -198,7 +200,7 @@ abstract class PoolBase
 
    PoolEntry newPoolEntry() throws Exception
    {
-      return new PoolEntry(newConnection(), this, isReadOnly, isAutoCommit);
+      return new PoolEntry(newConnection(), this, isReadOnly, isAutoCommit, optimizeFindColumn);
    }
 
    void resetConnectionState(final Connection connection, final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException

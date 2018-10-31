@@ -49,31 +49,32 @@ public final class ProxyFactory
     * @param isAutoCommit the default autoCommit state of the connection
     * @return a proxy that wraps the specified {@link Connection}
     */
-   static ProxyConnection getProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final long now, final boolean isReadOnly, final boolean isAutoCommit)
+   static ProxyConnection getProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask,
+                                             final long now, final boolean isReadOnly, final boolean isAutoCommit, final boolean optimizeFindColumn)
    {
       // Body is replaced (injected) by JavassistProxyFactory
       throw new IllegalStateException("You need to run the CLI build and you need target/classes in your classpath to run.");
    }
 
-   static Statement getProxyStatement(final ProxyConnection connection, final Statement statement)
+   static Statement getProxyStatement(final ProxyConnection connection, final Statement statement, final boolean optimizeFindColumn)
    {
       // Body is replaced (injected) by JavassistProxyFactory
       throw new IllegalStateException("You need to run the CLI build and you need target/classes in your classpath to run.");
    }
 
-   static CallableStatement getProxyCallableStatement(final ProxyConnection connection, final CallableStatement statement)
+   static CallableStatement getProxyCallableStatement(final ProxyConnection connection, final CallableStatement statement, final boolean optimizeFindColumn)
    {
       // Body is replaced (injected) by JavassistProxyFactory
       throw new IllegalStateException("You need to run the CLI build and you need target/classes in your classpath to run.");
    }
 
-   static PreparedStatement getProxyPreparedStatement(final ProxyConnection connection, final PreparedStatement statement)
+   static PreparedStatement getProxyPreparedStatement(final ProxyConnection connection, final PreparedStatement statement, final boolean optimizeFindColumn)
    {
       // Body is replaced (injected) by JavassistProxyFactory
       throw new IllegalStateException("You need to run the CLI build and you need target/classes in your classpath to run.");
    }
 
-   static ResultSet getProxyResultSet(final ProxyConnection connection, final ProxyStatement statement, final ResultSet resultSet)
+   static ResultSet getProxyResultSet(final ProxyConnection connection, final ProxyStatement statement, final ResultSet resultSet, final boolean optimizeFindColumn)
    {
       // Body is replaced (injected) by JavassistProxyFactory
       throw new IllegalStateException("You need to run the CLI build and you need target/classes in your classpath to run.");
