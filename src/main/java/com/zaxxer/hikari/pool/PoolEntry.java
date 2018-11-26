@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 final class PoolEntry implements IConcurrentBagEntry {
    private static final Logger LOGGER = LoggerFactory.getLogger(PoolEntry.class);
 
-   static final Comparator<PoolEntry> LASTACCESS_COMPARABLE;
+   static final Comparator<PoolEntry> LAST_ACCESS_COMPARABLE;
 
    Connection connection;
    long       lastAccessed;
@@ -52,8 +52,9 @@ final class PoolEntry implements IConcurrentBagEntry {
    private final boolean isReadOnly;
    private final boolean isAutoCommit;
 
-   static {
-      LASTACCESS_COMPARABLE = new Comparator<PoolEntry>() {
+   static
+   {
+      LAST_ACCESS_COMPARABLE = new Comparator<PoolEntry>() {
          @Override
          public int compare(final PoolEntry entryOne, final PoolEntry entryTwo) {
             return Long.compare(entryOne.lastAccessed, entryTwo.lastAccessed);
@@ -83,7 +84,7 @@ final class PoolEntry implements IConcurrentBagEntry {
    }
 
    /**
-    * @param endOfLife
+    * @param endOfLife the end future
     */
    void setFutureEol(final ScheduledFuture<?> endOfLife) {
       this.endOfLife = endOfLife;

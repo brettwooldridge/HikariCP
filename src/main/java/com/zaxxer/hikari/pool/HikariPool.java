@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.zaxxer.hikari.pool.PoolEntry.LASTACCESS_COMPARABLE;
+import static com.zaxxer.hikari.pool.PoolEntry.LAST_ACCESS_COMPARABLE;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_REMOVED;
@@ -611,7 +611,7 @@ public class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateL
                afterPrefix = "After cleanup  ";
 
                // Sort pool entries on lastAccessed
-               Collections.sort(idleList, LASTACCESS_COMPARABLE);
+               Collections.sort(idleList, LAST_ACCESS_COMPARABLE);
                for (PoolEntry poolEntry : idleList) {
                   if (clockSource.elapsedMillis(poolEntry.lastAccessed, now) > idleTimeout &&
                       connectionBag.reserve(poolEntry)) {

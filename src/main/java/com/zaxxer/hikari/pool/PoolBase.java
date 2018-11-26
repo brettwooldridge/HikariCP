@@ -215,7 +215,7 @@ abstract class PoolBase {
    /**
     * Register MBeans for HikariConfig and HikariPool.
     *
-    * @param pool a HikariPool instance
+    * @param hikariPool a HikariPool instance
     */
    void registerMBeans(final HikariPool hikariPool) {
       if (!config.isRegisterMbeans()) {
@@ -591,7 +591,7 @@ abstract class PoolBase {
 
       /**
        * @param poolEntry
-       * @param now
+       * @param startTime
        */
       void recordBorrowStats(final PoolEntry poolEntry, final long startTime) {
          final long now = ClockSource.INSTANCE.currentTime();
