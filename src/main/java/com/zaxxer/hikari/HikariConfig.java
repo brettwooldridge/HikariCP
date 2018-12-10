@@ -486,7 +486,7 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       try {
-         driverClass.newInstance();
+         driverClass.getConstructor().newInstance();
          this.driverClassName = driverClassName;
       }
       catch (Exception e) {
