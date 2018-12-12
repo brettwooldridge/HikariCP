@@ -65,13 +65,7 @@ public final class CodahaleHealthChecker
 
       final long expected99thPercentile = Long.parseLong(healthCheckProperties.getProperty("expected99thPercentileMs", "0"));
       if (metricRegistry != null && expected99thPercentile > 0) {
-         SortedMap<String,Timer> timers = metricRegistry.getTimers(new MetricFilter() {
-            @Override
-            public boolean matches(String name, Metric metric)
-            {
-               return name.equals(MetricRegistry.name(hikariConfig.getPoolName(), "pool", "Wait"));
-            }
-         });
+         SortedMap<String,Timer> timers = metricRegistry.getTimers((name, metric) -> name.equals(MetricRegistry.name(hikariConfig.getPoolName(), "pool", "Wait")));
 
          if (!timers.isEmpty()) {
             final Timer timer = timers.entrySet().iterator().next().getValue();
