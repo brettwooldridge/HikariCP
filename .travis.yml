@@ -27,6 +27,7 @@ matrix:
     - jdk: oraclejdk9
       env:
         - JDK=9
+    - jdk: oraclejdk11
 
 install: /bin/true
 
