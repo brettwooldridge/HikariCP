@@ -415,7 +415,7 @@
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-javadoc-plugin</artifactId>
-               <version>2.10.4</version>
+               <version>3.0.1</version>
                <configuration>
                   <show>public</show>
                   <excludePackageNames>com.zaxxer.hikari.hibernate:com.zaxxer.hikari.metrics.*:com.zaxxer.hikari.pool:com.zaxxer.hikari.util</excludePackageNames>
