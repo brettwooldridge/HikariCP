@@ -16,7 +16,7 @@
       <metrics.version>3.2.4</metrics.version>
       <micrometer.version>1.0.0</micrometer.version>
       <simpleclient.version>0.0.26</simpleclient.version>
-      <mockito.version>2.10.0</mockito.version>
+      <mockito.version>2.23.4</mockito.version>
       <pax.exam.version>4.11.0</pax.exam.version>
       <pax.url.version>2.5.2</pax.url.version>
       <postgresql.version>42.1.4</postgresql.version>
