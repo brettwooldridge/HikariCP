@@ -8,7 +8,7 @@
       <artifact.classifier />
 
       <felix.bundle.plugin.version>4.1.0</felix.bundle.plugin.version>
-      <felix.version>5.6.8</felix.version>
+      <felix.version>6.0.1</felix.version>
       <hibernate.version>5.2.10.Final</hibernate.version>
       <javassist.version>3.22.0-CR1</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>
