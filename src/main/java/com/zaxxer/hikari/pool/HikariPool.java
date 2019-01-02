@@ -137,10 +137,16 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       this.houseKeeperTask = houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L, housekeepingPeriodMs, MILLISECONDS);
 
       if (Boolean.getBoolean("com.zaxxer.hikari.blockUntilFilled") && config.getInitializationFailTimeout() > 1) {
+         addConnectionExecutor.setMaximumPoolSize(Runtime.getRuntime().availableProcessors());
+         addConnectionExecutor.setCorePoolSize(Runtime.getRuntime().availableProcessors());
+
          final long startTime = currentTime();
          while (elapsedMillis(startTime) < config.getInitializationFailTimeout() && getTotalConnections() < config.getMinimumIdle()) {
             quietlySleep(MILLISECONDS.toMillis(100));
          }
+
+         addConnectionExecutor.setMaximumPoolSize(1);
+         addConnectionExecutor.setCorePoolSize(1);
       }
    }
 
@@ -742,7 +748,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
        *
        * @return true if we should create a connection, false if the need has disappeared
        */
-      private boolean shouldCreateAnotherConnection() {
+      private synchronized boolean shouldCreateAnotherConnection() {
          return getTotalConnections() < config.getMaximumPoolSize() &&
             (connectionBag.getWaitingThreadCount() > 0 || getIdleConnections() < config.getMinimumIdle());
       }
