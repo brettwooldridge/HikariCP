@@ -215,7 +215,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       sharedList.add(bagEntry);
 
       // spin until a thread takes it or none are waiting
-      while (waiters.get() > 0 && !handoffQueue.offer(bagEntry)) {
+      while (waiters.get() > 0 && bagEntry.getState() != STATE_NOT_IN_USE && !handoffQueue.offer(bagEntry)) {
          yield();
       }
    }
