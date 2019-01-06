@@ -20,6 +20,7 @@ import com.zaxxer.hikari.HikariConfigMXBean;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariPoolMXBean;
 import com.zaxxer.hikari.mocks.StubDataSource;
+import java.util.Hashtable;
 import org.junit.Test;
 
 import javax.management.JMX;
@@ -71,7 +72,10 @@ public class TestMBean
          TimeUnit.SECONDS.sleep(1);
 
          MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-         ObjectName poolName = new ObjectName("com.zaxxer.hikari:type=Pool (testMBeanReporting)");
+         Hashtable<String, String> properties = new Hashtable<>(2);
+         properties.put("type", "Pool");
+         properties.put("name", "testMBeanReporting");
+         ObjectName poolName = new ObjectName("com.zaxxer.hikari", properties);
          HikariPoolMXBean hikariPoolMXBean = JMX.newMXBeanProxy(mBeanServer, poolName, HikariPoolMXBean.class);
 
          assertEquals(0, hikariPoolMXBean.getActiveConnections());
