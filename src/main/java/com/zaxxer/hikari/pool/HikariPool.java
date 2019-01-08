@@ -421,6 +421,20 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    }
 
    /**
+    * Log the current pool state at warn level.
+    *
+    * @param prefix an optional prefix to prepend the log message
+    */
+   void warnLogPoolState(String... prefix)
+   {
+      if (logger.isWarnEnabled()) {
+         logger.warn("{} - {}stats (total={}, active={}, idle={}, waiting={})",
+                      poolName, (prefix.length > 0 ? prefix[0] : ""),
+                      getTotalConnections(), getActiveConnections(), getIdleConnections(), getThreadsAwaitingConnection());
+      }
+   }
+
+   /**
     * Recycle PoolEntry (add back to the pool)
     *
     * @param poolEntry the PoolEntry to recycle
@@ -686,7 +700,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     */
    private SQLException createTimeoutException(long startTime)
    {
-      logPoolState("Timeout failure ");
+      warnLogPoolState("Timeout failure ");
       metricsTracker.recordConnectionTimeout();
 
       String sqlState = null;
