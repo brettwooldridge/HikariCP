@@ -7,8 +7,8 @@
       <sureFireForks9>false</sureFireForks9>
       <artifact.classifier />
 
-      <felix.bundle.plugin.version>3.3.0</felix.bundle.plugin.version>
-      <felix.version>5.6.8</felix.version>
+      <felix.bundle.plugin.version>4.1.0</felix.bundle.plugin.version>
+      <felix.version>6.0.1</felix.version>
       <hibernate.version>5.2.10.Final</hibernate.version>
       <javassist.version>3.24.1-GA</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>
@@ -17,8 +17,8 @@
       <micrometer.version>1.0.0</micrometer.version>
       <simpleclient.version>0.0.26</simpleclient.version>
       <mockito.version>2.23.4</mockito.version>
-      <pax.exam.version>4.11.0</pax.exam.version>
-      <pax.url.version>2.5.2</pax.url.version>
+      <pax.exam.version>4.13.1</pax.exam.version>
+      <pax.url.version>2.5.4</pax.url.version>
       <postgresql.version>42.1.4</postgresql.version>
       <slf4j.version>1.7.25</slf4j.version>
       <log4j.version>2.11.1</log4j.version>
@@ -265,7 +265,7 @@
          <plugin>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
-            <version>0.7.9</version>
+            <version>0.8.2</version>
             <executions>
                <!-- Prepares the property pointing to the JaCoCo runtime agent which is passed as VM argument when Maven the Surefire plugin is executed. -->
                <execution>
@@ -361,7 +361,7 @@
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-compiler-plugin</artifactId>
-               <version>3.7.0</version>
+               <version>3.8.0</version>
                <extensions>true</extensions>
                <configuration>
                   <source>1.8</source>
@@ -383,7 +383,7 @@
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-surefire-plugin</artifactId>
-               <version>2.20</version>
+               <version>2.22.1</version>
                <configuration>
                   <!-- Sets the VM argument line used when unit tests are run. -->
                   <argLine>${surefireArgLine} ${sureFireOptions9}</argLine>
@@ -415,7 +415,7 @@
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-javadoc-plugin</artifactId>
-               <version>2.10.4</version>
+               <version>3.0.1</version>
                <configuration>
                   <show>public</show>
                   <excludePackageNames>com.zaxxer.hikari.hibernate:com.zaxxer.hikari.metrics.*:com.zaxxer.hikari.pool:com.zaxxer.hikari.util</excludePackageNames>
