@@ -10,7 +10,7 @@
       <felix.bundle.plugin.version>3.3.0</felix.bundle.plugin.version>
       <felix.version>5.6.8</felix.version>
       <hibernate.version>5.2.10.Final</hibernate.version>
-      <javassist.version>3.22.0-CR1</javassist.version>
+      <javassist.version>3.24.1-GA</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>
       <maven.release.version>2.5.3</maven.release.version>
       <metrics.version>3.2.4</metrics.version>
