@@ -172,6 +172,7 @@ public class TestValidation
 
       HikariConfig config = newHikariConfig();
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      config.setMinimumIdle(9);
       config.setMaxLifetime(TimeUnit.MINUTES.toMillis(2));
       config.setIdleTimeout(TimeUnit.MINUTES.toMillis(3));
       config.validate();
