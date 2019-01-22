@@ -1,5 +1,39 @@
 HikariCP Changes
 
+Changes in 3.3.0
+
+ * Revert change where Connection.isClosed() was called outside of setNetworkTimeout() block, opening 
+   vulnerability to unacknowledged TCP traffic.
+
+ * fixed 1186 limit number of items in the ConcurrentBag's ThreadLocal list to avoid OOM errors in some
+   borrow/requite patterns.
+
+ * Merged changed to log uncaught (Throwable) exceptions during connection acquisition.
+
+ * fixed 1161 fix logging formatting anchor.
+
+ * fixed 1181, 1182 allow passing a Prometheus CollectorRegistry rather than always using the default
+   registry.
+
+ * merged 1210 use orElseGet() to delay call until necessary with respect to the housekeeper thread
+   factory.
+
+ * fixed 1074 capability to instantiate an object based on the String class name, usefull when you want
+   to set the MetricsTackerFactory from a property.
+
+ * merged 1250 fix proxy classes generation reproducibility using a sorted LinkedHashSet
+
+ * various clean-ups pointed out by sonarcloud.io
+
+ * merged 1290 Class.newInstance() is deprecated as of Java 9. Usage should be replaced by calling 
+   Class.getDeclaredConstructor().newInstance().
+
+ * fixed #1305 ensure that ConcurrentBag.add() does not spin under high load, when waiting threads may never
+   reach 0.
+
+ * fixes #1287 when system property blockUntilFilled is set, use multiple threads to fill the pool.
+
+ 
 Changes in 3.2.0
 
  * check connection closed condition before attempting to set network timeout to avoid spurios exceptions
