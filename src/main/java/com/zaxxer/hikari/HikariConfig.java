@@ -973,7 +973,7 @@ public class HikariConfig implements HikariConfigMXBean
          maxLifetime = MAX_LIFETIME;
       }
 
-      if (idleTimeout + SECONDS.toMillis(1) > maxLifetime && maxLifetime > 0) {
+      if (idleTimeout + SECONDS.toMillis(1) > maxLifetime && maxLifetime > 0 && minIdle < maxPoolSize) {
          LOGGER.warn("{} - idleTimeout is close to or more than maxLifetime, disabling it.", poolName);
          idleTimeout = 0;
       }
