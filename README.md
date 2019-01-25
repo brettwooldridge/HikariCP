@@ -159,8 +159,8 @@ available, a SQLException will be thrown.  Lowest acceptable connection timeout 
 
 &#8986;``idleTimeout``<br/>
 This property controls the maximum amount of time that a connection is allowed to sit idle in the
-pool.  **This setting only applies when ``minimumIdle`` is defined to be less than ``maximumPoolSize``.**
-Idle connections will *not* be retired once the pool reaches ``minimumIdle`` connections.  Whether a
+pool.  **This setting only applies when ``minIdle`` is defined to be less than ``maximumPoolSize``.**
+Idle connections will *not* be retired once the pool reaches ``minIdle`` connections.  Whether a
 connection is retired as idle or not is subject to a maximum variation of +30 seconds, and average 
 variation of +15 seconds.  A connection will never be retired as idle *before* this timeout.  A value
 of 0 means that idle connections are never removed from the pool.  The minimum allowed value is 10000ms
@@ -184,7 +184,7 @@ connection to the database is still alive. *Again, try running the pool without 
 HikariCP will log an error if your driver is not JDBC4 compliant to let you know.*
 *Default: none*
 
-&#128290;``minimumIdle``<br/>
+&#128290;``minIdle``<br/>
 This property controls the minimum number of *idle connections* that HikariCP tries to maintain
 in the pool.  If the idle connections dip below this value and total connections in the pool are less than ``maximumPoolSize``,
 HikariCP will make a best effort to add additional connections quickly and efficiently.
