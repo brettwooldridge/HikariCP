@@ -148,7 +148,11 @@ public abstract class ProxyConnection implements Connection
       SQLException nse = sqle;
       for (int depth = 0; delegate != ClosedConnection.CLOSED_CONNECTION && nse != null && depth < 10; depth++) {
          final String sqlState = nse.getSQLState();
-         if (sqlState != null && sqlState.startsWith("08") || ERROR_STATES.contains(sqlState) || ERROR_CODES.contains(nse.getErrorCode())) {
+         if (sqlState != null && sqlState.startsWith("08")
+             || nse instanceof SQLTimeoutException
+             || ERROR_STATES.contains(sqlState)
+             || ERROR_CODES.contains(nse.getErrorCode())) {
+
             // broken connection
             LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
                         poolEntry.getPoolName(), delegate, sqlState, nse.getErrorCode(), nse);
