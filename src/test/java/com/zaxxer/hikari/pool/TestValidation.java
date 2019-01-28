@@ -158,6 +158,7 @@ public class TestValidation
 
       HikariConfig config = newHikariConfig();
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      config.setMinimumIdle(5);
       config.setIdleTimeout(TimeUnit.SECONDS.toMillis(5));
       config.validate();
       assertTrue(new String(baos.toByteArray()).contains("less than 10000ms"));
@@ -172,7 +173,7 @@ public class TestValidation
 
       HikariConfig config = newHikariConfig();
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
-      config.setMinimumIdle(9);
+      config.setMinimumIdle(5);
       config.setMaxLifetime(TimeUnit.MINUTES.toMillis(2));
       config.setIdleTimeout(TimeUnit.MINUTES.toMillis(3));
       config.validate();
