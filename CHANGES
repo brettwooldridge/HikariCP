@@ -1,5 +1,16 @@
 HikariCP Changes
 
+Changes in 3.3.1
+
+ * fixed 1287 set core pool size before max pool size
+
+ * fixed 1308 treat a SQLTimeoutException as an evictable offense
+
+ * do not default maxPoolSize to minIdle when only minIdle is specified
+
+ * do not log warning about idleTimeout unless minimumIdle is less than maxPoolSize (because otherwise
+   it does not apply)
+
 Changes in 3.3.0
 
  * Revert change where Connection.isClosed() was called outside of setNetworkTimeout() block, opening 
