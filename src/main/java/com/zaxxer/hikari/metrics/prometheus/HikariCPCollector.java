@@ -12,13 +12,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package com.zaxxer.hikari.metrics.prometheus;
 
 import com.zaxxer.hikari.metrics.PoolStats;
 import io.prometheus.client.Collector;
 import io.prometheus.client.GaugeMetricFamily;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -50,13 +51,16 @@ class HikariCPCollector extends Collector {
       );
    }
 
-   protected HikariCPCollector add(String name, PoolStats poolStats) {
+   void add(String name, PoolStats poolStats) {
       poolStatsMap.put(name, poolStats);
-      return this;
+   }
+
+   void remove(String name) {
+      poolStatsMap.remove(name);
    }
 
    private GaugeMetricFamily createGauge(String metric, String help,
-      Function<PoolStats, Integer> metricValueFunction) {
+                                         Function<PoolStats, Integer> metricValueFunction) {
       GaugeMetricFamily metricFamily = new GaugeMetricFamily(metric, help, LABEL_NAMES);
       poolStatsMap.forEach((k, v) -> metricFamily.addMetric(
          Collections.singletonList(k),

@@ -19,6 +19,7 @@ package com.zaxxer.hikari.metrics.prometheus;
 import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import java.sql.Connection;
@@ -43,7 +44,7 @@ public class HikariCPCollectorTest {
 
 
    @Test
-   public void noConnection() throws Exception {
+   public void noConnection() {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
       config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(this.collectorRegistry));
@@ -135,7 +136,40 @@ public class HikariCPCollectorTest {
       }
    }
 
-   private double getValue(String name, String poolName) {
+   @Test
+   public void poolStatsRemovedAfterShutDown() throws Exception {
+      HikariConfig config = new HikariConfig();
+      config.setPoolName("shutDownPool");
+      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(this.collectorRegistry));
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      config.setMaximumPoolSize(1);
+
+      StubConnection.slowCreate = true;
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         try (Connection connection1 = ds.getConnection()) {
+            // close immediately
+         }
+
+         assertThat(getValue("hikaricp_active_connections", "shutDownPool"), is(0.0));
+         assertThat(getValue("hikaricp_idle_connections", "shutDownPool"), is(1.0));
+         assertThat(getValue("hikaricp_pending_threads", "shutDownPool"), is(0.0));
+         assertThat(getValue("hikaricp_connections", "shutDownPool"), is(1.0));
+         assertThat(getValue("hikaricp_max_connections", "shutDownPool"), is(1.0));
+         assertThat(getValue("hikaricp_min_connections", "shutDownPool"), is(1.0));
+      }
+      finally {
+         StubConnection.slowCreate = false;
+      }
+
+      assertNull(getValue("hikaricp_active_connections", "shutDownPool"));
+      assertNull(getValue("hikaricp_idle_connections", "shutDownPool"));
+      assertNull(getValue("hikaricp_pending_threads", "shutDownPool"));
+      assertNull(getValue("hikaricp_connections", "shutDownPool"));
+      assertNull(getValue("hikaricp_max_connections", "shutDownPool"));
+      assertNull(getValue("hikaricp_min_connections", "shutDownPool"));
+   }
+
+   private Double getValue(String name, String poolName) {
       String[] labelNames = {"pool"};
       String[] labelValues = {poolName};
       return this.collectorRegistry.getSampleValue(name, labelNames, labelValues);
