@@ -23,7 +23,10 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import java.sql.Connection;
+import java.util.List;
 
+import com.zaxxer.hikari.metrics.PoolStats;
+import io.prometheus.client.Collector;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,7 +44,6 @@ public class HikariCPCollectorTest {
    public void setupCollectorRegistry(){
       this.collectorRegistry = new CollectorRegistry();
    }
-
 
    @Test
    public void noConnection() {
@@ -65,7 +67,7 @@ public class HikariCPCollectorTest {
    }
 
    @Test
-   public void noConnectionWithoutPoolName() throws Exception {
+   public void noConnectionWithoutPoolName() {
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
       config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(this.collectorRegistry));
@@ -169,10 +171,41 @@ public class HikariCPCollectorTest {
       assertNull(getValue("hikaricp_min_connections", "shutDownPool"));
    }
 
+   @Test
+   public void testHikariCPCollectorGaugesMetricsInitialization() {
+      HikariCPCollector hikariCPCollector = new HikariCPCollector();
+      hikariCPCollector.add("collectorTestPool", poolStatsWithPredefinedValues());
+      List<Collector.MetricFamilySamples> metrics = hikariCPCollector.collect();
+      hikariCPCollector.register(collectorRegistry);
+
+      assertThat(metrics.size(), is(6));
+      assertThat(metrics.stream().filter(metricFamilySamples -> metricFamilySamples.type == Collector.Type.GAUGE).count(), is(6L));
+      assertThat(getValue("hikaricp_active_connections", "collectorTestPool"), is(58.0));
+      assertThat(getValue("hikaricp_idle_connections", "collectorTestPool"), is(42.0));
+      assertThat(getValue("hikaricp_pending_threads", "collectorTestPool"), is(1.0));
+      assertThat(getValue("hikaricp_connections", "collectorTestPool"), is(100.0));
+      assertThat(getValue("hikaricp_max_connections", "collectorTestPool"), is(100.0));
+      assertThat(getValue("hikaricp_min_connections", "collectorTestPool"), is(3.0));
+   }
+
    private Double getValue(String name, String poolName) {
       String[] labelNames = {"pool"};
       String[] labelValues = {poolName};
       return this.collectorRegistry.getSampleValue(name, labelNames, labelValues);
+   }
+
+   private PoolStats poolStatsWithPredefinedValues() {
+      return new PoolStats(0) {
+         @Override
+         protected void update() {
+            totalConnections = 100;
+            idleConnections = 42;
+            activeConnections = 58;
+            pendingThreads = 1;
+            maxConnections = 100;
+            minConnections = 3;
+         }
+      };
    }
 
 }

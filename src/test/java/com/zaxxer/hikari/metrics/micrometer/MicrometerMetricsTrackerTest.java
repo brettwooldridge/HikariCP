@@ -1,6 +1,6 @@
 package com.zaxxer.hikari.metrics.micrometer;
 
-import com.zaxxer.hikari.metrics.PoolStats;
+import com.zaxxer.hikari.mocks.StubPoolStats;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.Assert;
@@ -14,17 +14,12 @@ public class MicrometerMetricsTrackerTest {
    private MicrometerMetricsTracker testee;
 
    @Before
-   public void setup(){
-      testee = new MicrometerMetricsTracker("mypool", new PoolStats(1000L) {
-         @Override
-         protected void update() {
-            // nothing
-         }
-      }, mockMeterRegistry);
+   public void setup() {
+      testee = new MicrometerMetricsTracker("mypool", new StubPoolStats(1000L), mockMeterRegistry);
    }
 
    @Test
-   public void close() throws Exception {
+   public void close() {
       Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections.acquire").tag("pool", "mypool").timer());
       Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections.usage").tag("pool", "mypool").timer());
       Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections.creation").tag("pool", "mypool").timer());

@@ -1,6 +1,7 @@
 package com.zaxxer.hikari.metrics.prometheus;
 
 import com.zaxxer.hikari.metrics.PoolStats;
+import com.zaxxer.hikari.mocks.StubPoolStats;
 import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
 import org.junit.After;
@@ -15,11 +16,16 @@ import static org.junit.Assert.assertTrue;
 
 public class PrometheusMetricsTrackerFactoryTest {
 
+   @After
+   public void clearCollectorRegistry(){
+      CollectorRegistry.defaultRegistry.clear();
+   }
+
    @Test
    public void registersToProvidedCollectorRegistry() {
       CollectorRegistry collectorRegistry = new CollectorRegistry();
       PrometheusMetricsTrackerFactory factory = new PrometheusMetricsTrackerFactory(collectorRegistry);
-      factory.create("testpool-1", poolStats());
+      factory.create("testpool-1", new StubPoolStats(0));
       assertHikariMetricsAreNotPresent(CollectorRegistry.defaultRegistry);
       assertHikariMetricsArePresent(collectorRegistry);
    }
@@ -27,13 +33,8 @@ public class PrometheusMetricsTrackerFactoryTest {
    @Test
    public void registersToDefaultCollectorRegistry() {
       PrometheusMetricsTrackerFactory factory = new PrometheusMetricsTrackerFactory();
-      factory.create("testpool-2", poolStats());
+      factory.create("testpool-2", new StubPoolStats(0));
       assertHikariMetricsArePresent(CollectorRegistry.defaultRegistry);
-   }
-
-   @After
-   public void clearCollectorRegistry(){
-      CollectorRegistry.defaultRegistry.clear();
    }
 
    private void assertHikariMetricsArePresent(CollectorRegistry collectorRegistry) {
@@ -63,14 +64,4 @@ public class PrometheusMetricsTrackerFactoryTest {
       }
       return list;
    }
-
-   private PoolStats poolStats() {
-      return new PoolStats(0) {
-         @Override
-         protected void update() {
-            // do nothing
-         }
-      };
-   }
-
 }
