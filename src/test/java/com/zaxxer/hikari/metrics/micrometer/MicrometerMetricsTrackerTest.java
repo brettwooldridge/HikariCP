@@ -7,19 +7,22 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class MicrometerMetricsTrackerTest {
+public class MicrometerMetricsTrackerTest
+{
 
    private MeterRegistry mockMeterRegistry = new SimpleMeterRegistry();
 
    private MicrometerMetricsTracker testee;
 
    @Before
-   public void setup() {
+   public void setup()
+   {
       testee = new MicrometerMetricsTracker("mypool", new StubPoolStats(1000L), mockMeterRegistry);
    }
 
    @Test
-   public void close() {
+   public void close()
+   {
       Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections.acquire").tag("pool", "mypool").timer());
       Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections.usage").tag("pool", "mypool").timer());
       Assert.assertNotNull(mockMeterRegistry.find("hikaricp.connections.creation").tag("pool", "mypool").timer());

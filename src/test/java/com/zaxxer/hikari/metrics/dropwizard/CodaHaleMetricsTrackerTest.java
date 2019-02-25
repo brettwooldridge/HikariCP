@@ -11,7 +11,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
-public class CodaHaleMetricsTrackerTest {
+public class CodaHaleMetricsTrackerTest
+{
 
    @Mock
    public MetricRegistry mockMetricRegistry;
@@ -19,12 +20,14 @@ public class CodaHaleMetricsTrackerTest {
    private CodaHaleMetricsTracker testee;
 
    @Before
-   public void setup() {
+   public void setup()
+   {
       testee = new CodaHaleMetricsTracker("mypool", new StubPoolStats(0), mockMetricRegistry);
    }
 
    @Test
-   public void close() {
+   public void close()
+   {
       testee.close();
 
       verify(mockMetricRegistry).remove("mypool.pool.Wait");

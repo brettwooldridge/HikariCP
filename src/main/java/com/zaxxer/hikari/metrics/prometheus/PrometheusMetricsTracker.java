@@ -28,7 +28,8 @@ import java.util.concurrent.TimeUnit;
 
 import static com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFactory.RegistrationStatus.REGISTERED;
 
-class PrometheusMetricsTracker implements IMetricsTracker {
+class PrometheusMetricsTracker implements IMetricsTracker
+{
    private final static Counter CONNECTION_TIMEOUT_COUNTER = Counter.build()
       .name("hikaricp_connection_timeout_total")
       .labelNames("pool")
@@ -55,7 +56,8 @@ class PrometheusMetricsTracker implements IMetricsTracker {
    private final Summary.Child elapsedUsageSummaryChild;
    private final Summary.Child elapsedCreationSummaryChild;
 
-   PrometheusMetricsTracker(String poolName, CollectorRegistry collectorRegistry, HikariCPCollector hikariCPCollector) {
+   PrometheusMetricsTracker(String poolName, CollectorRegistry collectorRegistry, HikariCPCollector hikariCPCollector)
+   {
       registerMetrics(collectorRegistry);
       this.poolName = poolName;
       this.hikariCPCollector = hikariCPCollector;
@@ -65,7 +67,8 @@ class PrometheusMetricsTracker implements IMetricsTracker {
       this.elapsedCreationSummaryChild = ELAPSED_CREATION_SUMMARY.labels(poolName);
    }
 
-   private void registerMetrics(CollectorRegistry collectorRegistry) {
+   private void registerMetrics(CollectorRegistry collectorRegistry)
+   {
       if (registrationStatuses.putIfAbsent(collectorRegistry, REGISTERED) == null) {
          CONNECTION_TIMEOUT_COUNTER.register(collectorRegistry);
          ELAPSED_ACQUIRED_SUMMARY.register(collectorRegistry);
@@ -75,26 +78,31 @@ class PrometheusMetricsTracker implements IMetricsTracker {
    }
 
    @Override
-   public void recordConnectionAcquiredNanos(long elapsedAcquiredNanos) {
+   public void recordConnectionAcquiredNanos(long elapsedAcquiredNanos)
+   {
       elapsedAcquiredSummaryChild.observe(elapsedAcquiredNanos);
    }
 
    @Override
-   public void recordConnectionUsageMillis(long elapsedBorrowedMillis) {
+   public void recordConnectionUsageMillis(long elapsedBorrowedMillis)
+   {
       elapsedUsageSummaryChild.observe(elapsedBorrowedMillis);
    }
 
    @Override
-   public void recordConnectionCreatedMillis(long connectionCreatedMillis) {
+   public void recordConnectionCreatedMillis(long connectionCreatedMillis)
+   {
       elapsedCreationSummaryChild.observe(connectionCreatedMillis);
    }
 
    @Override
-   public void recordConnectionTimeout() {
+   public void recordConnectionTimeout()
+   {
       connectionTimeoutCounterChild.inc();
    }
 
-   private static Summary createSummary(String name, String help) {
+   private static Summary createSummary(String name, String help)
+   {
       return Summary.build()
          .name(name)
          .labelNames("pool")
@@ -108,7 +116,8 @@ class PrometheusMetricsTracker implements IMetricsTracker {
    }
 
    @Override
-   public void close() {
+   public void close()
+   {
       hikariCPCollector.remove(poolName);
       CONNECTION_TIMEOUT_COUNTER.remove(poolName);
       ELAPSED_ACQUIRED_SUMMARY.remove(poolName);

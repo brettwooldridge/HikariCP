@@ -37,7 +37,8 @@ import static com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFacto
  * config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(new CollectorRegistry()));
  * }</pre>
  */
-public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
+public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory
+{
 
    private final static Map<CollectorRegistry, RegistrationStatus> registrationStatuses = new ConcurrentHashMap<>();
 
@@ -45,7 +46,8 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
 
    private final CollectorRegistry collectorRegistry;
 
-   public enum RegistrationStatus {
+   public enum RegistrationStatus
+   {
       REGISTERED;
    }
 
@@ -53,7 +55,8 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
     * Default Constructor. The Hikari metrics are registered to the default
     * collector registry ({@code CollectorRegistry.defaultRegistry}).
     */
-   public PrometheusMetricsTrackerFactory() {
+   public PrometheusMetricsTrackerFactory()
+   {
       this(CollectorRegistry.defaultRegistry);
    }
 
@@ -61,18 +64,21 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory {
     * Constructor that allows to pass in a {@link CollectorRegistry} to which the
     * Hikari metrics are registered.
     */
-   public PrometheusMetricsTrackerFactory(CollectorRegistry collectorRegistry) {
+   public PrometheusMetricsTrackerFactory(CollectorRegistry collectorRegistry)
+   {
       this.collectorRegistry = collectorRegistry;
    }
 
    @Override
-   public IMetricsTracker create(String poolName, PoolStats poolStats) {
+   public IMetricsTracker create(String poolName, PoolStats poolStats)
+   {
       registerCollector(this.collector, this.collectorRegistry);
       this.collector.add(poolName, poolStats);
       return new PrometheusMetricsTracker(poolName, this.collectorRegistry, this.collector);
    }
 
-   private void registerCollector(Collector collector, CollectorRegistry collectorRegistry) {
+   private void registerCollector(Collector collector, CollectorRegistry collectorRegistry)
+   {
       if (registrationStatuses.putIfAbsent(collectorRegistry, REGISTERED) == null) {
          collector.register(collectorRegistry);
       }

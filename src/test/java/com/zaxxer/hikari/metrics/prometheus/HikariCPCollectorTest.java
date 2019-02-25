@@ -36,17 +36,20 @@ import com.zaxxer.hikari.mocks.StubConnection;
 
 import io.prometheus.client.CollectorRegistry;
 
-public class HikariCPCollectorTest {
+public class HikariCPCollectorTest
+{
 
    private CollectorRegistry collectorRegistry;
 
    @Before
-   public void setupCollectorRegistry(){
+   public void setupCollectorRegistry()
+   {
       this.collectorRegistry = new CollectorRegistry();
    }
 
    @Test
-   public void noConnection() {
+   public void noConnection()
+   {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(0);
       config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(this.collectorRegistry));
@@ -67,7 +70,8 @@ public class HikariCPCollectorTest {
    }
 
    @Test
-   public void noConnectionWithoutPoolName() {
+   public void noConnectionWithoutPoolName()
+   {
       HikariConfig config = new HikariConfig();
       config.setMinimumIdle(0);
       config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(this.collectorRegistry));
@@ -89,7 +93,8 @@ public class HikariCPCollectorTest {
    }
 
    @Test
-   public void connection1() throws Exception {
+   public void connection1() throws Exception
+   {
       HikariConfig config = newHikariConfig();
       config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(this.collectorRegistry));
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
@@ -114,7 +119,8 @@ public class HikariCPCollectorTest {
    }
 
    @Test
-   public void connectionClosed() throws Exception {
+   public void connectionClosed() throws Exception
+   {
       HikariConfig config = newHikariConfig();
       config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(this.collectorRegistry));
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
@@ -139,7 +145,8 @@ public class HikariCPCollectorTest {
    }
 
    @Test
-   public void poolStatsRemovedAfterShutDown() throws Exception {
+   public void poolStatsRemovedAfterShutDown() throws Exception
+   {
       HikariConfig config = new HikariConfig();
       config.setPoolName("shutDownPool");
       config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(this.collectorRegistry));
@@ -172,7 +179,8 @@ public class HikariCPCollectorTest {
    }
 
    @Test
-   public void testHikariCPCollectorGaugesMetricsInitialization() {
+   public void testHikariCPCollectorGaugesMetricsInitialization()
+   {
       HikariCPCollector hikariCPCollector = new HikariCPCollector();
       hikariCPCollector.add("collectorTestPool", poolStatsWithPredefinedValues());
       List<Collector.MetricFamilySamples> metrics = hikariCPCollector.collect();
@@ -188,13 +196,15 @@ public class HikariCPCollectorTest {
       assertThat(getValue("hikaricp_min_connections", "collectorTestPool"), is(3.0));
    }
 
-   private Double getValue(String name, String poolName) {
+   private Double getValue(String name, String poolName)
+   {
       String[] labelNames = {"pool"};
       String[] labelValues = {poolName};
       return this.collectorRegistry.getSampleValue(name, labelNames, labelValues);
    }
 
-   private PoolStats poolStatsWithPredefinedValues() {
+   private PoolStats poolStatsWithPredefinedValues()
+   {
       return new PoolStats(0) {
          @Override
          protected void update() {

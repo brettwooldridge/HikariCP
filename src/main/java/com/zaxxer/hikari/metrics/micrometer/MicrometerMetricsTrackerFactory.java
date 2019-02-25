@@ -5,7 +5,8 @@ import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.PoolStats;
 import io.micrometer.core.instrument.MeterRegistry;
 
-public class MicrometerMetricsTrackerFactory implements MetricsTrackerFactory {
+public class MicrometerMetricsTrackerFactory implements MetricsTrackerFactory
+{
 
    private final MeterRegistry registry;
 
