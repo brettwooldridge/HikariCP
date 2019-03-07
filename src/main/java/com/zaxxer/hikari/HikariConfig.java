@@ -39,6 +39,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Supplier;
 
 import static com.zaxxer.hikari.util.UtilityElf.getNullIfEmpty;
 import static com.zaxxer.hikari.util.UtilityElf.safeIsAssignableFrom;
@@ -70,7 +71,7 @@ public class HikariConfig implements HikariConfigMXBean
    private volatile int maxPoolSize;
    private volatile int minIdle;
    private volatile String username;
-   private volatile String password;
+   private volatile Supplier<String> passwordSupplier;
 
    // Properties NOT changeable at runtime
    //
@@ -274,7 +275,10 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public String getPassword()
    {
-      return password;
+      if (passwordSupplier == null){
+         return null;
+      }
+      return passwordSupplier.get();
    }
 
    /**
@@ -284,7 +288,20 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setPassword(String password)
    {
-      this.password = password;
+      if (passwordSupplier == null){
+         passwordSupplier = () -> password;
+      }
+      else {
+         throw new IllegalStateException("can't set static password after password supplier has been set. Please use setPasswordSupplier method to replace password supplier explicitly with () -> password");
+      }
+   }
+
+   /**
+    * Set a password {@link Supplier} to be used by {@link HikariConfig#getPassword()} for dynamically acquiring a password.
+    * @param passwordSupplier the password {@link Supplier}
+    */
+   public void setPasswordSupplier(Supplier<String> passwordSupplier){
+      this.passwordSupplier = passwordSupplier;
    }
 
    /**
