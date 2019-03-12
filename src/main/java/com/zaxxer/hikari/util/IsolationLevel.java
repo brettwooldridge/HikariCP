@@ -1,6 +1,6 @@
 package com.zaxxer.hikari.util;
 
-public enum HikariConnection {
+public enum IsolationLevel {
 
    TRANSACTION_NONE(0),
    TRANSACTION_READ_UNCOMMITTED(1),
@@ -9,13 +9,13 @@ public enum HikariConnection {
    TRANSACTION_SERIALIZABLE(8),
    TRANSACTION_SQL_SERVER_SNAPSHOT_ISOLATION_LEVEL(4096);
 
-   private final int isolationLevel;
+   private final int levelId;
 
-   HikariConnection(int isolationLevel) {
-      this.isolationLevel = isolationLevel;
+   IsolationLevel(int levelId) {
+      this.levelId = levelId;
    }
 
-   public int getIsolationLevel() {
-      return isolationLevel;
+   public int getLevelId() {
+      return levelId;
    }
 }

@@ -20,8 +20,6 @@ import static java.lang.Thread.currentThread;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.sql.Connection;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
@@ -170,9 +168,9 @@ public final class UtilityElf
       if (transactionIsolationName != null) {
          try {
             // use the english locale to avoid the infamous turkish locale bug
-            final String upperName = Optional.of(transactionIsolationName.toUpperCase(Locale.ENGLISH))
+            final String upperCaseIsolationLevelName = Optional.of(transactionIsolationName.toUpperCase(Locale.ENGLISH))
                .orElseThrow(IllegalArgumentException::new);
-            return HikariConnection.valueOf(upperName).getIsolationLevel();
+            return IsolationLevel.valueOf(upperCaseIsolationLevelName).getLevelId();
          } catch (Exception e) {
             throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
          }
