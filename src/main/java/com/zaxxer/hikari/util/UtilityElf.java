@@ -168,8 +168,7 @@ public final class UtilityElf
       if (transactionIsolationName != null) {
          try {
             // use the english locale to avoid the infamous turkish locale bug
-            final String upperCaseIsolationLevelName = Optional.of(transactionIsolationName.toUpperCase(Locale.ENGLISH))
-               .orElseThrow(IllegalArgumentException::new);
+            final String upperCaseIsolationLevelName = transactionIsolationName.toUpperCase(Locale.ENGLISH);
             return IsolationLevel.valueOf(upperCaseIsolationLevelName).getLevelId();
          } catch (Exception e) {
             throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
