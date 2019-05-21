@@ -4,11 +4,11 @@ import org.junit.Assert;
 import org.junit.Test;
 import com.zaxxer.hikari.mocks.TestObject;
 
+import java.lang.reflect.Field;
 import java.util.Properties;
+import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class PropertyElfTest
 {
@@ -39,5 +39,24 @@ public class PropertyElfTest
       catch (RuntimeException e) {
          assertEquals("argument type mismatch", e.getCause().getMessage());
       }
+   }
+
+   @Test
+   public void test() throws Exception
+   {
+      TestObject testObject = new TestObject();
+      testObject.setString("test");
+      Set<String> set = PropertyElf.getPropertyNames(testObject.getClass());
+      Field[] fields = testObject.getClass().getDeclaredFields();
+      assertEquals(1,set.stream().filter(value->value.equals(fields[0].getName())).count());
+      assertEquals(1,set.stream().filter(value->value.equals(fields[1].getName())).count());
+
+      assertEquals("test",PropertyElf.getProperty("string",testObject));
+
+      Properties properties = new Properties();
+      properties.setProperty("string", "aString");
+      properties.setProperty("testObject", "it is not a class");
+      Properties properties1 = PropertyElf.copyProperties(properties);
+      assertTrue(properties1.equals(properties));
    }
 }
