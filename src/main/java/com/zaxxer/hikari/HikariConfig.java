@@ -137,7 +137,7 @@ public class HikariConfig implements HikariConfigMXBean
    /**
     * Construct a HikariConfig from the specified property file name.  <code>propertyFileName</code>
     * will first be treated as a path in the file-system, and if that fails the
-    * Class.getResourceAsStream(propertyFileName) will be tried.
+    * ClassLoader.getResourceAsStream(propertyFileName) will be tried.
     *
     * @param propertyFileName the name of the property file
     */
@@ -1060,7 +1060,7 @@ public class HikariConfig implements HikariConfigMXBean
    private void loadProperties(String propertyFileName)
    {
       final File propFile = new File(propertyFileName);
-      try (final InputStream is = propFile.isFile() ? new FileInputStream(propFile) : this.getClass().getResourceAsStream(propertyFileName)) {
+      try (final InputStream is = propFile.isFile() ? new FileInputStream(propFile) : this.getClass().getClassLoader().getResourceAsStream(propertyFileName)) {
          if (is != null) {
             Properties props = new Properties();
             props.load(is);
