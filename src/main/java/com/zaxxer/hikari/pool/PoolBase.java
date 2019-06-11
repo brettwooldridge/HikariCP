@@ -152,8 +152,7 @@ abstract class PoolBase
                // Some drivers will throw here if the connection is already closed
                setNetworkTimeout(connection, validationTimeout);
             }
-            catch (SQLException sqlEx)
-            {
+            catch (SQLException sqlEx) {
                return false;
             }
 
