@@ -36,6 +36,9 @@ import static com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFacto
  * <pre>{@code
  * config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(new CollectorRegistry()));
  * }</pre>
+ *
+ * Note: the internal {@see io.prometheus.client.Summary} requires heavy locks. Consider using
+ * {@see PrometheusHistogramMetricsTrackerFactory} if performance plays a role and you don't need the summary per se.
  */
 public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory
 {
