@@ -148,13 +148,7 @@ abstract class PoolBase
    {
       try {
          try {
-            try {
-               // Some drivers will throw here if the connection is already closed
-               setNetworkTimeout(connection, validationTimeout);
-            }
-            catch (SQLException sqlEx) {
-               return false;
-            }
+            setNetworkTimeout(connection, validationTimeout);
 
             final int validationSeconds = (int) Math.max(1000L, validationTimeout) / 1000;
 
@@ -171,8 +165,13 @@ abstract class PoolBase
             }
          }
          finally {
-            setNetworkTimeout(connection, networkTimeout);
-
+            try {
+               // Some drivers will throw here if the connection is already closed
+               setNetworkTimeout(connection, networkTimeout);
+            }
+            catch (SQLException sqlEx) {
+               return false;
+            }
             if (isIsolateInternalQueries && !isAutoCommit) {
                connection.rollback();
             }
