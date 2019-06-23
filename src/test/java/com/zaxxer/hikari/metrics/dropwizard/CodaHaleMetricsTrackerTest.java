@@ -1,18 +1,18 @@
 package com.zaxxer.hikari.metrics.dropwizard;
 
-import static org.mockito.Mockito.verify;
-
-import com.zaxxer.hikari.metrics.PoolStats;
+import com.codahale.metrics.MetricRegistry;
+import com.zaxxer.hikari.mocks.StubPoolStats;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import com.codahale.metrics.MetricRegistry;
+import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
-public class CodaHaleMetricsTrackerTest {
+public class CodaHaleMetricsTrackerTest
+{
 
    @Mock
    public MetricRegistry mockMetricRegistry;
@@ -20,12 +20,14 @@ public class CodaHaleMetricsTrackerTest {
    private CodaHaleMetricsTracker testee;
 
    @Before
-   public void setup() {
-      testee = new CodaHaleMetricsTracker("mypool", poolStats(), mockMetricRegistry);
+   public void setup()
+   {
+      testee = new CodaHaleMetricsTracker("mypool", new StubPoolStats(0), mockMetricRegistry);
    }
 
    @Test
-   public void close() throws Exception {
+   public void close()
+   {
       testee.close();
 
       verify(mockMetricRegistry).remove("mypool.pool.Wait");
@@ -38,14 +40,5 @@ public class CodaHaleMetricsTrackerTest {
       verify(mockMetricRegistry).remove("mypool.pool.PendingConnections");
       verify(mockMetricRegistry).remove("mypool.pool.MaxConnections");
       verify(mockMetricRegistry).remove("mypool.pool.MinConnections");
-   }
-
-   private PoolStats poolStats() {
-      return new PoolStats(0) {
-         @Override
-         protected void update() {
-            // do nothing
-         }
-      };
    }
 }
