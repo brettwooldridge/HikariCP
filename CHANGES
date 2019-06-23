@@ -1,5 +1,8 @@
 HikariCP Changes
 
+Changes in 3.3.2
+ * load hikari properties file from classpath
+
 Changes in 3.3.1
 
  * fixed 1287 set core pool size before max pool size
