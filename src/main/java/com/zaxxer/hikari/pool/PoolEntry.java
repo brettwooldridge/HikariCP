@@ -146,7 +146,7 @@ final class PoolEntry implements IConcurrentBagEntry
    @Override
    public int getState()
    {
-      return stateUpdater.get(this);
+      return state;
    }
 
    /** {@inheritDoc} */
