@@ -55,9 +55,7 @@ import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
 import static com.zaxxer.hikari.util.ClockSource.plusMillis;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_USE;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
-import static com.zaxxer.hikari.util.UtilityElf.createThreadPoolExecutor;
-import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
-import static com.zaxxer.hikari.util.UtilityElf.safeIsAssignableFrom;
+import static com.zaxxer.hikari.util.UtilityElf.*;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -129,25 +127,29 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
       LinkedBlockingQueue<Runnable> addQueue = new LinkedBlockingQueue<>(config.getMaximumPoolSize());
       this.addConnectionQueue = unmodifiableCollection(addQueue);
-      this.addConnectionExecutor = createThreadPoolExecutor(addQueue, poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
-      this.closeConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
+      this.addConnectionExecutor = createAddConnectionExecutor(threadFactory, addQueue);
+      this.closeConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection " +
+            "closer",
+         threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
       this.leakTaskFactory = new ProxyLeakTaskFactory(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
-      this.houseKeeperTask = houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L, housekeepingPeriodMs, MILLISECONDS);
+      this.houseKeeperTask = houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L,
+         housekeepingPeriodMs, MILLISECONDS);
+   }
 
-      if (Boolean.getBoolean("com.zaxxer.hikari.blockUntilFilled") && config.getInitializationFailTimeout() > 1) {
-         addConnectionExecutor.setCorePoolSize(Runtime.getRuntime().availableProcessors());
-         addConnectionExecutor.setMaximumPoolSize(Runtime.getRuntime().availableProcessors());
+   private ThreadPoolExecutor createAddConnectionExecutor(ThreadFactory threadFactory,
+                                                          LinkedBlockingQueue<Runnable> addQueue)
+   {
+      int poosSize = 1;
 
-         final long startTime = currentTime();
-         while (elapsedMillis(startTime) < config.getInitializationFailTimeout() && getTotalConnections() < config.getMinimumIdle()) {
-            quietlySleep(MILLISECONDS.toMillis(100));
-         }
-
-         addConnectionExecutor.setCorePoolSize(1);
-         addConnectionExecutor.setMaximumPoolSize(1);
+      if (Boolean.getBoolean("com.zaxxer.hikari.blockUntilFilled")
+         && config.getInitializationFailTimeout() > 1) {
+         poosSize = config.getMinimumIdle();
       }
+
+      return createThreadPoolExecutorWithFixedSize(addQueue, poolName + " connection adder",
+         threadFactory, new ThreadPoolExecutor.DiscardPolicy(), poosSize);
    }
 
    /**

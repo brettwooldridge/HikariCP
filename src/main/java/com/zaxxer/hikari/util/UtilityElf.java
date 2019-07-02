@@ -154,6 +154,27 @@ public final class UtilityElf
       return executor;
    }
 
+   /**
+    * Create a ThreadPoolExecutor.
+    *
+    * @param queue the BlockingQueue to use
+    * @param threadName the thread name
+    * @param threadFactory an optional ThreadFactory
+    * @param policy the RejectedExecutionHandler policy
+    * @param size the fixed pool size
+    * @return a ThreadPoolExecutor
+    */
+   public static ThreadPoolExecutor createThreadPoolExecutorWithFixedSize(final BlockingQueue<Runnable> queue, final String threadName, ThreadFactory threadFactory, final RejectedExecutionHandler policy, int size)
+   {
+      if (threadFactory == null) {
+         threadFactory = new DefaultThreadFactory(threadName, true);
+      }
+
+      ThreadPoolExecutor executor = new ThreadPoolExecutor(size /*core*/, size /*max*/, 5 /*keepalive*/, SECONDS, queue, threadFactory, policy);
+      executor.allowCoreThreadTimeOut(true);
+      return executor;
+   }
+
    // ***********************************************************************
    //                       Misc. public methods
    // ***********************************************************************
