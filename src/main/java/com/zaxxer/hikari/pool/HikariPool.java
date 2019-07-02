@@ -137,7 +137,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       this.houseKeeperTask = houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L, housekeepingPeriodMs, MILLISECONDS);
 
       if (Boolean.getBoolean("com.zaxxer.hikari.blockUntilFilled") && config.getInitializationFailTimeout() > 1) {
-         addConnectionExecutor.setCorePoolSize(Runtime.getRuntime().availableProcessors());
+         addConnectionExecutor.setCorePoolSize(config.getMinimumIdle());
          addConnectionExecutor.setMaximumPoolSize(Runtime.getRuntime().availableProcessors());
 
          final long startTime = currentTime();
