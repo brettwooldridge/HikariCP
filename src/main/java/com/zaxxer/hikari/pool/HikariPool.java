@@ -131,7 +131,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       LinkedBlockingQueue<Runnable> addQueue = new LinkedBlockingQueue<>(config.getMaximumPoolSize());
       this.addConnectionQueue = unmodifiableCollection(addQueue);
       this.addConnectionExecutor = createAddConnectionExecutor(threadFactory, addQueue);
-      this.closeConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection " + "closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
+      this.closeConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
       this.leakTaskFactory = new ProxyLeakTaskFactory(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
