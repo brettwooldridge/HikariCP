@@ -154,9 +154,12 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
    private ThreadPoolExecutor createAddConnectionExecutor(ThreadFactory threadFactory, LinkedBlockingQueue<Runnable> addQueue)
    {
-      int maxPoolSize = 1;
+      final int maxPoolSize;
       if (isBlockedInitialization(config)) {
          maxPoolSize = config.getMinimumIdle();
+      }
+      else {
+         maxPoolSize = 1;
       }
 
       return createThreadPoolExecutorWithFlexibleSize(addQueue, poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardPolicy(), maxPoolSize);
