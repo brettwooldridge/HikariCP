@@ -157,20 +157,22 @@ public final class UtilityElf
    /**
     * Create a ThreadPoolExecutor.
     *
+    * The pool size is initialized with the max size, but it can be changed between 1 and maxSize
+    *
     * @param queue the BlockingQueue to use
     * @param threadName the thread name
     * @param threadFactory an optional ThreadFactory
     * @param policy the RejectedExecutionHandler policy
-    * @param size the fixed pool size
+    * @param maxSize the maxSize of the pool
     * @return a ThreadPoolExecutor
     */
-   public static ThreadPoolExecutor createThreadPoolExecutorWithFixedSize(final BlockingQueue<Runnable> queue, final String threadName, ThreadFactory threadFactory, final RejectedExecutionHandler policy, int size)
+   public static ThreadPoolExecutor createThreadPoolExecutorWithFlexibleSize(final BlockingQueue<Runnable> queue, final String threadName, ThreadFactory threadFactory, final RejectedExecutionHandler policy, int maxSize)
    {
       if (threadFactory == null) {
          threadFactory = new DefaultThreadFactory(threadName, true);
       }
 
-      ThreadPoolExecutor executor = new ThreadPoolExecutor(size /*core*/, size /*max*/, 5 /*keepalive*/, SECONDS, queue, threadFactory, policy);
+      ThreadPoolExecutor executor = new ThreadPoolExecutor(maxSize /*core*/, maxSize /*max*/, 5 /*keepalive*/, SECONDS, queue, threadFactory, policy);
       executor.allowCoreThreadTimeOut(true);
       return executor;
    }

@@ -58,8 +58,9 @@ public class AddConnectionExecutorTest
          throw new RuntimeException(e);
       }
 
-      assertEquals("Add connection executor's size equals minimum idle connection of hikari config",
-         config.getMinimumIdle(), addConnectionExecutor.getCorePoolSize());
+      //AddConnectionExecutor initializes pool with multi-threads, but it returns the thread pool size back to 1 (single-threaded) when initialized.
+      assertEquals("Add connection executor's size equals 1",
+         1, addConnectionExecutor.getCorePoolSize());
    }
 
    @Test
@@ -84,7 +85,7 @@ public class AddConnectionExecutorTest
          throw new RuntimeException(e);
       }
 
-      assertEquals("Add connection executor's size equals minimum idle connection of hikari config",
+      assertEquals("Add connection executor's size equals 1",
          1, addConnectionExecutor.getCorePoolSize());
    }
 

@@ -128,28 +128,39 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       LinkedBlockingQueue<Runnable> addQueue = new LinkedBlockingQueue<>(config.getMaximumPoolSize());
       this.addConnectionQueue = unmodifiableCollection(addQueue);
       this.addConnectionExecutor = createAddConnectionExecutor(threadFactory, addQueue);
-      this.closeConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection " +
-            "closer",
-         threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
+      this.closeConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection " + "closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
       this.leakTaskFactory = new ProxyLeakTaskFactory(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
-      this.houseKeeperTask = houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L,
-         housekeepingPeriodMs, MILLISECONDS);
+      this.houseKeeperTask = houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L, housekeepingPeriodMs, MILLISECONDS);
+
+      if (isBlockedInitialization(config)) {
+         blockUtilPoolInitialized(config);
+      }
    }
 
-   private ThreadPoolExecutor createAddConnectionExecutor(ThreadFactory threadFactory,
-                                                          LinkedBlockingQueue<Runnable> addQueue)
-   {
-      int poosSize = 1;
-
-      if (Boolean.getBoolean("com.zaxxer.hikari.blockUntilFilled")
-         && config.getInitializationFailTimeout() > 1) {
-         poosSize = config.getMinimumIdle();
+   private void blockUtilPoolInitialized(HikariConfig config) {
+      final long startTime = currentTime();
+      while (elapsedMillis(startTime) < config.getInitializationFailTimeout() && getTotalConnections() < config.getMinimumIdle()) {
+         quietlySleep(MILLISECONDS.toMillis(100));
       }
 
-      return createThreadPoolExecutorWithFixedSize(addQueue, poolName + " connection adder",
-         threadFactory, new ThreadPoolExecutor.DiscardPolicy(), poosSize);
+      addConnectionExecutor.setCorePoolSize(1);
+      addConnectionExecutor.setMaximumPoolSize(1);
+   }
+
+   private ThreadPoolExecutor createAddConnectionExecutor(ThreadFactory threadFactory, LinkedBlockingQueue<Runnable> addQueue)
+   {
+      int maxPoolSize = 1;
+      if (isBlockedInitialization(config)) {
+         maxPoolSize = config.getMinimumIdle();
+      }
+
+      return createThreadPoolExecutorWithFlexibleSize(addQueue, poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardPolicy(), maxPoolSize);
+   }
+
+   private boolean isBlockedInitialization(HikariConfig config) {
+      return Boolean.getBoolean("com.zaxxer.hikari.blockUntilFilled") && config.getInitializationFailTimeout() > 1;
    }
 
    /**
