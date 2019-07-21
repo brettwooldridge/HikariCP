@@ -92,6 +92,7 @@ public class TestConcurrentBag
          bag.requite(reserved);
    
          bag.remove(notinuse);
+         ps.flush();
          assertTrue(new String(baos.toByteArray()).contains("not borrowed or reserved"));
    
          bag.unreserve(notinuse);
