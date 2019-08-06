@@ -22,6 +22,7 @@ import org.junit.Test;
 
 import java.lang.reflect.Field;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import static com.zaxxer.hikari.pool.TestElf.*;
@@ -37,7 +38,7 @@ public class AddConnectionExecutorTest
    public void testAddConnectionExecutorCoreSizeInBlockedInitialization()
    {
       HikariConfig config = newHikariConfig();
-      config.setMinimumIdle(getRandom(1, 5));
+      config.setMinimumIdle(getRandomInRange(1, 5));
       config.setMaximumPoolSize(5);
       config.setConnectionTestQuery("SELECT 1");
       config.setDataSourceClassName("org.h2.jdbcx.JdbcDataSource");
@@ -67,7 +68,7 @@ public class AddConnectionExecutorTest
    public void testAddConnectionExecutorCoreSizeInUnBlockedInitialization()
    {
       HikariConfig config = newHikariConfig();
-      config.setMinimumIdle(getRandom(1, 5));
+      config.setMinimumIdle(getRandomInRange(1, 5));
       config.setMaximumPoolSize(5);
       config.setConnectionTestQuery("SELECT 1");
       config.setDataSourceClassName("org.h2.jdbcx.JdbcDataSource");
@@ -89,8 +90,7 @@ public class AddConnectionExecutorTest
          1, addConnectionExecutor.getCorePoolSize());
    }
 
-   private static int getRandom(int min, int max){
-      Random random = new Random();
-      return random.nextInt(max) % (max - min + 1) + min;
+   private static int getRandomInRange(int min, int max){
+      return ThreadLocalRandom.current().nextInt(min, max + 1);
    }
 }
