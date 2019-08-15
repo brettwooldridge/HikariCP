@@ -161,7 +161,7 @@ available, a SQLException will be thrown.  Lowest acceptable connection timeout 
 This property controls the maximum amount of time that a connection is allowed to sit idle in the
 pool.  **This setting only applies when ``minimumIdle`` is defined to be less than ``maximumPoolSize``.**
 Idle connections will *not* be retired once the pool reaches ``minimumIdle`` connections.  Whether a
-connection is retired as idle or not is subject to a maximum variation of +30 seconds, and average 
+connection is retired as idle or not is subject to a maximum variation of +30 seconds, and average
 variation of +15 seconds.  A connection will never be retired as idle *before* this timeout.  A value
 of 0 means that idle connections are never removed from the pool.  The minimum allowed value is 10000ms
 (10 seconds).
@@ -177,9 +177,9 @@ course to the ``idleTimeout`` setting.
 *Default: 1800000 (30 minutes)*
 
 &#128288;``connectionTestQuery``<br/>
-**If your driver supports JDBC4 we strongly recommend not setting this property.** This is for 
+**If your driver supports JDBC4 we strongly recommend not setting this property.** This is for
 "legacy" drivers that do not support the JDBC4 ``Connection.isValid() API``.  This is the query that
-will be executed just before a connection is given to you from the pool to validate that the 
+will be executed just before a connection is given to you from the pool to validate that the
 connection to the database is still alive. *Again, try running the pool without this property,
 HikariCP will log an error if your driver is not JDBC4 compliant to let you know.*
 *Default: none*
@@ -224,13 +224,13 @@ in logging and JMX management consoles to identify pools and pool configurations
 
 &#8986;``initializationFailTimeout``<br/>
 This property controls whether the pool will "fail fast" if the pool cannot be seeded with
-an initial connection successfully.  Any positive number is taken to be the number of 
-milliseconds to attempt to acquire an initial connection; the application thread will be 
+an initial connection successfully.  Any positive number is taken to be the number of
+milliseconds to attempt to acquire an initial connection; the application thread will be
 blocked during this period.  If a connection cannot be acquired before this timeout occurs,
 an exception will be thrown.  This timeout is applied *after* the ``connectionTimeout``
 period.  If the value is zero (0), HikariCP will attempt to obtain and validate a connection.
 If a connection is obtained, but fails validation, an exception will be thrown and the pool
-not started.  However, if a connection cannot be obtained, the pool will start, but later 
+not started.  However, if a connection cannot be obtained, the pool will start, but later
 efforts to obtain a connection may fail.  A value less than zero will bypass any initial
 connection attempt, and the pool will start immediately while trying to obtain connections
 in the background.  Consequently, later efforts to obtain a connection may fail.
@@ -253,7 +253,7 @@ useful for certain failover automation scenarios.  When the pool is suspended, c
 This property controls whether *Connections* obtained from the pool are in read-only mode by
 default.  Note some databases do not support the concept of read-only mode, while others provide
 query optimizations when the *Connection* is set to read-only.  Whether you need this property
-or not will depend largely on your application and database. 
+or not will depend largely on your application and database.
 *Default: false*
 
 &#10062;``registerMbeans``<br/>
@@ -437,6 +437,7 @@ Here is a list of JDBC *DataSource* classes for popular databases:
 |:---------------- |:------------ |:-------------------|
 | Apache Derby     | Derby        | org.apache.derby.jdbc.ClientDataSource |
 | Firebird         | Jaybird      | org.firebirdsql.ds.FBSimpleDataSource |
+| Google Spanner   | Spanner      | com.google.cloud.spanner.jdbc.JdbcDriver |
 | H2               | H2           | org.h2.jdbcx.JdbcDataSource |
 | HSQLDB           | HSQLDB       | org.hsqldb.jdbc.JDBCDataSource |
 | IBM DB2          | IBM JCC      | com.ibm.db2.jcc.DB2SimpleDataSource |
