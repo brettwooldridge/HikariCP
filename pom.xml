@@ -30,7 +30,7 @@
 
    <groupId>com.zaxxer</groupId>
    <artifactId>HikariCP</artifactId>
-   <version>3.4.0-SNAPSHOT</version>
+   <version>3.4.0</version>
    <packaging>bundle</packaging>
 
    <name>HikariCP</name>
@@ -46,7 +46,7 @@
       <connection>scm:git:git@github.com:brettwooldridge/HikariCP.git</connection>
       <developerConnection>scm:git:git@github.com:brettwooldridge/HikariCP.git</developerConnection>
       <url>git@github.com:brettwooldridge/HikariCP.git</url>
-      <tag>HEAD</tag>
+      <tag>HikariCP-3.4.0</tag>
    </scm>
 
    <licenses>
