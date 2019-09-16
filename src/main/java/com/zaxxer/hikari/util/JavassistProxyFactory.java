@@ -18,23 +18,14 @@ package com.zaxxer.hikari.util;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.zaxxer.hikari.pool.ProxyCallableStatement;
-import com.zaxxer.hikari.pool.ProxyConnection;
-import com.zaxxer.hikari.pool.ProxyFactory;
-import com.zaxxer.hikari.pool.ProxyPreparedStatement;
-import com.zaxxer.hikari.pool.ProxyResultSet;
-import com.zaxxer.hikari.pool.ProxyStatement;
+import com.zaxxer.hikari.pool.*;
 
 import javassist.*;
 import javassist.bytecode.ClassFile;
@@ -66,6 +57,7 @@ public final class JavassistProxyFactory
       generateProxyClass(Connection.class, ProxyConnection.class.getName(), methodBody);
       generateProxyClass(Statement.class, ProxyStatement.class.getName(), methodBody);
       generateProxyClass(ResultSet.class, ProxyResultSet.class.getName(), methodBody);
+      generateProxyClass(DatabaseMetaData.class, ProxyDatabaseMetaData.class.getName(), methodBody);
 
       // For these we have to cast the delegate
       methodBody = "{ try { return ((cast) delegate).method($$); } catch (SQLException e) { throw checkException(e); } }";
@@ -82,24 +74,27 @@ public final class JavassistProxyFactory
       CtClass proxyCt = classPool.getCtClass("com.zaxxer.hikari.pool.ProxyFactory");
       for (CtMethod method : proxyCt.getMethods()) {
          switch (method.getName()) {
-         case "getProxyConnection":
-            method.setBody("{return new " + packageName + ".HikariProxyConnection($$);}");
-            break;
-         case "getProxyStatement":
-            method.setBody("{return new " + packageName + ".HikariProxyStatement($$);}");
-            break;
-         case "getProxyPreparedStatement":
-            method.setBody("{return new " + packageName + ".HikariProxyPreparedStatement($$);}");
-            break;
-         case "getProxyCallableStatement":
-            method.setBody("{return new " + packageName + ".HikariProxyCallableStatement($$);}");
-            break;
-         case "getProxyResultSet":
-            method.setBody("{return new " + packageName + ".HikariProxyResultSet($$);}");
-            break;
-         default:
-            // unhandled method
-            break;
+            case "getProxyConnection":
+               method.setBody("{return new " + packageName + ".HikariProxyConnection($$);}");
+               break;
+            case "getProxyStatement":
+               method.setBody("{return new " + packageName + ".HikariProxyStatement($$);}");
+               break;
+            case "getProxyPreparedStatement":
+               method.setBody("{return new " + packageName + ".HikariProxyPreparedStatement($$);}");
+               break;
+            case "getProxyCallableStatement":
+               method.setBody("{return new " + packageName + ".HikariProxyCallableStatement($$);}");
+               break;
+            case "getProxyResultSet":
+               method.setBody("{return new " + packageName + ".HikariProxyResultSet($$);}");
+               break;
+            case "getProxyDatabaseMetaData":
+               method.setBody("{return new " + packageName + ".HikariProxyDatabaseMetaData($$);}");
+               break;
+            default:
+               // unhandled method
+               break;
          }
       }
 
