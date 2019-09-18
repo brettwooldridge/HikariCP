@@ -1,5 +1,21 @@
 HikariCP Changes
 
+Changes in 3.4.1
+
+ * fix regression caused by 1337, which broke the ability to pass the isolation level by integer
+   value (string) instead of isolation level name.
+
+Changes in 3.4.0
+
+ * merged 1265 alternative Prometheus metrics Histogram instead of locking Summary (which is
+   purportedly quite lock-heavy.
+
+ * merged 1337 support accepting TRANSACTION_SQL_SERVER_SNAPSHOT_ISOLATION_LEVEL string for
+   isolation level.
+
+ * add proxy class for DatabaseMetaData to intercept DatabaseMetaData.getConnection() call which was
+   leaking the raw database Connection object.
+
 Changes in 3.3.1
 
  * fixed 1287 set core pool size before max pool size
