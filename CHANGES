@@ -13,6 +13,9 @@ Changes in 3.4.0
  * merged 1337 support accepting TRANSACTION_SQL_SERVER_SNAPSHOT_ISOLATION_LEVEL string for
    isolation level.
 
+ * merged 1331 user contribution: major refactor of metrics handling, hopefully without any
+   breakage.
+
  * add proxy class for DatabaseMetaData to intercept DatabaseMetaData.getConnection() call which was
    leaking the raw database Connection object.
 
