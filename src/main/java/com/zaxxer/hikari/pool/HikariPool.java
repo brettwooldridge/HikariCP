@@ -138,11 +138,11 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       this.houseKeeperTask = houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L, housekeepingPeriodMs, MILLISECONDS);
 
       if (isBlockedInitialization(config)) {
-         blockUtilPoolInitialized(config);
+         blockUntilPoolInitialized(config);
       }
    }
 
-   private void blockUtilPoolInitialized(HikariConfig config) {
+   private void blockUntilPoolInitialized(HikariConfig config) {
       final long startTime = currentTime();
       while (elapsedMillis(startTime) < config.getInitializationFailTimeout() && getTotalConnections() < config.getMinimumIdle()) {
          quietlySleep(MILLISECONDS.toMillis(100));
