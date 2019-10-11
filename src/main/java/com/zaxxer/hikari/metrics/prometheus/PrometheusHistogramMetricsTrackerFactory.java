@@ -27,7 +27,8 @@ import io.prometheus.client.CollectorRegistry;
  * config.setMetricsTrackerFactory(new PrometheusHistogramMetricsTrackerFactory());
  * }</pre>
  */
-public class PrometheusHistogramMetricsTrackerFactory implements MetricsTrackerFactory {
+public class PrometheusHistogramMetricsTrackerFactory implements MetricsTrackerFactory
+{
 
    private HikariCPCollector collector;
 
@@ -50,7 +51,8 @@ public class PrometheusHistogramMetricsTrackerFactory implements MetricsTrackerF
    }
 
    @Override
-   public IMetricsTracker create(String poolName, PoolStats poolStats) {
+   public IMetricsTracker create(String poolName, PoolStats poolStats)
+   {
       getCollector().add(poolName, poolStats);
       return new PrometheusHistogramMetricsTracker(poolName, this.collectorRegistry);
    }
@@ -58,7 +60,8 @@ public class PrometheusHistogramMetricsTrackerFactory implements MetricsTrackerF
    /**
     * initialize and register collector if it isn't initialized yet
     */
-   private HikariCPCollector getCollector() {
+   private HikariCPCollector getCollector()
+   {
       if (collector == null) {
          collector = new HikariCPCollector().register(this.collectorRegistry);
       }
