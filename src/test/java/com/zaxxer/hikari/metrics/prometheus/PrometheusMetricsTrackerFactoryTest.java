@@ -1,6 +1,5 @@
 package com.zaxxer.hikari.metrics.prometheus;
 
-import com.zaxxer.hikari.metrics.PoolStats;
 import com.zaxxer.hikari.mocks.StubPoolStats;
 import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
