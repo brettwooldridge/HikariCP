@@ -18,6 +18,9 @@ package com.zaxxer.hikari.metrics.prometheus;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.metrics.IMetricsTracker;
+import com.zaxxer.hikari.mocks.StubPoolStats;
+
 import io.prometheus.client.CollectorRegistry;
 import org.junit.Before;
 import org.junit.Test;
@@ -117,6 +120,16 @@ public class PrometheusHistogramMetricsTrackerTest {
                labelNames,
                labelValues2), is(0.0));
          }
+      }
+   }
+
+   @Test
+   public void registersMetricsOnlyOnce()
+   {
+      PrometheusHistogramMetricsTrackerFactory factory = new PrometheusHistogramMetricsTrackerFactory(collectorRegistry);
+      try (IMetricsTracker tracker1 = factory.create("pool1", new StubPoolStats(0))) {
+      }
+      try (IMetricsTracker tracker2 = factory.create("pool2", new StubPoolStats(0))) {
       }
    }
 
