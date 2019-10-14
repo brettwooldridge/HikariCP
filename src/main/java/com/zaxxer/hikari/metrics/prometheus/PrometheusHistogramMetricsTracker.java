@@ -16,9 +16,16 @@
 package com.zaxxer.hikari.metrics.prometheus;
 
 import com.zaxxer.hikari.metrics.IMetricsTracker;
+import com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFactory.RegistrationStatus;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+import static com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFactory.RegistrationStatus.REGISTERED;
 
 /**
  * Alternative Prometheus metrics tracker using a Histogram instead of Summary
@@ -37,30 +44,24 @@ class PrometheusHistogramMetricsTracker implements IMetricsTracker
       .create();
 
    private static final Histogram ELAPSED_ACQUIRED_HISTOGRAM =
-      registerHistogram("hikaricp_connection_acquired_nanos", "Connection acquired time (ns)", 1_000);
+      createHistogram("hikaricp_connection_acquired_nanos", "Connection acquired time (ns)", 1_000);
 
    private static final Histogram ELAPSED_BORROWED_HISTOGRAM =
-      registerHistogram("hikaricp_connection_usage_millis", "Connection usage (ms)", 1);
+      createHistogram("hikaricp_connection_usage_millis", "Connection usage (ms)", 1);
 
    private static final Histogram ELAPSED_CREATION_HISTOGRAM =
-      registerHistogram("hikaricp_connection_creation_millis", "Connection creation (ms)", 1);
+      createHistogram("hikaricp_connection_creation_millis", "Connection creation (ms)", 1);
+
+   private final static Map<CollectorRegistry, RegistrationStatus> registrationStatuses = new ConcurrentHashMap<>();
 
    private final Counter.Child connectionTimeoutCounterChild;
-
-   private static Histogram registerHistogram(String name, String help, double bucketStart) {
-      return Histogram.build()
-         .name(name)
-         .labelNames("pool")
-         .help(help)
-         .exponentialBuckets(bucketStart, 2.0, 11)
-         .create();
-   }
 
    private final Histogram.Child elapsedAcquiredHistogramChild;
    private final Histogram.Child elapsedBorrowedHistogramChild;
    private final Histogram.Child elapsedCreationHistogramChild;
 
-   PrometheusHistogramMetricsTracker(String poolName, CollectorRegistry collectorRegistry) {
+   PrometheusHistogramMetricsTracker(String poolName, CollectorRegistry collectorRegistry)
+   {
       registerMetrics(collectorRegistry);
       this.connectionTimeoutCounterChild = CONNECTION_TIMEOUT_COUNTER.labels(poolName);
       this.elapsedAcquiredHistogramChild = ELAPSED_ACQUIRED_HISTOGRAM.labels(poolName);
@@ -68,30 +69,47 @@ class PrometheusHistogramMetricsTracker implements IMetricsTracker
       this.elapsedCreationHistogramChild = ELAPSED_CREATION_HISTOGRAM.labels(poolName);
    }
 
-   private void registerMetrics(CollectorRegistry collectorRegistry) {
-      CONNECTION_TIMEOUT_COUNTER.register(collectorRegistry);
-      ELAPSED_ACQUIRED_HISTOGRAM.register(collectorRegistry);
-      ELAPSED_BORROWED_HISTOGRAM.register(collectorRegistry);
-      ELAPSED_CREATION_HISTOGRAM.register(collectorRegistry);
+   private void registerMetrics(CollectorRegistry collectorRegistry)
+   {
+      if (registrationStatuses.putIfAbsent(collectorRegistry, REGISTERED) == null) {
+         CONNECTION_TIMEOUT_COUNTER.register(collectorRegistry);
+         ELAPSED_ACQUIRED_HISTOGRAM.register(collectorRegistry);
+         ELAPSED_BORROWED_HISTOGRAM.register(collectorRegistry);
+         ELAPSED_CREATION_HISTOGRAM.register(collectorRegistry);
+      }
    }
 
    @Override
-   public void recordConnectionAcquiredNanos(long elapsedAcquiredNanos) {
+   public void recordConnectionAcquiredNanos(long elapsedAcquiredNanos)
+   {
       elapsedAcquiredHistogramChild.observe(elapsedAcquiredNanos);
    }
 
    @Override
-   public void recordConnectionUsageMillis(long elapsedBorrowedMillis) {
+   public void recordConnectionUsageMillis(long elapsedBorrowedMillis)
+   {
       elapsedBorrowedHistogramChild.observe(elapsedBorrowedMillis);
    }
 
    @Override
-   public void recordConnectionCreatedMillis(long connectionCreatedMillis) {
+   public void recordConnectionCreatedMillis(long connectionCreatedMillis)
+   {
       elapsedCreationHistogramChild.observe(connectionCreatedMillis);
    }
 
    @Override
-   public void recordConnectionTimeout() {
+   public void recordConnectionTimeout()
+   {
       connectionTimeoutCounterChild.inc();
+   }
+
+   private static Histogram createHistogram(String name, String help, double bucketStart)
+   {
+      return Histogram.build()
+            .name(name)
+            .labelNames("pool")
+            .help(help)
+            .exponentialBuckets(bucketStart, 2.0, 11)
+            .create();
    }
 }
