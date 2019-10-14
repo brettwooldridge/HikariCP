@@ -12,14 +12,22 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package com.zaxxer.hikari.metrics.prometheus;
 
 import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.PoolStats;
+import com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFactory.RegistrationStatus;
+
+import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
+
+import static com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFactory.RegistrationStatus.REGISTERED;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * <pre>{@code
@@ -30,41 +38,42 @@ import io.prometheus.client.CollectorRegistry;
 public class PrometheusHistogramMetricsTrackerFactory implements MetricsTrackerFactory
 {
 
-   private HikariCPCollector collector;
+   private static final Map<CollectorRegistry, RegistrationStatus> registrationStatuses = new ConcurrentHashMap<>();
 
-   private CollectorRegistry collectorRegistry;
+   private final HikariCPCollector collector = new HikariCPCollector();
+
+   private final CollectorRegistry collectorRegistry;
 
    /**
     * Default Constructor. The Hikari metrics are registered to the default
     * collector registry ({@code CollectorRegistry.defaultRegistry}).
     */
-   public PrometheusHistogramMetricsTrackerFactory() {
-      this.collectorRegistry = CollectorRegistry.defaultRegistry;
+   public PrometheusHistogramMetricsTrackerFactory()
+   {
+      this(CollectorRegistry.defaultRegistry);
    }
 
    /**
     * Constructor that allows to pass in a {@link CollectorRegistry} to which the
     * Hikari metrics are registered.
     */
-   public PrometheusHistogramMetricsTrackerFactory(CollectorRegistry collectorRegistry) {
+   public PrometheusHistogramMetricsTrackerFactory(CollectorRegistry collectorRegistry)
+   {
       this.collectorRegistry = collectorRegistry;
    }
 
    @Override
    public IMetricsTracker create(String poolName, PoolStats poolStats)
    {
-      getCollector().add(poolName, poolStats);
+      registerCollector(this.collector, this.collectorRegistry);
+      this.collector.add(poolName, poolStats);
       return new PrometheusHistogramMetricsTracker(poolName, this.collectorRegistry);
    }
 
-   /**
-    * initialize and register collector if it isn't initialized yet
-    */
-   private HikariCPCollector getCollector()
+   private void registerCollector(Collector collector, CollectorRegistry collectorRegistry)
    {
-      if (collector == null) {
-         collector = new HikariCPCollector().register(this.collectorRegistry);
+      if (registrationStatuses.putIfAbsent(collectorRegistry, REGISTERED) == null) {
+         collector.register(collectorRegistry);
       }
-      return collector;
    }
 }
