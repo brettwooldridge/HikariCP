@@ -193,7 +193,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          } while (timeout > 0L);
 
          metricsTracker.recordBorrowTimeoutStats(startTime);
-         throw createTimeoutException(startTime);
+         throw createTimeoutException(startTime, hardTimeout);
       }
       catch (InterruptedException e) {
          Thread.currentThread().interrupt();
@@ -491,21 +491,21 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       catch (ConnectionSetupException e) {
          if (poolState == POOL_NORMAL) { // we check POOL_NORMAL to avoid a flood of messages if shutdown() is running concurrently
             logger.error("{} - Error thrown while acquiring connection from data source", poolName, e.getCause());
-            lastConnectionFailure.set(e);
+            setLastConnectionFailure(e);
          }
          return null;
       }
       catch (SQLException e) {
          if (poolState == POOL_NORMAL) { // we check POOL_NORMAL to avoid a flood of messages if shutdown() is running concurrently
             logger.debug("{} - Cannot acquire connection from data source", poolName, e);
-            lastConnectionFailure.set(new ConnectionSetupException(e));
+            setLastConnectionFailure(new ConnectionSetupException(e));
          }
          return null;
       }
       catch (Exception e) {
          if (poolState == POOL_NORMAL) { // we check POOL_NORMAL to avoid a flood of messages if shutdown() is running concurrently
             logger.error("{} - Error thrown while acquiring connection from data source", poolName, e);
-            lastConnectionFailure.set(new ConnectionSetupException(e));
+            setLastConnectionFailure(new ConnectionSetupException(e));
          }
          return null;
       }
@@ -682,21 +682,47 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     * As a side-effect, log the timeout failure at DEBUG, and record the timeout failure in the metrics tracker.
     *
     * @param startTime the start time (timestamp) of the acquisition attempt
+    * @param hardTimeout hard timeout value for this attempt
     * @return a SQLException to be thrown from {@link #getConnection()}
     */
-   private SQLException createTimeoutException(long startTime)
+   private SQLException createTimeoutException(long startTime, long hardTimeout)
    {
       logPoolState("Timeout failure ");
       metricsTracker.recordConnectionTimeout();
 
       String sqlState = null;
-      final Throwable originalException = getLastConnectionFailure();
-      if (originalException instanceof SQLException) {
-         sqlState = ((SQLException) originalException).getSQLState();
+      final PoolBase.ExceptionWithTimestamp lastConnectionFailureWithTimestamp = getLastConnectionFailureWithTimestamp();
+
+      Throwable exception = null;
+      Long exceptionTimestamp = null;
+
+      if (lastConnectionFailureWithTimestamp != null) {
+         exception = lastConnectionFailureWithTimestamp.e;
+         exceptionTimestamp = lastConnectionFailureWithTimestamp.time;
       }
-      final SQLException connectionException = new SQLTransientConnectionException(poolName + " - Connection is not available, request timed out after " + elapsedMillis(startTime) + "ms.", sqlState, originalException);
-      if (originalException instanceof SQLException) {
-         connectionException.setNextException((SQLException) originalException);
+
+      // try to unwrap ConnectionSetupException if possible
+      if (exception instanceof ConnectionSetupException && exception.getCause() != null) {
+         exception = exception.getCause();
+      }
+
+      if (exception instanceof SQLException) {
+         sqlState = ((SQLException) exception).getSQLState();
+      }
+
+      if (exceptionTimestamp != null && elapsedMillis(exceptionTimestamp) > hardTimeout * 5) {
+         // last know exception is too old - let's say about it's age in exception message
+         SQLTransientConnectionException wrappedException = new SQLTransientConnectionException(poolName + " - Last known exception is " + elapsedMillis(lastConnectionFailureWithTimestamp.time) + "ms old.", sqlState, exception);
+         if (exception instanceof SQLException) {
+            wrappedException.setNextException(((SQLException) exception));
+         }
+
+         exception = wrappedException;
+      }
+
+      final SQLException connectionException = new SQLTransientConnectionException(poolName + " - Connection is not available, request timed out after " + elapsedMillis(startTime) + "ms.", sqlState, exception);
+      if (exception instanceof SQLException) {
+         connectionException.setNextException(((SQLException) exception));
       }
 
       return connectionException;

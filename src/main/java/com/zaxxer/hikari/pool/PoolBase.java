@@ -44,6 +44,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static com.zaxxer.hikari.pool.ProxyConnection.*;
 import static com.zaxxer.hikari.util.ClockSource.*;
+import static com.zaxxer.hikari.util.ClockSource.currentTime;
 import static com.zaxxer.hikari.util.UtilityElf.createInstance;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -58,7 +59,7 @@ abstract class PoolBase
    protected final String poolName;
 
    volatile String catalog;
-   final AtomicReference<Exception> lastConnectionFailure;
+   final AtomicReference<ExceptionWithTimestamp> lastConnectionFailure;
 
    long connectionTimeout;
    long validationTimeout;
@@ -175,15 +176,28 @@ abstract class PoolBase
          return true;
       }
       catch (Exception e) {
-         lastConnectionFailure.set(e);
+         setLastConnectionFailure(e);
          logger.warn("{} - Failed to validate connection {} ({}). Possibly consider using a shorter maxLifetime value.",
                      poolName, connection, e.getMessage());
          return false;
       }
    }
 
+   void setLastConnectionFailure(Exception e) {
+      lastConnectionFailure.set(new ExceptionWithTimestamp(e));
+   }
+
    Exception getLastConnectionFailure()
    {
+      ExceptionWithTimestamp exceptionWithTimestamp = lastConnectionFailure.get();
+      if (exceptionWithTimestamp != null) {
+         return exceptionWithTimestamp.e;
+      } else {
+         return null;
+      }
+   }
+
+   ExceptionWithTimestamp getLastConnectionFailureWithTimestamp() {
       return lastConnectionFailure.get();
    }
 
@@ -353,7 +367,7 @@ abstract class PoolBase
          connection = (username == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
 
          setupConnection(connection);
-         lastConnectionFailure.set(null);
+         setLastConnectionFailure(null);
          return connection;
       }
       catch (Exception e) {
@@ -364,7 +378,7 @@ abstract class PoolBase
             logger.debug("{} - Failed to create/setup connection: {}", poolName, e.getMessage());
          }
 
-         lastConnectionFailure.set(e);
+         setLastConnectionFailure(e);
          throw e;
       }
       finally {
@@ -649,6 +663,16 @@ abstract class PoolBase
       ConnectionSetupException(Throwable t)
       {
          super(t);
+      }
+   }
+
+   static class ExceptionWithTimestamp {
+      final Exception e;
+      final long time;
+
+      ExceptionWithTimestamp(Exception e) {
+         this.e = e;
+         time = currentTime();
       }
    }
 
