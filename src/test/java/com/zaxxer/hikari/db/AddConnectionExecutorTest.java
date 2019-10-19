@@ -21,7 +21,6 @@ import com.zaxxer.hikari.pool.HikariPool;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -38,7 +37,8 @@ public class AddConnectionExecutorTest
    public void testAddConnectionExecutorCoreSizeInBlockedInitialization()
    {
       HikariConfig config = newHikariConfig();
-      config.setMinimumIdle(getRandomInRange(1, 5));
+      int minimumIdle = getRandomInRange(2, 4);
+      config.setMinimumIdle(minimumIdle);
       config.setMaximumPoolSize(5);
       config.setConnectionTestQuery("SELECT 1");
       config.setDataSourceClassName("org.h2.jdbcx.JdbcDataSource");
@@ -59,16 +59,20 @@ public class AddConnectionExecutorTest
          throw new RuntimeException(e);
       }
 
-      //AddConnectionExecutor initializes pool with multi-threads, but it returns the thread pool size back to 1 (single-threaded) when initialized.
+      // AddConnectionExecutor initializes pool with multi-threads, the number of threads is equal to minimumIdle
+      // but it makes the thread pool size back to 1 (single-threaded) when initialized.
       assertEquals("Add connection executor's size equals 1",
          1, addConnectionExecutor.getCorePoolSize());
+      assertEquals("Add connection executor's max pool size equals minimumIdle",
+         1, addConnectionExecutor.getMaximumPoolSize());
    }
 
    @Test
    public void testAddConnectionExecutorCoreSizeInUnBlockedInitialization()
    {
       HikariConfig config = newHikariConfig();
-      config.setMinimumIdle(getRandomInRange(1, 5));
+      int minimumIdle = getRandomInRange(2, 4);
+      config.setMinimumIdle(minimumIdle);
       config.setMaximumPoolSize(5);
       config.setConnectionTestQuery("SELECT 1");
       config.setDataSourceClassName("org.h2.jdbcx.JdbcDataSource");
@@ -88,6 +92,8 @@ public class AddConnectionExecutorTest
 
       assertEquals("Add connection executor's size equals 1",
          1, addConnectionExecutor.getCorePoolSize());
+      assertEquals("Add connection executor's max pool size equals 1",
+         1, addConnectionExecutor.getMaximumPoolSize());
    }
 
    private static int getRandomInRange(int min, int max){
