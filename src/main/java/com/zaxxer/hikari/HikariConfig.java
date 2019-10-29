@@ -18,6 +18,7 @@ package com.zaxxer.hikari;
 
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
+import com.zaxxer.hikari.util.IsolationLevel;
 import com.zaxxer.hikari.util.PropertyElf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -838,6 +839,17 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       this.transactionIsolationName = isolationLevel;
+   }
+
+   /**
+    * Set the default transaction isolation level with the <code>IsolationLevel</code> enum.
+    *
+    * @param isolationLevel the name of the isolation level
+    */
+   public void setTransactionIsolation(IsolationLevel isolationLevel)
+   {
+      checkIfSealed();
+      this.transactionIsolationName = isolationLevel.getLevelName();
    }
 
    /**
