@@ -287,6 +287,7 @@ public abstract class ProxyConnection implements Connection
       return ProxyFactory.getProxyStatement(this, trackStatement(delegate.createStatement(resultSetType, concurrency, holdability)));
    }
 
+
    /** {@inheritDoc} */
    @Override
    public CallableStatement prepareCall(String sql) throws SQLException
@@ -355,7 +356,7 @@ public abstract class ProxyConnection implements Connection
    public DatabaseMetaData getMetaData() throws SQLException
    {
       markCommitStateDirty();
-      return delegate.getMetaData();
+      return ProxyFactory.getProxyDatabaseMetaData(this, delegate.getMetaData());
    }
 
    /** {@inheritDoc} */

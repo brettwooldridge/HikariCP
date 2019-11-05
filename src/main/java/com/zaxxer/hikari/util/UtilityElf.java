@@ -16,17 +16,12 @@
 
 package com.zaxxer.hikari.util;
 
-import static java.lang.Thread.currentThread;
-import static java.util.concurrent.TimeUnit.SECONDS;
-
 import java.lang.reflect.Constructor;
 import java.util.Locale;
-import java.util.Optional;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.*;
+
+import static java.lang.Thread.currentThread;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  *
@@ -34,11 +29,6 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 public final class UtilityElf
 {
-   /**
-    * A constant for SQL Server's Snapshot isolation level
-    */
-   private static final int SQL_SERVER_SNAPSHOT_ISOLATION_LEVEL = 4096;
-
    /**
     *
     * @return null if string is null or empty
@@ -164,14 +154,28 @@ public final class UtilityElf
     * @param transactionIsolationName the name of the transaction isolation level
     * @return the int value of the isolation level or -1
     */
-   public static int getTransactionIsolation(final String transactionIsolationName) {
+   public static int getTransactionIsolation(final String transactionIsolationName)
+   {
       if (transactionIsolationName != null) {
          try {
             // use the english locale to avoid the infamous turkish locale bug
             final String upperCaseIsolationLevelName = transactionIsolationName.toUpperCase(Locale.ENGLISH);
             return IsolationLevel.valueOf(upperCaseIsolationLevelName).getLevelId();
-         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
+         } catch (IllegalArgumentException e) {
+            // legacy support for passing an integer version of the isolation level
+            try {
+               final int level = Integer.parseInt(transactionIsolationName);
+               for (IsolationLevel iso : IsolationLevel.values()) {
+                  if (iso.getLevelId() == level) {
+                     return iso.getLevelId();
+                  }
+               }
+
+               throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName);
+            }
+            catch (NumberFormatException nfe) {
+               throw new IllegalArgumentException("Invalid transaction isolation value: " + transactionIsolationName, nfe);
+            }
          }
       }
 

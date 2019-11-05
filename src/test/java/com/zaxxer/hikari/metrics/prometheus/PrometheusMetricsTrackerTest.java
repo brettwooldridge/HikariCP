@@ -12,12 +12,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package com.zaxxer.hikari.metrics.prometheus;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.metrics.IMetricsTracker;
+import com.zaxxer.hikari.mocks.StubPoolStats;
 import io.prometheus.client.CollectorRegistry;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,31 +30,37 @@ import java.sql.SQLTransientConnectionException;
 import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
-public class PrometheusMetricsTrackerTest {
+public class PrometheusMetricsTrackerTest
+{
 
-   private CollectorRegistry collectorRegistry;
+   private CollectorRegistry defaultCollectorRegistry;
+   private CollectorRegistry customCollectorRegistry;
 
    private static final String POOL_LABEL_NAME = "pool";
+   private static final String[] LABEL_NAMES = {POOL_LABEL_NAME};
 
    private static final String QUANTILE_LABEL_NAME = "quantile";
    private static final String[] QUANTILE_LABEL_VALUES = new String[]{"0.5", "0.95", "0.99"};
 
    @Before
-   public void setupCollectorRegistry(){
-      this.collectorRegistry = new CollectorRegistry();
+   public void setupCollectorRegistry()
+   {
+      this.defaultCollectorRegistry = new CollectorRegistry();
+      this.customCollectorRegistry = new CollectorRegistry();
    }
 
    @Test
-   public void recordConnectionTimeout() throws Exception {
+   public void recordConnectionTimeout() throws Exception
+   {
       HikariConfig config = newHikariConfig();
-      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(collectorRegistry));
+      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(defaultCollectorRegistry));
       config.setJdbcUrl("jdbc:h2:mem:");
       config.setMaximumPoolSize(2);
       config.setConnectionTimeout(250);
 
-      String[] labelNames = {POOL_LABEL_NAME};
       String[] labelValues = {config.getPoolName()};
 
       try (HikariDataSource hikariDataSource = new HikariDataSource(config)) {
@@ -63,88 +71,229 @@ public class PrometheusMetricsTrackerTest {
             }
          }
 
-         Double total = collectorRegistry.getSampleValue(
-            "hikaricp_connection_timeout_total",
-            labelNames,
-            labelValues
+         Double total = defaultCollectorRegistry.getSampleValue(
+            "hikaricp_connection_timeout_total", LABEL_NAMES, labelValues
          );
          assertThat(total, is(1.0));
       }
    }
 
    @Test
-   public void connectionAcquisitionMetrics() {
+   public void connectionAcquisitionMetrics()
+   {
       checkSummaryMetricFamily("hikaricp_connection_acquired_nanos");
    }
 
    @Test
-   public void connectionUsageMetrics() {
+   public void connectionUsageMetrics()
+   {
       checkSummaryMetricFamily("hikaricp_connection_usage_millis");
    }
 
    @Test
-   public void connectionCreationMetrics() {
+   public void connectionCreationMetrics()
+   {
       checkSummaryMetricFamily("hikaricp_connection_creation_millis");
    }
 
    @Test
-   public void testMultiplePoolName() throws Exception {
-      String[] labelNames = {POOL_LABEL_NAME};
+   public void testMultiplePoolNameWithOneCollectorRegistry()
+   {
+      HikariConfig configFirstPool = newHikariConfig();
+      configFirstPool.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(defaultCollectorRegistry));
+      configFirstPool.setPoolName("first");
+      configFirstPool.setJdbcUrl("jdbc:h2:mem:");
+      configFirstPool.setMaximumPoolSize(2);
+      configFirstPool.setConnectionTimeout(250);
 
-      HikariConfig config = newHikariConfig();
-      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(collectorRegistry));
-      config.setPoolName("first");
-      config.setJdbcUrl("jdbc:h2:mem:");
-      config.setMaximumPoolSize(2);
-      config.setConnectionTimeout(250);
-      String[] labelValues1 = {config.getPoolName()};
+      HikariConfig configSecondPool = newHikariConfig();
+      configSecondPool.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(defaultCollectorRegistry));
+      configSecondPool.setPoolName("second");
+      configSecondPool.setJdbcUrl("jdbc:h2:mem:");
+      configSecondPool.setMaximumPoolSize(4);
+      configSecondPool.setConnectionTimeout(250);
 
-      try (HikariDataSource ignored = new HikariDataSource(config)) {
-         assertThat(collectorRegistry.getSampleValue(
-            "hikaricp_connection_timeout_total",
-            labelNames,
-            labelValues1), is(0.0));
+      String[] labelValuesFirstPool = {configFirstPool.getPoolName()};
+      String[] labelValuesSecondPool = {configSecondPool.getPoolName()};
 
-         CollectorRegistry collectorRegistry2 = new CollectorRegistry();
-         HikariConfig config2 = newHikariConfig();
-         config2.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(collectorRegistry2));
-         config2.setPoolName("second");
-         config2.setJdbcUrl("jdbc:h2:mem:");
-         config2.setMaximumPoolSize(4);
-         config2.setConnectionTimeout(250);
-         String[] labelValues2 = {config2.getPoolName()};
+      try (HikariDataSource ignoredFirstPool = new HikariDataSource(configFirstPool)) {
+         assertThat(defaultCollectorRegistry.getSampleValue(
+            "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesFirstPool),
+            is(0.0));
 
-         try (HikariDataSource ignored2 = new HikariDataSource(config2)) {
-            assertThat(collectorRegistry2.getSampleValue(
-               "hikaricp_connection_timeout_total",
-               labelNames,
-               labelValues2), is(0.0));
+         try (HikariDataSource ignoredSecondPool = new HikariDataSource(configSecondPool)) {
+            assertThat(defaultCollectorRegistry.getSampleValue(
+               "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesSecondPool),
+               is(0.0));
          }
       }
    }
 
-   private void checkSummaryMetricFamily(String metricName) {
+   @Test
+   public void testMultiplePoolNameWithDifferentCollectorRegistries()
+   {
+      HikariConfig configFirstPool = newHikariConfig();
+      configFirstPool.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(defaultCollectorRegistry));
+      configFirstPool.setPoolName("first");
+      configFirstPool.setJdbcUrl("jdbc:h2:mem:");
+      configFirstPool.setMaximumPoolSize(2);
+      configFirstPool.setConnectionTimeout(250);
+
+      HikariConfig configSecondPool = newHikariConfig();
+      configSecondPool.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(customCollectorRegistry));
+      configSecondPool.setPoolName("second");
+      configSecondPool.setJdbcUrl("jdbc:h2:mem:");
+      configSecondPool.setMaximumPoolSize(4);
+      configSecondPool.setConnectionTimeout(250);
+
+      String[] labelValuesFirstPool = {configFirstPool.getPoolName()};
+      String[] labelValuesSecondPool = {configSecondPool.getPoolName()};
+
+      try (HikariDataSource ignoredFirstPool = new HikariDataSource(configFirstPool)) {
+         assertThat(defaultCollectorRegistry.getSampleValue(
+            "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesFirstPool),
+            is(0.0));
+
+         try (HikariDataSource ignoredSecondPool = new HikariDataSource(configSecondPool)) {
+            assertThat(customCollectorRegistry.getSampleValue(
+               "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesSecondPool),
+               is(0.0));
+         }
+      }
+   }
+
+   @Test
+   public void testMetricsRemovedAfterShutDown()
+   {
+      HikariConfig configFirstPool = newHikariConfig();
+      configFirstPool.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(defaultCollectorRegistry));
+      configFirstPool.setPoolName("first");
+      configFirstPool.setJdbcUrl("jdbc:h2:mem:");
+      configFirstPool.setMaximumPoolSize(2);
+      configFirstPool.setConnectionTimeout(250);
+
+      HikariConfig configSecondPool = newHikariConfig();
+      configSecondPool.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(customCollectorRegistry));
+      configSecondPool.setPoolName("second");
+      configSecondPool.setJdbcUrl("jdbc:h2:mem:");
+      configSecondPool.setMaximumPoolSize(4);
+      configSecondPool.setConnectionTimeout(250);
+
+      String[] labelValuesFirstPool = {configFirstPool.getPoolName()};
+      String[] labelValuesSecondPool = {configSecondPool.getPoolName()};
+
+      try (HikariDataSource ignoredFirstPool = new HikariDataSource(configFirstPool)) {
+         assertThat(defaultCollectorRegistry.getSampleValue(
+            "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesFirstPool),
+            is(0.0));
+
+         try (HikariDataSource ignoredSecondPool = new HikariDataSource(configSecondPool)) {
+            assertThat(customCollectorRegistry.getSampleValue(
+               "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesSecondPool),
+               is(0.0));
+         }
+
+         assertNull(defaultCollectorRegistry.getSampleValue(
+            "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesSecondPool));
+
+         assertThat(defaultCollectorRegistry.getSampleValue(
+            "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesFirstPool),
+            is(0.0));
+      }
+   }
+
+   @Test
+   public void testCloseMethod()
+   {
+      String[] labelValues = {"testPool"};
+      PrometheusMetricsTrackerFactory prometheusFactory = new PrometheusMetricsTrackerFactory(defaultCollectorRegistry);
+      IMetricsTracker prometheusTracker = prometheusFactory.create("testPool", new StubPoolStats(0));
+
+      prometheusTracker.recordConnectionTimeout();
+      prometheusTracker.recordConnectionAcquiredNanos(42L);
+      prometheusTracker.recordConnectionUsageMillis(111L);
+      prometheusTracker.recordConnectionCreatedMillis(101L);
+
+      assertThat(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_connection_timeout_total", LABEL_NAMES, labelValues),
+         is(1.0));
+      assertThat(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_connection_acquired_nanos_sum", LABEL_NAMES, labelValues),
+         is(42.0));
+      assertThat(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_connection_usage_millis_sum", LABEL_NAMES, labelValues),
+         is(111.0));
+      assertThat(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_connection_creation_millis_sum", LABEL_NAMES, labelValues),
+         is(101.0));
+      assertThat(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_active_connections", LABEL_NAMES, labelValues),
+         is(0.0));
+      assertThat(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_idle_connections", LABEL_NAMES, labelValues),
+         is(0.0));
+      assertThat(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_pending_threads", LABEL_NAMES, labelValues),
+         is(0.0));
+      assertThat(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_connections", LABEL_NAMES, labelValues),
+         is(0.0));
+      assertThat(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_max_connections", LABEL_NAMES, labelValues),
+         is(0.0));
+      assertThat(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_min_connections", LABEL_NAMES, labelValues),
+         is(0.0));
+
+      prometheusTracker.close();
+
+      assertNull(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_connection_timeout_total", LABEL_NAMES, labelValues));
+      assertNull(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_connection_acquired_nanos_sum", LABEL_NAMES, labelValues));
+      assertNull(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_connection_usage_millis_sum", LABEL_NAMES, labelValues));
+      assertNull(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_connection_creation_millis_sum", LABEL_NAMES, labelValues));
+      assertNull(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_active_connections", LABEL_NAMES, labelValues));
+      assertNull(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_idle_connections", LABEL_NAMES, labelValues));
+      assertNull(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_pending_threads", LABEL_NAMES, labelValues));
+      assertNull(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_connections", LABEL_NAMES, labelValues));
+      assertNull(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_connections", LABEL_NAMES, labelValues));
+      assertNull(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_max_connections", LABEL_NAMES, labelValues));
+      assertNull(defaultCollectorRegistry.getSampleValue(
+         "hikaricp_min_connections", LABEL_NAMES, labelValues));
+   }
+
+   private void checkSummaryMetricFamily(String metricName)
+   {
       HikariConfig config = newHikariConfig();
-      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(collectorRegistry));
+      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(defaultCollectorRegistry));
       config.setJdbcUrl("jdbc:h2:mem:");
 
       try (HikariDataSource ignored = new HikariDataSource(config)) {
-         Double count = collectorRegistry.getSampleValue(
+         Double count = defaultCollectorRegistry.getSampleValue(
             metricName + "_count",
-            new String[]{POOL_LABEL_NAME},
+            LABEL_NAMES,
             new String[]{config.getPoolName()}
          );
          assertNotNull(count);
 
-         Double sum = collectorRegistry.getSampleValue(
+         Double sum = defaultCollectorRegistry.getSampleValue(
             metricName + "_sum",
-            new String[]{POOL_LABEL_NAME},
+            LABEL_NAMES,
             new String[]{config.getPoolName()}
          );
          assertNotNull(sum);
 
          for (String quantileLabelValue : QUANTILE_LABEL_VALUES) {
-            Double quantileValue = collectorRegistry.getSampleValue(
+            Double quantileValue = defaultCollectorRegistry.getSampleValue(
                metricName,
                new String[]{POOL_LABEL_NAME, QUANTILE_LABEL_NAME},
                new String[]{config.getPoolName(), quantileLabelValue}
