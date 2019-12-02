@@ -849,7 +849,7 @@ public class HikariConfig implements HikariConfigMXBean
    public void setTransactionIsolation(IsolationLevel isolationLevel)
    {
       checkIfSealed();
-      this.transactionIsolationName = isolationLevel.getLevelName();
+      this.transactionIsolationName = isolationLevel.name();
    }
 
    /**
