@@ -23,8 +23,6 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.sql.*;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.Executor;
 
 import static com.zaxxer.hikari.util.ClockSource.currentTime;
@@ -43,9 +41,8 @@ public abstract class ProxyConnection implements Connection
    static final int DIRTY_BIT_NETTIMEOUT = 0b010000;
    static final int DIRTY_BIT_SCHEMA     = 0b100000;
 
-   private static final Logger LOGGER;
-   private static final Set<String> ERROR_STATES;
-   private static final Set<Integer> ERROR_CODES;
+   private static final Logger LOGGER = LoggerFactory.getLogger(ProxyConnection.class);
+   private ConnectionEvictionConfig connectionEvictionConfig;
 
    @SuppressWarnings("WeakerAccess")
    protected Connection delegate;
@@ -65,25 +62,10 @@ public abstract class ProxyConnection implements Connection
    private String dbcatalog;
    private String dbschema;
 
-   // static initializer
-   static {
-      LOGGER = LoggerFactory.getLogger(ProxyConnection.class);
-
-      ERROR_STATES = new HashSet<>();
-      ERROR_STATES.add("0A000"); // FEATURE UNSUPPORTED
-      ERROR_STATES.add("57P01"); // ADMIN SHUTDOWN
-      ERROR_STATES.add("57P02"); // CRASH SHUTDOWN
-      ERROR_STATES.add("57P03"); // CANNOT CONNECT NOW
-      ERROR_STATES.add("01002"); // SQL92 disconnect error
-      ERROR_STATES.add("JZ0C0"); // Sybase disconnect error
-      ERROR_STATES.add("JZ0C1"); // Sybase disconnect error
-
-      ERROR_CODES = new HashSet<>();
-      ERROR_CODES.add(500150);
-      ERROR_CODES.add(2399);
-   }
-
-   protected ProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final long now, final boolean isReadOnly, final boolean isAutoCommit) {
+   protected ProxyConnection(final PoolEntry poolEntry, final Connection connection,
+                             final FastList<Statement> openStatements, final ProxyLeakTask leakTask,
+                             final long now, final boolean isReadOnly, final boolean isAutoCommit,
+                             final ConnectionEvictionConfig connectionEvictionConfig) {
       this.poolEntry = poolEntry;
       this.delegate = connection;
       this.openStatements = openStatements;
@@ -91,6 +73,7 @@ public abstract class ProxyConnection implements Connection
       this.lastAccess = now;
       this.isReadOnly = isReadOnly;
       this.isAutoCommit = isAutoCommit;
+      this.connectionEvictionConfig = connectionEvictionConfig != null ? connectionEvictionConfig : ConnectionEvictionConfig.DEFAULT;
    }
 
    /** {@inheritDoc} */
@@ -147,11 +130,12 @@ public abstract class ProxyConnection implements Connection
    {
       SQLException nse = sqle;
       for (int depth = 0; delegate != ClosedConnection.CLOSED_CONNECTION && nse != null && depth < 10; depth++) {
+         SQLException nseFinal = nse;
          final String sqlState = nse.getSQLState();
-         if (sqlState != null && sqlState.startsWith("08")
-             || nse instanceof SQLTimeoutException
-             || ERROR_STATES.contains(sqlState)
-             || ERROR_CODES.contains(nse.getErrorCode())) {
+         if (sqlState != null && connectionEvictionConfig.getTerminalErrorStatePrefixes().stream().anyMatch(sqlState::startsWith)
+             || connectionEvictionConfig.getTerminalErrorExceptions().stream().anyMatch(e -> e.isInstance(nseFinal))
+             || connectionEvictionConfig.getTerminalErrorStates().contains(sqlState)
+             || connectionEvictionConfig.getTerminalErrorCodes().contains(nse.getErrorCode())) {
 
             // broken connection
             LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",

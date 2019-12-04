@@ -36,7 +36,8 @@ public class TestJavassistCodegen {
       Class<?> fastListClass = fauxClassLoader.loadClass("com.zaxxer.hikari.util.FastList");
       Object fastList = fastListClass.getConstructor(Class.class).newInstance(Statement.class);
 
-      Object proxyConnection = getMethod(proxyFactoryClass, "getProxyConnection")
+      Method proxyMethod = getMethod(proxyFactoryClass, "getProxyConnection");
+      Object proxyConnection = proxyMethod
          .invoke(null,
             null /*poolEntry*/,
             connection,
@@ -44,7 +45,8 @@ public class TestJavassistCodegen {
             null /*leakTask*/,
             0L /*now*/,
             Boolean.FALSE /*isReadOnly*/,
-            Boolean.FALSE /*isAutoCommit*/);
+            Boolean.FALSE /*isAutoCommit*/,
+            null);
       Assert.assertNotNull(proxyConnection);
 
       Object proxyStatement = getMethod(proxyConnection.getClass(), "createStatement", 0)

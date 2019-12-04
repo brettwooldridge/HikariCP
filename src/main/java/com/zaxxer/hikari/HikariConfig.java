@@ -18,6 +18,7 @@ package com.zaxxer.hikari;
 
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
+import com.zaxxer.hikari.pool.ConnectionEvictionConfig;
 import com.zaxxer.hikari.util.PropertyElf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,6 +98,7 @@ public class HikariConfig implements HikariConfigMXBean
    private Object metricRegistry;
    private Object healthCheckRegistry;
    private Properties healthCheckProperties;
+   private ConnectionEvictionConfig connectionEvictionConfig;
 
    private volatile boolean sealed;
 
@@ -859,6 +861,20 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       this.threadFactory = threadFactory;
+   }
+
+   /**
+    * @return The config defining when a connection should be evicted
+    */
+   public ConnectionEvictionConfig getConnectionEvictionConfig() {
+      return connectionEvictionConfig;
+   }
+
+   /**
+    * @param connectionEvictionConfig the config defining when a connection should be evicted
+    */
+   public void setConnectionEvictionConfig(ConnectionEvictionConfig connectionEvictionConfig) {
+      this.connectionEvictionConfig = connectionEvictionConfig;
    }
 
    void seal()
