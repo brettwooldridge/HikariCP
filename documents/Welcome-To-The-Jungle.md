@@ -1,7 +1,7 @@
 <img width="340" height="240" align="left" src="https://github.com/brettwooldridge/HikariCP/wiki/welcome-to-the-jungle.jpg">
 Microbenchmarks are great at measuring performance "in the small"; for example, measuring the performance of individual methods. But good results do not necessarily translate into macro-scale performance.  Real world access patterns and demand loads often run into deeper, systemic, architectural design issues that cannot be discerned at the micro level.
 
-HikariCP has over 100K users, so from time to time we are approached with challenges encountered "in the wild".  Recently, one such challenge led to a deeper investigation: ***Spike Demand***.
+HikariCP has over 1 million users, so from time to time we are approached with challenges encountered "in the wild".  Recently, one such challenge led to a deeper investigation: ***Spike Demand***.
 
 ### The Challenge
 The user has an environment where connection creation is expensive, on the order of 150ms; and yet queries typically execute in ~2ms.  Long connection setup times can be the result of various factors, alone or in combination: DNS resolution times, encrypted connections with strong encryption (2048/4096 bit), external authentication, database server load, etc.
