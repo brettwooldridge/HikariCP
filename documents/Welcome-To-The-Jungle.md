@@ -1,5 +1,5 @@
 <img width="340" height="240" align="left" src="https://github.com/brettwooldridge/HikariCP/wiki/welcome-to-the-jungle.jpg">
-Microbenchmarks are great at measuring performance "in the small"; for example, measuring the performance of individual methods. But good results do not necessarily translate into macro-scale performance.  Real world access patterns and demand loads often run into deeper, systemic, architectural design issues that cannot be discerned at the micro level.
+Microbenchmarks are great at measuring performance "in the small"; for example, measuring the performance of individual methods. But good results do not necessarily translate into macro-scale performance.  Real world access patterns and demand loads often run into deeper, systemic, architectural design issues that cannot be discerned at the micro level.<br><br>
 
 HikariCP has over 1 million users, so from time to time we are approached with challenges encountered "in the wild".  Recently, one such challenge led to a deeper investigation: ***Spike Demand***.
 
