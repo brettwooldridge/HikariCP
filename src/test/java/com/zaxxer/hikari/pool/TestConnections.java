@@ -673,6 +673,44 @@ public class TestConnections
    }
 
    @Test
+   public void testDataSourceRaisesCorrectErrorOnConnectioAdderHanging() {
+      StubDataSourceWithErrorSwitch stubDataSource = new StubDataSourceWithErrorSwitch();
+
+      HikariConfig config = newHikariConfig();
+      config.setMinimumIdle(0);
+      config.setMaximumPoolSize(2);
+      config.setConnectionTimeout(250);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSource(stubDataSource);
+
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         // this will make datasource throws FAST error, which will become uncaught
+         stubDataSource.setErrorOnConnection(true);
+         try (Connection ignored = ds.getConnection()) {
+            fail("SQLException should occur!");
+         } catch (SQLException e) {
+            // request will get timed-out and not wrapped
+            assertTrue(e.getMessage().contains("request timed out"));
+            assertTrue(e.getCause().getMessage().contains("Bad thing"));
+            assertFalse(e.getCause().getMessage().contains("old"));
+         }
+
+         stubDataSource.setSleep(TimeUnit.SECONDS.toMillis(600)); // never will be executed
+         quietlySleep(TimeUnit.SECONDS.toMillis(10));
+
+         // this will make datasource throws SLOW error, which will become uncaught
+         try (Connection ignored = ds.getConnection()) {
+            fail("SQLException should occur!");
+         } catch (SQLException e) {
+            // request will get timed-out and wrapped
+            assertTrue(e.getMessage().contains("request timed out"));
+            assertFalse(e.getCause().getMessage().contains("Bad thing"));
+            assertTrue(e.getCause().getMessage().contains("old"));
+         }
+      }
+   }
+
+   @Test
    public void testPopulationSlowAcquisition() throws InterruptedException, SQLException
    {
       HikariConfig config = newHikariConfig();
@@ -737,10 +775,14 @@ public class TestConnections
 
    class StubDataSourceWithErrorSwitch extends StubDataSource {
       private boolean errorOnConnection = false;
+      private long sleep = 0;
 
       /** {@inheritDoc} */
       @Override
       public Connection getConnection() throws SQLException {
+         if (sleep >= 0) {
+            quietlySleep(sleep);
+         }
          if (!errorOnConnection) {
             return new StubConnection();
          }
@@ -750,6 +792,10 @@ public class TestConnections
 
       public void setErrorOnConnection(boolean errorOnConnection) {
          this.errorOnConnection = errorOnConnection;
+      }
+
+      public void setSleep(long sleep) {
+         this.sleep = sleep;
       }
    }
 
