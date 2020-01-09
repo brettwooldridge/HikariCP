@@ -127,9 +127,9 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
       ThreadFactory threadFactory = config.getThreadFactory();
 
-      LinkedBlockingQueue<Runnable> addQueue = new LinkedBlockingQueue<>(config.getMaximumPoolSize());
-      this.addConnectionQueue = unmodifiableCollection(addQueue);
-      this.addConnectionExecutor = createThreadPoolExecutor(addQueue, poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
+      LinkedBlockingQueue<Runnable> addConnectionQueue = new LinkedBlockingQueue<>(config.getMaximumPoolSize());
+      this.addConnectionQueue = unmodifiableCollection(addConnectionQueue);
+      this.addConnectionExecutor = createThreadPoolExecutor(addConnectionQueue, poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
       this.closeConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
       this.leakTaskFactory = new ProxyLeakTaskFactory(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
@@ -493,22 +493,14 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             logger.error("{} - Error thrown while acquiring connection from data source", poolName, e.getCause());
             lastConnectionFailure.set(e);
          }
-         return null;
-      }
-      catch (SQLException e) {
-         if (poolState == POOL_NORMAL) { // we check POOL_NORMAL to avoid a flood of messages if shutdown() is running concurrently
-            logger.debug("{} - Cannot acquire connection from data source", poolName, e);
-            lastConnectionFailure.set(new ConnectionSetupException(e));
-         }
-         return null;
       }
       catch (Exception e) {
          if (poolState == POOL_NORMAL) { // we check POOL_NORMAL to avoid a flood of messages if shutdown() is running concurrently
-            logger.error("{} - Error thrown while acquiring connection from data source", poolName, e);
-            lastConnectionFailure.set(new ConnectionSetupException(e));
+            logger.debug("{} - Cannot acquire connection from data source", poolName, e);
          }
-         return null;
       }
+
+      return null;
    }
 
    /**
