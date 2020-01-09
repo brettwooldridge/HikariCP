@@ -1,5 +1,9 @@
 HikariCP Changes
 
+Changes in 3.4.2
+ * fixed 1528 regression caused by pull request 1159 whereby fail-fast logic would exit upon all
+   errors even if it was configured to continue trying.
+
 Changes in 3.4.1
 
  * fix regression caused by 1337, which broke the ability to pass the isolation level by integer
@@ -32,7 +36,7 @@ Changes in 3.3.1
 
 Changes in 3.3.0
 
- * Revert change where Connection.isClosed() was called outside of setNetworkTimeout() block, opening 
+ * Revert change where Connection.isClosed() was called outside of setNetworkTimeout() block, opening
    vulnerability to unacknowledged TCP traffic.
 
  * fixed 1186 limit number of items in the ConcurrentBag's ThreadLocal list to avoid OOM errors in some
@@ -55,7 +59,7 @@ Changes in 3.3.0
 
  * various clean-ups pointed out by sonarcloud.io
 
- * merged 1290 Class.newInstance() is deprecated as of Java 9. Usage should be replaced by calling 
+ * merged 1290 Class.newInstance() is deprecated as of Java 9. Usage should be replaced by calling
    Class.getDeclaredConstructor().newInstance().
 
  * fixed #1305 ensure that ConcurrentBag.add() does not spin under high load, when waiting threads may never
@@ -63,7 +67,7 @@ Changes in 3.3.0
 
  * fixes #1287 when system property blockUntilFilled is set, use multiple threads to fill the pool.
 
- 
+
 Changes in 3.2.0
 
  * check connection closed condition before attempting to set network timeout to avoid spurios exceptions
