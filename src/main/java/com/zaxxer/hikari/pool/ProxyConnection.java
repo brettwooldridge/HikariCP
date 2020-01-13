@@ -42,7 +42,7 @@ public abstract class ProxyConnection implements Connection
    static final int DIRTY_BIT_SCHEMA     = 0b100000;
 
    private static final Logger LOGGER = LoggerFactory.getLogger(ProxyConnection.class);
-   private ConnectionEvictionConfig connectionEvictionConfig;
+   private final ConnectionEvictionConfig connectionEvictionConfig;
 
    @SuppressWarnings("WeakerAccess")
    protected Connection delegate;
