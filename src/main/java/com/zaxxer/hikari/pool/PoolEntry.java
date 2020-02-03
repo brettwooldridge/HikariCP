@@ -128,6 +128,11 @@ final class PoolEntry implements IConcurrentBagEntry
       return elapsedMillis(lastBorrowed);
    }
 
+   PoolBase getPoolBase()
+   {
+      return hikariPool;
+   }
+
    /** {@inheritDoc} */
    @Override
    public String toString()

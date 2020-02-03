@@ -16,6 +16,7 @@
 
 package com.zaxxer.hikari.pool;
 
+import com.zaxxer.hikari.SQLExceptionOverride;
 import com.zaxxer.hikari.util.FastList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Executor;
 
+import static com.zaxxer.hikari.SQLExceptionOverride.Override.DO_NOT_EVICT;
 import static com.zaxxer.hikari.util.ClockSource.currentTime;
 
 /**
@@ -83,7 +85,13 @@ public abstract class ProxyConnection implements Connection
       ERROR_CODES.add(2399);
    }
 
-   protected ProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final long now, final boolean isReadOnly, final boolean isAutoCommit) {
+   protected ProxyConnection(final PoolEntry poolEntry,
+                             final Connection connection,
+                             final FastList<Statement> openStatements,
+                             final ProxyLeakTask leakTask,
+                             final long now,
+                             final boolean isReadOnly,
+                             final boolean isAutoCommit) {
       this.poolEntry = poolEntry;
       this.delegate = connection;
       this.openStatements = openStatements;
@@ -143,9 +151,12 @@ public abstract class ProxyConnection implements Connection
       return poolEntry;
    }
 
+   @SuppressWarnings("ConstantConditions")
    final SQLException checkException(SQLException sqle)
    {
+      boolean evict = false;
       SQLException nse = sqle;
+      final SQLExceptionOverride exceptionOverride = poolEntry.getPoolBase().exceptionOverride;
       for (int depth = 0; delegate != ClosedConnection.CLOSED_CONNECTION && nse != null && depth < 10; depth++) {
          final String sqlState = nse.getSQLState();
          if (sqlState != null && sqlState.startsWith("08")
@@ -153,16 +164,26 @@ public abstract class ProxyConnection implements Connection
              || ERROR_STATES.contains(sqlState)
              || ERROR_CODES.contains(nse.getErrorCode())) {
 
+            if (exceptionOverride != null && exceptionOverride.adjudicate(nse) == DO_NOT_EVICT) {
+               break;
+            }
+
             // broken connection
-            LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
-                        poolEntry.getPoolName(), delegate, sqlState, nse.getErrorCode(), nse);
-            leakTask.cancel();
-            poolEntry.evict("(connection is broken)");
-            delegate = ClosedConnection.CLOSED_CONNECTION;
+            evict = true;
+            break;
          }
          else {
             nse = nse.getNextException();
          }
+      }
+
+      if (evict) {
+         SQLException exception = (nse != null) ? nse : sqle;
+         LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
+            poolEntry.getPoolName(), delegate, exception.getSQLState(), exception.getErrorCode(), exception);
+         leakTask.cancel();
+         poolEntry.evict("(connection is broken)");
+         delegate = ClosedConnection.CLOSED_CONNECTION;
       }
 
       return sqle;

@@ -17,6 +17,7 @@
 package com.zaxxer.hikari.pool;
 
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.SQLExceptionOverride;
 import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.pool.HikariPool.PoolInitializationException;
 import com.zaxxer.hikari.util.DriverDataSource;
@@ -64,6 +65,8 @@ abstract class PoolBase
    long connectionTimeout;
    long validationTimeout;
 
+   SQLExceptionOverride exceptionOverride;
+
    private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout", "schema"};
    private static final int UNINITIALIZED = -1;
    private static final int TRUE = 1;
@@ -95,6 +98,7 @@ abstract class PoolBase
       this.schema = config.getSchema();
       this.isReadOnly = config.isReadOnly();
       this.isAutoCommit = config.isAutoCommit();
+      this.exceptionOverride = UtilityElf.createInstance(config.getExceptionOverrideClassName(), SQLExceptionOverride.class);
       this.transactionIsolation = UtilityElf.getTransactionIsolation(config.getTransactionIsolation());
 
       this.isQueryTimeoutSupported = UNINITIALIZED;

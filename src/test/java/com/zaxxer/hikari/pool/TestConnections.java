@@ -19,6 +19,7 @@ package com.zaxxer.hikari.pool;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariPoolMXBean;
+import com.zaxxer.hikari.SQLExceptionOverride;
 import com.zaxxer.hikari.mocks.StubConnection;
 import com.zaxxer.hikari.mocks.StubDataSource;
 import com.zaxxer.hikari.mocks.StubStatement;
@@ -40,6 +41,7 @@ import static org.junit.Assert.*;
 /**
  * @author Brett Wooldridge
  */
+@SuppressWarnings({"SqlDialectInspection", "SqlNoDataSourceInspection"})
 public class TestConnections
 {
    @Before
@@ -255,6 +257,81 @@ public class TestConnections
          assertEquals(1, pool.getTotalConnections());
          ds.evictConnection(connection);
          assertEquals(0, pool.getTotalConnections());
+      }
+   }
+
+   @Test
+   public void testEviction2() throws SQLException
+   {
+      HikariConfig config = newHikariConfig();
+      config.setMaximumPoolSize(5);
+      config.setConnectionTimeout(2500);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      config.setExceptionOverrideClassName(OverrideHandler.class.getName());
+
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         HikariPool pool = getPool(ds);
+
+         while (pool.getTotalConnections() < 5) {
+            quietlySleep(100L);
+         }
+
+         try (Connection connection = ds.getConnection()) {
+            assertNotNull(connection);
+
+            PreparedStatement statement = connection.prepareStatement("SELECT some, thing FROM somewhere WHERE something=?");
+            assertNotNull(statement);
+
+            ResultSet resultSet = statement.executeQuery();
+            assertNotNull(resultSet);
+
+            try {
+               statement.getMaxFieldSize();
+            } catch (Exception e) {
+               assertSame(SQLException.class, e.getClass());
+            }
+         }
+
+         assertEquals("Total connections not as expected", 5, pool.getTotalConnections());
+         assertEquals("Idle connections not as expected", 5, pool.getIdleConnections());
+      }
+   }
+
+   @Test
+   public void testEviction3() throws SQLException
+   {
+      HikariConfig config = newHikariConfig();
+      config.setMaximumPoolSize(5);
+      config.setConnectionTimeout(2500);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         HikariPool pool = getPool(ds);
+
+         while (pool.getTotalConnections() < 5) {
+            quietlySleep(100L);
+         }
+
+         try (Connection connection = ds.getConnection()) {
+            assertNotNull(connection);
+
+            PreparedStatement statement = connection.prepareStatement("SELECT some, thing FROM somewhere WHERE something=?");
+            assertNotNull(statement);
+
+            ResultSet resultSet = statement.executeQuery();
+            assertNotNull(resultSet);
+
+            try {
+               statement.getMaxFieldSize();
+            } catch (Exception e) {
+               assertSame(SQLException.class, e.getClass());
+            }
+         }
+
+         assertEquals("Total connections not as expected", 4, pool.getTotalConnections());
+         assertEquals("Idle connections not as expected", 4, pool.getIdleConnections());
       }
    }
 
@@ -735,12 +812,13 @@ public class TestConnections
       }
    }
 
-   class StubDataSourceWithErrorSwitch extends StubDataSource {
+   static class StubDataSourceWithErrorSwitch extends StubDataSource
+   {
       private boolean errorOnConnection = false;
 
       /** {@inheritDoc} */
       @Override
-      public Connection getConnection() throws SQLException {
+      public Connection getConnection() {
          if (!errorOnConnection) {
             return new StubConnection();
          }
@@ -753,4 +831,11 @@ public class TestConnections
       }
    }
 
+   public static class OverrideHandler implements SQLExceptionOverride
+   {
+      @java.lang.Override
+      public Override adjudicate(SQLException sqlException) {
+         return (sqlException.getSQLState().equals("08999")) ? Override.DO_NOT_EVICT : Override.CONTINUE_EVICT;
+      }
+   }
 }

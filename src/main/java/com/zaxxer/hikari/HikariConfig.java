@@ -80,6 +80,7 @@ public class HikariConfig implements HikariConfigMXBean
    private String dataSourceClassName;
    private String dataSourceJndiName;
    private String driverClassName;
+   private String exceptionOverrideClassName;
    private String jdbcUrl;
    private String poolName;
    private String schema;
@@ -812,7 +813,8 @@ public class HikariConfig implements HikariConfigMXBean
     *
     * @return the default schema name
     */
-   public String getSchema() {
+   public String getSchema()
+   {
       return schema;
    }
 
@@ -825,6 +827,50 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       this.schema = schema;
+   }
+
+   /**
+    * Get the user supplied SQLExceptionOverride class name.
+    *
+    * @return the user supplied SQLExceptionOverride class name
+    * @see SQLExceptionOverride
+    */
+   public String getExceptionOverrideClassName()
+   {
+      return this.exceptionOverrideClassName;
+   }
+
+   /**
+    * Set the user supplied SQLExceptionOverride class name.
+    *
+    * @param exceptionOverrideClassName the user supplied SQLExceptionOverride class name
+    * @see SQLExceptionOverride
+    */
+   public void setExceptionOverrideClassName(String exceptionOverrideClassName)
+   {
+      checkIfSealed();
+
+      Class<?> overrideClass = attemptFromContextLoader(exceptionOverrideClassName);
+      try {
+         if (overrideClass == null) {
+            overrideClass = this.getClass().getClassLoader().loadClass(exceptionOverrideClassName);
+            LOGGER.debug("SQLExceptionOverride class {} found in the HikariConfig class classloader {}", exceptionOverrideClassName, this.getClass().getClassLoader());
+         }
+      } catch (ClassNotFoundException e) {
+         LOGGER.error("Failed to load SQLExceptionOverride class {} from HikariConfig class classloader {}", exceptionOverrideClassName, this.getClass().getClassLoader());
+      }
+
+      if (overrideClass == null) {
+         throw new RuntimeException("Failed to load SQLExceptionOverride class " + exceptionOverrideClassName + " in either of HikariConfig class loader or Thread context classloader");
+      }
+
+      try {
+         overrideClass.getConstructor().newInstance();
+         this.exceptionOverrideClassName = exceptionOverrideClassName;
+      }
+      catch (Exception e) {
+         throw new RuntimeException("Failed to instantiate class " + exceptionOverrideClassName, e);
+      }
    }
 
    /**
