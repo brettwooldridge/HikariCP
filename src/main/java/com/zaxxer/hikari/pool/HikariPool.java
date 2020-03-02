@@ -19,7 +19,9 @@ package com.zaxxer.hikari.pool;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariPoolMXBean;
+import com.zaxxer.hikari.SQLExceptionOverride;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.PoolStats;
 import com.zaxxer.hikari.metrics.dropwizard.CodahaleHealthChecker;
@@ -30,6 +32,7 @@ import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.SuspendResumeLock;
 import com.zaxxer.hikari.util.UtilityElf.DefaultThreadFactory;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.hibernate.hql.internal.ast.SqlASTFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -198,6 +201,9 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       catch (InterruptedException e) {
          Thread.currentThread().interrupt();
          throw new SQLException(poolName + " - Interrupted during connection acquisition", e);
+      }
+      catch (SQLException e) {
+         throw e;
       }
       finally {
          suspendResumeLock.release();
@@ -467,8 +473,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     * Creating new poolEntry.  If maxLifetime is configured, create a future End-of-life task with 2.5% variance from
     * the maxLifetime time to ensure there is no massive die-off of Connections in the pool.
     */
-   private PoolEntry createPoolEntry()
-   {
+   private PoolEntry createPoolEntry() throws SQLException {
       try {
          final PoolEntry poolEntry = newPoolEntry();
 
@@ -492,6 +497,13 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          if (poolState == POOL_NORMAL) { // we check POOL_NORMAL to avoid a flood of messages if shutdown() is running concurrently
             logger.error("{} - Error thrown while acquiring connection from data source", poolName, e.getCause());
             lastConnectionFailure.set(e);
+         }
+      }
+      catch (SQLException e) {
+         if (poolState == POOL_NORMAL // we check POOL_NORMAL to avoid a flood of messages if shutdown() is running concurrently
+            && exceptionOverride != null
+            && exceptionOverride.bubleUp(e)) {
+            throw e;
          }
       }
       catch (Exception e) {
@@ -542,16 +554,21 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     * @throws PoolInitializationException if fails to create or validate connection
     * @see HikariConfig#setInitializationFailTimeout(long)
     */
-   private void checkFailFast()
-   {
+   private void checkFailFast() {
       final long initializationTimeout = config.getInitializationFailTimeout();
       if (initializationTimeout < 0) {
          return;
       }
 
       final long startTime = currentTime();
+      PoolEntry poolEntry = null;
       do {
-         final PoolEntry poolEntry = createPoolEntry();
+         try {
+            poolEntry = createPoolEntry();
+         }
+         catch (SQLException ignored) {
+         }
+
          if (poolEntry != null) {
             if (config.getMinimumIdle() > 0) {
                connectionBag.add(poolEntry);
@@ -712,11 +729,20 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       }
 
       @Override
-      public Boolean call()
-      {
+      public Boolean call() {
          long sleepBackoff = 250L;
          while (poolState == POOL_NORMAL && shouldCreateAnotherConnection()) {
-            final PoolEntry poolEntry = createPoolEntry();
+            PoolEntry poolEntry = null;
+            try {
+                poolEntry = createPoolEntry();
+            }
+            catch (SQLException e) {
+               if (exceptionOverride != null
+                  &&  exceptionOverride.bubleUp(e)) {
+                  exceptionOverride.onException(e, (HikariDataSource) config);
+               }
+            }
+
             if (poolEntry != null) {
                connectionBag.add(poolEntry);
                logger.debug("{} - Added connection {}", poolName, poolEntry.connection);
@@ -812,6 +838,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
       /**
        * Construct an exception, possibly wrapping the provided Throwable as the cause.
+       * @param t the Throwable to wrap
        * @param t the Throwable to wrap
        */
       public PoolInitializationException(Throwable t)

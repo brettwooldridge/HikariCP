@@ -1,5 +1,6 @@
 package com.zaxxer.hikari;
 
+import javax.sql.DataSource;
 import java.sql.SQLException;
 
 /**
@@ -26,5 +27,13 @@ public interface SQLExceptionOverride {
    default Override adjudicate(final SQLException sqlException)
    {
       return Override.CONTINUE_EVICT;
+   }
+
+   default boolean bubleUp(final SQLException sqlException)
+   {
+      return false;
+   }
+   default void onException(final SQLException sqlException, DataSource ds) {
+
    }
 }

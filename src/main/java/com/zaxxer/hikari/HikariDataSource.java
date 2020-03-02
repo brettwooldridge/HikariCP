@@ -19,6 +19,7 @@ package com.zaxxer.hikari;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.pool.HikariPool.PoolInitializationException;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,7 +98,12 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       }
 
       if (fastPathPool != null) {
-         return fastPathPool.getConnection();
+         try {
+            return fastPathPool.getConnection();
+         }
+         catch (SQLException e) {
+            checkException(e);
+         }
       }
 
       // See http://en.wikipedia.org/wiki/Double-checked_locking#Usage_in_Java
@@ -125,7 +131,13 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
          }
       }
 
-      return result.getConnection();
+      try {
+         return result.getConnection();
+      }
+      catch (SQLException e) {
+         checkException(e);
+      }
+      return null;
    }
 
    /** {@inheritDoc} */
@@ -373,5 +385,14 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    public String toString()
    {
       return "HikariDataSource (" + pool + ")";
+   }
+
+   private void checkException(SQLException e) throws SQLException {
+      if (pool.exceptionOverride != null && pool.exceptionOverride.bubleUp(e)) {
+         pool.exceptionOverride.onException(e, this);
+      }
+      else {
+         throw e;
+      }
    }
 }

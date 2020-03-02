@@ -65,7 +65,7 @@ abstract class PoolBase
    long connectionTimeout;
    long validationTimeout;
 
-   SQLExceptionOverride exceptionOverride;
+   public SQLExceptionOverride exceptionOverride;
 
    private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout", "schema"};
    private static final int UNINITIALIZED = -1;
@@ -98,7 +98,12 @@ abstract class PoolBase
       this.schema = config.getSchema();
       this.isReadOnly = config.isReadOnly();
       this.isAutoCommit = config.isAutoCommit();
-      this.exceptionOverride = UtilityElf.createInstance(config.getExceptionOverrideClassName(), SQLExceptionOverride.class);
+      if (config.getExceptionOverrideInstance() != null ) {
+         this.exceptionOverride = config.getExceptionOverrideInstance();
+      }
+      else {
+         this.exceptionOverride = UtilityElf.createInstance(config.getExceptionOverrideClassName(), SQLExceptionOverride.class);
+      }
       this.transactionIsolation = UtilityElf.getTransactionIsolation(config.getTransactionIsolation());
 
       this.isQueryTimeoutSupported = UNINITIALIZED;
