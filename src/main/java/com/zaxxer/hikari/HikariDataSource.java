@@ -98,12 +98,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       }
 
       if (fastPathPool != null) {
-         try {
-            return fastPathPool.getConnection();
-         }
-         catch (SQLException e) {
-            checkException(e);
-         }
+         return fastPathPool.getConnection();
       }
 
       // See http://en.wikipedia.org/wiki/Double-checked_locking#Usage_in_Java
@@ -130,14 +125,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
             }
          }
       }
-
-      try {
-         return result.getConnection();
-      }
-      catch (SQLException e) {
-         checkException(e);
-      }
-      return null;
+      return result.getConnection();
    }
 
    /** {@inheritDoc} */
@@ -385,14 +373,5 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    public String toString()
    {
       return "HikariDataSource (" + pool + ")";
-   }
-
-   private void checkException(SQLException e) throws SQLException {
-      if (pool.exceptionOverride != null && pool.exceptionOverride.bubleUp(e)) {
-         pool.exceptionOverride.onException(e, this);
-      }
-      else {
-         throw e;
-      }
    }
 }

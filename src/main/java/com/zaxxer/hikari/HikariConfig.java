@@ -81,7 +81,7 @@ public class HikariConfig implements HikariConfigMXBean
    private String dataSourceJndiName;
    private String driverClassName;
    private String exceptionOverrideClassName;
-   private SQLExceptionOverride exceptionOverrideInstance;
+   private SQLExceptionOverride exceptionOverride;
    private String jdbcUrl;
    private String poolName;
    private String schema;
@@ -830,12 +830,23 @@ public class HikariConfig implements HikariConfigMXBean
       this.schema = schema;
    }
 
-   public SQLExceptionOverride getExceptionOverrideInstance() {
-      return this.exceptionOverrideInstance;
+   /**
+    * Get the user supplied SQLExceptionOverride object.
+    *
+    * @return the user supplied SQLExceptionOverride object
+    * @see SQLExceptionOverride
+    */
+   public SQLExceptionOverride getExceptionOverride() {
+      return this.exceptionOverride;
    }
-
-   public void setExceptionOverrideInstance(SQLExceptionOverride instance) {
-      this.exceptionOverrideInstance = instance;
+   /**
+    * Set the user supplied SQLExceptionOverride object.
+    *
+    * @param exceptionOverride the user supplied SQLExceptionOverride object
+    * @see SQLExceptionOverride
+    */
+   public void setExceptionOverride(SQLExceptionOverride exceptionOverride) {
+      this.exceptionOverride = exceptionOverride;
    }
 
    /**

@@ -29,6 +29,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -238,6 +239,53 @@ public class TestConnections
          assertFalse("Connection should have closed", connection.isValid(5));
          assertTrue("Expected to contain ClosedConnection, but was " + connection, connection.toString().contains("ClosedConnection"));
       }
+   }
+
+   @Test
+   public void testShutdownHikariDatasourceByConnectionSqlExceptionOverride() throws SQLException {
+      StubDataSource stubDataSource = new StubDataSource() {
+         private Integer step = 0;
+         /** {@inheritDoc} */
+         @Override
+         public Connection getConnection() throws SQLException {
+            if (this.step == 0) {
+               this.step = 1;
+               return new StubConnection();
+            }
+            else {
+               throw new SQLException("Simulated exception in getConnection()");
+            }
+         }
+      };
+
+      class ShutdownOnException implements SQLExceptionOverride {
+         @java.lang.Override
+         public void onException(SQLException sqlException, DataSource ds) {
+            ((HikariDataSource) ds).close();
+         }
+      }
+
+      ShutdownOnException shutdownOnException = new ShutdownOnException();
+
+      HikariConfig config = newHikariConfig();
+      config.setMinimumIdle(1);
+      config.setMaximumPoolSize(2);
+      config.setConnectionTimeout(TimeUnit.SECONDS.toMillis(3));
+      config.setConnectionTestQuery("VALUES 1");
+      config.setInitializationFailTimeout(TimeUnit.SECONDS.toMillis(2));
+      config.setDataSource(stubDataSource);
+      config.setExceptionOverride(shutdownOnException);
+
+      HikariDataSource ds = new HikariDataSource(config);
+      Connection goodConnection = ds.getConnection();
+      assertFalse(ds.isClosed());
+      try(Connection ignored = ds.getConnection()) {
+         fail("getConnection() should have failed");
+      }
+      catch (SQLException ignored) {
+      }
+
+      assertTrue(ds.isClosed());
    }
 
    @Test
@@ -836,6 +884,11 @@ public class TestConnections
       @java.lang.Override
       public Override adjudicate(SQLException sqlException) {
          return (sqlException.getSQLState().equals("08999")) ? Override.DO_NOT_EVICT : Override.CONTINUE_EVICT;
+      }
+
+      @java.lang.Override
+      public void onException(final SQLException sqlException, DataSource ds) {
+
       }
    }
 }

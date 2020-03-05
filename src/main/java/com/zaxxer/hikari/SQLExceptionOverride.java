@@ -29,11 +29,5 @@ public interface SQLExceptionOverride {
       return Override.CONTINUE_EVICT;
    }
 
-   default boolean bubleUp(final SQLException sqlException)
-   {
-      return false;
-   }
-   default void onException(final SQLException sqlException, DataSource ds) {
-
-   }
+   default void onException(final SQLException sqlException, DataSource ds) {}
 }
