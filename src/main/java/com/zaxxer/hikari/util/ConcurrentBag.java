@@ -15,17 +15,9 @@
  */
 package com.zaxxer.hikari.util;
 
-import static java.lang.Thread.yield;
-import static java.util.concurrent.TimeUnit.MICROSECONDS;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
-import static java.util.concurrent.locks.LockSupport.parkNanos;
-
-import static com.zaxxer.hikari.util.ClockSource.currentTime;
-import static com.zaxxer.hikari.util.ClockSource.elapsedNanos;
-import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_USE;
-import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
-import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_REMOVED;
-import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_RESERVED;
+import com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -37,10 +29,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry;
+import static com.zaxxer.hikari.util.ClockSource.currentTime;
+import static com.zaxxer.hikari.util.ClockSource.elapsedNanos;
+import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.*;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.locks.LockSupport.parkNanos;
 
 /**
  * This is a specialized concurrent bag that achieves superior performance
@@ -190,7 +184,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
             parkNanos(MICROSECONDS.toNanos(10));
          }
          else {
-            yield();
+            Thread.yield();
          }
       }
 
@@ -216,7 +210,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
 
       // spin until a thread takes it or none are waiting
       while (waiters.get() > 0 && bagEntry.getState() == STATE_NOT_IN_USE && !handoffQueue.offer(bagEntry)) {
-         yield();
+         Thread.yield();
       }
    }
 
@@ -240,6 +234,8 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       if (!removed && !closed) {
          LOGGER.warn("Attempt to remove an object from the bag that does not exist: {}", bagEntry);
       }
+
+      threadList.get().remove(bagEntry);
 
       return removed;
    }
@@ -306,12 +302,13 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     *
     * @param bagEntry the item to unreserve
     */
+   @SuppressWarnings("SpellCheckingInspection")
    public void unreserve(final T bagEntry)
    {
       if (bagEntry.compareAndSet(STATE_RESERVED, STATE_NOT_IN_USE)) {
          // spin until a thread takes it or none are waiting
          while (waiters.get() > 0 && !handoffQueue.offer(bagEntry)) {
-            yield();
+            Thread.yield();
          }
       }
       else {
