@@ -30,7 +30,7 @@
 
    <groupId>com.zaxxer</groupId>
    <artifactId>HikariCP</artifactId>
-   <version>3.4.3-SNAPSHOT</version>
+   <version>3.4.3</version>
    <packaging>bundle</packaging>
 
    <name>HikariCP</name>
@@ -46,7 +46,7 @@
       <connection>scm:git:git@github.com:brettwooldridge/HikariCP.git</connection>
       <developerConnection>scm:git:git@github.com:brettwooldridge/HikariCP.git</developerConnection>
       <url>git@github.com:brettwooldridge/HikariCP.git</url>
-      <tag>HEAD</tag>
+      <tag>HikariCP-3.4.3</tag>
    </scm>
 
    <licenses>
@@ -277,6 +277,7 @@
                      <alias>db</alias>
                      <name>postgres:11</name>
                      <run>
+                        <env><POSTGRES_PASSWORD>password</POSTGRES_PASSWORD></env>
                         <wait>
                            <log>database system is ready to accept connections</log>
                            <time>20000</time>
