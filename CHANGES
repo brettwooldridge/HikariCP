@@ -1,5 +1,12 @@
 HikariCP Changes
 
+Changes in 3.4.3
+ * Fixed 1534 check resultSet.getStatement() for null in ProxyDatabaseMetaData.
+
+ * Add additional debug logging around connection add.
+
+ * Add ThreadLocal removal attempt when bag item is removed.
+
 Changes in 3.4.2
  * fixed 1528 regression caused by pull request 1159 whereby fail-fast logic would exit upon all
    errors even if it was configured to continue trying.
