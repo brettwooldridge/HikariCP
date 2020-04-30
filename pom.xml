@@ -5,6 +5,8 @@
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <sureFireOptions9 />
       <sureFireForks9>false</sureFireForks9>
+      <java9.sourceDirectory>${project.basedir}/src/main/java9</java9.sourceDirectory>
+      <java9.build.outputDirectory>${project.build.directory}/classes-java9</java9.build.outputDirectory>
       <artifact.classifier />
 
       <docker.maven.plugin.fabric8.version>0.33.0</docker.maven.plugin.fabric8.version>
@@ -375,6 +377,7 @@
                <classifier>${artifact.classifier}</classifier>
                <instructions>
                   <Automatic-Module-Name>com.zaxxer.hikari</Automatic-Module-Name>
+                  <Multi-Release>true</Multi-Release>
                   <Bundle-Name>HikariCP</Bundle-Name>
                   <Export-Package>
                      com.zaxxer.hikari,
@@ -515,6 +518,59 @@
             <sureFireForks9>true</sureFireForks9>
             <artifact.classifier>java9</artifact.classifier>
          </properties>
+
+         <build>
+            <plugins>
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-antrun-plugin</artifactId>
+                  <executions>
+                     <execution>
+                        <id>compile-java9</id>
+                        <phase>compile</phase>
+                        <goals>
+                           <goal>run</goal>
+                        </goals>
+                        <configuration>
+                           <tasks>
+                              <mkdir dir="${java9.build.outputDirectory}"/>
+                              <copy todir="${java9.build.outputDirectory}">
+                                 <fileset dir="${project.build.outputDirectory}"/>
+                              </copy>
+                              <javac srcdir="${java9.sourceDirectory}" destdir="${java9.build.outputDirectory}"
+                                     classpath="${project.build.outputDirectory}" includeantruntime="false"/>
+                           </tasks>
+                        </configuration>
+                     </execution>
+                  </executions>
+               </plugin>
+
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-resources-plugin</artifactId>
+                  <executions>
+                     <execution>
+                        <id>copy-module-info</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                           <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                           <outputDirectory>${project.build.outputDirectory}/META-INF/versions/9</outputDirectory>
+                           <resources>
+                              <resource>
+                                 <directory>${java9.build.outputDirectory}</directory>
+                                 <includes>
+                                    <include>module-info.class</include>
+                                 </includes>
+                              </resource>
+                           </resources>
+                        </configuration>
+                     </execution>
+                  </executions>
+               </plugin>
+            </plugins>
+         </build>
       </profile>
 
       <profile>
