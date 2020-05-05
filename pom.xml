@@ -1,16 +1,17 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
    <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-      <sureFireOptions9 />
-      <sureFireForks9>false</sureFireForks9>
-      <java9.sourceDirectory>${project.basedir}/src/main/java9</java9.sourceDirectory>
-      <java9.build.outputDirectory>${project.build.directory}/classes-java9</java9.build.outputDirectory>
-      <artifact.classifier />
+      <sureFireOptions11/>
+      <sureFireForks11>false</sureFireForks11>
+      <java11.sourceDirectory>${project.basedir}/src/main/java11</java11.sourceDirectory>
+      <java11.build.outputDirectory>${project.build.directory}/classes-java11</java11.build.outputDirectory>
+      <artifact.classifier/>
 
       <docker.maven.plugin.fabric8.version>0.33.0</docker.maven.plugin.fabric8.version>
-      <felix.bundle.plugin.version>4.1.0</felix.bundle.plugin.version>
+      <felix.bundle.plugin.version>4.2.1</felix.bundle.plugin.version>
       <felix.version>6.0.1</felix.version>
       <hibernate.version>5.2.10.Final</hibernate.version>
       <javassist.version>3.24.1-GA</javassist.version>
@@ -71,10 +72,6 @@
       <artifactId>oss-parent</artifactId>
       <version>9</version>
    </parent>
-
-   <prerequisites>
-      <maven>3.3.9</maven>
-   </prerequisites>
 
    <dependencies>
       <dependency>
@@ -247,6 +244,27 @@
    <build>
       <plugins>
          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <version>3.0.0-M3</version>
+            <executions>
+               <execution>
+                  <id>enforce-maven</id>
+                  <goals>
+                     <goal>enforce</goal>
+                  </goals>
+                  <configuration>
+                     <rules>
+                        <requireMavenVersion>
+                           <version>3.3.9</version>
+                        </requireMavenVersion>
+                     </rules>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
             <!-- Generate proxies -->
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
@@ -376,7 +394,7 @@
             <configuration>
                <classifier>${artifact.classifier}</classifier>
                <instructions>
-                  <Automatic-Module-Name>com.zaxxer.hikari</Automatic-Module-Name>
+                  <Automatic-Module-Name>${automatic.module.name}</Automatic-Module-Name>
                   <Multi-Release>true</Multi-Release>
                   <Bundle-Name>HikariCP</Bundle-Name>
                   <Export-Package>
@@ -452,10 +470,10 @@
                <version>2.22.1</version>
                <configuration>
                   <!-- Sets the VM argument line used when unit tests are run. -->
-                  <argLine>${surefireArgLine} ${sureFireOptions9}</argLine>
+                  <argLine>${surefireArgLine} ${sureFireOptions11}</argLine>
                   <!-- Skips unit tests if the value of skip.unit.tests property is true -->
                   <skipTests>${skip.unit.tests}</skipTests>
-                  <reuseForks>${sureFireForks9}</reuseForks>
+                  <reuseForks>${sureFireForks11}</reuseForks>
                </configuration>
             </plugin>
 
@@ -504,19 +522,28 @@
 
    <profiles>
       <profile>
-         <id>Java9</id>
+         <id>Java8</id>
          <activation>
-            <jdk>[9,)</jdk>
+            <jdk>[,11)</jdk>
          </activation>
          <properties>
-            <!-- sureFireOptions9>
+            <automatic.module.name>com.zaxxer.hikari</automatic.module.name>
+         </properties>
+      </profile>
+      <profile>
+         <id>Java11</id>
+         <activation>
+            <jdk>[11,)</jdk>
+         </activation>
+         <properties>
+            <!-- sureFireOptions11>
                -add-opens java.base/java.net=ALL-UNNAMED
                -add-opens java.base/java.security=ALL-UNNAMED
                -add-exports java.base/sun.net.www.protocol.http=ALL-UNNAMED
                -add-exports java.base/sun.net.www.protocol.https=ALL-UNNAMED
-            </sureFireOptions9 -->
-            <sureFireForks9>true</sureFireForks9>
-            <artifact.classifier>java9</artifact.classifier>
+            </sureFireOptions11 -->
+            <sureFireForks11>true</sureFireForks11>
+            <artifact.classifier>java11</artifact.classifier>
          </properties>
 
          <build>
@@ -526,18 +553,18 @@
                   <artifactId>maven-antrun-plugin</artifactId>
                   <executions>
                      <execution>
-                        <id>compile-java9</id>
+                        <id>compile-java11</id>
                         <phase>compile</phase>
                         <goals>
                            <goal>run</goal>
                         </goals>
                         <configuration>
                            <tasks>
-                              <mkdir dir="${java9.build.outputDirectory}"/>
-                              <copy todir="${java9.build.outputDirectory}">
+                              <mkdir dir="${java11.build.outputDirectory}"/>
+                              <copy todir="${java11.build.outputDirectory}">
                                  <fileset dir="${project.build.outputDirectory}"/>
                               </copy>
-                              <javac srcdir="${java9.sourceDirectory}" destdir="${java9.build.outputDirectory}"
+                              <javac srcdir="${java11.sourceDirectory}" destdir="${java11.build.outputDirectory}"
                                      classpath="${project.build.outputDirectory}" includeantruntime="false"/>
                            </tasks>
                         </configuration>
@@ -548,6 +575,7 @@
                <plugin>
                   <groupId>org.apache.maven.plugins</groupId>
                   <artifactId>maven-resources-plugin</artifactId>
+                  <version>3.1.0</version>
                   <executions>
                      <execution>
                         <id>copy-module-info</id>
@@ -556,10 +584,10 @@
                            <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                           <outputDirectory>${project.build.outputDirectory}/META-INF/versions/9</outputDirectory>
+                           <outputDirectory>${project.build.outputDirectory}/META-INF/versions/11</outputDirectory>
                            <resources>
                               <resource>
-                                 <directory>${java9.build.outputDirectory}</directory>
+                                 <directory>${java11.build.outputDirectory}</directory>
                                  <includes>
                                     <include>module-info.class</include>
                                  </includes>

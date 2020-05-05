@@ -30,7 +30,7 @@ import org.osgi.framework.BundleContext;
 import javax.inject.Inject;
 import java.io.File;
 
-import static com.zaxxer.hikari.pool.TestElf.isJava9;
+import static com.zaxxer.hikari.pool.TestElf.isJava11;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.*;
@@ -96,14 +96,14 @@ public class OSGiBundleTest
 
       @Override
       public void run(RunNotifier notifier) {
-         if (!isJava9()) {
+         if (!isJava11()) {
             super.run(notifier);
          }
       }
 
       @Override
       public void filter(Filter filter) throws NoTestsRemainException {
-         if (isJava9()) {
+         if (isJava11()) {
             throw new NoTestsRemainException();
          }
 
