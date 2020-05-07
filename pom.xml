@@ -575,9 +575,8 @@
                               <copy todir="${java11.build.outputDirectory}">
                                  <fileset dir="${project.build.outputDirectory}"/>
                               </copy>
-                              <property name="classpath" value="${project.build.directory}:
-                              ${org.hdrhistogram:HdrHistogram:jar}:${org.latencyutils:LatencyUtils:jar}:
-                              ${org.hibernate.javax.persistence:hibernate-jpa:jar}:
+                              <property name="classpath" value="${org.hdrhistogram:HdrHistogram:jar}:
+                              ${org.latencyutils:LatencyUtils:jar}:${org.hibernate.javax.persistence:hibernate-jpa:jar}:
                               ${org.hibernate.common:hibernate-commons-annotations:jar}:${antlr:antlr:jar}:
                               ${org.jboss:jandex:jar}:${com.fasterxml:classmate:jar}:${dom4j:dom4j:jar}"/>
                               "
