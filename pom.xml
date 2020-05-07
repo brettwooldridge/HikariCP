@@ -550,7 +550,6 @@
                -add-exports java.base/sun.net.www.protocol.https=ALL-UNNAMED
             </sureFireOptions11 -->
             <sureFireForks11>true</sureFireForks11>
-            <artifact.classifier>java11</artifact.classifier>
          </properties>
 
          <build>
