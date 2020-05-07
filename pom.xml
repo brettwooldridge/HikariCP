@@ -242,6 +242,12 @@
    </dependencies>
 
    <build>
+      <resources>
+         <resource>
+            <directory>target/classes</directory>
+         </resource>
+      </resources>
+
       <plugins>
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -403,6 +409,7 @@
                      com.zaxxer.hikari.metrics
                   </Export-Package>
                   <Private-Package>com.zaxxer.hikari.*</Private-Package>
+                  <Include-Resource>{maven-resources}</Include-Resource>
                   <_exportcontents>
                      com.zaxxer.hikari.pool,
                      com.zaxxer.hikari.util
