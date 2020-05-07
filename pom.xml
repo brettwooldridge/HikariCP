@@ -303,7 +303,9 @@
                      <alias>db</alias>
                      <name>postgres:11</name>
                      <run>
-                        <env><POSTGRES_PASSWORD>password</POSTGRES_PASSWORD></env>
+                        <env>
+                           <POSTGRES_PASSWORD>password</POSTGRES_PASSWORD>
+                        </env>
                         <wait>
                            <log>database system is ready to accept connections</log>
                            <time>20000</time>
@@ -509,7 +511,9 @@
                <version>3.0.1</version>
                <configuration>
                   <show>public</show>
-                  <excludePackageNames>com.zaxxer.hikari.hibernate:com.zaxxer.hikari.metrics.*:com.zaxxer.hikari.pool:com.zaxxer.hikari.util</excludePackageNames>
+                  <excludePackageNames>
+                     com.zaxxer.hikari.hibernate:com.zaxxer.hikari.metrics.*:com.zaxxer.hikari.pool:com.zaxxer.hikari.util
+                  </excludePackageNames>
                   <attach>true</attach>
                   <maxmemory>1024m</maxmemory>
                </configuration>
@@ -557,6 +561,7 @@
                <plugin>
                   <groupId>org.apache.maven.plugins</groupId>
                   <artifactId>maven-antrun-plugin</artifactId>
+                  <version>3.0.0</version>
                   <executions>
                      <execution>
                         <id>compile-java11</id>
@@ -565,14 +570,24 @@
                            <goal>run</goal>
                         </goals>
                         <configuration>
-                           <tasks>
+                           <target>
                               <mkdir dir="${java11.build.outputDirectory}"/>
                               <copy todir="${java11.build.outputDirectory}">
                                  <fileset dir="${project.build.outputDirectory}"/>
                               </copy>
+                              <property name="classpath" value="${project.build.directory}:
+                              ${org.hdrhistogram:HdrHistogram:jar}:${org.latencyutils:LatencyUtils:jar}:
+                              ${org.hibernate.javax.persistence:hibernate-jpa:jar}:
+                              ${org.hibernate.common:hibernate-commons-annotations:jar}:${antlr:antlr:jar}:
+                              ${org.jboss:jandex:jar}:${com.fasterxml:classmate:jar}:${dom4j:dom4j:jar}"/>
+                              "
+                              <property name="modulepath" value="${org.slf4j:slf4j-api:jar}:
+                              ${org.javassist:javassist:jar}:${io.micrometer:micrometer-core:jar}:
+                              ${org.hibernate:hibernate-core:jar}:${io.dropwizard.metrics:metrics-core:jar}:
+                              ${io.dropwizard.metrics:metrics-healthchecks:jar}:${io.prometheus:simpleclient:jar}"/>
                               <javac srcdir="${java11.sourceDirectory}" destdir="${java11.build.outputDirectory}"
-                                     classpath="${project.build.outputDirectory}" includeantruntime="false"/>
-                           </tasks>
+                                     classpath="${classpath}" modulepath="${modulepath}" includeantruntime="false"/>
+                           </target>
                         </configuration>
                      </execution>
                   </executions>
