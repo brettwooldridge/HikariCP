@@ -1,14 +1,13 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
    <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-      <sureFireOptions11/>
+      <sureFireOptions11 />
       <sureFireForks11>false</sureFireForks11>
       <java11.sourceDirectory>${project.basedir}/src/main/java11</java11.sourceDirectory>
       <java11.build.outputDirectory>${project.build.directory}/classes-java11</java11.build.outputDirectory>
-      <artifact.classifier/>
+      <artifact.classifier />
 
       <docker.maven.plugin.fabric8.version>0.33.0</docker.maven.plugin.fabric8.version>
       <felix.bundle.plugin.version>4.2.1</felix.bundle.plugin.version>
@@ -33,7 +32,7 @@
 
    <groupId>com.zaxxer</groupId>
    <artifactId>HikariCP</artifactId>
-   <version>3.4.4-SNAPSHOT</version>
+   <version>3.4.4</version>
    <packaging>bundle</packaging>
 
    <name>HikariCP</name>
@@ -49,7 +48,7 @@
       <connection>scm:git:git@github.com:brettwooldridge/HikariCP.git</connection>
       <developerConnection>scm:git:git@github.com:brettwooldridge/HikariCP.git</developerConnection>
       <url>git@github.com:brettwooldridge/HikariCP.git</url>
-      <tag>HEAD</tag>
+      <tag>HikariCP-3.4.4</tag>
    </scm>
 
    <licenses>
@@ -571,21 +570,14 @@
                         </goals>
                         <configuration>
                            <target>
-                              <mkdir dir="${java11.build.outputDirectory}"/>
+                              <mkdir dir="${java11.build.outputDirectory}" />
                               <copy todir="${java11.build.outputDirectory}">
-                                 <fileset dir="${project.build.outputDirectory}"/>
+                                 <fileset dir="${project.build.outputDirectory}" />
                               </copy>
-                              <property name="classpath" value="${org.hdrhistogram:HdrHistogram:jar}:
-                              ${org.latencyutils:LatencyUtils:jar}:${org.hibernate.javax.persistence:hibernate-jpa:jar}:
-                              ${org.hibernate.common:hibernate-commons-annotations:jar}:${antlr:antlr:jar}:
-                              ${org.jboss:jandex:jar}:${com.fasterxml:classmate:jar}:${dom4j:dom4j:jar}"/>
+                              <property name="classpath" value="${org.hdrhistogram:HdrHistogram:jar}: ${org.latencyutils:LatencyUtils:jar}:${org.hibernate.javax.persistence:hibernate-jpa:jar}:                               ${org.hibernate.common:hibernate-commons-annotations:jar}:${antlr:antlr:jar}:                               ${org.jboss:jandex:jar}:${com.fasterxml:classmate:jar}:${dom4j:dom4j:jar}" />
                               "
-                              <property name="modulepath" value="${org.slf4j:slf4j-api:jar}:
-                              ${org.javassist:javassist:jar}:${io.micrometer:micrometer-core:jar}:
-                              ${org.hibernate:hibernate-core:jar}:${io.dropwizard.metrics:metrics-core:jar}:
-                              ${io.dropwizard.metrics:metrics-healthchecks:jar}:${io.prometheus:simpleclient:jar}"/>
-                              <javac srcdir="${java11.sourceDirectory}" destdir="${java11.build.outputDirectory}"
-                                     classpath="${classpath}" modulepath="${modulepath}" includeantruntime="false"/>
+                              <property name="modulepath" value="${org.slf4j:slf4j-api:jar}: ${org.javassist:javassist:jar}:${io.micrometer:micrometer-core:jar}:                               ${org.hibernate:hibernate-core:jar}:${io.dropwizard.metrics:metrics-core:jar}:                               ${io.dropwizard.metrics:metrics-healthchecks:jar}:${io.prometheus:simpleclient:jar}" />
+                              <javac srcdir="${java11.sourceDirectory}" destdir="${java11.build.outputDirectory}" classpath="${classpath}" modulepath="${modulepath}" includeantruntime="false" />
                            </target>
                         </configuration>
                      </execution>
