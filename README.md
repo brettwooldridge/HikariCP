@@ -173,7 +173,7 @@ never be retired, only when it is closed will it then be removed.  On a connecti
 basis, minor negative attenuation is applied to avoid mass-extinction in the pool.  **We strongly recommend
 setting this value, and it should be several seconds shorter than any database or infrastructure imposed
 connection time limit.**  A value of 0 indicates no maximum lifetime (infinite lifetime), subject of
-course to the ``idleTimeout`` setting.
+course to the ``idleTimeout`` setting.  The minimum allowed value is 30000ms (30 seconds).
 *Default: 1800000 (30 minutes)*
 
 &#128288;``connectionTestQuery``<br/>
