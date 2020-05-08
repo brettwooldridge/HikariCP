@@ -3,8 +3,7 @@
    <toolchain>
       <type>paths</type>
       <provides>
-         <!-- Defines the folders to search for binaries of the "foo-bar" toolset -->
-         <id>javac</id>
+         <id>java</id>
       </provides>
       <configuration>
          <paths>

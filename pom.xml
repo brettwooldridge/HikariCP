@@ -32,7 +32,7 @@
 
    <groupId>com.zaxxer</groupId>
    <artifactId>HikariCP</artifactId>
-   <version>3.4.5-SNAPSHOT</version>
+   <version>3.4.5</version>
    <packaging>bundle</packaging>
 
    <name>HikariCP</name>
@@ -48,7 +48,7 @@
       <connection>scm:git:git@github.com:brettwooldridge/HikariCP.git</connection>
       <developerConnection>scm:git:git@github.com:brettwooldridge/HikariCP.git</developerConnection>
       <url>git@github.com:brettwooldridge/HikariCP.git</url>
-      <tag>HEAD</tag>
+      <tag>HikariCP-3.4.5</tag>
    </scm>
 
    <licenses>
@@ -283,7 +283,7 @@
             <configuration>
                <toolchains>
                   <paths>
-                     <id>javac</id>
+                     <id>java</id>
                   </paths>
                </toolchains>
             </configuration>
@@ -616,9 +616,9 @@
                               <copy todir="${java11.build.outputDirectory}">
                                  <fileset dir="${project.build.outputDirectory}" />
                               </copy>
-                              <property name="classpath" value="${org.hdrhistogram:HdrHistogram:jar}: ${org.latencyutils:LatencyUtils:jar}:${org.hibernate.javax.persistence:hibernate-jpa:jar}: ${org.hibernate.common:hibernate-commons-annotations:jar}:${antlr:antlr:jar}:                               ${org.jboss:jandex:jar}:${com.fasterxml:classmate:jar}:${dom4j:dom4j:jar}" />
+                              <property name="classpath" value="${org.hdrhistogram:HdrHistogram:jar}: ${org.latencyutils:LatencyUtils:jar}:${org.hibernate.javax.persistence:hibernate-jpa:jar}: ${org.hibernate.common:hibernate-commons-annotations:jar}:${antlr:antlr:jar}: ${org.jboss:jandex:jar}:${com.fasterxml:classmate:jar}:${dom4j:dom4j:jar}" />
                               "
-                              <property name="modulepath" value="${org.slf4j:slf4j-api:jar}: ${org.javassist:javassist:jar}:${io.micrometer:micrometer-core:jar}: ${org.hibernate:hibernate-core:jar}:${io.dropwizard.metrics:metrics-core:jar}:                               ${io.dropwizard.metrics:metrics-healthchecks:jar}:${io.prometheus:simpleclient:jar}" />
+                              <property name="modulepath" value="${org.slf4j:slf4j-api:jar}: ${org.javassist:javassist:jar}:${io.micrometer:micrometer-core:jar}: ${org.hibernate:hibernate-core:jar}:${io.dropwizard.metrics:metrics-core:jar}: ${io.dropwizard.metrics:metrics-healthchecks:jar}:${io.prometheus:simpleclient:jar}" />
                               <javac srcdir="${java11.sourceDirectory}" destdir="${java11.build.outputDirectory}" classpath="${classpath}" modulepath="${modulepath}" includeantruntime="false" />
                            </target>
                         </configuration>
