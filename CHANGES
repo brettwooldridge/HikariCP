@@ -1,6 +1,12 @@
 HikariCP Changes
 
+Changes kn 3.4.4
+
+ * Build HikariCP as a JEP 238 Multi-Release jar for increased compatability with Java 11 and
+   future modularized Java versions.
+
 Changes in 3.4.3
+
  * Fixed 1534 check resultSet.getStatement() for null in ProxyDatabaseMetaData.
 
  * Add additional debug logging around connection add.
