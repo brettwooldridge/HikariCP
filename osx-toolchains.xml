@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF8"?>
+<toolchains>
+   <toolchain>
+      <type>paths</type>
+      <provides>
+         <!-- Defines the folders to search for binaries of the "foo-bar" toolset -->
+         <id>javac</id>
+      </provides>
+      <configuration>
+         <paths>
+            <path>/Library/Java/JavaVirtualMachines/jdk1.8.0_191.jdk/Contents/Home/bin</path>
+         </paths>
+      </configuration>
+   </toolchain>
+</toolchains>

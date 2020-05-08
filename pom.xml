@@ -270,21 +270,64 @@
          </plugin>
 
          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-toolchains-plugin</artifactId>
+            <version>1.1</version>
+            <executions>
+               <execution>
+                  <goals>
+                     <goal>toolchain</goal>
+                  </goals>
+               </execution>
+            </executions>
+            <configuration>
+               <toolchains>
+                  <paths>
+                     <id>javac</id>
+                  </paths>
+               </toolchains>
+            </configuration>
+         </plugin>
+
+         <plugin>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>2.8</version>
+            <executions>
+               <execution>
+                  <phase>generate-sources</phase>
+                  <goals>
+                     <goal>build-classpath</goal>
+                  </goals>
+                  <configuration>
+                     <outputProperty>maven.compile.classpath</outputProperty>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
             <!-- Generate proxies -->
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
             <version>1.6.0</version>
+            <extensions>true</extensions>
             <executions>
                <execution>
                   <phase>compile</phase>
                   <!-- phase>generate-test-sources</phase -->
                   <goals>
-                     <goal>java</goal>
+                     <goal>exec</goal>
                   </goals>
                </execution>
             </executions>
             <configuration>
-               <mainClass>com.zaxxer.hikari.util.JavassistProxyFactory</mainClass>
+               <toolchain>paths</toolchain>
+               <executable>java</executable>
+               <arguments>
+                  <argument>-cp</argument>
+                  <argument>${project.build.outputDirectory}:${maven.compile.classpath}</argument>
+                  <argument>com.zaxxer.hikari.util.JavassistProxyFactory</argument>
+               </arguments>
             </configuration>
          </plugin>
 
@@ -454,7 +497,6 @@
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-compiler-plugin</artifactId>
                <version>3.8.1</version>
-               <extensions>true</extensions>
                <configuration>
                   <source>1.8</source>
                   <target>1.8</target>
