@@ -325,7 +325,7 @@
                <executable>java</executable>
                <arguments>
                   <argument>-cp</argument>
-                  <argument>${project.build.outputDirectory}:${maven.compile.classpath}</argument>
+                  <argument>${project.build.outputDirectory}${path.separator}${maven.compile.classpath}</argument>
                   <argument>com.zaxxer.hikari.util.JavassistProxyFactory</argument>
                </arguments>
             </configuration>
@@ -601,52 +601,20 @@
             <plugins>
                <plugin>
                   <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-antrun-plugin</artifactId>
-                  <version>3.0.0</version>
+                  <artifactId>maven-compiler-plugin</artifactId>
+                  <version>3.8.1</version>
                   <executions>
                      <execution>
                         <id>compile-java11</id>
-                        <phase>compile</phase>
                         <goals>
-                           <goal>run</goal>
+                           <goal>compile</goal>
                         </goals>
                         <configuration>
-                           <target>
-                              <mkdir dir="${java11.build.outputDirectory}" />
-                              <copy todir="${java11.build.outputDirectory}">
-                                 <fileset dir="${project.build.outputDirectory}" />
-                              </copy>
-                              <property name="classpath" value="${org.hdrhistogram:HdrHistogram:jar}: ${org.latencyutils:LatencyUtils:jar}:${org.hibernate.javax.persistence:hibernate-jpa:jar}: ${org.hibernate.common:hibernate-commons-annotations:jar}:${antlr:antlr:jar}: ${org.jboss:jandex:jar}:${com.fasterxml:classmate:jar}:${dom4j:dom4j:jar}" />
-                              "
-                              <property name="modulepath" value="${org.slf4j:slf4j-api:jar}: ${org.javassist:javassist:jar}:${io.micrometer:micrometer-core:jar}: ${org.hibernate:hibernate-core:jar}:${io.dropwizard.metrics:metrics-core:jar}: ${io.dropwizard.metrics:metrics-healthchecks:jar}:${io.prometheus:simpleclient:jar}" />
-                              <javac srcdir="${java11.sourceDirectory}" destdir="${java11.build.outputDirectory}" classpath="${classpath}" modulepath="${modulepath}" includeantruntime="false" />
-                           </target>
-                        </configuration>
-                     </execution>
-                  </executions>
-               </plugin>
-
-               <plugin>
-                  <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-resources-plugin</artifactId>
-                  <version>3.1.0</version>
-                  <executions>
-                     <execution>
-                        <id>copy-module-info</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                           <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                           <outputDirectory>${project.build.outputDirectory}/META-INF/versions/11</outputDirectory>
-                           <resources>
-                              <resource>
-                                 <directory>${java11.build.outputDirectory}</directory>
-                                 <includes>
-                                    <include>module-info.class</include>
-                                 </includes>
-                              </resource>
-                           </resources>
+                           <release>11</release>
+                           <compileSourceRoots>
+                              <compileSourceRoot>${project.basedir}/src/main/java11</compileSourceRoot>
+                           </compileSourceRoots>
+                           <multiReleaseOutput>true</multiReleaseOutput>
                         </configuration>
                      </execution>
                   </executions>
