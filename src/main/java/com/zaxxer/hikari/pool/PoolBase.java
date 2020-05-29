@@ -181,8 +181,8 @@ abstract class PoolBase
       }
       catch (Exception e) {
          lastConnectionFailure.set(e);
-         logger.warn("{} - Failed to validate connection {} ({}). Possibly consider using a shorter maxLifetime value.",
-                     poolName, connection, e.getMessage());
+         logger.warn("{} - Failed to validate connection {}. Possibly consider using a shorter maxLifetime value.",
+            poolName, connection, e);
          return false;
       }
    }

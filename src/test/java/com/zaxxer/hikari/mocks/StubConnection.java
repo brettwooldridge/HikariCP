@@ -47,6 +47,7 @@ public class StubConnection extends StubBaseConnection implements Connection
    public static final AtomicInteger count = new AtomicInteger();
    public static volatile boolean slowCreate;
    public static volatile boolean oldDriver;
+   public static volatile boolean setNetworkTimeoutThrows;
 
    private static long foo;
    private boolean autoCommit;
@@ -471,6 +472,9 @@ public class StubConnection extends StubBaseConnection implements Connection
    /** {@inheritDoc} */
    public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException
    {
+      if (setNetworkTimeoutThrows) {
+         throw new SQLException("This connection has been closed");
+      }
    }
 
    /** {@inheritDoc} */
