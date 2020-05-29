@@ -133,15 +133,8 @@ abstract class PoolBase
          try {
             logger.debug("{} - Closing connection {}: {}", poolName, connection, closureReason);
 
-            try {
-               setNetworkTimeout(connection, SECONDS.toMillis(15));
-            }
-            catch (SQLException e) {
-               // ignore
-            }
-            finally {
-               connection.close(); // continue with the close even if setNetworkTimeout() throws
-            }
+            trySetNetworkTimeout(connection, SECONDS.toMillis(15));
+            connection.close();
          }
          catch (Exception e) {
             logger.debug("{} - Closing connection {} failed", poolName, connection, e);
@@ -153,7 +146,7 @@ abstract class PoolBase
    {
       try {
          try {
-            setNetworkTimeout(connection, validationTimeout);
+            trySetNetworkTimeout(connection, validationTimeout);
 
             final int validationSeconds = (int) Math.max(1000L, validationTimeout) / 1000;
 
@@ -170,7 +163,7 @@ abstract class PoolBase
             }
          }
          finally {
-            setNetworkTimeout(connection, networkTimeout);
+            trySetNetworkTimeout(connection, networkTimeout);
 
             if (isIsolateInternalQueries && !isAutoCommit) {
                connection.rollback();
@@ -547,7 +540,7 @@ abstract class PoolBase
    }
 
    /**
-    * Set the network timeout, if <code>isUseNetworkTimeout</code> is <code>true</code> and the
+    * Set the network timeout, if <code>isNetworkTimeoutSupported</code> is <code>true</code> and the
     * driver supports it.
     *
     * @param connection the connection to set the network timeout on
@@ -558,6 +551,26 @@ abstract class PoolBase
    {
       if (isNetworkTimeoutSupported == TRUE) {
          connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
+      }
+   }
+
+   /**
+    * Set the network timeout, if <code>isNetworkTimeoutSupported</code> is <code>true</code> and the
+    * driver supports it.
+    *
+    * @param connection the connection to set the network timeout on
+    * @param timeoutMs  the number of milliseconds before timeout
+    * @return whether the timeout was successfully applied
+    */
+   private boolean trySetNetworkTimeout(final Connection connection, final long timeoutMs)
+   {
+      try {
+         setNetworkTimeout(connection, timeoutMs);
+         return true;
+      }
+      catch (SQLException e) {
+         // Connection was already closed
+         return false;
       }
    }
 
