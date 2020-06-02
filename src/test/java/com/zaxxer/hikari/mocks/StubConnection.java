@@ -44,10 +44,13 @@ import com.zaxxer.hikari.util.UtilityElf;
  */
 public class StubConnection extends StubBaseConnection implements Connection
 {
+
+   public static final String CONNECTION_CLOSED_ERROR = "This connection has been closed";
+
    public static final AtomicInteger count = new AtomicInteger();
    public static volatile boolean slowCreate;
    public static volatile boolean oldDriver;
-   public static volatile boolean setNetworkTimeoutThrows;
+   public static volatile boolean closed;
 
    private static long foo;
    private boolean autoCommit;
@@ -153,7 +156,7 @@ public class StubConnection extends StubBaseConnection implements Connection
       if (throwException) {
          throw new SQLException();
       }
-      return false;
+      return closed;
    }
 
    /** {@inheritDoc} */
@@ -472,8 +475,8 @@ public class StubConnection extends StubBaseConnection implements Connection
    /** {@inheritDoc} */
    public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException
    {
-      if (setNetworkTimeoutThrows) {
-         throw new SQLException("This connection has been closed");
+      if (closed) {
+         throw new SQLException(CONNECTION_CLOSED_ERROR);
       }
    }
 

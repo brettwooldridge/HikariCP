@@ -133,8 +133,11 @@ abstract class PoolBase
          try {
             logger.debug("{} - Closing connection {}: {}", poolName, connection, closureReason);
 
-            trySetNetworkTimeout(connection, SECONDS.toMillis(15));
-            connection.close();
+            try {
+               trySetNetworkTimeout(connection, SECONDS.toMillis(15));
+            } finally {
+               connection.close();
+            }
          }
          catch (Exception e) {
             logger.debug("{} - Closing connection {} failed", poolName, connection, e);
@@ -146,7 +149,10 @@ abstract class PoolBase
    {
       try {
          try {
-            trySetNetworkTimeout(connection, validationTimeout);
+            boolean timeoutSet = trySetNetworkTimeout(connection, validationTimeout);
+            if (!timeoutSet) {
+               return false;
+            }
 
             final int validationSeconds = (int) Math.max(1000L, validationTimeout) / 1000;
 
@@ -562,14 +568,15 @@ abstract class PoolBase
     * @param timeoutMs  the number of milliseconds before timeout
     * @return whether the timeout was successfully applied
     */
-   private boolean trySetNetworkTimeout(final Connection connection, final long timeoutMs)
+   private boolean trySetNetworkTimeout(final Connection connection, final long timeoutMs) throws SQLException
    {
       try {
          setNetworkTimeout(connection, timeoutMs);
          return true;
-      }
-      catch (SQLException e) {
-         // Connection was already closed
+      } catch (SQLException e) {
+         if (!connection.isClosed()) {
+            throw e;
+         }
          return false;
       }
    }

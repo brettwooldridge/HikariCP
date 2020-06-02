@@ -16,18 +16,15 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.pool.TestElf.getPool;
-import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
-import static com.zaxxer.hikari.pool.TestElf.setSlf4jLogLevel;
-import static com.zaxxer.hikari.pool.TestElf.setSlf4jTargetStream;
+import static com.zaxxer.hikari.mocks.StubConnection.CONNECTION_CLOSED_ERROR;
+import static com.zaxxer.hikari.pool.TestElf.*;
 import static com.zaxxer.hikari.util.ClockSource.currentTime;
 import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
+import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static java.lang.Thread.sleep;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -270,23 +267,29 @@ public class TestConnectionTimeoutRetry
    @Test
    public void testConnectionClosed()
    {
-      System.setProperty("com.zaxxer.hikari.aliveBypassWindowMs", "-1");
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      try (PrintStream ps = new PrintStream(baos, true)) {
+         setSlf4jTargetStream(PoolBase.class, ps);
 
-      HikariConfig config = newHikariConfig();
-      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+         System.setProperty("com.zaxxer.hikari.aliveBypassWindowMs", "-1");
 
-      StubConnection.setNetworkTimeoutThrows = false;
-      try (HikariDataSource ds = new HikariDataSource(config)) {
-         StubConnection.setNetworkTimeoutThrows = true; // needs to be after ds init, otherwise setting timeouts is disabled
+         HikariConfig config = newHikariConfig();
+         config.setDataSourceClassName(StubDataSource.class.getName());
 
-         try (Connection connection1 = ds.getConnection()) {
-            assertNotNull(connection1);
-         } catch (Exception e) {
-            e.printStackTrace();
-            fail();
+         try (HikariDataSource ds = new HikariDataSource(config)) {
+            StubConnection.closed = true;
+
+            try (Connection connection1 = ds.getConnection()) {
+               fail();
+            } catch (Exception e) {
+               assertTrue(e.getCause().getMessage().contains(CONNECTION_CLOSED_ERROR));
+            }
+         } finally {
+            StubConnection.closed = false;
          }
-      } finally {
-         StubConnection.setNetworkTimeoutThrows = false;
+
+         String logs = new String(baos.toByteArray());
+         assertFalse(logs.contains("Failed to validate connection"));
       }
    }
 
