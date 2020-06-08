@@ -691,6 +691,8 @@ abstract class PoolBase
 
       default void recordConnectionTimeout() {}
 
+      default void recordConnectionRequest() {}
+
       @Override
       default void close() {}
    }
@@ -738,6 +740,11 @@ abstract class PoolBase
       @Override
       public void recordConnectionTimeout() {
          tracker.recordConnectionTimeout();
+      }
+
+      @Override
+      public void recordConnectionRequest() {
+         tracker.recordConnectionRequest();
       }
 
       @Override

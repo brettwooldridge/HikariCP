@@ -29,6 +29,8 @@ public interface IMetricsTracker extends AutoCloseable
 
    default void recordConnectionTimeout() {}
 
+   default void recordConnectionRequest() {}
+
    @Override
    default void close() {}
 }

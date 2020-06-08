@@ -173,7 +173,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    {
       suspendResumeLock.acquire();
       final long startTime = currentTime();
-
+      metricsTracker.recordConnectionRequest();
       try {
          long timeout = hardTimeout;
          do {
