@@ -91,7 +91,8 @@ class PrometheusHistogramMetricsTracker implements IMetricsTracker
    }
 
    @Override
-   public void recordConnectionTimeout() {
+   public void recordConnectionTimeout(long elapsedTimeoutNanos) {
+      elapsedAcquiredHistogramChild.observe(elapsedTimeoutNanos);
       connectionTimeoutCounterChild.inc();
    }
 }

@@ -139,8 +139,9 @@ public class MicrometerMetricsTracker implements IMetricsTracker
    }
 
    @Override
-   public void recordConnectionTimeout()
+   public void recordConnectionTimeout(final long elapsedTimeoutNanos)
    {
+      recordConnectionAcquiredNanos(elapsedTimeoutNanos);
       connectionTimeoutCounter.increment();
    }
 

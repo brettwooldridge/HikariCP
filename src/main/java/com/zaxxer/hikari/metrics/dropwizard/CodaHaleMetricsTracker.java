@@ -106,8 +106,9 @@ public final class CodaHaleMetricsTracker implements IMetricsTracker
    }
 
    @Override
-   public void recordConnectionTimeout()
+   public void recordConnectionTimeout(final long elapsedTimeoutNanos)
    {
+      connectionObtainTimer.update(elapsedTimeoutNanos, TimeUnit.NANOSECONDS);
       connectionTimeoutMeter.mark();
    }
 

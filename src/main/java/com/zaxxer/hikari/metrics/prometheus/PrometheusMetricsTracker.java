@@ -96,8 +96,9 @@ class PrometheusMetricsTracker implements IMetricsTracker
    }
 
    @Override
-   public void recordConnectionTimeout()
+   public void recordConnectionTimeout(long elapsedTimeoutNanos)
    {
+      elapsedAcquiredSummaryChild.observe(elapsedTimeoutNanos);
       connectionTimeoutCounterChild.inc();
    }
 

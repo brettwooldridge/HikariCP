@@ -27,7 +27,7 @@ public interface IMetricsTracker extends AutoCloseable
 
    default void recordConnectionUsageMillis(final long elapsedBorrowedMillis) {}
 
-   default void recordConnectionTimeout() {}
+   default void recordConnectionTimeout(final long elapsedTimeoutNanos) {}
 
    default void recordConnectionRequest() {}
 

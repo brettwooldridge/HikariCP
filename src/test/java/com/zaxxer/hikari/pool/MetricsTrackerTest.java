@@ -46,7 +46,7 @@ public class MetricsTrackerTest
             // assert that connection timeout was measured
             assertThat(metricsTracker.connectionTimeoutRecorded, is(true));
             // assert that measured time to acquire connection should be roughly equal or greater than the configured connection timeout time
-            assertTrue(metricsTracker.connectionAcquiredNanos >= TimeUnit.NANOSECONDS.convert(timeoutMillis, TimeUnit.MILLISECONDS));
+            assertTrue(metricsTracker.elapsedTimeoutNanos >= TimeUnit.NANOSECONDS.convert(timeoutMillis, TimeUnit.MILLISECONDS));
          }
       }
    }
@@ -58,6 +58,7 @@ public class MetricsTrackerTest
       private Long connectionAcquiredNanos;
       private Long connectionBorrowedMillis;
       private boolean connectionTimeoutRecorded;
+      private long elapsedTimeoutNanos;
 
       @Override
       public void recordConnectionCreatedMillis(long connectionCreatedMillis)
@@ -78,8 +79,9 @@ public class MetricsTrackerTest
       }
 
       @Override
-      public void recordConnectionTimeout()
+      public void recordConnectionTimeout(long elapsedTimeoutNanos)
       {
+         this.elapsedTimeoutNanos = elapsedTimeoutNanos;
          this.connectionTimeoutRecorded = true;
       }
    }
