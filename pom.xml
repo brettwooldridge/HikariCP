@@ -18,6 +18,7 @@
       <maven.release.version>2.5.3</maven.release.version>
       <metrics.version>3.2.4</metrics.version>
       <micrometer.version>1.3.2</micrometer.version>
+      <opentracing.version>0.33.0</opentracing.version>
       <simpleclient.version>0.0.26</simpleclient.version>
       <mockito.version>3.2.4</mockito.version>
       <pax.exam.version>4.13.1</pax.exam.version>
@@ -175,6 +176,25 @@
          <version>${simpleclient.version}</version>
          <scope>provided</scope>
          <optional>true</optional>
+      </dependency>
+      <dependency>
+         <groupId>io.opentracing</groupId>
+         <artifactId>opentracing-api</artifactId>
+         <version>${opentracing.version}</version>
+         <scope>provided</scope>
+         <optional>true</optional>
+      </dependency>
+      <dependency>
+         <groupId>io.opentracing</groupId>
+         <artifactId>opentracing-mock</artifactId>
+         <version>${opentracing.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>io.opentracing</groupId>
+         <artifactId>opentracing-util</artifactId>
+         <version>${opentracing.version}</version>
+         <scope>test</scope>
       </dependency>
       <dependency>
          <groupId>simple-jndi</groupId>
