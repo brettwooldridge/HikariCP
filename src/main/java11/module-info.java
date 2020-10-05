@@ -1,15 +1,16 @@
 module com.zaxxer.hikari
 {
-   requires hibernate.core;
    requires java.sql;
    requires java.management;
    requires java.naming;
-   requires javassist;
-   requires simpleclient;
    requires slf4j.api;
-   requires metrics.core;
-   requires metrics.healthchecks;
-   requires micrometer.core;
+ 
+   requires static hibernate.core;
+   requires static javassist;
+   requires static micrometer.core;
+   requires static metrics.core;
+   requires static metrics.healthchecks;
+   requires static simpleclient;
 
    exports com.zaxxer.hikari;
    exports com.zaxxer.hikari.hibernate;
