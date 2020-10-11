@@ -10,7 +10,7 @@
       <artifact.classifier />
 
       <docker.maven.plugin.fabric8.version>0.33.0</docker.maven.plugin.fabric8.version>
-      <felix.bundle.plugin.version>4.2.1</felix.bundle.plugin.version>
+      <felix.bundle.plugin.version>5.1.1</felix.bundle.plugin.version>
       <felix.version>6.0.1</felix.version>
       <hibernate.version>5.2.10.Final</hibernate.version>
       <javassist.version>3.24.1-GA</javassist.version>
@@ -325,7 +325,7 @@
                <executable>java</executable>
                <arguments>
                   <argument>-cp</argument>
-                  <argument>${project.build.outputDirectory}:${maven.compile.classpath}</argument>
+                  <argument>${project.build.outputDirectory}${path.separator}${maven.compile.classpath}</argument>
                   <argument>com.zaxxer.hikari.util.JavassistProxyFactory</argument>
                </arguments>
             </configuration>
