@@ -6,7 +6,7 @@ module com.zaxxer.hikari
    requires java.naming;
    requires static javassist;
    requires static simpleclient;
-   requires slf4j.api;
+   requires org.slf4j;
    requires static metrics.core;
    requires static metrics.healthchecks;
    requires static micrometer.core;
