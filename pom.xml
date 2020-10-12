@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
    <properties>
@@ -10,7 +11,7 @@
       <artifact.classifier />
 
       <docker.maven.plugin.fabric8.version>0.33.0</docker.maven.plugin.fabric8.version>
-      <felix.bundle.plugin.version>4.2.1</felix.bundle.plugin.version>
+      <felix.bundle.plugin.version>5.1.1</felix.bundle.plugin.version>
       <felix.version>6.0.1</felix.version>
       <hibernate.version>5.2.10.Final</hibernate.version>
       <javassist.version>3.24.1-GA</javassist.version>
@@ -23,7 +24,6 @@
       <pax.exam.version>4.13.1</pax.exam.version>
       <pax.url.version>2.5.4</pax.url.version>
       <postgresql.version>42.1.4</postgresql.version>
-      <slf4j.version>1.7.25</slf4j.version>
       <log4j.version>2.11.1</log4j.version>
       <commons.csv.version>1.5</commons.csv.version>
       <h2.version>1.4.196</h2.version>
@@ -77,12 +77,6 @@
          <groupId>org.slf4j</groupId>
          <artifactId>slf4j-api</artifactId>
          <version>${slf4j.version}</version>
-      </dependency>
-      <dependency>
-         <groupId>org.apache.logging.log4j</groupId>
-         <artifactId>log4j-slf4j-impl</artifactId>
-         <version>${log4j.version}</version>
-         <scope>test</scope>
       </dependency>
       <dependency>
          <groupId>org.apache.logging.log4j</groupId>
@@ -325,7 +319,7 @@
                <executable>java</executable>
                <arguments>
                   <argument>-cp</argument>
-                  <argument>${project.build.outputDirectory}:${maven.compile.classpath}</argument>
+                  <argument>${project.build.outputDirectory}${path.separator}${maven.compile.classpath}</argument>
                   <argument>com.zaxxer.hikari.util.JavassistProxyFactory</argument>
                </arguments>
             </configuration>
@@ -580,7 +574,16 @@
          </activation>
          <properties>
             <automatic.module.name>com.zaxxer.hikari</automatic.module.name>
+            <slf4j.version>1.7.25</slf4j.version>
          </properties>
+         <dependencies>
+            <dependency>
+               <groupId>org.apache.logging.log4j</groupId>
+               <artifactId>log4j-slf4j-impl</artifactId>
+               <version>${log4j.version}</version>
+               <scope>test</scope>
+            </dependency>
+         </dependencies>
       </profile>
       <profile>
          <id>Java11</id>
@@ -594,9 +597,17 @@
                -add-exports java.base/sun.net.www.protocol.http=ALL-UNNAMED
                -add-exports java.base/sun.net.www.protocol.https=ALL-UNNAMED
             </sureFireOptions11 -->
+            <slf4j.version>2.0.0-alpha1</slf4j.version>
             <sureFireForks11>true</sureFireForks11>
          </properties>
-
+         <dependencies>
+            <dependency>
+               <groupId>org.apache.logging.log4j</groupId>
+               <artifactId>log4j-slf4j18-impl</artifactId>
+               <version>${log4j.version}</version>
+               <scope>test</scope>
+            </dependency>
+         </dependencies>
          <build>
             <plugins>
                <plugin>
