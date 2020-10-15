@@ -1,12 +1,12 @@
 module com.zaxxer.hikari
 {
-   requires static hibernate.core;
    requires java.sql;
    requires java.management;
    requires java.naming;
+   requires org.slf4j;
+   requires static org.hibernate.orm.core;
    requires static javassist;
    requires static simpleclient;
-   requires org.slf4j;
    requires static metrics.core;
    requires static metrics.healthchecks;
    requires static micrometer.core;

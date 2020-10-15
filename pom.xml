@@ -13,7 +13,7 @@
       <docker.maven.plugin.fabric8.version>0.33.0</docker.maven.plugin.fabric8.version>
       <felix.bundle.plugin.version>5.1.1</felix.bundle.plugin.version>
       <felix.version>6.0.1</felix.version>
-      <hibernate.version>5.2.10.Final</hibernate.version>
+      <hibernate.version>5.4.16.Final</hibernate.version>
       <javassist.version>3.24.1-GA</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>
       <maven.release.version>2.5.3</maven.release.version>
@@ -574,7 +574,7 @@
          </activation>
          <properties>
             <automatic.module.name>com.zaxxer.hikari</automatic.module.name>
-            <slf4j.version>1.7.25</slf4j.version>
+            <slf4j.version>1.7.30</slf4j.version>
          </properties>
          <dependencies>
             <dependency>
