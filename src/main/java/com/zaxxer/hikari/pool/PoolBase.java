@@ -279,8 +279,8 @@ abstract class PoolBase
       try {
          final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
 
-         final ObjectName beanConfigName = new ObjectName("com.zaxxer.hikari:type=PoolConfig (" + poolName + ")");
-         final ObjectName beanPoolName = new ObjectName("com.zaxxer.hikari:type=Pool (" + poolName + ")");
+         final ObjectName beanConfigName = new ObjectName("com.zaxxer.hikari:type=PoolConfig,name=" + poolName);
+         final ObjectName beanPoolName = new ObjectName("com.zaxxer.hikari:type=Pool,name=" + poolName);
          if (register) {
             if (!mBeanServer.isRegistered(beanConfigName)) {
                mBeanServer.registerMBean(config, beanConfigName);
