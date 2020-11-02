@@ -96,6 +96,25 @@ public class TestMBean
       finally {
          System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
       }
+
+      System.setProperty("hikaricp.jmx.register2.0", "true");
+
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+
+         getUnsealedConfig(ds).setIdleTimeout(3000);
+
+         TimeUnit.SECONDS.sleep(1);
+
+         MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+         ObjectName poolName = new ObjectName("com.zaxxer.hikari:type=Pool,name=testMBeanReporting");
+         HikariPoolMXBean hikariPoolMXBean = JMX.newMXBeanProxy(mBeanServer, poolName, HikariPoolMXBean.class);
+
+         assertEquals(0, hikariPoolMXBean.getActiveConnections());
+         assertEquals(3, hikariPoolMXBean.getIdleConnections());
+      }
+      finally {
+         System.clearProperty("hikaricp.jmx.register2.0");
+      }
    }
 
    @Test
