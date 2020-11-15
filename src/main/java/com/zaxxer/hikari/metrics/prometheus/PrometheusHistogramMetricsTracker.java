@@ -20,6 +20,12 @@ import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFactory.*;
+import static com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFactory.RegistrationStatus.REGISTERED;
+
 /**
  * Alternative Prometheus metrics tracker using a Histogram instead of Summary
  * <p>
@@ -56,12 +62,19 @@ class PrometheusHistogramMetricsTracker implements IMetricsTracker
          .create();
    }
 
+   private final static Map<CollectorRegistry, RegistrationStatus> registrationStatuses = new ConcurrentHashMap<>();
+
+   private final String poolName;
+   private final HikariCPCollector hikariCPCollector;
+
    private final Histogram.Child elapsedAcquiredHistogramChild;
    private final Histogram.Child elapsedBorrowedHistogramChild;
    private final Histogram.Child elapsedCreationHistogramChild;
 
-   PrometheusHistogramMetricsTracker(String poolName, CollectorRegistry collectorRegistry) {
+   PrometheusHistogramMetricsTracker(String poolName, CollectorRegistry collectorRegistry, HikariCPCollector hikariCPCollector) {
       registerMetrics(collectorRegistry);
+      this.poolName = poolName;
+      this.hikariCPCollector = hikariCPCollector;
       this.connectionTimeoutCounterChild = CONNECTION_TIMEOUT_COUNTER.labels(poolName);
       this.elapsedAcquiredHistogramChild = ELAPSED_ACQUIRED_HISTOGRAM.labels(poolName);
       this.elapsedBorrowedHistogramChild = ELAPSED_BORROWED_HISTOGRAM.labels(poolName);
@@ -69,10 +82,12 @@ class PrometheusHistogramMetricsTracker implements IMetricsTracker
    }
 
    private void registerMetrics(CollectorRegistry collectorRegistry) {
-      CONNECTION_TIMEOUT_COUNTER.register(collectorRegistry);
-      ELAPSED_ACQUIRED_HISTOGRAM.register(collectorRegistry);
-      ELAPSED_BORROWED_HISTOGRAM.register(collectorRegistry);
-      ELAPSED_CREATION_HISTOGRAM.register(collectorRegistry);
+      if (registrationStatuses.putIfAbsent(collectorRegistry, REGISTERED) == null) {
+         CONNECTION_TIMEOUT_COUNTER.register(collectorRegistry);
+         ELAPSED_ACQUIRED_HISTOGRAM.register(collectorRegistry);
+         ELAPSED_BORROWED_HISTOGRAM.register(collectorRegistry);
+         ELAPSED_CREATION_HISTOGRAM.register(collectorRegistry);
+      }
    }
 
    @Override
@@ -93,5 +108,14 @@ class PrometheusHistogramMetricsTracker implements IMetricsTracker
    @Override
    public void recordConnectionTimeout() {
       connectionTimeoutCounterChild.inc();
+   }
+
+   @Override
+   public void close() {
+      hikariCPCollector.remove(poolName);
+      CONNECTION_TIMEOUT_COUNTER.remove(poolName);
+      ELAPSED_ACQUIRED_HISTOGRAM.remove(poolName);
+      ELAPSED_BORROWED_HISTOGRAM.remove(poolName);
+      ELAPSED_CREATION_HISTOGRAM.remove(poolName);
    }
 }
