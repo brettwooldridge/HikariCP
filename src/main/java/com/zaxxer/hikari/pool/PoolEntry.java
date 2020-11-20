@@ -48,6 +48,8 @@ final class PoolEntry implements IConcurrentBagEntry
 
    private volatile ScheduledFuture<?> endOfLife;
 
+   private volatile ScheduledFuture<?> keepalive;
+
    private final FastList<Statement> openStatements;
    private final HikariPool hikariPool;
 
@@ -90,6 +92,10 @@ final class PoolEntry implements IConcurrentBagEntry
    void setFutureEol(final ScheduledFuture<?> endOfLife)
    {
       this.endOfLife = endOfLife;
+   }
+
+   public void setKeepalive(ScheduledFuture<?> keepalive) {
+      this.keepalive = keepalive;
    }
 
    Connection createProxyConnection(final ProxyLeakTask leakTask, final long now)
@@ -175,9 +181,15 @@ final class PoolEntry implements IConcurrentBagEntry
          LOGGER.warn("{} - maxLifeTime expiration task cancellation unexpectedly returned false for connection {}", getPoolName(), connection);
       }
 
+      ScheduledFuture<?> ka = keepalive;
+      if (ka != null && !ka.isDone() && !ka.cancel(false)) {
+         LOGGER.warn("{} - keepalive expiration task cancellation unexpectedly returned false for connection {}", getPoolName(), connection);
+      }
+
       Connection con = connection;
       connection = null;
       endOfLife = null;
+      keepalive = null;
       return con;
    }
 

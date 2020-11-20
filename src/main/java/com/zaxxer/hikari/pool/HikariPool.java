@@ -38,6 +38,7 @@ import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -477,6 +478,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          final PoolEntry poolEntry = newPoolEntry();
 
          final long maxLifetime = config.getMaxLifetime();
+         final boolean isKeepalive = config.isKeepalive();
+         final long keepaliveTime = config.getKeepaliveTime();
          if (maxLifetime > 0) {
             // variance up to 2.5% of the maxlifetime
             final long variance = maxLifetime > 10_000 ? ThreadLocalRandom.current().nextLong( maxLifetime / 40 ) : 0;
@@ -488,6 +491,15 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                   }
                },
                lifetime, MILLISECONDS));
+         }else if (isKeepalive) {
+            poolEntry.setKeepalive(houseKeepingExecutorService.schedule(
+               () -> {
+                  if (!keepaliveConnection(poolEntry)) {
+                     if (softEvictConnection(poolEntry, DEAD_CONNECTION_MESSAGE, false)) {
+                        addBagItem(connectionBag.getWaitingThreadCount());
+                     }
+                  }
+               }, keepaliveTime, MILLISECONDS));
          }
 
          return poolEntry;
@@ -617,6 +629,16 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       }
 
       return false;
+   }
+
+   /**
+    * check if the connection is alive
+    * if the connection state is in use ,we suppose it is alive.  then we'll check it by {@link PoolBase#isConnectionAlive}
+    * @param poolEntry  the PoolEntry (/Connection) to be checked from the pool
+    * @return  true if the connection is alive,false if it was dead
+    */
+   private boolean keepaliveConnection(final PoolEntry poolEntry) {
+      return poolEntry.getState() == STATE_IN_USE || isConnectionAlive(poolEntry.connection);
    }
 
    /**
