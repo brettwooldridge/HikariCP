@@ -28,7 +28,7 @@ import com.zaxxer.hikari.metrics.micrometer.MicrometerMetricsTrackerFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.SuspendResumeLock;
-import com.zaxxer.hikari.util.UtilityElf.DefaultThreadFactory;
+import com.zaxxer.hikari.util.UtilityElf.*;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -477,6 +477,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          final PoolEntry poolEntry = newPoolEntry();
 
          final long maxLifetime = config.getMaxLifetime();
+         final boolean isKeepalive = config.isKeepalive();
+
          if (maxLifetime > 0) {
             // variance up to 2.5% of the maxlifetime
             final long variance = maxLifetime > 10_000 ? ThreadLocalRandom.current().nextLong( maxLifetime / 40 ) : 0;
@@ -617,6 +619,16 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       }
 
       return false;
+   }
+
+   /**
+    * check if the connection is alive
+    * if the connection state is in use ,we suppose it is alive.  then we'll check it by {@link PoolBase#isConnectionAlive}
+    * @param poolEntry  the PoolEntry (/Connection) to be checked from the pool
+    * @return  true if the connection is alive,false if it was dead
+    */
+   private boolean keepaliveConnection(final PoolEntry poolEntry) {
+      return poolEntry.getState() == STATE_IN_USE || isConnectionAlive(poolEntry.connection);
    }
 
    /**

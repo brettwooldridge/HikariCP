@@ -55,6 +55,7 @@ public class HikariConfig implements HikariConfigMXBean
    private static final long VALIDATION_TIMEOUT = SECONDS.toMillis(5);
    private static final long IDLE_TIMEOUT = MINUTES.toMillis(10);
    private static final long MAX_LIFETIME = MINUTES.toMillis(30);
+   private static final long DEFAULT_KEEPALIVE_TIME = MINUTES.toMillis(30);
    private static final int DEFAULT_POOL_SIZE = 10;
 
    private static boolean unitTest = false;
@@ -99,6 +100,10 @@ public class HikariConfig implements HikariConfigMXBean
    private Object healthCheckRegistry;
    private Properties healthCheckProperties;
 
+   private boolean isKeepalive;
+
+   private long keepaliveTime;
+
    private volatile boolean sealed;
 
    /**
@@ -117,6 +122,8 @@ public class HikariConfig implements HikariConfigMXBean
       idleTimeout = IDLE_TIMEOUT;
       initializationFailTimeout = 1;
       isAutoCommit = true;
+      isKeepalive = false;
+      keepaliveTime = DEFAULT_KEEPALIVE_TIME;
 
       String systemProp = System.getProperty("hikaricp.configurationFile");
       if (systemProp != null) {
@@ -718,6 +725,22 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       healthCheckProperties.setProperty(key, value);
+   }
+
+   public boolean isKeepalive() {
+      return isKeepalive;
+   }
+
+   public void setKeepalive(boolean keepalive) {
+      isKeepalive = keepalive;
+   }
+
+   public long getKeepaliveTime() {
+      return keepaliveTime;
+   }
+
+   public void setKeepaliveTime(long keepaliveTime) {
+      this.keepaliveTime = keepaliveTime;
    }
 
    /**
