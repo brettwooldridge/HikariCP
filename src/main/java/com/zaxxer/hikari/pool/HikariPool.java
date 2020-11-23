@@ -491,6 +491,24 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                },
                lifetime, MILLISECONDS));
          }
+         if (isKeepalive) {
+            final long keepaliveTime = config.getKeepaliveTime();
+            // variance up to 10% of the heartbeat time
+            final long variance = ThreadLocalRandom.current().nextLong(keepaliveTime / 10);
+            final long heartbeatTime = keepaliveTime - variance;
+            poolEntry.setKeepalive(houseKeepingExecutorService.scheduleWithFixedDelay(
+               () -> {
+                  boolean isConnectionAlive = keepaliveConnection(poolEntry);
+                  if (!isConnectionAlive) {
+                     if (softEvictConnection(poolEntry, DEAD_CONNECTION_MESSAGE, false)) {
+                        addBagItem(connectionBag.getWaitingThreadCount());
+                     }
+                  }
+                  if (logger.isDebugEnabled()) {
+                     logger.debug("{} - keepalive heartbeat: Is connection alive? {}", poolName, isConnectionAlive);
+                  }
+               }, heartbeatTime, heartbeatTime, MILLISECONDS));
+         }
 
          return poolEntry;
       }

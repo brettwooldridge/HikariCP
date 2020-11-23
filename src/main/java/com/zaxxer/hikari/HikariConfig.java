@@ -1041,6 +1041,12 @@ public class HikariConfig implements HikariConfigMXBean
          maxLifetime = MAX_LIFETIME;
       }
 
+      // keepalive time must larger then 30 seconds
+      if (keepaliveTime < SECONDS.toMillis(30)) {
+         LOGGER.warn("{} - keepaliveTime is less than 30000ms, setting to default {}ms.", poolName, DEFAULT_KEEPALIVE_TIME);
+         keepaliveTime = DEFAULT_KEEPALIVE_TIME;
+      }
+
       if (leakDetectionThreshold > 0 && !unitTest) {
          if (leakDetectionThreshold < SECONDS.toMillis(2) || (leakDetectionThreshold > maxLifetime && maxLifetime > 0)) {
             LOGGER.warn("{} - leakDetectionThreshold is less than 2000ms or more than maxLifetime, disabling it.", poolName);
