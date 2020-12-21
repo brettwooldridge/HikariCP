@@ -476,7 +476,7 @@ abstract class PoolBase
    private void checkDefaultIsolation(final Connection connection) throws SQLException
    {
       try {
-         defaultTransactionIsolation = connection.getTransactionIsolation();
+         transactionIsolation = connection.getTransactionIsolation();
          if (transactionIsolation == -1) {
             transactionIsolation = defaultTransactionIsolation;
          }
