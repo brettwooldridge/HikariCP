@@ -46,8 +46,8 @@ public final class TestElf
       // default constructor
    }
 
-   public static boolean isJava9() {
-      return System.getProperty("java.version").startsWith("9");
+   public static boolean isJava11() {
+      return System.getProperty("java.version").startsWith("11");
    }
 
    public static HikariPool getPool(final HikariDataSource ds)

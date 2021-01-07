@@ -16,11 +16,7 @@
 
 package com.zaxxer.hikari.pool;
 
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 
 import com.zaxxer.hikari.util.FastList;
 
@@ -74,6 +70,12 @@ public final class ProxyFactory
    }
 
    static ResultSet getProxyResultSet(final ProxyConnection connection, final ProxyStatement statement, final ResultSet resultSet)
+   {
+      // Body is replaced (injected) by JavassistProxyFactory
+      throw new IllegalStateException("You need to run the CLI build and you need target/classes in your classpath to run.");
+   }
+
+   static DatabaseMetaData getProxyDatabaseMetaData(final ProxyConnection connection, final DatabaseMetaData metaData)
    {
       // Body is replaced (injected) by JavassistProxyFactory
       throw new IllegalStateException("You need to run the CLI build and you need target/classes in your classpath to run.");

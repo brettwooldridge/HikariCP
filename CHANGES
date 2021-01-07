@@ -1,5 +1,91 @@
 HikariCP Changes
 
+Changes in 3.4.5
+
+ * fixed 1578 build change to ensure that proxies are generated using Java 8, otherwise we end
+   up with class references to Java 11 classes, which fail to load on Java 8.
+
+Changes in 3.4.4
+
+ * Build HikariCP as a JEP 238 Multi-Release jar for increased compatability with Java 11 and
+   future modularized Java versions.
+
+Changes in 3.4.3
+
+ * Fixed 1534 check resultSet.getStatement() for null in ProxyDatabaseMetaData.
+
+ * Add additional debug logging around connection add.
+
+ * Add ThreadLocal removal attempt when bag item is removed.
+
+Changes in 3.4.2
+ * fixed 1528 regression caused by pull request 1159 whereby fail-fast logic would exit upon all
+   errors even if it was configured to continue trying.
+
+Changes in 3.4.1
+
+ * fix regression caused by 1337, which broke the ability to pass the isolation level by integer
+   value (string) instead of isolation level name.
+
+Changes in 3.4.0
+
+ * merged 1265 alternative Prometheus metrics Histogram instead of locking Summary (which is
+   purportedly quite lock-heavy.
+
+ * merged 1337 support accepting TRANSACTION_SQL_SERVER_SNAPSHOT_ISOLATION_LEVEL string for
+   isolation level.
+
+ * merged 1331 user contribution: major refactor of metrics handling, hopefully without any
+   breakage.
+
+ * add proxy class for DatabaseMetaData to intercept DatabaseMetaData.getConnection() call which was
+   leaking the raw database Connection object.
+
+Changes in 3.3.1
+
+ * fixed 1287 set core pool size before max pool size
+
+ * fixed 1308 treat a SQLTimeoutException as an evictable offense
+
+ * do not default maxPoolSize to minIdle when only minIdle is specified
+
+ * do not log warning about idleTimeout unless minimumIdle is less than maxPoolSize (because otherwise
+   it does not apply)
+
+Changes in 3.3.0
+
+ * Revert change where Connection.isClosed() was called outside of setNetworkTimeout() block, opening
+   vulnerability to unacknowledged TCP traffic.
+
+ * fixed 1186 limit number of items in the ConcurrentBag's ThreadLocal list to avoid OOM errors in some
+   borrow/requite patterns.
+
+ * Merged changed to log uncaught (Throwable) exceptions during connection acquisition.
+
+ * fixed 1161 fix logging formatting anchor.
+
+ * fixed 1181, 1182 allow passing a Prometheus CollectorRegistry rather than always using the default
+   registry.
+
+ * merged 1210 use orElseGet() to delay call until necessary with respect to the housekeeper thread
+   factory.
+
+ * fixed 1074 capability to instantiate an object based on the String class name, usefull when you want
+   to set the MetricsTackerFactory from a property.
+
+ * merged 1250 fix proxy classes generation reproducibility using a sorted LinkedHashSet
+
+ * various clean-ups pointed out by sonarcloud.io
+
+ * merged 1290 Class.newInstance() is deprecated as of Java 9. Usage should be replaced by calling
+   Class.getDeclaredConstructor().newInstance().
+
+ * fixed #1305 ensure that ConcurrentBag.add() does not spin under high load, when waiting threads may never
+   reach 0.
+
+ * fixes #1287 when system property blockUntilFilled is set, use multiple threads to fill the pool.
+
+
 Changes in 3.2.0
 
  * check connection closed condition before attempting to set network timeout to avoid spurios exceptions

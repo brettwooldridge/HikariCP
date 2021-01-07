@@ -80,6 +80,7 @@ public class HikariConfig implements HikariConfigMXBean
    private String dataSourceClassName;
    private String dataSourceJndiName;
    private String driverClassName;
+   private String exceptionOverrideClassName;
    private String jdbcUrl;
    private String poolName;
    private String schema;
@@ -471,20 +472,8 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
 
-      Class<?> driverClass = null;
-      ClassLoader threadContextClassLoader = Thread.currentThread().getContextClassLoader();
+      Class<?> driverClass = attemptFromContextLoader(driverClassName);
       try {
-         if (threadContextClassLoader != null) {
-            try {
-               driverClass = threadContextClassLoader.loadClass(driverClassName);
-               LOGGER.debug("Driver class {} found in Thread context class loader {}", driverClassName, threadContextClassLoader);
-            }
-            catch (ClassNotFoundException e) {
-               LOGGER.debug("Driver class {} not found in Thread context class loader {}, trying classloader {}",
-                            driverClassName, threadContextClassLoader, this.getClass().getClassLoader());
-            }
-         }
-
          if (driverClass == null) {
             driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
             LOGGER.debug("Driver class {} found in the HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
@@ -498,7 +487,7 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       try {
-         driverClass.newInstance();
+         driverClass.getConstructor().newInstance();
          this.driverClassName = driverClassName;
       }
       catch (Exception e) {
@@ -650,7 +639,7 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Get the MetricRegistry instance to used for registration of metrics used by HikariCP.  Default is {@code null}.
+    * Get the MetricRegistry instance to use for registration of metrics used by HikariCP.  Default is {@code null}.
     *
     * @return the MetricRegistry instance that will be used
     */
@@ -758,7 +747,6 @@ public class HikariConfig implements HikariConfigMXBean
     *
     * @return {@code true} if HikariCP will register MXBeans, {@code false} if it will not
     */
-   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
    public boolean isRegisterMbeans()
    {
       return isRegisterMbeans;
@@ -825,7 +813,8 @@ public class HikariConfig implements HikariConfigMXBean
     *
     * @return the default schema name
     */
-   public String getSchema() {
+   public String getSchema()
+   {
       return schema;
    }
 
@@ -838,6 +827,50 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       this.schema = schema;
+   }
+
+   /**
+    * Get the user supplied SQLExceptionOverride class name.
+    *
+    * @return the user supplied SQLExceptionOverride class name
+    * @see SQLExceptionOverride
+    */
+   public String getExceptionOverrideClassName()
+   {
+      return this.exceptionOverrideClassName;
+   }
+
+   /**
+    * Set the user supplied SQLExceptionOverride class name.
+    *
+    * @param exceptionOverrideClassName the user supplied SQLExceptionOverride class name
+    * @see SQLExceptionOverride
+    */
+   public void setExceptionOverrideClassName(String exceptionOverrideClassName)
+   {
+      checkIfSealed();
+
+      Class<?> overrideClass = attemptFromContextLoader(exceptionOverrideClassName);
+      try {
+         if (overrideClass == null) {
+            overrideClass = this.getClass().getClassLoader().loadClass(exceptionOverrideClassName);
+            LOGGER.debug("SQLExceptionOverride class {} found in the HikariConfig class classloader {}", exceptionOverrideClassName, this.getClass().getClassLoader());
+         }
+      } catch (ClassNotFoundException e) {
+         LOGGER.error("Failed to load SQLExceptionOverride class {} from HikariConfig class classloader {}", exceptionOverrideClassName, this.getClass().getClassLoader());
+      }
+
+      if (overrideClass == null) {
+         throw new RuntimeException("Failed to load SQLExceptionOverride class " + exceptionOverrideClassName + " in either of HikariConfig class loader or Thread context classloader");
+      }
+
+      try {
+         overrideClass.getConstructor().newInstance();
+         this.exceptionOverrideClassName = exceptionOverrideClassName;
+      }
+      catch (Exception e) {
+         throw new RuntimeException("Failed to instantiate class " + exceptionOverrideClassName, e);
+      }
    }
 
    /**
@@ -905,6 +938,22 @@ public class HikariConfig implements HikariConfigMXBean
    //                          Private methods
    // ***********************************************************************
 
+   private Class<?> attemptFromContextLoader(final String driverClassName) {
+      final ClassLoader threadContextClassLoader = Thread.currentThread().getContextClassLoader();
+      if (threadContextClassLoader != null) {
+         try {
+            final Class<?> driverClass = threadContextClassLoader.loadClass(driverClassName);
+            LOGGER.debug("Driver class {} found in Thread context class loader {}", driverClassName, threadContextClassLoader);
+            return driverClass;
+         } catch (ClassNotFoundException e) {
+            LOGGER.debug("Driver class {} not found in Thread context class loader {}, trying classloader {}",
+               driverClassName, threadContextClassLoader, this.getClass().getClassLoader());
+         }
+      }
+
+      return null;
+   }
+
    @SuppressWarnings("StatementWithEmptyBody")
    public void validate()
    {
@@ -969,16 +1018,6 @@ public class HikariConfig implements HikariConfigMXBean
          maxLifetime = MAX_LIFETIME;
       }
 
-      if (idleTimeout + SECONDS.toMillis(1) > maxLifetime && maxLifetime > 0) {
-         LOGGER.warn("{} - idleTimeout is close to or more than maxLifetime, disabling it.", poolName);
-         idleTimeout = 0;
-      }
-
-      if (idleTimeout != 0 && idleTimeout < SECONDS.toMillis(10)) {
-         LOGGER.warn("{} - idleTimeout is less than 10000ms, setting to default {}ms.", poolName, IDLE_TIMEOUT);
-         idleTimeout = IDLE_TIMEOUT;
-      }
-
       if (leakDetectionThreshold > 0 && !unitTest) {
          if (leakDetectionThreshold < SECONDS.toMillis(2) || (leakDetectionThreshold > maxLifetime && maxLifetime > 0)) {
             LOGGER.warn("{} - leakDetectionThreshold is less than 2000ms or more than maxLifetime, disabling it.", poolName);
@@ -997,15 +1036,23 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       if (maxPoolSize < 1) {
-         maxPoolSize = (minIdle <= 0) ? DEFAULT_POOL_SIZE : minIdle;
+         maxPoolSize = DEFAULT_POOL_SIZE;
       }
 
       if (minIdle < 0 || minIdle > maxPoolSize) {
          minIdle = maxPoolSize;
       }
 
-      if (idleTimeout != IDLE_TIMEOUT && idleTimeout != 0 && minIdle == maxPoolSize) {
-         LOGGER.warn("{} - idleTimeout has been set but has no effect because the pool is operating as a fixed size pool.");
+      if (idleTimeout + SECONDS.toMillis(1) > maxLifetime && maxLifetime > 0 && minIdle < maxPoolSize) {
+         LOGGER.warn("{} - idleTimeout is close to or more than maxLifetime, disabling it.", poolName);
+         idleTimeout = 0;
+      }
+      else if (idleTimeout != 0 && idleTimeout < SECONDS.toMillis(10) && minIdle < maxPoolSize) {
+         LOGGER.warn("{} - idleTimeout is less than 10000ms, setting to default {}ms.", poolName, IDLE_TIMEOUT);
+         idleTimeout = IDLE_TIMEOUT;
+      }
+      else  if (idleTimeout != IDLE_TIMEOUT && idleTimeout != 0 && minIdle == maxPoolSize) {
+         LOGGER.warn("{} - idleTimeout has been set but has no effect because the pool is operating as a fixed size pool.", poolName);
       }
    }
 
@@ -1014,7 +1061,6 @@ public class HikariConfig implements HikariConfigMXBean
       if (sealed) throw new IllegalStateException("The configuration of the pool is sealed once started. Use HikariConfigMXBean for runtime changes.");
    }
 
-   @SuppressWarnings("StatementWithEmptyBody")
    private void logConfiguration()
    {
       LOGGER.debug("{} - configuration:", poolName);

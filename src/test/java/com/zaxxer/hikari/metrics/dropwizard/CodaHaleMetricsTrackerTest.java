@@ -1,17 +1,18 @@
 package com.zaxxer.hikari.metrics.dropwizard;
 
-import static org.mockito.Mockito.verify;
-
+import com.codahale.metrics.MetricRegistry;
+import com.zaxxer.hikari.mocks.StubPoolStats;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import com.codahale.metrics.MetricRegistry;
+import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
-public class CodaHaleMetricsTrackerTest {
+public class CodaHaleMetricsTrackerTest
+{
 
    @Mock
    public MetricRegistry mockMetricRegistry;
@@ -19,12 +20,14 @@ public class CodaHaleMetricsTrackerTest {
    private CodaHaleMetricsTracker testee;
 
    @Before
-   public void setup(){
-      testee = new CodaHaleMetricsTracker("mypool", null, mockMetricRegistry);
+   public void setup()
+   {
+      testee = new CodaHaleMetricsTracker("mypool", new StubPoolStats(0), mockMetricRegistry);
    }
 
    @Test
-   public void close() throws Exception {
+   public void close()
+   {
       testee.close();
 
       verify(mockMetricRegistry).remove("mypool.pool.Wait");

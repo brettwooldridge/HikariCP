@@ -13,12 +13,12 @@ Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC con
 
 ----------------------------------------------------
 
-_Java 8/9 maven artifact:_
+_Java 8 thru 11 maven artifact:_
 ```xml
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>3.1.0</version>
+        <version>3.4.5</version>
     </dependency>
 ```
 _Java 7 maven artifact (*maintenance mode*):_
@@ -69,7 +69,7 @@ The customer's environment imposed a high cost of new connection acquisition, an
 <br/>
 <br/>
 #### You're [probably] doing it wrong.
-<a href=""><img width="200" align="right" src="https://github.com/brettwooldridge/HikariCP/wiki/Postgres_Chart.png"></a>
+<a href="https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing"><img width="200" align="right" src="https://github.com/brettwooldridge/HikariCP/wiki/Postgres_Chart.png"></a>
 AKA *"What you probably didn't know about connection pool sizing"*.  Watch a video from the Oracle Real-world Performance group, and learn about why connection pools do not need to be sized as large as they often are.  In fact, oversized connection pools have a clear and demonstrable *negative* impact on performance; a 50x difference in the case of the Oracle demonstration.  [Read on to find out](https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing).
 <br/>
 #### WIX Engineering Analysis
@@ -173,7 +173,7 @@ never be retired, only when it is closed will it then be removed.  On a connecti
 basis, minor negative attenuation is applied to avoid mass-extinction in the pool.  **We strongly recommend
 setting this value, and it should be several seconds shorter than any database or infrastructure imposed
 connection time limit.**  A value of 0 indicates no maximum lifetime (infinite lifetime), subject of
-course to the ``idleTimeout`` setting.
+course to the ``idleTimeout`` setting.  The minimum allowed value is 30000ms (30 seconds).
 *Default: 1800000 (30 minutes)*
 
 &#128288;``connectionTestQuery``<br/>
@@ -358,6 +358,9 @@ properties of their own driver.  This includes Oracle, MySQL, Derby, MSSQL, and 
 even support slow query logging.  For those few databases that do not support it, several options are available.
 We have received [a report that p6spy works well](https://github.com/brettwooldridge/HikariCP/issues/57#issuecomment-354647631),
 and also note the availability of [log4jdbc](https://github.com/arthurblake/log4jdbc) and [jdbcdslog-exp](https://code.google.com/p/jdbcdslog-exp/).
+
+#### Rapid Recovery
+Please read the [Rapid Recovery Guide](https://github.com/brettwooldridge/HikariCP/wiki/Rapid-Recovery) for details on how to configure your driver and system for proper recovery from database restart and network partition events.
 
 ----------------------------------------------------
 

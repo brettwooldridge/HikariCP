@@ -4,14 +4,6 @@ language: java
 dist:
   - trusty
 
-before_script:
-  - if [[ "x$JDK" == *'x9'* ]]; then export MAVEN_SKIP_RC=true; fi
-
-script:
-  - export JDK8_HOME=$(jdk_switcher home oraclejdk8)
-  - export JDK9_HOME=/usr/lib/jvm/java-9-oracle
-  - test -d "${JDK9_HOME}" || export JDK9_HOME=$(jdk_switcher home oraclejdk8)
-
 before_cache:
   # No sense in caching current build artifacts
   - rm -rf $HOME/.m2/repository/com/zaxxer
@@ -20,18 +12,16 @@ cache:
   directories:
     - $HOME/.m2/repository
 
-matrix:
-  fast_finish: true
-  include:
-    - jdk: oraclejdk8
-    - jdk: oraclejdk9
-      env:
-        - JDK=9
-
 install: /bin/true
 
+jdk: oraclejdk8
+
 script:
-  - mvn package -Dmaven.javadoc.skip=true -V -B
+  - export JAVA8_HOME=$JAVA_HOME
+#  - jdk_switcher use openjdk11
+  - export JAVA_HOME=$HOME/openjdk11
+  - $TRAVIS_BUILD_DIR/install-jdk.sh --feature 11 --target $JAVA_HOME
+  - mvn package --global-toolchains ./travis-toolchains.xml -Dmaven.javadoc.skip=true -V -B
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)

@@ -16,7 +16,6 @@
 
 package com.zaxxer.hikari.util;
 
-import com.zaxxer.hikari.pool.TestElf;
 import com.zaxxer.hikari.pool.TestElf.FauxWebClassLoader;
 import com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry;
 import org.junit.FixMethodOrder;
@@ -33,7 +32,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
 
-import static com.zaxxer.hikari.pool.TestElf.isJava9;
+import static com.zaxxer.hikari.pool.TestElf.isJava11;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -48,7 +47,7 @@ public class TomcatConcurrentBagLeakTest
    @Test
    public void testConcurrentBagForLeaks() throws Exception
    {
-      assumeTrue(!isJava9());
+      assumeTrue(!isJava11());
 
       ClassLoader cl = new FauxWebClassLoader();
       Class<?> clazz = cl.loadClass(this.getClass().getName() + "$FauxWebContext");
@@ -65,7 +64,7 @@ public class TomcatConcurrentBagLeakTest
    @Test
    public void testConcurrentBagForLeaks2() throws Exception
    {
-      assumeTrue(!isJava9());
+      assumeTrue(!isJava11());
 
       ClassLoader cl = this.getClass().getClassLoader();
       Class<?> clazz = cl.loadClass(this.getClass().getName() + "$FauxWebContext");

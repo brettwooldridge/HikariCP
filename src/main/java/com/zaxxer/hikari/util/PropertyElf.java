@@ -38,9 +38,11 @@ import com.zaxxer.hikari.HikariConfig;
  */
 public final class PropertyElf
 {
-   private static final Logger LOGGER = LoggerFactory.getLogger(PropertyElf.class);
-
    private static final Pattern GETTER_PATTERN = Pattern.compile("(get|is)[A-Z].+");
+
+   private PropertyElf() {
+      // cannot be constructed
+   }
 
    public static void setTargetFromProperties(final Object target, final Properties properties)
    {
@@ -80,7 +82,7 @@ public final class PropertyElf
                }
             }
             catch (Exception e) {
-               continue;
+               // fall thru (continue)
             }
          }
       }
@@ -117,6 +119,8 @@ public final class PropertyElf
 
    private static void setProperty(final Object target, final String propName, final Object propValue, final List<Method> methods)
    {
+      final Logger logger = LoggerFactory.getLogger(PropertyElf.class);
+
       // use the english locale to avoid the infamous turkish locale bug
       String methodName = "set" + propName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propName.substring(1);
       Method writeMethod = methods.stream().filter(m -> m.getName().equals(methodName) && m.getParameterCount() == 1).findFirst().orElse(null);
@@ -127,7 +131,7 @@ public final class PropertyElf
       }
 
       if (writeMethod == null) {
-         LOGGER.error("Property {} does not exist on target {}", propName, target.getClass());
+         logger.error("Property {} does not exist on target {}", propName, target.getClass());
          throw new RuntimeException(String.format("Property %s does not exist on target %s", propName, target.getClass()));
       }
 
@@ -147,17 +151,17 @@ public final class PropertyElf
          }
          else {
             try {
-               LOGGER.debug("Try to create a new instance of \"{}\"", propValue.toString());
+               logger.debug("Try to create a new instance of \"{}\"", propValue.toString());
                writeMethod.invoke(target, Class.forName(propValue.toString()).newInstance());
             }
             catch (InstantiationException | ClassNotFoundException e) {
-               LOGGER.debug("Class \"{}\" not found or could not instantiate it (Default constructor)", propValue.toString());
+               logger.debug("Class \"{}\" not found or could not instantiate it (Default constructor)", propValue.toString());
                writeMethod.invoke(target, propValue);
             }
          }
       }
       catch (Exception e) {
-         LOGGER.error("Failed to set property {} on target {}", propName, target.getClass(), e);
+         logger.error("Failed to set property {} on target {}", propName, target.getClass(), e);
          throw new RuntimeException(e);
       }
    }

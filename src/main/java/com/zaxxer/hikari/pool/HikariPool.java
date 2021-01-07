@@ -70,7 +70,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  */
 public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateListener
 {
-   private final Logger LOGGER = LoggerFactory.getLogger(HikariPool.class);
+   private final Logger logger = LoggerFactory.getLogger(HikariPool.class);
 
    public static final int POOL_NORMAL = 0;
    public static final int POOL_SUSPENDED = 1;
@@ -78,15 +78,15 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
    public volatile int poolState;
 
-   private final long ALIVE_BYPASS_WINDOW_MS = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", MILLISECONDS.toMillis(500));
-   private final long HOUSEKEEPING_PERIOD_MS = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", SECONDS.toMillis(30));
+   private final long aliveBypassWindowMs = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", MILLISECONDS.toMillis(500));
+   private final long housekeepingPeriodMs = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", SECONDS.toMillis(30));
 
    private static final String EVICTED_CONNECTION_MESSAGE = "(connection was evicted)";
    private static final String DEAD_CONNECTION_MESSAGE = "(connection is dead)";
 
-   private final PoolEntryCreator POOL_ENTRY_CREATOR = new PoolEntryCreator(null /*logging prefix*/);
-   private final PoolEntryCreator POST_FILL_POOL_ENTRY_CREATOR = new PoolEntryCreator("After adding ");
-   private final Collection<Runnable> addConnectionQueue;
+   private final PoolEntryCreator poolEntryCreator = new PoolEntryCreator(null /*logging prefix*/);
+   private final PoolEntryCreator postFillPoolEntryCreator = new PoolEntryCreator("After adding ");
+   private final Collection<Runnable> addConnectionQueueReadOnlyView;
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
 
@@ -123,24 +123,31 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
       setHealthCheckRegistry(config.getHealthCheckRegistry());
 
-      registerMBeans(this);
+      handleMBeans(this, true);
 
       ThreadFactory threadFactory = config.getThreadFactory();
 
-      LinkedBlockingQueue<Runnable> addConnectionQueue = new LinkedBlockingQueue<>(config.getMaximumPoolSize());
-      this.addConnectionQueue = unmodifiableCollection(addConnectionQueue);
-      this.addConnectionExecutor = createThreadPoolExecutor(addConnectionQueue, poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardPolicy());
-      this.closeConnectionExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
+      final int maxPoolSize = config.getMaximumPoolSize();
+      LinkedBlockingQueue<Runnable> addConnectionQueue = new LinkedBlockingQueue<>(maxPoolSize);
+      this.addConnectionQueueReadOnlyView = unmodifiableCollection(addConnectionQueue);
+      this.addConnectionExecutor = createThreadPoolExecutor(addConnectionQueue, poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardOldestPolicy());
+      this.closeConnectionExecutor = createThreadPoolExecutor(maxPoolSize, poolName + " connection closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
       this.leakTaskFactory = new ProxyLeakTaskFactory(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
-      this.houseKeeperTask = houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L, HOUSEKEEPING_PERIOD_MS, MILLISECONDS);
+      this.houseKeeperTask = houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L, housekeepingPeriodMs, MILLISECONDS);
 
       if (Boolean.getBoolean("com.zaxxer.hikari.blockUntilFilled") && config.getInitializationFailTimeout() > 1) {
+         addConnectionExecutor.setCorePoolSize(Math.min(16, Runtime.getRuntime().availableProcessors()));
+         addConnectionExecutor.setMaximumPoolSize(Math.min(16, Runtime.getRuntime().availableProcessors()));
+
          final long startTime = currentTime();
          while (elapsedMillis(startTime) < config.getInitializationFailTimeout() && getTotalConnections() < config.getMinimumIdle()) {
             quietlySleep(MILLISECONDS.toMillis(100));
          }
+
+         addConnectionExecutor.setCorePoolSize(1);
+         addConnectionExecutor.setMaximumPoolSize(1);
       }
    }
 
@@ -176,7 +183,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             }
 
             final long now = currentTime();
-            if (poolEntry.isMarkedEvicted() || (elapsedMillis(poolEntry.lastAccessed, now) > ALIVE_BYPASS_WINDOW_MS && !isConnectionAlive(poolEntry.connection))) {
+            if (poolEntry.isMarkedEvicted() || (elapsedMillis(poolEntry.lastAccessed, now) > aliveBypassWindowMs && !isConnectionAlive(poolEntry.connection))) {
                closeConnection(poolEntry, poolEntry.isMarkedEvicted() ? EVICTED_CONNECTION_MESSAGE : DEAD_CONNECTION_MESSAGE);
                timeout = hardTimeout - elapsedMillis(startTime);
             }
@@ -249,7 +256,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       }
       finally {
          logPoolState("After shutdown ");
-         unregisterMBeans();
+         handleMBeans(this, false);
          metricsTracker.close();
       }
    }
@@ -327,9 +334,12 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    @Override
    public void addBagItem(final int waiting)
    {
-      final boolean shouldAdd = waiting - addConnectionQueue.size() >= 0; // Yes, >= is intentional.
+      final boolean shouldAdd = waiting - addConnectionQueueReadOnlyView.size() >= 0; // Yes, >= is intentional.
       if (shouldAdd) {
-         addConnectionExecutor.submit(POOL_ENTRY_CREATOR);
+         addConnectionExecutor.submit(poolEntryCreator);
+      }
+      else {
+         logger.debug("{} - Add connection elided, waiting {}, queue {}", poolName, waiting, addConnectionQueueReadOnlyView.size());
       }
    }
 
@@ -407,8 +417,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     */
    void logPoolState(String... prefix)
    {
-      if (LOGGER.isDebugEnabled()) {
-         LOGGER.debug("{} - {}stats (total={}, active={}, idle={}, waiting={})",
+      if (logger.isDebugEnabled()) {
+         logger.debug("{} - {}stats (total={}, active={}, idle={}, waiting={})",
                       poolName, (prefix.length > 0 ? prefix[0] : ""),
                       getTotalConnections(), getActiveConnections(), getIdleConnections(), getThreadsAwaitingConnection());
       }
@@ -482,23 +492,19 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
          return poolEntry;
       }
-      catch (SQLException e) {
+      catch (ConnectionSetupException e) {
          if (poolState == POOL_NORMAL) { // we check POOL_NORMAL to avoid a flood of messages if shutdown() is running concurrently
-            LOGGER.debug("{} - Cannot acquire connection from data source", poolName, e);
+            logger.error("{} - Error thrown while acquiring connection from data source", poolName, e.getCause());
+            lastConnectionFailure.set(e);
          }
-         return null;
       }
-      catch (Throwable e) {
+      catch (Exception e) {
          if (poolState == POOL_NORMAL) { // we check POOL_NORMAL to avoid a flood of messages if shutdown() is running concurrently
-            LOGGER.error("{} - Error thrown while acquiring connection from data source", poolName, (e instanceof ConnectionSetupException ? e.getCause() : e));
-            if (e instanceof ConnectionSetupException) {
-               lastConnectionFailure.set(e);
-            } else {
-               lastConnectionFailure.set(new ConnectionSetupException(e));
-            }
+            logger.debug("{} - Cannot acquire connection from data source", poolName, e);
          }
-         return null;
       }
+
+      return null;
    }
 
    /**
@@ -507,9 +513,11 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    private synchronized void fillPool()
    {
       final int connectionsToAdd = Math.min(config.getMaximumPoolSize() - getTotalConnections(), config.getMinimumIdle() - getIdleConnections())
-                                   - addConnectionQueue.size();
+                                   - addConnectionQueueReadOnlyView.size();
+      if (connectionsToAdd <= 0) logger.debug("{} - Fill pool skipped, pool is at sufficient level.", poolName);
+
       for (int i = 0; i < connectionsToAdd; i++) {
-         addConnectionExecutor.submit((i < connectionsToAdd - 1) ? POOL_ENTRY_CREATOR : POST_FILL_POOL_ENTRY_CREATOR);
+         addConnectionExecutor.submit((i < connectionsToAdd - 1) ? poolEntryCreator : postFillPoolEntryCreator);
       }
    }
 
@@ -553,7 +561,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          if (poolEntry != null) {
             if (config.getMinimumIdle() > 0) {
                connectionBag.add(poolEntry);
-               LOGGER.debug("{} - Added connection {}", poolName, poolEntry.connection);
+               logger.debug("{} - Added connection {}", poolName, poolEntry.connection);
             }
             else {
                quietlyCloseConnection(poolEntry.close(), "(initialization check complete and minimumIdle is zero)");
@@ -582,7 +590,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     */
    private void throwPoolInitializationException(Throwable t)
    {
-      LOGGER.error("{} - Exception during pool initialization.", poolName, t);
+      logger.error("{} - Exception during pool initialization.", poolName, t);
       destroyHouseKeepingExecutorService();
       throw new PoolInitializationException(t);
    }
@@ -717,7 +725,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             final PoolEntry poolEntry = createPoolEntry();
             if (poolEntry != null) {
                connectionBag.add(poolEntry);
-               LOGGER.debug("{} - Added connection {}", poolName, poolEntry.connection);
+               logger.debug("{} - Added connection {}", poolName, poolEntry.connection);
                if (loggingPrefix != null) {
                   logPoolState(loggingPrefix);
                }
@@ -725,9 +733,11 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             }
 
             // failed to get connection from db, sleep and retry
+            if (loggingPrefix != null) logger.debug("{} - Connection add failed, sleeping with backoff: {}ms", poolName, sleepBackoff);
             quietlySleep(sleepBackoff);
             sleepBackoff = Math.min(SECONDS.toMillis(10), Math.min(connectionTimeout, (long) (sleepBackoff * 1.5)));
          }
+
          // Pool is suspended or shutdown or at max size
          return Boolean.FALSE;
       }
@@ -738,7 +748,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
        *
        * @return true if we should create a connection, false if the need has disappeared
        */
-      private boolean shouldCreateAnotherConnection() {
+      private synchronized boolean shouldCreateAnotherConnection() {
          return getTotalConnections() < config.getMaximumPoolSize() &&
             (connectionBag.getWaitingThreadCount() > 0 || getIdleConnections() < config.getMinimumIdle());
       }
@@ -749,7 +759,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     */
    private final class HouseKeeper implements Runnable
    {
-      private volatile long previous = plusMillis(currentTime(), -HOUSEKEEPING_PERIOD_MS);
+      private volatile long previous = plusMillis(currentTime(), -housekeepingPeriodMs);
 
       @Override
       public void run()
@@ -765,16 +775,16 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             final long now = currentTime();
 
             // Detect retrograde time, allowing +128ms as per NTP spec.
-            if (plusMillis(now, 128) < plusMillis(previous, HOUSEKEEPING_PERIOD_MS)) {
-               LOGGER.warn("{} - Retrograde clock change detected (housekeeper delta={}), soft-evicting connections from pool.",
+            if (plusMillis(now, 128) < plusMillis(previous, housekeepingPeriodMs)) {
+               logger.warn("{} - Retrograde clock change detected (housekeeper delta={}), soft-evicting connections from pool.",
                            poolName, elapsedDisplayString(previous, now));
                previous = now;
                softEvictConnections();
                return;
             }
-            else if (now > plusMillis(previous, (3 * HOUSEKEEPING_PERIOD_MS) / 2)) {
+            else if (now > plusMillis(previous, (3 * housekeepingPeriodMs) / 2)) {
                // No point evicting for forward clock motion, this merely accelerates connection retirement anyway
-               LOGGER.warn("{} - Thread starvation or clock leap detected (housekeeper delta={}).", poolName, elapsedDisplayString(previous, now));
+               logger.warn("{} - Thread starvation or clock leap detected (housekeeper delta={}).", poolName, elapsedDisplayString(previous, now));
             }
 
             previous = now;
@@ -799,7 +809,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             fillPool(); // Try to maintain minimum connections
          }
          catch (Exception e) {
-            LOGGER.error("Unexpected exception in housekeeping task", e);
+            logger.error("Unexpected exception in housekeeping task", e);
          }
       }
    }
