@@ -21,9 +21,8 @@ import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.util.ClockSource.currentTime;
 import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
-import static java.util.concurrent.TimeUnit.MINUTES;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -32,179 +31,157 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.junit.After;
 import org.junit.Before;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.util.UtilityElf;
+import org.junit.Test;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.utility.DockerImageName;
 
-/**
- * This test is meant to be run manually and interactively and was
- * build for issue #159.
- *
- * @author Brett Wooldridge
- */
 public class PostgresTest
 {
-   //@Test
-   public void testCase1() throws Exception
-   {
-      HikariConfig config = newHikariConfig();
+   private static final DockerImageName IMAGE_NAME = DockerImageName.parse("postgres:9.6.20");
+
+   private PostgreSQLContainer postgres;
+
+   @Before
+   public void beforeTest() {
+     postgres = new PostgreSQLContainer<>(IMAGE_NAME);
+     postgres.start();
+   }
+
+   @After
+   public void afterTest() {
+     postgres.stop();
+   }
+
+   @Test
+   public void testCase1() throws Exception {
+      HikariConfig config = createConfig(postgres);
       config.setMinimumIdle(3);
       config.setMaximumPoolSize(10);
       config.setConnectionTimeout(3000);
-      config.setIdleTimeout(TimeUnit.SECONDS.toMillis(10));
-      config.setValidationTimeout(TimeUnit.SECONDS.toMillis(2));
+      config.setIdleTimeout(SECONDS.toMillis(10));
+      config.setValidationTimeout(SECONDS.toMillis(2));
 
-      config.setJdbcUrl("jdbc:pgsql://localhost:5432/test");
-      config.setUsername("brettw");
-
-      try (final HikariDataSource ds = new HikariDataSource(config)) {
-         final long start = currentTime();
-         do {
-            Thread t = new Thread() {
-               public void run() {
-                  try (Connection connection = ds.getConnection()) {
-                     System.err.println("Obtained connection " + connection);
-                     quietlySleep(TimeUnit.SECONDS.toMillis((long)(10 + (Math.random() * 20))));
-                  }
-                  catch (SQLException e) {
-                     e.printStackTrace();
-                  }
-               }
-            };
-            t.setDaemon(true);
-            t.start();
-
-            quietlySleep(TimeUnit.SECONDS.toMillis((long)((Math.random() * 20))));
-         } while (elapsedMillis(start) < MINUTES.toMillis(15));
-      }
+      exerciseConfig(config, 3);
    }
 
-   //@Test
+   @Test
    public void testCase2() throws Exception
    {
-      HikariConfig config = newHikariConfig();
+      HikariConfig config = createConfig(postgres);
       config.setMinimumIdle(3);
       config.setMaximumPoolSize(10);
       config.setConnectionTimeout(1000);
-      config.setIdleTimeout(TimeUnit.SECONDS.toMillis(60));
+      config.setIdleTimeout(SECONDS.toMillis(20));
 
-      config.setJdbcUrl("jdbc:pgsql://localhost:5432/test");
-      config.setUsername("brettw");
-
-      try (HikariDataSource ds = new HikariDataSource(config)) {
-
-         try (Connection conn = ds.getConnection()) {
-            System.err.println("\nGot a connection, and released it.  Now, enable the firewall.");
-         }
-
-         getPool(ds).logPoolState();
-         quietlySleep(5000L);
-
-         System.err.println("\nNow attempting another getConnection(), expecting a timeout...");
-
-         long start = currentTime();
-         try (Connection conn = ds.getConnection()) {
-            System.err.println("\nOpps, got a connection.  Did you enable the firewall? " + conn);
-            fail("Opps, got a connection.  Did you enable the firewall?");
-         }
-         catch (SQLException e)
-         {
-            assertTrue("Timeout less than expected " + elapsedMillis(start) + "ms", elapsedMillis(start) > 5000);
-         }
-
-         System.err.println("\nOk, so far so good.  Now, disable the firewall again.  Attempting connection in 5 seconds...");
-         quietlySleep(5000L);
-         getPool(ds).logPoolState();
-
-         try (Connection conn = ds.getConnection()) {
-            System.err.println("\nGot a connection, and released it.");
-         }
-      }
-
-      System.err.println("\nPassed.");
+      exerciseConfig(config, 3);
    }
 
-   //@Test
+   @Test
    public void testCase3() throws Exception
    {
-      HikariConfig config = newHikariConfig();
+      HikariConfig config = createConfig(postgres);
       config.setMinimumIdle(3);
       config.setMaximumPoolSize(10);
       config.setConnectionTimeout(1000);
-      config.setIdleTimeout(TimeUnit.SECONDS.toMillis(60));
+      config.setIdleTimeout(SECONDS.toMillis(20));
 
-      config.setJdbcUrl("jdbc:pgsql://localhost:5432/test");
-      config.setUsername("brettw");
-
-      try (final HikariDataSource ds = new HikariDataSource(config)) {
-         for (int i = 0; i < 10; i++) {
-            new Thread() {
-               public void run() {
-                  try (Connection conn = ds.getConnection()) {
-                     System.err.println("ERROR: should not have acquired connection.");
-                  }
-                  catch (SQLException e) {
-                     // expected
-                  }
-               }
-            }.start();
-         }
-
-         quietlySleep(5000L);
-
-         System.err.println("Now, bring the DB online.  Checking pool in 15 seconds.");
-         quietlySleep(15000L);
-
-         getPool(ds).logPoolState();
-      }
+      exerciseConfig(config, 3);
    }
 
-   // @Test
+   @Test
    public void testCase4() throws Exception
    {
-      HikariConfig config = newHikariConfig();
+      HikariConfig config = createConfig(postgres);
       config.setMinimumIdle(0);
       config.setMaximumPoolSize(15);
       config.setConnectionTimeout(10000);
-      config.setIdleTimeout(TimeUnit.MINUTES.toMillis(1));
-      config.setMaxLifetime(TimeUnit.MINUTES.toMillis(2));
+      config.setIdleTimeout(2000);
+      config.setMaxLifetime(5);
       config.setRegisterMbeans(true);
 
-      config.setJdbcUrl("jdbc:postgresql://localhost:5432/netld");
-      config.setUsername("brettw");
+      exerciseConfig(config, 3);
+   }
 
+   static private void exerciseConfig(HikariConfig config, int numThreads) {
       try (final HikariDataSource ds = new HikariDataSource(config)) {
+         assertTrue(ds.isRunning());
+         exerciseDataSource(ds, numThreads);
+         assertTrue(ds.isRunning());
+      }
+   }
 
-         countdown(20);
-         List<Thread> threads = new ArrayList<>();
-         for (int i = 0; i < 20; i++) {
-            threads.add(new Thread() {
-               public void run() {
-                  UtilityElf.quietlySleep((long)(Math.random() * 2500L));
-                  final long start = currentTime();
-                  do {
-                     try (Connection conn = ds.getConnection(); Statement stmt = conn.createStatement()) {
-                        try (ResultSet rs = stmt.executeQuery("SELECT * FROM device WHERE device_id=0 ORDER BY device_id LIMIT 1 OFFSET 0")) {
-                           rs.next();
-                        }
-                        UtilityElf.quietlySleep(100L); //Math.max(50L, (long)(Math.random() * 250L)));
-                     }
-                     catch (SQLException e) {
-                        e.printStackTrace();
-                        // throw new RuntimeException(e);
-                     }
+   static private void exerciseDataSource(HikariDataSource ds, int numThreads) {
+      final long start = currentTime();
+      List<PostgresWorkerThread> threads = startThreads(ds, numThreads);
+      do {
+         quietlySleep(SECONDS.toMillis(1));
+         assertZeroErrors(threads);
+      } while (elapsedMillis(start) < SECONDS.toMillis(30));
+      stopThreads(threads);
+   }
 
-                     // UtilityElf.quietlySleep(10L); //Math.max(50L, (long)(Math.random() * 250L)));
-                  } while (elapsedMillis(start) < TimeUnit.MINUTES.toMillis(5));
-               }
-            });
+   static private void assertZeroErrors(List<PostgresWorkerThread> threads) {
+     for (PostgresWorkerThread t : threads) {
+        assertEquals(0, t.getErrorCount());
+     }
+   }
+
+   static List<PostgresWorkerThread> startThreads(HikariDataSource ds, int numThreads) {
+     List<PostgresWorkerThread> threads = new ArrayList<>();
+     for (int i = 0; i < numThreads; i++) {
+        PostgresWorkerThread t = new PostgresWorkerThread(ds);
+        t.start();
+        threads.add(t);
+     }
+     return threads;
+   }
+
+   static void stopThreads(List<PostgresWorkerThread> threads) {
+      for (PostgresWorkerThread t : threads) {
+         t.requestStop();
+      }
+   }
+
+   static class PostgresWorkerThread extends Thread {
+      static private final AtomicInteger id = new AtomicInteger(0);
+      private final HikariDataSource dataSource;
+      private int errorCount = 0;
+      private AtomicBoolean stopRequested = new AtomicBoolean(false);
+
+      public PostgresWorkerThread(HikariDataSource ds) {
+         this.dataSource = ds;
+         this.setName(getClass().getSimpleName() + "-" + id.getAndIncrement());
+         this.setDaemon(true);
+      }
+
+      public void requestStop() {
+        stopRequested.set(true);
+         System.err.println("[" + getName() + "] stopRequested()");
+      }
+
+      public void run() {
+         System.err.println("[" + getName() + "] run()");
+         while (!stopRequested.get()) {
+            try (Connection connection = dataSource.getConnection()) {
+               quietlySleep(5);
+            } catch (Exception e) {
+               e.printStackTrace();
+               errorCount++;
+            }
          }
+      }
 
-//         threads.forEach(t -> t.start());
-//         threads.forEach(t -> { try { t.join(); } catch (InterruptedException e) {} });
+      public int getErrorCount() {
+         return errorCount;
       }
    }
 
@@ -214,18 +191,28 @@ public class PostgresTest
       System.err.println("\n");
    }
 
-   private void countdown(int seconds)
+   static private void countdown(int seconds)
    {
       do {
          System.out.printf("Starting in %d seconds...\n", seconds);
          if (seconds > 10) {
-            UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(10));
+            UtilityElf.quietlySleep(SECONDS.toMillis(10));
             seconds -= 10;
          }
          else {
-            UtilityElf.quietlySleep(TimeUnit.SECONDS.toMillis(1));
+            UtilityElf.quietlySleep(SECONDS.toMillis(1));
             seconds -= 1;
          }
       } while (seconds > 0);
    }
+
+   static private HikariConfig createConfig(PostgreSQLContainer postgres) {
+      HikariConfig config = newHikariConfig();
+      config.setJdbcUrl(postgres.getJdbcUrl());
+      config.setUsername(postgres.getUsername());
+      config.setPassword(postgres.getPassword());
+      config.setDriverClassName(postgres.getDriverClassName());
+      return config;
+   }
+
 }
