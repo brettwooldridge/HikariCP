@@ -67,10 +67,12 @@ public class MicrometerMetricsTracker implements IMetricsTracker
    private final Gauge minConnectionGauge;
    @SuppressWarnings({"FieldCanBeLocal", "unused"})
    private final PoolStats poolStats;
+   private final MeterRegistry meterRegistry;
 
    MicrometerMetricsTracker(final String poolName, final PoolStats poolStats, final MeterRegistry meterRegistry)
    {
       this.poolStats = poolStats;
+      this.meterRegistry = meterRegistry;
 
       this.connectionObtainTimer = Timer.builder(METRIC_NAME_WAIT)
          .description("Connection acquire time")
@@ -148,5 +150,19 @@ public class MicrometerMetricsTracker implements IMetricsTracker
    public void recordConnectionCreatedMillis(long connectionCreatedMillis)
    {
       connectionCreation.record(connectionCreatedMillis, TimeUnit.MILLISECONDS);
+   }
+
+   @Override
+   public void close() {
+      meterRegistry.remove(connectionObtainTimer);
+      meterRegistry.remove(connectionTimeoutCounter);
+      meterRegistry.remove(connectionUsage);
+      meterRegistry.remove(connectionCreation);
+      meterRegistry.remove(totalConnectionGauge);
+      meterRegistry.remove(idleConnectionGauge);
+      meterRegistry.remove(activeConnectionGauge);
+      meterRegistry.remove(pendingConnectionGauge);
+      meterRegistry.remove(maxConnectionGauge);
+      meterRegistry.remove(minConnectionGauge);
    }
 }
