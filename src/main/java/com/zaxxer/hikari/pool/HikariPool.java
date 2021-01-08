@@ -28,7 +28,7 @@ import com.zaxxer.hikari.metrics.micrometer.MicrometerMetricsTrackerFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.SuspendResumeLock;
-import com.zaxxer.hikari.util.UtilityElf.*;
+import com.zaxxer.hikari.util.UtilityElf.DefaultThreadFactory;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -477,7 +477,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          final PoolEntry poolEntry = newPoolEntry();
 
          final long maxLifetime = config.getMaxLifetime();
-         final boolean isKeepalive = config.isKeepalive();
+         final long keepaliveTime = config.getKeepaliveTime();
 
          if (maxLifetime > 0) {
             // variance up to 2.5% of the maxlifetime
@@ -491,21 +491,21 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                },
                lifetime, MILLISECONDS));
          }
-         if (isKeepalive) {
-            final long keepaliveTime = config.getKeepaliveTime();
+
+         if (keepaliveTime > 0) {
             // variance up to 10% of the heartbeat time
             final long variance = ThreadLocalRandom.current().nextLong(keepaliveTime / 10);
             final long heartbeatTime = keepaliveTime - variance;
             poolEntry.setKeepalive(houseKeepingExecutorService.scheduleWithFixedDelay(
                () -> {
-                  boolean isConnectionAlive = keepaliveConnection(poolEntry);
-                  if (!isConnectionAlive) {
-                     if (softEvictConnection(poolEntry, DEAD_CONNECTION_MESSAGE, false)) {
+                  if (connectionBag.reserve(poolEntry)) {
+                     if (!isConnectionAlive(poolEntry.connection)) {
+                        softEvictConnection(poolEntry, DEAD_CONNECTION_MESSAGE, true);
                         addBagItem(connectionBag.getWaitingThreadCount());
                      }
-                  }
-                  if (logger.isDebugEnabled()) {
-                     logger.debug("{} - keepalive heartbeat: Is connection alive? {}", poolName, isConnectionAlive);
+                     else {
+                        logger.debug("{} - keepalive: connection {} is alive", poolName, poolEntry.connection);
+                     }
                   }
                }, heartbeatTime, heartbeatTime, MILLISECONDS));
          }
@@ -637,16 +637,6 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       }
 
       return false;
-   }
-
-   /**
-    * check if the connection is alive
-    * if the connection state is in use ,we suppose it is alive.  then we'll check it by {@link PoolBase#isConnectionAlive}
-    * @param poolEntry  the PoolEntry (/Connection) to be checked from the pool
-    * @return  true if the connection is alive,false if it was dead
-    */
-   private boolean keepaliveConnection(final PoolEntry poolEntry) {
-      return poolEntry.getState() == STATE_IN_USE || isConnectionAlive(poolEntry.connection);
    }
 
    /**

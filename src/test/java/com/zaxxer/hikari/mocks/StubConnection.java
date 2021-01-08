@@ -47,7 +47,7 @@ public class StubConnection extends StubBaseConnection implements Connection
    public static final AtomicInteger count = new AtomicInteger();
    public static volatile boolean slowCreate;
    public static volatile boolean oldDriver;
-   private volatile boolean isClose = false;
+   private volatile boolean isClosed = false;
 
    private static long foo;
    private boolean autoCommit;
@@ -55,7 +55,7 @@ public class StubConnection extends StubBaseConnection implements Connection
    private String catalog;
    private long waitTimeout;
 
-   private ScheduledExecutorService connectionWaitTimeout = new ScheduledThreadPoolExecutor(1);
+   private static ScheduledExecutorService connectionWaitTimeout = new ScheduledThreadPoolExecutor(1);
    private ScheduledFuture<?> waitTimeoutTask;
 
    static {
@@ -75,9 +75,10 @@ public class StubConnection extends StubBaseConnection implements Connection
       if (slowCreate) {
          UtilityElf.quietlySleep(1000);
       }
-      try{
+
+      try {
          refreshConnectionWaitTimeout();
-      }catch (Exception e){
+      } catch (Exception e){
          //ignore
       }
    }
@@ -151,14 +152,16 @@ public class StubConnection extends StubBaseConnection implements Connection
    }
 
    private void refreshConnectionWaitTimeout() throws SQLException {
-      if (this.isClose) {
+      if (this.isClosed) {
          throw new SQLException("connection has been closed");
       }
+
       if (waitTimeoutTask != null) {
          waitTimeoutTask.cancel(true);
       }
+
       if (waitTimeout > 0) {
-         waitTimeoutTask = connectionWaitTimeout.schedule(() -> { this.isClose = true;}, waitTimeout, TimeUnit.MILLISECONDS);
+         waitTimeoutTask = connectionWaitTimeout.schedule(() -> { this.isClosed = true;}, waitTimeout, TimeUnit.MILLISECONDS);
       }
    }
 
@@ -183,7 +186,7 @@ public class StubConnection extends StubBaseConnection implements Connection
       if (throwException) {
          throw new SQLException();
       }
-      return isClose;
+      return isClosed;
    }
 
    /** {@inheritDoc} */
@@ -440,7 +443,7 @@ public class StubConnection extends StubBaseConnection implements Connection
          throw new SQLException();
       }
       refreshConnectionWaitTimeout();
-      return !isClose;
+      return !isClosed;
    }
 
    /** {@inheritDoc} */

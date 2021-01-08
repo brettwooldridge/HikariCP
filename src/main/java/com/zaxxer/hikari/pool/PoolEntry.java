@@ -47,7 +47,6 @@ final class PoolEntry implements IConcurrentBagEntry
    private volatile boolean evict;
 
    private volatile ScheduledFuture<?> endOfLife;
-
    private volatile ScheduledFuture<?> keepalive;
 
    private final FastList<Statement> openStatements;
@@ -183,7 +182,7 @@ final class PoolEntry implements IConcurrentBagEntry
 
       ScheduledFuture<?> ka = keepalive;
       if (ka != null && !ka.isDone() && !ka.cancel(false)) {
-         LOGGER.warn("{} - keepalive expiration task cancellation unexpectedly returned false for connection {}", getPoolName(), connection);
+         LOGGER.warn("{} - keepalive task cancellation unexpectedly returned false for connection {}", getPoolName(), connection);
       }
 
       Connection con = connection;

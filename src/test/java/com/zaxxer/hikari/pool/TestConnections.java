@@ -232,7 +232,6 @@ public class TestConnections
 
       setConfigUnitTest(true);
       try (HikariDataSource ds = new HikariDataSource(config)) {
-         getUnsealedConfig(ds).setKeepalive(true);
          getUnsealedConfig(ds).setKeepaliveTime(500);
 
          HikariPool pool = getPool(ds);
@@ -264,7 +263,6 @@ public class TestConnections
 
       setConfigUnitTest(true);
       try (HikariDataSource ds = new HikariDataSource(config)) {
-         getUnsealedConfig(ds).setKeepalive(true);
          getUnsealedConfig(ds).setKeepaliveTime(700);
 
          HikariPool pool = getPool(ds);
