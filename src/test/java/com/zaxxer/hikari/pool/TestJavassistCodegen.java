@@ -7,6 +7,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,6 +30,11 @@ public class TestJavassistCodegen {
       Assert.assertTrue("", Files.isRegularFile(base.resolve("ProxyFactory.class")));
 
       FauxWebClassLoader fauxClassLoader = new FauxWebClassLoader();
+
+      int mod = fauxClassLoader.loadClass("com.zaxxer.hikari.pool.HikariProxyConnection").getModifiers();
+      Assert.assertTrue("Generated proxy class should be public", Modifier.isPublic(mod));
+      Assert.assertTrue("Generated proxy class should be final", Modifier.isFinal(mod));
+
       Class<?> proxyFactoryClass = fauxClassLoader.loadClass("com.zaxxer.hikari.pool.ProxyFactory");
 
       Connection connection = new StubConnection();

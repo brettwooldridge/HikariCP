@@ -646,7 +646,7 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Get the MetricRegistry instance to used for registration of metrics used by HikariCP.  Default is {@code null}.
+    * Get the MetricRegistry instance to use for registration of metrics used by HikariCP.  Default is {@code null}.
     *
     * @return the MetricRegistry instance that will be used
     */

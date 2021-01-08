@@ -28,6 +28,7 @@
       <commons.csv.version>1.5</commons.csv.version>
       <h2.version>1.4.196</h2.version>
       <junit.version>4.12</junit.version>
+      <testcontainers.version>1.15.1</testcontainers.version>
    </properties>
 
    <groupId>com.zaxxer</groupId>
@@ -88,6 +89,12 @@
          <groupId>org.apache.logging.log4j</groupId>
          <artifactId>log4j-core</artifactId>
          <version>${log4j.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.testcontainers</groupId>
+         <artifactId>postgresql</artifactId>
+         <version>${testcontainers.version}</version>
          <scope>test</scope>
       </dependency>
       <dependency>
@@ -515,8 +522,6 @@
                <configuration>
                   <!-- Sets the VM argument line used when unit tests are run. -->
                   <argLine>${surefireArgLine} ${sureFireOptions11}</argLine>
-                  <!-- Skips unit tests if the value of skip.unit.tests property is true -->
-                  <skipTests>${skip.unit.tests}</skipTests>
                   <reuseForks>${sureFireForks11}</reuseForks>
                </configuration>
             </plugin>
