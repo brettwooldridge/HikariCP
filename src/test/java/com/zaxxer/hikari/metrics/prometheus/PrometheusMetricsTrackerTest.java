@@ -209,7 +209,7 @@ public class PrometheusMetricsTrackerTest
       PrometheusMetricsTrackerFactory prometheusFactory = new PrometheusMetricsTrackerFactory(defaultCollectorRegistry);
       IMetricsTracker prometheusTracker = prometheusFactory.create("testPool", new StubPoolStats(0));
 
-      prometheusTracker.recordConnectionTimeout();
+      prometheusTracker.recordConnectionTimeout(112L);
       prometheusTracker.recordConnectionAcquiredNanos(42L);
       prometheusTracker.recordConnectionUsageMillis(111L);
       prometheusTracker.recordConnectionCreatedMillis(101L);
@@ -219,7 +219,7 @@ public class PrometheusMetricsTrackerTest
          is(1.0));
       assertThat(defaultCollectorRegistry.getSampleValue(
          "hikaricp_connection_acquired_nanos_sum", LABEL_NAMES, labelValues),
-         is(42.0));
+         is(154.0));
       assertThat(defaultCollectorRegistry.getSampleValue(
          "hikaricp_connection_usage_millis_sum", LABEL_NAMES, labelValues),
          is(111.0));
