@@ -24,7 +24,7 @@
       <pax.exam.version>4.13.1</pax.exam.version>
       <pax.url.version>2.5.4</pax.url.version>
       <postgresql.version>42.1.4</postgresql.version>
-      <log4j.version>2.14</log4j.version>
+      <log4j.version>2.14.0</log4j.version>
       <commons.csv.version>1.5</commons.csv.version>
       <h2.version>1.4.196</h2.version>
       <junit.version>4.13.1</junit.version>
