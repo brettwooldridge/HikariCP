@@ -16,18 +16,15 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.pool.TestElf.getPool;
-import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
-import static com.zaxxer.hikari.pool.TestElf.setSlf4jLogLevel;
-import static com.zaxxer.hikari.pool.TestElf.setSlf4jTargetStream;
+import static com.zaxxer.hikari.mocks.StubConnection.CONNECTION_CLOSED_ERROR;
+import static com.zaxxer.hikari.pool.TestElf.*;
 import static com.zaxxer.hikari.util.ClockSource.currentTime;
 import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
+import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static java.lang.Thread.sleep;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -223,45 +220,79 @@ public class TestConnectionTimeoutRetry
    @Test
    public void testConnectionIdleFill() throws Exception
    {
-      StubConnection.slowCreate = false;
+      try {
+         StubConnection.slowCreate = false;
 
-      HikariConfig config = newHikariConfig();
-      config.setMinimumIdle(5);
-      config.setMaximumPoolSize(10);
-      config.setConnectionTimeout(2000);
-      config.setValidationTimeout(2000);
-      config.setConnectionTestQuery("VALUES 2");
-      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+         HikariConfig config = newHikariConfig();
+         config.setMinimumIdle(5);
+         config.setMaximumPoolSize(10);
+         config.setConnectionTimeout(2000);
+         config.setValidationTimeout(2000);
+         config.setConnectionTestQuery("VALUES 2");
+         config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-      System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "400");
+         System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "400");
 
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      PrintStream ps = new PrintStream(baos, true);
-      setSlf4jTargetStream(HikariPool.class, ps);
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         PrintStream ps = new PrintStream(baos, true);
+         setSlf4jTargetStream(HikariPool.class, ps);
 
-      try (HikariDataSource ds = new HikariDataSource(config)) {
-         setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
+         try (HikariDataSource ds = new HikariDataSource(config)) {
+            setSlf4jLogLevel(HikariPool.class, Level.DEBUG);
 
-         HikariPool pool = getPool(ds);
-         try (
-            Connection connection1 = ds.getConnection();
-            Connection connection2 = ds.getConnection();
-            Connection connection3 = ds.getConnection();
-            Connection connection4 = ds.getConnection();
-            Connection connection5 = ds.getConnection();
-            Connection connection6 = ds.getConnection();
-            Connection connection7 = ds.getConnection()) {
+            HikariPool pool = getPool(ds);
+            try (
+               Connection connection1 = ds.getConnection();
+               Connection connection2 = ds.getConnection();
+               Connection connection3 = ds.getConnection();
+               Connection connection4 = ds.getConnection();
+               Connection connection5 = ds.getConnection();
+               Connection connection6 = ds.getConnection();
+               Connection connection7 = ds.getConnection()) {
 
-            sleep(1300);
+               sleep(1300);
+
+               assertSame("Total connections not as expected", 10, pool.getTotalConnections());
+               assertSame("Idle connections not as expected", 3, pool.getIdleConnections());
+            }
 
             assertSame("Total connections not as expected", 10, pool.getTotalConnections());
-            assertSame("Idle connections not as expected", 3, pool.getIdleConnections());
+            assertSame("Idle connections not as expected", 10, pool.getIdleConnections());
          }
-
-         assertSame("Total connections not as expected", 10, pool.getTotalConnections());
-         assertSame("Idle connections not as expected", 10, pool.getIdleConnections());
+      } finally {
+         StubConnection.slowCreate = true;
       }
    }
+
+   @Test
+   public void testConnectionClosed()
+   {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      try (PrintStream ps = new PrintStream(baos, true)) {
+         setSlf4jTargetStream(PoolBase.class, ps);
+
+         System.setProperty("com.zaxxer.hikari.aliveBypassWindowMs", "-1");
+
+         HikariConfig config = newHikariConfig();
+         config.setDataSourceClassName(StubDataSource.class.getName());
+
+         try (HikariDataSource ds = new HikariDataSource(config)) {
+            StubConnection.closed = true;
+
+            try (Connection connection1 = ds.getConnection()) {
+               fail();
+            } catch (Exception e) {
+               assertTrue(e.getCause().getMessage().contains(CONNECTION_CLOSED_ERROR));
+            }
+         } finally {
+            StubConnection.closed = false;
+         }
+
+         String logs = new String(baos.toByteArray());
+         assertFalse(logs.contains("Failed to validate connection"));
+      }
+   }
+
 
    @Before
    public void before()
