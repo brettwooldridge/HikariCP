@@ -143,6 +143,9 @@ public final class PropertyElf
          else if (paramClass == long.class) {
             writeMethod.invoke(target, Long.parseLong(propValue.toString()));
          }
+         else if (paramClass == short.class) {
+            writeMethod.invoke(target, Short.parseShort(propValue.toString()));
+         }
          else if (paramClass == boolean.class || paramClass == Boolean.class) {
             writeMethod.invoke(target, Boolean.parseBoolean(propValue.toString()));
          }

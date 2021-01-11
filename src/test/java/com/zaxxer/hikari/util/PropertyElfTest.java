@@ -18,9 +18,11 @@ public class PropertyElfTest
       Properties properties = new Properties();
       properties.setProperty("string", "aString");
       properties.setProperty("testObject", "com.zaxxer.hikari.mocks.TestObject");
+      properties.setProperty("shortRaw", "1");
       TestObject testObject = new TestObject();
       PropertyElf.setTargetFromProperties(testObject, properties);
       assertEquals("aString", testObject.getString());
+      assertEquals((short) 1, testObject.getShortRaw());
       assertEquals(com.zaxxer.hikari.mocks.TestObject.class, testObject.getTestObject().getClass());
       assertNotSame(testObject, testObject.getTestObject());
    }
