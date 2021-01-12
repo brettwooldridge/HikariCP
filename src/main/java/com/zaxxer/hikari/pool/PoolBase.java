@@ -35,6 +35,8 @@ import javax.sql.DataSource;
 import java.lang.management.ManagementFactory;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLSyntaxErrorException;
 import java.sql.SQLTransientConnectionException;
 import java.sql.Statement;
 import java.util.Properties;
@@ -84,9 +86,9 @@ abstract class PoolBase
    private final boolean isReadOnly;
    private final boolean isAutoCommit;
 
-   private final boolean isUseJdbc4Validation;
    private final boolean isIsolateInternalQueries;
 
+   private volatile boolean isUseJdbc4Validation;
    private volatile boolean isValidChecked;
 
    PoolBase(final HikariConfig config)
@@ -444,7 +446,26 @@ abstract class PoolBase
    private void checkDriverSupport(final Connection connection) throws SQLException
    {
       if (!isValidChecked) {
-         checkValidationSupport(connection);
+         try {
+           checkValidationSupport(connection);
+         } catch (SQLFeatureNotSupportedException e) {
+            boolean defaultConnectionTestQueryUsed = false;
+            if (config.getConnectionTestQuery() == null) {
+               String defaultConnectionTestQuery = "select 1";
+               config.setConnectionTestQuery(defaultConnectionTestQuery);
+               defaultConnectionTestQueryUsed = true;
+               logger.warn("{} - Use default connection test query ({})", poolName, defaultConnectionTestQuery);
+            }
+            isUseJdbc4Validation = false;
+            try {
+               checkValidationSupport(connection);
+            } catch (SQLSyntaxErrorException ex) {
+               if(defaultConnectionTestQueryUsed) {
+                  logger.error("{} - Please config your own connection test query since default one is not supported", poolName);
+               }
+               throw ex;
+            }
+         }
          checkDefaultIsolation(connection);
 
          isValidChecked = true;
@@ -468,7 +489,9 @@ abstract class PoolBase
          }
       }
       catch (Exception | AbstractMethodError e) {
-         logger.error("{} - Failed to execute{} connection test query ({}).", poolName, (isUseJdbc4Validation ? " isValid() for connection, configure" : ""), e.getMessage());
+         if (!(e instanceof SQLFeatureNotSupportedException)) {
+            logger.error("{} - Failed to execute{} connection test query ({}).", poolName, (isUseJdbc4Validation ? " isValid() for connection, configure" : ""), e.getMessage());
+         }
          throw e;
       }
    }
