@@ -55,6 +55,7 @@ public class HikariConfig implements HikariConfigMXBean
    private static final long VALIDATION_TIMEOUT = SECONDS.toMillis(5);
    private static final long IDLE_TIMEOUT = MINUTES.toMillis(10);
    private static final long MAX_LIFETIME = MINUTES.toMillis(30);
+   private static final long DEFAULT_KEEPALIVE_TIME = 0L;
    private static final int DEFAULT_POOL_SIZE = 10;
 
    private static boolean unitTest = false;
@@ -99,6 +100,8 @@ public class HikariConfig implements HikariConfigMXBean
    private Object healthCheckRegistry;
    private Properties healthCheckProperties;
 
+   private long keepaliveTime;
+
    private volatile boolean sealed;
 
    /**
@@ -117,6 +120,7 @@ public class HikariConfig implements HikariConfigMXBean
       idleTimeout = IDLE_TIMEOUT;
       initializationFailTimeout = 1;
       isAutoCommit = true;
+      keepaliveTime = DEFAULT_KEEPALIVE_TIME;
 
       String systemProp = System.getProperty("hikaricp.configurationFile");
       if (systemProp != null) {
@@ -721,6 +725,26 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
+    * This property controls the keepalive interval for a connection in the pool. An in-use connection will never be
+    * tested by the keepalive thread, only when it is idle will it be tested.
+    *
+    * @return the interval in which connections will be tested for aliveness, thus keeping them alive by the act of checking. Value is in milliseconds, default is 0 (disabled).
+    */
+   public long getKeepaliveTime() {
+      return keepaliveTime;
+   }
+
+   /**
+    * This property controls the keepalive interval for a connection in the pool. An in-use connection will never be
+    * tested by the keepalive thread, only when it is idle will it be tested.
+    *
+    * @param keepaliveTimeMs the interval in which connections will be tested for aliveness, thus keeping them alive by the act of checking. Value is in milliseconds, default is 0 (disabled).
+    */
+   public void setKeepaliveTime(long keepaliveTimeMs) {
+      this.keepaliveTime = keepaliveTimeMs;
+   }
+
+   /**
     * Determine whether the Connections in the pool are in read-only mode.
     *
     * @return {@code true} if the Connections in the pool are read-only, {@code false} if not
@@ -1016,6 +1040,18 @@ public class HikariConfig implements HikariConfigMXBean
       if (maxLifetime != 0 && maxLifetime < SECONDS.toMillis(30)) {
          LOGGER.warn("{} - maxLifetime is less than 30000ms, setting to default {}ms.", poolName, MAX_LIFETIME);
          maxLifetime = MAX_LIFETIME;
+      }
+
+      // keepalive time must larger then 30 seconds
+      if (keepaliveTime != 0 && keepaliveTime < SECONDS.toMillis(30)) {
+         LOGGER.warn("{} - keepaliveTime is less than 30000ms, disabling it.", poolName);
+         keepaliveTime = DEFAULT_KEEPALIVE_TIME;
+      }
+
+      // keepalive time must be less than maxLifetime (if maxLifetime is enabled)
+      if (keepaliveTime != 0 && maxLifetime != 0 && keepaliveTime >= maxLifetime) {
+         LOGGER.warn("{} - keepaliveTime is greater than or equal to maxLifetime, disabling it.", poolName);
+         keepaliveTime = DEFAULT_KEEPALIVE_TIME;
       }
 
       if (leakDetectionThreshold > 0 && !unitTest) {

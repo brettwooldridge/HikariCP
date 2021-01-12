@@ -68,6 +68,7 @@ public class StubStatement implements Statement
    {
       checkClosed();
       StubResultSet resultSet = new StubResultSet();
+      connection.commit();
       return resultSet;
    }
 
@@ -179,6 +180,7 @@ public class StubStatement implements Statement
       if (simulatedQueryTime > 0) {
          quietlySleep(simulatedQueryTime);
       }
+      connection.commit();
       return false;
    }
 

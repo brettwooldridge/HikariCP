@@ -38,6 +38,7 @@ public class StubDataSource implements DataSource
    private SQLException throwException;
    private long connectionAcquistionTime = 0;
    private int loginTimeout;
+   private int waitTimeout = 30000;
 
    public String getUser()
    {
@@ -57,6 +58,14 @@ public class StubDataSource implements DataSource
    public void setPassword(String password)
    {
       this.password = password;
+   }
+
+   public int getWaitTimeout() {
+      return waitTimeout;
+   }
+
+   public void setWaitTimeout(int waitTimeout) {
+      this.waitTimeout = waitTimeout;
    }
 
    public void setURL(String url)
@@ -127,15 +136,14 @@ public class StubDataSource implements DataSource
       if (connectionAcquistionTime > 0) {
          UtilityElf.quietlySleep(connectionAcquistionTime);
       }
-
-      return new StubConnection();
+      return new StubConnection(waitTimeout);
    }
 
    /** {@inheritDoc} */
    @Override
    public Connection getConnection(String username, String password) throws SQLException
    {
-      return new StubConnection();
+      return new StubConnection(waitTimeout);
    }
 
    public void setThrowException(SQLException e)

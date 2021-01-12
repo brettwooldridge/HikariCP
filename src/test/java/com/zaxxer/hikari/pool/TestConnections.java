@@ -218,6 +218,76 @@ public class TestConnections
    }
 
    @Test
+   public void testKeepalive() throws Exception{
+      HikariConfig config = newHikariConfig();
+      config.setMinimumIdle(0);
+      config.setMaximumPoolSize(1);
+      config.setConnectionTimeout(2500);
+      config.setConnectionTestQuery("VALUES 1");
+      StubDataSource sds = new StubDataSource();
+      sds.setWaitTimeout(700);
+      config.setDataSource(sds);
+
+      System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "100");
+
+      setConfigUnitTest(true);
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         getUnsealedConfig(ds).setKeepaliveTime(500);
+
+         HikariPool pool = getPool(ds);
+         Connection conn = pool.getConnection();
+         Connection unwrap = conn.unwrap(Connection.class);
+         //recycle, change IN_USE state
+         conn.close();
+         assertFalse("Connection should be open", unwrap.isClosed());
+         quietlySleep(1200);
+         assertFalse("Connection should be open", unwrap.isClosed());
+      }
+      finally {
+         setConfigUnitTest(false);
+      }
+   }
+
+   @Test
+   public void testKeepalive2() throws Exception{
+      HikariConfig config = newHikariConfig();
+      config.setMinimumIdle(0);
+      config.setMaximumPoolSize(1);
+      config.setConnectionTimeout(2500);
+      config.setConnectionTestQuery("VALUES 1");
+      StubDataSource sds = new StubDataSource();
+      sds.setWaitTimeout(500);
+      config.setDataSource(sds);
+
+      System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "100");
+
+      setConfigUnitTest(true);
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         getUnsealedConfig(ds).setKeepaliveTime(700);
+
+         HikariPool pool = getPool(ds);
+         Connection conn = pool.getConnection();
+         Connection unwrap = conn.unwrap(Connection.class);
+         //recycle, change IN_USE state
+         conn.close();
+         assertFalse("Connection should be open", unwrap.isClosed());
+         quietlySleep(1200);
+         assertTrue("Connection should have closed:" + unwrap, unwrap.isClosed());
+
+         Connection conn2 = pool.getConnection();
+         Connection unwrap2 = conn2.unwrap(Connection.class);
+
+         assertNotSame("Expected a different connection", unwrap, unwrap2);
+         assertFalse("Connection should be open", unwrap2.isClosed());
+
+         conn2.close();
+      }
+      finally {
+         setConfigUnitTest(false);
+      }
+   }
+
+   @Test
    public void testDoubleClose() throws Exception
    {
       HikariConfig config = newHikariConfig();

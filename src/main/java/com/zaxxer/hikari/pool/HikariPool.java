@@ -477,6 +477,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          final PoolEntry poolEntry = newPoolEntry();
 
          final long maxLifetime = config.getMaxLifetime();
+         final long keepaliveTime = config.getKeepaliveTime();
+
          if (maxLifetime > 0) {
             // variance up to 2.5% of the maxlifetime
             final long variance = maxLifetime > 10_000 ? ThreadLocalRandom.current().nextLong( maxLifetime / 40 ) : 0;
@@ -488,6 +490,25 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                   }
                },
                lifetime, MILLISECONDS));
+         }
+
+         if (keepaliveTime > 0) {
+            // variance up to 10% of the heartbeat time
+            final long variance = ThreadLocalRandom.current().nextLong(keepaliveTime / 10);
+            final long heartbeatTime = keepaliveTime - variance;
+            poolEntry.setKeepalive(houseKeepingExecutorService.scheduleWithFixedDelay(
+               () -> {
+                  if (connectionBag.reserve(poolEntry)) {
+                     if (!isConnectionAlive(poolEntry.connection)) {
+                        softEvictConnection(poolEntry, DEAD_CONNECTION_MESSAGE, true);
+                        addBagItem(connectionBag.getWaitingThreadCount());
+                     }
+                     else {
+                        connectionBag.unreserve(poolEntry);
+                        logger.debug("{} - keepalive: connection {} is alive", poolName, poolEntry.connection);
+                     }
+                  }
+               }, heartbeatTime, heartbeatTime, MILLISECONDS));
          }
 
          return poolEntry;
