@@ -16,7 +16,8 @@
 
 package com.zaxxer.hikari.util;
 
-public enum IsolationLevel {
+public enum IsolationLevel
+{
    TRANSACTION_NONE(0),
    TRANSACTION_READ_UNCOMMITTED(1),
    TRANSACTION_READ_COMMITTED(2),
@@ -33,5 +34,4 @@ public enum IsolationLevel {
    public int getLevelId() {
       return levelId;
    }
-
 }
