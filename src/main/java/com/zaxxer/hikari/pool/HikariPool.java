@@ -504,6 +504,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                         addBagItem(connectionBag.getWaitingThreadCount());
                      }
                      else {
+                        connectionBag.unreserve(poolEntry);
                         logger.debug("{} - keepalive: connection {} is alive", poolName, poolEntry.connection);
                      }
                   }

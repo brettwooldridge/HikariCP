@@ -1049,8 +1049,8 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       // keepalive time must be less than maxLifetime (if maxLifetime is enabled)
-      if (keepaliveTime != 0 && maxLifetime != 0 && keepaliveTime < maxLifetime) {
-         LOGGER.warn("{} - keepaliveTime is less than maxLifetime, disabling it.", poolName);
+      if (keepaliveTime != 0 && maxLifetime != 0 && keepaliveTime >= maxLifetime) {
+         LOGGER.warn("{} - keepaliveTime is greater than or equal to maxLifetime, disabling it.", poolName);
          keepaliveTime = DEFAULT_KEEPALIVE_TIME;
       }
 
