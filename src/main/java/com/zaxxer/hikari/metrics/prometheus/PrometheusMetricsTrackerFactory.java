@@ -49,9 +49,9 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory
 
    private final CollectorRegistry collectorRegistry;
 
-   public enum RegistrationStatus
+   enum RegistrationStatus
    {
-      REGISTERED;
+      REGISTERED
    }
 
    /**
