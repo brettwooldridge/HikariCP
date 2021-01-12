@@ -477,38 +477,19 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          final PoolEntry poolEntry = newPoolEntry();
 
          final long maxLifetime = config.getMaxLifetime();
-         final long keepaliveTime = config.getKeepaliveTime();
-
          if (maxLifetime > 0) {
             // variance up to 2.5% of the maxlifetime
             final long variance = maxLifetime > 10_000 ? ThreadLocalRandom.current().nextLong( maxLifetime / 40 ) : 0;
             final long lifetime = maxLifetime - variance;
-            poolEntry.setFutureEol(houseKeepingExecutorService.schedule(
-               () -> {
-                  if (softEvictConnection(poolEntry, "(connection has passed maxLifetime)", false /* not owner */)) {
-                     addBagItem(connectionBag.getWaitingThreadCount());
-                  }
-               },
-               lifetime, MILLISECONDS));
+            poolEntry.setFutureEol(houseKeepingExecutorService.schedule(new MaxLifetimeTask(poolEntry), lifetime, MILLISECONDS));
          }
 
+         final long keepaliveTime = config.getKeepaliveTime();
          if (keepaliveTime > 0) {
             // variance up to 10% of the heartbeat time
             final long variance = ThreadLocalRandom.current().nextLong(keepaliveTime / 10);
             final long heartbeatTime = keepaliveTime - variance;
-            poolEntry.setKeepalive(houseKeepingExecutorService.scheduleWithFixedDelay(
-               () -> {
-                  if (connectionBag.reserve(poolEntry)) {
-                     if (!isConnectionAlive(poolEntry.connection)) {
-                        softEvictConnection(poolEntry, DEAD_CONNECTION_MESSAGE, true);
-                        addBagItem(connectionBag.getWaitingThreadCount());
-                     }
-                     else {
-                        connectionBag.unreserve(poolEntry);
-                        logger.debug("{} - keepalive: connection {} is alive", poolName, poolEntry.connection);
-                     }
-                  }
-               }, heartbeatTime, heartbeatTime, MILLISECONDS));
+            poolEntry.setKeepalive(houseKeepingExecutorService.scheduleWithFixedDelay(new KeepaliveTask(poolEntry), heartbeatTime, heartbeatTime, MILLISECONDS));
          }
 
          return poolEntry;
@@ -831,6 +812,47 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          }
          catch (Exception e) {
             logger.error("Unexpected exception in housekeeping task", e);
+         }
+      }
+   }
+
+   private final class MaxLifetimeTask implements Runnable
+   {
+      private final PoolEntry poolEntry;
+
+      MaxLifetimeTask(final PoolEntry poolEntry)
+      {
+         this.poolEntry = poolEntry;
+      }
+
+      public void run()
+      {
+         if (softEvictConnection(poolEntry, "(connection has passed maxLifetime)", false /* not owner */)) {
+            addBagItem(connectionBag.getWaitingThreadCount());
+         }
+      }
+   }
+
+   private final class KeepaliveTask implements Runnable
+   {
+      private final PoolEntry poolEntry;
+
+      KeepaliveTask(final PoolEntry poolEntry)
+      {
+         this.poolEntry = poolEntry;
+      }
+
+      public void run()
+      {
+         if (connectionBag.reserve(poolEntry)) {
+            if (!isConnectionAlive(poolEntry.connection)) {
+               softEvictConnection(poolEntry, DEAD_CONNECTION_MESSAGE, true);
+               addBagItem(connectionBag.getWaitingThreadCount());
+            }
+            else {
+               connectionBag.unreserve(poolEntry);
+               logger.debug("{} - keepalive: connection {} is alive", poolName, poolEntry.connection);
+            }
          }
       }
    }
