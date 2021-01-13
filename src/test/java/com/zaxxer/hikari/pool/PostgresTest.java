@@ -16,7 +16,6 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.pool.TestElf.getPool;
 import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.util.ClockSource.currentTime;
 import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
@@ -25,12 +24,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.*;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -39,7 +34,6 @@ import org.junit.Before;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.util.UtilityElf;
 import org.junit.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -48,7 +42,7 @@ public class PostgresTest
 {
    private static final DockerImageName IMAGE_NAME = DockerImageName.parse("postgres:9.6.20");
 
-   private PostgreSQLContainer postgres;
+   private PostgreSQLContainer<?> postgres;
 
    @Before
    public void beforeTest() {
@@ -191,22 +185,7 @@ public class PostgresTest
       System.err.println("\n");
    }
 
-   static private void countdown(int seconds)
-   {
-      do {
-         System.out.printf("Starting in %d seconds...\n", seconds);
-         if (seconds > 10) {
-            UtilityElf.quietlySleep(SECONDS.toMillis(10));
-            seconds -= 10;
-         }
-         else {
-            UtilityElf.quietlySleep(SECONDS.toMillis(1));
-            seconds -= 1;
-         }
-      } while (seconds > 0);
-   }
-
-   static private HikariConfig createConfig(PostgreSQLContainer postgres) {
+   static private HikariConfig createConfig(PostgreSQLContainer<?> postgres) {
       HikariConfig config = newHikariConfig();
       config.setJdbcUrl(postgres.getJdbcUrl());
       config.setUsername(postgres.getUsername());
@@ -214,5 +193,4 @@ public class PostgresTest
       config.setDriverClassName(postgres.getDriverClassName());
       return config;
    }
-
 }

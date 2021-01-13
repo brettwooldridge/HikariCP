@@ -57,7 +57,7 @@ public class TestPropertySetter
       config.validate();
 
       Class<?> clazz = this.getClass().getClassLoader().loadClass(config.getDataSourceClassName());
-      DataSource dataSource = (DataSource) clazz.newInstance();
+      DataSource dataSource = (DataSource) clazz.getDeclaredConstructor().newInstance();
       PropertyElf.setTargetFromProperties(dataSource, config.getDataSourceProperties());
    }
 
@@ -70,7 +70,7 @@ public class TestPropertySetter
       config.addDataSourceProperty("logWriter", writer);
 
       Class<?> clazz = this.getClass().getClassLoader().loadClass(config.getDataSourceClassName());
-      DataSource dataSource = (DataSource) clazz.newInstance();
+      DataSource dataSource = (DataSource) clazz.getDeclaredConstructor().newInstance();
       PropertyElf.setTargetFromProperties(dataSource, config.getDataSourceProperties());
 
       assertSame(PrintWriter.class, dataSource.getLogWriter().getClass());
@@ -85,7 +85,7 @@ public class TestPropertySetter
       config.validate();
 
       Class<?> clazz = this.getClass().getClassLoader().loadClass(config.getDataSourceClassName());
-      DataSource dataSource = (DataSource) clazz.newInstance();
+      DataSource dataSource = (DataSource) clazz.getDeclaredConstructor().newInstance();
       PropertyElf.setTargetFromProperties(dataSource, config.getDataSourceProperties());
    }
 
@@ -106,6 +106,7 @@ public class TestPropertySetter
          fail();
       }
       catch (RuntimeException e) {
+         // fall-thru
       }
    }
 }

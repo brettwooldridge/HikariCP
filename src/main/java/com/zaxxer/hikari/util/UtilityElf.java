@@ -29,6 +29,11 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  */
 public final class UtilityElf
 {
+   private UtilityElf()
+   {
+      // non-constructable
+   }
+
    /**
     *
     * @return null if string is null or empty
@@ -88,7 +93,7 @@ public final class UtilityElf
       try {
          Class<?> loaded = UtilityElf.class.getClassLoader().loadClass(className);
          if (args.length == 0) {
-            return clazz.cast(loaded.newInstance());
+            return clazz.cast(loaded.getDeclaredConstructor().newInstance());
          }
 
          Class<?>[] argClasses = new Class<?>[args.length];

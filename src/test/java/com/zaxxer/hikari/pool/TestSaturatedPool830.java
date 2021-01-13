@@ -16,14 +16,12 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.pool.TestElf.getConcurrentBag;
 import static com.zaxxer.hikari.pool.TestElf.getPool;
 import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.pool.TestElf.setSlf4jLogLevel;
 import static com.zaxxer.hikari.util.ClockSource.currentTime;
 import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
-import static java.lang.Math.round;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
 
@@ -33,7 +31,6 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.logging.log4j.Level;
@@ -49,9 +46,9 @@ import com.zaxxer.hikari.mocks.StubStatement;
 /**
  * @author Brett Wooldridge
  */
-public class SaturatedPoolTest830
+public class TestSaturatedPool830
 {
-   private static final Logger LOGGER = LoggerFactory.getLogger(SaturatedPoolTest830.class);
+   private static final Logger LOGGER = LoggerFactory.getLogger(TestSaturatedPool830.class);
    private static final int MAX_POOL_SIZE = 10;
 
    @Test
@@ -144,7 +141,7 @@ outer:   while (true) {
             quietlySleep(50);
          }
 
-         assertEquals("Rate not in balance at 10req/s", SECONDS.toMillis(1) / sleep, 10L);
+         assertEquals("Rate not in balance at 10req/s", 10L, SECONDS.toMillis(1) / sleep);
       }
       finally {
          StubStatement.setSimulatedQueryTime(0);

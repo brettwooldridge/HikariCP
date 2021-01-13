@@ -19,7 +19,6 @@ public abstract class ProxyDatabaseMetaData implements DatabaseMetaData
       this.delegate = metaData;
    }
 
-   @SuppressWarnings("unused")
    final SQLException checkException(SQLException e)
    {
       return connection.checkException(e);

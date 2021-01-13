@@ -48,24 +48,23 @@ public class MicrometerMetricsTracker implements IMetricsTracker
    private static final String METRIC_NAME_MAX_CONNECTIONS = HIKARI_METRIC_NAME_PREFIX + ".connections.max";
    private static final String METRIC_NAME_MIN_CONNECTIONS = HIKARI_METRIC_NAME_PREFIX + ".connections.min";
 
-
    private final Timer connectionObtainTimer;
    private final Counter connectionTimeoutCounter;
    private final Timer connectionUsage;
    private final Timer connectionCreation;
-   @SuppressWarnings({"FieldCanBeLocal", "unused"})
+   @SuppressWarnings("FieldCanBeLocal")
    private final Gauge totalConnectionGauge;
-   @SuppressWarnings({"FieldCanBeLocal", "unused"})
+   @SuppressWarnings("FieldCanBeLocal")
    private final Gauge idleConnectionGauge;
-   @SuppressWarnings({"FieldCanBeLocal", "unused"})
+   @SuppressWarnings("FieldCanBeLocal")
    private final Gauge activeConnectionGauge;
-   @SuppressWarnings({"FieldCanBeLocal", "unused"})
+   @SuppressWarnings("FieldCanBeLocal")
    private final Gauge pendingConnectionGauge;
-   @SuppressWarnings({"FieldCanBeLocal", "unused"})
+   @SuppressWarnings("FieldCanBeLocal")
    private final Gauge maxConnectionGauge;
-   @SuppressWarnings({"FieldCanBeLocal", "unused"})
+   @SuppressWarnings("FieldCanBeLocal")
    private final Gauge minConnectionGauge;
-   @SuppressWarnings({"FieldCanBeLocal", "unused"})
+   @SuppressWarnings("FieldCanBeLocal")
    private final PoolStats poolStats;
    private final MeterRegistry meterRegistry;
 

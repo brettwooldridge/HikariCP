@@ -1,6 +1,5 @@
 package com.zaxxer.hikari.util;
 
-import org.junit.Assert;
 import org.junit.Test;
 import com.zaxxer.hikari.mocks.TestObject;
 

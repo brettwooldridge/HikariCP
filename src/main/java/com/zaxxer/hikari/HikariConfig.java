@@ -45,7 +45,7 @@ import static com.zaxxer.hikari.util.UtilityElf.safeIsAssignableFrom;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-@SuppressWarnings({"SameParameterValue", "unused"})
+@SuppressWarnings({"SameParameterValue"})
 public class HikariConfig implements HikariConfigMXBean
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariConfig.class);
@@ -1131,7 +1131,7 @@ public class HikariConfig implements HikariConfigMXBean
             else if (value == null) {
                value = "none";
             }
-            LOGGER.debug((prop + "................................................").substring(0, 32) + value);
+            LOGGER.debug("{}{}", (prop + "................................................".substring(0, 32)), value);
          }
          catch (Exception e) {
             // continue

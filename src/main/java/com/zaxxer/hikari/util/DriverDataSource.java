@@ -50,10 +50,10 @@ public final class DriverDataSource implements DataSource
       }
 
       if (username != null) {
-         driverProperties.put(USER, driverProperties.getProperty("user", username));
+         driverProperties.put(USER, driverProperties.getProperty(USER, username));
       }
       if (password != null) {
-         driverProperties.put(PASSWORD, driverProperties.getProperty("password", password));
+         driverProperties.put(PASSWORD, driverProperties.getProperty(PASSWORD, password));
       }
 
       if (driverClassName != null) {
@@ -92,7 +92,7 @@ public final class DriverDataSource implements DataSource
 
             if (driverClass != null) {
                try {
-                  driver = (Driver) driverClass.newInstance();
+                  driver = (Driver) driverClass.getDeclaredConstructor().newInstance();
                } catch (Exception e) {
                   LOGGER.warn("Failed to create instance of driver class {}, trying jdbcUrl resolution", driverClassName, e);
                }
@@ -126,13 +126,13 @@ public final class DriverDataSource implements DataSource
    {
       final Properties cloned = (Properties) driverProperties.clone();
       if (username != null) {
-         cloned.put("user", username);
+         cloned.put(USER, username);
          if (cloned.containsKey("username")) {
             cloned.put("username", username);
          }
       }
       if (password != null) {
-         cloned.put("password", password);
+         cloned.put(PASSWORD, password);
       }
 
       return driver.connect(jdbcUrl, cloned);

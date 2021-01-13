@@ -26,7 +26,6 @@ import com.zaxxer.hikari.util.FastList;
  *
  * @author Brett Wooldridge
  */
-@SuppressWarnings("unused")
 public final class ProxyFactory
 {
    private ProxyFactory()

@@ -42,7 +42,7 @@ import com.zaxxer.hikari.util.UtilityElf;
  *
  * @author Brett Wooldridge
  */
-public class StubConnection extends StubBaseConnection implements Connection
+public class StubConnection extends StubBaseConnection
 {
    public static final AtomicInteger count = new AtomicInteger();
    public static volatile boolean slowCreate;

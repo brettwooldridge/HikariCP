@@ -51,7 +51,7 @@ public class TomcatConcurrentBagLeakTest
 
       ClassLoader cl = new FauxWebClassLoader();
       Class<?> clazz = cl.loadClass(this.getClass().getName() + "$FauxWebContext");
-      Object fauxWebContext = clazz.newInstance();
+      Object fauxWebContext = clazz.getDeclaredConstructor().newInstance();
 
       Method createConcurrentBag = clazz.getDeclaredMethod("createConcurrentBag");
       createConcurrentBag.invoke(fauxWebContext);
@@ -68,7 +68,7 @@ public class TomcatConcurrentBagLeakTest
 
       ClassLoader cl = this.getClass().getClassLoader();
       Class<?> clazz = cl.loadClass(this.getClass().getName() + "$FauxWebContext");
-      Object fauxWebContext = clazz.newInstance();
+      Object fauxWebContext = clazz.getDeclaredConstructor().newInstance();
 
       Method createConcurrentBag = clazz.getDeclaredMethod("createConcurrentBag");
       createConcurrentBag.invoke(fauxWebContext);
@@ -102,7 +102,6 @@ public class TomcatConcurrentBagLeakTest
       }
    }
 
-   @SuppressWarnings("unused")
    public static class FauxWebContext
    {
       private static final Logger log = LoggerFactory.getLogger(FauxWebContext.class);
@@ -110,7 +109,7 @@ public class TomcatConcurrentBagLeakTest
       @SuppressWarnings("WeakerAccess")
       public Exception failureException;
 
-      @SuppressWarnings({"unused", "ResultOfMethodCallIgnored"})
+      @SuppressWarnings({"ResultOfMethodCallIgnored"})
       public void createConcurrentBag() throws InterruptedException
       {
          try (ConcurrentBag<PoolEntry> bag = new ConcurrentBag<>((x) -> CompletableFuture.completedFuture(Boolean.TRUE))) {

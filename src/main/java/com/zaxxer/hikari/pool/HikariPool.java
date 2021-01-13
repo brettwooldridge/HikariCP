@@ -456,7 +456,6 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       }
    }
 
-   @SuppressWarnings("unused")
    int[] getPoolStateCounts()
    {
       return connectionBag.getStateCounts();
