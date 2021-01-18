@@ -20,7 +20,7 @@
       <metrics.version>3.2.4</metrics.version>
       <micrometer.version>1.3.2</micrometer.version>
       <simpleclient.version>0.0.26</simpleclient.version>
-      <mockito.version>3.2.4</mockito.version>
+      <mockito.version>3.7.7</mockito.version>
       <pax.exam.version>4.13.1</pax.exam.version>
       <pax.url.version>2.5.4</pax.url.version>
       <postgresql.version>42.1.4</postgresql.version>
