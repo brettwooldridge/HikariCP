@@ -18,7 +18,7 @@ _Java 8 thru 11 maven artifact:_
     <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
-        <version>3.4.5</version>
+        <version>4.0.0</version>
     </dependency>
 ```
 _Java 7 maven artifact (*maintenance mode*):_
@@ -166,6 +166,18 @@ variation of +15 seconds.  A connection will never be retired as idle *before* t
 of 0 means that idle connections are never removed from the pool.  The minimum allowed value is 10000ms
 (10 seconds).
 *Default: 600000 (10 minutes)*
+
+&#8986;``keepaliveTime``<br/>
+This property controls how frequently HikariCP will attempt to keep a connection alive, in order to prevent
+it from being timed out by the database or network infrastructure. This value must be less than the
+`maxLifetime` value. A "keepalive" will only occur on idle connections, and never against in-use
+connections. When the time arrives for a "keepalive" against a given connection, that connection will be
+removed from the pool, "pinged", and then returned to the pool. The 'ping' is one of either invocation of
+the JDBC4 `isValid()` method, or execution of the `connectionTestQuery`. Typically, the duration out-of-the-pool
+should be measured in single digit milliseconds or even sub-milliseconds, and therefore should have little
+or no noticible performance impact. The minimum allowed value is 30000ms (30 seconds), but a value in the
+range of minutes is most desirable.
+*Default: 0 (disabled)*
 
 &#8986;``maxLifetime``<br/>
 This property controls the maximum lifetime of a connection in the pool.  An in-use connection will
