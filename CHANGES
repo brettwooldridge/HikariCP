@@ -8,7 +8,7 @@ Changes in 4.0.0
 
  * merged #1661 mark generated proxy class final
 
- * merged #1681 allow alternate, more standard, JXM ObjectName, enabled by setting system 
+ * merged #1681 allow alternate, more standard, JMX ObjectName, enabled by setting system 
    property 'hikaricp.jmx.register2.0=true'
 
  * merged #1605 fixes Java 11 issue where setMaximumPoolSize needs to be called before
