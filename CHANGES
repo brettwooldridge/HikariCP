@@ -6,7 +6,7 @@ Changes in 4.0.0
 
  * merged #1700 remove micrometer metrics upon close
 
- * merged #1661 mark generated proxy class final
+ * merged #1661 mark generated proxy classes final
 
  * merged #1681 allow alternate, more standard, JMX ObjectName, enabled by setting system 
    property 'hikaricp.jmx.register2.0=true'
