@@ -2,7 +2,7 @@ HikariCP Changes
 
 Changes in 4.0.0
 
- * merged #1669 #1582 mark optional dependencies are 'require static' in module-info
+ * merged #1669 #1582 mark optional dependencies as 'require static' in module-info
 
  * merged #1700 remove micrometer metrics upon close
 
