@@ -1,5 +1,11 @@
 HikariCP Changes
 
+Changes in 4.0.1
+ * fixed #1725 pom file change to be more gradle-friendly
+ 
+ * fixed #1726 regression in micrometrics caused by lack of a strong reference to an
+   object
+
 Changes in 4.0.0
 
  * merged #1669 #1582 mark optional dependencies as 'require static' in module-info
