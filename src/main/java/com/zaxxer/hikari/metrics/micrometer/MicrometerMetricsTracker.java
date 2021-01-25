@@ -65,10 +65,13 @@ public class MicrometerMetricsTracker implements IMetricsTracker
    @SuppressWarnings("FieldCanBeLocal")
    private final Gauge minConnectionGauge;
    @SuppressWarnings("FieldCanBeLocal")
+   private final PoolStats poolStats;
+   @SuppressWarnings("FieldCanBeLocal")
    private final MeterRegistry meterRegistry;
 
    MicrometerMetricsTracker(final String poolName, final PoolStats poolStats, final MeterRegistry meterRegistry)
    {
+      this.poolStats = poolStats;
       this.meterRegistry = meterRegistry;
 
       this.connectionObtainTimer = Timer.builder(METRIC_NAME_WAIT)
@@ -91,32 +94,32 @@ public class MicrometerMetricsTracker implements IMetricsTracker
          .tags(METRIC_CATEGORY, poolName)
          .register(meterRegistry);
 
-      this.totalConnectionGauge = Gauge.builder(METRIC_NAME_TOTAL_CONNECTIONS, poolStats, PoolStats::getTotalConnections)
+      this.totalConnectionGauge = Gauge.builder(METRIC_NAME_TOTAL_CONNECTIONS, this.poolStats, PoolStats::getTotalConnections)
          .description("Total connections")
          .tags(METRIC_CATEGORY, poolName)
          .register(meterRegistry);
 
-      this.idleConnectionGauge = Gauge.builder(METRIC_NAME_IDLE_CONNECTIONS, poolStats, PoolStats::getIdleConnections)
+      this.idleConnectionGauge = Gauge.builder(METRIC_NAME_IDLE_CONNECTIONS, this.poolStats, PoolStats::getIdleConnections)
          .description("Idle connections")
          .tags(METRIC_CATEGORY, poolName)
          .register(meterRegistry);
 
-      this.activeConnectionGauge = Gauge.builder(METRIC_NAME_ACTIVE_CONNECTIONS, poolStats, PoolStats::getActiveConnections)
+      this.activeConnectionGauge = Gauge.builder(METRIC_NAME_ACTIVE_CONNECTIONS, this.poolStats, PoolStats::getActiveConnections)
          .description("Active connections")
          .tags(METRIC_CATEGORY, poolName)
          .register(meterRegistry);
 
-      this.pendingConnectionGauge = Gauge.builder(METRIC_NAME_PENDING_CONNECTIONS, poolStats, PoolStats::getPendingThreads)
+      this.pendingConnectionGauge = Gauge.builder(METRIC_NAME_PENDING_CONNECTIONS, this.poolStats, PoolStats::getPendingThreads)
          .description("Pending threads")
          .tags(METRIC_CATEGORY, poolName)
          .register(meterRegistry);
 
-      this.maxConnectionGauge = Gauge.builder(METRIC_NAME_MAX_CONNECTIONS, poolStats, PoolStats::getMaxConnections)
+      this.maxConnectionGauge = Gauge.builder(METRIC_NAME_MAX_CONNECTIONS, this.poolStats, PoolStats::getMaxConnections)
          .description("Max connections")
          .tags(METRIC_CATEGORY, poolName)
          .register(meterRegistry);
 
-      this.minConnectionGauge = Gauge.builder(METRIC_NAME_MIN_CONNECTIONS, poolStats, PoolStats::getMinConnections)
+      this.minConnectionGauge = Gauge.builder(METRIC_NAME_MIN_CONNECTIONS, this.poolStats, PoolStats::getMinConnections)
          .description("Min connections")
          .tags(METRIC_CATEGORY, poolName)
          .register(meterRegistry);
