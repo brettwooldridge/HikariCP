@@ -106,6 +106,12 @@ public class HikariConfig implements HikariConfigMXBean
 
    /**
     * Default constructor
+    * <p>
+    * If the System property {@code hikari.configurationFile} is set,
+    * then the default constructor will attempt to load the specified configuration file
+    * <p>
+    * {@link #HikariConfig(String propertyFileName)} can be similarly used
+    * instead of using the system property
     */
    public HikariConfig()
    {
