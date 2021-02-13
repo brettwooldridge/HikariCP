@@ -13,11 +13,19 @@ Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC con
 
 ----------------------------------------------------
 ### Index
-[Artifacts](#artifacts) <br>
-[JMH Benchmarks](#jmh-benchmarks-checkered_flag) <br>
-[Analyses](#analyses-microscope) <br>
-[User Testimonials](#user-testimonials-family) <br>
-[Configuration](#configuration-knobs-baby-gear) <br>
+* [Artifacts](#artifacts)
+* [JMH Benchmarks](#jmh-benchmarks-checkered_flag)
+* [Analyses](#analyses-microscope)
+  * [Spike Demand Pool Comparison](#spike-demand-pool-comparison)
+  * [You're probably doing it wrong](#youre-probably-doing-it-wrong)
+  * [WIX Engineering Analysis](#wix-engineering-analysis)
+  * [Failure: Pools behaving badly](#failure-pools-behaving-badly)
+* [User Testimonials](#user-testimonials-family) <br>
+* [Configuration](#configuration-knobs-baby-gear) <br>
+  * [Essentials](#essentials)
+  * [Frequently used](#frequently-used)
+  * [Infrequently used](#infrequently-used)
+* [Initialization](#initialization)
 
 ----------------------------------------------------
 
@@ -78,7 +86,7 @@ Analysis of HikariCP v2.6, in comparison to other pools, in relation to a unique
 The customer's environment imposed a high cost of new connection acquisition, and a requirement for a dynamically-sized pool, but yet a need for responsiveness to request spikes.  Read about the spike demand handling [here](https://github.com/brettwooldridge/HikariCP/blob/dev/documents/Welcome-To-The-Jungle.md).
 <br/>
 <br/>
-#### You're [probably] doing it wrong.
+#### You're [probably] doing it wrong
 <a href="https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing"><img width="200" align="right" src="https://github.com/brettwooldridge/HikariCP/wiki/Postgres_Chart.png"></a>
 AKA *"What you probably didn't know about connection pool sizing"*.  Watch a video from the Oracle Real-world Performance group, and learn about why connection pools do not need to be sized as large as they often are.  In fact, oversized connection pools have a clear and demonstrable *negative* impact on performance; a 50x difference in the case of the Oracle demonstration.  [Read on to find out](https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing).
 <br/>
@@ -111,7 +119,7 @@ HikariCP comes with *sane* defaults that perform well in most deployments withou
 
 &#128680;&nbsp;HikariCP relies on accurate timers for both performance and reliability. It is *imperative* that your server is synchronized with a time-source such as an NTP server. *Especially* if your server is running within a virtual machine.  Why? [Read more here](https://dba.stackexchange.com/a/171020). **Do not rely on hypervisor settings to "synchronize" the clock of the virtual machine. Configure time-source synchronization inside the virtual machine.**   If you come asking for support on an issue that turns out to be caused by lack time synchronization, you will be taunted publicly on Twitter.
 
-##### Essentials
+#### Essentials
 
 &#128288;``dataSourceClassName``<br/>
 This is the name of the ``DataSource`` class provided by the JDBC driver.  Consult the
@@ -154,7 +162,7 @@ driver's ``DriverManager.getConnection(jdbcUrl, props)`` call.  If this is not w
 skip this method entirely and call ``addDataSourceProperty("pass", ...)``, for example.
 *Default: none*
 
-##### Frequently used
+#### Frequently used
 
 &#9989;``autoCommit``<br/>
 This property controls the default auto-commit behavior of connections returned from the pool.
@@ -241,7 +249,7 @@ This property represents a user-defined name for the connection pool and appears
 in logging and JMX management consoles to identify pools and pool configurations.
 *Default: auto-generated*
 
-##### Infrequently used
+#### Infrequently used
 
 &#8986;``initializationFailTimeout``<br/>
 This property controls whether the pool will "fail fast" if the pool cannot be seeded with
