@@ -12,6 +12,16 @@ Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC con
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- *Edsger Dijkstra*</sup>
 
 ----------------------------------------------------
+### Index
+[Artifacts](#artifacts)
+[JMH Benchmarks](#jmh-benchmarks)
+[Analyses](#analyses)
+[User Testimonials](#user-testimonials)
+[Configuration](#configuration)
+
+----------------------------------------------------
+
+### Artifacts
 
 _Java 8 thru 11 maven artifact:_
 ```xml
@@ -41,7 +51,7 @@ Or [download from here](http://search.maven.org/#search%7Cga%7C1%7Ccom.zaxxer.hi
 
 ----------------------------------------------------
 
-##### JMH Benchmarks :checkered_flag:
+### JMH Benchmarks :checkered_flag:
 
 Microbenchmarks were created to isolate and measure the overhead of pools using the [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/). You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
 
@@ -59,7 +69,7 @@ Microbenchmarks were created to isolate and measure the overhead of pools using 
 </sup>
 
 ----------------------------------------------------
-#### Analyses :microscope:
+### Analyses :microscope:
 
 #### Spike Demand Pool Comparison
 <a href="https://github.com/brettwooldridge/HikariCP/blob/dev/documents/Welcome-To-The-Jungle.md"><img width="400" align="right" src="https://github.com/brettwooldridge/HikariCP/wiki/Spike-Hikari.png"></a>
@@ -86,7 +96,7 @@ Read our interesting ["Database down" pool challenge](https://github.com/brettwo
 Open source software like HikariCP, like any product, competes in the free market.  We get it.  We understand that product advancements, once public, are often co-opted.  And we understand that ideas can arise from the zeitgeist; simultaneously and independently.  But the timeline of innovation, particularly in open source projects, is also clear and we want our users to understand the direction of flow of innovation in our space.  It could be demoralizing to see the result of hundreds of hours of thought and research co-opted so easily, and perhaps that is inherent in a free marketplace, but we are not demoralized.  *We are motivated; to widen the gap.*
 
 ----------------------------------------------------
-##### User Testimonials
+### User Testimonials :family:
 
 [![](https://github.com/brettwooldridge/HikariCP/wiki/tweet3.png)](https://twitter.com/jkuipers)<br/>
 [![](https://github.com/brettwooldridge/HikariCP/wiki/tweet1.png)](https://twitter.com/steve_objectify)<br/>
@@ -94,7 +104,7 @@ Open source software like HikariCP, like any product, competes in the free marke
 [![](https://github.com/brettwooldridge/HikariCP/wiki/tweet4.png)](https://twitter.com/dgomesbr/status/527521925401419776)
 
 ------------------------------
-#### Configuration (knobs, baby!)
+### Configuration (knobs, baby!) :gear:
 HikariCP comes with *sane* defaults that perform well in most deployments without additional tweaking. **Every property is optional, except for the "essentials" marked below.**
 
 <sup>&#128206;</sup>&nbsp;*HikariCP uses milliseconds for all time values.*
