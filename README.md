@@ -169,13 +169,13 @@ This property controls the default auto-commit behavior of connections returned 
 It is a boolean value.
 *Default: true*
 
-&#8986;``connectionTimeout``<br/>
+&#9203;``connectionTimeout``<br/>
 This property controls the maximum number of milliseconds that a client (that's you) will wait
 for a connection from the pool.  If this time is exceeded without a connection becoming
 available, a SQLException will be thrown.  Lowest acceptable connection timeout is 250 ms.
 *Default: 30000 (30 seconds)*
 
-&#8986;``idleTimeout``<br/>
+&#9203;``idleTimeout``<br/>
 This property controls the maximum amount of time that a connection is allowed to sit idle in the
 pool.  **This setting only applies when ``minimumIdle`` is defined to be less than ``maximumPoolSize``.**
 Idle connections will *not* be retired once the pool reaches ``minimumIdle`` connections.  Whether a
@@ -185,7 +185,7 @@ of 0 means that idle connections are never removed from the pool.  The minimum a
 (10 seconds).
 *Default: 600000 (10 minutes)*
 
-&#8986;``keepaliveTime``<br/>
+&#9203;``keepaliveTime``<br/>
 This property controls how frequently HikariCP will attempt to keep a connection alive, in order to prevent
 it from being timed out by the database or network infrastructure. This value must be less than the
 `maxLifetime` value. A "keepalive" will only occur on an idle connection. When the time arrives for a "keepalive"
@@ -196,7 +196,7 @@ or even sub-millisecond, and therefore should have little or no noticible perfor
 allowed value is 30000ms (30 seconds), but a value in the range of minutes is most desirable.
 *Default: 0 (disabled)*
 
-&#8986;``maxLifetime``<br/>
+&#9203;``maxLifetime``<br/>
 This property controls the maximum lifetime of a connection in the pool.  An in-use connection will
 never be retired, only when it is closed will it then be removed.  On a connection-by-connection
 basis, minor negative attenuation is applied to avoid mass-extinction in the pool.  **We strongly recommend
@@ -251,7 +251,7 @@ in logging and JMX management consoles to identify pools and pool configurations
 
 #### Infrequently used
 
-&#8986;``initializationFailTimeout``<br/>
+&#9203;``initializationFailTimeout``<br/>
 This property controls whether the pool will "fail fast" if the pool cannot be seeded with
 an initial connection successfully.  Any positive number is taken to be the number of 
 milliseconds to attempt to acquire an initial connection; the application thread will be 
@@ -314,12 +314,12 @@ common for all queries.  The value of this property is the constant name from th
 class such as ``TRANSACTION_READ_COMMITTED``, ``TRANSACTION_REPEATABLE_READ``, etc.
 *Default: driver default*
 
-&#8986;``validationTimeout``<br/>
+&#9203;``validationTimeout``<br/>
 This property controls the maximum amount of time that a connection will be tested for aliveness.
 This value must be less than the ``connectionTimeout``.  Lowest acceptable validation timeout is 250 ms.
 *Default: 5000*
 
-&#8986;``leakDetectionThreshold``<br/>
+&#9203;``leakDetectionThreshold``<br/>
 This property controls the amount of time that a connection can be out of the pool before a
 message is logged indicating a possible connection leak.  A value of 0 means leak detection
 is disabled.  Lowest acceptable value for enabling leak detection is 2000 (2 seconds).
