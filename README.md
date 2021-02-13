@@ -13,11 +13,11 @@ Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC con
 
 ----------------------------------------------------
 ### Index
-[Artifacts](#artifacts)
-[JMH Benchmarks](#jmh-benchmarks)
-[Analyses](#analyses)
-[User Testimonials](#user-testimonials)
-[Configuration](#configuration)
+[Artifacts](#artifacts) <br>
+[JMH Benchmarks](#jmh-benchmarks-checkered_flag) <br>
+[Analyses](#analyses-microscope) <br>
+[User Testimonials](#user-testimonials-family) <br>
+[Configuration](#configuration-knobs-baby-gear) <br>
 
 ----------------------------------------------------
 
