@@ -121,7 +121,7 @@ HikariCP comes with *sane* defaults that perform well in most deployments withou
 
 #### Essentials
 
-&#128288;``dataSourceClassName``<br/>
+&#128292;``dataSourceClassName``<br/>
 This is the name of the ``DataSource`` class provided by the JDBC driver.  Consult the
 documentation for your specific JDBC driver to get this class name, or see the [table](https://github.com/brettwooldridge/HikariCP#popular-datasource-class-names) below.
 Note XA data sources are not supported.  XA requires a real transaction manager like
@@ -131,7 +131,7 @@ Note XA data sources are not supported.  XA requires a real transaction manager 
 
 *- or -*
 
-&#128288;``jdbcUrl``<br/>
+&#128292;``jdbcUrl``<br/>
 This property directs HikariCP to use "DriverManager-based" configuration.  We feel that DataSource-based
 configuration (above) is superior for a variety of reasons (see below), but for many deployments there is
 little significant difference.  **When using this property with "old" drivers, you may also need to set
@@ -142,7 +142,7 @@ specified in the URL itself.
 
 ***
 
-&#128288;``username``<br/>
+&#128292;``username``<br/>
 This property sets the default authentication username used when obtaining *Connections* from
 the underlying driver.  Note that for DataSources this works in a very deterministic fashion by
 calling ``DataSource.getConnection(*username*, password)`` on the underlying DataSource.  However,
@@ -152,7 +152,7 @@ driver's ``DriverManager.getConnection(jdbcUrl, props)`` call.  If this is not w
 skip this method entirely and call ``addDataSourceProperty("username", ...)``, for example.
 *Default: none*
 
-&#128288;``password``<br/>
+&#128292;``password``<br/>
 This property sets the default authentication password used when obtaining *Connections* from
 the underlying driver. Note that for DataSources this works in a very deterministic fashion by
 calling ``DataSource.getConnection(username, *password*)`` on the underlying DataSource.  However,
@@ -244,7 +244,7 @@ pool to report current health information.  See the [Health Checks](https://gith
 wiki page for details.
 *Default: none*
 
-&#128288;``poolName``<br/>
+&#128292;``poolName``<br/>
 This property represents a user-defined name for the connection pool and appears mainly
 in logging and JMX management consoles to identify pools and pool configurations.
 *Default: auto-generated*
@@ -289,24 +289,24 @@ or not will depend largely on your application and database.
 This property controls whether or not JMX Management Beans ("MBeans") are registered or not.
 *Default: false*
 
-&#128288;``catalog``<br/>
+&#128292;``catalog``<br/>
 This property sets the default *catalog* for databases that support the concept of catalogs.
 If this property is not specified, the default catalog defined by the JDBC driver is used.
 *Default: driver default*
 
-&#128288;``connectionInitSql``<br/>
+&#128292;``connectionInitSql``<br/>
 This property sets a SQL statement that will be executed after every new connection creation
 before adding it to the pool. If this SQL is not valid or throws an exception, it will be
 treated as a connection failure and the standard retry logic will be followed.
 *Default: none*
 
-&#128288;``driverClassName``<br/>
+&#128292;``driverClassName``<br/>
 HikariCP will attempt to resolve a driver through the DriverManager based solely on the ``jdbcUrl``,
 but for some older drivers the ``driverClassName`` must also be specified.  Omit this property unless
 you get an obvious error message indicating that the driver was not found.
 *Default: none*
 
-&#128288;``transactionIsolation``<br/>
+&#128292;``transactionIsolation``<br/>
 This property controls the default transaction isolation level of connections returned from
 the pool.  If this property is not specified, the default transaction isolation level defined
 by the JDBC driver is used.  Only use this property if you have specific isolation requirements that are
@@ -333,7 +333,7 @@ frameworks. When this property is specified, the ``dataSourceClassName`` propert
 DataSource-specific properties will be ignored.
 *Default: none*
 
-&#128288;``schema``<br/>
+&#128292;``schema``<br/>
 This property sets the default *schema* for databases that support the concept of schemas.
 If this property is not specified, the default schema defined by the JDBC driver is used.
 *Default: driver default*
