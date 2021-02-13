@@ -14,18 +14,18 @@ Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC con
 ----------------------------------------------------
 ### Index
 * [Artifacts](#artifacts)
-* [JMH Benchmarks](#jmh-benchmarks-checkered_flag)
-* [Analyses](#analyses-microscope)
+* [JMH Benchmarks](#checkered_flag-jmh-benchmarks)
+* [Analyses](#microscope-analyses)
   * [Spike Demand Pool Comparison](#spike-demand-pool-comparison)
   * [You're probably doing it wrong](#youre-probably-doing-it-wrong)
   * [WIX Engineering Analysis](#wix-engineering-analysis)
   * [Failure: Pools behaving badly](#failure-pools-behaving-badly)
-* [User Testimonials](#user-testimonials-family) <br>
-* [Configuration](#configuration-knobs-baby-gear) <br>
+* [User Testimonials](#family-user-testimonials) <br>
+* [Configuration](#gear-configuration-knobs-baby) <br>
   * [Essentials](#essentials)
   * [Frequently used](#frequently-used)
   * [Infrequently used](#infrequently-used)
-* [Initialization](#initialization)
+* [Initialization](#rocket-initialization)
 
 ----------------------------------------------------
 
@@ -59,7 +59,7 @@ Or [download from here](http://search.maven.org/#search%7Cga%7C1%7Ccom.zaxxer.hi
 
 ----------------------------------------------------
 
-### JMH Benchmarks :checkered_flag:
+### :checkered_flag: JMH Benchmarks
 
 Microbenchmarks were created to isolate and measure the overhead of pools using the [JMH microbenchmark framework](http://openjdk.java.net/projects/code-tools/jmh/). You can checkout the [HikariCP benchmark project for details](https://github.com/brettwooldridge/HikariCP-benchmark) and review/run the benchmarks yourself.
 
@@ -77,7 +77,7 @@ Microbenchmarks were created to isolate and measure the overhead of pools using 
 </sup>
 
 ----------------------------------------------------
-### Analyses :microscope:
+### :microscope: Analyses
 
 #### Spike Demand Pool Comparison
 <a href="https://github.com/brettwooldridge/HikariCP/blob/dev/documents/Welcome-To-The-Jungle.md"><img width="400" align="right" src="https://github.com/brettwooldridge/HikariCP/wiki/Spike-Hikari.png"></a>
@@ -104,7 +104,7 @@ Read our interesting ["Database down" pool challenge](https://github.com/brettwo
 Open source software like HikariCP, like any product, competes in the free market.  We get it.  We understand that product advancements, once public, are often co-opted.  And we understand that ideas can arise from the zeitgeist; simultaneously and independently.  But the timeline of innovation, particularly in open source projects, is also clear and we want our users to understand the direction of flow of innovation in our space.  It could be demoralizing to see the result of hundreds of hours of thought and research co-opted so easily, and perhaps that is inherent in a free marketplace, but we are not demoralized.  *We are motivated; to widen the gap.*
 
 ----------------------------------------------------
-### User Testimonials :family:
+### :family: User Testimonials
 
 [![](https://github.com/brettwooldridge/HikariCP/wiki/tweet3.png)](https://twitter.com/jkuipers)<br/>
 [![](https://github.com/brettwooldridge/HikariCP/wiki/tweet1.png)](https://twitter.com/steve_objectify)<br/>
@@ -112,7 +112,7 @@ Open source software like HikariCP, like any product, competes in the free marke
 [![](https://github.com/brettwooldridge/HikariCP/wiki/tweet4.png)](https://twitter.com/dgomesbr/status/527521925401419776)
 
 ------------------------------
-### Configuration (knobs, baby!) :gear:
+### :gear: Configuration (knobs, baby!)
 HikariCP comes with *sane* defaults that perform well in most deployments without additional tweaking. **Every property is optional, except for the "essentials" marked below.**
 
 <sup>&#128206;</sup>&nbsp;*HikariCP uses milliseconds for all time values.*
@@ -393,7 +393,7 @@ Please read the [Rapid Recovery Guide](https://github.com/brettwooldridge/Hikari
 
 ----------------------------------------------------
 
-### Initialization
+### :rocket: Initialization
 
 You can use the ``HikariConfig`` class like so<sup>1</sup>:
 ```java
