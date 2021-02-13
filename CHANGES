@@ -1,6 +1,11 @@
 HikariCP Changes
 
+Changes in 4.0.2
+
+ * fixed regression caused by #1605 affecting block-until-filled semantic
+
 Changes in 4.0.1
+
  * fixed #1725 pom file change to be more gradle-friendly
  
  * fixed #1726 regression in micrometrics caused by lack of a strong reference to an
@@ -45,6 +50,7 @@ Changes in 3.4.3
  * add ThreadLocal removal attempt when bag item is removed.
 
 Changes in 3.4.2
+
  * fixed 1528 regression caused by pull request 1159 whereby fail-fast logic would exit upon all
    errors even if it was configured to continue trying.
 
@@ -110,7 +116,6 @@ Changes in 3.3.0
    reach 0.
 
  * fixes #1287 when system property blockUntilFilled is set, use multiple threads to fill the pool.
-
 
 Changes in 3.2.0
 
