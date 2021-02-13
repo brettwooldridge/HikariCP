@@ -205,7 +205,7 @@ connection time limit.**  A value of 0 indicates no maximum lifetime (infinite l
 course to the ``idleTimeout`` setting.  The minimum allowed value is 30000ms (30 seconds).
 *Default: 1800000 (30 minutes)*
 
-&#128288;``connectionTestQuery``<br/>
+&#128292;``connectionTestQuery``<br/>
 **If your driver supports JDBC4 we strongly recommend not setting this property.** This is for 
 "legacy" drivers that do not support the JDBC4 ``Connection.isValid() API``.  This is the query that
 will be executed just before a connection is given to you from the pool to validate that the 
