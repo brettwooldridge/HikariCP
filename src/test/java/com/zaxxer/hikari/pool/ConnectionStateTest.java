@@ -32,6 +32,7 @@ import org.junit.Test;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.util.IsolationLevel;
 import com.zaxxer.hikari.util.UtilityElf;
 
 public class ConnectionStateTest
@@ -86,6 +87,18 @@ public class ConnectionStateTest
       HikariConfig config = newHikariConfig();
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
       config.setTransactionIsolation("TRANSACTION_REPEATABLE_READ");
+      config.validate();
+
+      int transactionIsolation = UtilityElf.getTransactionIsolation(config.getTransactionIsolation());
+      assertSame(Connection.TRANSACTION_REPEATABLE_READ, transactionIsolation);
+   }
+
+   @Test
+   public void testIsolationEnum() throws Exception
+   {
+      HikariConfig config = newHikariConfig();
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      config.setTransactionIsolation(IsolationLevel.TRANSACTION_REPEATABLE_READ);
       config.validate();
 
       int transactionIsolation = UtilityElf.getTransactionIsolation(config.getTransactionIsolation());
