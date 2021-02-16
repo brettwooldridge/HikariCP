@@ -121,14 +121,8 @@ public final class PropertyElf
    {
       final Logger logger = LoggerFactory.getLogger(PropertyElf.class);
 
-      // use the english locale to avoid the infamous turkish locale bug
-      String methodName = "set" + propName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propName.substring(1);
-      Method writeMethod = methods.stream().filter(m -> m.getName().equals(methodName) && m.getParameterCount() == 1).findFirst().orElse(null);
-
-      if (writeMethod == null) {
-         String methodName2 = "set" + propName.toUpperCase(Locale.ENGLISH);
-         writeMethod = methods.stream().filter(m -> m.getName().equals(methodName2) && m.getParameterCount() == 1).findFirst().orElse(null);
-      }
+      String methodName = "set"+propName;
+      Method writeMethod = methods.stream().filter(m -> m.getName().equalsIgnoreCase(methodName) && m.getParameterCount() == 1).findFirst().orElse(null);
 
       if (writeMethod == null) {
          logger.error("Property {} does not exist on target {}", propName, target.getClass());
