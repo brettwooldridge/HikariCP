@@ -1,5 +1,10 @@
 HikariCP Changes
 
+Changes in 4.0.3
+
+ * fixed #1735 added system property to permit override of lower limit of connectionTimeout
+   and validation timeout
+
 Changes in 4.0.2
 
  * fixed regression caused by #1605 affecting block-until-filled semantic
@@ -7,7 +12,7 @@ Changes in 4.0.2
 Changes in 4.0.1
 
  * fixed #1725 pom file change to be more gradle-friendly
- 
+
  * fixed #1726 regression in micrometrics caused by lack of a strong reference to an
    object
 
@@ -19,7 +24,7 @@ Changes in 4.0.0
 
  * merged #1661 mark generated proxy classes final
 
- * merged #1681 allow alternate, more standard, JMX ObjectName, enabled by setting system 
+ * merged #1681 allow alternate, more standard, JMX ObjectName, enabled by setting system
    property 'hikaricp.jmx.register2.0=true'
 
  * merged #1605 fixes Java 11 issue where setMaximumPoolSize needs to be called before
@@ -30,7 +35,7 @@ Changes in 4.0.0
  * merged #1699 add new configuration property 'keepaliveTime'
 
  * merged #1692 fix prometheus histogram metric tracker for multiple pools
- 
+
 Changes in 3.4.5
 
  * fixed 1578 build change to ensure that proxies are generated using Java 8, otherwise we end
