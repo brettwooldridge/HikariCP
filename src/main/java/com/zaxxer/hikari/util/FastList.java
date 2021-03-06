@@ -228,7 +228,7 @@ public final class FastList<T> implements List<T>, RandomAccess, Serializable
                return elementData[index++];
             }
 
-            throw new NoSuchElementException("No more elements in FastList"); 
+            throw new NoSuchElementException("No more elements in FastList");
          }
       };
    }
