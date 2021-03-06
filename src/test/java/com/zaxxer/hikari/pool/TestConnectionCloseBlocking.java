@@ -59,17 +59,17 @@ public class TestConnectionCloseBlocking {
       long start = currentTime();
       try (HikariDataSource ds = new HikariDataSource(config);
             Connection connection = ds.getConnection()) {
-            
+
             connection.close();
-   
+
             // Hikari only checks for validity for connections with lastAccess > 1000 ms so we sleep for 1001 ms to force
             // Hikari to do a connection validation which will fail and will trigger the connection to be closed
             quietlySleep(1100L);
-   
+
             shouldFail = true;
-   
+
             // on physical connection close we sleep 2 seconds
-            try (Connection connection2 = ds.getConnection()) {   
+            try (Connection connection2 = ds.getConnection()) {
                assertTrue("Waited longer than timeout", (elapsedMillis(start) < config.getConnectionTimeout()));
             }
       } catch (SQLException e) {

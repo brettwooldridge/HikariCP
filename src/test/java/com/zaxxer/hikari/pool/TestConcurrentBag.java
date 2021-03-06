@@ -71,36 +71,36 @@ public class TestConcurrentBag
    {
       try (ConcurrentBag<PoolEntry> bag = new ConcurrentBag<>((x) -> CompletableFuture.completedFuture(Boolean.TRUE))) {
          assertEquals(0, bag.values(8).size());
-   
+
          PoolEntry reserved = pool.newPoolEntry();
          bag.add(reserved);
          bag.reserve(reserved);      // reserved
-   
+
          PoolEntry inuse = pool.newPoolEntry();
          bag.add(inuse);
          bag.borrow(2, MILLISECONDS); // in use
-   
+
          PoolEntry notinuse = pool.newPoolEntry();
          bag.add(notinuse); // not in use
-   
+
          bag.dumpState();
-   
+
          ByteArrayOutputStream baos = new ByteArrayOutputStream();
          PrintStream ps = new PrintStream(baos, true);
          setSlf4jTargetStream(ConcurrentBag.class, ps);
-   
+
          bag.requite(reserved);
-   
+
          bag.remove(notinuse);
          assertTrue(new String(baos.toByteArray()).contains("not borrowed or reserved"));
-   
+
          bag.unreserve(notinuse);
          assertTrue(new String(baos.toByteArray()).contains("was not reserved"));
-   
+
          bag.remove(inuse);
          bag.remove(inuse);
          assertTrue(new String(baos.toByteArray()).contains("not borrowed or reserved"));
-   
+
          bag.close();
          try {
             PoolEntry bagEntry = pool.newPoolEntry();
@@ -110,7 +110,7 @@ public class TestConcurrentBag
          catch (IllegalStateException e) {
             assertTrue(new String(baos.toByteArray()).contains("ignoring add()"));
          }
-   
+
          assertNotNull(notinuse.toString());
       }
    }
