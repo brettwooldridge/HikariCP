@@ -139,12 +139,12 @@ abstract class PoolBase
             catch (SQLException e) {
                // ignore
             }
-            finally {
+         } finally {
+            try {
                connection.close(); // continue with the close even if setNetworkTimeout() throws
+            } catch (Exception e) {
+               logger.debug("{} - Closing connection {} failed", poolName, connection, e);
             }
-         }
-         catch (Exception e) {
-            logger.debug("{} - Closing connection {} failed", poolName, connection, e);
          }
       }
    }
