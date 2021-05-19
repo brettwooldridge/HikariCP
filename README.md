@@ -198,7 +198,7 @@ allowed value is 30000ms (30 seconds), but a value in the range of minutes is mo
 
 &#9203;``maxLifetime``<br/>
 This property controls the maximum lifetime of a connection in the pool.  An in-use connection will
-never be retired, only when it is closed will it then be removed.  On a connection-by-connection
+never be retired, only when it is closed it will then be removed.  On a connection-by-connection
 basis, minor negative attenuation is applied to avoid mass-extinction in the pool.  **We strongly recommend
 setting this value, and it should be several seconds shorter than any database or infrastructure imposed
 connection time limit.**  A value of 0 indicates no maximum lifetime (infinite lifetime), subject of
