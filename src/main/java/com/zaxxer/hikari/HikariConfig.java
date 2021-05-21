@@ -53,6 +53,7 @@ public class HikariConfig implements HikariConfigMXBean
    private static final char[] ID_CHARACTERS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
    private static final long CONNECTION_TIMEOUT = SECONDS.toMillis(30);
    private static final long VALIDATION_TIMEOUT = SECONDS.toMillis(5);
+   private static final long SOFT_TIMEOUT_FLOOR = Long.getLong("com.zaxxer.hikari.timeoutMs.floor", 250L);
    private static final long IDLE_TIMEOUT = MINUTES.toMillis(10);
    private static final long MAX_LIFETIME = MINUTES.toMillis(30);
    private static final long DEFAULT_KEEPALIVE_TIME = 0L;
@@ -186,8 +187,8 @@ public class HikariConfig implements HikariConfigMXBean
       if (connectionTimeoutMs == 0) {
          this.connectionTimeout = Integer.MAX_VALUE;
       }
-      else if (connectionTimeoutMs < 250) {
-         throw new IllegalArgumentException("connectionTimeout cannot be less than 250ms");
+      else if (connectionTimeoutMs < SOFT_TIMEOUT_FLOOR) {
+         throw new IllegalArgumentException("connectionTimeout cannot be less than " + SOFT_TIMEOUT_FLOOR + "ms");
       }
       else {
          this.connectionTimeout = connectionTimeoutMs;
@@ -324,8 +325,8 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setValidationTimeout(long validationTimeoutMs)
    {
-      if (validationTimeoutMs < 250) {
-         throw new IllegalArgumentException("validationTimeout cannot be less than 250ms");
+      if (validationTimeoutMs < SOFT_TIMEOUT_FLOOR) {
+         throw new IllegalArgumentException("validationTimeout cannot be less than " + SOFT_TIMEOUT_FLOOR + "ms");
       }
 
       this.validationTimeout = validationTimeoutMs;
@@ -1061,13 +1062,13 @@ public class HikariConfig implements HikariConfigMXBean
          }
       }
 
-      if (connectionTimeout < 250) {
-         LOGGER.warn("{} - connectionTimeout is less than 250ms, setting to {}ms.", poolName, CONNECTION_TIMEOUT);
+      if (connectionTimeout < SOFT_TIMEOUT_FLOOR) {
+         LOGGER.warn("{} - connectionTimeout is less than {}ms, setting to {}ms.", poolName, SOFT_TIMEOUT_FLOOR, CONNECTION_TIMEOUT);
          connectionTimeout = CONNECTION_TIMEOUT;
       }
 
-      if (validationTimeout < 250) {
-         LOGGER.warn("{} - validationTimeout is less than 250ms, setting to {}ms.", poolName, VALIDATION_TIMEOUT);
+      if (validationTimeout < SOFT_TIMEOUT_FLOOR) {
+         LOGGER.warn("{} - validationTimeout is less than {}ms, setting to {}ms.", poolName, SOFT_TIMEOUT_FLOOR, VALIDATION_TIMEOUT);
          validationTimeout = VALIDATION_TIMEOUT;
       }
 

@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
    <properties>
@@ -14,17 +13,18 @@
       <felix.bundle.plugin.version>5.1.1</felix.bundle.plugin.version>
       <felix.version>6.0.1</felix.version>
       <hibernate.version>5.4.16.Final</hibernate.version>
-      <javassist.version>3.24.1-GA</javassist.version>
+      <javassist.version>3.27.0-GA</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>
       <maven.release.version>2.5.3</maven.release.version>
-      <metrics.version>3.2.4</metrics.version>
-      <micrometer.version>1.3.2</micrometer.version>
-      <simpleclient.version>0.0.26</simpleclient.version>
+      <metrics.version>3.2.5</metrics.version>
+      <micrometer.version>1.5.10</micrometer.version>
+      <simpleclient.version>0.9.0</simpleclient.version>
       <mockito.version>3.7.7</mockito.version>
       <pax.exam.version>4.13.1</pax.exam.version>
       <pax.url.version>2.5.4</pax.url.version>
       <postgresql.version>42.1.4</postgresql.version>
       <log4j.version>2.14.0</log4j.version>
+      <slf4j.version>1.7.30</slf4j.version>
       <commons.csv.version>1.5</commons.csv.version>
       <h2.version>1.4.196</h2.version>
       <junit.version>4.13.1</junit.version>
@@ -33,7 +33,7 @@
 
    <groupId>com.zaxxer</groupId>
    <artifactId>HikariCP</artifactId>
-   <version>3.4.6-SNAPSHOT</version>
+   <version>4.0.4-SNAPSHOT</version>
    <packaging>bundle</packaging>
 
    <name>HikariCP</name>

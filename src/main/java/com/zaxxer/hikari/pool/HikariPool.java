@@ -146,8 +146,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             quietlySleep(MILLISECONDS.toMillis(100));
          }
 
-         addConnectionExecutor.setMaximumPoolSize(1);
          addConnectionExecutor.setCorePoolSize(1);
+         addConnectionExecutor.setMaximumPoolSize(1);
       }
    }
 

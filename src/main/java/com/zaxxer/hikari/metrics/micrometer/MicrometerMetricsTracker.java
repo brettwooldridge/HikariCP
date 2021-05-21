@@ -66,9 +66,15 @@ public class MicrometerMetricsTracker implements IMetricsTracker
    private final Gauge minConnectionGauge;
    @SuppressWarnings("FieldCanBeLocal")
    private final MeterRegistry meterRegistry;
+   @SuppressWarnings("FieldCanBeLocal")
+   private final PoolStats poolStats;
+
 
    MicrometerMetricsTracker(final String poolName, final PoolStats poolStats, final MeterRegistry meterRegistry)
    {
+      // poolStats must be held with a 'strong reference' even though it is never referenced within this class
+      this.poolStats = poolStats;  // DO NOT REMOVE
+
       this.meterRegistry = meterRegistry;
 
       this.connectionObtainTimer = Timer.builder(METRIC_NAME_WAIT)
