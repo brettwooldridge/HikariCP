@@ -1132,7 +1132,7 @@ public class HikariConfig implements HikariConfigMXBean
             else if (value == null) {
                value = "none";
             }
-            LOGGER.debug("{}{}", (prop + "................................................".substring(0, 32)), value);
+            LOGGER.debug("{}{}", (prop + "................................................").substring(0, 32), value);
          }
          catch (Exception e) {
             // continue
