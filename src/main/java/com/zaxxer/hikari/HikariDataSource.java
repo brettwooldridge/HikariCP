@@ -347,7 +347,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       HikariPool p = pool;
       if (p != null) {
          try {
-            LOGGER.info("{} - Shutdown initiated...", getPoolName());
+            LOGGER.info("{} - Shutdown initializing...", getPoolName());
             p.shutdown();
             LOGGER.info("{} - Shutdown completed.", getPoolName());
          }
