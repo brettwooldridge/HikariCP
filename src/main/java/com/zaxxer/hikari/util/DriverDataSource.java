@@ -46,7 +46,7 @@ public final class DriverDataSource implements DataSource
       this.driverProperties = new Properties();
 
       for (Entry<Object, Object> entry : properties.entrySet()) {
-         driverProperties.setProperty(entry.getKey().toString(), entry.getValue().toString());
+         driverProperties.put(entry.getKey().toString(), entry.getValue());
       }
 
       if (username != null) {
