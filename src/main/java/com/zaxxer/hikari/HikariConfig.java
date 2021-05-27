@@ -657,7 +657,9 @@ public class HikariConfig implements HikariConfigMXBean
     * Set a MetricRegistry instance to use for registration of metrics used by HikariCP.
     *
     * @param metricRegistry the MetricRegistry instance to use
+    * @deprecated use {@link #setMetricsTrackerFactory(MetricsTrackerFactory)}
     */
+   @Deprecated
    public void setMetricRegistry(Object metricRegistry)
    {
       if (metricsTrackerFactory != null) {

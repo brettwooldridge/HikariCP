@@ -284,7 +284,9 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     * method from being called more than once.
     *
     * @param metricRegistry the metrics registry instance to use
+    * @deprecated use {@link #setMetricsTrackerFactory(MetricsTrackerFactory)} instead
     */
+   @Deprecated
    public void setMetricRegistry(Object metricRegistry)
    {
       if (metricRegistry != null && safeIsAssignableFrom(metricRegistry, "com.codahale.metrics.MetricRegistry")) {
