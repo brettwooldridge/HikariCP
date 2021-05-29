@@ -161,6 +161,7 @@ public class TestValidation
       config.setMinimumIdle(5);
       config.setIdleTimeout(TimeUnit.SECONDS.toMillis(5));
       config.validate();
+      ps.flush();
       assertTrue(new String(baos.toByteArray()).contains("less than 10000ms"));
    }
 
@@ -178,6 +179,7 @@ public class TestValidation
       config.setIdleTimeout(TimeUnit.MINUTES.toMillis(3));
       config.validate();
 
+      ps.flush();
       String s = new String(baos.toByteArray());
       assertTrue("idleTimeout is close to or more than maxLifetime, disabling it." + s + "*", s.contains("is close to or more than maxLifetime"));
    }
