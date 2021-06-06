@@ -16,11 +16,12 @@
 
 package com.zaxxer.hikari.metrics.prometheus;
 
+import com.zaxxer.hikari.metrics.HikariMetricsConfig;
 import com.zaxxer.hikari.metrics.PoolStats;
 import io.prometheus.client.Collector;
 import io.prometheus.client.GaugeMetricFamily;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -34,23 +35,27 @@ class HikariCPCollector extends Collector
 
    private final Map<String, PoolStats> poolStatsMap = new ConcurrentHashMap<>();
 
+   private HikariMetricsConfig hikariMetricsConfig;
+
+   public HikariCPCollector()
+   {
+      this(new HikariMetricsConfig());
+   }
+
+   public HikariCPCollector(HikariMetricsConfig config)
+   {
+      this.hikariMetricsConfig = config;
+   }
+
    @Override
    public List<MetricFamilySamples> collect()
    {
-      return Arrays.asList(
-         createGauge("hikaricp_active_connections", "Active connections",
-            PoolStats::getActiveConnections),
-         createGauge("hikaricp_idle_connections", "Idle connections",
-            PoolStats::getIdleConnections),
-         createGauge("hikaricp_pending_threads", "Pending threads",
-            PoolStats::getPendingThreads),
-         createGauge("hikaricp_connections", "The number of current connections",
-            PoolStats::getTotalConnections),
-         createGauge("hikaricp_max_connections", "Max connections",
-            PoolStats::getMaxConnections),
-         createGauge("hikaricp_min_connections", "Min connections",
-            PoolStats::getMinConnections)
-      );
+      MetricDef[] metrics = MetricDef.values();
+      List<MetricFamilySamples> metricFamilySamples = new ArrayList<>(metrics.length);
+      for (MetricDef metricDef : metrics) {
+         metricFamilySamples.add(createGauge(metricDef));
+      }
+      return metricFamilySamples;
    }
 
    void add(String name, PoolStats poolStats)
@@ -72,5 +77,45 @@ class HikariCPCollector extends Collector
          metricValueFunction.apply(v)
       ));
       return metricFamily;
+   }
+
+   private GaugeMetricFamily createGauge(MetricDef metricDef)
+   {
+      String metricName = metricDef.metricName;
+      if (hikariMetricsConfig.isMetricNaming2()) {
+         metricName = metricDef.metricName2;
+      }
+      return createGauge(metricName, metricDef.help, metricDef.metricValueFunction);
+   }
+
+   private enum MetricDef
+   {
+      active("hikaricp_active_connections", "hikaricp_connections_active", "Active connections", PoolStats::getActiveConnections),
+      idle("hikaricp_idle_connections", "hikaricp_connections_idle", "Idle connections",
+         PoolStats::getIdleConnections),
+      pending("hikaricp_pending_threads", "hikaricp_connections_pending", "Pending threads", PoolStats::getPendingThreads),
+
+      current("hikaricp_connections", "hikaricp_connections", "The number of current connections",
+         PoolStats::getTotalConnections),
+      max("hikaricp_max_connections", "hikaricp_connections_max", "Max connections",
+         PoolStats::getMaxConnections),
+      min("hikaricp_min_connections", "hikaricp_connections_min", "Min connections",
+         PoolStats::getMinConnections);
+
+      private String metricName;
+
+      private String metricName2;
+
+      private String help;
+
+      private Function<PoolStats, Integer> metricValueFunction;
+
+      MetricDef(String metricName, String metricName2, String help, Function<PoolStats, Integer> metricValueFunction)
+      {
+         this.metricName = metricName;
+         this.metricName2 = metricName2;
+         this.help = help;
+         this.metricValueFunction = metricValueFunction;
+      }
    }
 }
