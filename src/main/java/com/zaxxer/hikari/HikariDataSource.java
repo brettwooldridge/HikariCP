@@ -104,6 +104,10 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
       HikariPool result = pool;
       if (result == null) {
          synchronized (this) {
+            if (isClosed()) {
+               throw new SQLException("HikariDataSource " + this + " has been closed.");
+            }
+
             result = pool;
             if (result == null) {
                validate();
@@ -344,16 +348,18 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
          return;
       }
 
-      HikariPool p = pool;
-      if (p != null) {
-         try {
-            LOGGER.info("{} - Shutdown initiated...", getPoolName());
-            p.shutdown();
-            LOGGER.info("{} - Shutdown completed.", getPoolName());
-         }
-         catch (InterruptedException e) {
-            LOGGER.warn("{} - Interrupted during closing", getPoolName(), e);
-            Thread.currentThread().interrupt();
+      synchronized (this) {
+         HikariPool p = pool;
+         if (p != null) {
+            try {
+               LOGGER.info("{} - Shutdown initiated...", getPoolName());
+               p.shutdown();
+               LOGGER.info("{} - Shutdown completed.", getPoolName());
+            }
+            catch (InterruptedException e) {
+               LOGGER.warn("{} - Interrupted during closing", getPoolName(), e);
+               Thread.currentThread().interrupt();
+            }
          }
       }
    }
