@@ -170,8 +170,13 @@ abstract class PoolBase
             }
          }
          finally {
-            setNetworkTimeout(connection, networkTimeout);
-
+            try {
+               // Some drivers will throw here if the connection is already closed
+               setNetworkTimeout(connection, networkTimeout);
+            }
+            catch (SQLException sqlEx) {
+               return false;
+            }
             if (isIsolateInternalQueries && !isAutoCommit) {
                connection.rollback();
             }
