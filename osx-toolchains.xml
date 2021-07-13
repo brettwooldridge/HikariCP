@@ -7,7 +7,7 @@
       </provides>
       <configuration>
          <paths>
-            <path>/Library/Java/JavaVirtualMachines/jdk1.8.0_191.jdk/Contents/Home/bin</path>
+            <path>/Library/Java/JavaVirtualMachines/jdk-11.0.11.jdk/Contents/Home/bin</path>
          </paths>
       </configuration>
    </toolchain>

@@ -9,7 +9,7 @@
       <java11.build.outputDirectory>${project.build.directory}/classes-java11</java11.build.outputDirectory>
       <artifact.classifier />
 
-      <docker.maven.plugin.fabric8.version>0.33.0</docker.maven.plugin.fabric8.version>
+      <docker.maven.plugin.fabric8.version>0.36.0</docker.maven.plugin.fabric8.version>
       <felix.bundle.plugin.version>5.1.1</felix.bundle.plugin.version>
       <felix.version>6.0.1</felix.version>
       <hibernate.version>5.4.16.Final</hibernate.version>
@@ -22,7 +22,7 @@
       <mockito.version>3.7.7</mockito.version>
       <pax.exam.version>4.13.1</pax.exam.version>
       <pax.url.version>2.5.4</pax.url.version>
-      <postgresql.version>42.1.4</postgresql.version>
+      <postgresql.version>42.2.20</postgresql.version>
       <log4j.version>2.14.0</log4j.version>
       <slf4j.version>1.7.30</slf4j.version>
       <commons.csv.version>1.5</commons.csv.version>
@@ -499,8 +499,8 @@
                <artifactId>maven-compiler-plugin</artifactId>
                <version>3.8.1</version>
                <configuration>
-                  <source>1.8</source>
-                  <target>1.8</target>
+                  <source>11</source>
+                  <target>11</target>
                   <compilerArgs>-Xlint</compilerArgs>
                </configuration>
             </plugin>
@@ -572,24 +572,6 @@
    </build>
 
    <profiles>
-      <profile>
-         <id>Java8</id>
-         <activation>
-            <jdk>[,11)</jdk>
-         </activation>
-         <properties>
-            <automatic.module.name>com.zaxxer.hikari</automatic.module.name>
-            <slf4j.version>1.7.30</slf4j.version>
-         </properties>
-         <dependencies>
-            <dependency>
-               <groupId>org.apache.logging.log4j</groupId>
-               <artifactId>log4j-slf4j-impl</artifactId>
-               <version>${log4j.version}</version>
-               <scope>test</scope>
-            </dependency>
-         </dependencies>
-      </profile>
       <profile>
          <id>Java11</id>
          <activation>
