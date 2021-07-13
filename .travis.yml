@@ -17,9 +17,7 @@ install: /bin/true
 jdk: openjdk11
 
 script:
-  - export JAVA_HOME=$HOME/openjdk11
-  - $TRAVIS_BUILD_DIR/install-jdk.sh --feature 11 --target $JAVA_HOME
-  - mvn package --global-toolchains ./travis-toolchains.xml -Dmaven.javadoc.skip=true -V -B
+  - mvn package -Dmaven.javadoc.skip=true -V -B
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
