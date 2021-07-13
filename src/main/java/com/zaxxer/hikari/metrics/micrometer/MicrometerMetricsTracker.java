@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
  *      };
  * </pre></blockquote>
  */
+@SuppressWarnings("ALL")
 public class MicrometerMetricsTracker implements IMetricsTracker
 {
    /** Prefix used for all HikariCP metric names. */

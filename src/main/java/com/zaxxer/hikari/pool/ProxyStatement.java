@@ -49,7 +49,7 @@ public abstract class ProxyStatement implements Statement
    @Override
    public final String toString()
    {
-      final String delegateToString = delegate.toString();
+      final var delegateToString = delegate.toString();
       return this.getClass().getSimpleName() + '@' + System.identityHashCode(this) + " wrapping " + delegateToString;
    }
 
@@ -210,7 +210,7 @@ public abstract class ProxyStatement implements Statement
    /** {@inheritDoc} */
    @Override
    public ResultSet getResultSet() throws SQLException {
-      final ResultSet resultSet = delegate.getResultSet();
+      final var resultSet = delegate.getResultSet();
       if (resultSet != null) {
          if (proxyResultSet == null || ((ProxyResultSet) proxyResultSet).delegate != resultSet) {
             proxyResultSet = ProxyFactory.getProxyResultSet(connection, this, resultSet);
@@ -226,7 +226,7 @@ public abstract class ProxyStatement implements Statement
    @Override
    public ResultSet getGeneratedKeys() throws SQLException
    {
-      ResultSet resultSet = delegate.getGeneratedKeys();
+      var resultSet = delegate.getGeneratedKeys();
       if (proxyResultSet == null || ((ProxyResultSet) proxyResultSet).delegate != resultSet) {
          proxyResultSet = ProxyFactory.getProxyResultSet(connection, this, resultSet);
       }

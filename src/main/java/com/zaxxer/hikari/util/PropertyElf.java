@@ -16,20 +16,12 @@
 
 package com.zaxxer.hikari.util;
 
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Properties;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.slf4j.Logger;
+import com.zaxxer.hikari.HikariConfig;
 import org.slf4j.LoggerFactory;
 
-import com.zaxxer.hikari.HikariConfig;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * A class that reflectively sets bean properties on a target object.
@@ -50,7 +42,7 @@ public final class PropertyElf
          return;
       }
 
-      List<Method> methods = Arrays.asList(target.getClass().getMethods());
+      var methods = Arrays.asList(target.getClass().getMethods());
       properties.forEach((key, value) -> {
          if (target instanceof HikariConfig && key.toString().startsWith("dataSource.")) {
             ((HikariConfig) target).addDataSourceProperty(key.toString().substring("dataSource.".length()), value);
@@ -69,10 +61,10 @@ public final class PropertyElf
     */
    public static Set<String> getPropertyNames(final Class<?> targetClass)
    {
-      HashSet<String> set = new HashSet<>();
-      Matcher matcher = GETTER_PATTERN.matcher("");
-      for (Method method : targetClass.getMethods()) {
-         String name = method.getName();
+      var set = new HashSet<String>();
+      var matcher = GETTER_PATTERN.matcher("");
+      for (var method : targetClass.getMethods()) {
+         var name = method.getName();
          if (method.getParameterTypes().length == 0 && matcher.reset(name).matches()) {
             name = name.replaceFirst("(get|is)", "");
             try {
@@ -94,14 +86,14 @@ public final class PropertyElf
    {
       try {
          // use the english locale to avoid the infamous turkish locale bug
-         String capitalized = "get" + propName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propName.substring(1);
-         Method method = target.getClass().getMethod(capitalized);
+         var capitalized = "get" + propName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propName.substring(1);
+         var method = target.getClass().getMethod(capitalized);
          return method.invoke(target);
       }
       catch (Exception e) {
          try {
-            String capitalized = "is" + propName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propName.substring(1);
-            Method method = target.getClass().getMethod(capitalized);
+            var capitalized = "is" + propName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propName.substring(1);
+            var method = target.getClass().getMethod(capitalized);
             return method.invoke(target);
          }
          catch (Exception e2) {
@@ -112,21 +104,21 @@ public final class PropertyElf
 
    public static Properties copyProperties(final Properties props)
    {
-      Properties copy = new Properties();
+      var copy = new Properties();
       props.forEach((key, value) -> copy.setProperty(key.toString(), value.toString()));
       return copy;
    }
 
    private static void setProperty(final Object target, final String propName, final Object propValue, final List<Method> methods)
    {
-      final Logger logger = LoggerFactory.getLogger(PropertyElf.class);
+      final var logger = LoggerFactory.getLogger(PropertyElf.class);
 
       // use the english locale to avoid the infamous turkish locale bug
-      String methodName = "set" + propName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propName.substring(1);
-      Method writeMethod = methods.stream().filter(m -> m.getName().equals(methodName) && m.getParameterCount() == 1).findFirst().orElse(null);
+      var methodName = "set" + propName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propName.substring(1);
+      var writeMethod = methods.stream().filter(m -> m.getName().equals(methodName) && m.getParameterCount() == 1).findFirst().orElse(null);
 
       if (writeMethod == null) {
-         String methodName2 = "set" + propName.toUpperCase(Locale.ENGLISH);
+         var methodName2 = "set" + propName.toUpperCase(Locale.ENGLISH);
          writeMethod = methods.stream().filter(m -> m.getName().equals(methodName2) && m.getParameterCount() == 1).findFirst().orElse(null);
       }
 
@@ -136,7 +128,7 @@ public final class PropertyElf
       }
 
       try {
-         Class<?> paramClass = writeMethod.getParameterTypes()[0];
+         var paramClass = writeMethod.getParameterTypes()[0];
          if (paramClass == int.class) {
             writeMethod.invoke(target, Integer.parseInt(propValue.toString()));
          }

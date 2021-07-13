@@ -16,7 +16,6 @@
 
 package com.zaxxer.hikari.util;
 
-import java.lang.reflect.Constructor;
 import java.util.Locale;
 import java.util.concurrent.*;
 
@@ -67,7 +66,7 @@ public final class UtilityElf
     */
    public static boolean safeIsAssignableFrom(Object obj, String className) {
       try {
-         Class<?> clazz = Class.forName(className);
+         var clazz = Class.forName(className);
          return clazz.isAssignableFrom(obj.getClass());
       } catch (ClassNotFoundException ignored) {
          return false;
@@ -91,16 +90,16 @@ public final class UtilityElf
       }
 
       try {
-         Class<?> loaded = UtilityElf.class.getClassLoader().loadClass(className);
+         var loaded = UtilityElf.class.getClassLoader().loadClass(className);
          if (args.length == 0) {
             return clazz.cast(loaded.getDeclaredConstructor().newInstance());
          }
 
-         Class<?>[] argClasses = new Class<?>[args.length];
+         var argClasses = new Class<?>[args.length];
          for (int i = 0; i < args.length; i++) {
             argClasses[i] = args[i].getClass();
          }
-         Constructor<?> constructor = loaded.getConstructor(argClasses);
+         var constructor = loaded.getConstructor(argClasses);
          return clazz.cast(constructor.newInstance(args));
       }
       catch (Exception e) {
@@ -123,8 +122,8 @@ public final class UtilityElf
          threadFactory = new DefaultThreadFactory(threadName, true);
       }
 
-      LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<>(queueSize);
-      ThreadPoolExecutor executor = new ThreadPoolExecutor(1 /*core*/, 1 /*max*/, 5 /*keepalive*/, SECONDS, queue, threadFactory, policy);
+      var queue = new LinkedBlockingQueue<Runnable>(queueSize);
+      var executor = new ThreadPoolExecutor(1 /*core*/, 1 /*max*/, 5 /*keepalive*/, SECONDS, queue, threadFactory, policy);
       executor.allowCoreThreadTimeOut(true);
       return executor;
    }
@@ -144,7 +143,7 @@ public final class UtilityElf
          threadFactory = new DefaultThreadFactory(threadName, true);
       }
 
-      ThreadPoolExecutor executor = new ThreadPoolExecutor(1 /*core*/, 1 /*max*/, 5 /*keepalive*/, SECONDS, queue, threadFactory, policy);
+      var executor = new ThreadPoolExecutor(1 /*core*/, 1 /*max*/, 5 /*keepalive*/, SECONDS, queue, threadFactory, policy);
       executor.allowCoreThreadTimeOut(true);
       return executor;
    }
@@ -164,13 +163,13 @@ public final class UtilityElf
       if (transactionIsolationName != null) {
          try {
             // use the english locale to avoid the infamous turkish locale bug
-            final String upperCaseIsolationLevelName = transactionIsolationName.toUpperCase(Locale.ENGLISH);
+            final var upperCaseIsolationLevelName = transactionIsolationName.toUpperCase(Locale.ENGLISH);
             return IsolationLevel.valueOf(upperCaseIsolationLevelName).getLevelId();
          } catch (IllegalArgumentException e) {
             // legacy support for passing an integer version of the isolation level
             try {
-               final int level = Integer.parseInt(transactionIsolationName);
-               for (IsolationLevel iso : IsolationLevel.values()) {
+               final var level = Integer.parseInt(transactionIsolationName);
+               for (var iso : IsolationLevel.values()) {
                   if (iso.getLevelId() == level) {
                      return iso.getLevelId();
                   }
@@ -198,8 +197,9 @@ public final class UtilityElf
       }
 
       @Override
+      @SuppressWarnings("NullableProblems")
       public Thread newThread(Runnable r) {
-         Thread thread = new Thread(r, threadName);
+         var thread = new Thread(r, threadName);
          thread.setDaemon(daemon);
          return thread;
       }

@@ -55,18 +55,18 @@ public final class CodahaleHealthChecker
     */
    public static void registerHealthChecks(final HikariPool pool, final HikariConfig hikariConfig, final HealthCheckRegistry registry)
    {
-      final Properties healthCheckProperties = hikariConfig.getHealthCheckProperties();
-      final MetricRegistry metricRegistry = (MetricRegistry) hikariConfig.getMetricRegistry();
+      final var healthCheckProperties = hikariConfig.getHealthCheckProperties();
+      final var metricRegistry = (MetricRegistry) hikariConfig.getMetricRegistry();
 
-      final long checkTimeoutMs = Long.parseLong(healthCheckProperties.getProperty("connectivityCheckTimeoutMs", String.valueOf(hikariConfig.getConnectionTimeout())));
+      final var checkTimeoutMs = Long.parseLong(healthCheckProperties.getProperty("connectivityCheckTimeoutMs", String.valueOf(hikariConfig.getConnectionTimeout())));
       registry.register(MetricRegistry.name(hikariConfig.getPoolName(), "pool", "ConnectivityCheck"), new ConnectivityHealthCheck(pool, checkTimeoutMs));
 
-      final long expected99thPercentile = Long.parseLong(healthCheckProperties.getProperty("expected99thPercentileMs", "0"));
+      final var expected99thPercentile = Long.parseLong(healthCheckProperties.getProperty("expected99thPercentileMs", "0"));
       if (metricRegistry != null && expected99thPercentile > 0) {
-         SortedMap<String,Timer> timers = metricRegistry.getTimers((name, metric) -> name.equals(MetricRegistry.name(hikariConfig.getPoolName(), "pool", "Wait")));
+         var timers = metricRegistry.getTimers((name, metric) -> name.equals(MetricRegistry.name(hikariConfig.getPoolName(), "pool", "Wait")));
 
          if (!timers.isEmpty()) {
-            final Timer timer = timers.entrySet().iterator().next().getValue();
+            final var timer = timers.entrySet().iterator().next().getValue();
             registry.register(MetricRegistry.name(hikariConfig.getPoolName(), "pool", "Connection99Percent"), new Connection99Percent(timer, expected99thPercentile));
          }
       }

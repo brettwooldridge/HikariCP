@@ -35,6 +35,7 @@ import java.util.function.UnaryOperator;
  *
  * @author Brett Wooldridge
  */
+@SuppressWarnings("NullableProblems")
 public final class FastList<T> implements List<T>, RandomAccess, Serializable
 {
    private static final long serialVersionUID = -4598088075242913858L;
@@ -79,10 +80,10 @@ public final class FastList<T> implements List<T>, RandomAccess, Serializable
       }
       else {
          // overflow-conscious code
-         final int oldCapacity = elementData.length;
-         final int newCapacity = oldCapacity << 1;
+         final var oldCapacity = elementData.length;
+         final var newCapacity = oldCapacity << 1;
          @SuppressWarnings("unchecked")
-         final T[] newElementData = (T[]) Array.newInstance(clazz, newCapacity);
+         final var newElementData = (T[]) Array.newInstance(clazz, newCapacity);
          System.arraycopy(elementData, 0, newElementData, 0, oldCapacity);
          newElementData[size++] = element;
          elementData = newElementData;
@@ -127,9 +128,9 @@ public final class FastList<T> implements List<T>, RandomAccess, Serializable
    @Override
    public boolean remove(Object element)
    {
-      for (int index = size - 1; index >= 0; index--) {
+      for (var index = size - 1; index >= 0; index--) {
          if (element == elementData[index]) {
-            final int numMoved = size - index - 1;
+            final var numMoved = size - index - 1;
             if (numMoved > 0) {
                System.arraycopy(elementData, index + 1, elementData, index, numMoved);
             }
@@ -147,7 +148,7 @@ public final class FastList<T> implements List<T>, RandomAccess, Serializable
    @Override
    public void clear()
    {
-      for (int i = 0; i < size; i++) {
+      for (var i = 0; i < size; i++) {
          elementData[i] = null;
       }
 
@@ -191,7 +192,7 @@ public final class FastList<T> implements List<T>, RandomAccess, Serializable
 
       final T old = elementData[index];
 
-      final int numMoved = size - index - 1;
+      final var numMoved = size - index - 1;
       if (numMoved > 0) {
          System.arraycopy(elementData, index + 1, elementData, index, numMoved);
       }
@@ -212,7 +213,7 @@ public final class FastList<T> implements List<T>, RandomAccess, Serializable
    @Override
    public Iterator<T> iterator()
    {
-      return new Iterator<T>() {
+      return new Iterator<>() {
          private int index;
 
          @Override
@@ -228,7 +229,7 @@ public final class FastList<T> implements List<T>, RandomAccess, Serializable
                return elementData[index++];
             }
 
-            throw new NoSuchElementException("No more elements in FastList"); 
+            throw new NoSuchElementException("No more elements in FastList");
          }
       };
    }

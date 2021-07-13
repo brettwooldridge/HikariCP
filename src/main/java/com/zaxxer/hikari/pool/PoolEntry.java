@@ -142,7 +142,7 @@ final class PoolEntry implements IConcurrentBagEntry
    @Override
    public String toString()
    {
-      final long now = currentTime();
+      final var now = currentTime();
       return connection
          + ", accessed " + elapsedDisplayString(lastAccessed, now) + " ago, "
          + stateToString();
@@ -175,17 +175,17 @@ final class PoolEntry implements IConcurrentBagEntry
 
    Connection close()
    {
-      ScheduledFuture<?> eol = endOfLife;
+      var eol = endOfLife;
       if (eol != null && !eol.isDone() && !eol.cancel(false)) {
          LOGGER.warn("{} - maxLifeTime expiration task cancellation unexpectedly returned false for connection {}", getPoolName(), connection);
       }
 
-      ScheduledFuture<?> ka = keepalive;
+      var ka = keepalive;
       if (ka != null && !ka.isDone() && !ka.cancel(false)) {
          LOGGER.warn("{} - keepalive task cancellation unexpectedly returned false for connection {}", getPoolName(), connection);
       }
 
-      Connection con = connection;
+      var con = connection;
       connection = null;
       endOfLife = null;
       keepalive = null;

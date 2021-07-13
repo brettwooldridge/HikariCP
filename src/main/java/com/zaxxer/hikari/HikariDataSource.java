@@ -147,7 +147,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @Override
    public void setLogWriter(PrintWriter out) throws SQLException
    {
-      HikariPool p = pool;
+      var p = pool;
       if (p != null) {
          p.getUnwrappedDataSource().setLogWriter(out);
       }
@@ -157,7 +157,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @Override
    public void setLoginTimeout(int seconds) throws SQLException
    {
-      HikariPool p = pool;
+      var p = pool;
       if (p != null) {
          p.getUnwrappedDataSource().setLoginTimeout(seconds);
       }
@@ -167,7 +167,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @Override
    public int getLoginTimeout() throws SQLException
    {
-      HikariPool p = pool;
+      var p = pool;
       return (p != null ? p.getUnwrappedDataSource().getLoginTimeout() : 0);
    }
 
@@ -187,9 +187,9 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
          return (T) this;
       }
 
-      HikariPool p = pool;
+      var p = pool;
       if (p != null) {
-         final DataSource unwrappedDataSource = p.getUnwrappedDataSource();
+         final var unwrappedDataSource = p.getUnwrappedDataSource();
          if (iface.isInstance(unwrappedDataSource)) {
             return (T) unwrappedDataSource;
          }
@@ -210,9 +210,9 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
          return true;
       }
 
-      HikariPool p = pool;
+      var p = pool;
       if (p != null) {
-         final DataSource unwrappedDataSource = p.getUnwrappedDataSource();
+         final var unwrappedDataSource = p.getUnwrappedDataSource();
          if (iface.isInstance(unwrappedDataSource)) {
             return true;
          }
@@ -233,10 +233,10 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @Override
    public void setMetricRegistry(Object metricRegistry)
    {
-      boolean isAlreadySet = getMetricRegistry() != null;
+      var isAlreadySet = getMetricRegistry() != null;
       super.setMetricRegistry(metricRegistry);
 
-      HikariPool p = pool;
+      var p = pool;
       if (p != null) {
          if (isAlreadySet) {
             throw new IllegalStateException("MetricRegistry can only be set one time");
@@ -251,10 +251,10 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @Override
    public void setMetricsTrackerFactory(MetricsTrackerFactory metricsTrackerFactory)
    {
-      boolean isAlreadySet = getMetricsTrackerFactory() != null;
+      var isAlreadySet = getMetricsTrackerFactory() != null;
       super.setMetricsTrackerFactory(metricsTrackerFactory);
 
-      HikariPool p = pool;
+      var p = pool;
       if (p != null) {
          if (isAlreadySet) {
             throw new IllegalStateException("MetricsTrackerFactory can only be set one time");
@@ -269,10 +269,10 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    @Override
    public void setHealthCheckRegistry(Object healthCheckRegistry)
    {
-      boolean isAlreadySet = getHealthCheckRegistry() != null;
+      var isAlreadySet = getHealthCheckRegistry() != null;
       super.setHealthCheckRegistry(healthCheckRegistry);
 
-      HikariPool p = pool;
+      var p = pool;
       if (p != null) {
          if (isAlreadySet) {
             throw new IllegalStateException("HealthCheckRegistry can only be set one time");
@@ -344,7 +344,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
          return;
       }
 
-      HikariPool p = pool;
+      var p = pool;
       if (p != null) {
          try {
             LOGGER.info("{} - Shutdown initiated...", getPoolName());

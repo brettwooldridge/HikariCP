@@ -16,7 +16,6 @@
 
 package com.zaxxer.hikari.pool;
 
-import com.zaxxer.hikari.SQLExceptionOverride;
 import com.zaxxer.hikari.util.FastList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +35,7 @@ import static com.zaxxer.hikari.util.ClockSource.currentTime;
  *
  * @author Brett Wooldridge
  */
+@SuppressWarnings("ClassEscapesDefinedScope")
 public abstract class ProxyConnection implements Connection
 {
    static final int DIRTY_BIT_READONLY   = 0b000001;
@@ -154,11 +154,11 @@ public abstract class ProxyConnection implements Connection
    @SuppressWarnings("ConstantConditions")
    final SQLException checkException(SQLException sqle)
    {
-      boolean evict = false;
+      var evict = false;
       SQLException nse = sqle;
-      final SQLExceptionOverride exceptionOverride = poolEntry.getPoolBase().exceptionOverride;
+      final var exceptionOverride = poolEntry.getPoolBase().exceptionOverride;
       for (int depth = 0; delegate != ClosedConnection.CLOSED_CONNECTION && nse != null && depth < 10; depth++) {
-         final String sqlState = nse.getSQLState();
+         final var sqlState = nse.getSQLState();
          if (sqlState != null && sqlState.startsWith("08")
              || nse instanceof SQLTimeoutException
              || ERROR_STATES.contains(sqlState)
@@ -178,7 +178,7 @@ public abstract class ProxyConnection implements Connection
       }
 
       if (evict) {
-         SQLException exception = (nse != null) ? nse : sqle;
+         var exception = (nse != null) ? nse : sqle;
          LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
             poolEntry.getPoolName(), delegate, exception.getSQLState(), exception.getErrorCode(), exception);
          leakTask.cancel();
@@ -219,7 +219,7 @@ public abstract class ProxyConnection implements Connection
    @SuppressWarnings("EmptyTryBlock")
    private synchronized void closeStatements()
    {
-      final int size = openStatements.size();
+      final var size = openStatements.size();
       if (size > 0) {
          for (int i = 0; i < size && delegate != ClosedConnection.CLOSED_CONNECTION; i++) {
             try (Statement ignored = openStatements.get(i)) {

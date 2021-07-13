@@ -66,7 +66,7 @@ class HikariCPCollector extends Collector
    private GaugeMetricFamily createGauge(String metric, String help,
                                          Function<PoolStats, Integer> metricValueFunction)
    {
-      GaugeMetricFamily metricFamily = new GaugeMetricFamily(metric, help, LABEL_NAMES);
+      var metricFamily = new GaugeMetricFamily(metric, help, LABEL_NAMES);
       poolStatsMap.forEach((k, v) -> metricFamily.addMetric(
          Collections.singletonList(k),
          metricValueFunction.apply(v)

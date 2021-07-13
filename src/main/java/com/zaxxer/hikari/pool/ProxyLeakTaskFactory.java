@@ -46,7 +46,7 @@ class ProxyLeakTaskFactory
    }
 
    private ProxyLeakTask scheduleNewTask(PoolEntry poolEntry) {
-      ProxyLeakTask task = new ProxyLeakTask(poolEntry);
+      var task = new ProxyLeakTask(poolEntry);
       task.schedule(executorService, leakDetectionThreshold);
 
       return task;
