@@ -31,29 +31,37 @@ Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC con
 
 ### Artifacts
 
-_Java 8 thru 11 maven artifact:_
+_**Java 11+** maven artifact:_
 ```xml
-    <dependency>
-        <groupId>com.zaxxer</groupId>
-        <artifactId>HikariCP</artifactId>
-        <version>4.0.3</version>
-    </dependency>
+<dependency>
+   <groupId>com.zaxxer</groupId>
+   <artifactId>HikariCP</artifactId>
+   <version>5.0.0</version>
+</dependency>
+```
+_Java 8 maven artifact (*maintenance mode*):_
+```xml
+<dependency>
+   <groupId>com.zaxxer</groupId>
+   <artifactId>HikariCP</artifactId>
+   <version>4.0.3</version>
+</dependency>
 ```
 _Java 7 maven artifact (*maintenance mode*):_
 ```xml
-    <dependency>
-        <groupId>com.zaxxer</groupId>
-        <artifactId>HikariCP-java7</artifactId>
-        <version>2.4.13</version>
-    </dependency>
+<dependency>
+   <groupId>com.zaxxer</groupId>
+   <artifactId>HikariCP-java7</artifactId>
+   <version>2.4.13</version>
+</dependency>
 ```
 _Java 6 maven artifact (*maintenance mode*):_
 ```xml
-    <dependency>
-        <groupId>com.zaxxer</groupId>
-        <artifactId>HikariCP-java6</artifactId>
-        <version>2.3.13</version>
-    </dependency>
+<dependency>
+   <groupId>com.zaxxer</groupId>
+   <artifactId>HikariCP-java6</artifactId>
+   <version>2.3.13</version>
+</dependency>
 ```
 Or [download from here](http://search.maven.org/#search%7Cga%7C1%7Ccom.zaxxer.hikaricp).
 
@@ -529,8 +537,8 @@ YourKit supports open source projects with its full-featured Java Profiler.  Cli
 
 Please perform changes and submit pull requests from the ``dev`` branch instead of ``master``.  Please set your editor to use spaces instead of tabs, and adhere to the apparent style of the code you are editing.  The ``dev`` branch is always more "current" than the ``master`` if you are looking to live life on the edge.
 
-[Build Status]:https://travis-ci.org/brettwooldridge/HikariCP
-[Build Status img]:https://travis-ci.org/brettwooldridge/HikariCP.svg?branch=dev
+[Build Status]:https://travis-ci.com/brettwooldridge/HikariCP
+[Build Status img]:https://travis-ci.com/brettwooldridge/HikariCP.svg?branch=dev
 
 [Coverage Status]:https://codecov.io/gh/brettwooldridge/HikariCP
 [Coverage Status img]:https://codecov.io/gh/brettwooldridge/HikariCP/branch/dev/graph/badge.svg
