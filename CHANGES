@@ -1,5 +1,10 @@
 HikariCP Changes
 
+Changes in 5.0.0
+
+ * rewrote connection elide/add code to fix an unconfirmed but occassionally reported
+   race condition that results in the pool draining to 0 and not refilling.
+
 Changes in 4.0.3
 
  * fixed #1735 added system property to permit override of lower limit of connectionTimeout
