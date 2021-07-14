@@ -16,6 +16,7 @@
 
 package com.zaxxer.hikari.metrics.prometheus;
 
+import com.zaxxer.hikari.metrics.HikariMetricsConfig;
 import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.PoolStats;
@@ -36,7 +37,7 @@ import static com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFacto
  * <pre>{@code
  * config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(new CollectorRegistry()));
  * }</pre>
- *
+ * <p>
  * Note: the internal {@see io.prometheus.client.Summary} requires heavy locks. Consider using
  * {@see PrometheusHistogramMetricsTrackerFactory} if performance plays a role and you don't need the summary per se.
  */
@@ -45,7 +46,7 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory
 
    private final static Map<CollectorRegistry, RegistrationStatus> registrationStatuses = new ConcurrentHashMap<>();
 
-   private final HikariCPCollector collector = new HikariCPCollector();
+   private final HikariCPCollector collector;
 
    private final CollectorRegistry collectorRegistry;
 
@@ -69,7 +70,17 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory
     */
    public PrometheusMetricsTrackerFactory(CollectorRegistry collectorRegistry)
    {
+      this(collectorRegistry, new HikariMetricsConfig());
+   }
+
+   /**
+    * Constructor that allows to pass in a {@link CollectorRegistry} and a
+    * {@link HikariMetricsConfig} to which the Hikari metrics are registered.
+    */
+   public PrometheusMetricsTrackerFactory(CollectorRegistry collectorRegistry, HikariMetricsConfig config)
+   {
       this.collectorRegistry = collectorRegistry;
+      this.collector = new HikariCPCollector(config);
    }
 
    @Override
