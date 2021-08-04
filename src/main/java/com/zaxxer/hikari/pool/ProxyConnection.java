@@ -28,14 +28,12 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 
 import static com.zaxxer.hikari.SQLExceptionOverride.Override.DO_NOT_EVICT;
-import static com.zaxxer.hikari.util.ClockSource.currentTime;
 
 /**
  * This is the proxy class for java.sql.Connection.
  *
  * @author Brett Wooldridge
  */
-@SuppressWarnings("ClassEscapesDefinedScope")
 public abstract class ProxyConnection implements Connection
 {
    static final int DIRTY_BIT_READONLY   = 0b000001;
@@ -57,7 +55,6 @@ public abstract class ProxyConnection implements Connection
    private final FastList<Statement> openStatements;
 
    private int dirtyBits;
-   private long lastAccess;
    private boolean isCommitStateDirty;
 
    private boolean isReadOnly;
@@ -89,14 +86,12 @@ public abstract class ProxyConnection implements Connection
                              final Connection connection,
                              final FastList<Statement> openStatements,
                              final ProxyLeakTask leakTask,
-                             final long now,
                              final boolean isReadOnly,
                              final boolean isAutoCommit) {
       this.poolEntry = poolEntry;
       this.delegate = connection;
       this.openStatements = openStatements;
       this.leakTask = leakTask;
-      this.lastAccess = now;
       this.isReadOnly = isReadOnly;
       this.isAutoCommit = isAutoCommit;
    }
@@ -196,10 +191,7 @@ public abstract class ProxyConnection implements Connection
 
    final void markCommitStateDirty()
    {
-      if (isAutoCommit) {
-         lastAccess = currentTime();
-      }
-      else {
+      if (!isAutoCommit) {
          isCommitStateDirty = true;
       }
    }
@@ -255,13 +247,11 @@ public abstract class ProxyConnection implements Connection
          try {
             if (isCommitStateDirty && !isAutoCommit) {
                delegate.rollback();
-               lastAccess = currentTime();
                LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.getPoolName(), delegate);
             }
 
             if (dirtyBits != 0) {
                poolEntry.resetConnectionState(this, dirtyBits);
-               lastAccess = currentTime();
             }
 
             delegate.clearWarnings();
@@ -274,7 +264,7 @@ public abstract class ProxyConnection implements Connection
          }
          finally {
             delegate = ClosedConnection.CLOSED_CONNECTION;
-            poolEntry.recycle(lastAccess);
+            poolEntry.recycle();
          }
       }
    }
@@ -386,7 +376,6 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.commit();
       isCommitStateDirty = false;
-      lastAccess = currentTime();
    }
 
    /** {@inheritDoc} */
@@ -395,7 +384,6 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.rollback();
       isCommitStateDirty = false;
-      lastAccess = currentTime();
    }
 
    /** {@inheritDoc} */
@@ -404,7 +392,6 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.rollback(savepoint);
       isCommitStateDirty = false;
-      lastAccess = currentTime();
    }
 
    /** {@inheritDoc} */

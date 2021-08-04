@@ -27,6 +27,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import static com.zaxxer.hikari.util.ClockSource.*;
+import static com.zaxxer.hikari.util.ClockSource.currentTime;
 
 /**
  * Entry used in the ConcurrentBag to track Connection instances.
@@ -72,13 +73,11 @@ final class PoolEntry implements IConcurrentBagEntry
 
    /**
     * Release this entry back to the pool.
-    *
-    * @param lastAccessed last access time-stamp
     */
-   void recycle(final long lastAccessed)
+   void recycle()
    {
       if (connection != null) {
-         this.lastAccessed = lastAccessed;
+         this.lastAccessed = currentTime();
          hikariPool.recycle(this);
       }
    }
@@ -97,9 +96,9 @@ final class PoolEntry implements IConcurrentBagEntry
       this.keepalive = keepalive;
    }
 
-   Connection createProxyConnection(final ProxyLeakTask leakTask, final long now)
+   Connection createProxyConnection(final ProxyLeakTask leakTask)
    {
-      return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, now, isReadOnly, isAutoCommit);
+      return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, isReadOnly, isAutoCommit);
    }
 
    void resetConnectionState(final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
