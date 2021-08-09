@@ -155,7 +155,7 @@ public abstract class ProxyConnection implements Connection
       for (int depth = 0; delegate != ClosedConnection.CLOSED_CONNECTION && nse != null && depth < 10; depth++) {
          final var sqlState = nse.getSQLState();
          if (sqlState != null && sqlState.startsWith("08")
-             || (nse instanceof SQLTimeoutException && nse.getSQLState().equals("HY008") && nse.getErrorCode() == 0)
+             || (nse instanceof SQLTimeoutException && "HY008".equals(sqlState) && nse.getErrorCode() == 0)
              || ERROR_STATES.contains(sqlState)
              || ERROR_CODES.contains(nse.getErrorCode())) {
 
