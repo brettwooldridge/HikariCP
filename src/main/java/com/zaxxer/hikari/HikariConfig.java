@@ -79,6 +79,7 @@ public class HikariConfig implements HikariConfigMXBean
    private String dataSourceClassName;
    private String dataSourceJndiName;
    private String driverClassName;
+   private ClassLoader driverClassLoader;
    private String exceptionOverrideClassName;
    private String jdbcUrl;
    private String poolName;
@@ -470,18 +471,37 @@ public class HikariConfig implements HikariConfigMXBean
       return driverClassName;
    }
 
+   public ClassLoader getDriverClassLoader() {
+      return driverClassLoader;
+   }
+
+   public void setDriverClassLoader(ClassLoader driverClassLoader) {
+      this.driverClassLoader = driverClassLoader;
+   }
+
    public void setDriverClassName(String driverClassName)
    {
       checkIfSealed();
 
-      var driverClass = attemptFromContextLoader(driverClassName);
-      try {
-         if (driverClass == null) {
-            driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
-            LOGGER.debug("Driver class {} found in the HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
+      Class<?> driverClass = null;
+      if (driverClassLoader != null) {
+         try {
+            driverClass = driverClassLoader.loadClass(driverClassName);
+         } catch (ClassNotFoundException e) {
+            throw new RuntimeException("Failed to load driver class " + driverClassName + " in classloader " + driverClassLoader);
          }
-      } catch (ClassNotFoundException e) {
-         LOGGER.error("Failed to load driver class {} from HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
+      }
+
+      if (driverClass == null) {
+         driverClass = attemptFromContextLoader(driverClassName);
+         try {
+            if (driverClass == null) {
+               driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
+               LOGGER.debug("Driver class {} found in the HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
+            }
+         } catch (ClassNotFoundException e) {
+            LOGGER.error("Failed to load driver class {} from HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
+         }
       }
 
       if (driverClass == null) {
