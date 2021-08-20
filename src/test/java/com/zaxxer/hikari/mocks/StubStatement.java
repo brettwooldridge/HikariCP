@@ -32,6 +32,7 @@ import java.sql.Statement;
 public class StubStatement implements Statement
 {
    public static volatile boolean oldDriver;
+   public static volatile SQLException throwException;
 
    private static volatile long simulatedQueryTime;
    private boolean closed;
@@ -395,6 +396,10 @@ public class StubStatement implements Statement
    {
       if (closed) {
          throw new SQLException("Statement is closed");
+      } else if (throwException != null) {
+         SQLException toThrow = throwException;
+         throwException = null;
+         throw toThrow;
       }
    }
 }

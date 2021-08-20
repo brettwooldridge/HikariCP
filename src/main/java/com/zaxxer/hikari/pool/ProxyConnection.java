@@ -155,7 +155,7 @@ public abstract class ProxyConnection implements Connection
       for (int depth = 0; delegate != ClosedConnection.CLOSED_CONNECTION && nse != null && depth < 10; depth++) {
          final var sqlState = nse.getSQLState();
          if (sqlState != null && sqlState.startsWith("08")
-             || (nse instanceof SQLTimeoutException && nse.getSQLState().equals("HY008") && nse.getErrorCode() == 0)
+             || (nse instanceof SQLTimeoutException && isMicrosoftSqlServer())
              || ERROR_STATES.contains(sqlState)
              || ERROR_CODES.contains(nse.getErrorCode())) {
 
@@ -182,6 +182,12 @@ public abstract class ProxyConnection implements Connection
       }
 
       return sqle;
+   }
+
+   private final boolean isMicrosoftSqlServer()
+   {
+      return getPoolEntry().getPoolBase().getDataSourceClassName()
+         .equals("com.microsoft.sqlserver.jdbc.SQLServerDataSource");
    }
 
    final synchronized void untrackStatement(final Statement statement)

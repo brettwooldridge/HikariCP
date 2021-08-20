@@ -63,6 +63,18 @@ public final class TestElf
       }
    }
 
+   public static void setDataSourceClassName(HikariPool pool, String value)
+   {
+      try {
+         Field field = PoolBase.class.getDeclaredField("dataSourceClassName");
+         field.setAccessible(true);
+         field.set(pool, value);
+      }
+      catch (Exception e) {
+         throw new RuntimeException(e);
+      }
+   }
+
    static ConcurrentBag<?> getConcurrentBag(final HikariDataSource ds)
    {
       try {

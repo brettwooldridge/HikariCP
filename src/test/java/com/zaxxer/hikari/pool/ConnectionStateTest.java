@@ -26,7 +26,10 @@ import static org.junit.Assert.assertFalse;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
 import java.sql.Statement;
+
+import com.zaxxer.hikari.mocks.StubStatement;
 
 import org.junit.Test;
 
@@ -166,5 +169,34 @@ public class ConnectionStateTest
             assertTrue(TestElf.getConnectionCommitDirtyState(connection));
          }
       }
+   }
+
+   @Test
+   public void sqlTimeouExceptionEvictsOnlyMicrosoftSqlServer() throws SQLException {
+      HikariConfig config = newHikariConfig();
+      config.setMaximumPoolSize(5);
+      config.setConnectionTimeout(2500);
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      HikariDataSource ds = new HikariDataSource(config);
+      Connection conn = ds.getConnection();
+
+      conn.createStatement().executeQuery("");
+      assertFalse(conn.isClosed());
+      StubStatement.throwException = new SQLTimeoutException();
+      try {
+         conn.createStatement().executeQuery("");
+      } catch (SQLTimeoutException e) {
+         // ignore
+      }
+      assertFalse(conn.isClosed());
+
+      StubStatement.throwException = new SQLTimeoutException();
+      TestElf.setDataSourceClassName(TestElf.getPool(ds),"com.microsoft.sqlserver.jdbc.SQLServerDataSource");
+      try {
+         conn.createStatement().executeQuery("");
+      } catch (SQLTimeoutException e) {
+         // ignore
+      }
+      assertTrue(conn.isClosed());
    }
 }

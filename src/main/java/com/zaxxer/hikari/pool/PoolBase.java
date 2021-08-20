@@ -77,6 +77,7 @@ abstract class PoolBase
    private int transactionIsolation;
    private Executor netTimeoutExecutor;
    private DataSource dataSource;
+   private String dataSourceClassName;
 
    private final String schema;
    private final boolean isReadOnly;
@@ -340,6 +341,12 @@ abstract class PoolBase
       }
 
       this.dataSource = ds;
+      this.dataSourceClassName = ds.getClass().getName();
+   }
+
+   public String getDataSourceClassName()
+   {
+      return dataSourceClassName;
    }
 
    /**
