@@ -406,6 +406,74 @@ public class TestConnections
    }
 
    @Test
+   public void testNoEvictionOnSqlTimeout() throws SQLException {
+      HikariConfig config = newHikariConfig();
+      config.setMaximumPoolSize(5);
+      config.setConnectionTimeout(2500);
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      // Do not set setExceptionOverrideClassName
+
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         HikariPool pool = getPool(ds);
+
+         while (pool.getTotalConnections() < 5) {
+            quietlySleep(100L);
+         }
+
+         try (Connection connection = ds.getConnection()) {
+            assertNotNull(connection);
+
+            StubStatement.throwException = new SQLTimeoutException();
+            try {
+               connection.createStatement().executeQuery("SELECT some, thing FROM somewhere WHERE something=?");
+               // Shouldn't get here
+               assertFalse(true);
+            } catch (SQLException e) {
+               assertSame(SQLTimeoutException.class, e.getClass());
+               assertFalse(connection.isClosed());
+            }
+         }
+
+         assertEquals("Total connections not as expected", 5, pool.getTotalConnections());
+         assertEquals("Idle connections not as expected", 5, pool.getIdleConnections());
+      }
+   }
+
+   @Test
+   public void testEvictionOnSqlTimeout() throws SQLException {
+      HikariConfig config = newHikariConfig();
+      config.setMaximumPoolSize(5);
+      config.setConnectionTimeout(2500);
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      config.setExceptionOverrideClassName(AlwaysEvictOverrideHandler.class.getName());
+
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         HikariPool pool = getPool(ds);
+
+         while (pool.getTotalConnections() < 5) {
+            quietlySleep(100L);
+         }
+
+         try (Connection connection = ds.getConnection()) {
+            assertNotNull(connection);
+
+            StubStatement.throwException = new SQLTimeoutException();
+            try {
+               connection.createStatement().executeQuery("SELECT some, thing FROM somewhere WHERE something=?");
+               // Shouldn't get here
+               assertFalse(true);
+            } catch (SQLException e) {
+               assertSame(SQLTimeoutException.class, e.getClass());
+               assertTrue(connection.isClosed());
+            }
+         }
+
+         assertEquals("Total connections not as expected", 4, pool.getTotalConnections());
+         assertEquals("Idle connections not as expected", 4, pool.getIdleConnections());
+      }
+   }
+
+   @Test
    public void testEvictAllRefill() throws Exception {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(5);
@@ -906,6 +974,14 @@ public class TestConnections
       @java.lang.Override
       public Override adjudicate(SQLException sqlException) {
          return (sqlException.getSQLState().equals("08999")) ? Override.DO_NOT_EVICT : Override.CONTINUE_EVICT;
+      }
+   }
+
+   public static class AlwaysEvictOverrideHandler implements SQLExceptionOverride
+   {
+      @java.lang.Override
+      public Override adjudicate(SQLException sqlException) {
+         return Override.CONTINUE_EVICT;
       }
    }
 }
