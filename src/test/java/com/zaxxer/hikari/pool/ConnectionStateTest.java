@@ -164,6 +164,9 @@ public class ConnectionStateTest
 
             resultSet.updateRow();
             assertTrue(TestElf.getConnectionCommitDirtyState(connection));
+
+            connection.setReadOnly(!connection.isReadOnly());
+            assertTrue(TestElf.getConnectionCommitDirtyState(connection));
          }
       }
    }

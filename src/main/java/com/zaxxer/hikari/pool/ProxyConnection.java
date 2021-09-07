@@ -409,7 +409,6 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.setReadOnly(readOnly);
       isReadOnly = readOnly;
-      isCommitStateDirty = false;
       dirtyBits |= DIRTY_BIT_READONLY;
    }
 
