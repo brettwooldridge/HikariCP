@@ -27,7 +27,6 @@ import com.zaxxer.hikari.util.UtilityElf.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -37,7 +36,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
 import java.sql.Statement;
-import java.util.Properties;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -134,14 +132,11 @@ abstract class PoolBase
          try {
             logger.debug("{} - Closing connection {}: {}", poolName, connection, closureReason);
 
-            try {
+            // continue with the close even if setNetworkTimeout() throws
+            try (connection) {
                setNetworkTimeout(connection, SECONDS.toMillis(15));
-            }
-            catch (SQLException e) {
+            } catch (SQLException e) {
                // ignore
-            }
-            finally {
-               connection.close(); // continue with the close even if setNetworkTimeout() throws
             }
          }
          catch (Exception e) {
@@ -150,19 +145,19 @@ abstract class PoolBase
       }
    }
 
-   boolean isConnectionAlive(final Connection connection)
+   boolean isConnectionDead(final Connection connection)
    {
       try {
          try {
             setNetworkTimeout(connection, validationTimeout);
 
-            final int validationSeconds = (int) Math.max(1000L, validationTimeout) / 1000;
+            final var validationSeconds = (int) Math.max(1000L, validationTimeout) / 1000;
 
             if (isUseJdbc4Validation) {
-               return connection.isValid(validationSeconds);
+               return !connection.isValid(validationSeconds);
             }
 
-            try (Statement statement = connection.createStatement()) {
+            try (var statement = connection.createStatement()) {
                if (isNetworkTimeoutSupported != TRUE) {
                   setQueryTimeout(statement, validationSeconds);
                }
@@ -178,13 +173,13 @@ abstract class PoolBase
             }
          }
 
-         return true;
+         return false;
       }
       catch (Exception e) {
          lastConnectionFailure.set(e);
          logger.warn("{} - Failed to validate connection {} ({}). Possibly consider using a shorter maxLifetime value.",
                      poolName, connection, e.getMessage());
-         return false;
+         return true;
       }
    }
 
@@ -278,10 +273,16 @@ abstract class PoolBase
       }
 
       try {
-         final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+         final var mBeanServer = ManagementFactory.getPlatformMBeanServer();
 
-         final ObjectName beanConfigName = new ObjectName("com.zaxxer.hikari:type=PoolConfig (" + poolName + ")");
-         final ObjectName beanPoolName = new ObjectName("com.zaxxer.hikari:type=Pool (" + poolName + ")");
+         ObjectName beanConfigName, beanPoolName;
+         if ("true".equals(System.getProperty("hikaricp.jmx.register2.0"))) {
+             beanConfigName = new ObjectName("com.zaxxer.hikari:type=PoolConfig,name=" + poolName);
+             beanPoolName = new ObjectName("com.zaxxer.hikari:type=Pool,name=" + poolName);
+         } else {
+            beanConfigName = new ObjectName("com.zaxxer.hikari:type=PoolConfig (" + poolName + ")");
+            beanPoolName = new ObjectName("com.zaxxer.hikari:type=Pool (" + poolName + ")");
+         }
          if (register) {
             if (!mBeanServer.isRegistered(beanConfigName)) {
                mBeanServer.registerMBean(config, beanConfigName);
@@ -309,15 +310,15 @@ abstract class PoolBase
     */
    private void initializeDataSource()
    {
-      final String jdbcUrl = config.getJdbcUrl();
-      final String username = config.getUsername();
-      final String password = config.getPassword();
-      final String dsClassName = config.getDataSourceClassName();
-      final String driverClassName = config.getDriverClassName();
-      final String dataSourceJNDI = config.getDataSourceJNDI();
-      final Properties dataSourceProperties = config.getDataSourceProperties();
+      final var jdbcUrl = config.getJdbcUrl();
+      final var username = config.getUsername();
+      final var password = config.getPassword();
+      final var dsClassName = config.getDataSourceClassName();
+      final var driverClassName = config.getDriverClassName();
+      final var dataSourceJNDI = config.getDataSourceJNDI();
+      final var dataSourceProperties = config.getDataSourceProperties();
 
-      DataSource ds = config.getDataSource();
+      var ds = config.getDataSource();
       if (dsClassName != null && ds == null) {
          ds = createInstance(dsClassName, DataSource.class);
          PropertyElf.setTargetFromProperties(ds, dataSourceProperties);
@@ -327,7 +328,7 @@ abstract class PoolBase
       }
       else if (dataSourceJNDI != null && ds == null) {
          try {
-            InitialContext ic = new InitialContext();
+            var ic = new InitialContext();
             ds = (DataSource) ic.lookup(dataSourceJNDI);
          } catch (NamingException e) {
             throw new PoolInitializationException(e);
@@ -362,12 +363,12 @@ abstract class PoolBase
     */
    private Connection newConnection() throws Exception
    {
-      final long start = currentTime();
+      final var start = currentTime();
 
       Connection connection = null;
       try {
-         String username = config.getUsername();
-         String password = config.getPassword();
+         var username = config.getUsername();
+         var password = config.getPassword();
 
          connection = (username == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
          if (connection == null) {
@@ -537,7 +538,7 @@ abstract class PoolBase
    {
       if (isNetworkTimeoutSupported != FALSE) {
          try {
-            final int originalTimeout = connection.getNetworkTimeout();
+            final var originalTimeout = connection.getNetworkTimeout();
             connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
             isNetworkTimeoutSupported = TRUE;
             return originalTimeout;
@@ -586,7 +587,7 @@ abstract class PoolBase
    private void executeSql(final Connection connection, final String sql, final boolean isCommit) throws SQLException
    {
       if (sql != null) {
-         try (Statement statement = connection.createStatement()) {
+         try (var statement = connection.createStatement()) {
             // connection was created a few milliseconds before, so set query timeout is omitted (we assume it will succeed)
             statement.execute(sql);
          }
@@ -649,7 +650,7 @@ abstract class PoolBase
     */
    private String stringFromResetBits(final int bits)
    {
-      final StringBuilder sb = new StringBuilder();
+      final var sb = new StringBuilder();
       for (int ndx = 0; ndx < RESET_STATES.length; ndx++) {
          if ( (bits & (0b1 << ndx)) != 0) {
             sb.append(RESET_STATES[ndx]).append(", ");
@@ -682,6 +683,7 @@ abstract class PoolBase
    {
       /** {@inheritDoc} */
       @Override
+      @SuppressWarnings("NullableProblems")
       public void execute(Runnable command)
       {
          try {
@@ -744,7 +746,7 @@ abstract class PoolBase
       @Override
       public void recordBorrowStats(final PoolEntry poolEntry, final long startTime)
       {
-         final long now = currentTime();
+         final var now = currentTime();
          poolEntry.lastBorrowed = now;
          tracker.recordConnectionAcquiredNanos(elapsedNanos(startTime, now));
       }

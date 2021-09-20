@@ -26,7 +26,6 @@ import com.zaxxer.hikari.util.FastList;
  *
  * @author Brett Wooldridge
  */
-@SuppressWarnings("unused")
 public final class ProxyFactory
 {
    private ProxyFactory()
@@ -40,12 +39,11 @@ public final class ProxyFactory
     * @param connection the raw database Connection
     * @param openStatements a reusable list to track open Statement instances
     * @param leakTask the ProxyLeakTask for this connection
-    * @param now the current timestamp
     * @param isReadOnly the default readOnly state of the connection
     * @param isAutoCommit the default autoCommit state of the connection
     * @return a proxy that wraps the specified {@link Connection}
     */
-   static ProxyConnection getProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final long now, final boolean isReadOnly, final boolean isAutoCommit)
+   static ProxyConnection getProxyConnection(final PoolEntry poolEntry, final Connection connection, final FastList<Statement> openStatements, final ProxyLeakTask leakTask, final boolean isReadOnly, final boolean isAutoCommit)
    {
       // Body is replaced (injected) by JavassistProxyFactory
       throw new IllegalStateException("You need to run the CLI build and you need target/classes in your classpath to run.");

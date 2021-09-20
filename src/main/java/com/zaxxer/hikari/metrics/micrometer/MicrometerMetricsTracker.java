@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
  *      };
  * </pre></blockquote>
  */
+@SuppressWarnings("ALL")
 public class MicrometerMetricsTracker implements IMetricsTracker
 {
    /** Prefix used for all HikariCP metric names. */
@@ -48,29 +49,34 @@ public class MicrometerMetricsTracker implements IMetricsTracker
    private static final String METRIC_NAME_MAX_CONNECTIONS = HIKARI_METRIC_NAME_PREFIX + ".connections.max";
    private static final String METRIC_NAME_MIN_CONNECTIONS = HIKARI_METRIC_NAME_PREFIX + ".connections.min";
 
-
    private final Timer connectionObtainTimer;
    private final Counter connectionTimeoutCounter;
    private final Timer connectionUsage;
    private final Timer connectionCreation;
-   @SuppressWarnings({"FieldCanBeLocal", "unused"})
+   @SuppressWarnings("FieldCanBeLocal")
    private final Gauge totalConnectionGauge;
-   @SuppressWarnings({"FieldCanBeLocal", "unused"})
+   @SuppressWarnings("FieldCanBeLocal")
    private final Gauge idleConnectionGauge;
-   @SuppressWarnings({"FieldCanBeLocal", "unused"})
+   @SuppressWarnings("FieldCanBeLocal")
    private final Gauge activeConnectionGauge;
-   @SuppressWarnings({"FieldCanBeLocal", "unused"})
+   @SuppressWarnings("FieldCanBeLocal")
    private final Gauge pendingConnectionGauge;
-   @SuppressWarnings({"FieldCanBeLocal", "unused"})
+   @SuppressWarnings("FieldCanBeLocal")
    private final Gauge maxConnectionGauge;
-   @SuppressWarnings({"FieldCanBeLocal", "unused"})
+   @SuppressWarnings("FieldCanBeLocal")
    private final Gauge minConnectionGauge;
-   @SuppressWarnings({"FieldCanBeLocal", "unused"})
+   @SuppressWarnings("FieldCanBeLocal")
+   private final MeterRegistry meterRegistry;
+   @SuppressWarnings("FieldCanBeLocal")
    private final PoolStats poolStats;
+
 
    MicrometerMetricsTracker(final String poolName, final PoolStats poolStats, final MeterRegistry meterRegistry)
    {
-      this.poolStats = poolStats;
+      // poolStats must be held with a 'strong reference' even though it is never referenced within this class
+      this.poolStats = poolStats;  // DO NOT REMOVE
+
+      this.meterRegistry = meterRegistry;
 
       this.connectionObtainTimer = Timer.builder(METRIC_NAME_WAIT)
          .description("Connection acquire time")
@@ -148,5 +154,19 @@ public class MicrometerMetricsTracker implements IMetricsTracker
    public void recordConnectionCreatedMillis(long connectionCreatedMillis)
    {
       connectionCreation.record(connectionCreatedMillis, TimeUnit.MILLISECONDS);
+   }
+
+   @Override
+   public void close() {
+      meterRegistry.remove(connectionObtainTimer);
+      meterRegistry.remove(connectionTimeoutCounter);
+      meterRegistry.remove(connectionUsage);
+      meterRegistry.remove(connectionCreation);
+      meterRegistry.remove(totalConnectionGauge);
+      meterRegistry.remove(idleConnectionGauge);
+      meterRegistry.remove(activeConnectionGauge);
+      meterRegistry.remove(pendingConnectionGauge);
+      meterRegistry.remove(maxConnectionGauge);
+      meterRegistry.remove(minConnectionGauge);
    }
 }

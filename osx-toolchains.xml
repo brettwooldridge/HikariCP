@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF8"?>
+<toolchains>
+   <toolchain>
+      <type>paths</type>
+      <provides>
+         <id>java</id>
+      </provides>
+      <configuration>
+         <paths>
+            <path>/Library/Java/JavaVirtualMachines/jdk-11.0.11.jdk/Contents/Home/bin</path>
+         </paths>
+      </configuration>
+   </toolchain>
+</toolchains>

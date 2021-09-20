@@ -49,7 +49,7 @@ public abstract class ProxyPreparedStatement extends ProxyStatement implements P
    public ResultSet executeQuery() throws SQLException
    {
       connection.markCommitStateDirty();
-      ResultSet resultSet = ((PreparedStatement) delegate).executeQuery();
+      var resultSet = ((PreparedStatement) delegate).executeQuery();
       return ProxyFactory.getProxyResultSet(connection, this, resultSet);
    }
 

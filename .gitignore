@@ -1,6 +1,5 @@
 .classpath
 .project
-.settings/
 
 target/
 dependency-reduced-pom.xml
@@ -20,7 +19,6 @@ dependency-reduced-pom.xml
 .tm_*
 .classpath
 .project
-.settings/
 .idea/
 .gradle/
 out/

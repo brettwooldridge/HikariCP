@@ -45,21 +45,21 @@ public final class DriverDataSource implements DataSource
       this.jdbcUrl = jdbcUrl;
       this.driverProperties = new Properties();
 
-      for (Entry<Object, Object> entry : properties.entrySet()) {
+      for (var entry : properties.entrySet()) {
          driverProperties.setProperty(entry.getKey().toString(), entry.getValue().toString());
       }
 
       if (username != null) {
-         driverProperties.put(USER, driverProperties.getProperty("user", username));
+         driverProperties.put(USER, driverProperties.getProperty(USER, username));
       }
       if (password != null) {
-         driverProperties.put(PASSWORD, driverProperties.getProperty("password", password));
+         driverProperties.put(PASSWORD, driverProperties.getProperty(PASSWORD, password));
       }
 
       if (driverClassName != null) {
-         Enumeration<Driver> drivers = DriverManager.getDrivers();
+         var drivers = DriverManager.getDrivers();
          while (drivers.hasMoreElements()) {
-            Driver d = drivers.nextElement();
+            var d = drivers.nextElement();
             if (d.getClass().getName().equals(driverClassName)) {
                driver = d;
                break;
@@ -69,7 +69,7 @@ public final class DriverDataSource implements DataSource
          if (driver == null) {
             LOGGER.warn("Registered driver with driverClassName={} was not found, trying direct instantiation.", driverClassName);
             Class<?> driverClass = null;
-            ClassLoader threadContextClassLoader = Thread.currentThread().getContextClassLoader();
+            var threadContextClassLoader = Thread.currentThread().getContextClassLoader();
             try {
                if (threadContextClassLoader != null) {
                   try {
@@ -92,7 +92,7 @@ public final class DriverDataSource implements DataSource
 
             if (driverClass != null) {
                try {
-                  driver = (Driver) driverClass.newInstance();
+                  driver = (Driver) driverClass.getDeclaredConstructor().newInstance();
                } catch (Exception e) {
                   LOGGER.warn("Failed to create instance of driver class {}, trying jdbcUrl resolution", driverClassName, e);
                }
@@ -100,7 +100,7 @@ public final class DriverDataSource implements DataSource
          }
       }
 
-      final String sanitizedUrl = jdbcUrl.replaceAll("([?&;]password=)[^&#;]*(.*)", "$1<masked>$2");
+      final var sanitizedUrl = jdbcUrl.replaceAll("([?&;]password=)[^&#;]*(.*)", "$1<masked>$2");
       try {
          if (driver == null) {
             driver = DriverManager.getDriver(jdbcUrl);
@@ -124,15 +124,15 @@ public final class DriverDataSource implements DataSource
    @Override
    public Connection getConnection(final String username, final String password) throws SQLException
    {
-      final Properties cloned = (Properties) driverProperties.clone();
+      final var cloned = (Properties) driverProperties.clone();
       if (username != null) {
-         cloned.put("user", username);
+         cloned.put(USER, username);
          if (cloned.containsKey("username")) {
             cloned.put("username", username);
          }
       }
       if (password != null) {
-         cloned.put("password", password);
+         cloned.put(PASSWORD, password);
       }
 
       return driver.connect(jdbcUrl, cloned);

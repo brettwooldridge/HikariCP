@@ -4,6 +4,7 @@ public class TestObject
 {
    private TestObject testObject;
    private String string;
+   private short shortRaw;
 
    public void setTestObject(TestObject testObject)
    {
@@ -23,5 +24,13 @@ public class TestObject
    public String getString()
    {
       return string;
+   }
+
+   public short getShortRaw() {
+      return shortRaw;
+   }
+
+   public void setShortRaw(short shortRaw) {
+      this.shortRaw = shortRaw;
    }
 }

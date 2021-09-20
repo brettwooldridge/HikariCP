@@ -33,7 +33,7 @@ import java.sql.Statement;
 import java.sql.Struct;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Executor;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.zaxxer.hikari.util.UtilityElf;
@@ -42,16 +42,21 @@ import com.zaxxer.hikari.util.UtilityElf;
  *
  * @author Brett Wooldridge
  */
-public class StubConnection extends StubBaseConnection implements Connection
+public class StubConnection extends StubBaseConnection
 {
    public static final AtomicInteger count = new AtomicInteger();
    public static volatile boolean slowCreate;
    public static volatile boolean oldDriver;
+   private volatile boolean isClosed = false;
 
    private static long foo;
    private boolean autoCommit;
    private int isolation = Connection.TRANSACTION_READ_COMMITTED;
    private String catalog;
+   private long waitTimeout;
+
+   private static ScheduledExecutorService connectionWaitTimeout = new ScheduledThreadPoolExecutor(1);
+   private ScheduledFuture<?> waitTimeoutTask;
 
    static {
       foo = System.currentTimeMillis();
@@ -63,6 +68,21 @@ public class StubConnection extends StubBaseConnection implements Connection
          UtilityElf.quietlySleep(1000);
       }
    }
+
+   public StubConnection(long waitTimeout) {
+      this.waitTimeout = waitTimeout;
+      count.incrementAndGet();
+      if (slowCreate) {
+         UtilityElf.quietlySleep(1000);
+      }
+
+      try {
+         refreshConnectionWaitTimeout();
+      } catch (Exception e){
+         //ignore
+      }
+   }
+
 
    /** {@inheritDoc} */
    @SuppressWarnings("unchecked")
@@ -128,7 +148,21 @@ public class StubConnection extends StubBaseConnection implements Connection
    @Override
    public void commit() throws SQLException
    {
+      refreshConnectionWaitTimeout();
+   }
 
+   private void refreshConnectionWaitTimeout() throws SQLException {
+      if (this.isClosed) {
+         throw new SQLException("connection has been closed");
+      }
+
+      if (waitTimeoutTask != null) {
+         waitTimeoutTask.cancel(true);
+      }
+
+      if (waitTimeout > 0) {
+         waitTimeoutTask = connectionWaitTimeout.schedule(() -> { this.isClosed = true;}, waitTimeout, TimeUnit.MILLISECONDS);
+      }
    }
 
    /** {@inheritDoc} */
@@ -152,7 +186,7 @@ public class StubConnection extends StubBaseConnection implements Connection
       if (throwException) {
          throw new SQLException();
       }
-      return false;
+      return isClosed;
    }
 
    /** {@inheritDoc} */
@@ -408,7 +442,8 @@ public class StubConnection extends StubBaseConnection implements Connection
       if (throwException) {
          throw new SQLException();
       }
-      return true;
+      refreshConnectionWaitTimeout();
+      return !isClosed;
    }
 
    /** {@inheritDoc} */

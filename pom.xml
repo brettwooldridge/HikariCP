@@ -3,34 +3,37 @@
 
    <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-      <sureFireOptions9 />
-      <sureFireForks9>false</sureFireForks9>
+      <sureFireOptions11 />
+      <sureFireForks11>false</sureFireForks11>
+      <java11.sourceDirectory>${project.basedir}/src/main/java11</java11.sourceDirectory>
+      <java11.build.outputDirectory>${project.build.directory}/classes-java11</java11.build.outputDirectory>
       <artifact.classifier />
 
-      <docker.maven.plugin.fabric8.version>0.31.0</docker.maven.plugin.fabric8.version>
-      <felix.bundle.plugin.version>4.1.0</felix.bundle.plugin.version>
+      <docker.maven.plugin.fabric8.version>0.36.0</docker.maven.plugin.fabric8.version>
+      <felix.bundle.plugin.version>5.1.1</felix.bundle.plugin.version>
       <felix.version>6.0.1</felix.version>
-      <hibernate.version>5.2.10.Final</hibernate.version>
-      <javassist.version>3.24.1-GA</javassist.version>
+      <hibernate.version>5.4.16.Final</hibernate.version>
+      <javassist.version>3.27.0-GA</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>
       <maven.release.version>2.5.3</maven.release.version>
-      <metrics.version>3.2.4</metrics.version>
-      <micrometer.version>1.3.2</micrometer.version>
-      <simpleclient.version>0.0.26</simpleclient.version>
-      <mockito.version>3.2.4</mockito.version>
+      <metrics.version>3.2.5</metrics.version>
+      <micrometer.version>1.5.10</micrometer.version>
+      <simpleclient.version>0.9.0</simpleclient.version>
+      <mockito.version>3.7.7</mockito.version>
       <pax.exam.version>4.13.1</pax.exam.version>
       <pax.url.version>2.5.4</pax.url.version>
-      <postgresql.version>42.1.4</postgresql.version>
-      <slf4j.version>1.7.25</slf4j.version>
-      <log4j.version>2.11.1</log4j.version>
+      <postgresql.version>42.2.20</postgresql.version>
+      <log4j.version>2.14.0</log4j.version>
+      <slf4j.version>1.7.30</slf4j.version>
       <commons.csv.version>1.5</commons.csv.version>
       <h2.version>1.4.196</h2.version>
-      <junit.version>4.12</junit.version>
+      <junit.version>4.13.1</junit.version>
+      <testcontainers.version>1.15.1</testcontainers.version>
    </properties>
 
    <groupId>com.zaxxer</groupId>
    <artifactId>HikariCP</artifactId>
-   <version>3.4.3-SNAPSHOT</version>
+   <version>5.0.1-SNAPSHOT</version>
    <packaging>bundle</packaging>
 
    <name>HikariCP</name>
@@ -70,21 +73,11 @@
       <version>9</version>
    </parent>
 
-   <prerequisites>
-      <maven>3.3.9</maven>
-   </prerequisites>
-
    <dependencies>
       <dependency>
          <groupId>org.slf4j</groupId>
          <artifactId>slf4j-api</artifactId>
          <version>${slf4j.version}</version>
-      </dependency>
-      <dependency>
-         <groupId>org.apache.logging.log4j</groupId>
-         <artifactId>log4j-slf4j-impl</artifactId>
-         <version>${log4j.version}</version>
-         <scope>test</scope>
       </dependency>
       <dependency>
          <groupId>org.apache.logging.log4j</groupId>
@@ -96,6 +89,12 @@
          <groupId>org.apache.logging.log4j</groupId>
          <artifactId>log4j-core</artifactId>
          <version>${log4j.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.testcontainers</groupId>
+         <artifactId>postgresql</artifactId>
+         <version>${testcontainers.version}</version>
          <scope>test</scope>
       </dependency>
       <dependency>
@@ -243,23 +242,72 @@
    </dependencies>
 
    <build>
+      <resources>
+         <resource>
+            <directory>target/classes</directory>
+         </resource>
+      </resources>
+
       <plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <version>3.0.0-M3</version>
+            <executions>
+               <execution>
+                  <id>enforce-maven</id>
+                  <goals>
+                     <goal>enforce</goal>
+                  </goals>
+                  <configuration>
+                     <rules>
+                        <requireMavenVersion>
+                           <version>3.3.9</version>
+                        </requireMavenVersion>
+                     </rules>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>2.8</version>
+            <executions>
+               <execution>
+                  <phase>generate-sources</phase>
+                  <goals>
+                     <goal>build-classpath</goal>
+                  </goals>
+                  <configuration>
+                     <outputProperty>maven.compile.classpath</outputProperty>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
          <plugin>
             <!-- Generate proxies -->
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
             <version>1.6.0</version>
+            <extensions>true</extensions>
             <executions>
                <execution>
                   <phase>compile</phase>
                   <!-- phase>generate-test-sources</phase -->
                   <goals>
-                     <goal>java</goal>
+                     <goal>exec</goal>
                   </goals>
                </execution>
             </executions>
             <configuration>
-               <mainClass>com.zaxxer.hikari.util.JavassistProxyFactory</mainClass>
+               <executable>java</executable>
+               <arguments>
+                  <argument>-cp</argument>
+                  <argument>${project.build.outputDirectory}${path.separator}${maven.compile.classpath}</argument>
+                  <argument>com.zaxxer.hikari.util.JavassistProxyFactory</argument>
+               </arguments>
             </configuration>
          </plugin>
 
@@ -275,8 +323,11 @@
                   <!-- Postgres Image is used 'as-is' and iked into the service s linimage -->
                   <image>
                      <alias>db</alias>
-                     <name>postgres:9</name>
+                     <name>postgres:11</name>
                      <run>
+                        <env>
+                           <POSTGRES_PASSWORD>password</POSTGRES_PASSWORD>
+                        </env>
                         <wait>
                            <log>database system is ready to accept connections</log>
                            <time>20000</time>
@@ -373,7 +424,8 @@
             <configuration>
                <classifier>${artifact.classifier}</classifier>
                <instructions>
-                  <Automatic-Module-Name>com.zaxxer.hikari</Automatic-Module-Name>
+                  <Automatic-Module-Name>${automatic.module.name}</Automatic-Module-Name>
+                  <Multi-Release>true</Multi-Release>
                   <Bundle-Name>HikariCP</Bundle-Name>
                   <Export-Package>
                      com.zaxxer.hikari,
@@ -381,6 +433,7 @@
                      com.zaxxer.hikari.metrics
                   </Export-Package>
                   <Private-Package>com.zaxxer.hikari.*</Private-Package>
+                  <Include-Resource>{maven-resources}</Include-Resource>
                   <_exportcontents>
                      com.zaxxer.hikari.pool,
                      com.zaxxer.hikari.util
@@ -424,10 +477,9 @@
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-compiler-plugin</artifactId>
                <version>3.8.1</version>
-               <extensions>true</extensions>
                <configuration>
-                  <source>1.8</source>
-                  <target>1.8</target>
+                  <source>11</source>
+                  <target>11</target>
                   <compilerArgs>-Xlint</compilerArgs>
                </configuration>
             </plugin>
@@ -445,13 +497,11 @@
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-surefire-plugin</artifactId>
-               <version>2.22.1</version>
+               <version>3.0.0-M5</version>
                <configuration>
                   <!-- Sets the VM argument line used when unit tests are run. -->
-                  <argLine>${surefireArgLine} ${sureFireOptions9}</argLine>
-                  <!-- Skips unit tests if the value of skip.unit.tests property is true -->
-                  <skipTests>${skip.unit.tests}</skipTests>
-                  <reuseForks>${sureFireForks9}</reuseForks>
+                  <argLine>${surefireArgLine} ${sureFireOptions11}</argLine>
+                  <reuseForks>${sureFireForks11}</reuseForks>
                </configuration>
             </plugin>
 
@@ -480,7 +530,9 @@
                <version>3.0.1</version>
                <configuration>
                   <show>public</show>
-                  <excludePackageNames>com.zaxxer.hikari.hibernate:com.zaxxer.hikari.metrics.*:com.zaxxer.hikari.pool:com.zaxxer.hikari.util</excludePackageNames>
+                  <excludePackageNames>
+                     com.zaxxer.hikari.hibernate:com.zaxxer.hikari.metrics.*:com.zaxxer.hikari.pool:com.zaxxer.hikari.util
+                  </excludePackageNames>
                   <attach>true</attach>
                   <maxmemory>1024m</maxmemory>
                </configuration>
@@ -500,20 +552,52 @@
 
    <profiles>
       <profile>
-         <id>Java9</id>
+         <id>Java11</id>
          <activation>
-            <jdk>[9,)</jdk>
+            <jdk>[11,)</jdk>
          </activation>
          <properties>
-            <!-- sureFireOptions9>
+            <!-- sureFireOptions11>
                -add-opens java.base/java.net=ALL-UNNAMED
                -add-opens java.base/java.security=ALL-UNNAMED
                -add-exports java.base/sun.net.www.protocol.http=ALL-UNNAMED
                -add-exports java.base/sun.net.www.protocol.https=ALL-UNNAMED
-            </sureFireOptions9 -->
-            <sureFireForks9>true</sureFireForks9>
-            <artifact.classifier>java9</artifact.classifier>
+            </sureFireOptions11 -->
+            <slf4j.version>2.0.0-alpha1</slf4j.version>
+            <sureFireForks11>true</sureFireForks11>
          </properties>
+         <dependencies>
+            <dependency>
+               <groupId>org.apache.logging.log4j</groupId>
+               <artifactId>log4j-slf4j18-impl</artifactId>
+               <version>${log4j.version}</version>
+               <scope>test</scope>
+            </dependency>
+         </dependencies>
+         <build>
+            <plugins>
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-compiler-plugin</artifactId>
+                  <version>3.8.1</version>
+                  <executions>
+                     <execution>
+                        <id>compile-java11</id>
+                        <goals>
+                           <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                           <release>11</release>
+                           <compileSourceRoots>
+                              <compileSourceRoot>${project.basedir}/src/main/java11</compileSourceRoot>
+                           </compileSourceRoots>
+                           <multiReleaseOutput>true</multiReleaseOutput>
+                        </configuration>
+                     </execution>
+                  </executions>
+               </plugin>
+            </plugins>
+         </build>
       </profile>
 
       <profile>

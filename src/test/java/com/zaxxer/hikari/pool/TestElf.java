@@ -24,6 +24,7 @@ import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.layout.CsvLogEventLayout;
 import org.apache.logging.slf4j.Log4jLogger;
 import org.slf4j.LoggerFactory;
@@ -46,8 +47,8 @@ public final class TestElf
       // default constructor
    }
 
-   public static boolean isJava9() {
-      return System.getProperty("java.version").startsWith("9");
+   public static boolean isJava11() {
+      return System.getProperty("java.version").startsWith("11");
    }
 
    public static HikariPool getPool(final HikariDataSource ds)
@@ -187,7 +188,7 @@ public final class TestElf
 
       StringAppender(final String name, final PrintStream stream)
       {
-         super(name, null, CsvLogEventLayout.createDefaultLayout());
+         super(name, null, CsvLogEventLayout.createDefaultLayout(), true, Property.EMPTY_ARRAY);
          this.stream = stream;
       }
 

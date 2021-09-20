@@ -16,7 +16,6 @@
 
 package com.zaxxer.hikari.pool;
 
-import com.zaxxer.hikari.SQLExceptionOverride;
 import com.zaxxer.hikari.util.FastList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +28,6 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 
 import static com.zaxxer.hikari.SQLExceptionOverride.Override.DO_NOT_EVICT;
-import static com.zaxxer.hikari.util.ClockSource.currentTime;
 
 /**
  * This is the proxy class for java.sql.Connection.
@@ -57,7 +55,6 @@ public abstract class ProxyConnection implements Connection
    private final FastList<Statement> openStatements;
 
    private int dirtyBits;
-   private long lastAccess;
    private boolean isCommitStateDirty;
 
    private boolean isReadOnly;
@@ -89,14 +86,12 @@ public abstract class ProxyConnection implements Connection
                              final Connection connection,
                              final FastList<Statement> openStatements,
                              final ProxyLeakTask leakTask,
-                             final long now,
                              final boolean isReadOnly,
                              final boolean isAutoCommit) {
       this.poolEntry = poolEntry;
       this.delegate = connection;
       this.openStatements = openStatements;
       this.leakTask = leakTask;
-      this.lastAccess = now;
       this.isReadOnly = isReadOnly;
       this.isAutoCommit = isAutoCommit;
    }
@@ -154,11 +149,11 @@ public abstract class ProxyConnection implements Connection
    @SuppressWarnings("ConstantConditions")
    final SQLException checkException(SQLException sqle)
    {
-      boolean evict = false;
+      var evict = false;
       SQLException nse = sqle;
-      final SQLExceptionOverride exceptionOverride = poolEntry.getPoolBase().exceptionOverride;
+      final var exceptionOverride = poolEntry.getPoolBase().exceptionOverride;
       for (int depth = 0; delegate != ClosedConnection.CLOSED_CONNECTION && nse != null && depth < 10; depth++) {
-         final String sqlState = nse.getSQLState();
+         final var sqlState = nse.getSQLState();
          if (sqlState != null && sqlState.startsWith("08")
              || nse instanceof SQLTimeoutException
              || ERROR_STATES.contains(sqlState)
@@ -178,7 +173,7 @@ public abstract class ProxyConnection implements Connection
       }
 
       if (evict) {
-         SQLException exception = (nse != null) ? nse : sqle;
+         var exception = (nse != null) ? nse : sqle;
          LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
             poolEntry.getPoolName(), delegate, exception.getSQLState(), exception.getErrorCode(), exception);
          leakTask.cancel();
@@ -196,10 +191,7 @@ public abstract class ProxyConnection implements Connection
 
    final void markCommitStateDirty()
    {
-      if (isAutoCommit) {
-         lastAccess = currentTime();
-      }
-      else {
+      if (!isAutoCommit) {
          isCommitStateDirty = true;
       }
    }
@@ -219,7 +211,7 @@ public abstract class ProxyConnection implements Connection
    @SuppressWarnings("EmptyTryBlock")
    private synchronized void closeStatements()
    {
-      final int size = openStatements.size();
+      final var size = openStatements.size();
       if (size > 0) {
          for (int i = 0; i < size && delegate != ClosedConnection.CLOSED_CONNECTION; i++) {
             try (Statement ignored = openStatements.get(i)) {
@@ -255,13 +247,11 @@ public abstract class ProxyConnection implements Connection
          try {
             if (isCommitStateDirty && !isAutoCommit) {
                delegate.rollback();
-               lastAccess = currentTime();
                LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.getPoolName(), delegate);
             }
 
             if (dirtyBits != 0) {
                poolEntry.resetConnectionState(this, dirtyBits);
-               lastAccess = currentTime();
             }
 
             delegate.clearWarnings();
@@ -274,7 +264,7 @@ public abstract class ProxyConnection implements Connection
          }
          finally {
             delegate = ClosedConnection.CLOSED_CONNECTION;
-            poolEntry.recycle(lastAccess);
+            poolEntry.recycle();
          }
       }
    }
@@ -386,7 +376,6 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.commit();
       isCommitStateDirty = false;
-      lastAccess = currentTime();
    }
 
    /** {@inheritDoc} */
@@ -395,7 +384,6 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.rollback();
       isCommitStateDirty = false;
-      lastAccess = currentTime();
    }
 
    /** {@inheritDoc} */
@@ -404,7 +392,6 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.rollback(savepoint);
       isCommitStateDirty = false;
-      lastAccess = currentTime();
    }
 
    /** {@inheritDoc} */

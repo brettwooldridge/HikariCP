@@ -77,13 +77,13 @@ public class BasicPoolTest
       System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "1000");
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
+         getUnsealedConfig(ds).setIdleTimeout(3000);
+
          System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
 
          SECONDS.sleep(1);
 
          HikariPool pool = getPool(ds);
-
-         getUnsealedConfig(ds).setIdleTimeout(3000);
 
          assertEquals("Total connections not as expected", 5, pool.getTotalConnections());
          assertEquals("Idle connections not as expected", 5, pool.getIdleConnections());
@@ -99,7 +99,7 @@ public class BasicPoolTest
 
          assertEquals("Idle connections not as expected", 6, pool.getIdleConnections());
 
-         SECONDS.sleep(2);
+         MILLISECONDS.sleep(3000);
 
          assertEquals("Third total connections not as expected", 5, pool.getTotalConnections());
          assertEquals("Third idle connections not as expected", 5, pool.getIdleConnections());
