@@ -148,7 +148,7 @@ abstract class PoolBase
    {
       try {
          if(connection.isClosed()){
-            return false;
+            return true;
          }
 
          try {
