@@ -147,6 +147,10 @@ abstract class PoolBase
    boolean isConnectionDead(final Connection connection)
    {
       try {
+         if(connection.isClosed()){
+            return false;
+         }
+
          try {
             setNetworkTimeout(connection, validationTimeout);
 
