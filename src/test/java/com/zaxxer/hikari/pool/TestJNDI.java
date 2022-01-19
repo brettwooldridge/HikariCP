@@ -44,11 +44,13 @@ public class TestJNDI
       ref.add(new BogusRef("maxLifetime", "30000"));
       ref.add(new BogusRef("maximumPoolSize", "10"));
       ref.add(new BogusRef("dataSource.loginTimeout", "10"));
+      ref.add(new BogusRef("dataSource.nonStringObj", Integer.valueOf(10)));
       Context nameCtx = new BogusContext();
 
       try (HikariDataSource ds = (HikariDataSource) jndi.getObjectInstance(ref, null, nameCtx, null)) {
          assertNotNull(ds);
          assertEquals("foo", getUnsealedConfig(ds).getUsername());
+         assertEquals(ds.getDataSourceProperties().get("nonStringObj"), Integer.valueOf(10));
       }
    }
 
@@ -149,8 +151,8 @@ public class TestJNDI
    {
       private static final long serialVersionUID = 1L;
 
-      private String content;
-      BogusRef(String type, String content)
+      private Object content;
+      BogusRef(String type, Object content)
       {
          super(type);
          this.content = content;

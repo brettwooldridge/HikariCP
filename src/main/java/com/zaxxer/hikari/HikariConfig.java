@@ -1105,6 +1105,9 @@ public class HikariConfig implements HikariConfigMXBean
             if ("dataSourceProperties".equals(prop)) {
                var dsProps = PropertyElf.copyProperties(dataSourceProperties);
                dsProps.setProperty("password", "<masked>");
+               if (dsProps.containsKey("privateKey")) {
+                  dsProps.setProperty("privateKey", "<masked>");
+               }
                value = dsProps;
             }
 

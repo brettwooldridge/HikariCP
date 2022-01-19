@@ -45,7 +45,7 @@ public class HikariJNDIFactory implements ObjectFactory
             var element = enumeration.nextElement();
             var type = element.getType();
             if (type.startsWith("dataSource.") || hikariPropSet.contains(type)) {
-               properties.setProperty(type, element.getContent().toString());
+               properties.put(type, element.getContent());
             }
          }
          return createDataSource(properties, nameCtx);

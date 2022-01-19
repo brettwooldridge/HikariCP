@@ -105,7 +105,7 @@ public final class PropertyElf
    public static Properties copyProperties(final Properties props)
    {
       var copy = new Properties();
-      props.forEach((key, value) -> copy.setProperty(key.toString(), value.toString()));
+      props.forEach((key, value) -> copy.put(key.toString(), value));
       return copy;
    }
 

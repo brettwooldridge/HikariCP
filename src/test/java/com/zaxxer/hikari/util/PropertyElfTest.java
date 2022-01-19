@@ -41,4 +41,26 @@ public class PropertyElfTest
          assertEquals("argument type mismatch", e.getCause().getMessage());
       }
    }
+
+   @Test
+   public void copyPropertiesPropValueIsString() {
+      Properties propertiesOrig = new Properties();
+      String stringPropName = "stringProp";
+      String stringPropValue = "aString";
+      propertiesOrig.setProperty(stringPropName, stringPropValue);
+
+      Properties propertiesCopy = PropertyElf.copyProperties(propertiesOrig);
+      assertEquals(stringPropValue, propertiesCopy.getProperty(stringPropName));
+   }
+
+   @Test
+   public void copyPropertiesPropValueIsNonStringObject() {
+      Properties propertiesOrig = new Properties();
+      String propName = "nonStringProp";
+      Integer propValue = 10;
+      propertiesOrig.put(propName, propValue);
+
+      Properties propertiesCopy = PropertyElf.copyProperties(propertiesOrig);
+      assertEquals(propValue, propertiesCopy.get(propName));
+   }
 }
