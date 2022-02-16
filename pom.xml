@@ -3,12 +3,7 @@
 
    <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-      <sureFireOptions11 />
-      <sureFireForks11>false</sureFireForks11>
-      <java11.sourceDirectory>${project.basedir}/src/main/java11</java11.sourceDirectory>
-      <java11.build.outputDirectory>${project.build.directory}/classes-java11</java11.build.outputDirectory>
       <artifact.classifier />
-
       <docker.maven.plugin.fabric8.version>0.36.0</docker.maven.plugin.fabric8.version>
       <felix.bundle.plugin.version>5.1.1</felix.bundle.plugin.version>
       <felix.version>6.0.1</felix.version>
@@ -23,8 +18,8 @@
       <pax.exam.version>4.13.1</pax.exam.version>
       <pax.url.version>2.5.4</pax.url.version>
       <postgresql.version>42.2.20</postgresql.version>
-      <log4j.version>[2.17.1,)</log4j.version>
-      <slf4j.version>1.7.30</slf4j.version>
+      <log4j.version>[2.17.1,3.0.0-SNAPSHOT)</log4j.version>
+      <slf4j.version>2.0.0-alpha6</slf4j.version>
       <commons.csv.version>1.5</commons.csv.version>
       <h2.version>[2.0.206,)</h2.version>
       <junit.version>4.13.1</junit.version>
@@ -88,6 +83,12 @@
       <dependency>
          <groupId>org.apache.logging.log4j</groupId>
          <artifactId>log4j-core</artifactId>
+         <version>${log4j.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.logging.log4j</groupId>
+         <artifactId>log4j-slf4j18-impl</artifactId>
          <version>${log4j.version}</version>
          <scope>test</scope>
       </dependency>
@@ -500,8 +501,7 @@
                <version>3.0.0-M5</version>
                <configuration>
                   <!-- Sets the VM argument line used when unit tests are run. -->
-                  <argLine>${surefireArgLine} ${sureFireOptions11}</argLine>
-                  <reuseForks>${sureFireForks11}</reuseForks>
+                  <argLine>${surefireArgLine}</argLine>
                </configuration>
             </plugin>
 
@@ -551,55 +551,6 @@
    </build>
 
    <profiles>
-      <profile>
-         <id>Java11</id>
-         <activation>
-            <jdk>[11,)</jdk>
-         </activation>
-         <properties>
-            <!-- sureFireOptions11>
-               -add-opens java.base/java.net=ALL-UNNAMED
-               -add-opens java.base/java.security=ALL-UNNAMED
-               -add-exports java.base/sun.net.www.protocol.http=ALL-UNNAMED
-               -add-exports java.base/sun.net.www.protocol.https=ALL-UNNAMED
-            </sureFireOptions11 -->
-            <slf4j.version>2.0.0-alpha1</slf4j.version>
-            <sureFireForks11>true</sureFireForks11>
-         </properties>
-         <dependencies>
-            <dependency>
-               <groupId>org.apache.logging.log4j</groupId>
-               <artifactId>log4j-slf4j18-impl</artifactId>
-               <version>${log4j.version}</version>
-               <scope>test</scope>
-            </dependency>
-         </dependencies>
-         <build>
-            <plugins>
-               <plugin>
-                  <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-compiler-plugin</artifactId>
-                  <version>3.8.1</version>
-                  <executions>
-                     <execution>
-                        <id>compile-java11</id>
-                        <goals>
-                           <goal>compile</goal>
-                        </goals>
-                        <configuration>
-                           <release>11</release>
-                           <compileSourceRoots>
-                              <compileSourceRoot>${project.basedir}/src/main/java11</compileSourceRoot>
-                           </compileSourceRoots>
-                           <multiReleaseOutput>true</multiReleaseOutput>
-                        </configuration>
-                     </execution>
-                  </executions>
-               </plugin>
-            </plugins>
-         </build>
-      </profile>
-
       <profile>
          <id>release-sign-artifacts</id>
          <activation>
