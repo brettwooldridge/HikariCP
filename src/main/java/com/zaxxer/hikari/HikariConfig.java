@@ -31,8 +31,8 @@ import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.security.AccessControlException;
 import java.sql.Connection;
+import java.util.HashSet;
 import java.util.Properties;
-import java.util.TreeSet;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadLocalRandom;
@@ -1098,7 +1098,7 @@ public class HikariConfig implements HikariConfigMXBean
    private void logConfiguration()
    {
       LOGGER.debug("{} - configuration:", poolName);
-      final var propertyNames = new TreeSet<>(PropertyElf.getPropertyNames(HikariConfig.class));
+      final var propertyNames = new HashSet<>(PropertyElf.getPropertyNames(HikariConfig.class));
       for (var prop : propertyNames) {
          try {
             var value = PropertyElf.getProperty(prop, this);
