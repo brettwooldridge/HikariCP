@@ -336,7 +336,7 @@ abstract class PoolBase
 
       if (ds != null) {
          setLoginTimeout(ds);
-         createNetworkTimeoutExecutor(ds, dsClassName, jdbcUrl);
+         createNetworkTimeoutExecutor(ds, dsClassName, jdbcUrl, driverClassName);
       }
 
       this.dataSource = ds;
@@ -589,12 +589,13 @@ abstract class PoolBase
       }
    }
 
-   private void createNetworkTimeoutExecutor(final DataSource dataSource, final String dsClassName, final String jdbcUrl)
+   private void createNetworkTimeoutExecutor(final DataSource dataSource, final String dsClassName, final String jdbcUrl, final String driverClassName)
    {
       // Temporary hack for MySQL issue: http://bugs.mysql.com/bug.php?id=75615
       if ((dsClassName != null && dsClassName.contains("Mysql")) ||
           (jdbcUrl != null && jdbcUrl.contains("mysql")) ||
-          (dataSource != null && dataSource.getClass().getName().contains("Mysql"))) {
+          (dataSource != null && dataSource.getClass().getName().contains("Mysql")) ||
+          "com.amazonaws.secretsmanager.sql.AWSSecretsManagerMySQLDriver".equals(driverClassName)) {
          netTimeoutExecutor = new SynchronousExecutor();
       }
       else {
