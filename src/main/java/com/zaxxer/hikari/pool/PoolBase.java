@@ -132,10 +132,11 @@ abstract class PoolBase
             logger.debug("{} - Closing connection {}: {}", poolName, connection, closureReason);
 
             // continue with the close even if setNetworkTimeout() throws
-            try (connection) {
-               setNetworkTimeout(connection, SECONDS.toMillis(15));
-            } catch (SQLException e) {
-               // ignore
+            try (connection; connection) {
+               if (!connection.isClosed())
+                  setNetworkTimeout(connection, SECONDS.toMillis(15));
+               } catch (SQLException e) {
+                  // ignore
             }
          }
          catch (Exception e) {
@@ -663,7 +664,7 @@ abstract class PoolBase
 
    /**
     * Special executor used only to work around a MySQL issue that has not been addressed.
-    * MySQL issue: http://bugs.mysql.com/bug.php?id=75615
+    * MySQL issue: <a href="http://bugs.mysql.com/bug.php?id=75615">...</a>
     */
    private static class SynchronousExecutor implements Executor
    {

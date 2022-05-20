@@ -120,7 +120,7 @@ public class BasicPoolTest
       try (HikariDataSource ds = new HikariDataSource(config)) {
          System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
 
-         SECONDS.sleep(1);
+         SECONDS.sleep(3);
 
          HikariPool pool = getPool(ds);
 

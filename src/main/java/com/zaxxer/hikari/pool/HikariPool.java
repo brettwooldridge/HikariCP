@@ -37,7 +37,6 @@ import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
 import java.util.Optional;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 import static com.zaxxer.hikari.util.ClockSource.*;
@@ -71,7 +70,6 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
    private final PoolEntryCreator poolEntryCreator = new PoolEntryCreator();
    private final PoolEntryCreator postFillPoolEntryCreator = new PoolEntryCreator("After adding ");
-   private final AtomicInteger addConnectionQueueDepth = new AtomicInteger();
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
 
@@ -113,7 +111,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       ThreadFactory threadFactory = config.getThreadFactory();
 
       final int maxPoolSize = config.getMaximumPoolSize();
-      LinkedBlockingQueue<Runnable> addConnectionQueue = new LinkedBlockingQueue<>(16);
+      LinkedBlockingQueue<Runnable> addConnectionQueue = new LinkedBlockingQueue<>(maxPoolSize);
       this.addConnectionExecutor = createThreadPoolExecutor(addConnectionQueue, poolName + " connection adder", threadFactory, new CustomDiscardPolicy());
       this.closeConnectionExecutor = createThreadPoolExecutor(maxPoolSize, poolName + " connection closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
@@ -325,15 +323,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    @Override
    public void addBagItem(final int waiting)
    {
-      final int queueDepth = addConnectionQueueDepth.get();
-      final int countToAdd = waiting - queueDepth;
-      if (countToAdd >= 0) {
-         addConnectionQueueDepth.incrementAndGet();
+      if (waiting > addConnectionExecutor.getQueue().size())
          addConnectionExecutor.submit(poolEntryCreator);
-      }
-      else {
-         logger.debug("{} - Add connection elided, waiting={}, adders pending/running={}", poolName, waiting, queueDepth);
-      }
    }
 
    // ***********************************************************************
@@ -507,18 +498,16 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     */
    private synchronized void fillPool(final boolean isAfterAdd)
    {
-      final var queueDepth = addConnectionQueueDepth.get();
-      final var countToAdd = connectionBag.getWaitingThreadCount() - queueDepth;
-      final var shouldAdd =
-            getTotalConnections() < config.getMaximumPoolSize() &&
-               (getIdleConnections() < config.getMinimumIdle() || countToAdd > getIdleConnections());
+      final var idle = getIdleConnections();
+      final var shouldAdd = getTotalConnections() < config.getMaximumPoolSize() && idle < config.getMinimumIdle();
 
       if (shouldAdd) {
-         addConnectionQueueDepth.incrementAndGet();
-         addConnectionExecutor.submit(isAfterAdd ? postFillPoolEntryCreator : poolEntryCreator);
+         final var countToAdd = config.getMinimumIdle() - idle;
+         for (int i = 0; i < countToAdd; i++)
+            addConnectionExecutor.submit(isAfterAdd ? postFillPoolEntryCreator : poolEntryCreator);
       }
       else if (isAfterAdd) {
-         logger.debug("{} - Fill pool skipped, pool has sufficient level or currently being filled (queueDepth={}).", poolName, queueDepth);
+         logger.debug("{} - Fill pool skipped, pool has sufficient level or currently being filled.", poolName);
       }
    }
 
@@ -733,20 +722,19 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                final var poolEntry = createPoolEntry();
                if (poolEntry != null) {
                   added = true;
-                  backoffMs = 10L;
                   connectionBag.add(poolEntry);
                   logger.debug("{} - Added connection {}", poolName, poolEntry.connection);
+                  quietlySleep(30L);
+                  break;
                } else {  // failed to get connection from db, sleep and retry
-                  backoffMs = Math.min(SECONDS.toMillis(5), backoffMs * 2);
-                  if (loggingPrefix != null)
+                  if (loggingPrefix != null && backoffMs % 50 == 0)
                      logger.debug("{} - Connection add failed, sleeping with backoff: {}ms", poolName, backoffMs);
+                  quietlySleep(backoffMs);
+                  backoffMs = Math.min(SECONDS.toMillis(5), backoffMs * 2);
                }
-
-               quietlySleep(backoffMs);
             }
          }
          finally {
-            addConnectionQueueDepth.decrementAndGet();
             if (added && loggingPrefix != null) logPoolState(loggingPrefix);
          }
 
@@ -831,11 +819,10 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       }
    }
 
-   private class CustomDiscardPolicy implements RejectedExecutionHandler
+   private static class CustomDiscardPolicy implements RejectedExecutionHandler
    {
       @Override
       public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-         addConnectionQueueDepth.decrementAndGet();
       }
    }
 
