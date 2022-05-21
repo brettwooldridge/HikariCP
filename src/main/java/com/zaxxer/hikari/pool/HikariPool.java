@@ -735,7 +735,10 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             }
          }
          finally {
-            if (added && loggingPrefix != null) logPoolState(loggingPrefix);
+            if (added && loggingPrefix != null)
+               logPoolState(loggingPrefix);
+            else
+               logPoolState("Connection not added, ");
          }
 
          // Pool is suspended, shutdown, or at max size
