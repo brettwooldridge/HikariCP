@@ -48,9 +48,13 @@
    <scm>
       <connection>scm:git:git@github.com:brettwooldridge/HikariCP.git</connection>
       <developerConnection>scm:git:git@github.com:brettwooldridge/HikariCP.git</developerConnection>
-      <url>git@github.com:brettwooldridge/HikariCP.git</url>
+      <url>https://github.com/brettwooldridge/HikariCP</url>
       <tag>HEAD</tag>
    </scm>
+
+   <issueManagement>
+      <url>https://github.com/brettwooldridge/HikariCP/issues</url>
+   </issueManagement>
 
    <licenses>
       <license>
