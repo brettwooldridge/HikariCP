@@ -118,14 +118,7 @@ public final class UtilityElf
     */
    public static ThreadPoolExecutor createThreadPoolExecutor(final int queueSize, final String threadName, ThreadFactory threadFactory, final RejectedExecutionHandler policy)
    {
-      if (threadFactory == null) {
-         threadFactory = new DefaultThreadFactory(threadName, true);
-      }
-
-      var queue = new LinkedBlockingQueue<Runnable>(queueSize);
-      var executor = new ThreadPoolExecutor(1 /*core*/, 1 /*max*/, 5 /*keepalive*/, SECONDS, queue, threadFactory, policy);
-      executor.allowCoreThreadTimeOut(true);
-      return executor;
+      return createThreadPoolExecutor(new LinkedBlockingQueue<>(queueSize), threadName, threadFactory, policy);
    }
 
    /**
@@ -140,7 +133,7 @@ public final class UtilityElf
    public static ThreadPoolExecutor createThreadPoolExecutor(final BlockingQueue<Runnable> queue, final String threadName, ThreadFactory threadFactory, final RejectedExecutionHandler policy)
    {
       if (threadFactory == null) {
-         threadFactory = new DefaultThreadFactory(threadName, true);
+         threadFactory = new DefaultThreadFactory(threadName);
       }
 
       var executor = new ThreadPoolExecutor(1 /*core*/, 1 /*max*/, 5 /*keepalive*/, SECONDS, queue, threadFactory, policy);
@@ -186,14 +179,21 @@ public final class UtilityElf
       return -1;
    }
 
-   public static final class DefaultThreadFactory implements ThreadFactory {
+   public static class CustomDiscardPolicy implements RejectedExecutionHandler
+   {
+      @Override
+      public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+      }
+   }
 
+   public static final class DefaultThreadFactory implements ThreadFactory
+   {
       private final String threadName;
       private final boolean daemon;
 
-      public DefaultThreadFactory(String threadName, boolean daemon) {
+      public DefaultThreadFactory(String threadName) {
          this.threadName = threadName;
-         this.daemon = daemon;
+         this.daemon = true;
       }
 
       @Override

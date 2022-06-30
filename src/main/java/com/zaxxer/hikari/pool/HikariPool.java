@@ -619,7 +619,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    private ScheduledExecutorService initializeHouseKeepingExecutorService()
    {
       if (config.getScheduledExecutor() == null) {
-         final var threadFactory = Optional.ofNullable(config.getThreadFactory()).orElseGet(() -> new DefaultThreadFactory(poolName + " housekeeper", true));
+         final var threadFactory = Optional.ofNullable(config.getThreadFactory()).orElseGet(() -> new DefaultThreadFactory(poolName + " housekeeper"));
          final var executor = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
          executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
          executor.setRemoveOnCancelPolicy(true);
@@ -665,9 +665,9 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     * timeout occurred when trying to acquire a Connection from the pool.  If there was an underlying cause for the
     * timeout, e.g. a SQLException thrown by the driver while trying to create a new Connection, then use the
     * SQL State from that exception as our own and additionally set that exception as the "next" SQLException inside
-    * of our exception.
+    * our exception.
     *
-    * As a side-effect, log the timeout failure at DEBUG, and record the timeout failure in the metrics tracker.
+    * As a side effect, log the timeout failure at DEBUG, and record the timeout failure in the metrics tracker.
     *
     * @param startTime the start time (timestamp) of the acquisition attempt
     * @return a SQLException to be thrown from {@link #getConnection()}
@@ -758,7 +758,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    }
 
    /**
-    * The house keeping task to retire and maintain minimum idle connections.
+    * The housekeeping task to retire and maintain minimum idle connections.
     */
    private final class HouseKeeper implements Runnable
    {
@@ -797,35 +797,26 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
             previous = now;
 
-            var afterPrefix = "Pool ";
             if (idleTimeout > 0L && config.getMinimumIdle() < config.getMaximumPoolSize()) {
                logPoolState("Before cleanup ");
-               afterPrefix = "After cleanup  ";
-
                final var notInUse = connectionBag.values(STATE_NOT_IN_USE);
-               var toRemove = notInUse.size() - config.getMinimumIdle();
+               var maxToRemove = notInUse.size() - config.getMinimumIdle();
                for (PoolEntry entry : notInUse) {
-                  if (toRemove > 0 && elapsedMillis(entry.lastAccessed, now) > idleTimeout && connectionBag.reserve(entry)) {
+                  if (maxToRemove > 0 && elapsedMillis(entry.lastAccessed, now) > idleTimeout && connectionBag.reserve(entry)) {
                      closeConnection(entry, "(connection has passed idleTimeout)");
-                     toRemove--;
+                     maxToRemove--;
                   }
                }
+               logPoolState("After cleanup  ");
             }
-
-            logPoolState(afterPrefix);
+            else
+               logPoolState("Pool ");
 
             fillPool(true); // Try to maintain minimum connections
          }
          catch (Exception e) {
             logger.error("Unexpected exception in housekeeping task", e);
          }
-      }
-   }
-
-   private static class CustomDiscardPolicy implements RejectedExecutionHandler
-   {
-      @Override
-      public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
       }
    }
 
