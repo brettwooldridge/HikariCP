@@ -5,6 +5,7 @@
 [![][license img]][license]
 [![][Maven Central img]][Maven Central]
 [![][Javadocs img]][Javadocs]
+[![][Librapay img][Librapay]
 
 Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC connection pool.  At roughly 130Kb, the library is very light.  Read about [how we do it here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).
 
@@ -551,3 +552,6 @@ Please perform changes and submit pull requests from the ``dev`` branch instead 
 
 [Javadocs]:http://javadoc.io/doc/com.zaxxer/HikariCP
 [Javadocs img]:http://javadoc.io/badge/com.zaxxer/HikariCP.svg
+
+[Librapay]:https://liberapay.com/brettwooldridge
+[Librapay img]:https://img.shields.io/liberapay/patrons/brettwooldridge.svg?logo=liberapay
