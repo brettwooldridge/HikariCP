@@ -1,0 +1,10 @@
+[
+  {
+    "condition": {
+      "typeReachable": "com.zaxxer.hikari.pool.ProxyConnection$ClosedConnection"
+    },
+    "interfaces": [
+      "java.sql.Connection"
+    ]
+  }
+]
