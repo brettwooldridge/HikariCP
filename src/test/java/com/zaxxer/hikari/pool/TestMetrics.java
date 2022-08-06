@@ -71,7 +71,7 @@ public class TestMetrics
             @Override
             public boolean matches(String name, Metric metric)
             {
-               return "testMetricWait.pool.Wait".equals(MetricRegistry.name("testMetricWait", "pool", "Wait"));
+               return name.equals(MetricRegistry.name("testMetricWait", "pool", "Wait"));
             }
          }).values().iterator().next();
 
