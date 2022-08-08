@@ -8,6 +8,7 @@ module com.zaxxer.hikari
    requires static simpleclient;
    requires static metrics.core;
    requires static metrics.healthchecks;
+   requires static io.dropwizard.metrics5;
    requires static micrometer.core;
    requires static org.javassist;
 

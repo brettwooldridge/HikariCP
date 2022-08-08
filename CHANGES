@@ -1,5 +1,10 @@
 HikariCP Changes
 
+Changes in 5.0.2
+
+ * Dropwizard 5 metrics are now supported via the setMetricRegistry()
+   method in HikariConfig and in HikariDataSource.
+
 Changes in 5.0.0
 
  * rewrote connection elide/add code to fix an unconfirmed but occassionally reported

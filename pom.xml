@@ -17,6 +17,7 @@
       <jndi.version>0.11.4.1</jndi.version>
       <maven.release.version>2.5.3</maven.release.version>
       <metrics.version>3.2.5</metrics.version>
+      <metrics5.version>5.0.0-rc17</metrics5.version>
       <micrometer.version>1.5.10</micrometer.version>
       <simpleclient.version>0.9.0</simpleclient.version>
       <mockito.version>3.7.7</mockito.version>
@@ -171,6 +172,13 @@
          <groupId>io.dropwizard.metrics</groupId>
          <artifactId>metrics-healthchecks</artifactId>
          <version>${metrics.version}</version>
+         <scope>provided</scope>
+         <optional>true</optional>
+      </dependency>
+      <dependency>
+         <groupId>io.dropwizard.metrics5</groupId>
+         <artifactId>metrics-core</artifactId>
+         <version>${metrics5.version}</version>
          <scope>provided</scope>
          <optional>true</optional>
       </dependency>
@@ -462,6 +470,7 @@
                      javax.sql.rowset.spi,
                      com.codahale.metrics;resolution:=optional,
                      com.codahale.metrics.health;resolution:=optional,
+                     io.dropwizard.metrics5;resolution:=optional,
                      io.micrometer.core.instrument;resolution:=optional,
                      org.slf4j;version="[1.6,2)",
                      org.hibernate;resolution:=optional,
