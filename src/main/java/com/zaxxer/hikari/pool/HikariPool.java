@@ -156,11 +156,15 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       suspendResumeLock.acquire();
       final var startTime = currentTime();
 
+      String message = "获取连接开始状态";
+
       try {
          var timeout = hardTimeout;
          do {
             var poolEntry = connectionBag.borrow(timeout, MILLISECONDS);
             if (poolEntry == null) {
+               message = "没有获取到连接池的连接！所以要抛出异常了，与超时(" + hardTimeout + ")无关了。";
+               logger.error("{}", message);
                break; // We timed out... break and throw exception
             }
 
@@ -168,21 +172,22 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             if (poolEntry.isMarkedEvicted() || (elapsedMillis(poolEntry.lastAccessed, now) > aliveBypassWindowMs && isConnectionDead(poolEntry.connection))) {
                closeConnection(poolEntry, poolEntry.isMarkedEvicted() ? EVICTED_CONNECTION_MESSAGE : DEAD_CONNECTION_MESSAGE);
                timeout = hardTimeout - elapsedMillis(startTime);
-            }
-            else {
+               if (timeout<=0){
+                  message = "连接是有的，但是获取连接超时了";
+               }
+            } else {
                metricsTracker.recordBorrowStats(poolEntry, startTime);
                return poolEntry.createProxyConnection(leakTaskFactory.schedule(poolEntry));
             }
          } while (timeout > 0L);
 
          metricsTracker.recordBorrowTimeoutStats(startTime);
-         throw createTimeoutException(startTime);
-      }
-      catch (InterruptedException e) {
+         logger.error("当前设置的超时时间是{}，剩余时间 {}，后面抛出异常", hardTimeout, timeout);
+         throw createTimeoutException(startTime, message);
+      } catch (InterruptedException e) {
          Thread.currentThread().interrupt();
          throw new SQLException(poolName + " - Interrupted during connection acquisition", e);
-      }
-      finally {
+      } finally {
          suspendResumeLock.release();
       }
    }
@@ -672,7 +677,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     * @param startTime the start time (timestamp) of the acquisition attempt
     * @return a SQLException to be thrown from {@link #getConnection()}
     */
-   private SQLException createTimeoutException(long startTime)
+   private SQLException createTimeoutException(long startTime,String message)
    {
       logPoolState("Timeout failure ");
       metricsTracker.recordConnectionTimeout();
@@ -682,7 +687,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       if (originalException instanceof SQLException) {
          sqlState = ((SQLException) originalException).getSQLState();
       }
-      final var connectionException = new SQLTransientConnectionException(
+      final var connectionException = new SQLTransientConnectionException(message +
          poolName + " - Connection is not available, request timed out after " + elapsedMillis(startTime) + "ms " +
             "(total=" + getTotalConnections() + ", active=" + getActiveConnections() + ", idle=" + getIdleConnections() + ", waiting=" + getThreadsAwaitingConnection() + ")",
          sqlState, originalException);
