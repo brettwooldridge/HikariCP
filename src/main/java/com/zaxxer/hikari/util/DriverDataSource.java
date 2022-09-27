@@ -21,8 +21,6 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.util.Enumeration;
-import java.util.Map.Entry;
 import java.util.Properties;
 
 import javax.sql.DataSource;

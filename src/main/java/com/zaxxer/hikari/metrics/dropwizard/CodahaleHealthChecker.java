@@ -18,8 +18,6 @@ package com.zaxxer.hikari.metrics.dropwizard;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Properties;
-import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
 
 import com.codahale.metrics.MetricRegistry;
