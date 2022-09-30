@@ -148,9 +148,8 @@ abstract class PoolBase
    boolean isConnectionDead(final Connection connection)
    {
       try {
+         setNetworkTimeout(connection, validationTimeout);
          try {
-            setNetworkTimeout(connection, validationTimeout);
-
             final var validationSeconds = (int) Math.max(1000L, validationTimeout) / 1000;
 
             if (isUseJdbc4Validation) {

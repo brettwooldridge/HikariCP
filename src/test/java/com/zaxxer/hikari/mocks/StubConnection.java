@@ -47,6 +47,7 @@ public class StubConnection extends StubBaseConnection
    public static final AtomicInteger count = new AtomicInteger();
    public static volatile boolean slowCreate;
    public static volatile boolean oldDriver;
+   public static volatile Callable<Void> networkTimeoutSetter;
    private volatile boolean isClosed = false;
 
    private static long foo;
@@ -506,6 +507,17 @@ public class StubConnection extends StubBaseConnection
    /** {@inheritDoc} */
    public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException
    {
+      if (networkTimeoutSetter != null) {
+         try {
+            networkTimeoutSetter.call();
+         }
+         catch (SQLException e) {
+            throw e;
+         }
+         catch (Exception e) {
+            throw new RuntimeException(e);
+         }
+      }
    }
 
    /** {@inheritDoc} */
