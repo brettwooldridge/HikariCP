@@ -18,6 +18,7 @@ package com.zaxxer.hikari.pool;
 
 import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.pool.TestElf.getPool;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -28,7 +29,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import com.zaxxer.hikari.mocks.StubConnection;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,12 +44,14 @@ public class ExceptionTest
 {
    private HikariDataSource ds;
 
+   private final int CONNECTION_TIMEOUT_SECS = 5;
    @Before
    public void setup()
    {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(2);
+      config.setConnectionTimeout(TimeUnit.SECONDS.toMillis(CONNECTION_TIMEOUT_SECS));
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -114,6 +120,50 @@ public class ExceptionTest
          catch (SQLException e) {
             assertSame("Connection is closed", e.getMessage());
          }
+      }
+   }
+
+   /**
+    * This test verifies that in an isConnectionDead call if an exception is thrown from setNetworkTimeout we will not
+    * call setNetworkTimeout a second time resulting in the exception from second hiding the exception from the first.
+    */
+   @Test
+   public void testLastErrorTimeout() throws Exception
+   {
+      // take one connection so there is only one left.
+      try (Connection ignored1 = ds.getConnection()) {
+         try (Connection ignored = ds.getConnection()) {
+            // no-op
+            assertTrue(true);
+         }
+
+         // force the last access of this connection to be older than 'aliveBypassWindowMs'
+         // thus forcing isConnectionDead to be called (and setNetworkTimeout)
+         Thread.sleep(500);
+
+         AtomicInteger callCount = new AtomicInteger();
+         StubConnection.networkTimeoutSetter = () -> {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(CONNECTION_TIMEOUT_SECS + 1)); // wait longer than the connection timeout
+            throw new SQLException("Exception " + callCount.incrementAndGet());
+         };
+
+         try (Connection ignored = ds.getConnection()) {
+            fail("getConnection should have failed");
+         }
+         catch (SQLException e) {
+            e.printStackTrace();
+            Throwable cause = e.getCause();
+            assertNotNull(cause);
+            Throwable causeCause = e.getCause();
+            assertNotNull(causeCause);
+            assertEquals("Exception 1", causeCause.getMessage());
+         }
+         finally {
+            // Remove the callback so that we don't interfere with any other tests that might run in the same jvm instance.
+            StubConnection.networkTimeoutSetter = null;
+         }
+
+         assertEquals(1, callCount.get());
       }
    }
 }
