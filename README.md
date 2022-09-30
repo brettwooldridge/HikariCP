@@ -101,7 +101,7 @@ AKA *"What you probably didn't know about connection pool sizing"*.  Watch a vid
 <br/>
 #### WIX Engineering Analysis
 <a href="https://www.wix.engineering/blog/how-does-hikaricp-compare-to-other-connection-pools"><img width="180" align="left" src="https://github.com/brettwooldridge/HikariCP/wiki/Wix-Engineering.png"></a>
-We'd like to thank the guys over at WIX for the unsolicited and deep write-up about HikariCP on their [engineering blog](https://www.wix.engineering/blog/how-does-hikaricp-compare-to-other-connection-pools).  Take a look if you have time.
+We'd like to thank the guys over at WIX for the unsolicited and deep write-up about HikariCP on their [engineering blog](https://www.wix.engineering/post/how-does-hikaricp-compare-to-other-connection-pools).  Take a look if you have time.
 <br/>
 <br/>
 <br/>
