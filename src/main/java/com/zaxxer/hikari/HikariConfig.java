@@ -793,8 +793,8 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Set the name of the connection pool.  This is primarily used for the MBean
-    * to uniquely identify the pool configuration.
+    * Set the name of the connection pool.  This is primarily used in logging and JMX management consoles
+    * to identify pools and pool configurations
     *
     * @param poolName the name of the connection pool to use
     */
