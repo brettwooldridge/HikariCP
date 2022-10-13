@@ -434,7 +434,10 @@
                   <Export-Package>
                      com.zaxxer.hikari,
                      com.zaxxer.hikari.hibernate,
-                     com.zaxxer.hikari.metrics
+                     com.zaxxer.hikari.metrics,
+                     com.zaxxer.hikari.metrics.dropwizard,
+                     com.zaxxer.hikari.metrics.micrometer,
+                     com.zaxxer.hikari.metrics.prometheus
                   </Export-Package>
                   <Private-Package>com.zaxxer.hikari.*</Private-Package>
                   <Include-Resource>{maven-resources}</Include-Resource>
