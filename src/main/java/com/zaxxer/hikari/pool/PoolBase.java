@@ -358,7 +358,7 @@ abstract class PoolBase
          var username = config.getUsername();
          var password = config.getPassword();
 
-         logger.debug("{} - Attempting to create/setup new connection: {}", poolName, id.toString());
+         logger.debug("{} - Attempting to create/setup new connection: {} ", poolName, id.toString());
          
          connection = (username == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
          if (connection == null) {
@@ -375,7 +375,7 @@ abstract class PoolBase
             quietlyCloseConnection(connection, "(Failed to create/setup connection for id:".concat(id.toString()));
          }
          else if (getLastConnectionFailure() == null) {
-            logger.debug("{} - Failed to create/setup connection: {}", poolName, e.getMessage(), id.toString());
+            logger.debug("{} - Failed to create/setup connection: {} {}", poolName, e.getMessage(), id.toString());
          }
 
          lastConnectionFailure.set(e);
