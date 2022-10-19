@@ -98,7 +98,8 @@ public final class DriverDataSource implements DataSource
          }
       }
 
-      final var sanitizedUrl = jdbcUrl.replaceAll("([?&;]password=)[^&#;]*(.*)", "$1<masked>$2");
+      final var sanitizedUrl = jdbcUrl.replaceAll("([?&;][^&#;=]*[pP]assword=)[^&#;]*", "$1<masked>");
+      
       try {
          if (driver == null) {
             driver = DriverManager.getDriver(jdbcUrl);
