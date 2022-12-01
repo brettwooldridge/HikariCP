@@ -139,7 +139,7 @@ public class ExceptionTest
 
          // force the last access of this connection to be older than 'aliveBypassWindowMs'
          // thus forcing isConnectionDead to be called (and setNetworkTimeout)
-         Thread.sleep(500);
+         Thread.sleep(505);
 
          AtomicInteger callCount = new AtomicInteger();
          StubConnection.networkTimeoutSetter = () -> {
