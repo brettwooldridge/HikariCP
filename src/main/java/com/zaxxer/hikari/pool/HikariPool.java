@@ -158,12 +158,15 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
       try {
          var timeout = hardTimeout;
+         String dbUrl="";
+
          do {
             var poolEntry = connectionBag.borrow(timeout, MILLISECONDS);
             if (poolEntry == null) {
                break; // We timed out... break and throw exception
             }
 
+            dbUrl = poolEntry.connection.getMetaData().getURL();
             final var now = currentTime();
             if (poolEntry.isMarkedEvicted() || (elapsedMillis(poolEntry.lastAccessed, now) > aliveBypassWindowMs && isConnectionDead(poolEntry.connection))) {
                closeConnection(poolEntry, poolEntry.isMarkedEvicted() ? EVICTED_CONNECTION_MESSAGE : DEAD_CONNECTION_MESSAGE);
@@ -176,7 +179,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          } while (timeout > 0L);
 
          metricsTracker.recordBorrowTimeoutStats(startTime);
-         throw createTimeoutException(startTime);
+         throw createTimeoutException(startTime, dbUrl);
       }
       catch (InterruptedException e) {
          Thread.currentThread().interrupt();
@@ -670,9 +673,10 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     * As a side effect, log the timeout failure at DEBUG, and record the timeout failure in the metrics tracker.
     *
     * @param startTime the start time (timestamp) of the acquisition attempt
+    * @param dbUrl the attempted database url
     * @return a SQLException to be thrown from {@link #getConnection()}
     */
-   private SQLException createTimeoutException(long startTime)
+   private SQLException createTimeoutException(long startTime, String dbUrl)
    {
       logPoolState("Timeout failure ");
       metricsTracker.recordConnectionTimeout();
@@ -684,7 +688,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       }
       final var connectionException = new SQLTransientConnectionException(
          poolName + " - Connection is not available, request timed out after " + elapsedMillis(startTime) + "ms " +
-            "(total=" + getTotalConnections() + ", active=" + getActiveConnections() + ", idle=" + getIdleConnections() + ", waiting=" + getThreadsAwaitingConnection() + ")",
+            "(total=" + getTotalConnections() + ", active=" + getActiveConnections() + ", idle=" + getIdleConnections() + ", waiting=" + getThreadsAwaitingConnection() + ")"
+            + "attempted db=" + dbUrl,
          sqlState, originalException);
       if (originalException instanceof SQLException) {
          connectionException.setNextException((SQLException) originalException);

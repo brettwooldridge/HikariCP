@@ -58,6 +58,7 @@ public class StubConnection extends StubBaseConnection
 
    private static ScheduledExecutorService connectionWaitTimeout = new ScheduledThreadPoolExecutor(1);
    private ScheduledFuture<?> waitTimeoutTask;
+   private DatabaseMetaData databaseMetaData;
 
    static {
       foo = System.currentTimeMillis();
@@ -68,6 +69,7 @@ public class StubConnection extends StubBaseConnection
       if (slowCreate) {
          UtilityElf.quietlySleep(1000);
       }
+      databaseMetaData = new StubDatabaseMetaData();
    }
 
    public StubConnection(long waitTimeout) {
@@ -82,6 +84,7 @@ public class StubConnection extends StubBaseConnection
       } catch (Exception e){
          //ignore
       }
+      databaseMetaData = new StubDatabaseMetaData();
    }
 
 
@@ -194,7 +197,7 @@ public class StubConnection extends StubBaseConnection
    @Override
    public DatabaseMetaData getMetaData() throws SQLException
    {
-      return null;
+      return databaseMetaData;
    }
 
    /** {@inheritDoc} */
