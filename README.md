@@ -361,6 +361,14 @@ be used for various internally scheduled tasks.  If supplying HikariCP with a ``
 instance, it is recommended that ``setRemoveOnCancelPolicy(true)`` is used.
 *Default: none*
 
+&#128292;``connectionCreatorClassName``<br/>
+HikariCP will by default call the ``DataSource`` ``getConnection`` method directly to create new
+connections. This property allows you to supply your own instance of
+``com.zaxxer.hikari.HikariConnectionCreator`` that will be called any time a new connection is required.
+This is useful for dynamically choosing a username and/or password rather than relying on the
+``username`` and ``password`` properties on ``HikariConfig``.
+*Default: none*
+
 ----------------------------------------------------
 
 #### Missing Knobs

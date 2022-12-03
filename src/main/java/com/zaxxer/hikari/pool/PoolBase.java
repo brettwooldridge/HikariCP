@@ -17,12 +17,14 @@
 package com.zaxxer.hikari.pool;
 
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariConnectionCreator;
 import com.zaxxer.hikari.SQLExceptionOverride;
 import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.pool.HikariPool.PoolInitializationException;
 import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyElf;
 import com.zaxxer.hikari.util.UtilityElf;
+import com.zaxxer.hikari.util.DefaultHikariConnectionCreator;
 import com.zaxxer.hikari.util.UtilityElf.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,6 +80,8 @@ abstract class PoolBase
    private Executor netTimeoutExecutor;
    private DataSource dataSource;
 
+   private final HikariConnectionCreator connectionCreator;
+
    private final String schema;
    private final boolean isReadOnly;
    private final boolean isAutoCommit;
@@ -108,6 +112,11 @@ abstract class PoolBase
       this.connectionTimeout = config.getConnectionTimeout();
       this.validationTimeout = config.getValidationTimeout();
       this.lastConnectionFailure = new AtomicReference<>();
+
+      var connectionCreatorClassName = config.getConnectionCreatorClassName();
+      this.connectionCreator = connectionCreatorClassName == null ?
+         new DefaultHikariConnectionCreator() :
+         UtilityElf.createInstance(connectionCreatorClassName, HikariConnectionCreator.class);
 
       initializeDataSource();
    }
@@ -353,10 +362,7 @@ abstract class PoolBase
 
       Connection connection = null;
       try {
-         var username = config.getUsername();
-         var password = config.getPassword();
-
-         connection = (username == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
+         connection = connectionCreator.createConnection(dataSource, config);
          if (connection == null) {
             throw new SQLTransientConnectionException("DataSource returned null unexpectedly");
          }

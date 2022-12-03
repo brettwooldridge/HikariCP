@@ -80,6 +80,7 @@ public class HikariConfig implements HikariConfigMXBean
    private String dataSourceJndiName;
    private String driverClassName;
    private String exceptionOverrideClassName;
+   private String connectionCreatorClassName;
    private String jdbcUrl;
    private String poolName;
    private String schema;
@@ -878,27 +879,35 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
 
-      var overrideClass = attemptFromContextLoader(exceptionOverrideClassName);
-      try {
-         if (overrideClass == null) {
-            overrideClass = this.getClass().getClassLoader().loadClass(exceptionOverrideClassName);
-            LOGGER.debug("SQLExceptionOverride class {} found in the HikariConfig class classloader {}", exceptionOverrideClassName, this.getClass().getClassLoader());
-         }
-      } catch (ClassNotFoundException e) {
-         LOGGER.error("Failed to load SQLExceptionOverride class {} from HikariConfig class classloader {}", exceptionOverrideClassName, this.getClass().getClassLoader());
-      }
+      validateClass("SQLExceptionOverride", exceptionOverrideClassName);
 
-      if (overrideClass == null) {
-         throw new RuntimeException("Failed to load SQLExceptionOverride class " + exceptionOverrideClassName + " in either of HikariConfig class loader or Thread context classloader");
-      }
+      this.exceptionOverrideClassName = exceptionOverrideClassName;
+   }
 
-      try {
-         overrideClass.getConstructor().newInstance();
-         this.exceptionOverrideClassName = exceptionOverrideClassName;
-      }
-      catch (Exception e) {
-         throw new RuntimeException("Failed to instantiate class " + exceptionOverrideClassName, e);
-      }
+   /**
+    * Get the user supplied HikariConnectionCreator class name.
+    *
+    * @return the user supplied HikariConnectionCreator class name
+    * @see HikariConnectionCreator
+    */
+   public String getConnectionCreatorClassName()
+   {
+      return connectionCreatorClassName;
+   }
+
+   /**
+    * Set the user supplied HikariConnectionCreator class name.
+    *
+    * @param connectionCreatorClassName the user supplied HikariConnectionCreator class name
+    * @see HikariConnectionCreator
+    */
+   public void setConnectionCreatorClassName(String connectionCreatorClassName)
+   {
+      checkIfSealed();
+
+      validateClass("HikariConnectionCreator", connectionCreatorClassName);
+
+      this.connectionCreatorClassName = connectionCreatorClassName;
    }
 
    /**
@@ -980,6 +989,36 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       return null;
+   }
+
+   /**
+    * Validate that the given className can be classloaded.
+    *
+    * @param targetInterfaceName The target interface name (used for friendly log messages)
+    * @param className The class name to validate.
+    */
+   private void validateClass(String targetInterfaceName, String className)
+   {
+      var clazz = attemptFromContextLoader(className);
+      try {
+         if (clazz == null) {
+            clazz = this.getClass().getClassLoader().loadClass(className);
+            LOGGER.debug("{} class {} found in the HikariConfig class classloader {}", targetInterfaceName, className, this.getClass().getClassLoader());
+         }
+      } catch (ClassNotFoundException e) {
+         LOGGER.error("Failed to load {} class {} from HikariConfig class classloader {}", targetInterfaceName, className, this.getClass().getClassLoader());
+      }
+
+      if (clazz == null) {
+         throw new RuntimeException("Failed to load " + targetInterfaceName + " class " + className + " in either of HikariConfig class loader or Thread context classloader");
+      }
+
+      try {
+         clazz.getConstructor().newInstance();
+      }
+      catch (Exception e) {
+         throw new RuntimeException("Failed to instantiate class " + className, e);
+      }
    }
 
    @SuppressWarnings("StatementWithEmptyBody")
