@@ -571,7 +571,7 @@
                -add-exports java.base/sun.net.www.protocol.https=ALL-UNNAMED
             </sureFireOptions11 -->
             <slf4j.version>2.0.0-alpha1</slf4j.version>
-            <sureFireForks11>true</sureFireForks11>
+            <sureFireForks11>false</sureFireForks11>
             <automatic.module.name>com.zaxxer.hikari</automatic.module.name>
          </properties>
          <dependencies>
