@@ -19,6 +19,7 @@ package com.zaxxer.hikari;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.pool.HikariPool;
 import com.zaxxer.hikari.pool.HikariPool.PoolInitializationException;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,7 +125,6 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
             }
          }
       }
-
       return result.getConnection();
    }
 

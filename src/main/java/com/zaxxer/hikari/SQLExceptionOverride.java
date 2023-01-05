@@ -1,5 +1,6 @@
 package com.zaxxer.hikari;
 
+import javax.sql.DataSource;
 import java.sql.SQLException;
 
 /**
@@ -27,4 +28,6 @@ public interface SQLExceptionOverride {
    {
       return Override.CONTINUE_EVICT;
    }
+
+   default void onException(final SQLException sqlException, DataSource ds) {}
 }

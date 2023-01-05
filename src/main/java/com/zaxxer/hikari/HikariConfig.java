@@ -80,6 +80,7 @@ public class HikariConfig implements HikariConfigMXBean
    private String dataSourceJndiName;
    private String driverClassName;
    private String exceptionOverrideClassName;
+   private SQLExceptionOverride exceptionOverride;
    private String jdbcUrl;
    private String poolName;
    private String schema;
@@ -855,6 +856,25 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       this.schema = schema;
+   }
+
+   /**
+    * Get the user supplied SQLExceptionOverride object.
+    *
+    * @return the user supplied SQLExceptionOverride object
+    * @see SQLExceptionOverride
+    */
+   public SQLExceptionOverride getExceptionOverride() {
+      return this.exceptionOverride;
+   }
+   /**
+    * Set the user supplied SQLExceptionOverride object.
+    *
+    * @param exceptionOverride the user supplied SQLExceptionOverride object
+    * @see SQLExceptionOverride
+    */
+   public void setExceptionOverride(SQLExceptionOverride exceptionOverride) {
+      this.exceptionOverride = exceptionOverride;
    }
 
    /**
