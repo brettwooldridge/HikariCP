@@ -493,8 +493,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       for (int i = 0; i < connectionsToAdd; i++) {
          addConnectionExecutor.submit((i < connectionsToAdd - 1) ? poolEntryCreator : postFillPoolEntryCreator);
       }
-
-      if (connectionsToAdd <= 0 && shouldCreateAnotherConnection() && addConnectionQueueReadOnlyView.size() > 0) {
+      boolean flag = connectionsToAdd <= 0 && shouldCreateAnotherConnection() && addConnectionQueueReadOnlyView.size() > 0;
+      if (flag) {
          this.checkHangs.maybehangs();
       }
    }
@@ -803,27 +803,35 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                this.qsize = addConnectionQueueReadOnlyView.size();
                this.tc = getTotalConnections();
                times++;
+               logger.warn("check maybehangs");
             } else {
-               if (this.qsize == addConnectionQueueReadOnlyView.size() && this.tc == getTotalConnections() &&
-                  getTotalConnections() < config.getMinimumIdle()) {
+               boolean flag = this.qsize == addConnectionQueueReadOnlyView.size()
+                  && this.tc == getTotalConnections()
+                  && getTotalConnections() < config.getMinimumIdle();
+               if (flag) {
                   dealHangs();
                }
                this.times = 0;
             }
-         } catch (InterruptedException ie) {
          } catch (Exception e) {
             e.printStackTrace();
          }
       }
    }
 
-   private void dealHangs() throws InterruptedException {
+   private void dealHangs() {
+      logger.warn("start dealHangs");
       this.checkFailFast();
       BlockingQueue<Runnable> queue = this.addConnectionExecutor.getQueue();
       ThreadFactory threadFactory = this.addConnectionExecutor.getThreadFactory();
-      this.addConnectionExecutor.shutdownNow();
-      this.addConnectionExecutor.awaitTermination(5, SECONDS);
-      queue.clear();
-      this.addConnectionExecutor = createThreadPoolExecutor(queue, poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardOldestPolicy());
+      try {
+         this.addConnectionExecutor.shutdownNow();
+         this.addConnectionExecutor.awaitTermination(5, SECONDS);
+      } catch (InterruptedException e) {
+      } finally {
+         queue.clear();
+         this.addConnectionExecutor = createThreadPoolExecutor(queue, poolName + " connection adder", threadFactory, new ThreadPoolExecutor.DiscardOldestPolicy());
+         logger.warn("ready dealHangs");
+      }
    }
 }
