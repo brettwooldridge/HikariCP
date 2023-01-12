@@ -32,7 +32,7 @@
 
    <groupId>com.zaxxer</groupId>
    <artifactId>HikariCP</artifactId>
-   <version>3.4.5</version>
+   <version>3.4.5.kt</version>
    <packaging>bundle</packaging>
 
    <name>HikariCP</name>
@@ -325,7 +325,7 @@
                <executable>java</executable>
                <arguments>
                   <argument>-cp</argument>
-                  <argument>${project.build.outputDirectory}:${maven.compile.classpath}</argument>
+                  <argument>${project.build.outputDirectory};${maven.compile.classpath}</argument>
                   <argument>com.zaxxer.hikari.util.JavassistProxyFactory</argument>
                </arguments>
             </configuration>
