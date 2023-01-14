@@ -38,6 +38,7 @@ import java.sql.SQLTransientConnectionException;
 import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static com.zaxxer.hikari.util.ClockSource.*;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_USE;
@@ -80,6 +81,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
    private final ScheduledExecutorService houseKeepingExecutorService;
    private ScheduledFuture<?> houseKeeperTask;
+   private final ReentrantLock hikariPoolLock = new ReentrantLock();
 
    /**
     * Construct a HikariPool with the specified configuration.
@@ -193,8 +195,9 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     *
     * @throws InterruptedException thrown if the thread is interrupted during shutdown
     */
-   public synchronized void shutdown() throws InterruptedException
+   public void shutdown() throws InterruptedException
    {
+      hikariPoolLock.lock();
       try {
          poolState = POOL_SHUTDOWN;
 
@@ -246,6 +249,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          logPoolState("After shutdown ");
          handleMBeans(this, false);
          metricsTracker.close();
+         hikariPoolLock.unlock();
       }
    }
 
@@ -368,25 +372,35 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
    /** {@inheritDoc} */
    @Override
-   public synchronized void suspendPool()
+   public void suspendPool()
    {
-      if (suspendResumeLock == SuspendResumeLock.FAUX_LOCK) {
-         throw new IllegalStateException(poolName + " - is not suspendable");
-      }
-      else if (poolState != POOL_SUSPENDED) {
-         suspendResumeLock.suspend();
-         poolState = POOL_SUSPENDED;
+      hikariPoolLock.lock();
+      try {
+         if (suspendResumeLock == SuspendResumeLock.FAUX_LOCK) {
+            throw new IllegalStateException(poolName + " - is not suspendable");
+         }
+         else if (poolState != POOL_SUSPENDED) {
+            suspendResumeLock.suspend();
+            poolState = POOL_SUSPENDED;
+         }
+      } finally {
+        hikariPoolLock.unlock();
       }
    }
 
    /** {@inheritDoc} */
    @Override
-   public synchronized void resumePool()
+   public void resumePool()
    {
-      if (poolState == POOL_SUSPENDED) {
-         poolState = POOL_NORMAL;
-         fillPool(false);
-         suspendResumeLock.resume();
+      hikariPoolLock.lock();
+      try {
+         if (poolState == POOL_SUSPENDED) {
+            poolState = POOL_NORMAL;
+            fillPool(false);
+            suspendResumeLock.resume();
+         }
+      } finally {
+         hikariPoolLock.unlock();
       }
    }
 
@@ -496,18 +510,23 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    /**
     * Fill pool up from current idle connections (as they are perceived at the point of execution) to minimumIdle connections.
     */
-   private synchronized void fillPool(final boolean isAfterAdd)
+   private void fillPool(final boolean isAfterAdd)
    {
-      final var idle = getIdleConnections();
-      final var shouldAdd = getTotalConnections() < config.getMaximumPoolSize() && idle < config.getMinimumIdle();
+      hikariPoolLock.lock();
+      try {
+         final var idle = getIdleConnections();
+         final var shouldAdd = getTotalConnections() < config.getMaximumPoolSize() && idle < config.getMinimumIdle();
 
-      if (shouldAdd) {
-         final var countToAdd = config.getMinimumIdle() - idle;
-         for (int i = 0; i < countToAdd; i++)
-            addConnectionExecutor.submit(isAfterAdd ? postFillPoolEntryCreator : poolEntryCreator);
-      }
-      else if (isAfterAdd) {
-         logger.debug("{} - Fill pool skipped, pool has sufficient level or currently being filled.", poolName);
+         if (shouldAdd) {
+            final var countToAdd = config.getMinimumIdle() - idle;
+            for (int i = 0; i < countToAdd; i++)
+               addConnectionExecutor.submit(isAfterAdd ? postFillPoolEntryCreator : poolEntryCreator);
+         }
+         else if (isAfterAdd) {
+            logger.debug("{} - Fill pool skipped, pool has sufficient level or currently being filled.", poolName);
+         }
+      } finally {
+         hikariPoolLock.unlock();
       }
    }
 
@@ -704,6 +723,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    private final class PoolEntryCreator implements Callable<Boolean>
    {
       private final String loggingPrefix;
+      private final ReentrantLock poolEntryLock = new ReentrantLock();
 
       PoolEntryCreator()
       {
@@ -754,9 +774,14 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
        *
        * @return true if we should create a connection, false if the need has disappeared
        */
-      private synchronized boolean shouldContinueCreating() {
-         return poolState == POOL_NORMAL && getTotalConnections() < config.getMaximumPoolSize() &&
-            (getIdleConnections() < config.getMinimumIdle() || connectionBag.getWaitingThreadCount() > getIdleConnections());
+      private boolean shouldContinueCreating() {
+         poolEntryLock.lock();
+         try {
+            return poolState == POOL_NORMAL && getTotalConnections() < config.getMaximumPoolSize() &&
+               (getIdleConnections() < config.getMinimumIdle() || connectionBag.getWaitingThreadCount() > getIdleConnections());
+         } finally {
+            poolEntryLock.unlock();
+         }
       }
    }
 

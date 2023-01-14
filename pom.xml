@@ -28,7 +28,7 @@
       <commons.csv.version>1.5</commons.csv.version>
       <h2.version>2.1.212</h2.version>
       <junit.version>4.13.1</junit.version>
-      <testcontainers.version>1.15.1</testcontainers.version>
+      <testcontainers.version>1.17.6</testcontainers.version>
    </properties>
 
    <groupId>com.zaxxer</groupId>
