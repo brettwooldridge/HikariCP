@@ -27,4 +27,8 @@ public interface SQLExceptionOverride {
    {
       return Override.CONTINUE_EVICT;
    }
+
+   default boolean adjudicateAnyway() {
+      return false;
+   }
 }

@@ -82,7 +82,7 @@ public class StubPreparedStatement extends StubStatement implements PreparedStat
     @Override
     public int getMaxRows() throws SQLException
     {
-        return 0;
+        throw new SQLException("Simulated general error", "HY000", 1290);
     }
 
     /** {@inheritDoc} */

@@ -406,6 +406,45 @@ public class TestConnections
    }
 
    @Test
+   public void testEviction4() throws SQLException
+   {
+      HikariConfig config = newHikariConfig();
+      config.setMaximumPoolSize(5);
+      config.setConnectionTimeout(2500);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      config.setExceptionOverrideClassName(OverrideHandler2.class.getName());
+
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         HikariPool pool = getPool(ds);
+
+         while (pool.getTotalConnections() < 5) {
+            quietlySleep(100L);
+         }
+
+         try (Connection connection = ds.getConnection()) {
+            assertNotNull(connection);
+
+            PreparedStatement statement = connection.prepareStatement("SELECT some, thing FROM somewhere WHERE something=?");
+            assertNotNull(statement);
+
+            ResultSet resultSet = statement.executeQuery();
+            assertNotNull(resultSet);
+
+            try {
+               statement.getMaxRows();
+            } catch (Exception e) {
+               assertSame(SQLException.class, e.getClass());
+            }
+         }
+
+         assertEquals("Total connections not as expected", 4, pool.getTotalConnections());
+         assertEquals("Idle connections not as expected", 4, pool.getIdleConnections());
+      }
+   }
+
+
+   @Test
    public void testEvictAllRefill() throws Exception {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(5);
@@ -906,6 +945,21 @@ public class TestConnections
       @java.lang.Override
       public Override adjudicate(SQLException sqlException) {
          return (sqlException.getSQLState().equals("08999")) ? Override.DO_NOT_EVICT : Override.CONTINUE_EVICT;
+      }
+   }
+
+   public static class OverrideHandler2 implements SQLExceptionOverride
+   {
+      @java.lang.Override
+      public Override adjudicate(SQLException sqlException) {
+         return (sqlException.getSQLState().equals("HY000") && sqlException.getErrorCode() == 1290)
+            ? Override.CONTINUE_EVICT
+            : Override.DO_NOT_EVICT;
+      }
+
+      @java.lang.Override
+      public boolean adjudicateAnyway() {
+         return true;
       }
    }
 }
