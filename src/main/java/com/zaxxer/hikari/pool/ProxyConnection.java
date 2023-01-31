@@ -80,6 +80,7 @@ public abstract class ProxyConnection implements Connection
       ERROR_CODES = new HashSet<>();
       ERROR_CODES.add(500150);
       ERROR_CODES.add(2399);
+      ERROR_CODES.add(1105);
    }
 
    protected ProxyConnection(final PoolEntry poolEntry,
