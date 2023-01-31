@@ -78,8 +78,8 @@ public class OSGiBundleTest
       return options(
          systemProperty("org.osgi.framework.storage.clean").value("true"),
          systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("WARN"),
-         mavenBundle("org.slf4j", "slf4j-api", "1.7.5"),
-         mavenBundle("org.slf4j", "slf4j-simple", "1.7.5").noStart(),
+         mavenBundle("org.slf4j", "slf4j-api", "1.7.36"),
+         mavenBundle("org.slf4j", "slf4j-simple", "1.7.36").noStart(),
          new File("target/classes").exists()
             ? bundle("reference:file:target/classes")
             : bundle("reference:file:../target/classes"),
