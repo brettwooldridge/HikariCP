@@ -539,8 +539,8 @@ YourKit supports open source projects with its full-featured Java Profiler.  Cli
 
 Please perform changes and submit pull requests from the ``dev`` branch instead of ``master``.  Please set your editor to use spaces instead of tabs, and adhere to the apparent style of the code you are editing.  The ``dev`` branch is always more "current" than the ``master`` if you are looking to live life on the edge.
 
-[Build Status]:https://app.travis-ci.com/brettwooldridge/HikariCP
-[Build Status img]:https://app.travis-ci.com/brettwooldridge/HikariCP.svg?branch=dev
+[Build Status]:https://circleci.com/gh/brettwooldridge/HikariCP
+[Build Status img]:https://circleci.com/gh/brettwooldridge/HikariCP/tree/dev.svg?style=shield
 
 [Coverage Status]:https://codecov.io/gh/brettwooldridge/HikariCP
 [Coverage Status img]:https://codecov.io/gh/brettwooldridge/HikariCP/branch/dev/graph/badge.svg
