@@ -452,7 +452,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    // ***********************************************************************
 
    /**
-    * Creating new poolEntry.  If maxLifetime is configured, create a future End-of-life task with 2.5% variance from
+    * Creating new poolEntry.  If maxLifetime is configured, create a future End-of-life task with configurable variance from
     * the maxLifetime time to ensure there is no massive die-off of Connections in the pool.
     */
    private PoolEntry createPoolEntry()
@@ -462,8 +462,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
          final var maxLifetime = config.getMaxLifetime();
          if (maxLifetime > 0) {
-            // variance up to 2.5% of the maxlifetime
-            final var variance = maxLifetime > 10_000 ? ThreadLocalRandom.current().nextLong( maxLifetime / 40 ) : 0;
+            final var variance = maxLifetime > 10_000 ? ThreadLocalRandom.current().nextLong( Math.round(maxLifetime * (config.getMaxLifetimeVariance() / 100)) ) : 0;
             final var lifetime = maxLifetime - variance;
             poolEntry.setFutureEol(houseKeepingExecutorService.schedule(new MaxLifetimeTask(poolEntry), lifetime, MILLISECONDS));
          }

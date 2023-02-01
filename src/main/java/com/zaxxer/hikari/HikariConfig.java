@@ -53,6 +53,7 @@ public class HikariConfig implements HikariConfigMXBean
    private static final long SOFT_TIMEOUT_FLOOR = Long.getLong("com.zaxxer.hikari.timeoutMs.floor", 250L);
    private static final long IDLE_TIMEOUT = MINUTES.toMillis(10);
    private static final long MAX_LIFETIME = MINUTES.toMillis(30);
+   private static final double MAX_LIFETIME_VARIANCE = 2.5;
    private static final long DEFAULT_KEEPALIVE_TIME = 0L;
    private static final int DEFAULT_POOL_SIZE = 10;
 
@@ -66,6 +67,7 @@ public class HikariConfig implements HikariConfigMXBean
    private volatile long idleTimeout;
    private volatile long leakDetectionThreshold;
    private volatile long maxLifetime;
+   private volatile double maxLifetimeVariance;
    private volatile int maxPoolSize;
    private volatile int minIdle;
    private volatile String username;
@@ -119,6 +121,7 @@ public class HikariConfig implements HikariConfigMXBean
       minIdle = -1;
       maxPoolSize = -1;
       maxLifetime = MAX_LIFETIME;
+      maxLifetimeVariance = MAX_LIFETIME_VARIANCE;
       connectionTimeout = CONNECTION_TIMEOUT;
       validationTimeout = VALIDATION_TIMEOUT;
       idleTimeout = IDLE_TIMEOUT;
@@ -228,6 +231,17 @@ public class HikariConfig implements HikariConfigMXBean
    {
       this.leakDetectionThreshold = leakDetectionThresholdMs;
    }
+
+   /** {@inheritDoc} */
+   @Override
+   public double getMaxLifetimeVariance()
+   {
+      return maxLifetimeVariance;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public void setMaxLifetimeVariance(double maxLifetimeVariance) { this.maxLifetimeVariance = maxLifetimeVariance; }
 
    /** {@inheritDoc} */
    @Override
