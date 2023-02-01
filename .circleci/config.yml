@@ -5,5 +5,6 @@ jobs:
 
     steps:
       # Commands run in a Linux virtual machine environment
+      - checkout
       - run: mvn clean package
 
