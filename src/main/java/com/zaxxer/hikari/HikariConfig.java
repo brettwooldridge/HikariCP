@@ -53,7 +53,7 @@ public class HikariConfig implements HikariConfigMXBean
    private static final long SOFT_TIMEOUT_FLOOR = Long.getLong("com.zaxxer.hikari.timeoutMs.floor", 250L);
    private static final long IDLE_TIMEOUT = MINUTES.toMillis(10);
    private static final long MAX_LIFETIME = MINUTES.toMillis(30);
-   private static final double MAX_LIFETIME_VARIANCE = 2.5;
+   private static final double DEFAULT_MAX_LIFETIME_VARIANCE = 2.5;
    private static final long DEFAULT_KEEPALIVE_TIME = 0L;
    private static final int DEFAULT_POOL_SIZE = 10;
 
@@ -121,7 +121,7 @@ public class HikariConfig implements HikariConfigMXBean
       minIdle = -1;
       maxPoolSize = -1;
       maxLifetime = MAX_LIFETIME;
-      maxLifetimeVariance = MAX_LIFETIME_VARIANCE;
+      maxLifetimeVariance = DEFAULT_MAX_LIFETIME_VARIANCE;
       connectionTimeout = CONNECTION_TIMEOUT;
       validationTimeout = VALIDATION_TIMEOUT;
       idleTimeout = IDLE_TIMEOUT;
