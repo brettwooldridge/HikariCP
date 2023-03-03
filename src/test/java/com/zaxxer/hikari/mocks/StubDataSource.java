@@ -36,7 +36,7 @@ public class StubDataSource implements DataSource
    private String password;
    private PrintWriter logWriter;
    private SQLException throwException;
-   private long connectionAcquistionTime = 0;
+   private long connectionAcquisitionTime = 0;
    private int loginTimeout;
    private int waitTimeout = 30000;
 
@@ -133,8 +133,8 @@ public class StubDataSource implements DataSource
       if (throwException != null) {
          throw throwException;
       }
-      if (connectionAcquistionTime > 0) {
-         UtilityElf.quietlySleep(connectionAcquistionTime);
+      if (connectionAcquisitionTime > 0) {
+         UtilityElf.quietlySleep(connectionAcquisitionTime);
       }
       return new StubConnection(waitTimeout);
    }
@@ -151,7 +151,7 @@ public class StubDataSource implements DataSource
       this.throwException = e;
    }
 
-   public void setConnectionAcquistionTime(long connectionAcquisitionTime) {
-      this.connectionAcquistionTime = connectionAcquisitionTime;
+   public void setConnectionAcquisitionTime(long connectionAcquisitionTime) {
+      this.connectionAcquisitionTime = connectionAcquisitionTime;
    }
 }
