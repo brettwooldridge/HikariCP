@@ -20,6 +20,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * This is the proxy class for java.sql.Statement.
@@ -33,6 +34,7 @@ public abstract class ProxyStatement implements Statement
 
    private boolean isClosed;
    private ResultSet proxyResultSet;
+   protected final ReentrantLock proxyStatementLock = new ReentrantLock();
 
    ProxyStatement(ProxyConnection connection, Statement statement)
    {
@@ -61,12 +63,15 @@ public abstract class ProxyStatement implements Statement
    @Override
    public final void close() throws SQLException
    {
-      synchronized (this) {
+      proxyStatementLock.lock();
+      try {
          if (isClosed) {
             return;
          }
 
          isClosed = true;
+      } finally {
+         proxyStatementLock.unlock();
       }
 
       connection.untrackStatement(delegate);
