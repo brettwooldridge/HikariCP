@@ -199,56 +199,59 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    {
       hikariPoolLock.lock();
       try {
-         poolState = POOL_SHUTDOWN;
-
-         if (addConnectionExecutor == null) { // pool never started
-            return;
-         }
-
-         logPoolState("Before shutdown ");
-
-         if (houseKeeperTask != null) {
-            houseKeeperTask.cancel(false);
-            houseKeeperTask = null;
-         }
-
-         softEvictConnections();
-
-         addConnectionExecutor.shutdown();
-         if (!addConnectionExecutor.awaitTermination(getLoginTimeout(), SECONDS)) {
-            logger.warn("Timed-out waiting for add connection executor to shutdown");
-         }
-
-         destroyHouseKeepingExecutorService();
-
-         connectionBag.close();
-
-         final var assassinExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection assassinator",
-                                                                           config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
          try {
-            final var start = currentTime();
-            do {
-               abortActiveConnections(assassinExecutor);
-               softEvictConnections();
-            } while (getTotalConnections() > 0 && elapsedMillis(start) < SECONDS.toMillis(10));
-         }
-         finally {
-            assassinExecutor.shutdown();
-            if (!assassinExecutor.awaitTermination(10L, SECONDS)) {
-               logger.warn("Timed-out waiting for connection assassin to shutdown");
+            poolState = POOL_SHUTDOWN;
+
+            if (addConnectionExecutor == null) { // pool never started
+               return;
+            }
+
+            logPoolState("Before shutdown ");
+
+            if (houseKeeperTask != null) {
+               houseKeeperTask.cancel(false);
+               houseKeeperTask = null;
+            }
+
+            softEvictConnections();
+
+            addConnectionExecutor.shutdown();
+            if (!addConnectionExecutor.awaitTermination(getLoginTimeout(), SECONDS)) {
+               logger.warn("Timed-out waiting for add connection executor to shutdown");
+            }
+
+            destroyHouseKeepingExecutorService();
+
+            connectionBag.close();
+
+            final var assassinExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection assassinator",
+                                                                              config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
+            try {
+               final var start = currentTime();
+               do {
+                  abortActiveConnections(assassinExecutor);
+                  softEvictConnections();
+               } while (getTotalConnections() > 0 && elapsedMillis(start) < SECONDS.toMillis(10));
+            }
+            finally {
+               assassinExecutor.shutdown();
+               if (!assassinExecutor.awaitTermination(10L, SECONDS)) {
+                  logger.warn("Timed-out waiting for connection assassin to shutdown");
+               }
+            }
+
+            shutdownNetworkTimeoutExecutor();
+            closeConnectionExecutor.shutdown();
+            if (!closeConnectionExecutor.awaitTermination(10L, SECONDS)) {
+               logger.warn("Timed-out waiting for close connection executor to shutdown");
             }
          }
-
-         shutdownNetworkTimeoutExecutor();
-         closeConnectionExecutor.shutdown();
-         if (!closeConnectionExecutor.awaitTermination(10L, SECONDS)) {
-            logger.warn("Timed-out waiting for close connection executor to shutdown");
+         finally {
+            logPoolState("After shutdown ");
+            handleMBeans(this, false);
+            metricsTracker.close();
          }
-      }
-      finally {
-         logPoolState("After shutdown ");
-         handleMBeans(this, false);
-         metricsTracker.close();
+      } finally {
          hikariPoolLock.unlock();
       }
    }
