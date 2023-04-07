@@ -141,6 +141,9 @@ public final class PropertyElf
          else if (paramClass == boolean.class || paramClass == Boolean.class) {
             writeMethod.invoke(target, Boolean.parseBoolean(propValue.toString()));
          }
+         else if (paramClass.isArray() && char.class.isAssignableFrom(paramClass.getComponentType())) {
+            writeMethod.invoke(target, propValue.toString().toCharArray());
+         }
          else if (paramClass == String.class) {
             writeMethod.invoke(target, propValue.toString());
          }
