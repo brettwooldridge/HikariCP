@@ -112,8 +112,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
       final int maxPoolSize = config.getMaximumPoolSize();
       LinkedBlockingQueue<Runnable> addConnectionQueue = new LinkedBlockingQueue<>(maxPoolSize);
-      this.addConnectionExecutor = createThreadPoolExecutor(addConnectionQueue, poolName + " connection adder", threadFactory, new CustomDiscardPolicy());
-      this.closeConnectionExecutor = createThreadPoolExecutor(maxPoolSize, poolName + " connection closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
+      this.addConnectionExecutor = createThreadPoolExecutor(addConnectionQueue, poolName + ":connection-adder", threadFactory, new CustomDiscardPolicy());
+      this.closeConnectionExecutor = createThreadPoolExecutor(maxPoolSize, poolName + ":connection-closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
       this.leakTaskFactory = new ProxyLeakTaskFactory(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
 
@@ -220,7 +220,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
          connectionBag.close();
 
-         final var assassinExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + " connection assassinator",
+         final var assassinExecutor = createThreadPoolExecutor(config.getMaximumPoolSize(), poolName + ":connection-assassinator",
                                                                            config.getThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
          try {
             final var start = currentTime();
@@ -619,7 +619,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    private ScheduledExecutorService initializeHouseKeepingExecutorService()
    {
       if (config.getScheduledExecutor() == null) {
-         final var threadFactory = Optional.ofNullable(config.getThreadFactory()).orElseGet(() -> new DefaultThreadFactory(poolName + " housekeeper"));
+         final var threadFactory = Optional.ofNullable(config.getThreadFactory()).orElseGet(() -> new DefaultThreadFactory(poolName + ":housekeeper"));
          final var executor = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
          executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
          executor.setRemoveOnCancelPolicy(true);
