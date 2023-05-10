@@ -33,7 +33,7 @@ public class TestJavassistCodegen {
 
       int mod = fauxClassLoader.loadClass("com.zaxxer.hikari.pool.HikariProxyConnection").getModifiers();
       Assert.assertTrue("Generated proxy class should be public", Modifier.isPublic(mod));
-      Assert.assertTrue("Generated proxy class should be final", Modifier.isFinal(mod));
+      Assert.assertTrue("Generated proxy class shouldnot be final", !Modifier.isFinal(mod));
 
       Class<?> proxyFactoryClass = fauxClassLoader.loadClass("com.zaxxer.hikari.pool.ProxyFactory");
 
