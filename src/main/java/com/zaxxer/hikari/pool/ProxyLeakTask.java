@@ -38,7 +38,7 @@ class ProxyLeakTask implements Runnable
    private String connectionName;
    private Exception exception;
    private String threadName;
-   private boolean isLeaked;
+   private volatile boolean isLeaked;
 
    static
    {
