@@ -62,15 +62,13 @@ public final class CodahaleHealthChecker
 
       final Object metricRegistryObj = hikariConfig.getMetricRegistry();
 
-      if (expected99thPercentile > 0 && metricRegistryObj != null) {
-         if (metricRegistryObj instanceof MetricRegistry) {
-            final var metricRegistry = (MetricRegistry) hikariConfig.getMetricRegistry();
-            var timers = metricRegistry.getTimers((name, metric) -> name.equals(MetricRegistry.name(hikariConfig.getPoolName(), "pool", "Wait")));
+      if (expected99thPercentile > 0 && metricRegistryObj instanceof MetricRegistry) {
+         final var metricRegistry = (MetricRegistry) hikariConfig.getMetricRegistry();
+         var timers = metricRegistry.getTimers((name, metric) -> name.equals(MetricRegistry.name(hikariConfig.getPoolName(), "pool", "Wait")));
 
-            if (!timers.isEmpty()) {
-               final var timer = timers.entrySet().iterator().next().getValue();
-               registry.register(MetricRegistry.name(hikariConfig.getPoolName(), "pool", "Connection99Percent"), new Connection99Percent(timer, expected99thPercentile));
-            }
+         if (!timers.isEmpty()) {
+            final var timer = timers.entrySet().iterator().next().getValue();
+            registry.register(MetricRegistry.name(hikariConfig.getPoolName(), "pool", "Connection99Percent"), new Connection99Percent(timer, expected99thPercentile));
          }
       }
    }
