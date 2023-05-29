@@ -155,7 +155,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    {
       suspendResumeLock.acquire();
       final var startTime = currentTime();
-
+//  Connectio Borrowed here
       try {
          var timeout = hardTimeout;
          do {
@@ -171,7 +171,14 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             }
             else {
                metricsTracker.recordBorrowStats(poolEntry, startTime);
-               return poolEntry.createProxyConnection(leakTaskFactory.schedule(poolEntry));
+               Connection newconn=poolEntry.createProxyConnection(leakTaskFactory.schedule(poolEntry));
+               if (newconn.getMetaData().getJDBCMajorVersion()>4 ||
+                  (newconn.getMetaData().getJDBCMajorVersion()==4 && newconn.getMetaData().getJDBCMinorVersion()>=3)) {
+                  newconn.beginRequest();
+                  System.out.println("BEGIN REQUEST CALLED");
+               }
+//               return poolEntry.createProxyConnection(leakTaskFactory.schedule(poolEntry));
+               return newconn;
             }
          } while (timeout > 0L);
 

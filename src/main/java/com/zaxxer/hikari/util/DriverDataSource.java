@@ -99,7 +99,7 @@ public final class DriverDataSource implements DataSource
       }
 
       final var sanitizedUrl = jdbcUrl.replaceAll("([?&;][^&#;=]*[pP]assword=)[^&#;]*", "$1<masked>");
-      
+
       try {
          if (driver == null) {
             driver = DriverManager.getDriver(jdbcUrl);
@@ -133,6 +133,7 @@ public final class DriverDataSource implements DataSource
       if (password != null) {
          cloned.put(PASSWORD, password);
       }
+//      maybe here connection is pulled
 
       return driver.connect(jdbcUrl, cloned);
    }

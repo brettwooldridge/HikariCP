@@ -120,6 +120,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    public T borrow(long timeout, final TimeUnit timeUnit) throws InterruptedException
    {
       // Try the thread-local list first
+// Try to get and mark the connection
       final var list = threadList.get();
       for (int i = list.size() - 1; i >= 0; i--) {
          final var entry = list.remove(i);
