@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
 import java.util.Optional;
@@ -172,10 +173,18 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             else {
                metricsTracker.recordBorrowStats(poolEntry, startTime);
                Connection newconn=poolEntry.createProxyConnection(leakTaskFactory.schedule(poolEntry));
-               if (newconn.getMetaData().getJDBCMajorVersion()>4 ||
-                  (newconn.getMetaData().getJDBCMajorVersion()==4 && newconn.getMetaData().getJDBCMinorVersion()>=3)) {
-                  newconn.beginRequest();
-                  System.out.println("BEGIN REQUEST CALLED");
+               DatabaseMetaData dm= newconn.getMetaData();
+               if (dm!=null){
+                  try {
+                     if (dm.getJDBCMajorVersion() > 4 ||
+                        (dm.getJDBCMajorVersion() == 4 && dm.getJDBCMinorVersion() >= 3)) {
+                        newconn.beginRequest();
+                        System.out.println("BEGIN REQUEST CALLED");
+                     }
+                  }
+                  catch(NullPointerException np){
+                     System.out.println("getJDBCMajorVersion Call Failed");
+                  }
                }
 //               return poolEntry.createProxyConnection(leakTaskFactory.schedule(poolEntry));
                return newconn;
