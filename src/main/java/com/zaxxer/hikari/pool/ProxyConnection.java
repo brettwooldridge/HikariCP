@@ -104,7 +104,6 @@ public abstract class ProxyConnection implements Connection
       return this.getClass().getSimpleName() + '@' + System.identityHashCode(this) + " wrapping " + delegate;
    }
 
-
    // ***********************************************************************
    //                     Connection State Accessors
    // ***********************************************************************
