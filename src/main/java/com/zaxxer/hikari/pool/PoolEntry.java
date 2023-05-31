@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.ScheduledFuture;
@@ -74,10 +75,20 @@ final class PoolEntry implements IConcurrentBagEntry
    /**
     * Release this entry back to the pool.
     */
-   void recycle()
-   {
+   void recycle() throws SQLException {
+      // endRequest Call just to let driver know.support only for jdbc4.3 and above
       if (connection != null) {
          this.lastAccessed = currentTime();
+         DatabaseMetaData dm= connection.getMetaData();
+         if (dm!=null){
+            if (dm.getJDBCMajorVersion() > 4 ||
+               (dm.getJDBCMajorVersion() == 4 && dm.getJDBCMinorVersion() >= 3)) {
+               connection.endRequest();
+            }
+         }
+         else{
+            LOGGER.warn("endRequest cannot be called as getMetaData not found for Connection: {}", connection);
+         }
          hikariPool.recycle(this);
       }
    }
@@ -96,8 +107,18 @@ final class PoolEntry implements IConcurrentBagEntry
       this.keepalive = keepalive;
    }
 
-   Connection createProxyConnection(final ProxyLeakTask leakTask)
-   {
+   Connection createProxyConnection(final ProxyLeakTask leakTask) throws SQLException {
+      DatabaseMetaData dm= connection.getMetaData();
+      // calling beginRequest for JDBC 4.3 and later
+      if (dm!=null){
+         if (dm.getJDBCMajorVersion() > 4 ||
+            (dm.getJDBCMajorVersion() == 4 && dm.getJDBCMinorVersion() >= 3)) {
+            connection.beginRequest();
+         }
+      }
+      else{
+         LOGGER.warn("beginRequest cannot be called as getMetaData not found for Connection: {}", connection);
+      }
       return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, isReadOnly, isAutoCommit);
    }
 

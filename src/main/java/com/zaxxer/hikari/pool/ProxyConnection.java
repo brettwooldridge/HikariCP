@@ -265,22 +265,8 @@ public abstract class ProxyConnection implements Connection
             }
          }
          finally {
-            DatabaseMetaData dm= delegate.getMetaData();
-            if (dm!=null){
-               if (delegate.getMetaData().getJDBCMajorVersion() > 4 ||
-                  (delegate.getMetaData().getJDBCMajorVersion() == 4 && delegate.getMetaData().getJDBCMinorVersion() >= 3)) {
-                  delegate.endRequest();
-                  System.out.println("END REQUEST CALLED");
-               }
-               delegate = ClosedConnection.CLOSED_CONNECTION;
-               poolEntry.recycle();
-            }
-            else{
-               delegate = ClosedConnection.CLOSED_CONNECTION;
-               poolEntry.recycle();
-            }
-
-// MAybe here connection is sent back
+            delegate = ClosedConnection.CLOSED_CONNECTION;
+            poolEntry.recycle();
          }
       }
    }
