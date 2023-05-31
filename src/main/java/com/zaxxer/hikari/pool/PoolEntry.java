@@ -88,7 +88,7 @@ final class PoolEntry implements IConcurrentBagEntry
                }
             }
          } catch (SQLException e) {
-            LOGGER.warn("{},endRequest Failed: {}",e,connection);
+            LOGGER.warn("endRequest Failed for: {},({})",connection,e.getMessage());
          }
          hikariPool.recycle(this);
       }
@@ -120,7 +120,7 @@ final class PoolEntry implements IConcurrentBagEntry
             }
          }
       } catch (SQLException e) {
-         LOGGER.warn("{},beginRequest Failed: {}",e,connection);
+         LOGGER.warn("beginRequest Failed for: {}, ({})",connection,e.getMessage());
       }
       return newproxyconn;
    }
