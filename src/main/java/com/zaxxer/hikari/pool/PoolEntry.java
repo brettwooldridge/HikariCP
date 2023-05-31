@@ -75,19 +75,20 @@ final class PoolEntry implements IConcurrentBagEntry
    /**
     * Release this entry back to the pool.
     */
-   void recycle() throws SQLException {
-      // endRequest Call just to let driver know.support only for jdbc4.3 and above
+   void recycle() {
+      // endRequest Call just to let driver know.Supported only for JDBC 4.3 and above
       if (connection != null) {
          this.lastAccessed = currentTime();
-         DatabaseMetaData dm= connection.getMetaData();
-         if (dm!=null){
-            if (dm.getJDBCMajorVersion() > 4 ||
-               (dm.getJDBCMajorVersion() == 4 && dm.getJDBCMinorVersion() >= 3)) {
-               connection.endRequest();
+         try {
+            DatabaseMetaData dm = connection.getMetaData();
+            if (dm!=null){
+               if (dm.getJDBCMajorVersion() > 4 ||
+                  (dm.getJDBCMajorVersion() == 4 && dm.getJDBCMinorVersion() >= 3)) {
+                  connection.endRequest();
+               }
             }
-         }
-         else{
-            LOGGER.warn("endRequest cannot be called as getMetaData not found for Connection: {}", connection);
+         } catch (SQLException e) {
+            LOGGER.warn("{},endRequest Failed: {}",e,connection);
          }
          hikariPool.recycle(this);
       }
@@ -107,19 +108,21 @@ final class PoolEntry implements IConcurrentBagEntry
       this.keepalive = keepalive;
    }
 
-   Connection createProxyConnection(final ProxyLeakTask leakTask) throws SQLException {
-      DatabaseMetaData dm= connection.getMetaData();
+   Connection createProxyConnection(final ProxyLeakTask leakTask){
+      Connection newproxyconn= ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, isReadOnly, isAutoCommit);
       // calling beginRequest for JDBC 4.3 and later
-      if (dm!=null){
-         if (dm.getJDBCMajorVersion() > 4 ||
-            (dm.getJDBCMajorVersion() == 4 && dm.getJDBCMinorVersion() >= 3)) {
-            connection.beginRequest();
+      try {
+         DatabaseMetaData dm=connection.getMetaData();
+         if (dm!=null){
+            if (dm.getJDBCMajorVersion() > 4 ||
+               (dm.getJDBCMajorVersion() == 4 && dm.getJDBCMinorVersion() >= 3)) {
+               connection.beginRequest();
+            }
          }
+      } catch (SQLException e) {
+         LOGGER.warn("{},beginRequest Failed: {}",e,connection);
       }
-      else{
-         LOGGER.warn("beginRequest cannot be called as getMetaData not found for Connection: {}", connection);
-      }
-      return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, isReadOnly, isAutoCommit);
+      return newproxyconn;
    }
 
    void resetConnectionState(final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
