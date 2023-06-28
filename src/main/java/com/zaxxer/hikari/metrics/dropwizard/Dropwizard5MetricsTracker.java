@@ -1,30 +1,14 @@
-/*
- * Copyright (C) 2013,2014 Brett Wooldridge
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.zaxxer.hikari.metrics.dropwizard;
 
 import java.util.concurrent.TimeUnit;
 
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
 import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.metrics.PoolStats;
+import io.dropwizard.metrics5.Gauge;
+import io.dropwizard.metrics5.Histogram;
+import io.dropwizard.metrics5.Meter;
+import io.dropwizard.metrics5.MetricRegistry;
+import io.dropwizard.metrics5.Timer;
 
 import static com.zaxxer.hikari.metrics.dropwizard.DropwizardCommon.METRIC_CATEGORY;
 import static com.zaxxer.hikari.metrics.dropwizard.DropwizardCommon.METRIC_NAME_ACTIVE_CONNECTIONS;
@@ -38,7 +22,7 @@ import static com.zaxxer.hikari.metrics.dropwizard.DropwizardCommon.METRIC_NAME_
 import static com.zaxxer.hikari.metrics.dropwizard.DropwizardCommon.METRIC_NAME_USAGE;
 import static com.zaxxer.hikari.metrics.dropwizard.DropwizardCommon.METRIC_NAME_WAIT;
 
-public final class CodaHaleMetricsTracker implements IMetricsTracker
+public class Dropwizard5MetricsTracker implements IMetricsTracker
 {
    private final String poolName;
    private final Timer connectionObtainTimer;
@@ -47,7 +31,7 @@ public final class CodaHaleMetricsTracker implements IMetricsTracker
    private final Meter connectionTimeoutMeter;
    private final MetricRegistry registry;
 
-   CodaHaleMetricsTracker(final String poolName, final PoolStats poolStats, final MetricRegistry registry)
+   Dropwizard5MetricsTracker(final String poolName, final PoolStats poolStats, final MetricRegistry registry)
    {
       this.poolName = poolName;
       this.registry = registry;
@@ -112,7 +96,7 @@ public final class CodaHaleMetricsTracker implements IMetricsTracker
    }
 
    @Override
-   public void recordConnectionCreatedMillis(long connectionCreatedMillis)
+   public void recordConnectionCreatedMillis(final long connectionCreatedMillis)
    {
       connectionCreation.update(connectionCreatedMillis);
    }

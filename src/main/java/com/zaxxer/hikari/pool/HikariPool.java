@@ -24,6 +24,7 @@ import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.PoolStats;
 import com.zaxxer.hikari.metrics.dropwizard.CodahaleHealthChecker;
 import com.zaxxer.hikari.metrics.dropwizard.CodahaleMetricsTrackerFactory;
+import com.zaxxer.hikari.metrics.dropwizard.Dropwizard5MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.micrometer.MicrometerMetricsTrackerFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
@@ -278,6 +279,9 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    {
       if (metricRegistry != null && safeIsAssignableFrom(metricRegistry, "com.codahale.metrics.MetricRegistry")) {
          setMetricsTrackerFactory(new CodahaleMetricsTrackerFactory((MetricRegistry) metricRegistry));
+      }
+      else if (metricRegistry != null && safeIsAssignableFrom(metricRegistry, "io.dropwizard.metrics5.MetricRegistry")) {
+         setMetricsTrackerFactory(new Dropwizard5MetricsTrackerFactory((io.dropwizard.metrics5.MetricRegistry) metricRegistry));
       }
       else if (metricRegistry != null && safeIsAssignableFrom(metricRegistry, "io.micrometer.core.instrument.MeterRegistry")) {
          setMetricsTrackerFactory(new MicrometerMetricsTrackerFactory((MeterRegistry) metricRegistry));
