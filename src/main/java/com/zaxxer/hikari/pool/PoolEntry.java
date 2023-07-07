@@ -77,8 +77,6 @@ final class PoolEntry implements IConcurrentBagEntry
     */
    void recycle()
    {
-      // endRequest Call just to let driver know that the connection has been returned to pool.
-      // Supported only for JDBC 4.3 and above
       if (connection != null) {
          this.lastAccessed = currentTime();
          try {
@@ -113,8 +111,6 @@ final class PoolEntry implements IConcurrentBagEntry
    Connection createProxyConnection(final ProxyLeakTask leakTask)
    {
       Connection newproxyconn= ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, isReadOnly, isAutoCommit);
-      // beginRequest Call just to let driver know that the connection has been borrowed from the pool.
-      // Supported only for JDBC 4.3 and above
       try {
          DatabaseMetaData dm=connection.getMetaData();
          if (dm!=null){
