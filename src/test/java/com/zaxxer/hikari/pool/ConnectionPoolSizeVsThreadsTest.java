@@ -111,7 +111,7 @@ public class ConnectionPoolSizeVsThreadsTest {
       try (final HikariDataSource ds = new HikariDataSource(config)) {
          final StubDataSource stubDataSource = ds.unwrap(StubDataSource.class);
          // connection acquisition takes more than 0 ms in a real system
-         stubDataSource.setConnectionAcquistionTime(connectionAcquisitionTimeMs);
+         stubDataSource.setConnectionAcquisitionTime(connectionAcquisitionTimeMs);
 
          final ExecutorService threadPool = newFixedThreadPool(threadCount);
          final CountDownLatch allThreadsDone = new CountDownLatch(iterations);

@@ -29,7 +29,7 @@ public class MetricsTrackerTest
          int timeToCreateNewConnectionMillis = timeoutMillis * 2;
 
          StubDataSource stubDataSource = new StubDataSource();
-         stubDataSource.setConnectionAcquistionTime(timeToCreateNewConnectionMillis);
+         stubDataSource.setConnectionAcquisitionTime(timeToCreateNewConnectionMillis);
 
          StubMetricsTracker metricsTracker = new StubMetricsTracker();
 

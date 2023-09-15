@@ -152,7 +152,7 @@ public class TestMBean
 
          final StubDataSource stubDataSource = ds.unwrap(StubDataSource.class);
          // connection acquisition takes more than 0 ms in a real system
-         stubDataSource.setConnectionAcquistionTime(1200);
+         stubDataSource.setConnectionAcquisitionTime(1200);
 
          hikariConfigMXBean.setConnectionTimeout(1000);
 
