@@ -5,6 +5,7 @@ public class TestObject
    private TestObject testObject;
    private String string;
    private short shortRaw;
+   private char[] charArray;
 
    public void setTestObject(TestObject testObject)
    {
@@ -32,5 +33,15 @@ public class TestObject
 
    public void setShortRaw(short shortRaw) {
       this.shortRaw = shortRaw;
+   }
+
+   public void setCharArray(char[] charArray)
+   {
+      this.charArray = charArray;
+   }
+
+   public char[] getCharArray()
+   {
+      return charArray;
    }
 }

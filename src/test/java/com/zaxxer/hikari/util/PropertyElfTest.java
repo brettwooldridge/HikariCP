@@ -5,6 +5,7 @@ import com.zaxxer.hikari.mocks.TestObject;
 
 import java.util.Properties;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.fail;
@@ -18,10 +19,12 @@ public class PropertyElfTest
       properties.setProperty("string", "aString");
       properties.setProperty("testObject", "com.zaxxer.hikari.mocks.TestObject");
       properties.setProperty("shortRaw", "1");
+      properties.setProperty("charArray", "aCharArray");
       TestObject testObject = new TestObject();
       PropertyElf.setTargetFromProperties(testObject, properties);
       assertEquals("aString", testObject.getString());
       assertEquals((short) 1, testObject.getShortRaw());
+      assertArrayEquals("aCharArray".toCharArray(), testObject.getCharArray());
       assertEquals(com.zaxxer.hikari.mocks.TestObject.class, testObject.getTestObject().getClass());
       assertNotSame(testObject, testObject.getTestObject());
    }
