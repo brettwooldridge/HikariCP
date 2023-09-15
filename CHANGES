@@ -1,8 +1,32 @@
 HikariCP Changes
 
+Changes in 6.0.0
+
+ * fixed #1907 re-added automatic.module.name that was lost along the way
+
+ * fixed #1986 evict connection exceptions with (SQLState HY000) error code 1105.
+
+ * merged #2059 add support for char[] in DataSource properties
+
+ * merged #1979 and #1993 mask any property that looks like a password in URLs
+
+ * add pool stats to connection acquisition timeout exception
+
+ * merged #2076 don't case metric registry before it is checked for null
+
+ * merged #1820 allow minimum login timeout to be set as system property
+
+ * merged #1952 add more isolation levels
+
+ * merged #1660 remove redundant error log for poll initialization exception
+
+Changes in 5.0.1
+
+ * Update log4j version to 2.17.1 to address Log4Shell vulnerability (although this is only used in tests, so it doesn't really impact users)
+
 Changes in 5.0.0
 
- * rewrote connection elide/add code to fix an unconfirmed but occassionally reported
+ * rewrote connection elide/add code to fix an unconfirmed but occasionally reported
    race condition that results in the pool draining to 0 and not refilling.
 
 Changes in 4.0.3
