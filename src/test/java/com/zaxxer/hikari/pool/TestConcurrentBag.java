@@ -69,7 +69,7 @@ public class TestConcurrentBag
    @Test
    public void testConcurrentBag() throws Exception
    {
-      try (ConcurrentBag<PoolEntry> bag = new ConcurrentBag<>((x) -> CompletableFuture.completedFuture(Boolean.TRUE))) {
+      try (ConcurrentBag<PoolEntry> bag = new ConcurrentBag<>(x -> CompletableFuture.completedFuture(Boolean.TRUE))) {
          assertEquals(0, bag.values(8).size());
 
          PoolEntry reserved = pool.newPoolEntry();

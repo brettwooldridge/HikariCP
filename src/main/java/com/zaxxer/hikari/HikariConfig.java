@@ -28,13 +28,10 @@ import javax.sql.DataSource;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.security.AccessControlException;
 import java.sql.Connection;
 import java.util.Properties;
-import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -45,7 +42,7 @@ import static com.zaxxer.hikari.util.UtilityElf.safeIsAssignableFrom;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-@SuppressWarnings({"SameParameterValue"})
+@SuppressWarnings({"SameParameterValue", "unused"})
 public class HikariConfig implements HikariConfigMXBean
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariConfig.class);
@@ -107,6 +104,12 @@ public class HikariConfig implements HikariConfigMXBean
 
    /**
     * Default constructor
+    * <p>
+    * If the System property {@code hikari.configurationFile} is set,
+    * then the default constructor will attempt to load the specified configuration file
+    * <p>
+    * {@link #HikariConfig(String propertyFileName)} can be similarly used
+    * instead of using the system property
     */
    public HikariConfig()
    {
@@ -123,7 +126,7 @@ public class HikariConfig implements HikariConfigMXBean
       isAutoCommit = true;
       keepaliveTime = DEFAULT_KEEPALIVE_TIME;
 
-      String systemProp = System.getProperty("hikaricp.configurationFile");
+      var systemProp = System.getProperty("hikaricp.configurationFile");
       if (systemProp != null) {
          loadProperties(systemProp);
       }
@@ -477,7 +480,7 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
 
-      Class<?> driverClass = attemptFromContextLoader(driverClassName);
+      var driverClass = attemptFromContextLoader(driverClassName);
       try {
          if (driverClass == null) {
             driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
@@ -796,8 +799,8 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Set the name of the connection pool.  This is primarily used for the MBean
-    * to uniquely identify the pool configuration.
+    * Set the name of the connection pool.  This is primarily used in logging and JMX management consoles
+    * to identify pools and pool configurations
     *
     * @param poolName the name of the connection pool to use
     */
@@ -875,7 +878,7 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
 
-      Class<?> overrideClass = attemptFromContextLoader(exceptionOverrideClassName);
+      var overrideClass = attemptFromContextLoader(exceptionOverrideClassName);
       try {
          if (overrideClass == null) {
             overrideClass = this.getClass().getClassLoader().loadClass(exceptionOverrideClassName);
@@ -944,7 +947,7 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void copyStateTo(HikariConfig other)
    {
-      for (Field field : HikariConfig.class.getDeclaredFields()) {
+      for (var field : HikariConfig.class.getDeclaredFields()) {
          if (!Modifier.isFinal(field.getModifiers())) {
             field.setAccessible(true);
             try {
@@ -964,10 +967,10 @@ public class HikariConfig implements HikariConfigMXBean
    // ***********************************************************************
 
    private Class<?> attemptFromContextLoader(final String driverClassName) {
-      final ClassLoader threadContextClassLoader = Thread.currentThread().getContextClassLoader();
+      final var threadContextClassLoader = Thread.currentThread().getContextClassLoader();
       if (threadContextClassLoader != null) {
          try {
-            final Class<?> driverClass = threadContextClassLoader.loadClass(driverClassName);
+            final var driverClass = threadContextClassLoader.loadClass(driverClassName);
             LOGGER.debug("Driver class {} found in Thread context class loader {}", driverClassName, threadContextClassLoader);
             return driverClass;
          } catch (ClassNotFoundException e) {
@@ -1043,7 +1046,7 @@ public class HikariConfig implements HikariConfigMXBean
          maxLifetime = MAX_LIFETIME;
       }
 
-      // keepalive time must larger then 30 seconds
+      // keepalive time must larger than 30 seconds
       if (keepaliveTime != 0 && keepaliveTime < SECONDS.toMillis(30)) {
          LOGGER.warn("{} - keepaliveTime is less than 30000ms, disabling it.", poolName);
          keepaliveTime = DEFAULT_KEEPALIVE_TIME;
@@ -1101,12 +1104,12 @@ public class HikariConfig implements HikariConfigMXBean
    private void logConfiguration()
    {
       LOGGER.debug("{} - configuration:", poolName);
-      final Set<String> propertyNames = new TreeSet<>(PropertyElf.getPropertyNames(HikariConfig.class));
-      for (String prop : propertyNames) {
+      final var propertyNames = new TreeSet<>(PropertyElf.getPropertyNames(HikariConfig.class));
+      for (var prop : propertyNames) {
          try {
-            Object value = PropertyElf.getProperty(prop, this);
+            var value = PropertyElf.getProperty(prop, this);
             if ("dataSourceProperties".equals(prop)) {
-               Properties dsProps = PropertyElf.copyProperties(dataSourceProperties);
+               var dsProps = PropertyElf.copyProperties(dataSourceProperties);
                dsProps.setProperty("password", "<masked>");
                value = dsProps;
             }
@@ -1121,7 +1124,7 @@ public class HikariConfig implements HikariConfigMXBean
                value = "internal";
             }
             else if (prop.contains("jdbcUrl") && value instanceof String) {
-               value = ((String)value).replaceAll("([?&;]password=)[^&#;]*(.*)", "$1<masked>$2");
+               value = ((String)value).replaceAll("([?&;][^&#;=]*[pP]assword=)[^&#;]*", "$1<masked>");
             }
             else if (prop.contains("password")) {
                value = "<masked>";
@@ -1132,7 +1135,7 @@ public class HikariConfig implements HikariConfigMXBean
             else if (value == null) {
                value = "none";
             }
-            LOGGER.debug("{}{}", (prop + "................................................".substring(0, 32)), value);
+            LOGGER.debug("{}{}", (prop + "................................................").substring(0, 32), value);
          }
          catch (Exception e) {
             // continue
@@ -1142,10 +1145,10 @@ public class HikariConfig implements HikariConfigMXBean
 
    private void loadProperties(String propertyFileName)
    {
-      final File propFile = new File(propertyFileName);
-      try (final InputStream is = propFile.isFile() ? new FileInputStream(propFile) : this.getClass().getResourceAsStream(propertyFileName)) {
+      final var propFile = new File(propertyFileName);
+      try (final var is = propFile.isFile() ? new FileInputStream(propFile) : this.getClass().getResourceAsStream(propertyFileName)) {
          if (is != null) {
-            Properties props = new Properties();
+            var props = new Properties();
             props.load(is);
             PropertyElf.setTargetFromProperties(this, props);
          }
@@ -1160,21 +1163,21 @@ public class HikariConfig implements HikariConfigMXBean
 
    private String generatePoolName()
    {
-      final String prefix = "HikariPool-";
+      final var prefix = "HikariPool-";
       try {
          // Pool number is global to the VM to avoid overlapping pool numbers in classloader scoped environments
          synchronized (System.getProperties()) {
-            final String next = String.valueOf(Integer.getInteger("com.zaxxer.hikari.pool_number", 0) + 1);
+            final var next = String.valueOf(Integer.getInteger("com.zaxxer.hikari.pool_number", 0) + 1);
             System.setProperty("com.zaxxer.hikari.pool_number", next);
             return prefix + next;
          }
       } catch (AccessControlException e) {
          // The SecurityManager didn't allow us to read/write system properties
          // so just generate a random pool number instead
-         final ThreadLocalRandom random = ThreadLocalRandom.current();
-         final StringBuilder buf = new StringBuilder(prefix);
+         final var random = ThreadLocalRandom.current();
+         final var buf = new StringBuilder(prefix);
 
-         for (int i = 0; i < 4; i++) {
+         for (var i = 0; i < 4; i++) {
             buf.append(ID_CHARACTERS[random.nextInt(62)]);
          }
 
@@ -1188,7 +1191,7 @@ public class HikariConfig implements HikariConfigMXBean
    {
       if (object instanceof String) {
          try {
-            InitialContext initCtx = new InitialContext();
+            var initCtx = new InitialContext();
             return initCtx.lookup((String) object);
          }
          catch (NamingException e) {

@@ -21,8 +21,6 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.util.Enumeration;
-import java.util.Map.Entry;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -45,7 +43,7 @@ public final class DriverDataSource implements DataSource
       this.jdbcUrl = jdbcUrl;
       this.driverProperties = new Properties();
 
-      for (Entry<Object, Object> entry : properties.entrySet()) {
+      for (var entry : properties.entrySet()) {
          driverProperties.setProperty(entry.getKey().toString(), entry.getValue().toString());
       }
 
@@ -57,9 +55,9 @@ public final class DriverDataSource implements DataSource
       }
 
       if (driverClassName != null) {
-         Enumeration<Driver> drivers = DriverManager.getDrivers();
+         var drivers = DriverManager.getDrivers();
          while (drivers.hasMoreElements()) {
-            Driver d = drivers.nextElement();
+            var d = drivers.nextElement();
             if (d.getClass().getName().equals(driverClassName)) {
                driver = d;
                break;
@@ -69,7 +67,7 @@ public final class DriverDataSource implements DataSource
          if (driver == null) {
             LOGGER.warn("Registered driver with driverClassName={} was not found, trying direct instantiation.", driverClassName);
             Class<?> driverClass = null;
-            ClassLoader threadContextClassLoader = Thread.currentThread().getContextClassLoader();
+            var threadContextClassLoader = Thread.currentThread().getContextClassLoader();
             try {
                if (threadContextClassLoader != null) {
                   try {
@@ -100,7 +98,8 @@ public final class DriverDataSource implements DataSource
          }
       }
 
-      final String sanitizedUrl = jdbcUrl.replaceAll("([?&;]password=)[^&#;]*(.*)", "$1<masked>$2");
+      final var sanitizedUrl = jdbcUrl.replaceAll("([?&;][^&#;=]*[pP]assword=)[^&#;]*", "$1<masked>");
+      
       try {
          if (driver == null) {
             driver = DriverManager.getDriver(jdbcUrl);
@@ -124,7 +123,7 @@ public final class DriverDataSource implements DataSource
    @Override
    public Connection getConnection(final String username, final String password) throws SQLException
    {
-      final Properties cloned = (Properties) driverProperties.clone();
+      final var cloned = (Properties) driverProperties.clone();
       if (username != null) {
          cloned.put(USER, username);
          if (cloned.containsKey("username")) {

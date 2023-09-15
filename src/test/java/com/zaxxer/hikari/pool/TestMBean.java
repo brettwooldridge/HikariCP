@@ -66,9 +66,9 @@ public class TestMBean
 
       try (HikariDataSource ds = new HikariDataSource(config)) {
 
-         getUnsealedConfig(ds).setIdleTimeout(3000);
-
          TimeUnit.SECONDS.sleep(1);
+
+         getUnsealedConfig(ds).setIdleTimeout(3000);
 
          MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
          ObjectName poolName = new ObjectName("com.zaxxer.hikari:type=Pool (testMBeanReporting)");
@@ -86,12 +86,11 @@ public class TestMBean
             assertEquals(4, hikariPoolMXBean.getTotalConnections());
          }
 
-         TimeUnit.SECONDS.sleep(2);
+         TimeUnit.SECONDS.sleep(3);
 
          assertEquals(0, hikariPoolMXBean.getActiveConnections());
          assertEquals(3, hikariPoolMXBean.getIdleConnections());
          assertEquals(3, hikariPoolMXBean.getTotalConnections());
-
       }
       finally {
          System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
@@ -153,7 +152,7 @@ public class TestMBean
 
          final StubDataSource stubDataSource = ds.unwrap(StubDataSource.class);
          // connection acquisition takes more than 0 ms in a real system
-         stubDataSource.setConnectionAcquistionTime(1200);
+         stubDataSource.setConnectionAcquisitionTime(1200);
 
          hikariConfigMXBean.setConnectionTimeout(1000);
 

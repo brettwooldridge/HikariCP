@@ -100,8 +100,8 @@ public abstract class PoolStats
    private boolean shouldLoad()
    {
       for (; ; ) {
-          final long now = currentTime();
-          final long reloadTime = reloadAt.get();
+          final var now = currentTime();
+          final var reloadTime = reloadAt.get();
           if (reloadTime > now) {
               return false;
           }

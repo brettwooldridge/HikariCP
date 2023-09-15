@@ -16,19 +16,17 @@
 
 package com.zaxxer.hikari.util;
 
+import com.zaxxer.hikari.pool.*;
+import javassist.*;
+import javassist.bytecode.ClassFile;
+
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
-
-import com.zaxxer.hikari.pool.*;
-
-import javassist.*;
-import javassist.bytecode.ClassFile;
 
 /**
  * This class generates the proxy objects for {@link Connection}, {@link Statement},
@@ -70,9 +68,9 @@ public final class JavassistProxyFactory
    private static void modifyProxyFactory() throws NotFoundException, CannotCompileException, IOException {
       System.out.println("Generating method bodies for com.zaxxer.hikari.proxy.ProxyFactory");
 
-      String packageName = ProxyConnection.class.getPackage().getName();
-      CtClass proxyCt = classPool.getCtClass("com.zaxxer.hikari.pool.ProxyFactory");
-      for (CtMethod method : proxyCt.getMethods()) {
+      var packageName = ProxyConnection.class.getPackage().getName();
+      var proxyCt = classPool.getCtClass("com.zaxxer.hikari.pool.ProxyFactory");
+      for (var method : proxyCt.getMethods()) {
          switch (method.getName()) {
             case "getProxyConnection":
                method.setBody("{return new " + packageName + ".HikariProxyConnection($$);}");
@@ -106,28 +104,28 @@ public final class JavassistProxyFactory
     */
    private static <T> void generateProxyClass(Class<T> primaryInterface, String superClassName, String methodBody) throws Exception
    {
-      String newClassName = superClassName.replaceAll("(.+)\\.(\\w+)", "$1.Hikari$2");
+      var newClassName = superClassName.replaceAll("(.+)\\.(\\w+)", "$1.Hikari$2");
 
-      CtClass superCt = classPool.getCtClass(superClassName);
-      CtClass targetCt = classPool.makeClass(newClassName, superCt);
+      var superCt = classPool.getCtClass(superClassName);
+      var targetCt = classPool.makeClass(newClassName, superCt);
       targetCt.setModifiers(Modifier.setPublic(Modifier.FINAL));
 
       System.out.println("Generating " + newClassName);
 
       // Make a set of method signatures we inherit implementation for, so we don't generate delegates for these
-      Set<String> superSigs = new HashSet<>();
-      for (CtMethod method : superCt.getMethods()) {
+      var superSigs = new HashSet<String>();
+      for (var method : superCt.getMethods()) {
          if ((method.getModifiers() & Modifier.FINAL) == Modifier.FINAL) {
             superSigs.add(method.getName() + method.getSignature());
          }
       }
 
-      Set<String> methods = new HashSet<>();
-      for (Class<?> intf : getAllInterfaces(primaryInterface)) {
-         CtClass intfCt = classPool.getCtClass(intf.getName());
+      var methods = new HashSet<String>();
+      for (var intf : getAllInterfaces(primaryInterface)) {
+         var intfCt = classPool.getCtClass(intf.getName());
          targetCt.addInterface(intfCt);
-         for (CtMethod intfMethod : intfCt.getDeclaredMethods()) {
-            final String signature = intfMethod.getName() + intfMethod.getSignature();
+         for (var intfMethod : intfCt.getDeclaredMethods()) {
+            final var signature = intfMethod.getName() + intfMethod.getSignature();
 
             // don't generate delegates for methods we override
             if (superSigs.contains(signature)) {
@@ -143,12 +141,12 @@ public final class JavassistProxyFactory
             methods.add(signature);
 
             // Clone the method we want to inject into
-            CtMethod method = CtNewMethod.copy(intfMethod, targetCt, null);
+            var method = CtNewMethod.copy(intfMethod, targetCt, null);
 
-            String modifiedBody = methodBody;
+            var modifiedBody = methodBody;
 
             // If the super-Proxy has concrete methods (non-abstract), transform the call into a simple super.method() call
-            CtMethod superMethod = superCt.getMethod(intfMethod.getName(), intfMethod.getSignature());
+            var superMethod = superCt.getMethod(intfMethod.getName(), intfMethod.getSignature());
             if ((superMethod.getModifiers() & Modifier.ABSTRACT) != Modifier.ABSTRACT && !isDefaultMethod(intf, intfMethod)) {
                modifiedBody = modifiedBody.replace("((cast) ", "");
                modifiedBody = modifiedBody.replace("delegate", "super");
@@ -181,7 +179,7 @@ public final class JavassistProxyFactory
    private static boolean isThrowsSqlException(CtMethod method)
    {
       try {
-         for (CtClass clazz : method.getExceptionTypes()) {
+         for (var clazz : method.getExceptionTypes()) {
             if (clazz.getSimpleName().equals("SQLException")) {
                return true;
             }
@@ -196,9 +194,9 @@ public final class JavassistProxyFactory
 
    private static boolean isDefaultMethod(Class<?> intf, CtMethod intfMethod) throws Exception
    {
-      List<Class<?>> paramTypes = new ArrayList<>();
+      var paramTypes = new ArrayList<Class<?>>();
 
-      for (CtClass pt : intfMethod.getParameterTypes()) {
+      for (var pt : intfMethod.getParameterTypes()) {
          paramTypes.add(toJavaClass(pt));
       }
 
@@ -207,8 +205,8 @@ public final class JavassistProxyFactory
 
    private static Set<Class<?>> getAllInterfaces(Class<?> clazz)
    {
-      Set<Class<?>> interfaces = new LinkedHashSet<>();
-      for (Class<?> intf : clazz.getInterfaces()) {
+      var interfaces = new LinkedHashSet<Class<?>>();
+      for (var intf : clazz.getInterfaces()) {
          if (intf.getInterfaces().length > 0) {
             interfaces.addAll(getAllInterfaces(intf));
          }

@@ -1,0 +1,10 @@
+jobs:
+  build: # name of your job
+    machine: true # executor type
+    resource_class: brettwooldridge/ubuntu
+
+    steps:
+      # Commands run in a Linux virtual machine environment
+      - checkout
+      - run: mvn clean package
+

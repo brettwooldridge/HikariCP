@@ -9,6 +9,7 @@ module com.zaxxer.hikari
    requires static metrics.core;
    requires static metrics.healthchecks;
    requires static micrometer.core;
+   requires static org.javassist;
 
    exports com.zaxxer.hikari;
    exports com.zaxxer.hikari.hibernate;

@@ -48,7 +48,6 @@ public class TestJavassistCodegen {
             connection,
             fastList,
             null /*leakTask*/,
-            0L /*now*/,
             Boolean.FALSE /*isReadOnly*/,
             Boolean.FALSE /*isAutoCommit*/);
       Assert.assertNotNull(proxyConnection);

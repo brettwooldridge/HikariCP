@@ -48,7 +48,7 @@ public final class TestElf
    }
 
    public static boolean isJava11() {
-      return System.getProperty("java.version").startsWith("11");
+      return Integer.parseInt(System.getProperty("java.version").split("\\.")[0]) >= 11;
    }
 
    public static HikariPool getPool(final HikariDataSource ds)

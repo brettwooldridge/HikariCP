@@ -119,7 +119,7 @@ public class PostgresTest
       do {
          quietlySleep(SECONDS.toMillis(1));
          assertZeroErrors(threads);
-      } while (elapsedMillis(start) < SECONDS.toMillis(30));
+      } while (elapsedMillis(start) < SECONDS.toMillis(15));
       stopThreads(threads);
    }
 

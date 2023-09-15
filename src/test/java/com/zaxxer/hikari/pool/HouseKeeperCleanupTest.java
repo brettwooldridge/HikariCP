@@ -43,7 +43,7 @@ public class HouseKeeperCleanupTest
    @Before
    public void before() throws Exception
    {
-      ThreadFactory threadFactory = new UtilityElf.DefaultThreadFactory("global housekeeper", true);
+      ThreadFactory threadFactory = new UtilityElf.DefaultThreadFactory("global housekeeper");
 
       executor = new ScheduledThreadPoolExecutor(1, threadFactory, new ThreadPoolExecutor.DiscardPolicy());
       executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);

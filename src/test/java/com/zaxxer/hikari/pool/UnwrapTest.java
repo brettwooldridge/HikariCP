@@ -56,7 +56,7 @@ public class UnwrapTest
           assertNotNull(connection);
 
           StubConnection unwrapped = connection.unwrap(StubConnection.class);
-          assertTrue("unwrapped connection is not instance of StubConnection: " + unwrapped, (unwrapped != null && unwrapped instanceof StubConnection));
+          assertTrue("unwrapped connection is not instance of StubConnection: " + unwrapped, (unwrapped instanceof StubConnection));
        }
     }
 

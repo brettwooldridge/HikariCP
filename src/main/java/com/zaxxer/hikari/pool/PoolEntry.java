@@ -27,6 +27,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import static com.zaxxer.hikari.util.ClockSource.*;
+import static com.zaxxer.hikari.util.ClockSource.currentTime;
 
 /**
  * Entry used in the ConcurrentBag to track Connection instances.
@@ -72,13 +73,11 @@ final class PoolEntry implements IConcurrentBagEntry
 
    /**
     * Release this entry back to the pool.
-    *
-    * @param lastAccessed last access time-stamp
     */
-   void recycle(final long lastAccessed)
+   void recycle()
    {
       if (connection != null) {
-         this.lastAccessed = lastAccessed;
+         this.lastAccessed = currentTime();
          hikariPool.recycle(this);
       }
    }
@@ -97,9 +96,9 @@ final class PoolEntry implements IConcurrentBagEntry
       this.keepalive = keepalive;
    }
 
-   Connection createProxyConnection(final ProxyLeakTask leakTask, final long now)
+   Connection createProxyConnection(final ProxyLeakTask leakTask)
    {
-      return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, now, isReadOnly, isAutoCommit);
+      return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, isReadOnly, isAutoCommit);
    }
 
    void resetConnectionState(final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
@@ -142,7 +141,7 @@ final class PoolEntry implements IConcurrentBagEntry
    @Override
    public String toString()
    {
-      final long now = currentTime();
+      final var now = currentTime();
       return connection
          + ", accessed " + elapsedDisplayString(lastAccessed, now) + " ago, "
          + stateToString();
@@ -175,17 +174,17 @@ final class PoolEntry implements IConcurrentBagEntry
 
    Connection close()
    {
-      ScheduledFuture<?> eol = endOfLife;
+      var eol = endOfLife;
       if (eol != null && !eol.isDone() && !eol.cancel(false)) {
          LOGGER.warn("{} - maxLifeTime expiration task cancellation unexpectedly returned false for connection {}", getPoolName(), connection);
       }
 
-      ScheduledFuture<?> ka = keepalive;
+      var ka = keepalive;
       if (ka != null && !ka.isDone() && !ka.cancel(false)) {
          LOGGER.warn("{} - keepalive task cancellation unexpectedly returned false for connection {}", getPoolName(), connection);
       }
 
-      Connection con = connection;
+      var con = connection;
       connection = null;
       endOfLife = null;
       keepalive = null;

@@ -5,6 +5,7 @@
 [![][license img]][license]
 [![][Maven Central img]][Maven Central]
 [![][Javadocs img]][Javadocs]
+[![][Librapay img]][Librapay]
 
 Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC connection pool.  At roughly 130Kb, the library is very light.  Read about [how we do it here](https://github.com/brettwooldridge/HikariCP/wiki/Down-the-Rabbit-Hole).
 
@@ -31,29 +32,37 @@ Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC con
 
 ### Artifacts
 
-_Java 8 thru 11 maven artifact:_
+_**Java 11+** maven artifact:_
 ```xml
-    <dependency>
-        <groupId>com.zaxxer</groupId>
-        <artifactId>HikariCP</artifactId>
-        <version>4.0.3</version>
-    </dependency>
+<dependency>
+   <groupId>com.zaxxer</groupId>
+   <artifactId>HikariCP</artifactId>
+   <version>5.0.1</version>
+</dependency>
+```
+_Java 8 maven artifact (*maintenance mode*):_
+```xml
+<dependency>
+   <groupId>com.zaxxer</groupId>
+   <artifactId>HikariCP</artifactId>
+   <version>4.0.3</version>
+</dependency>
 ```
 _Java 7 maven artifact (*maintenance mode*):_
 ```xml
-    <dependency>
-        <groupId>com.zaxxer</groupId>
-        <artifactId>HikariCP-java7</artifactId>
-        <version>2.4.13</version>
-    </dependency>
+<dependency>
+   <groupId>com.zaxxer</groupId>
+   <artifactId>HikariCP-java7</artifactId>
+   <version>2.4.13</version>
+</dependency>
 ```
 _Java 6 maven artifact (*maintenance mode*):_
 ```xml
-    <dependency>
-        <groupId>com.zaxxer</groupId>
-        <artifactId>HikariCP-java6</artifactId>
-        <version>2.3.13</version>
-    </dependency>
+<dependency>
+   <groupId>com.zaxxer</groupId>
+   <artifactId>HikariCP-java6</artifactId>
+   <version>2.3.13</version>
+</dependency>
 ```
 Or [download from here](http://search.maven.org/#search%7Cga%7C1%7Ccom.zaxxer.hikaricp).
 
@@ -92,7 +101,7 @@ AKA *"What you probably didn't know about connection pool sizing"*.  Watch a vid
 <br/>
 #### WIX Engineering Analysis
 <a href="https://www.wix.engineering/blog/how-does-hikaricp-compare-to-other-connection-pools"><img width="180" align="left" src="https://github.com/brettwooldridge/HikariCP/wiki/Wix-Engineering.png"></a>
-We'd like to thank the guys over at WIX for the unsolicited and deep write-up about HikariCP on their [engineering blog](https://www.wix.engineering/blog/how-does-hikaricp-compare-to-other-connection-pools).  Take a look if you have time.
+We'd like to thank the guys over at WIX for the unsolicited and deep write-up about HikariCP on their [engineering blog](https://www.wix.engineering/post/how-does-hikaricp-compare-to-other-connection-pools).  Take a look if you have time.
 <br/>
 <br/>
 <br/>
@@ -179,7 +188,7 @@ available, a SQLException will be thrown.  Lowest acceptable connection timeout 
 This property controls the maximum amount of time that a connection is allowed to sit idle in the
 pool.  **This setting only applies when ``minimumIdle`` is defined to be less than ``maximumPoolSize``.**
 Idle connections will *not* be retired once the pool reaches ``minimumIdle`` connections.  Whether a
-connection is retired as idle or not is subject to a maximum variation of +30 seconds, and average 
+connection is retired as idle or not is subject to a maximum variation of +30 seconds, and average
 variation of +15 seconds.  A connection will never be retired as idle *before* this timeout.  A value
 of 0 means that idle connections are never removed from the pool.  The minimum allowed value is 10000ms
 (10 seconds).
@@ -190,9 +199,9 @@ This property controls how frequently HikariCP will attempt to keep a connection
 it from being timed out by the database or network infrastructure. This value must be less than the
 `maxLifetime` value. A "keepalive" will only occur on an idle connection. When the time arrives for a "keepalive"
 against a given connection, that connection will be removed from the pool, "pinged", and then returned to the
-pool. The 'ping' is one of either: invocation of the JDBC4 `isValid()` method, or execution of the 
+pool. The 'ping' is one of either: invocation of the JDBC4 `isValid()` method, or execution of the
 `connectionTestQuery`. Typically, the duration out-of-the-pool should be measured in single digit milliseconds
-or even sub-millisecond, and therefore should have little or no noticible performance impact. The minimum
+or even sub-millisecond, and therefore should have little or no noticeable performance impact. The minimum
 allowed value is 30000ms (30 seconds), but a value in the range of minutes is most desirable.
 *Default: 0 (disabled)*
 
@@ -206,9 +215,9 @@ course to the ``idleTimeout`` setting.  The minimum allowed value is 30000ms (30
 *Default: 1800000 (30 minutes)*
 
 &#128292;``connectionTestQuery``<br/>
-**If your driver supports JDBC4 we strongly recommend not setting this property.** This is for 
+**If your driver supports JDBC4 we strongly recommend not setting this property.** This is for
 "legacy" drivers that do not support the JDBC4 ``Connection.isValid() API``.  This is the query that
-will be executed just before a connection is given to you from the pool to validate that the 
+will be executed just before a connection is given to you from the pool to validate that the
 connection to the database is still alive. *Again, try running the pool without this property,
 HikariCP will log an error if your driver is not JDBC4 compliant to let you know.*
 *Default: none*
@@ -253,13 +262,13 @@ in logging and JMX management consoles to identify pools and pool configurations
 
 &#9203;``initializationFailTimeout``<br/>
 This property controls whether the pool will "fail fast" if the pool cannot be seeded with
-an initial connection successfully.  Any positive number is taken to be the number of 
-milliseconds to attempt to acquire an initial connection; the application thread will be 
+an initial connection successfully.  Any positive number is taken to be the number of
+milliseconds to attempt to acquire an initial connection; the application thread will be
 blocked during this period.  If a connection cannot be acquired before this timeout occurs,
 an exception will be thrown.  This timeout is applied *after* the ``connectionTimeout``
 period.  If the value is zero (0), HikariCP will attempt to obtain and validate a connection.
 If a connection is obtained, but fails validation, an exception will be thrown and the pool
-not started.  However, if a connection cannot be obtained, the pool will start, but later 
+not started.  However, if a connection cannot be obtained, the pool will start, but later
 efforts to obtain a connection may fail.  A value less than zero will bypass any initial
 connection attempt, and the pool will start immediately while trying to obtain connections
 in the background.  Consequently, later efforts to obtain a connection may fail.
@@ -282,7 +291,7 @@ useful for certain failover automation scenarios.  When the pool is suspended, c
 This property controls whether *Connections* obtained from the pool are in read-only mode by
 default.  Note some databases do not support the concept of read-only mode, while others provide
 query optimizations when the *Connection* is set to read-only.  Whether you need this property
-or not will depend largely on your application and database. 
+or not will depend largely on your application and database.
 *Default: false*
 
 &#10062;``registerMbeans``<br/>
@@ -466,6 +475,7 @@ Here is a list of JDBC *DataSource* classes for popular databases:
 |:---------------- |:------------ |:-------------------|
 | Apache Derby     | Derby        | org.apache.derby.jdbc.ClientDataSource |
 | Firebird         | Jaybird      | org.firebirdsql.ds.FBSimpleDataSource |
+| Google Spanner   | Spanner      | com.google.cloud.spanner.jdbc.JdbcDriver |
 | H2               | H2           | org.h2.jdbcx.JdbcDataSource |
 | HSQLDB           | HSQLDB       | org.hsqldb.jdbc.JDBCDataSource |
 | IBM DB2          | IBM JCC      | com.ibm.db2.jcc.DB2SimpleDataSource |
@@ -529,8 +539,8 @@ YourKit supports open source projects with its full-featured Java Profiler.  Cli
 
 Please perform changes and submit pull requests from the ``dev`` branch instead of ``master``.  Please set your editor to use spaces instead of tabs, and adhere to the apparent style of the code you are editing.  The ``dev`` branch is always more "current" than the ``master`` if you are looking to live life on the edge.
 
-[Build Status]:https://travis-ci.org/brettwooldridge/HikariCP
-[Build Status img]:https://travis-ci.org/brettwooldridge/HikariCP.svg?branch=dev
+[Build Status]:https://circleci.com/gh/brettwooldridge/HikariCP
+[Build Status img]:https://circleci.com/gh/brettwooldridge/HikariCP/tree/dev.svg?style=shield
 
 [Coverage Status]:https://codecov.io/gh/brettwooldridge/HikariCP
 [Coverage Status img]:https://codecov.io/gh/brettwooldridge/HikariCP/branch/dev/graph/badge.svg
@@ -543,3 +553,6 @@ Please perform changes and submit pull requests from the ``dev`` branch instead 
 
 [Javadocs]:http://javadoc.io/doc/com.zaxxer/HikariCP
 [Javadocs img]:http://javadoc.io/badge/com.zaxxer/HikariCP.svg
+
+[Librapay]:https://liberapay.com/brettwooldridge
+[Librapay img]:https://img.shields.io/liberapay/patrons/brettwooldridge.svg?logo=liberapay
