@@ -1046,7 +1046,7 @@ public class HikariConfig implements HikariConfigMXBean
          maxLifetime = MAX_LIFETIME;
       }
 
-      // keepalive time must larger then 30 seconds
+      // keepalive time must larger than 30 seconds
       if (keepaliveTime != 0 && keepaliveTime < SECONDS.toMillis(30)) {
          LOGGER.warn("{} - keepaliveTime is less than 30000ms, disabling it.", poolName);
          keepaliveTime = DEFAULT_KEEPALIVE_TIME;
