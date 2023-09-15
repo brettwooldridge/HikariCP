@@ -48,7 +48,7 @@ public class ClockSourceTest
       String ds2 = msSource.elapsedDisplayString0(sTime, eTime2);
       Assert.assertEquals("-59m54s795ms", ds2);
 
-      
+
       ClockSource nsSource = new ClockSource.NanosecondClockSource();
 
       final long sTime2 = DAYS.toNanos(3) + HOURS.toNanos(9) + MINUTES.toNanos(24) + SECONDS.toNanos(18) + MILLISECONDS.toNanos(572) + MICROSECONDS.toNanos(324) + NANOSECONDS.toNanos(823);

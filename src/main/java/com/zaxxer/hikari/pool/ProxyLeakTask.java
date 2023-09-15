@@ -78,6 +78,7 @@ class ProxyLeakTask implements Runnable
 
       final var stackTrace = exception.getStackTrace();
       final var trace = new StackTraceElement[stackTrace.length - 5];
+
       System.arraycopy(stackTrace, 5, trace, 0, trace.length);
 
       exception.setStackTrace(trace);
