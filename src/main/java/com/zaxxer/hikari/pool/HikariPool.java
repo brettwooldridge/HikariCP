@@ -580,7 +580,6 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     */
    private void throwPoolInitializationException(Throwable t)
    {
-      logger.error("{} - Exception during pool initialization.", poolName, t);
       destroyHouseKeepingExecutorService();
       throw new PoolInitializationException(t);
    }
