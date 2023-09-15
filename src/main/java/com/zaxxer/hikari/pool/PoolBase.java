@@ -69,6 +69,7 @@ abstract class PoolBase
    private static final int UNINITIALIZED = -1;
    private static final int TRUE = 1;
    private static final int FALSE = 0;
+   private static final int MINIMUM_LOGIN_TIMEOUT = Integer.getInteger("com.zaxxer.hikari.minimumLoginTimeoutSecs", 1);
 
    private int networkTimeout;
    private int isNetworkTimeoutSupported;
@@ -616,7 +617,7 @@ abstract class PoolBase
    {
       if (connectionTimeout != Integer.MAX_VALUE) {
          try {
-            dataSource.setLoginTimeout(Math.max(1, (int) MILLISECONDS.toSeconds(500L + connectionTimeout)));
+            dataSource.setLoginTimeout(Math.max(MINIMUM_LOGIN_TIMEOUT, (int) MILLISECONDS.toSeconds(500L + connectionTimeout)));
          }
          catch (Exception e) {
             logger.info("{} - Failed to set login timeout for data source. ({})", poolName, e.getMessage());
