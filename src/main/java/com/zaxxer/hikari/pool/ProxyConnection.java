@@ -16,6 +16,7 @@
 
 package com.zaxxer.hikari.pool;
 
+import com.zaxxer.hikari.SQLExceptionOverride;
 import com.zaxxer.hikari.util.FastList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +43,8 @@ public abstract class ProxyConnection implements Connection
    static final int DIRTY_BIT_CATALOG    = 0b001000;
    static final int DIRTY_BIT_NETTIMEOUT = 0b010000;
    static final int DIRTY_BIT_SCHEMA     = 0b100000;
+
+   private final static SQLExceptionOverride DEFAULT_SQLEXCEPTION_OVERRIDE = new SQLExceptionOverride() {};
 
    private static final Logger LOGGER;
    private static final Set<String> ERROR_STATES;
@@ -160,7 +163,9 @@ public abstract class ProxyConnection implements Connection
              || ERROR_STATES.contains(sqlState)
              || ERROR_CODES.contains(nse.getErrorCode())) {
 
-            if (exceptionOverride != null && exceptionOverride.adjudicate(nse) == DO_NOT_EVICT) {
+
+            if ((exceptionOverride != null
+               ? exceptionOverride.adjudicate(nse) : DEFAULT_SQLEXCEPTION_OVERRIDE.adjudicate(nse)) == DO_NOT_EVICT) {
                break;
             }
 
