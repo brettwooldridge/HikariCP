@@ -29,13 +29,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
-import java.security.AccessControlException;
 import java.sql.Connection;
 import java.util.Properties;
 import java.util.TreeSet;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.zaxxer.hikari.util.UtilityElf.getNullIfEmpty;
 import static com.zaxxer.hikari.util.UtilityElf.safeIsAssignableFrom;
@@ -55,6 +54,7 @@ public class HikariConfig implements HikariConfigMXBean
    private static final long MAX_LIFETIME = MINUTES.toMillis(30);
    private static final long DEFAULT_KEEPALIVE_TIME = 0L;
    private static final int DEFAULT_POOL_SIZE = 10;
+   private static final AtomicInteger POOL_NUMBER = new AtomicInteger(0);
 
    private static boolean unitTest = false;
 
@@ -1164,27 +1164,10 @@ public class HikariConfig implements HikariConfigMXBean
    private String generatePoolName()
    {
       final var prefix = "HikariPool-";
-      try {
-         // Pool number is global to the VM to avoid overlapping pool numbers in classloader scoped environments
-         synchronized (System.getProperties()) {
-            final var next = String.valueOf(Integer.getInteger("com.zaxxer.hikari.pool_number", 0) + 1);
-            System.setProperty("com.zaxxer.hikari.pool_number", next);
-            return prefix + next;
-         }
-      } catch (AccessControlException e) {
-         // The SecurityManager didn't allow us to read/write system properties
-         // so just generate a random pool number instead
-         final var random = ThreadLocalRandom.current();
-         final var buf = new StringBuilder(prefix);
-
-         for (var i = 0; i < 4; i++) {
-            buf.append(ID_CHARACTERS[random.nextInt(62)]);
-         }
-
-         LOGGER.info("assigned random pool name '{}' (security manager prevented access to system properties)", buf);
-
-         return buf.toString();
-      }
+      // Pool number is global to the VM to avoid overlapping pool numbers in classloader scoped environments
+      // The pool number will be incremented atomically
+      final var next = String.valueOf(POOL_NUMBER.incrementAndGet());
+      return prefix + next;
    }
 
    private Object getObjectOrPerformJndiLookup(Object object)
