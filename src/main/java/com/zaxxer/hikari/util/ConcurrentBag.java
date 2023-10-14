@@ -20,8 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.SynchronousQueue;
@@ -101,7 +101,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       this.waiters = new AtomicInteger();
       this.sharedList = new CopyOnWriteArrayList<>();
       if (weakThreadLocals) {
-         this.threadList = ThreadLocal.withInitial(() -> new ArrayList<>(16));
+         this.threadList = ThreadLocal.withInitial(() -> new LinkedList<>());
       }
       else {
          this.threadList = ThreadLocal.withInitial(() -> new FastList<>(IConcurrentBagEntry.class, 16));
@@ -122,7 +122,14 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       // Try the thread-local list first
       final var list = threadList.get();
       for (int i = list.size() - 1; i >= 0; i--) {
-         final var entry = list.remove(i);
+         Object entry = null;
+         if (weakThreadLocals) {
+            entry = ((LinkedList) list).removeLast();
+         }
+         else {
+            entry = ((FastList) list).removeLast();
+         }
+
          @SuppressWarnings("unchecked")
          final T bagEntry = weakThreadLocals ? ((WeakReference<T>) entry).get() : (T) entry;
          if (bagEntry != null && bagEntry.compareAndSet(STATE_NOT_IN_USE, STATE_IN_USE)) {
