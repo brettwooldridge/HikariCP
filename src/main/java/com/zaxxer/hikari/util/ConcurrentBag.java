@@ -23,6 +23,7 @@ import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
@@ -124,7 +125,12 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       for (int i = list.size() - 1; i >= 0; i--) {
          Object entry = null;
          if (weakThreadLocals) {
-            entry = ((LinkedList) list).removeLast();
+            try {
+               entry = ((LinkedList) list).removeLast();
+            }
+            catch (NoSuchElementException e){
+               //ignore
+            }
          }
          else {
             entry = ((FastList) list).removeLast();
