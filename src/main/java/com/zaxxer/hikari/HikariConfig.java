@@ -36,7 +36,6 @@ import java.util.TreeSet;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.locks.ReentrantLock;
 
 import static com.zaxxer.hikari.util.UtilityElf.getNullIfEmpty;
 import static com.zaxxer.hikari.util.UtilityElf.safeIsAssignableFrom;
@@ -56,7 +55,6 @@ public class HikariConfig implements HikariConfigMXBean
    private static final long MAX_LIFETIME = MINUTES.toMillis(30);
    private static final long DEFAULT_KEEPALIVE_TIME = 0L;
    private static final int DEFAULT_POOL_SIZE = 10;
-   private static final ReentrantLock HIKARI_CONFIG_LOCK = new ReentrantLock();
 
    private static boolean unitTest = false;
 
@@ -673,7 +671,7 @@ public class HikariConfig implements HikariConfigMXBean
          metricRegistry = getObjectOrPerformJndiLookup(metricRegistry);
 
          if (!safeIsAssignableFrom(metricRegistry, "com.codahale.metrics.MetricRegistry")
-             && !(safeIsAssignableFrom(metricRegistry, "io.micrometer.core.instrument.MeterRegistry"))) {
+            && !(safeIsAssignableFrom(metricRegistry, "io.micrometer.core.instrument.MeterRegistry"))) {
             throw new IllegalArgumentException("Class must be instance of com.codahale.metrics.MetricRegistry or io.micrometer.core.instrument.MeterRegistry");
          }
       }
@@ -1168,13 +1166,10 @@ public class HikariConfig implements HikariConfigMXBean
       final var prefix = "HikariPool-";
       try {
          // Pool number is global to the VM to avoid overlapping pool numbers in classloader scoped environments
-         HIKARI_CONFIG_LOCK.lock();
-         try {
+         synchronized (System.getProperties()) {
             final var next = String.valueOf(Integer.getInteger("com.zaxxer.hikari.pool_number", 0) + 1);
             System.setProperty("com.zaxxer.hikari.pool_number", next);
             return prefix + next;
-         } finally {
-            HIKARI_CONFIG_LOCK.unlock();
          }
       } catch (AccessControlException e) {
          // The SecurityManager didn't allow us to read/write system properties
