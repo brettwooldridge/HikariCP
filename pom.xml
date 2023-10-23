@@ -15,7 +15,7 @@
       <hibernate.version>5.4.24.Final</hibernate.version>
       <javassist.version>3.29.2-GA</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>
-      <maven.release.version>2.5.3</maven.release.version>
+      <maven.release.version>3.0.1</maven.release.version>
       <metrics.version>3.2.5</metrics.version>
       <micrometer.version>1.5.10</micrometer.version>
       <simpleclient.version>0.9.0</simpleclient.version>
@@ -56,6 +56,13 @@
       <url>https://github.com/brettwooldridge/HikariCP/issues</url>
    </issueManagement>
 
+   <distributionManagement>
+      <snapshotRepository>
+         <id>ossrh</id>
+         <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+      </snapshotRepository>
+   </distributionManagement>
+
    <licenses>
       <license>
          <name>The Apache Software License, Version 2.0</name>
@@ -70,12 +77,6 @@
          <email>brett.wooldridge@gmail.com</email>
       </developer>
    </developers>
-
-   <parent>
-      <groupId>org.sonatype.oss</groupId>
-      <artifactId>oss-parent</artifactId>
-      <version>9</version>
-   </parent>
 
    <dependencies>
       <dependency>
@@ -482,6 +483,18 @@
                   </goals>
                </execution>
             </executions>
+         </plugin>
+
+         <plugin>
+            <groupId>org.sonatype.plugins</groupId>
+            <artifactId>nexus-staging-maven-plugin</artifactId>
+            <version>1.6.13</version>
+            <extensions>true</extensions>
+            <configuration>
+               <serverId>ossrh</serverId>
+               <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+               <autoReleaseAfterClose>true</autoReleaseAfterClose>
+            </configuration>
          </plugin>
       </plugins>
 
