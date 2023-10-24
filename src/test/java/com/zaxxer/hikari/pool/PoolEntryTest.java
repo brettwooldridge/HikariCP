@@ -47,7 +47,7 @@ public class PoolEntryTest {
       poolEntry.recycle();
       Mockito.verify(connection, Mockito.never()).beginRequest();
       Mockito.verify(connection, Mockito.never()).endRequest();
-      Mockito.verify(connection, Mockitp.atMostOnce()).getMetaData();
+      Mockito.verify(connection, Mockito.atMostOnce()).getMetaData();
    }
 
    @Test
@@ -60,7 +60,7 @@ public class PoolEntryTest {
       poolEntry.recycle();
       Mockito.verify(connection, Mockito.never()).beginRequest();
       Mockito.verify(connection, Mockito.never()).endRequest();
-      Mockito.verify(connection, Mockitp.atMostOnce()).getMetaData();
+      Mockito.verify(connection, Mockito.atMostOnce()).getMetaData();
    }
 
    @Test
@@ -73,7 +73,7 @@ public class PoolEntryTest {
       poolEntry.recycle();
       Mockito.verify(connection, Mockito.atMostOnce()).beginRequest();
       Mockito.verify(connection, Mockito.atMostOnce()).endRequest();
-      Mockito.verify(connection, Mockitp.atMostOnce()).getMetaData();
+      Mockito.verify(connection, Mockito.atMostOnce()).getMetaData();
    }
 
    @Test
@@ -86,7 +86,7 @@ public class PoolEntryTest {
       poolEntry.recycle();
       Mockito.verify(connection, Mockito.atMostOnce()).beginRequest();
       Mockito.verify(connection, Mockito.atMostOnce()).endRequest();
-      Mockito.verify(connection, Mockitp.atMostOnce()).getMetaData();
+      Mockito.verify(connection, Mockito.atMostOnce()).getMetaData();
    }
 
    @Test
@@ -99,7 +99,7 @@ public class PoolEntryTest {
       poolEntry.recycle();
       Mockito.verify(connection, Mockito.atMostOnce()).beginRequest();
       Mockito.verify(connection, Mockito.atMostOnce()).endRequest();
-      Mockito.verify(connection, Mockitp.atMostOnce()).getMetaData();
+      Mockito.verify(connection, Mockito.atMostOnce()).getMetaData();
    }
 
 }
