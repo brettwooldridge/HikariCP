@@ -56,6 +56,7 @@ final class PoolEntry implements IConcurrentBagEntry
 
    private final boolean isReadOnly;
    private final boolean isAutoCommit;
+   private boolean isJDBC43OrLater;
 
    static
    {
@@ -70,6 +71,17 @@ final class PoolEntry implements IConcurrentBagEntry
       this.isAutoCommit = isAutoCommit;
       this.lastAccessed = currentTime();
       this.openStatements = new FastList<>(Statement.class, 16);
+      boolean isJDBC43OrLater = false;
+      try {
+         DatabaseMetaData dm = connection.getMetaData();
+         isJDBC43OrLater = ((dm != null) && (
+            (dm.getJDBCMajorVersion() > 4) || 
+            (dm.getJDBCMajorVersion() == 4 && dm.getJDBCMinorVersion() >= 3)
+         ));
+      } catch (SQLException sqlEx) {
+         LOGGER.warn("getMetaData Failed for: {},({})", connection, sqlEx.getMessage());
+      }
+      this.isJDBC43OrLater = isJDBC43OrLater;
    }
 
    /**
@@ -80,12 +92,8 @@ final class PoolEntry implements IConcurrentBagEntry
       if (connection != null) {
          this.lastAccessed = currentTime();
          try {
-            DatabaseMetaData dm = connection.getMetaData();
-            if (dm!=null){
-               if (dm.getJDBCMajorVersion() > 4 ||
-                  (dm.getJDBCMajorVersion() == 4 && dm.getJDBCMinorVersion() >= 3)) {
-                  connection.endRequest();
-               }
+            if (this.isJDBC43OrLater){
+               connection.endRequest();
             }
          } catch (SQLException e) {
             LOGGER.warn("endRequest Failed for: {},({})",connection,e.getMessage());
@@ -112,12 +120,8 @@ final class PoolEntry implements IConcurrentBagEntry
    {
       Connection newproxyconn= ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, isReadOnly, isAutoCommit);
       try {
-         DatabaseMetaData dm=connection.getMetaData();
-         if (dm!=null){
-            if (dm.getJDBCMajorVersion() > 4 ||
-               (dm.getJDBCMajorVersion() == 4 && dm.getJDBCMinorVersion() >= 3)) {
-               connection.beginRequest();
-            }
+         if (this.isJDBC43OrLater){
+            connection.beginRequest();
          }
       } catch (SQLException e) {
          LOGGER.warn("beginRequest Failed for: {}, ({})",connection,e.getMessage());
