@@ -58,8 +58,8 @@
 
    <distributionManagement>
       <snapshotRepository>
-         <id>ossrh</id>
-         <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+         <id>sonatype-nexus-staging</id>
+         <url>https://oss.sonatype.org/content/repositories/snapshots</url>
       </snapshotRepository>
    </distributionManagement>
 
@@ -491,8 +491,8 @@
             <version>1.6.13</version>
             <extensions>true</extensions>
             <configuration>
-               <serverId>ossrh</serverId>
-               <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+               <serverId>sonatype-nexus-staging</serverId>
+               <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                <autoReleaseAfterClose>true</autoReleaseAfterClose>
             </configuration>
          </plugin>
