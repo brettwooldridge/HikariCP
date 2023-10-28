@@ -257,6 +257,9 @@
          <resource>
             <directory>target/classes</directory>
          </resource>
+         <resource>
+            <directory>src/main/resources</directory>
+         </resource>
       </resources>
 
       <plugins>
@@ -627,6 +630,31 @@
                <scope>test</scope>
             </dependency>
          </dependencies>
+      </profile>
+
+      <profile>
+         <id>native</id>
+         <build>
+            <plugins>
+               <plugin>
+                  <groupId>org.graalvm.buildtools</groupId>
+                  <artifactId>native-maven-plugin</artifactId>
+                  <version>0.9.13</version>
+                  <extensions>true</extensions>
+                  <configuration>
+                     <agent>
+                        <options>
+                           <option>experimental-conditional-config-part</option>
+                        </options>
+                        <options name="test">
+                           <option>access-filter-file=${project.basedir}/native/access-filter.json</option>
+                           <option>caller-filter-file=${project.basedir}/native/caller-filter.json</option>
+                        </options>
+                     </agent>
+                  </configuration>
+               </plugin>
+            </plugins>
+         </build>
       </profile>
    </profiles>
 </project>

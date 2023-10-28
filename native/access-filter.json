@@ -1,0 +1,10 @@
+{
+  "rules": [
+    {
+      "includeClasses": "**"
+    },
+    {
+      "excludeClasses": "org.apache.logging.log4j.**"
+    }
+  ]
+}

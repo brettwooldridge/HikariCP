@@ -1,0 +1,20 @@
+[
+  {
+    "name": "java.lang.ClassLoader",
+    "methods": [
+      {
+        "name": "getPlatformClassLoader",
+        "parameterTypes": []
+      },
+      {
+        "name": "loadClass",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "jdk.internal.loader.ClassLoaders$PlatformClassLoader"
+  }
+]
