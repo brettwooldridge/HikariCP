@@ -64,6 +64,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
    private final long aliveBypassWindowMs = Long.getLong("com.zaxxer.hikari.aliveBypassWindowMs", MILLISECONDS.toMillis(500));
    private final long housekeepingPeriodMs = Long.getLong("com.zaxxer.hikari.housekeeping.periodMs", SECONDS.toMillis(30));
+   private final boolean isRequestBoundariesEnabled = Boolean.getBoolean("com.zaxxer.hikari.enableRequestBoundary");
 
    private static final String EVICTED_CONNECTION_MESSAGE = "(connection was evicted)";
    private static final String DEAD_CONNECTION_MESSAGE = "(connection is dead)";
@@ -171,6 +172,13 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             }
             else {
                metricsTracker.recordBorrowStats(poolEntry, startTime);
+               try {
+                  if (isRequestBoundariesEnabled) {
+                     poolEntry.connection.beginRequest();
+                  }
+               } catch (SQLException e) {
+                  logger.warn("beginRequest Failed for: {}, ({})", poolEntry.connection, e.getMessage());
+               }
                return poolEntry.createProxyConnection(leakTaskFactory.schedule(poolEntry));
             }
          } while (timeout > 0L);
@@ -416,6 +424,13 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    @Override
    void recycle(final PoolEntry poolEntry)
    {
+      try {
+         if (isRequestBoundariesEnabled) {
+            poolEntry.connection.endRequest();
+         }
+      } catch (SQLException e) {
+         logger.warn("endRequest Failed for: {},({})", poolEntry.connection, e.getMessage());
+      }
       metricsTracker.recordConnectionUsage(poolEntry);
 
       connectionBag.requite(poolEntry);

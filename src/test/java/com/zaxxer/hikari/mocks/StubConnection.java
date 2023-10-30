@@ -59,6 +59,9 @@ public class StubConnection extends StubBaseConnection
    private static ScheduledExecutorService connectionWaitTimeout = new ScheduledThreadPoolExecutor(1);
    private ScheduledFuture<?> waitTimeoutTask;
 
+   public boolean beginRequestCalled = false;
+   public boolean endRequestCalled = false;
+
    static {
       foo = System.currentTimeMillis();
    }
@@ -528,6 +531,16 @@ public class StubConnection extends StubBaseConnection
       }
 
       return 0;
+   }
+
+   @Override
+   public void beginRequest() {
+      beginRequestCalled = true;
+   }
+
+   @Override
+   public void endRequest() {
+      endRequestCalled = true;
    }
 
 }

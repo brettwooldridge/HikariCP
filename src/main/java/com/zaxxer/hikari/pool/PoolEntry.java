@@ -75,7 +75,7 @@ final class PoolEntry implements IConcurrentBagEntry
       try {
          DatabaseMetaData dm = connection.getMetaData();
          isJDBC43OrLater = ((dm != null) && (
-            (dm.getJDBCMajorVersion() > 4) || 
+            (dm.getJDBCMajorVersion() > 4) ||
             (dm.getJDBCMajorVersion() == 4 && dm.getJDBCMinorVersion() >= 3)
          ));
       } catch (SQLException sqlEx) {
@@ -91,13 +91,7 @@ final class PoolEntry implements IConcurrentBagEntry
    {
       if (connection != null) {
          this.lastAccessed = currentTime();
-         try {
-            if (this.isJDBC43OrLater){
-               connection.endRequest();
-            }
-         } catch (SQLException e) {
-            LOGGER.warn("endRequest Failed for: {},({})",connection,e.getMessage());
-         }
+
          hikariPool.recycle(this);
       }
    }
@@ -118,15 +112,7 @@ final class PoolEntry implements IConcurrentBagEntry
 
    Connection createProxyConnection(final ProxyLeakTask leakTask)
    {
-      Connection newproxyconn= ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, isReadOnly, isAutoCommit);
-      try {
-         if (this.isJDBC43OrLater){
-            connection.beginRequest();
-         }
-      } catch (SQLException e) {
-         LOGGER.warn("beginRequest Failed for: {}, ({})",connection,e.getMessage());
-      }
-      return newproxyconn;
+      return ProxyFactory.getProxyConnection(this, connection, openStatements, leakTask, isReadOnly, isAutoCommit);
    }
 
    void resetConnectionState(final ProxyConnection proxyConnection, final int dirtyBits) throws SQLException
