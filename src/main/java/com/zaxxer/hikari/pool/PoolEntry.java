@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.ScheduledFuture;
@@ -56,7 +55,6 @@ final class PoolEntry implements IConcurrentBagEntry
 
    private final boolean isReadOnly;
    private final boolean isAutoCommit;
-   private boolean isJDBC43OrLater;
 
    static
    {
@@ -71,17 +69,6 @@ final class PoolEntry implements IConcurrentBagEntry
       this.isAutoCommit = isAutoCommit;
       this.lastAccessed = currentTime();
       this.openStatements = new FastList<>(Statement.class, 16);
-      boolean isJDBC43OrLater = false;
-      try {
-         DatabaseMetaData dm = connection.getMetaData();
-         isJDBC43OrLater = ((dm != null) && (
-            (dm.getJDBCMajorVersion() > 4) ||
-            (dm.getJDBCMajorVersion() == 4 && dm.getJDBCMinorVersion() >= 3)
-         ));
-      } catch (SQLException sqlEx) {
-         LOGGER.warn("getMetaData Failed for: {},({})", connection, sqlEx.getMessage());
-      }
-      this.isJDBC43OrLater = isJDBC43OrLater;
    }
 
    /**
