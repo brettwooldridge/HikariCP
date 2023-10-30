@@ -33,25 +33,27 @@ public class RequestBoundaryTest {
    }
 
    @Test
-   public void RequestBoundaryEnabledTest() throws Exception {
+   public void requestBoundaryEnabledTest() throws Exception {
       HikariPool pool = getHikariPool(true);
       Connection conn = pool.getConnection();
-      Assert.assertTrue("Begin request called", ((StubConnection)conn).beginRequestCalled);
-      Assert.assertFalse("End request called", ((StubConnection)conn).beginRequestCalled);
+      StubConnection stubConnection = conn.unwrap(StubConnection.class);
+      Assert.assertTrue("Begin request called", stubConnection.beginRequestCalled);
+      Assert.assertFalse("End request called", stubConnection.endRequestCalled);
       conn.close();
-      Assert.assertTrue("Begin request called", ((StubConnection)conn).beginRequestCalled);
-      Assert.assertTrue("End request called", ((StubConnection)conn).beginRequestCalled);
+      Assert.assertTrue("Begin request called", stubConnection.beginRequestCalled);
+      Assert.assertTrue("End request called", stubConnection.endRequestCalled);
    }
 
    @Test
-   public void RequestBoundaryDisabledTest() throws Exception {
+   public void requestBoundaryDisabledTest() throws Exception {
       HikariPool pool = getHikariPool(false);
       Connection conn = pool.getConnection();
-      Assert.assertFalse("Begin request called", ((StubConnection)conn).beginRequestCalled);
-      Assert.assertFalse("End request called", ((StubConnection)conn).beginRequestCalled);
+      StubConnection stubConnection = conn.unwrap(StubConnection.class);
+      Assert.assertFalse("Begin request called", stubConnection.beginRequestCalled);
+      Assert.assertFalse("End request called", stubConnection.endRequestCalled);
       conn.close();
-      Assert.assertFalse("Begin request called", ((StubConnection)conn).beginRequestCalled);
-      Assert.assertFalse("End request called", ((StubConnection)conn).beginRequestCalled);
+      Assert.assertFalse("Begin request called", stubConnection.beginRequestCalled);
+      Assert.assertFalse("End request called", stubConnection.endRequestCalled);
    }
 
 }
