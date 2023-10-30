@@ -194,16 +194,16 @@ final class PoolEntry implements IConcurrentBagEntry
    private String stateToString()
    {
       switch (state) {
-         case STATE_IN_USE:
-            return "IN_USE";
-         case STATE_NOT_IN_USE:
-            return "NOT_IN_USE";
-         case STATE_REMOVED:
-            return "REMOVED";
-         case STATE_RESERVED:
-            return "RESERVED";
-         default:
-            return "Invalid";
+      case STATE_IN_USE:
+         return "IN_USE";
+      case STATE_NOT_IN_USE:
+         return "NOT_IN_USE";
+      case STATE_REMOVED:
+         return "REMOVED";
+      case STATE_RESERVED:
+         return "RESERVED";
+      default:
+         return "Invalid";
       }
    }
 }
