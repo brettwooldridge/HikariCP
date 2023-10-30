@@ -5,15 +5,13 @@ import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.mocks.StubConnection;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 
 import static com.zaxxer.hikari.pool.TestElf.getPool;
 import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 
-public class RequestBoundaryTest {
+public class RequestBoundariesTest {
 
    private static final HikariConfig config;
    static {
@@ -25,8 +23,8 @@ public class RequestBoundaryTest {
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
    }
 
-   private HikariPool getHikariPool(boolean enableRequestBoundary) {
-      System.setProperty("com.zaxxer.hikari.enableRequestBoundary", String.valueOf(enableRequestBoundary));
+   private HikariPool getHikariPool(boolean enableRequestBoundaries) {
+      System.setProperty("com.zaxxer.hikari.enableRequestBoundaries", String.valueOf(enableRequestBoundaries));
       HikariDataSource ds = new HikariDataSource(config);
       HikariPool pool = getPool(ds);
       return pool;
