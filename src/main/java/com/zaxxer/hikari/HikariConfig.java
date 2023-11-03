@@ -80,6 +80,7 @@ public class HikariConfig implements HikariConfigMXBean
    private String dataSourceJndiName;
    private String driverClassName;
    private String exceptionOverrideClassName;
+   private SQLExceptionOverride exceptionOverride;
    private String jdbcUrl;
    private String poolName;
    private String schema;
@@ -892,13 +893,40 @@ public class HikariConfig implements HikariConfigMXBean
          throw new RuntimeException("Failed to load SQLExceptionOverride class " + exceptionOverrideClassName + " in either of HikariConfig class loader or Thread context classloader");
       }
 
+      if (!SQLExceptionOverride.class.isAssignableFrom(overrideClass)) {
+         throw new RuntimeException("Loaded SQLExceptionOverride class " + exceptionOverrideClassName + " does not implement " + SQLExceptionOverride.class.getName());
+      }
+
       try {
-         overrideClass.getConstructor().newInstance();
+         this.exceptionOverride = (SQLExceptionOverride) overrideClass.getConstructor().newInstance();
          this.exceptionOverrideClassName = exceptionOverrideClassName;
       }
       catch (Exception e) {
          throw new RuntimeException("Failed to instantiate class " + exceptionOverrideClassName, e);
       }
+   }
+
+
+   /**
+    * Get the SQLExceptionOverride instance created by {@link #setExceptionOverrideClassName(String)}.
+    *
+    * @return the SQLExceptionOverride instance, or null if {@link #setExceptionOverrideClassName(String)} is not called
+    * @see SQLExceptionOverride
+    */
+   public SQLExceptionOverride getExceptionOverride()
+   {
+      return this.exceptionOverride;
+   }
+
+   /**
+    * Set the user supplied SQLExceptionOverride instance.
+    *
+    * @param exceptionOverride the user supplied SQLExceptionOverride instance
+    * @see SQLExceptionOverride
+    */
+   public void setExceptionOverride(SQLExceptionOverride exceptionOverride) {
+      checkIfSealed();
+      this.exceptionOverride = exceptionOverride;
    }
 
    /**
@@ -966,15 +994,15 @@ public class HikariConfig implements HikariConfigMXBean
    //                          Private methods
    // ***********************************************************************
 
-   private Class<?> attemptFromContextLoader(final String driverClassName) {
+   private Class<?> attemptFromContextLoader(final String className) {
       final var threadContextClassLoader = Thread.currentThread().getContextClassLoader();
       if (threadContextClassLoader != null) {
          try {
-            final var driverClass = threadContextClassLoader.loadClass(driverClassName);
-            LOGGER.debug("Driver class {} found in Thread context class loader {}", driverClassName, threadContextClassLoader);
+            final var driverClass = threadContextClassLoader.loadClass(className);
+            LOGGER.debug("Class {} found in Thread context class loader {}", className, threadContextClassLoader);
             return driverClass;
          } catch (ClassNotFoundException e) {
-            LOGGER.debug("Driver class {} not found in Thread context class loader {}, trying classloader {}",
+            LOGGER.debug("Class {} not found in Thread context class loader {}, trying classloader {}",
                driverClassName, threadContextClassLoader, this.getClass().getClassLoader());
          }
       }
