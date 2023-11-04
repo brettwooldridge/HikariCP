@@ -1,6 +1,6 @@
 HikariCP Changes
 
-Changes in 6.0.0
+Changes in 5.1.0
 
  * fixed #1907 re-added automatic.module.name that was lost along the way
 
