@@ -7,7 +7,9 @@
       <sureFireForks11>false</sureFireForks11>
       <!--java11.sourceDirectory>${project.basedir}/src/main/java11</java11.sourceDirectory -->
       <!--java11.build.outputDirectory>${project.build.directory}/classes-java11</java11.build.outputDirectory -->
-      <artifact.classifier/>
+      <artifact.classifier />
+
+      <sonatypeOssDistMgmtSnapshotsUrl>https://oss.sonatype.org/content/repositories/snapshots/</sonatypeOssDistMgmtSnapshotsUrl>
 
       <docker.maven.plugin.fabric8.version>0.40.3</docker.maven.plugin.fabric8.version>
       <felix.bundle.plugin.version>5.1.1</felix.bundle.plugin.version>
@@ -15,7 +17,7 @@
       <hibernate.version>5.4.24.Final</hibernate.version>
       <javassist.version>3.29.2-GA</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>
-      <maven.release.version>2.5.3</maven.release.version>
+      <maven.release.version>3.0.1</maven.release.version>
       <metrics.version>3.2.5</metrics.version>
       <micrometer.version>1.5.10</micrometer.version>
       <simpleclient.version>0.9.0</simpleclient.version>
@@ -52,6 +54,33 @@
       <tag>HEAD</tag>
    </scm>
 
+   <repositories>
+      <repository>
+         <id>sonatype-nexus-snapshots</id>
+         <name>Sonatype Nexus Snapshots</name>
+         <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+         <releases>
+            <enabled>false</enabled>
+         </releases>
+         <snapshots>
+            <enabled>true</enabled>
+         </snapshots>
+      </repository>
+   </repositories>
+
+   <distributionManagement>
+      <snapshotRepository>
+         <id>sonatype-nexus-snapshots</id>
+         <name>Sonatype Nexus Snapshots</name>
+         <url>${sonatypeOssDistMgmtSnapshotsUrl}</url>
+      </snapshotRepository>
+      <repository>
+         <id>sonatype-nexus-staging</id>
+         <name>Nexus Release Repository</name>
+         <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+      </repository>
+   </distributionManagement>
+
    <issueManagement>
       <url>https://github.com/brettwooldridge/HikariCP/issues</url>
    </issueManagement>
@@ -70,12 +99,6 @@
          <email>brett.wooldridge@gmail.com</email>
       </developer>
    </developers>
-
-   <parent>
-      <groupId>org.sonatype.oss</groupId>
-      <artifactId>oss-parent</artifactId>
-      <version>9</version>
-   </parent>
 
    <dependencies>
       <dependency>
@@ -262,7 +285,7 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-enforcer-plugin</artifactId>
-            <version>3.0.0-M3</version>
+            <version>3.4.1</version>
             <executions>
                <execution>
                   <id>enforce-maven</id>
@@ -272,7 +295,7 @@
                   <configuration>
                      <rules>
                         <requireMavenVersion>
-                           <version>3.3.9</version>
+                           <version>(3.0.0,)</version>
                         </requireMavenVersion>
                      </rules>
                   </configuration>
@@ -505,6 +528,7 @@
                <configuration>
                   <autoVersionSubmodules>true</autoVersionSubmodules>
                   <tagNameFormat>HikariCP-@{project.version}</tagNameFormat>
+                  <arguments>-Psonatype-oss-release</arguments>
                </configuration>
             </plugin>
 
@@ -532,7 +556,7 @@
                   <execution>
                      <id>attach-sources</id>
                      <goals>
-                        <goal>jar</goal>
+                        <goal>jar-no-fork</goal>
                      </goals>
                   </execution>
                </executions>
@@ -614,6 +638,53 @@
                <scope>test</scope>
             </dependency>
          </dependencies>
+      </profile>
+      <profile>
+         <id>sonatype-oss-release</id>
+         <build>
+            <plugins>
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-source-plugin</artifactId>
+                  <version>3.3.0</version>
+                  <executions>
+                     <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                           <goal>jar-no-fork</goal>
+                        </goals>
+                     </execution>
+                  </executions>
+               </plugin>
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-javadoc-plugin</artifactId>
+                  <version>3.6.0</version>
+                  <executions>
+                     <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                           <goal>jar</goal>
+                        </goals>
+                     </execution>
+                  </executions>
+               </plugin>
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-gpg-plugin</artifactId>
+                  <version>3.1.0</version>
+                  <executions>
+                     <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                           <goal>sign</goal>
+                        </goals>
+                     </execution>
+                  </executions>
+               </plugin>
+            </plugins>
+         </build>
       </profile>
    </profiles>
 </project>
