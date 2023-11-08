@@ -395,17 +395,15 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    // ***********************************************************************
 
    /**
-    * Log the current pool state at debug level.
+    * Log the current pool state.
     *
     * @param prefix an optional prefix to prepend the log message
     */
    void logPoolState(String... prefix)
    {
-      if (logger.isDebugEnabled()) {
-         logger.debug("{} - {}stats (total={}, active={}, idle={}, waiting={})",
-                      poolName, (prefix.length > 0 ? prefix[0] : ""),
-                      getTotalConnections(), getActiveConnections(), getIdleConnections(), getThreadsAwaitingConnection());
-      }
+      logger.info("{} - {}stats (total={}, active={}, idle={}, waiting={})",
+                   poolName, (prefix.length > 0 ? prefix[0] : ""),
+                   getTotalConnections(), getActiveConnections(), getIdleConnections(), getThreadsAwaitingConnection());
    }
 
    /**
