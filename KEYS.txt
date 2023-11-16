@@ -1,0 +1,3 @@
+# GPG Release Key Fingerprints
+Brett Wooldridge <brett.wooldridge@gmail.com> F3A9 0E6B 10E8 09F8 51AB  4FC5 4CC0 8E7F 47C3 EC76
+Leo Bayer        <lfbayer@gmail.com>          9579 802D C3E1 5DE9 C389  239F C0D4 8A11 9CE7 EE7B
