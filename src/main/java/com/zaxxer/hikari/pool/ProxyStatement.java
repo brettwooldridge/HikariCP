@@ -72,6 +72,7 @@ public abstract class ProxyStatement implements Statement
       connection.untrackStatement(delegate);
 
       try {
+         connection.close();
          delegate.close();
       }
       catch (SQLException e) {
