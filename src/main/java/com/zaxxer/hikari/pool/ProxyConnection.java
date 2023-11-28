@@ -392,7 +392,7 @@ public abstract class ProxyConnection implements Connection
    public void rollback(Savepoint savepoint) throws SQLException
    {
       delegate.rollback(savepoint);
-      isCommitStateDirty = false;
+      isCommitStateDirty = true;
    }
 
    /** {@inheritDoc} */
