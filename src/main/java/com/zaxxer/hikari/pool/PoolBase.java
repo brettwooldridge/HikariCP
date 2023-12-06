@@ -133,7 +133,7 @@ abstract class PoolBase
             logger.debug("{} - Closing connection {}: {}", poolName, connection, closureReason);
 
             // continue with the close even if setNetworkTimeout() throws
-            try (connection; connection) {
+            try (connection) {
                if (!connection.isClosed())
                   setNetworkTimeout(connection, SECONDS.toMillis(15));
                } catch (SQLException e) {
