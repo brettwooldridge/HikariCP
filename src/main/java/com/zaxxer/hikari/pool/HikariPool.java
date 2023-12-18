@@ -417,8 +417,11 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    void recycle(final PoolEntry poolEntry)
    {
       metricsTracker.recordConnectionUsage(poolEntry);
-
-      connectionBag.requite(poolEntry);
+      if (poolEntry.isMarkedEvicted()) {
+         closeConnection(poolEntry, EVICTED_CONNECTION_MESSAGE);
+      } else {
+         connectionBag.requite(poolEntry);
+      }
    }
 
    /**
