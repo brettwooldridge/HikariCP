@@ -20,7 +20,7 @@
       <maven.release.version>3.0.1</maven.release.version>
       <metrics.version>3.2.5</metrics.version>
       <micrometer.version>1.5.10</micrometer.version>
-      <simpleclient.version>0.9.0</simpleclient.version>
+      <simpleclient.version>0.16.0</simpleclient.version>
       <mockito.version>3.7.7</mockito.version>
       <pax.exam.version>4.13.5</pax.exam.version>
       <pax.url.version>2.5.4</pax.url.version>
