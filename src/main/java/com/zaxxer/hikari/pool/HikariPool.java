@@ -739,7 +739,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          finally {
             if (added && loggingPrefix != null)
                logPoolState(loggingPrefix);
-            else
+            else if (!added)
                logPoolState("Connection not added, ");
          }
 
