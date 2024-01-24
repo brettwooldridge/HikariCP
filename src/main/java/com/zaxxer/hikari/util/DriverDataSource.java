@@ -38,7 +38,11 @@ public final class DriverDataSource implements DataSource
    private final Properties driverProperties;
    private Driver driver;
 
-   public DriverDataSource(String jdbcUrl, String driverClassName, Properties properties, String username, String password)
+   public DriverDataSource(String jdbcUrl, String driverClassName, Properties properties, String username, String password) {
+      this(jdbcUrl, driverClassName, properties, username, password, null);
+   }
+
+   public DriverDataSource(String jdbcUrl, String driverClassName, Properties properties, String username, String password, ClassLoader cl)
    {
       this.jdbcUrl = jdbcUrl;
       this.driverProperties = new Properties();
@@ -65,27 +69,36 @@ public final class DriverDataSource implements DataSource
          }
 
          if (driver == null) {
-            LOGGER.warn("Registered driver with driverClassName={} was not found, trying direct instantiation.", driverClassName);
             Class<?> driverClass = null;
-            var threadContextClassLoader = Thread.currentThread().getContextClassLoader();
-            try {
-               if (threadContextClassLoader != null) {
-                  try {
-                     driverClass = threadContextClassLoader.loadClass(driverClassName);
-                     LOGGER.debug("Driver class {} found in Thread context class loader {}", driverClassName, threadContextClassLoader);
-                  }
-                  catch (ClassNotFoundException e) {
-                     LOGGER.debug("Driver class {} not found in Thread context class loader {}, trying classloader {}",
-                                  driverClassName, threadContextClassLoader, this.getClass().getClassLoader());
-                  }
+            if (cl != null) {
+               try {
+                  driverClass = cl.loadClass(driverClassName);
+               } catch (ClassNotFoundException e) {
+                  throw new RuntimeException("Driver " + driverClassName + " not found in explicitly passed class loader, " + cl);
                }
+            }
 
-               if (driverClass == null) {
-                  driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
-                  LOGGER.debug("Driver class {} found in the HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
+            if (driverClass == null) {
+               LOGGER.warn("Registered driver with driverClassName={} was not found, trying direct instantiation.", driverClassName);
+               var threadContextClassLoader = Thread.currentThread().getContextClassLoader();
+               try {
+                  if (threadContextClassLoader != null) {
+                     try {
+                        driverClass = threadContextClassLoader.loadClass(driverClassName);
+                        LOGGER.debug("Driver class {} found in Thread context class loader {}", driverClassName, threadContextClassLoader);
+                     } catch (ClassNotFoundException e) {
+                        LOGGER.debug("Driver class {} not found in Thread context class loader {}, trying classloader {}",
+                           driverClassName, threadContextClassLoader, this.getClass().getClassLoader());
+                     }
+                  }
+
+                  if (driverClass == null) {
+                     driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
+                     LOGGER.debug("Driver class {} found in the HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
+                  }
+               } catch (ClassNotFoundException e) {
+                  LOGGER.debug("Failed to load driver class {} from HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
                }
-            } catch (ClassNotFoundException e) {
-               LOGGER.debug("Failed to load driver class {} from HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
             }
 
             if (driverClass != null) {

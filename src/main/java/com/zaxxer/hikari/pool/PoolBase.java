@@ -324,7 +324,7 @@ abstract class PoolBase
          PropertyElf.setTargetFromProperties(ds, dataSourceProperties);
       }
       else if (jdbcUrl != null && ds == null) {
-         ds = new DriverDataSource(jdbcUrl, driverClassName, dataSourceProperties, username, password);
+         ds = new DriverDataSource(jdbcUrl, driverClassName, dataSourceProperties, username, password, config.getDriverClassLoader());
       }
       else if (dataSourceJNDI != null && ds == null) {
          try {
