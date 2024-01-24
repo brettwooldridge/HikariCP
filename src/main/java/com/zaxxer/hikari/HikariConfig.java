@@ -36,6 +36,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Supplier;
 
 import static com.zaxxer.hikari.util.UtilityElf.getNullIfEmpty;
 import static com.zaxxer.hikari.util.UtilityElf.safeIsAssignableFrom;
@@ -45,6 +46,19 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class HikariConfig implements HikariConfigMXBean
 {
+   // Password supplier to use when the password is set directly to the configuration instance.
+   private static class StringPasswordSupplier implements Supplier<String> {
+      private final String password;
+
+      public StringPasswordSupplier(String password) {
+         this.password = password;
+      }
+
+      @Override public String get() {
+         return password;
+      }
+   }
+
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariConfig.class);
 
    private static final char[] ID_CHARACTERS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
@@ -69,7 +83,7 @@ public class HikariConfig implements HikariConfigMXBean
    private volatile int maxPoolSize;
    private volatile int minIdle;
    private volatile String username;
-   private volatile String password;
+   private volatile Supplier<String> passwordSupplier = new StringPasswordSupplier(null);
 
    // Properties NOT changeable at runtime
    //
@@ -278,12 +292,33 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
+    * Get the password supplier to use to provide the password for DataSource.getConnection(user, password) calls.
+    * @return the password supplier or null if there is no supplier or the password has been set directly.
+    */
+   public Supplier<String> getPasswordSupplier()
+   {
+      return (passwordSupplier instanceof StringPasswordSupplier) ? null : passwordSupplier;
+   }
+
+   /**
+    * Set the password supplier to use for DataSource.getConnection(username, password) calls.
+    * @param passwordSupplier the password supplier
+    */
+   public void setPasswordSupplier(Supplier<String> passwordSupplier)
+   {
+      if (passwordSupplier == null) {
+         throw new IllegalArgumentException("passwordSupplier cannot be null");
+      }
+      this.passwordSupplier = passwordSupplier;
+   }
+
+   /**
     * Get the default password to use for DataSource.getConnection(username, password) calls.
     * @return the password
     */
    public String getPassword()
    {
-      return password;
+      return passwordSupplier.get();
    }
 
    /**
@@ -293,7 +328,7 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setPassword(String password)
    {
-      this.password = password;
+      setPasswordSupplier(new StringPasswordSupplier(password));
    }
 
    /**
