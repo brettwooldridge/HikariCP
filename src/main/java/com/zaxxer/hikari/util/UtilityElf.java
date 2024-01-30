@@ -44,11 +44,20 @@ public final class UtilityElf
 
    /**
     *
-    * @return null if string is null or empty
+    * @return null if string is null or empty, trimmed string otherwise
    */
    public static String getNullIfEmpty(final String text)
    {
-      return text == null ? null : text.trim().isEmpty() ? null : text.trim();
+      if (text == null) {
+         return null;
+      }
+
+      var trimmed = text.trim();
+
+      if (trimmed.isEmpty()) {
+         return null;
+      }
+      return trimmed;
    }
 
    /**
