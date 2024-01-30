@@ -60,37 +60,48 @@ public final class PropertyElf
    public static Set<String> getPropertyNames(final Class<?> targetClass)
    {
       var set = new HashSet<String>();
-      var matcher = GETTER_PATTERN.matcher("");
       for (var method : targetClass.getMethods()) {
-         var name = method.getName();
-         if (method.getParameterTypes().length == 0 && matcher.reset(name).matches()) {
-            name = name.replaceFirst("(get|is)", "");
-            try {
-               if (targetClass.getMethod("set" + name, method.getReturnType()) != null) {
-                  name = Character.toLowerCase(name.charAt(0)) + name.substring(1);
-                  set.add(name);
-               }
+         var name = propertyNameFromGetterName(method.getName());
+         try {
+            if (method.getParameterTypes().length == 0
+               && name != null
+               && targetClass.getMethod("set" + name, method.getReturnType()) != null) {
+               set.add(name);
             }
-            catch (Exception e) {
-               // fall thru (continue)
-            }
+         }
+         catch (Exception e) {
+            // fall thru (continue)
          }
       }
 
       return set;
    }
 
+   private static String propertyNameFromGetterName(final String methodName)
+   {
+      String name = null;
+      if (methodName.startsWith("get") && methodName.length() > 3) {
+         name = methodName.substring(3);
+      }
+      else if (methodName.startsWith("is") && methodName.length() > 2) {
+         name = methodName.substring(2);
+      }
+      if (name != null && Character.isUpperCase(name.charAt(0))) {
+         return Character.toLowerCase(name.charAt(0)) + name.substring(1);
+      }
+      return null;
+   }
+
    public static Object getProperty(final String propName, final Object target)
    {
       try {
-         // use the english locale to avoid the infamous turkish locale bug
-         var capitalized = "get" + propName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propName.substring(1);
+         var capitalized = "get" + capitalizedPropertyName(propName);
          var method = target.getClass().getMethod(capitalized);
          return method.invoke(target);
       }
       catch (Exception e) {
          try {
-            var capitalized = "is" + propName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propName.substring(1);
+            var capitalized = "is" + capitalizedPropertyName(propName);
             var method = target.getClass().getMethod(capitalized);
             return method.invoke(target);
          }
@@ -112,7 +123,7 @@ public final class PropertyElf
       final var logger = LoggerFactory.getLogger(PropertyElf.class);
 
       // use the english locale to avoid the infamous turkish locale bug
-      var methodName = "set" + propName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propName.substring(1);
+      var methodName = "set" + capitalizedPropertyName(propName);
       var writeMethod = methods.stream().filter(m -> m.getName().equals(methodName) && m.getParameterCount() == 1).findFirst().orElse(null);
 
       if (writeMethod == null) {
@@ -160,5 +171,11 @@ public final class PropertyElf
          logger.error("Failed to set property {} on target {}", propName, target.getClass(), e);
          throw new RuntimeException(e);
       }
+   }
+
+   private static String capitalizedPropertyName(String propertyName)
+   {
+      // use the english locale to avoid the infamous turkish locale bug
+      return propertyName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propertyName.substring(1);
    }
 }

@@ -1121,7 +1121,10 @@ public class HikariConfig implements HikariConfigMXBean
             else if ("transactionIsolation".equals(prop) && transactionIsolationName == null) {
                value = "default";
             }
-            else if (prop.matches("scheduledExecutorService|threadFactory") && value == null) {
+            else if ("scheduledExecutorService".equals(prop) && value == null) {
+               value = "internal";
+            }
+            else if ("threadFactory".equals(prop) && value == null) {
                value = "internal";
             }
             else if (prop.contains("jdbcUrl") && value instanceof String) {

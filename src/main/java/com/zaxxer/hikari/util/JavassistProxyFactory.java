@@ -104,7 +104,7 @@ public final class JavassistProxyFactory
     */
    private static <T> void generateProxyClass(Class<T> primaryInterface, String superClassName, String methodBody) throws Exception
    {
-      var newClassName = superClassName.replaceAll("(.+)\\.(\\w+)", "$1.Hikari$2");
+      var newClassName = replaceLast(".", superClassName, ".Hikari");
 
       var superCt = classPool.getCtClass(superClassName);
       var targetCt = classPool.makeClass(newClassName, superCt);
@@ -174,6 +174,15 @@ public final class JavassistProxyFactory
 
       targetCt.getClassFile().setMajorVersion(ClassFile.JAVA_8);
       targetCt.writeFile(genDirectory + "target/classes");
+   }
+
+   private static String replaceLast(String delimiter, String original, String replacement)
+   {
+      var index = original.lastIndexOf(delimiter);
+      if (index == -1) {
+         return original;
+      }
+      return original.substring(0, index) + replacement + original.substring(index + delimiter.length());
    }
 
    private static boolean isThrowsSqlException(CtMethod method)
