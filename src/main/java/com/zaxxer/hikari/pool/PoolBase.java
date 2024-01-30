@@ -36,6 +36,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
 import java.sql.Statement;
+import java.util.StringJoiner;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -628,8 +629,9 @@ abstract class PoolBase
    /**
     * This will create a string for debug logging. Given a set of "reset bits", this
     * method will return a concatenated string, for example:
-    *
+    * <p>
     * Input : 0b00110
+    * <p>
     * Output: "autoCommit, isolation"
     *
     * @param bits a set of "reset bits"
@@ -637,14 +639,12 @@ abstract class PoolBase
     */
    private String stringFromResetBits(final int bits)
    {
-      final var sb = new StringBuilder();
+      final var sb = new StringJoiner(", ");
       for (int ndx = 0; ndx < RESET_STATES.length; ndx++) {
          if ( (bits & (0b1 << ndx)) != 0) {
-            sb.append(RESET_STATES[ndx]).append(", ");
+            sb.add(RESET_STATES[ndx]);
          }
       }
-
-      sb.setLength(sb.length() - 2);  // trim trailing comma
       return sb.toString();
    }
 

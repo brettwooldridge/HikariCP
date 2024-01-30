@@ -27,7 +27,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import static com.zaxxer.hikari.util.ClockSource.*;
-import static com.zaxxer.hikari.util.ClockSource.currentTime;
 
 /**
  * Entry used in the ConcurrentBag to track Connection instances.

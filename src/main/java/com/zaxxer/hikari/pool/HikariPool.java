@@ -732,7 +732,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                   if (loggingPrefix != null && backoffMs % 50 == 0)
                      logger.debug("{} - Connection add failed, sleeping with backoff: {}ms", poolName, backoffMs);
                   quietlySleep(backoffMs);
-                  backoffMs = Math.min(SECONDS.toMillis(5), backoffMs * 2);
+                  backoffMs = Math.min(SECONDS.toMillis(5), backoffMs << 1);
                }
             }
          }
