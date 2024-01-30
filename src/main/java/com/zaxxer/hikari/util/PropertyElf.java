@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * A class that reflectively sets bean properties on a target object.
@@ -30,8 +29,6 @@ import java.util.regex.Pattern;
  */
 public final class PropertyElf
 {
-   private static final Pattern GETTER_PATTERN = Pattern.compile("(get|is)[A-Z].+");
-
    private PropertyElf() {
       // cannot be constructed
    }
@@ -44,11 +41,12 @@ public final class PropertyElf
 
       var methods = Arrays.asList(target.getClass().getMethods());
       properties.forEach((key, value) -> {
-         if (target instanceof HikariConfig && key.toString().startsWith("dataSource.")) {
-            ((HikariConfig) target).addDataSourceProperty(key.toString().substring("dataSource.".length()), value);
+         var keyName = key.toString();
+         if (target instanceof HikariConfig && keyName.startsWith("dataSource.")) {
+            ((HikariConfig) target).addDataSourceProperty(keyName.substring("dataSource.".length()), value);
          }
          else {
-            setProperty(target, key.toString(), value, methods);
+            setProperty(target, keyName, value, methods);
          }
       });
    }
