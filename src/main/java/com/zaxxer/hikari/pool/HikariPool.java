@@ -171,7 +171,9 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             }
             else {
                metricsTracker.recordBorrowStats(poolEntry, startTime);
-               return poolEntry.createProxyConnection(leakTaskFactory.schedule(poolEntry));
+               final var proxyConnection = poolEntry.createProxyConnection(leakTaskFactory.schedule(poolEntry));
+               logger.trace("getConnection(hardTimeout={}): returning proxyConnection={}", hardTimeout, proxyConnection);
+               return proxyConnection;
             }
          } while (timeout > 0L);
 
@@ -418,6 +420,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    {
       metricsTracker.recordConnectionUsage(poolEntry);
 
+      logger.trace("recycle(poolEntry={}) in pool={}", poolEntry, poolEntry.getPoolName());
       connectionBag.requite(poolEntry);
    }
 
@@ -429,6 +432,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     */
    void closeConnection(final PoolEntry poolEntry, final String closureReason)
    {
+      logger.trace("closeConnection(poolEntry={}, closureReason={}): poolName={}", poolEntry, closureReason, poolEntry.getPoolName());
       if (connectionBag.remove(poolEntry)) {
          final var connection = poolEntry.close();
          closeConnectionExecutor.execute(() -> {

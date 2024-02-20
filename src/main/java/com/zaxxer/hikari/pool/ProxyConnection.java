@@ -144,6 +144,7 @@ public abstract class ProxyConnection implements Connection
 
    final PoolEntry getPoolEntry()
    {
+      LOGGER.trace("getPoolEntry(): poolEntry={}", poolEntry);
       return poolEntry;
    }
 
@@ -195,6 +196,7 @@ public abstract class ProxyConnection implements Connection
       if (!isAutoCommit) {
          isCommitStateDirty = true;
       }
+      LOGGER.trace("markCommitStateDirty(): isAutoCommit={}, isCommitStateDirty={}", isAutoCommit, isCommitStateDirty);
    }
 
    void cancelLeakTask()
@@ -229,6 +231,7 @@ public abstract class ProxyConnection implements Connection
 
          openStatements.clear();
       }
+      LOGGER.trace("closeStatements()");
    }
 
    // **********************************************************************
@@ -268,6 +271,7 @@ public abstract class ProxyConnection implements Connection
             poolEntry.recycle();
          }
       }
+      LOGGER.trace("close()");
    }
 
    /** {@inheritDoc} */
@@ -377,6 +381,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.commit();
       isCommitStateDirty = false;
+      LOGGER.trace("commit()");
    }
 
    /** {@inheritDoc} */
@@ -385,6 +390,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.rollback();
       isCommitStateDirty = false;
+      LOGGER.trace("rollback()");
    }
 
    /** {@inheritDoc} */
@@ -393,6 +399,7 @@ public abstract class ProxyConnection implements Connection
    {
       delegate.rollback(savepoint);
       isCommitStateDirty = false;
+      LOGGER.trace("rollback(savepoint)");
    }
 
    /** {@inheritDoc} */
@@ -412,6 +419,7 @@ public abstract class ProxyConnection implements Connection
       isReadOnly = readOnly;
       isCommitStateDirty = false;
       dirtyBits |= DIRTY_BIT_READONLY;
+      LOGGER.trace("setReadOnly(readOnly={})", readOnly);
    }
 
    /** {@inheritDoc} */
@@ -503,6 +511,7 @@ public abstract class ProxyConnection implements Connection
             throw new SQLException("Connection is closed");
          };
 
+         LOGGER.trace("ClosedConnection::getClosedConnection()");
          return (Connection) Proxy.newProxyInstance(Connection.class.getClassLoader(), new Class[] { Connection.class }, handler);
       }
    }
