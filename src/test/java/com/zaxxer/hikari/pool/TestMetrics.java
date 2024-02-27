@@ -203,7 +203,7 @@ public class TestMetrics
 
          try (Connection connection = ds.getConnection()) {
 
-            // after the pool is started, we cannot set it any more
+            // after the pool is started, we cannot set it anymore
             ds.setMetricRegistry(metricRegistry);
             fail("Should not have been allowed to set registry after pool started");
          }
