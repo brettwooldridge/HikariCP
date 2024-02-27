@@ -97,7 +97,7 @@ public class TestPropertySetter
    }
 
    @Test
-   public void testSetNonExistantPropertyName() throws Exception
+   public void testSetNonExistentPropertyName() throws Exception
    {
       try {
          Properties props = new Properties();
