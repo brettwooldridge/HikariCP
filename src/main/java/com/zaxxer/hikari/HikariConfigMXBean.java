@@ -16,6 +16,8 @@
 
 package com.zaxxer.hikari;
 
+import com.zaxxer.hikari.util.Credentials;
+
 /**
  * The javax.management MBean for a Hikari pool configuration.
  *
@@ -167,6 +169,14 @@ public interface HikariConfigMXBean
     */
    void setUsername(String username);
 
+   /**
+    * Set the username and password used for authentication. Changing this at runtime will apply to new
+    * connections only. Altering this at runtime only works for DataSource-based connections, not Driver-class
+    * or JDBC URL-based connections.
+    *
+    * @param credentials the database username and password pair
+    */
+   void setCredentials(Credentials credentials);
 
    /**
     * The name of the connection pool.

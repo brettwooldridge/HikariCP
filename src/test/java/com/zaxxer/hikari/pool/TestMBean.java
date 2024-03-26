@@ -20,6 +20,7 @@ import com.zaxxer.hikari.HikariConfigMXBean;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariPoolMXBean;
 import com.zaxxer.hikari.mocks.StubDataSource;
+import com.zaxxer.hikari.util.Credentials;
 import org.junit.Test;
 
 import javax.management.JMX;
@@ -168,6 +169,26 @@ public class TestMBean
       }
       finally {
          System.clearProperty("com.zaxxer.hikari.housekeeping.periodMs");
+      }
+   }
+
+   @Test
+   public void testMBeanCredentialRotation() {
+      HikariConfig config = newHikariConfig();
+      config.setMinimumIdle(3);
+      config.setMaximumPoolSize(5);
+      config.setRegisterMbeans(true);
+      config.setConnectionTimeout(2800);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      config.setCredentials(Credentials.of("foo", "bar"));
+
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         HikariConfigMXBean hikariConfigMXBean = ds.getHikariConfigMXBean();
+         hikariConfigMXBean.setCredentials(Credentials.of("newFoo", "newBar"));
+
+         assertEquals("newFoo", ds.getUsername());
+         assertEquals("newBar", ds.getPassword());
       }
    }
 }
