@@ -18,9 +18,11 @@ package com.zaxxer.hikari.metrics.prometheus;
 
 import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFactory.RegistrationStatus;
-import io.prometheus.client.CollectorRegistry;
-import io.prometheus.client.Counter;
-import io.prometheus.client.Summary;
+import io.prometheus.metrics.core.datapoints.CounterDataPoint;
+import io.prometheus.metrics.core.datapoints.DistributionDataPoint;
+import io.prometheus.metrics.core.metrics.Counter;
+import io.prometheus.metrics.core.metrics.Summary;
+import io.prometheus.metrics.model.registry.PrometheusRegistry;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,11 +32,11 @@ import static com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFacto
 
 class PrometheusMetricsTracker implements IMetricsTracker
 {
-   private final static Counter CONNECTION_TIMEOUT_COUNTER = Counter.build()
+   private final static Counter CONNECTION_TIMEOUT_COUNTER = Counter.builder()
       .name("hikaricp_connection_timeout_total")
       .labelNames("pool")
       .help("Connection timeout total count")
-      .create();
+      .register();
 
    private final static Summary ELAPSED_ACQUIRED_SUMMARY =
       createSummary("hikaricp_connection_acquired_nanos", "Connection acquired time (ns)");
@@ -45,35 +47,35 @@ class PrometheusMetricsTracker implements IMetricsTracker
    private final static Summary ELAPSED_CREATION_SUMMARY =
       createSummary("hikaricp_connection_creation_millis", "Connection creation (ms)");
 
-   private final static Map<CollectorRegistry, RegistrationStatus> registrationStatuses = new ConcurrentHashMap<>();
+   private final static Map<PrometheusRegistry, RegistrationStatus> registrationStatuses = new ConcurrentHashMap<>();
 
    private final String poolName;
    private final HikariCPCollector hikariCPCollector;
 
-   private final Counter.Child connectionTimeoutCounterChild;
+   private final CounterDataPoint connectionTimeoutCounterChild;
 
-   private final Summary.Child elapsedAcquiredSummaryChild;
-   private final Summary.Child elapsedUsageSummaryChild;
-   private final Summary.Child elapsedCreationSummaryChild;
+   private final DistributionDataPoint elapsedAcquiredSummaryChild;
+   private final DistributionDataPoint elapsedUsageSummaryChild;
+   private final DistributionDataPoint elapsedCreationSummaryChild;
 
-   PrometheusMetricsTracker(String poolName, CollectorRegistry collectorRegistry, HikariCPCollector hikariCPCollector)
+   PrometheusMetricsTracker(String poolName, PrometheusRegistry collectorRegistry, HikariCPCollector hikariCPCollector)
    {
       registerMetrics(collectorRegistry);
       this.poolName = poolName;
       this.hikariCPCollector = hikariCPCollector;
-      this.connectionTimeoutCounterChild = CONNECTION_TIMEOUT_COUNTER.labels(poolName);
-      this.elapsedAcquiredSummaryChild = ELAPSED_ACQUIRED_SUMMARY.labels(poolName);
-      this.elapsedUsageSummaryChild = ELAPSED_USAGE_SUMMARY.labels(poolName);
-      this.elapsedCreationSummaryChild = ELAPSED_CREATION_SUMMARY.labels(poolName);
+      this.connectionTimeoutCounterChild = CONNECTION_TIMEOUT_COUNTER.labelValues(poolName);
+      this.elapsedAcquiredSummaryChild = ELAPSED_ACQUIRED_SUMMARY.labelValues(poolName);
+      this.elapsedUsageSummaryChild = ELAPSED_USAGE_SUMMARY.labelValues(poolName);
+      this.elapsedCreationSummaryChild = ELAPSED_CREATION_SUMMARY.labelValues(poolName);
    }
 
-   private void registerMetrics(CollectorRegistry collectorRegistry)
+   private void registerMetrics(PrometheusRegistry collectorRegistry)
    {
       if (registrationStatuses.putIfAbsent(collectorRegistry, REGISTERED) == null) {
-         CONNECTION_TIMEOUT_COUNTER.register(collectorRegistry);
-         ELAPSED_ACQUIRED_SUMMARY.register(collectorRegistry);
-         ELAPSED_USAGE_SUMMARY.register(collectorRegistry);
-         ELAPSED_CREATION_SUMMARY.register(collectorRegistry);
+         collectorRegistry.register(CONNECTION_TIMEOUT_COUNTER);
+         collectorRegistry.register(ELAPSED_ACQUIRED_SUMMARY);
+         collectorRegistry.register(ELAPSED_USAGE_SUMMARY);
+         collectorRegistry.register(ELAPSED_CREATION_SUMMARY);
       }
    }
 
@@ -103,7 +105,7 @@ class PrometheusMetricsTracker implements IMetricsTracker
 
    private static Summary createSummary(String name, String help)
    {
-      return Summary.build()
+      return Summary.builder()
          .name(name)
          .labelNames("pool")
          .help(help)
@@ -111,8 +113,8 @@ class PrometheusMetricsTracker implements IMetricsTracker
          .quantile(0.95, 0.01)
          .quantile(0.99, 0.001)
          .maxAgeSeconds(TimeUnit.MINUTES.toSeconds(5))
-         .ageBuckets(5)
-         .create();
+         .numberOfAgeBuckets(5)
+         .register();
    }
 
    @Override

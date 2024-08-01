@@ -16,9 +16,11 @@
 package com.zaxxer.hikari.metrics.prometheus;
 
 import com.zaxxer.hikari.metrics.IMetricsTracker;
-import io.prometheus.client.CollectorRegistry;
-import io.prometheus.client.Counter;
-import io.prometheus.client.Histogram;
+import io.prometheus.metrics.core.datapoints.CounterDataPoint;
+import io.prometheus.metrics.core.datapoints.DistributionDataPoint;
+import io.prometheus.metrics.core.metrics.Histogram;
+import io.prometheus.metrics.model.registry.PrometheusRegistry;
+import io.prometheus.metrics.core.metrics.Counter;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,11 +38,11 @@ import static com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFacto
  */
 class PrometheusHistogramMetricsTracker implements IMetricsTracker
 {
-   private static final Counter CONNECTION_TIMEOUT_COUNTER = Counter.build()
+   private static final Counter CONNECTION_TIMEOUT_COUNTER = Counter.builder()
       .name("hikaricp_connection_timeout_total")
       .labelNames("pool")
       .help("Connection timeout total count")
-      .create();
+      .register();
 
    private static final Histogram ELAPSED_ACQUIRED_HISTOGRAM =
       registerHistogram("hikaricp_connection_acquired_nanos", "Connection acquired time (ns)", 1_000);
@@ -51,42 +53,42 @@ class PrometheusHistogramMetricsTracker implements IMetricsTracker
    private static final Histogram ELAPSED_CREATION_HISTOGRAM =
       registerHistogram("hikaricp_connection_creation_millis", "Connection creation (ms)", 1);
 
-   private final Counter.Child connectionTimeoutCounterChild;
+   private final CounterDataPoint connectionTimeoutCounterChild;
 
    private static Histogram registerHistogram(String name, String help, double bucketStart) {
-      return Histogram.build()
+      return Histogram.builder()
          .name(name)
          .labelNames("pool")
          .help(help)
-         .exponentialBuckets(bucketStart, 2.0, 11)
-         .create();
+         .classicExponentialUpperBounds(bucketStart, 2.0, 11)
+         .register();
    }
 
-   private final static Map<CollectorRegistry, RegistrationStatus> registrationStatuses = new ConcurrentHashMap<>();
+   private final static Map<PrometheusRegistry, RegistrationStatus> registrationStatuses = new ConcurrentHashMap<>();
 
    private final String poolName;
    private final HikariCPCollector hikariCPCollector;
 
-   private final Histogram.Child elapsedAcquiredHistogramChild;
-   private final Histogram.Child elapsedBorrowedHistogramChild;
-   private final Histogram.Child elapsedCreationHistogramChild;
+   private final DistributionDataPoint elapsedAcquiredHistogramChild;
+   private final DistributionDataPoint elapsedBorrowedHistogramChild;
+   private final DistributionDataPoint elapsedCreationHistogramChild;
 
-   PrometheusHistogramMetricsTracker(String poolName, CollectorRegistry collectorRegistry, HikariCPCollector hikariCPCollector) {
+   PrometheusHistogramMetricsTracker(String poolName, PrometheusRegistry collectorRegistry, HikariCPCollector hikariCPCollector) {
       registerMetrics(collectorRegistry);
       this.poolName = poolName;
       this.hikariCPCollector = hikariCPCollector;
-      this.connectionTimeoutCounterChild = CONNECTION_TIMEOUT_COUNTER.labels(poolName);
-      this.elapsedAcquiredHistogramChild = ELAPSED_ACQUIRED_HISTOGRAM.labels(poolName);
-      this.elapsedBorrowedHistogramChild = ELAPSED_BORROWED_HISTOGRAM.labels(poolName);
-      this.elapsedCreationHistogramChild = ELAPSED_CREATION_HISTOGRAM.labels(poolName);
+      this.connectionTimeoutCounterChild = CONNECTION_TIMEOUT_COUNTER.labelValues(poolName);
+      this.elapsedAcquiredHistogramChild = ELAPSED_ACQUIRED_HISTOGRAM.labelValues(poolName);
+      this.elapsedBorrowedHistogramChild = ELAPSED_BORROWED_HISTOGRAM.labelValues(poolName);
+      this.elapsedCreationHistogramChild = ELAPSED_CREATION_HISTOGRAM.labelValues(poolName);
    }
 
-   private void registerMetrics(CollectorRegistry collectorRegistry) {
+   private void registerMetrics(PrometheusRegistry collectorRegistry) {
       if (registrationStatuses.putIfAbsent(collectorRegistry, REGISTERED) == null) {
-         CONNECTION_TIMEOUT_COUNTER.register(collectorRegistry);
-         ELAPSED_ACQUIRED_HISTOGRAM.register(collectorRegistry);
-         ELAPSED_BORROWED_HISTOGRAM.register(collectorRegistry);
-         ELAPSED_CREATION_HISTOGRAM.register(collectorRegistry);
+         collectorRegistry.register(CONNECTION_TIMEOUT_COUNTER);
+         collectorRegistry.register(ELAPSED_ACQUIRED_HISTOGRAM);
+         collectorRegistry.register(ELAPSED_BORROWED_HISTOGRAM);
+         collectorRegistry.register(ELAPSED_CREATION_HISTOGRAM);
       }
    }
 
