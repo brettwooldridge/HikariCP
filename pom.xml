@@ -205,20 +205,6 @@
          <optional>true</optional>
       </dependency>
       <dependency>
-         <groupId>io.prometheus</groupId>
-         <artifactId>prometheus-metrics-instrumentation-jvm</artifactId>
-         <version>${prometheus-metrics.version}</version>
-         <scope>provided</scope>
-         <optional>true</optional>
-      </dependency>
-      <dependency>
-         <groupId>io.prometheus</groupId>
-         <artifactId>prometheus-metrics-exporter-httpserver</artifactId>
-         <version>${prometheus-metrics.version}</version>
-         <scope>provided</scope>
-         <optional>true</optional>
-      </dependency>
-      <dependency>
          <groupId>simple-jndi</groupId>
          <artifactId>simple-jndi</artifactId>
          <version>${jndi.version}</version>
