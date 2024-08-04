@@ -49,6 +49,7 @@ public class StubConnection extends StubBaseConnection
    public static volatile boolean oldDriver;
    public static volatile Callable<Void> networkTimeoutSetter;
    private volatile boolean isClosed = false;
+   private boolean isRollback = false;
 
    private static long foo;
    private boolean autoCommit;
@@ -170,7 +171,7 @@ public class StubConnection extends StubBaseConnection
    @Override
    public void rollback() throws SQLException
    {
-
+      isRollback = true;
    }
 
    /** {@inheritDoc} */
@@ -340,6 +341,7 @@ public class StubConnection extends StubBaseConnection
    @Override
    public void rollback(Savepoint savepoint) throws SQLException
    {
+      isRollback = true;
    }
 
    /** {@inheritDoc} */
@@ -528,6 +530,10 @@ public class StubConnection extends StubBaseConnection
       }
 
       return 0;
+   }
+
+   public boolean isRollback() {
+      return isRollback;
    }
 
 }

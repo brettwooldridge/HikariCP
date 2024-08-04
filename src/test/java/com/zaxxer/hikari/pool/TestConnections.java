@@ -448,6 +448,46 @@ public class TestConnections
    }
 
    @Test
+   public void testEvictForException() throws SQLException
+   {
+      HikariConfig config = newHikariConfig();
+      config.setAutoCommit(false);
+      config.setMaximumPoolSize(1);
+      config.setConnectionTimeout(2500);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         HikariPool pool = getPool(ds);
+
+         try (Connection connection = ds.getConnection()) {
+            assertNotNull(connection);
+
+            StubConnection stubConnection = connection.unwrap(StubConnection.class);
+            assertFalse(stubConnection.isRollback());
+
+            PreparedStatement statement = connection.prepareStatement("SELECT some, thing FROM somewhere WHERE something=?");
+            assertNotNull(statement);
+
+            ResultSet resultSet = statement.executeQuery();
+            assertNotNull(resultSet);
+
+            try {
+               statement.getMaxFieldSize();
+            } catch (Exception e) {
+               assertSame(SQLException.class, e.getClass());
+            }
+
+            while (pool.getTotalConnections() < 1) {
+               quietlySleep(100L);
+            }
+
+            assertTrue(stubConnection.isRollback());
+         }
+      }
+   }
+
+   @Test
    public void testBackfill() throws Exception
    {
       HikariConfig config = newHikariConfig();
