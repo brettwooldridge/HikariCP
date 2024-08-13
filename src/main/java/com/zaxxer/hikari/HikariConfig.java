@@ -698,7 +698,6 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public void setHealthCheckRegistry(Object healthCheckRegistry)
    {
-      checkIfSealed();
 
       if (healthCheckRegistry != null) {
          healthCheckRegistry = getObjectOrPerformJndiLookup(healthCheckRegistry);
