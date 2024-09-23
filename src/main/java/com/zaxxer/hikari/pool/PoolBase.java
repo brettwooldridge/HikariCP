@@ -73,7 +73,7 @@ abstract class PoolBase
    private static final int MINIMUM_LOGIN_TIMEOUT = Integer.getInteger("com.zaxxer.hikari.minimumLoginTimeoutSecs", 1);
 
    private int networkTimeout;
-   private int isNetworkTimeoutSupported;
+   private volatile int isNetworkTimeoutSupported;
    private int isQueryTimeoutSupported;
    private int defaultTransactionIsolation;
    private int transactionIsolation;
@@ -244,6 +244,7 @@ abstract class PoolBase
 
    void shutdownNetworkTimeoutExecutor()
    {
+      isNetworkTimeoutSupported = UNINITIALIZED;
       if (netTimeoutExecutor instanceof ThreadPoolExecutor) {
          ((ThreadPoolExecutor) netTimeoutExecutor).shutdownNow();
       }
