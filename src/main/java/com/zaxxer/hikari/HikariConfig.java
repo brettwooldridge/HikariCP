@@ -454,11 +454,11 @@ public class HikariConfig implements HikariConfigMXBean
 
    /**
     * Add a property (name/value pair) that will be used to configure the {@link DataSource}/{@link java.sql.Driver}.
-    * <p/>
+    * <p>
     * In the case of a {@link DataSource}, the property names will be translated to Java setters following the Java Bean
     * naming convention.  For example, the property {@code cachePrepStmts} will translate into {@code setCachePrepStmts()}
     * with the {@code value} passed as a parameter.
-    * <p/>
+    * <p>
     * In the case of a {@link java.sql.Driver}, the property will be added to a {@link Properties} instance that will
     * be passed to the driver during {@link java.sql.Driver#connect(String, Properties)} calls.
     *
