@@ -397,11 +397,31 @@ public abstract class ProxyConnection implements Connection
 
    /** {@inheritDoc} */
    @Override
+   public boolean getAutoCommit() throws SQLException
+   {
+      if ((dirtyBits & DIRTY_BIT_AUTOCOMMIT) != 0) {
+         return isAutoCommit;
+      }
+      return delegate.getAutoCommit();
+   }
+
+   /** {@inheritDoc} */
+   @Override
    public void setAutoCommit(boolean autoCommit) throws SQLException
    {
       delegate.setAutoCommit(autoCommit);
       isAutoCommit = autoCommit;
       dirtyBits |= DIRTY_BIT_AUTOCOMMIT;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public boolean isReadOnly() throws SQLException
+   {
+      if ((dirtyBits & DIRTY_BIT_READONLY) != 0) {
+         return isReadOnly;
+      }
+      return delegate.isReadOnly();
    }
 
    /** {@inheritDoc} */
@@ -416,11 +436,31 @@ public abstract class ProxyConnection implements Connection
 
    /** {@inheritDoc} */
    @Override
+   public int getTransactionIsolation() throws SQLException
+   {
+      if ((dirtyBits & DIRTY_BIT_ISOLATION) != 0) {
+         return transactionIsolation;
+      }
+      return delegate.getTransactionIsolation();
+   }
+
+   /** {@inheritDoc} */
+   @Override
    public void setTransactionIsolation(int level) throws SQLException
    {
       delegate.setTransactionIsolation(level);
       transactionIsolation = level;
       dirtyBits |= DIRTY_BIT_ISOLATION;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public String getCatalog() throws SQLException
+   {
+      if ((dirtyBits & DIRTY_BIT_CATALOG) != 0) {
+         return dbcatalog;
+      }
+      return delegate.getCatalog();
    }
 
    /** {@inheritDoc} */
@@ -434,11 +474,31 @@ public abstract class ProxyConnection implements Connection
 
    /** {@inheritDoc} */
    @Override
+   public int getNetworkTimeout() throws SQLException
+   {
+      if ((dirtyBits & DIRTY_BIT_NETTIMEOUT) != 0) {
+         return networkTimeout;
+      }
+      return delegate.getNetworkTimeout();
+   }
+
+   /** {@inheritDoc} */
+   @Override
    public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException
    {
       delegate.setNetworkTimeout(executor, milliseconds);
       networkTimeout = milliseconds;
       dirtyBits |= DIRTY_BIT_NETTIMEOUT;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public String getSchema() throws SQLException
+   {
+      if ((dirtyBits & DIRTY_BIT_SCHEMA) != 0) {
+         return dbschema;
+      }
+      return delegate.getSchema();
    }
 
    /** {@inheritDoc} */
