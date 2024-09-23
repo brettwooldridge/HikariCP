@@ -1,8 +1,24 @@
 HikariCP Changes
 
-Changes in 5.2.0
+Changes in 6.0.0
 
  * fixed #2152 duplicate connection in try with resources clause caused close() being called twice on each connection.
+
+ * merged #2226 consistent handling of errorCode and sqlState in timeout exception
+
+ * merged #2199 eliminate network call if state get is called after set
+
+ * merged #2189 add support to get and set db credentials in an atomic operation
+
+ * merged #2149 make Savepoint rollbacks mark the connection dirty
+
+ * merged #2157 close connections marked as evicted instead of returning them to the pool
+
+ * merged #2147 skip Connection::setNetworkTimeout if PoolBase::shutdownNetworkTimeoutExecutor is called
+
+ * merged #2126 added Support For beginRequest and endRequest
+
+ * small improvements and cleanup from pull request #2166
 
  * minor debug logging enhancements
 

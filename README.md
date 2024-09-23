@@ -37,7 +37,7 @@ _**Java 11+** maven artifact:_
 <dependency>
    <groupId>com.zaxxer</groupId>
    <artifactId>HikariCP</artifactId>
-   <version>5.2.0</version>
+   <version>6.0.0</version>
 </dependency>
 ```
 _Java 8 maven artifact (*maintenance mode*):_
