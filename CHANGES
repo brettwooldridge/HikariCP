@@ -1,5 +1,11 @@
 HikariCP Changes
 
+Changes in 5.2.0
+
+ * fixed #2152 duplicate connection in try with resources clause caused close() being called twice on each connection.
+
+ * minor debug logging enhancements
+
 Changes in 5.1.0
 
  * fixed #1907 re-added automatic.module.name that was lost along the way
