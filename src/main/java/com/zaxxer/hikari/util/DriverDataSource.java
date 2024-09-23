@@ -28,6 +28,8 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.zaxxer.hikari.util.UtilityElf.maskPasswordInJdbcUrl;
+
 public final class DriverDataSource implements DataSource
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(DriverDataSource.class);
@@ -98,8 +100,8 @@ public final class DriverDataSource implements DataSource
          }
       }
 
-      final var sanitizedUrl = jdbcUrl.replaceAll("([?&;][^&#;=]*[pP]assword=)[^&#;]*", "$1<masked>");
-      
+      final var sanitizedUrl = maskPasswordInJdbcUrl(jdbcUrl);
+
       try {
          if (driver == null) {
             driver = DriverManager.getDriver(jdbcUrl);

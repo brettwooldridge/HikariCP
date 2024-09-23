@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * A class that reflectively sets bean properties on a target object.
@@ -30,8 +29,6 @@ import java.util.regex.Pattern;
  */
 public final class PropertyElf
 {
-   private static final Pattern GETTER_PATTERN = Pattern.compile("(get|is)[A-Z].+");
-
    private PropertyElf() {
       // cannot be constructed
    }
@@ -44,11 +41,12 @@ public final class PropertyElf
 
       var methods = Arrays.asList(target.getClass().getMethods());
       properties.forEach((key, value) -> {
-         if (target instanceof HikariConfig && key.toString().startsWith("dataSource.")) {
-            ((HikariConfig) target).addDataSourceProperty(key.toString().substring("dataSource.".length()), value);
+         var keyName = key.toString();
+         if (target instanceof HikariConfig && keyName.startsWith("dataSource.")) {
+            ((HikariConfig) target).addDataSourceProperty(keyName.substring("dataSource.".length()), value);
          }
          else {
-            setProperty(target, key.toString(), value, methods);
+            setProperty(target, keyName, value, methods);
          }
       });
    }
@@ -62,20 +60,16 @@ public final class PropertyElf
    public static Set<String> getPropertyNames(final Class<?> targetClass)
    {
       var set = new HashSet<String>();
-      var matcher = GETTER_PATTERN.matcher("");
       for (var method : targetClass.getMethods()) {
-         var name = method.getName();
-         if (method.getParameterTypes().length == 0 && matcher.reset(name).matches()) {
-            name = name.replaceFirst("(get|is)", "");
-            try {
-               if (targetClass.getMethod("set" + name, method.getReturnType()) != null) {
-                  name = Character.toLowerCase(name.charAt(0)) + name.substring(1);
-                  set.add(name);
-               }
+         var name = propertyNameFromGetterName(method.getName());
+         try {
+            if (method.getParameterTypes().length == 0 && name != null) {
+               targetClass.getMethod("set" + capitalizedPropertyName(name), method.getReturnType()); // throws if method setter does not exist
+               set.add(name);
             }
-            catch (Exception e) {
-               // fall thru (continue)
-            }
+         }
+         catch (Exception e) {
+            // fall thru (continue)
          }
       }
 
@@ -86,13 +80,13 @@ public final class PropertyElf
    {
       try {
          // use the english locale to avoid the infamous turkish locale bug
-         var capitalized = "get" + propName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propName.substring(1);
+         var capitalized = "get" + capitalizedPropertyName(propName);
          var method = target.getClass().getMethod(capitalized);
          return method.invoke(target);
       }
       catch (Exception e) {
          try {
-            var capitalized = "is" + propName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propName.substring(1);
+            var capitalized = "is" + capitalizedPropertyName(propName);
             var method = target.getClass().getMethod(capitalized);
             return method.invoke(target);
          }
@@ -107,6 +101,23 @@ public final class PropertyElf
       var copy = new Properties();
       props.forEach((key, value) -> copy.setProperty(key.toString(), value.toString()));
       return copy;
+   }
+
+   private static String propertyNameFromGetterName(final String methodName)
+   {
+      String name = null;
+      if (methodName.startsWith("get") && methodName.length() > 3) {
+         name = methodName.substring(3);
+      }
+      else if (methodName.startsWith("is") && methodName.length() > 2) {
+         name = methodName.substring(2);
+      }
+
+      if (name != null) {
+         return Character.toLowerCase(name.charAt(0)) + name.substring(1);
+      }
+
+      return null;
    }
 
    private static void setProperty(final Object target, final String propName, final Object propValue, final List<Method> methods)
@@ -162,5 +173,11 @@ public final class PropertyElf
          logger.error("Failed to set property {} on target {}", propName, target.getClass(), e);
          throw new RuntimeException(e);
       }
+   }
+
+   private static String capitalizedPropertyName(String propertyName)
+   {
+      // use the english locale to avoid the infamous turkish locale bug
+      return propertyName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propertyName.substring(1);
    }
 }

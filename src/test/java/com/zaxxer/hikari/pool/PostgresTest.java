@@ -41,7 +41,7 @@ import org.testcontainers.utility.DockerImageName;
 
 public class PostgresTest
 {
-   private static final DockerImageName IMAGE_NAME = DockerImageName.parse("postgres:9.6.20");
+   private static final DockerImageName IMAGE_NAME = DockerImageName.parse("postgres:16");
 
    private PostgreSQLContainer<?> postgres;
 
