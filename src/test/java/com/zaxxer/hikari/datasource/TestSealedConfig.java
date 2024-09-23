@@ -2,6 +2,7 @@ package com.zaxxer.hikari.datasource;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.util.Credentials;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -68,6 +69,7 @@ public class TestSealedConfig
          ds.setMaximumPoolSize(8);
          ds.setPassword("password");
          ds.setUsername("username");
+         ds.setCredentials(Credentials.of("anothername", "anotherpassword"));
       }
    }
 }

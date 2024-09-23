@@ -311,8 +311,7 @@ abstract class PoolBase
    private void initializeDataSource()
    {
       final var jdbcUrl = config.getJdbcUrl();
-      final var username = config.getUsername();
-      final var password = config.getPassword();
+      final var credentials = config.getCredentials();
       final var dsClassName = config.getDataSourceClassName();
       final var driverClassName = config.getDriverClassName();
       final var dataSourceJNDI = config.getDataSourceJNDI();
@@ -324,7 +323,7 @@ abstract class PoolBase
          PropertyElf.setTargetFromProperties(ds, dataSourceProperties);
       }
       else if (jdbcUrl != null && ds == null) {
-         ds = new DriverDataSource(jdbcUrl, driverClassName, dataSourceProperties, username, password);
+         ds = new DriverDataSource(jdbcUrl, driverClassName, dataSourceProperties, credentials.getUsername(), credentials.getPassword());
       }
       else if (dataSourceJNDI != null && ds == null) {
          try {
@@ -354,8 +353,9 @@ abstract class PoolBase
 
       Connection connection = null;
       try {
-         var username = config.getUsername();
-         var password = config.getPassword();
+         final var credentials = config.getCredentials();
+         final var username = credentials.getUsername();
+         final var password = credentials.getPassword();
 
          connection = (username == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
          if (connection == null) {

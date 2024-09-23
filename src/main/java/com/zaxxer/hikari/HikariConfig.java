@@ -18,6 +18,7 @@ package com.zaxxer.hikari;
 
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
+import com.zaxxer.hikari.util.Credentials;
 import com.zaxxer.hikari.util.PropertyElf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.zaxxer.hikari.util.UtilityElf.getNullIfEmpty;
 import static com.zaxxer.hikari.util.UtilityElf.safeIsAssignableFrom;
@@ -68,8 +70,7 @@ public class HikariConfig implements HikariConfigMXBean
    private volatile long maxLifetime;
    private volatile int maxPoolSize;
    private volatile int minIdle;
-   private volatile String username;
-   private volatile String password;
+   private final AtomicReference<Credentials> credentials = new AtomicReference<>(Credentials.of(null, null));
 
    // Properties NOT changeable at runtime
    //
@@ -283,7 +284,7 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public String getPassword()
    {
-      return password;
+      return credentials.get().getPassword();
    }
 
    /**
@@ -293,7 +294,7 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setPassword(String password)
    {
-      this.password = password;
+      credentials.updateAndGet(current -> Credentials.of(current.getUsername(), password));
    }
 
    /**
@@ -303,7 +304,7 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public String getUsername()
    {
-      return username;
+      return credentials.get().getUsername();
    }
 
    /**
@@ -314,7 +315,28 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setUsername(String username)
    {
-      this.username = username;
+      credentials.updateAndGet(current -> Credentials.of(username, current.getPassword()));
+   }
+
+   /**
+    * Atomically set the default username and password to use for DataSource.getConnection(username, password) calls.
+    *
+    * @param credentials the username and password pair
+    */
+   @Override
+   public void setCredentials(final Credentials credentials)
+   {
+      this.credentials.set(credentials);
+   }
+
+   /**
+    * Atomically get the default username and password to use for DataSource.getConnection(username, password) calls.
+    *
+    * @return the username and password pair
+    */
+   public Credentials getCredentials()
+   {
+      return credentials.get();
    }
 
    /** {@inheritDoc} */
@@ -945,17 +967,20 @@ public class HikariConfig implements HikariConfigMXBean
     *
     * @param other Other {@link HikariConfig} to copy the state to.
     */
+   @SuppressWarnings({"rawtypes", "unchecked"})
    public void copyStateTo(HikariConfig other)
    {
       for (var field : HikariConfig.class.getDeclaredFields()) {
-         if (!Modifier.isFinal(field.getModifiers())) {
-            field.setAccessible(true);
-            try {
+         try {
+            if (!Modifier.isFinal(field.getModifiers())) {
+               field.setAccessible(true);
                field.set(other, field.get(this));
+            } else if (field.getType().isAssignableFrom(AtomicReference.class)) {
+               ((AtomicReference) field.get(other)).set(((AtomicReference) field.get(this)).get());
             }
-            catch (Exception e) {
-               throw new RuntimeException("Failed to copy HikariConfig state: " + e.getMessage(), e);
-            }
+         }
+         catch (Exception e) {
+            throw new RuntimeException("Failed to copy HikariConfig state: " + e.getMessage(), e);
          }
       }
 

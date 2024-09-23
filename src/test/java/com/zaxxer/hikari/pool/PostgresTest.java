@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.zaxxer.hikari.util.Credentials;
 import org.junit.After;
 import org.junit.Before;
 
@@ -101,6 +102,24 @@ public class PostgresTest
       config.setIdleTimeout(2000);
       config.setMaxLifetime(5);
       config.setRegisterMbeans(true);
+
+      exerciseConfig(config, 3);
+   }
+
+   @Test
+   public void testCredentialRotation()
+   {
+      HikariConfig config = createConfig(postgres);
+      config.setMinimumIdle(3);
+      config.setMaximumPoolSize(10);
+      config.setConnectionTimeout(1000);
+      config.setIdleTimeout(SECONDS.toMillis(20));
+
+      exerciseConfig(config, 3);
+
+      updatePostgresCredentials("newuser", "newpassword");
+      config.setJdbcUrl(postgres.getJdbcUrl());
+      config.setCredentials(Credentials.of("newuser", "newpassword"));
 
       exerciseConfig(config, 3);
    }
@@ -192,5 +211,13 @@ public class PostgresTest
       config.setPassword(postgres.getPassword());
       config.setDriverClassName(postgres.getDriverClassName());
       return config;
+   }
+
+   private void updatePostgresCredentials(String username, String password) {
+      postgres.stop();
+      postgres = new PostgreSQLContainer<>(IMAGE_NAME)
+         .withUsername(username)
+         .withPassword(password);
+      postgres.start();
    }
 }
