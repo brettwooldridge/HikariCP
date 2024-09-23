@@ -48,8 +48,8 @@
    </organization>
 
    <scm>
-      <connection>scm:git:git@github.com:brettwooldridge/HikariCP.git</connection>
-      <developerConnection>scm:git:git@github.com:brettwooldridge/HikariCP.git</developerConnection>
+      <connection>scm:git:https://github.com/brettwooldridge/HikariCP.git</connection>
+      <developerConnection>scm:git:https://github.com/brettwooldridge/HikariCP.git</developerConnection>
       <url>https://github.com/brettwooldridge/HikariCP</url>
       <tag>HEAD</tag>
    </scm>
