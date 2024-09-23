@@ -96,6 +96,24 @@ public interface HikariConfigMXBean
    void setLeakDetectionThreshold(long leakDetectionThresholdMs);
 
    /**
+    * This property controls the percentage of a connections maximum lifetime that will be used as variance/jitter.
+    * This percentage will be a maximum and random variances up to this percentage will be subtracted from the defined
+    * maxLifeTime value.
+    *
+    * @return the maximum percentage of a connections maxLifeTime to be utilized as a variance
+    */
+   double getMaxLifetimeVariance();
+
+   /**
+    * This property controls the percentage of a connections maximum lifetime that will be used as variance/jitter.
+    * This percentage will be a maximum and random variances up to this percentage will be subtracted from the defined
+    * maxLifeTime value.
+    *
+    * @param maxLifetimeVariance the maximum percentage of maxLifeTime that should be used for variance
+    */
+   void setMaxLifetimeVariance(double maxLifetimeVariance);
+
+   /**
     * This property controls the maximum lifetime of a connection in the pool. When a connection reaches this
     * timeout, even if recently used, it will be retired from the pool. An in-use connection will never be
     * retired, only when it is idle will it be removed.
