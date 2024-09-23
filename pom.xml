@@ -9,7 +9,10 @@
       <!--java11.build.outputDirectory>${project.build.directory}/classes-java11</java11.build.outputDirectory -->
       <artifact.classifier />
 
-      <sonatypeOssDistMgmtSnapshotsUrl>https://oss.sonatype.org/content/repositories/snapshots/</sonatypeOssDistMgmtSnapshotsUrl>
+      <!-- When releasing a new version, this property controls whether the staged artifacts will be automatically
+           released in Nexus. If this is set to false (-DautoReleaseStagedArtifacts=false), artifacts will need to
+           be manually released via the Nexus UI at https://oss.sonatype.org -->
+      <autoReleaseStagedArtifacts>true</autoReleaseStagedArtifacts>
 
       <docker.maven.plugin.fabric8.version>0.45.0</docker.maven.plugin.fabric8.version>
       <felix.bundle.plugin.version>5.1.1</felix.bundle.plugin.version>
@@ -53,20 +56,6 @@
       <url>https://github.com/brettwooldridge/HikariCP</url>
       <tag>HEAD</tag>
    </scm>
-
-   <repositories>
-      <repository>
-         <id>sonatype-nexus-snapshots</id>
-         <name>Sonatype Nexus Snapshots</name>
-         <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-         <releases>
-            <enabled>false</enabled>
-         </releases>
-         <snapshots>
-            <enabled>true</enabled>
-         </snapshots>
-      </repository>
-   </repositories>
 
    <distributionManagement>
       <snapshotRepository>
@@ -274,6 +263,104 @@
             <directory>target/classes</directory>
          </resource>
       </resources>
+
+      <pluginManagement>
+         <plugins>
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-clean-plugin</artifactId>
+               <version>3.2.0</version>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-compiler-plugin</artifactId>
+               <version>3.10.1</version>
+               <configuration>
+                  <source>11</source>
+                  <target>11</target>
+                  <compilerArgs>-Xlint</compilerArgs>
+               </configuration>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-deploy-plugin</artifactId>
+               <version>2.8.2</version>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-gpg-plugin</artifactId>
+               <version>3.0.1</version>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-release-plugin</artifactId>
+               <version>2.5.3</version>
+            </plugin>
+
+            <plugin>
+               <groupId>org.sonatype.plugins</groupId>
+               <artifactId>nexus-staging-maven-plugin</artifactId>
+               <version>1.6.12</version>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-surefire-plugin</artifactId>
+               <version>3.0.0-M8</version>
+               <configuration>
+                  <!-- Sets the VM argument line used when unit tests are run. -->
+                  <argLine>${surefireArgLine} ${sureFireOptions11}</argLine>
+                  <reuseForks>${sureFireForks11}</reuseForks>
+               </configuration>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-source-plugin</artifactId>
+               <version>3.0.1</version>
+               <configuration>
+                  <!-- outputDirectory>/absolute/path/to/the/output/directory</outputDirectory>
+                     <finalName>filename-of-generated-jar-file</finalName -->
+                  <attach>true</attach>
+               </configuration>
+               <executions>
+                  <execution>
+                     <id>attach-sources</id>
+                     <goals>
+                        <goal>jar-no-fork</goal>
+                     </goals>
+                  </execution>
+               </executions>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-javadoc-plugin</artifactId>
+               <version>3.6.0</version>
+               <configuration>
+                  <show>public</show>
+                  <excludePackageNames>
+                     com.zaxxer.hikari.hibernate:com.zaxxer.hikari.metrics.*:com.zaxxer.hikari.pool:com.zaxxer.hikari.util
+                  </excludePackageNames>
+                  <attach>true</attach>
+                  <maxmemory>1024m</maxmemory>
+               </configuration>
+               <executions>
+                  <execution>
+                     <id>bundle-sources</id>
+                     <phase>package</phase>
+                     <goals>
+                        <goal>jar</goal>
+                     </goals>
+                  </execution>
+               </executions>
+            </plugin>
+         </plugins>
+      </pluginManagement>
 
       <plugins>
          <plugin>
@@ -501,116 +588,9 @@
             </executions>
          </plugin>
       </plugins>
-
-      <pluginManagement>
-         <plugins>
-            <plugin>
-               <groupId>org.apache.maven.plugins</groupId>
-               <artifactId>maven-compiler-plugin</artifactId>
-               <version>3.8.1</version>
-               <configuration>
-                  <source>11</source>
-                  <target>11</target>
-                  <compilerArgs>-Xlint</compilerArgs>
-               </configuration>
-            </plugin>
-
-            <plugin>
-               <groupId>org.apache.maven.plugins</groupId>
-               <artifactId>maven-release-plugin</artifactId>
-               <version>${maven.release.version}</version>
-               <configuration>
-                  <autoVersionSubmodules>true</autoVersionSubmodules>
-                  <tagNameFormat>HikariCP-@{project.version}</tagNameFormat>
-                  <arguments>-Psonatype-oss-release</arguments>
-               </configuration>
-            </plugin>
-
-            <plugin>
-               <groupId>org.apache.maven.plugins</groupId>
-               <artifactId>maven-surefire-plugin</artifactId>
-               <version>3.0.0-M8</version>
-               <configuration>
-                  <!-- Sets the VM argument line used when unit tests are run. -->
-                  <argLine>${surefireArgLine} ${sureFireOptions11}</argLine>
-                  <reuseForks>${sureFireForks11}</reuseForks>
-               </configuration>
-            </plugin>
-
-            <plugin>
-               <groupId>org.apache.maven.plugins</groupId>
-               <artifactId>maven-source-plugin</artifactId>
-               <version>3.0.1</version>
-               <configuration>
-                  <!-- outputDirectory>/absolute/path/to/the/output/directory</outputDirectory>
-                     <finalName>filename-of-generated-jar-file</finalName -->
-                  <attach>true</attach>
-               </configuration>
-               <executions>
-                  <execution>
-                     <id>attach-sources</id>
-                     <goals>
-                        <goal>jar-no-fork</goal>
-                     </goals>
-                  </execution>
-               </executions>
-            </plugin>
-
-            <plugin>
-               <groupId>org.apache.maven.plugins</groupId>
-               <artifactId>maven-javadoc-plugin</artifactId>
-               <version>3.0.1</version>
-               <configuration>
-                  <show>public</show>
-                  <excludePackageNames>
-                     com.zaxxer.hikari.hibernate:com.zaxxer.hikari.metrics.*:com.zaxxer.hikari.pool:com.zaxxer.hikari.util
-                  </excludePackageNames>
-                  <attach>true</attach>
-                  <maxmemory>1024m</maxmemory>
-               </configuration>
-               <executions>
-                  <execution>
-                     <id>bundle-sources</id>
-                     <phase>package</phase>
-                     <goals>
-                        <goal>jar</goal>
-                     </goals>
-                  </execution>
-               </executions>
-            </plugin>
-         </plugins>
-      </pluginManagement>
    </build>
 
    <profiles>
-      <profile>
-         <id>release-sign-artifacts</id>
-         <activation>
-            <property>
-               <name>performRelease</name>
-               <value>true</value>
-            </property>
-         </activation>
-         <build>
-            <plugins>
-               <plugin>
-                  <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-gpg-plugin</artifactId>
-                  <version>1.6</version>
-                  <executions>
-                     <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                           <goal>sign</goal>
-                        </goals>
-                     </execution>
-                  </executions>
-               </plugin>
-            </plugins>
-         </build>
-      </profile>
-
       <profile>
          <id>felix</id>
          <activation>
@@ -633,8 +613,15 @@
             </dependency>
          </dependencies>
       </profile>
+
       <profile>
-         <id>sonatype-oss-release</id>
+         <id>release</id>
+         <activation>
+            <property>
+               <name>performRelease</name>
+               <value>true</value>
+            </property>
+         </activation>
          <build>
             <plugins>
                <plugin>
@@ -650,6 +637,7 @@
                      </execution>
                   </executions>
                </plugin>
+
                <plugin>
                   <groupId>org.apache.maven.plugins</groupId>
                   <artifactId>maven-javadoc-plugin</artifactId>
@@ -663,10 +651,12 @@
                      </execution>
                   </executions>
                </plugin>
+
+               <!-- For release: mvn release:perform -Darguments=-Dgpg.passphrase=PASSPHRASE
+                      With gpg2 you don't need to pass the passphrase; the GPG agent will prompt for it. -->
                <plugin>
                   <groupId>org.apache.maven.plugins</groupId>
                   <artifactId>maven-gpg-plugin</artifactId>
-                  <version>3.1.0</version>
                   <executions>
                      <execution>
                         <id>sign-artifacts</id>
@@ -676,6 +666,20 @@
                         </goals>
                      </execution>
                   </executions>
+               </plugin>
+
+               <!-- nexus-staging-maven-plugin replaces the standard maven-deploy-plugin for releases and
+                    is useful for ensuring artifacts are all-or-nothing, as well as allowing artifacts to
+                    be reviewed before they're made public -->
+               <plugin>
+                  <groupId>org.sonatype.plugins</groupId>
+                  <artifactId>nexus-staging-maven-plugin</artifactId>
+                  <extensions>true</extensions>
+                  <configuration>
+                     <autoReleaseAfterClose>${autoReleaseStagedArtifacts}</autoReleaseAfterClose>
+                     <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                     <serverId>ossrh</serverId>
+                  </configuration>
                </plugin>
             </plugins>
          </build>
