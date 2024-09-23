@@ -357,7 +357,7 @@
                   <!-- Postgres Image is used 'as-is' and iked into the service s linimage -->
                   <image>
                      <alias>db</alias>
-                     <name>postgres:11</name>
+                     <name>postgres:16</name>
                      <run>
                         <env>
                            <POSTGRES_PASSWORD>password</POSTGRES_PASSWORD>
