@@ -311,6 +311,28 @@ public class TestConnections
    }
 
    @Test
+   public void testCloseMarkEvicted() throws Exception
+   {
+      HikariConfig config = newHikariConfig();
+      config.setMinimumIdle(0);
+      config.setMaximumPoolSize(5);
+      config.setConnectionTimeout(2500);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         ProxyConnection connection = (ProxyConnection) ds.getConnection();
+
+         HikariPool pool = getPool(ds);
+         assertEquals(1, pool.getTotalConnections());
+         connection.getPoolEntry().markEvicted();
+         connection.close();
+
+         assertEquals("Connection should have been evicted after close", 0, pool.getTotalConnections());
+      }
+   }
+
+   @Test
    public void testEviction() throws Exception
    {
       HikariConfig config = newHikariConfig();
