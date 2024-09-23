@@ -57,6 +57,8 @@ public class StubConnection extends StubBaseConnection
    private String catalog;
    private String schema;
    private long waitTimeout;
+   public boolean beginRequestCalled = false;
+   public boolean endRequestCalled = false;
 
    private static ScheduledExecutorService connectionWaitTimeout = new ScheduledThreadPoolExecutor(1);
    private ScheduledFuture<?> waitTimeoutTask;
@@ -555,4 +557,13 @@ public class StubConnection extends StubBaseConnection
       return 0;
    }
 
+   @Override
+   public void beginRequest() {
+      beginRequestCalled = true;
+   }
+
+   @Override
+   public void endRequest() {
+      endRequestCalled = true;
+   }
 }
