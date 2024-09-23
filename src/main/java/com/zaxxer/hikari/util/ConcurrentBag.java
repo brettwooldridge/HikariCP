@@ -45,7 +45,7 @@ import static java.util.concurrent.locks.LockSupport.parkNanos;
  * ThreadLocal lists can be "stolen" when the borrowing thread has none
  * of its own.  It is a "lock-less" implementation using a specialized
  * AbstractQueuedLongSynchronizer to manage cross-thread signaling.
- *
+ * <p>
  * Note that items that are "borrowed" from the bag are not actually
  * removed from any collection, so garbage collection will not occur
  * even if the reference is abandoned.  Thus care must be taken to

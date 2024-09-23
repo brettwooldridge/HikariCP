@@ -402,9 +402,9 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    void logPoolState(String... prefix)
    {
       if (logger.isDebugEnabled()) {
-         logger.debug("{} - {}stats (total={}, active={}, idle={}, waiting={})",
+         logger.debug("{} - {}stats (total={}/{}, idle={}/{}, active={}, waiting={})",
                       poolName, (prefix.length > 0 ? prefix[0] : ""),
-                      getTotalConnections(), getActiveConnections(), getIdleConnections(), getThreadsAwaitingConnection());
+                      getTotalConnections(), config.getMaximumPoolSize(), getIdleConnections(), config.getMinimumIdle(), getActiveConnections(), getThreadsAwaitingConnection());
       }
    }
 
@@ -740,8 +740,6 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          finally {
             if (added && loggingPrefix != null)
                logPoolState(loggingPrefix);
-            else
-               logPoolState("Connection not added, ");
          }
 
          // Pool is suspended, shutdown, or at max size
