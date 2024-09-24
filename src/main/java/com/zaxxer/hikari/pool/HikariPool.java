@@ -276,7 +276,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    }
 
    /**
-    * Set a metrics registry to be used when registering metrics collectors.  The HikariDataSource prevents this
+    * Set a metrics registry to be used when registering metrics collectors. The HikariDataSource prevents this
     * method from being called more than once.
     *
     * @param metricRegistry the metrics registry instance to use
@@ -311,7 +311,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    }
 
    /**
-    * Set the health check registry to be used when registering health checks.  Currently only Codahale health
+    * Set the health check registry to be used when registering health checks. Currently only Codahale health
     * checks are supported.
     *
     * @param healthCheckRegistry the health check registry instance to use
@@ -470,7 +470,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    // ***********************************************************************
 
    /**
-    * Creating new poolEntry.  If maxLifetime is configured, create a future End-of-life task with 2.5% variance from
+    * Creating new poolEntry. If maxLifetime is configured, create a future End-of-life task with 2.5% variance from
     * the maxLifetime time to ensure there is no massive die-off of Connections in the pool.
     */
    private PoolEntry createPoolEntry()
@@ -603,11 +603,11 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    }
 
    /**
-    * "Soft" evict a Connection (/PoolEntry) from the pool.  If this method is being called by the user directly
+    * "Soft" evict a Connection (/PoolEntry) from the pool. If this method is being called by the user directly
     * through {@link com.zaxxer.hikari.HikariDataSource#evictConnection(Connection)} then {@code owner} is {@code true}.
-    *
+    * <p>
     * If the caller is the owner, or if the Connection is idle (i.e. can be "reserved" in the {@link ConcurrentBag}),
-    * then we can close the connection immediately.  Otherwise, we leave it "marked" for eviction so that it is evicted
+    * then we can close the connection immediately. Otherwise, we leave it "marked" for eviction so that it is evicted
     * the next time someone tries to acquire it from the pool.
     *
     * @param poolEntry the PoolEntry (/Connection) to "soft" evict from the pool
@@ -627,8 +627,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    }
 
    /**
-    * Create/initialize the Housekeeping service {@link ScheduledExecutorService}.  If the user specified an Executor
-    * to be used in the {@link HikariConfig}, then we use that.  If no Executor was specified (typical), then create
+    * Create/initialize the Housekeeping service {@link ScheduledExecutorService}. If the user specified an Executor
+    * to be used in the {@link HikariConfig}, then we use that. If no Executor was specified (typical), then create
     * an Executor and configure it.
     *
     * @return either the user specified {@link ScheduledExecutorService}, or the one we created
@@ -679,11 +679,11 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
    /**
     * Create a timeout exception (specifically, {@link SQLTransientConnectionException}) to be thrown, because a
-    * timeout occurred when trying to acquire a Connection from the pool.  If there was an underlying cause for the
+    * timeout occurred when trying to acquire a Connection from the pool. If there was an underlying cause for the
     * timeout, e.g. a SQLException thrown by the driver while trying to create a new Connection, then use the
     * SQL State from that exception as our own and additionally set that exception as the "next" SQLException inside
     * our exception.
-    *
+    * <p>
     * As a side effect, log the timeout failure at DEBUG, and record the timeout failure in the metrics tracker.
     *
     * @param startTime the start time (timestamp) of the acquisition attempt
@@ -769,7 +769,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
       /**
        * We only create connections if we need another idle connection or have threads still waiting
-       * for a new connection.  Otherwise we bail out of the request to create.
+       * for a new connection. Otherwise, we bail out of the request to create.
        *
        * @return true if we should create a connection, false if the need has disappeared
        */

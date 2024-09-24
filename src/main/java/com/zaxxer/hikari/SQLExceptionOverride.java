@@ -4,9 +4,9 @@ import java.sql.SQLException;
 
 /**
  * Users can implement this interface to override the default SQLException handling
- * of HikariCP.  By the time an instance of this interface is invoked HikariCP has
+ * of HikariCP. By the time an instance of this interface is invoked HikariCP has
  * already made a determination to evict the Connection from the pool.
- *
+ * <p>
  * If the {@link #adjudicate(SQLException)} method returns {@link Override#CONTINUE_EVICT} the eviction will occur, but if the
  * method returns {@link Override#DO_NOT_EVICT} the eviction will be elided.
  */

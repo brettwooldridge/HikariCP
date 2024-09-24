@@ -105,7 +105,7 @@ public final class FastList<T> implements List<T>, RandomAccess, Serializable
    }
 
    /**
-    * Remove the last element from the list.  No bound check is performed, so if this
+    * Remove the last element from the list. No bound check is performed, so if this
     * method is called on an empty list and ArrayIndexOutOfBounds exception will be
     * thrown.
     *
@@ -120,7 +120,7 @@ public final class FastList<T> implements List<T>, RandomAccess, Serializable
 
    /**
     * This remove method is most efficient when the element being removed
-    * is the last element.  Equality is identity based, not equals() based.
+    * is the last element. Equality is identity based, not equals() based.
     * Only the first matching element is removed.
     *
     * @param element the element to remove

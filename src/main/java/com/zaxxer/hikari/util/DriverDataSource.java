@@ -152,13 +152,13 @@ public final class DriverDataSource implements DataSource
    }
 
    @Override
-   public void setLoginTimeout(int seconds) throws SQLException
+   public void setLoginTimeout(int seconds)
    {
       DriverManager.setLoginTimeout(seconds);
    }
 
    @Override
-   public int getLoginTimeout() throws SQLException
+   public int getLoginTimeout()
    {
       return DriverManager.getLoginTimeout();
    }

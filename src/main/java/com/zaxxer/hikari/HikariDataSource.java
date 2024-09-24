@@ -47,12 +47,12 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    private volatile HikariPool pool;
 
    /**
-    * Default constructor.  Setters are used to configure the pool.  Using
+    * Default constructor. Setters are used to configure the pool. Using
     * this constructor vs. {@link #HikariDataSource(HikariConfig)} will
     * result in {@link #getConnection()} performance that is slightly lower
     * due to lazy initialization checks.
-    *
-    * The first call to {@link #getConnection()} starts the pool.  Once the pool
+    * <p>
+    * The first call to {@link #getConnection()} starts the pool. Once the pool
     * is started, the configuration is "sealed" and no further configuration
     * changes are possible -- except via {@link HikariConfigMXBean} methods.
     */
@@ -62,10 +62,10 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    }
 
    /**
-    * Construct a HikariDataSource with the specified configuration.  The
+    * Construct a HikariDataSource with the specified configuration. The
     * {@link HikariConfig} is copied and the pool is started by invoking this
     * constructor.
-    *
+    * <p>
     * The {@link HikariConfig} can be modified without affecting the HikariDataSource
     * and used to initialize another HikariDataSource instance.
     *
@@ -297,7 +297,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    }
 
    /**
-    * Get the {@code HikariPoolMXBean} for this HikariDataSource instance.  If this method is called on
+    * Get the {@code HikariPoolMXBean} for this HikariDataSource instance. If this method is called on
     * a {@code HikariDataSource} that has been constructed without a {@code HikariConfig} instance,
     * and before an initial call to {@code #getConnection()}, the return value will be {@code null}.
     *
@@ -319,9 +319,9 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
    }
 
    /**
-    * Evict a connection from the pool.  If the connection has already been closed (returned to the pool)
+    * Evict a connection from the pool. If the connection has already been closed (returned to the pool)
     * this may result in a "soft" eviction; the connection will be evicted sometime in the future if it is
-    * currently in use.  If the connection has not been closed, the eviction is immediate.
+    * currently in use. If the connection has not been closed, the eviction is immediate.
     *
     * @param connection the connection to evict from the pool
     */

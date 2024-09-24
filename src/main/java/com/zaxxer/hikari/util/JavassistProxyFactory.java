@@ -30,7 +30,7 @@ import java.util.Set;
 
 /**
  * This class generates the proxy objects for {@link Connection}, {@link Statement},
- * {@link PreparedStatement}, and {@link CallableStatement}.  Additionally it injects
+ * {@link PreparedStatement}, and {@link CallableStatement}. Additionally, it injects
  * method bodies into the {@link ProxyFactory} class methods that can instantiate
  * instances of the generated proxies.
  *
@@ -100,7 +100,7 @@ public final class JavassistProxyFactory
    }
 
    /**
-    *  Generate Javassist Proxy Classes
+    * Generate Javassist Proxy Classes
     */
    private static <T> void generateProxyClass(Class<T> primaryInterface, String superClassName, String methodBody) throws Exception
    {
@@ -186,7 +186,7 @@ public final class JavassistProxyFactory
          }
       }
       catch (NotFoundException e) {
-         // fall thru
+         // fall through
       }
 
       return false;

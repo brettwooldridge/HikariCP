@@ -39,17 +39,17 @@ import static java.util.concurrent.locks.LockSupport.parkNanos;
 /**
  * This is a specialized concurrent bag that achieves superior performance
  * to LinkedBlockingQueue and LinkedTransferQueue for the purposes of a
- * connection pool.  It uses ThreadLocal storage when possible to avoid
+ * connection pool. It uses ThreadLocal storage when possible to avoid
  * locks, but resorts to scanning a common collection if there are no
- * available items in the ThreadLocal list.  Not-in-use items in the
+ * available items in the ThreadLocal list. Not-in-use items in the
  * ThreadLocal lists can be "stolen" when the borrowing thread has none
- * of its own.  It is a "lock-less" implementation using a specialized
+ * of its own. It is a "lock-less" implementation using a specialized
  * AbstractQueuedLongSynchronizer to manage cross-thread signaling.
  * <p>
  * Note that items that are "borrowed" from the bag are not actually
  * removed from any collection, so garbage collection will not occur
- * even if the reference is abandoned.  Thus care must be taken to
- * "requite" borrowed objects otherwise a memory leak will result.  Only
+ * even if the reference is abandoned. Thus care must be taken to
+ * "requite" borrowed objects otherwise a memory leak will result. Only
  * the "remove" method can completely remove an object from the bag.
  *
  * @author Brett Wooldridge
@@ -164,7 +164,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    }
 
    /**
-    * This method will return a borrowed object to the bag.  Objects
+    * This method will return a borrowed object to the bag. Objects
     * that are borrowed from the bag but never "requited" will result
     * in a memory leak.
     *
@@ -215,7 +215,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    }
 
    /**
-    * Remove a value from the bag.  This method should only be called
+    * Remove a value from the bag. This method should only be called
     * with objects obtained by <code>borrow(long, TimeUnit)</code> or <code>reserve(T)</code>
     *
     * @param bagEntry the value to remove
@@ -251,8 +251,8 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
 
    /**
     * This method provides a "snapshot" in time of the BagEntry
-    * items in the bag in the specified state.  It does not "lock"
-    * or reserve items in any way.  Call <code>reserve(T)</code>
+    * items in the bag in the specified state. It does not "lock"
+    * or reserve items in any way. Call <code>reserve(T)</code>
     * on items in list before performing any action on them.
     *
     * @param state one of the {@link IConcurrentBagEntry} states
@@ -266,8 +266,8 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    }
 
    /**
-    * This method provides a "snapshot" in time of the bag items.  It
-    * does not "lock" or reserve items in any way.  Call <code>reserve(T)</code>
+    * This method provides a "snapshot" in time of the bag items. It
+    * does not "lock" or reserve items in any way. Call <code>reserve(T)</code>
     * on items in the list, or understand the concurrency implications of
     * modifying items, before performing any action on them.
     *
@@ -281,15 +281,15 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
 
    /**
     * The method is used to make an item in the bag "unavailable" for
-    * borrowing.  It is primarily used when wanting to operate on items
-    * returned by the <code>values(int)</code> method.  Items that are
+    * borrowing. It is primarily used when wanting to operate on items
+    * returned by the <code>values(int)</code> method. Items that are
     * reserved can be removed from the bag via <code>remove(T)</code>
-    * without the need to unreserve them.  Items that are not removed
+    * without the need to unreserve them. Items that are not removed
     * from the bag can be make available for borrowing again by calling
     * the <code>unreserve(T)</code> method.
     *
     * @param bagEntry the item to reserve
-    * @return true if the item was able to be reserved, false otherwise
+    * @return true if the item is able to reserve, false otherwise
     */
    public boolean reserve(final T bagEntry)
    {

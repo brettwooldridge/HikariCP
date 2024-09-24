@@ -145,9 +145,9 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Construct a HikariConfig from the specified property file name.  <code>propertyFileName</code>
+    * Construct a HikariConfig from the specified property file name. <code>propertyFileName</code>
     * will first be treated as a path in the file-system, and if that fails the
-    * Class.getResourceAsStream(propertyFileName) will be tried.
+    * <code>Class.getResourceAsStream(propertyFileName)</code> will be tried.
     *
     * @param propertyFileName the name of the property file
     */
@@ -397,7 +397,7 @@ public class HikariConfig implements HikariConfigMXBean
 
    /**
     * Set the SQL string that will be executed on all new connections when they are
-    * created, before they are added to the pool.  If this query fails, it will be
+    * created, before they are added to the pool. If this query fails, it will be
     * treated as a failed connection attempt.
     *
     * @param connectionInitSql the SQL to execute on new connections
@@ -420,7 +420,7 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Set a {@link DataSource} for the pool to explicitly wrap.  This setter is not
+    * Set a {@link DataSource} for the pool to explicitly wrap. This setter is not
     * available through property file based initialization.
     *
     * @param dataSource a specific {@link DataSource} to be wrapped by the pool
@@ -456,7 +456,7 @@ public class HikariConfig implements HikariConfigMXBean
     * Add a property (name/value pair) that will be used to configure the {@link DataSource}/{@link java.sql.Driver}.
     * <p>
     * In the case of a {@link DataSource}, the property names will be translated to Java setters following the Java Bean
-    * naming convention.  For example, the property {@code cachePrepStmts} will translate into {@code setCachePrepStmts()}
+    * naming convention. For example, the property {@code cachePrepStmts} will translate into {@code setCachePrepStmts()}
     * with the {@code value} passed as a parameter.
     * <p>
     * In the case of a {@link java.sql.Driver}, the property will be added to a {@link Properties} instance that will
@@ -568,8 +568,8 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Set whether or not pool suspension is allowed.  There is a performance
-    * impact when pool suspension is enabled.  Unless you need it (for a
+    * Set whether pool suspension is allowed. There is a performance
+    * impact when pool suspension is enabled. Unless you need it (for a
     * redundancy system for example) do not enable it.
     *
     * @param isAllowPoolSuspension the desired pool suspension allowance
@@ -581,7 +581,7 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Get the pool initialization failure timeout.  See {@code #setInitializationFailTimeout(long)}
+    * Get the pool initialization failure timeout. See {@code #setInitializationFailTimeout(long)}
     * for details.
     *
     * @return the number of milliseconds before the pool initialization fails
@@ -593,32 +593,32 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Set the pool initialization failure timeout.  This setting applies to pool
+    * Set the pool initialization failure timeout. This setting applies to pool
     * initialization when {@link HikariDataSource} is constructed with a {@link HikariConfig},
     * or when {@link HikariDataSource} is constructed using the no-arg constructor
     * and {@link HikariDataSource#getConnection()} is called.
     * <ul>
     *   <li>Any value greater than zero will be treated as a timeout for pool initialization.
     *       The calling thread will be blocked from continuing until a successful connection
-    *       to the database, or until the timeout is reached.  If the timeout is reached, then
+    *       to the database, or until the timeout is reached. If the timeout is reached, then
     *       a {@code PoolInitializationException} will be thrown. </li>
-    *   <li>A value of zero will <i>not</i>  prevent the pool from starting in the
+    *   <li>A value of zero will <i>not</i> prevent the pool from starting in the
     *       case that a connection cannot be obtained. However, upon start the pool will
     *       attempt to obtain a connection and validate that the {@code connectionTestQuery}
-    *       and {@code connectionInitSql} are valid.  If those validations fail, an exception
-    *       will be thrown.  If a connection cannot be obtained, the validation is skipped
+    *       and {@code connectionInitSql} are valid. If those validations fail, an exception
+    *       will be thrown. If a connection cannot be obtained, the validation is skipped
     *       and the the pool will start and continue to try to obtain connections in the
-    *       background.  This can mean that callers to {@code DataSource#getConnection()} may
+    *       background. This can mean that callers to {@code DataSource#getConnection()} may
     *       encounter exceptions. </li>
     *   <li>A value less than zero will bypass any connection attempt and validation during
-    *       startup, and therefore the pool will start immediately.  The pool will continue to
+    *       startup, and therefore the pool will start immediately. The pool will continue to
     *       try to obtain connections in the background. This can mean that callers to
     *       {@code DataSource#getConnection()} may encounter exceptions. </li>
     * </ul>
     * Note that if this timeout value is greater than or equal to zero (0), and therefore an
     * initial connection validation is performed, this timeout does not override the
     * {@code connectionTimeout} or {@code validationTimeout}; they will be honored before this
-    * timeout is applied.  The default value is one millisecond.
+    * timeout is applied. The default value is one millisecond.
     *
     * @param initializationFailTimeout the number of milliseconds before the
     *        pool initialization fails, or 0 to validate connection setup but continue with
@@ -633,7 +633,7 @@ public class HikariConfig implements HikariConfigMXBean
 
    /**
     * Determine whether internal pool queries, principally aliveness checks, will be isolated in their own transaction
-    * via {@link Connection#rollback()}.  Defaults to {@code false}.
+    * via {@link Connection#rollback()}. Defaults to {@code false}.
     *
     * @return {@code true} if internal pool queries are isolated, {@code false} if not
     */
@@ -644,7 +644,7 @@ public class HikariConfig implements HikariConfigMXBean
 
    /**
     * Configure whether internal pool queries, principally aliveness checks, will be isolated in their own transaction
-    * via {@link Connection#rollback()}.  Defaults to {@code false}.
+    * via {@link Connection#rollback()}. Defaults to {@code false}.
     *
     * @param isolate {@code true} if internal pool queries should be isolated, {@code false} if not
     */
@@ -669,7 +669,7 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Get the MetricRegistry instance to use for registration of metrics used by HikariCP.  Default is {@code null}.
+    * Get the MetricRegistry instance to use for registration of metrics used by HikariCP. Default is {@code null}.
     *
     * @return the MetricRegistry instance that will be used
     */
@@ -702,7 +702,7 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Get the HealthCheckRegistry that will be used for registration of health checks by HikariCP.  Currently only
+    * Get the HealthCheckRegistry that will be used for registration of health checks by HikariCP. Currently only
     * Codahale/DropWizard is supported for health checks.
     *
     * @return the HealthCheckRegistry instance that will be used
@@ -713,8 +713,8 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Set the HealthCheckRegistry that will be used for registration of health checks by HikariCP.  Currently only
-    * Codahale/DropWizard is supported for health checks.  Default is {@code null}.
+    * Set the HealthCheckRegistry that will be used for registration of health checks by HikariCP. Currently only
+    * Codahale/DropWizard is supported for health checks. Default is {@code null}.
     *
     * @param healthCheckRegistry the HealthCheckRegistry to be used
     */
@@ -821,7 +821,7 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Set the name of the connection pool.  This is primarily used in logging and JMX management consoles
+    * Set the name of the connection pool. This is primarily used in logging and JMX management consoles
     * to identify pools and pool configurations
     *
     * @param poolName the name of the connection pool to use
@@ -951,8 +951,8 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
-    * Set the default transaction isolation level.  The specified value is the
-    * constant name from the <code>Connection</code> class, eg.
+    * Set the default transaction isolation level. The specified value is the
+    * constant name from the <code>Connection</code> class, for example:
     * <code>TRANSACTION_REPEATABLE_READ</code>.
     *
     * @param isolationLevel the name of the isolation level
@@ -1143,7 +1143,7 @@ public class HikariConfig implements HikariConfigMXBean
          LOGGER.warn("{} - idleTimeout is less than 10000ms, setting to default {}ms.", poolName, IDLE_TIMEOUT);
          idleTimeout = IDLE_TIMEOUT;
       }
-      else  if (idleTimeout != IDLE_TIMEOUT && idleTimeout != 0 && minIdle == maxPoolSize) {
+      else if (idleTimeout != IDLE_TIMEOUT && idleTimeout != 0 && minIdle == maxPoolSize) {
          LOGGER.warn("{} - idleTimeout has been set but has no effect because the pool is operating as a fixed size pool.", poolName);
       }
    }

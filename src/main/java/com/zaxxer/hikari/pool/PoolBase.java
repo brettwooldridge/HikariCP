@@ -347,7 +347,7 @@ abstract class PoolBase
    /**
     * Obtain connection from data source.
     *
-    * @return a Connection connection
+    * @return a connection
     */
    private Connection newConnection() throws Exception
    {
@@ -388,7 +388,7 @@ abstract class PoolBase
    }
 
    /**
-    * Setup a connection initial state.
+    * Set up a connection initial state.
     *
     * @param connection a Connection
     * @throws ConnectionSetupException thrown if any exception is encountered
@@ -517,7 +517,7 @@ abstract class PoolBase
 
    /**
     * Set the network timeout, if <code>isUseNetworkTimeout</code> is <code>true</code> and the
-    * driver supports it.  Return the pre-existing value of the network timeout.
+    * driver supports it. Return the pre-existing value of the network timeout.
     *
     * @param connection the connection to set the network timeout on
     * @param timeoutMs the number of milliseconds before timeout
@@ -630,7 +630,7 @@ abstract class PoolBase
    /**
     * This will create a string for debug logging. Given a set of "reset bits", this
     * method will return a concatenated string, for example:
-    *
+    * <p>
     * Input : 0b00110
     * Output: "autoCommit, isolation"
     *
@@ -700,7 +700,7 @@ abstract class PoolBase
    }
 
    /**
-    * A class that delegates to a MetricsTracker implementation.  The use of a delegate
+    * A class that delegates to a MetricsTracker implementation. The use of a delegate
     * allows us to use the NopMetricsTrackerDelegate when metrics are disabled, which in
     * turn allows the JIT to completely optimize away to callsites to record metrics.
     */

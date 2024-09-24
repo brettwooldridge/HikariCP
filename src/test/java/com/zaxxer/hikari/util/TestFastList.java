@@ -106,7 +106,7 @@ public class TestFastList
        }
 
        Iterator<Statement> iter = list.iterator();
-       for (int i = 0;  i < list.size(); i++) {
+       for (int i = 0; i < list.size(); i++) {
           assertSame(list.get(i), iter.next());
        }
     }
