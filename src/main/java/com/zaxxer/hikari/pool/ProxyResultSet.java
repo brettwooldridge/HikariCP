@@ -56,7 +56,7 @@ public abstract class ProxyResultSet implements ResultSet
 
    /** {@inheritDoc} */
    @Override
-   public final Statement getStatement() throws SQLException
+   public final Statement getStatement()
    {
       return statement;
    }

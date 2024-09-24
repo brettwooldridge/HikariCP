@@ -19,7 +19,7 @@ package com.zaxxer.hikari;
 import com.zaxxer.hikari.util.Credentials;
 
 /**
- * The javax.management MBean for a Hikari pool configuration.
+ * The {@code javax.management} MBean for a Hikari pool configuration.
  *
  * @author Brett Wooldridge
  */
@@ -116,7 +116,7 @@ public interface HikariConfigMXBean
    /**
     * The property controls the minimum number of idle connections that HikariCP tries to maintain in the pool,
     * including both idle and in-use connections. If the idle connections dip below this value, HikariCP will
-    * make a best effort to restore them quickly and efficiently.
+    * make the best effort to restore them quickly and efficiently.
     *
     * @return the minimum number of connections in the pool
     */
@@ -125,7 +125,7 @@ public interface HikariConfigMXBean
    /**
     * The property controls the minimum number of idle connections that HikariCP tries to maintain in the pool,
     * including both idle and in-use connections. If the idle connections dip below this value, HikariCP will
-    * make a best effort to restore them quickly and efficiently.
+    * make the best effort to restore them quickly and efficiently.
     *
     * @param minIdle the minimum number of idle connections in the pool to maintain
     */

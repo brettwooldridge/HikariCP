@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A Runnable that is scheduled in the future to report leaks.  The ScheduledFuture is
+ * A Runnable that is scheduled in the future to report leaks. The ScheduledFuture is
  * cancelled if the connection is closed before the leak time expires.
  *
  * @author Brett Wooldridge

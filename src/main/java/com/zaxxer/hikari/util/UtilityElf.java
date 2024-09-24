@@ -43,7 +43,7 @@ public final class UtilityElf
 
    /**
     *
-    * @return null if string is null or empty, , trimmed string otherwise
+    * @return null if string is null or empty, trimmed string otherwise
    */
    public static String getNullIfEmpty(final String text)
    {

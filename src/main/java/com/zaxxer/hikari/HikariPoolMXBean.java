@@ -19,7 +19,7 @@ package com.zaxxer.hikari;
 import javax.sql.DataSource;
 
 /**
- * The javax.management MBean for a Hikari pool instance.
+ * The {@code javax.management} MBean for a Hikari pool instance.
  *
  * @author Brett Wooldridge
  */
@@ -28,7 +28,7 @@ public interface HikariPoolMXBean
    /**
     * Get the number of currently idle connections in the pool.
     * <p>
-    * The return value is extremely transient and is a point-in-time measurement.  Therefore, due to a time
+    * The return value is extremely transient and is a point-in-time measurement. Therefore, due to a time
     * difference between invoking this method and {@link #getActiveConnections()}, it is possible for the sum
     * of idle plus active connections to be either less than or greater than the value returned by
     * {@link #getTotalConnections()}.
@@ -40,7 +40,7 @@ public interface HikariPoolMXBean
    /**
     * Get the number of currently active connections in the pool.
     * <p>
-    * The return value is extremely transient and is a point-in-time measurement.  Therefore, due to a time
+    * The return value is extremely transient and is a point-in-time measurement. Therefore, due to a time
     * difference between invoking this method and {@link #getIdleConnections()}, it is possible for the sum
     * of idle plus active connections to be either less than or greater than the value returned by
     * {@link #getTotalConnections()}.
@@ -50,7 +50,7 @@ public interface HikariPoolMXBean
    int getActiveConnections();
 
    /**
-    * Get the total number of connections currently in the pool.  The return value is transient and is a
+    * Get the total number of connections currently in the pool. The return value is transient and is a
     * point-in-time measurement.
     *
     * @return the total number of connections in the pool
@@ -58,7 +58,7 @@ public interface HikariPoolMXBean
    int getTotalConnections();
 
    /**
-    * Get the number of threads awaiting connections from the pool.  The return value is extremely transient and is
+    * Get the number of threads awaiting connections from the pool. The return value is extremely transient and is
     * a point-in-time measurement.
     *
     * @return the number of threads awaiting a connection from the pool
@@ -72,7 +72,7 @@ public interface HikariPoolMXBean
    void softEvictConnections();
 
    /**
-    * Suspend the pool.  When the pool is suspended, threads calling {@link DataSource#getConnection()} will be
+    * Suspend the pool. When the pool is suspended, threads calling {@link DataSource#getConnection()} will be
     * blocked <i>with no timeout</i> until the pool is resumed via the {@link #resumePool()} method.
     * <br>
     * This method has no effect unless the {@link HikariConfig#setAllowPoolSuspension(boolean)} method or equivalent
@@ -81,7 +81,7 @@ public interface HikariPoolMXBean
    void suspendPool();
 
    /**
-    * Resume the pool.  Enables connection borrowing to resume on a pool that has been suspended via the
+    * Resume the pool. Enables connection borrowing to resume on a pool that has been suspended via the
     * {@link #suspendPool()} method.
     * <br>
     * This method has no effect unless the {@link HikariConfig#setAllowPoolSuspension(boolean)} method or equivalent

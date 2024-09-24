@@ -68,7 +68,7 @@ public class HikariConnectionProvider implements ConnectionProvider, Configurabl
       this.hds = null;
       if (Version.getVersionString().substring(0, 5).compareTo("4.3.6") >= 1) {
          LOGGER.warn("com.zaxxer.hikari.hibernate.HikariConnectionProvider has been deprecated for versions of "
-                     + "Hibernate 4.3.6 and newer.  Please switch to org.hibernate.hikaricp.internal.HikariCPConnectionProvider.");
+                     + "Hibernate 4.3.6 and newer. Please switch to org.hibernate.hikaricp.internal.HikariCPConnectionProvider.");
       }
    }
 
