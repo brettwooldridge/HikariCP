@@ -41,7 +41,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.zaxxer.hikari.pool.ProxyConnection.*;
 import static com.zaxxer.hikari.util.ClockSource.*;
@@ -59,7 +58,7 @@ abstract class PoolBase
    protected final String poolName;
 
    volatile String catalog;
-   final AtomicReference<Exception> lastConnectionFailure;
+   volatile Exception lastConnectionFailure;
 
    long connectionTimeout;
    long validationTimeout;
@@ -109,7 +108,6 @@ abstract class PoolBase
       this.poolName = config.getPoolName();
       this.connectionTimeout = config.getConnectionTimeout();
       this.validationTimeout = config.getValidationTimeout();
-      this.lastConnectionFailure = new AtomicReference<>();
 
       initializeDataSource();
    }
@@ -177,7 +175,7 @@ abstract class PoolBase
          return false;
       }
       catch (Exception e) {
-         lastConnectionFailure.set(e);
+         lastConnectionFailure = e;
          logger.warn("{} - Failed to validate connection {} ({}). Possibly consider using a shorter maxLifetime value.",
                      poolName, connection, e.getMessage());
          return true;
@@ -186,7 +184,7 @@ abstract class PoolBase
 
    Exception getLastConnectionFailure()
    {
-      return lastConnectionFailure.get();
+      return lastConnectionFailure;
    }
 
    public DataSource getUnwrappedDataSource()
@@ -365,7 +363,7 @@ abstract class PoolBase
          }
 
          setupConnection(connection);
-         lastConnectionFailure.set(null);
+         lastConnectionFailure = null;
          return connection;
       }
       catch (Exception e) {
@@ -376,7 +374,7 @@ abstract class PoolBase
             logger.debug("{} - Failed to create/setup connection: {}", poolName, e.getMessage());
          }
 
-         lastConnectionFailure.set(e);
+         lastConnectionFailure = e;
          throw e;
       }
       finally {
