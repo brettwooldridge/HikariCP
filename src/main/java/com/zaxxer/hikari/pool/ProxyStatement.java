@@ -227,8 +227,13 @@ public abstract class ProxyStatement implements Statement
    public ResultSet getGeneratedKeys() throws SQLException
    {
       var resultSet = delegate.getGeneratedKeys();
-      if (proxyResultSet == null || ((ProxyResultSet) proxyResultSet).delegate != resultSet) {
-         proxyResultSet = ProxyFactory.getProxyResultSet(connection, this, resultSet);
+      if (resultSet != null) {
+         if (proxyResultSet == null || ((ProxyResultSet) proxyResultSet).delegate != resultSet) {
+            proxyResultSet = ProxyFactory.getProxyResultSet(connection, this, resultSet);
+         }
+      }
+      else {
+         proxyResultSet = null;
       }
       return proxyResultSet;
    }
