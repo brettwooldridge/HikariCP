@@ -26,9 +26,7 @@ import org.slf4j.LoggerFactory;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Modifier;
 import java.security.AccessControlException;
 import java.sql.Connection;
@@ -1197,8 +1195,7 @@ public class HikariConfig implements HikariConfigMXBean
 
    private void loadProperties(String propertyFileName)
    {
-      final var propFile = new File(propertyFileName);
-      try (final var is = propFile.isFile() ? new FileInputStream(propFile) : this.getClass().getResourceAsStream(propertyFileName)) {
+      try (final var is = openPropertiesInputStream(propertyFileName)) {
          if (is != null) {
             var props = new Properties();
             props.load(is);
@@ -1211,6 +1208,18 @@ public class HikariConfig implements HikariConfigMXBean
       catch (IOException io) {
          throw new RuntimeException("Failed to read property file", io);
       }
+   }
+
+   private InputStream openPropertiesInputStream(String propertyFileName) throws FileNotFoundException {
+      final var propFile = new File(propertyFileName);
+      if (propFile.isFile()) {
+         return new FileInputStream(propFile);
+      }
+      var propertiesInputStream = this.getClass().getResourceAsStream(propertyFileName);
+      if (propertiesInputStream == null) {
+        propertiesInputStream = this.getClass().getClassLoader().getResourceAsStream(propertyFileName);
+      }
+      return propertiesInputStream;
    }
 
    private String generatePoolName()
