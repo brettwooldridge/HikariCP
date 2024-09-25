@@ -22,9 +22,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
- * This is the proxy class for java.sql.Statement.
+ * This is the proxy class for {@link Statement}.
  *
  * @author Brett Wooldridge
+ * @author Yanming Zhou
  */
 public abstract class ProxyStatement implements Statement
 {
@@ -231,6 +232,13 @@ public abstract class ProxyStatement implements Statement
          proxyResultSet = ProxyFactory.getProxyResultSet(connection, this, resultSet);
       }
       return proxyResultSet;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public final boolean isWrapperFor(Class<?> iface) throws SQLException
+   {
+      return iface.isInstance(delegate) || (delegate != null && delegate.isWrapperFor(iface));
    }
 
    /** {@inheritDoc} */

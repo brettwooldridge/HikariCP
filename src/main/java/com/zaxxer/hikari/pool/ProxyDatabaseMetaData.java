@@ -5,6 +5,12 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+/**
+ * This is the proxy class for {@link DatabaseMetaData}.
+ *
+ * @author Brett Wooldridge
+ * @author Yanming Zhou
+ */
 public abstract class ProxyDatabaseMetaData implements DatabaseMetaData
 {
    protected final ProxyConnection connection;
@@ -300,6 +306,13 @@ public abstract class ProxyDatabaseMetaData implements DatabaseMetaData
          statement = ProxyFactory.getProxyStatement(connection, statement);
       }
       return ProxyFactory.getProxyResultSet(connection, (ProxyStatement) statement, resultSet);
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public final boolean isWrapperFor(Class<?> iface) throws SQLException
+   {
+      return iface.isInstance(delegate) || (delegate != null && delegate.isWrapperFor(iface));
    }
 
    /** {@inheritDoc} */

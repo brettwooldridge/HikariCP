@@ -30,7 +30,7 @@ import java.util.concurrent.Executor;
 import static com.zaxxer.hikari.SQLExceptionOverride.Override.DO_NOT_EVICT;
 
 /**
- * This is the proxy class for java.sql.Connection.
+ * This is the proxy class for {@link Connection}.
  *
  * @author Brett Wooldridge
  */
