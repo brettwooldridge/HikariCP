@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package com.zaxxer.hikari.metrics.prometheus;
 
@@ -102,7 +102,7 @@ public class HikariCPCollectorTest
 
       StubConnection.slowCreate = true;
       try (HikariDataSource ds = new HikariDataSource(config);
-         Connection connection1 = ds.getConnection()) {
+           Connection connection1 = ds.getConnection()) {
 
          quietlySleep(1000);
 
@@ -115,6 +115,34 @@ public class HikariCPCollectorTest
       }
       finally {
          StubConnection.slowCreate = false;
+      }
+   }
+
+   @Test
+   public void connectionWithMetricNaming2() throws Exception
+   {
+      HikariConfig config = newHikariConfig();
+      System.setProperty("hikari.metrics.naming2", "true");
+      config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory(this.collectorRegistry));
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      config.setMaximumPoolSize(1);
+
+      StubConnection.slowCreate = true;
+      try (HikariDataSource ds = new HikariDataSource(config);
+           Connection connection1 = ds.getConnection()) {
+
+         quietlySleep(1000);
+
+         assertThat(getValue("hikaricp_connections_active", "connectionWithMetricNaming2"), is(1.0));
+         assertThat(getValue("hikaricp_connections_idle", "connectionWithMetricNaming2"), is(0.0));
+         assertThat(getValue("hikaricp_connections_pending", "connectionWithMetricNaming2"), is(0.0));
+         assertThat(getValue("hikaricp_connections", "connectionWithMetricNaming2"), is(1.0));
+         assertThat(getValue("hikaricp_connections_max", "connectionWithMetricNaming2"), is(1.0));
+         assertThat(getValue("hikaricp_connections_min", "connectionWithMetricNaming2"), is(1.0));
+      }
+      finally {
+         StubConnection.slowCreate = false;
+         System.setProperty("hikari.metrics.naming2", "false");
       }
    }
 
@@ -205,9 +233,11 @@ public class HikariCPCollectorTest
 
    private PoolStats poolStatsWithPredefinedValues()
    {
-      return new PoolStats(0) {
+      return new PoolStats(0)
+      {
          @Override
-         protected void update() {
+         protected void update()
+         {
             totalConnections = 100;
             idleConnections = 42;
             activeConnections = 58;
