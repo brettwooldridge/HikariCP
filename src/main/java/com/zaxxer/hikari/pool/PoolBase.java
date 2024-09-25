@@ -352,6 +352,7 @@ abstract class PoolBase
    private Connection newConnection() throws Exception
    {
       final var start = currentTime();
+      final var id = java.util.UUID.randomUUID();
 
       Connection connection = null;
       try {
@@ -359,21 +360,24 @@ abstract class PoolBase
          final var username = credentials.getUsername();
          final var password = credentials.getPassword();
 
+         logger.debug("{} - Attempting to create/setup new connection: {} ", poolName, id.toString());
+         
          connection = (username == null) ? dataSource.getConnection() : dataSource.getConnection(username, password);
          if (connection == null) {
             throw new SQLTransientConnectionException("DataSource returned null unexpectedly");
          }
 
          setupConnection(connection);
+         logger.debug("{} - Established new connection: {}", poolName, id);
          lastConnectionFailure.set(null);
          return connection;
       }
       catch (Exception e) {
          if (connection != null) {
-            quietlyCloseConnection(connection, "(Failed to create/setup connection)");
+            quietlyCloseConnection(connection, "(Failed to create/setup connection for id:".concat(id.toString()));
          }
          else if (getLastConnectionFailure() == null) {
-            logger.debug("{} - Failed to create/setup connection: {}", poolName, e.getMessage());
+            logger.debug("{} - Failed to create/setup connection: {} {}", poolName, e.getMessage(), id.toString());
          }
 
          lastConnectionFailure.set(e);
