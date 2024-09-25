@@ -602,7 +602,7 @@ abstract class PoolBase
       }
       else {
          ThreadFactory threadFactory = config.getThreadFactory();
-         threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory(poolName + " network timeout executor");
+         threadFactory = threadFactory != null ? threadFactory : new DefaultThreadFactory(poolName + ":network-timeout-executor");
          ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool(threadFactory);
          executor.setKeepAliveTime(15, SECONDS);
          executor.allowCoreThreadTimeOut(true);
