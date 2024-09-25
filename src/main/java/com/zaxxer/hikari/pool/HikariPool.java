@@ -578,16 +578,10 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             return;
          }
 
-         if (getLastConnectionFailure() instanceof ConnectionSetupException) {
-            throwPoolInitializationException(getLastConnectionFailure().getCause());
-         }
-
          quietlySleep(SECONDS.toMillis(1));
       } while (elapsedMillis(startTime) < initializationTimeout);
 
-      if (initializationTimeout > 0) {
-         throwPoolInitializationException(getLastConnectionFailure());
-      }
+      throwPoolInitializationException(getLastConnectionFailure());
    }
 
    /**

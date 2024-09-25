@@ -28,7 +28,9 @@ import org.apache.logging.log4j.Level;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -37,6 +39,7 @@ import static com.zaxxer.hikari.pool.TestElf.*;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.*;
+import static org.mockito.BDDMockito.given;
 
 /**
  * @author Brett Wooldridge
@@ -705,6 +708,28 @@ public class TestConnections
    }
 
    @Test
+   public void testInitializationFailTimeout() throws SQLException
+   {
+      Connection connection = Mockito.mock(Connection.class);
+
+      DataSource dataSource = Mockito.mock(DataSource.class);
+      given(dataSource.getConnection())
+         .willThrow(new SQLException("Simulated exception in getConnection()"))
+         .willReturn(connection);
+
+      HikariConfig config = newHikariConfig();
+      config.setMinimumIdle(1);
+      config.setMaximumPoolSize(2);
+      config.setConnectionTimeout(TimeUnit.SECONDS.toMillis(3));
+      config.setInitializationFailTimeout(TimeUnit.SECONDS.toMillis(2));
+      config.setDataSource(dataSource);
+
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         assertSame(ds.getConnection().unwrap(Connection.class), connection);
+      }
+   }
+
+   @Test
    public void testInitializationFailure1()
    {
       StubDataSource stubDataSource = new StubDataSource();
@@ -720,7 +745,7 @@ public class TestConnections
          try (Connection ignored = ds.getConnection()) {
             fail("Initialization should have failed");
          }
-         catch (SQLException e) {
+         catch (PoolInitializationException | SQLException e) {
             // passed
          }
       }
@@ -784,7 +809,7 @@ public class TestConnections
          }
       }
       catch (PoolInitializationException e) {
-         assertSame("Simulated exception in createStatement()", e.getCause().getMessage());
+         assertEquals("java.sql.SQLException: Simulated exception in createStatement()", e.getCause().getMessage());
       }
 
       config.setInitializationFailTimeout(0);
