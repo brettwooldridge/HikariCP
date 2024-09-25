@@ -369,6 +369,13 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
    /** {@inheritDoc} */
    @Override
+   public boolean isSuspended()
+   {
+      return poolState == POOL_SUSPENDED;
+   }
+
+   /** {@inheritDoc} */
+   @Override
    public void softEvictConnections()
    {
       connectionBag.values().forEach(poolEntry -> softEvictConnection(poolEntry, "(connection evicted)", false /* not owner */));

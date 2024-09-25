@@ -66,6 +66,11 @@ public interface HikariPoolMXBean
    int getThreadsAwaitingConnection();
 
    /**
+    * Returns whether the pool is currently suspended.
+    */
+   boolean isSuspended();
+
+   /**
     * Evict currently idle connections from the pool, and mark active (in-use) connections for eviction when they are
     * returned to the pool.
     */
