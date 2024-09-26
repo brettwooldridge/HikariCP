@@ -20,6 +20,7 @@ import com.zaxxer.hikari.pool.*;
 import javassist.*;
 import javassist.bytecode.ClassFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.sql.*;
@@ -35,11 +36,12 @@ import java.util.Set;
  * instances of the generated proxies.
  *
  * @author Brett Wooldridge
+ * @author Yanming Zhou
  */
 public final class JavassistProxyFactory
 {
    private static ClassPool classPool;
-   private static String genDirectory = "";
+   private static String genDirectory = "target" + File.separator + "classes";
 
    public static void main(String... args) throws Exception {
       classPool = new ClassPool();
@@ -47,8 +49,14 @@ public final class JavassistProxyFactory
       classPool.appendClassPath(new LoaderClassPath(JavassistProxyFactory.class.getClassLoader()));
 
       if (args.length > 0) {
-         genDirectory = args[0];
+         String parentDir = args[0];
+         if (!parentDir.endsWith(File.separator)) {
+            parentDir += File.separator;
+         }
+         genDirectory = parentDir + genDirectory;
       }
+
+      System.out.println("Generating following classes to " + genDirectory);
 
       // Cast is not needed for these
       String methodBody = "{ try { return delegate.method($$); } catch (SQLException e) { throw checkException(e); } }";
@@ -96,7 +104,7 @@ public final class JavassistProxyFactory
          }
       }
 
-      proxyCt.writeFile(genDirectory + "target/classes");
+      proxyCt.writeFile(genDirectory);
    }
 
    /**
@@ -173,7 +181,7 @@ public final class JavassistProxyFactory
       }
 
       targetCt.getClassFile().setMajorVersion(ClassFile.JAVA_8);
-      targetCt.writeFile(genDirectory + "target/classes");
+      targetCt.writeFile(genDirectory);
    }
 
    private static boolean isThrowsSqlException(CtMethod method)

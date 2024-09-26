@@ -19,7 +19,7 @@ public class TestJavassistCodegen {
    @Test
    public void testCodegen() throws Exception {
       String tmp = System.getProperty("java.io.tmpdir");
-      JavassistProxyFactory.main(tmp + (tmp.endsWith("/") ? "" : "/"));
+      JavassistProxyFactory.main(tmp);
 
       Path base = Paths.get(tmp, "target/classes/com/zaxxer/hikari/pool".split("/"));
       Assert.assertTrue("", Files.isRegularFile(base.resolve("HikariProxyConnection.class")));

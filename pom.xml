@@ -421,7 +421,7 @@
                   <argument>-cp</argument>
                   <argument>${project.build.outputDirectory}${path.separator}${maven.compile.classpath}</argument>
                   <argument>com.zaxxer.hikari.util.JavassistProxyFactory</argument>
-                  <argument>${project.basedir}${file.separator}</argument>
+                  <argument>${project.basedir}</argument>
                </arguments>
             </configuration>
          </plugin>
