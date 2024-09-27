@@ -32,6 +32,8 @@ import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.security.AccessControlException;
 import java.sql.Connection;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Properties;
 import java.util.TreeSet;
 import java.util.concurrent.ScheduledExecutorService;
@@ -91,13 +93,13 @@ public class HikariConfig implements HikariConfigMXBean
    private boolean isRegisterMbeans;
    private boolean isAllowPoolSuspension;
    private DataSource dataSource;
-   private Properties dataSourceProperties;
+   private final Properties dataSourceProperties = new Properties();
    private ThreadFactory threadFactory;
    private ScheduledExecutorService scheduledExecutor;
    private MetricsTrackerFactory metricsTrackerFactory;
    private Object metricRegistry;
    private Object healthCheckRegistry;
-   private Properties healthCheckProperties;
+   private final Properties healthCheckProperties = new Properties();
 
    private long keepaliveTime;
 
@@ -114,9 +116,6 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public HikariConfig()
    {
-      dataSourceProperties = new Properties();
-      healthCheckProperties = new Properties();
-
       minIdle = -1;
       maxPoolSize = -1;
       maxLifetime = MAX_LIFETIME;
@@ -1002,8 +1001,22 @@ public class HikariConfig implements HikariConfigMXBean
             if (!Modifier.isFinal(field.getModifiers())) {
                field.setAccessible(true);
                field.set(other, field.get(this));
-            } else if (field.getType().isAssignableFrom(AtomicReference.class)) {
-               ((AtomicReference) field.get(other)).set(((AtomicReference) field.get(this)).get());
+            } else {
+               if (AtomicReference.class.isAssignableFrom(field.getType())) {
+                  ((AtomicReference) field.get(other)).set(((AtomicReference) field.get(this)).get());
+               } else if (Collection.class.isAssignableFrom(field.getType())) {
+                  Collection source = (Collection) field.get(this);
+                  Collection target = (Collection) field.get(other);
+                  if (source != null && target != null) {
+                     target.addAll(source);
+                  }
+               } else if (Map.class.isAssignableFrom(field.getType())) {
+                  Map source = (Map) field.get(this);
+                  Map target = (Map) field.get(other);
+                  if (source != null && target != null) {
+                     target.putAll(source);
+                  }
+               }
             }
          }
          catch (Exception e) {
