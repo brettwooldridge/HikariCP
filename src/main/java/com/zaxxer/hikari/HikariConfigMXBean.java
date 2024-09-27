@@ -19,9 +19,10 @@ package com.zaxxer.hikari;
 import com.zaxxer.hikari.util.Credentials;
 
 /**
- * The javax.management MBean for a Hikari pool configuration.
+ * The {@code javax.management} MBean for a Hikari pool configuration.
  *
  * @author Brett Wooldridge
+ * @author Yanming Zhou
  */
 public interface HikariConfigMXBean
 {
@@ -42,6 +43,24 @@ public interface HikariConfigMXBean
     * @param connectionTimeoutMs the connection timeout in milliseconds
     */
    void setConnectionTimeout(long connectionTimeoutMs);
+
+   /**
+    * Get the network timeout in milliseconds for {@link java.sql.Connection#close()}.
+    * {@code 0} means no timeout will be set.
+    * {@link javax.sql.DataSource#getConnection()}.
+    *
+    * @return the close timeout in milliseconds
+    * @see java.sql.Connection#setNetworkTimeout(java.util.concurrent.Executor, int)
+    */
+   long getCloseNetworkTimeout();
+
+   /**
+    * Set the network timeout in milliseconds for {@link java.sql.Connection#close()}.
+    *
+    * @param closeNetworkTimeoutMs the close timeout in milliseconds, {@code 0} means no timeout will be set
+    * @see java.sql.Connection#setNetworkTimeout(java.util.concurrent.Executor, int)
+    */
+   void setCloseNetworkTimeout(long closeNetworkTimeoutMs);
 
    /**
     * Get the maximum number of milliseconds that the pool will wait for a connection to be validated as

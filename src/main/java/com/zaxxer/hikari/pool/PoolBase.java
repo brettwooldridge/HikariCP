@@ -135,9 +135,10 @@ abstract class PoolBase
 
             // continue with the close even if setNetworkTimeout() throws
             try (connection) {
-               if (!connection.isClosed())
-                  setNetworkTimeout(connection, SECONDS.toMillis(15));
-               } catch (SQLException e) {
+               if (!connection.isClosed() && config.getCloseNetworkTimeout() > 0) {
+                  setNetworkTimeout(connection, config.getCloseNetworkTimeout());
+               }
+            } catch (SQLException e) {
                   // ignore
             }
          }

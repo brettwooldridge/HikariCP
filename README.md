@@ -274,6 +274,10 @@ connection attempt, and the pool will start immediately while trying to obtain c
 in the background.  Consequently, later efforts to obtain a connection may fail.
 *Default: 1*
 
+&#9203;``closeNetworkTimeout``<br/>
+This property set network timeout in milliseconds on connection close if the JDBC driver supports.
+*Default: 15000*
+
 &#10062;``isolateInternalQueries``<br/>
 This property determines whether HikariCP isolates internal pool queries, such as the
 connection alive test, in their own transaction.  Since these are typically read-only

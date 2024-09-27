@@ -50,6 +50,7 @@ public class HikariConfig implements HikariConfigMXBean
 
    private static final char[] ID_CHARACTERS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
    private static final long CONNECTION_TIMEOUT = SECONDS.toMillis(30);
+   private static final long CLOSE_NETWORK_TIMEOUT = SECONDS.toMillis(15);
    private static final long VALIDATION_TIMEOUT = SECONDS.toMillis(5);
    private static final long SOFT_TIMEOUT_FLOOR = Long.getLong("com.zaxxer.hikari.timeoutMs.floor", 250L);
    private static final long IDLE_TIMEOUT = MINUTES.toMillis(10);
@@ -64,6 +65,7 @@ public class HikariConfig implements HikariConfigMXBean
    private volatile String catalog;
    private volatile long connectionTimeout;
    private volatile long validationTimeout;
+   private volatile long closeNetworkTimeout;
    private volatile long idleTimeout;
    private volatile long leakDetectionThreshold;
    private volatile long maxLifetime;
@@ -121,6 +123,7 @@ public class HikariConfig implements HikariConfigMXBean
       maxPoolSize = -1;
       maxLifetime = MAX_LIFETIME;
       connectionTimeout = CONNECTION_TIMEOUT;
+      closeNetworkTimeout = CLOSE_NETWORK_TIMEOUT;
       validationTimeout = VALIDATION_TIMEOUT;
       idleTimeout = IDLE_TIMEOUT;
       initializationFailTimeout = 1;
@@ -197,6 +200,23 @@ public class HikariConfig implements HikariConfigMXBean
       else {
          this.connectionTimeout = connectionTimeoutMs;
       }
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public long getCloseNetworkTimeout()
+   {
+      return closeNetworkTimeout;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public void setCloseNetworkTimeout(long closeNetworkTimeoutMs)
+   {
+      if (closeNetworkTimeoutMs < 0) {
+         throw new IllegalArgumentException("closeNetworkTimeout cannot be negative");
+      }
+      this.closeNetworkTimeout = closeNetworkTimeoutMs;
    }
 
    /** {@inheritDoc} */
