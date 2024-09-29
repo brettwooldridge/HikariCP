@@ -551,15 +551,15 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    }
 
    /**
-    * If initializationFailFast is configured, check that we have DB connectivity.
+    * If {@code initializationFailTimeout} is configured, check that we have DB connectivity.
     *
     * @throws PoolInitializationException if fails to create or validate connection
     * @see HikariConfig#setInitializationFailTimeout(long)
     */
    private void checkFailFast()
    {
-      final var initializationTimeout = config.getInitializationFailTimeout();
-      if (initializationTimeout < 0) {
+      final var initializationFailTimeout = config.getInitializationFailTimeout();
+      if (initializationFailTimeout < 0) {
          return;
       }
 
@@ -583,9 +583,9 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          }
 
          quietlySleep(SECONDS.toMillis(1));
-      } while (elapsedMillis(startTime) < initializationTimeout);
+      } while (elapsedMillis(startTime) < initializationFailTimeout);
 
-      if (initializationTimeout > 0) {
+      if (initializationFailTimeout > 0) {
          throwPoolInitializationException(getLastConnectionFailure());
       }
    }
