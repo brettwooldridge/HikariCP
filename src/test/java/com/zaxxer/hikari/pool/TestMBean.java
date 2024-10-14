@@ -136,12 +136,13 @@ public class TestMBean
    }
 
    @Test
-   public void testMBeanConnectionTimeoutChange() throws SQLException {
+   public void testMBeanConnectionTimeoutAndCloseNetworkTimeoutChange() throws SQLException {
       HikariConfig config = newHikariConfig();
       config.setMinimumIdle(1);
       config.setMaximumPoolSize(2);
       config.setRegisterMbeans(true);
       config.setConnectionTimeout(2800);
+      config.setCloseNetworkTimeout(2300);
       config.setConnectionTestQuery("VALUES 1");
       config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
@@ -150,12 +151,14 @@ public class TestMBean
       try (HikariDataSource ds = new HikariDataSource(config)) {
          HikariConfigMXBean hikariConfigMXBean = ds.getHikariConfigMXBean();
          assertEquals(2800, hikariConfigMXBean.getConnectionTimeout());
+         assertEquals(2300, hikariConfigMXBean.getCloseNetworkTimeout());
 
          final StubDataSource stubDataSource = ds.unwrap(StubDataSource.class);
          // connection acquisition takes more than 0 ms in a real system
          stubDataSource.setConnectionAcquisitionTime(1200);
 
          hikariConfigMXBean.setConnectionTimeout(1000);
+         hikariConfigMXBean.setCloseNetworkTimeout(1000);
 
          quietlySleep(500);
 
@@ -165,6 +168,7 @@ public class TestMBean
          }
          catch (SQLException e) {
             assertEquals(1000, ds.getConnectionTimeout());
+            assertEquals(1000, ds.getCloseNetworkTimeout());
          }
       }
       finally {

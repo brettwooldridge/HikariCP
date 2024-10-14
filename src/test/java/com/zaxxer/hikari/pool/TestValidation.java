@@ -31,6 +31,7 @@ import com.zaxxer.hikari.HikariConfig;
 
 /**
  * @author Brett Wooldridge
+ * @author Yanming Zhou
  */
 public class TestValidation
 {
@@ -250,6 +251,33 @@ public class TestValidation
       }
       catch (IllegalArgumentException ise) {
          // pass
+      }
+   }
+
+   @Test
+   public void validateZeroCloseNetworkTimeout()
+   {
+      try {
+         HikariConfig config = newHikariConfig();
+         config.setCloseNetworkTimeout(0);
+         config.validate();
+         assertEquals(0, config.getCloseNetworkTimeout());
+      }
+      catch (IllegalArgumentException ise) {
+         // pass
+      }
+   }
+
+   @Test
+   public void validateInvalidCloseNetworkTimeout()
+   {
+      try {
+         HikariConfig config = newHikariConfig();
+         config.setCloseNetworkTimeout(-1);
+         fail();
+      }
+      catch (IllegalArgumentException ise) {
+         assertTrue(ise.getMessage().contains("closeNetworkTimeout cannot be negative"));
       }
    }
 }
