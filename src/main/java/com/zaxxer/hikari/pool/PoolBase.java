@@ -530,6 +530,9 @@ abstract class PoolBase
             final var originalTimeout = connection.getNetworkTimeout();
             connection.setNetworkTimeout(netTimeoutExecutor, (int) timeoutMs);
             isNetworkTimeoutSupported = TRUE;
+            if (originalTimeout == 0) {
+               return (int) timeoutMs;
+            }
             return originalTimeout;
          }
          catch (Exception | AbstractMethodError e) {
