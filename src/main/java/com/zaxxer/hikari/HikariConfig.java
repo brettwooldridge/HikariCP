@@ -693,7 +693,7 @@ public class HikariConfig implements HikariConfigMXBean
          metricRegistry = getObjectOrPerformJndiLookup(metricRegistry);
 
          if (!safeIsAssignableFrom(metricRegistry, "com.codahale.metrics.MetricRegistry")
-             && !(safeIsAssignableFrom(metricRegistry, "io.micrometer.core.instrument.MeterRegistry"))) {
+            && !(safeIsAssignableFrom(metricRegistry, "io.micrometer.core.instrument.MeterRegistry"))) {
             throw new IllegalArgumentException("Class must be instance of com.codahale.metrics.MetricRegistry or io.micrometer.core.instrument.MeterRegistry");
          }
       }
