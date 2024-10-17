@@ -13,6 +13,12 @@ Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC con
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- *Edsger Dijkstra*</sup>
 
 ----------------------------------------------------
+
+> [!IMPORTANT]
+> In order to avoid a rare condition where the pool goes to zero and does not recover it is necessary to configure *TCP keepalive*. Some JDBC drivers support this via properties, for example ``tcpKeepAlive=true`` on PostgreSQL, but in any case it can also be configured at the OS-level. See [Setting OS TCP Keepalive](https://github.com/brettwooldridge/HikariCP/wiki/Setting-OS-TCP-Keepalive) and/or [TCP keepalive for a better PostgreSQL experience](https://www.cybertec-postgresql.com/en/tcp-keepalive-for-a-better-postgresql-experience/#setting-tcp-keepalive-parameters-on-the-operating-system).
+
+----------------------------------------------------
+
 ### Index
 * [Artifacts](#artifacts)
 * [JMH Benchmarks](#checkered_flag-jmh-benchmarks)
