@@ -43,6 +43,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.zaxxer.hikari.SQLExceptionOverride.Override.DO_NOT_EVICT;
 import static com.zaxxer.hikari.pool.ProxyConnection.*;
 import static com.zaxxer.hikari.util.ClockSource.*;
 import static com.zaxxer.hikari.util.UtilityElf.createInstance;
@@ -147,39 +148,58 @@ abstract class PoolBase
       }
    }
 
+   private boolean doIsConnectionDead(final Connection connection) throws SQLException {
+      setNetworkTimeout(connection, validationTimeout);
+      try {
+         final var validationSeconds = (int) Math.max(1000L, validationTimeout) / 1000;
+
+         if (isUseJdbc4Validation) {
+            return !connection.isValid(validationSeconds);
+         }
+
+         try (var statement = connection.createStatement()) {
+            if (isNetworkTimeoutSupported != TRUE) {
+               setQueryTimeout(statement, validationSeconds);
+            }
+
+            statement.execute(config.getConnectionTestQuery());
+         }
+      }
+      finally {
+         setNetworkTimeout(connection, networkTimeout);
+
+         if (isIsolateInternalQueries && !isAutoCommit) {
+            connection.rollback();
+         }
+      }
+      return false;
+   }
+
+   private void connectionDeadException(final Connection connection, Exception e) {
+      lastConnectionFailure.set(e);
+      logger.warn("{} - Failed to validate connection {} ({}). Possibly consider using a shorter maxLifetime value.",
+         poolName, connection, e.getMessage());
+   }
+
    boolean isConnectionDead(final Connection connection)
    {
       try {
-         setNetworkTimeout(connection, validationTimeout);
-         try {
-            final var validationSeconds = (int) Math.max(1000L, validationTimeout) / 1000;
-
-            if (isUseJdbc4Validation) {
-               return !connection.isValid(validationSeconds);
-            }
-
-            try (var statement = connection.createStatement()) {
-               if (isNetworkTimeoutSupported != TRUE) {
-                  setQueryTimeout(statement, validationSeconds);
-               }
-
-               statement.execute(config.getConnectionTestQuery());
-            }
-         }
-         finally {
-            setNetworkTimeout(connection, networkTimeout);
-
-            if (isIsolateInternalQueries && !isAutoCommit) {
-               connection.rollback();
-            }
-         }
-
-         return false;
+         return doIsConnectionDead(connection);
       }
       catch (Exception e) {
-         lastConnectionFailure.set(e);
-         logger.warn("{} - Failed to validate connection {} ({}). Possibly consider using a shorter maxLifetime value.",
-                     poolName, connection, e.getMessage());
+         if (e instanceof SQLException && exceptionOverride != null &&
+            exceptionOverride.adjudicate((SQLException) e) == DO_NOT_EVICT) {
+            // try one more time, in case of failover
+            try {
+               return doIsConnectionDead(connection);
+            }
+            catch (Exception e2) {
+               connectionDeadException(connection, e2);
+               return true;
+            }
+         }
+
+         connectionDeadException(connection, e);
          return true;
       }
    }
