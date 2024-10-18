@@ -22,8 +22,8 @@
       <jndi.version>0.11.4.1</jndi.version>
       <maven.release.version>3.0.1</maven.release.version>
       <metrics.version>3.2.5</metrics.version>
-      <micrometer.version>1.5.10</micrometer.version>
-      <simpleclient.version>0.9.0</simpleclient.version>
+      <micrometer.version>1.13.2</micrometer.version>
+      <prometheus-metrics.version>1.3.1</prometheus-metrics.version>
       <mockito.version>3.7.7</mockito.version>
       <pax.exam.version>4.13.5</pax.exam.version>
       <pax.url.version>2.5.4</pax.url.version>
@@ -182,8 +182,8 @@
       </dependency>
       <dependency>
          <groupId>io.prometheus</groupId>
-         <artifactId>simpleclient</artifactId>
-         <version>${simpleclient.version}</version>
+         <artifactId>prometheus-metrics-core</artifactId>
+         <version>${prometheus-metrics.version}</version>
          <scope>provided</scope>
          <optional>true</optional>
       </dependency>

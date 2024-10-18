@@ -20,7 +20,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.mocks.StubPoolStats;
-import io.prometheus.client.CollectorRegistry;
+import io.prometheus.metrics.model.registry.PrometheusRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,8 +36,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class PrometheusMetricsTrackerTest
 {
 
-   private CollectorRegistry defaultCollectorRegistry;
-   private CollectorRegistry customCollectorRegistry;
+   private PrometheusRegistry defaultCollectorRegistry;
+   private PrometheusRegistry customCollectorRegistry;
 
    private static final String POOL_LABEL_NAME = "pool";
    private static final String[] LABEL_NAMES = {POOL_LABEL_NAME};
@@ -48,8 +48,8 @@ public class PrometheusMetricsTrackerTest
    @Before
    public void setupCollectorRegistry()
    {
-      this.defaultCollectorRegistry = new CollectorRegistry();
-      this.customCollectorRegistry = new CollectorRegistry();
+      this.defaultCollectorRegistry = new PrometheusRegistry();
+      this.customCollectorRegistry = new PrometheusRegistry();
    }
 
    @Test

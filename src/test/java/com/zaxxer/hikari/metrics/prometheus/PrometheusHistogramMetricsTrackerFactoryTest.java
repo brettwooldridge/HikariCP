@@ -3,12 +3,16 @@ package com.zaxxer.hikari.metrics.prometheus;
 import com.zaxxer.hikari.metrics.PoolStats;
 import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
+import io.prometheus.metrics.model.registry.PrometheusRegistry;
+import io.prometheus.metrics.model.snapshots.MetricSnapshot;
+import io.prometheus.metrics.model.snapshots.MetricSnapshots;
 import org.junit.After;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -17,11 +21,11 @@ public class PrometheusHistogramMetricsTrackerFactoryTest {
 
    @Test
    public void registersToProvidedCollectorRegistry() {
-      CollectorRegistry collectorRegistry = new CollectorRegistry();
+      PrometheusRegistry collectorRegistry = new PrometheusRegistry();
       PrometheusHistogramMetricsTrackerFactory factory =
          new PrometheusHistogramMetricsTrackerFactory(collectorRegistry);
       factory.create("testpool-1", poolStats());
-      assertHikariMetricsAreNotPresent(CollectorRegistry.defaultRegistry);
+      assertHikariMetricsAreNotPresent(PrometheusRegistry.defaultRegistry);
       assertHikariMetricsArePresent(collectorRegistry);
    }
 
@@ -29,16 +33,16 @@ public class PrometheusHistogramMetricsTrackerFactoryTest {
    public void registersToDefaultCollectorRegistry() {
       PrometheusHistogramMetricsTrackerFactory factory = new PrometheusHistogramMetricsTrackerFactory();
       factory.create("testpool-2", poolStats());
-      assertHikariMetricsArePresent(CollectorRegistry.defaultRegistry);
+      assertHikariMetricsArePresent(PrometheusRegistry.defaultRegistry);
    }
 
    @After
    public void clearCollectorRegistry(){
-      CollectorRegistry.defaultRegistry.clear();
+//      PrometheusRegistry.defaultRegistry.clear();
    }
 
-   private void assertHikariMetricsArePresent(CollectorRegistry collectorRegistry) {
-      List<String> registeredMetrics = toMetricNames(collectorRegistry.metricFamilySamples());
+   private void assertHikariMetricsArePresent(PrometheusRegistry collectorRegistry) {
+      List<String> registeredMetrics = toMetricNames(collectorRegistry.scrape());
       assertTrue(registeredMetrics.contains("hikaricp_active_connections"));
       assertTrue(registeredMetrics.contains("hikaricp_idle_connections"));
       assertTrue(registeredMetrics.contains("hikaricp_pending_threads"));
@@ -47,8 +51,8 @@ public class PrometheusHistogramMetricsTrackerFactoryTest {
       assertTrue(registeredMetrics.contains("hikaricp_min_connections"));
    }
 
-   private void assertHikariMetricsAreNotPresent(CollectorRegistry collectorRegistry) {
-      List<String> registeredMetrics = toMetricNames(collectorRegistry.metricFamilySamples());
+   private void assertHikariMetricsAreNotPresent(PrometheusRegistry collectorRegistry) {
+      List<String> registeredMetrics = toMetricNames(collectorRegistry.scrape());
       assertFalse(registeredMetrics.contains("hikaricp_active_connections"));
       assertFalse(registeredMetrics.contains("hikaricp_idle_connections"));
       assertFalse(registeredMetrics.contains("hikaricp_pending_threads"));
@@ -57,12 +61,8 @@ public class PrometheusHistogramMetricsTrackerFactoryTest {
       assertFalse(registeredMetrics.contains("hikaricp_min_connections"));
    }
 
-   private List<String> toMetricNames(Enumeration<Collector.MetricFamilySamples> enumeration) {
-      List<String> list = new ArrayList<>();
-      while (enumeration.hasMoreElements()) {
-         list.add(enumeration.nextElement().name);
-      }
-      return list;
+   private List<String> toMetricNames(MetricSnapshots metricSnapshots) {
+      return metricSnapshots.stream().map(metricSnapshot -> metricSnapshot.getMetadata().getName()).collect(Collectors.toList());
    }
 
    private PoolStats poolStats() {
