@@ -21,9 +21,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
- * This is the proxy class for java.sql.ResultSet.
+ * This is the proxy class for {@link ResultSet}.
  *
  * @author Brett Wooldridge
+ * @author Yanming Zhou
  */
 public abstract class ProxyResultSet implements ResultSet
 {
@@ -83,6 +84,13 @@ public abstract class ProxyResultSet implements ResultSet
    {
       connection.markCommitStateDirty();
       delegate.deleteRow();
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public final boolean isWrapperFor(Class<?> iface) throws SQLException
+   {
+      return iface.isInstance(delegate) || (delegate != null && delegate.isWrapperFor(iface));
    }
 
    /** {@inheritDoc} */

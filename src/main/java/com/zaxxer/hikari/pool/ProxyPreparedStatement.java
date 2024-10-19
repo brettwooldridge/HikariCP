@@ -21,7 +21,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * This is the proxy class for java.sql.PreparedStatement.
+ * This is the proxy class for {@link PreparedStatement}.
  *
  * @author Brett Wooldridge
  */

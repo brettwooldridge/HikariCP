@@ -19,7 +19,7 @@ package com.zaxxer.hikari.pool;
 import java.sql.CallableStatement;
 
 /**
- * This is the proxy class for java.sql.CallableStatement.
+ * This is the proxy class for {@link CallableStatement}.
  *
  * @author Brett Wooldridge
  */
