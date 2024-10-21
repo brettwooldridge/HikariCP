@@ -622,7 +622,7 @@ abstract class PoolBase
             dataSource.setLoginTimeout(Math.max(MINIMUM_LOGIN_TIMEOUT, (int) MILLISECONDS.toSeconds(500L + connectionTimeout)));
          }
          catch (Exception e) {
-            logger.info("{} - Failed to set login timeout for data source. ({})", poolName, e.getMessage());
+            logger.info("{} - Failed to set login timeout for data source. ({})", poolName, e.toString());
          }
       }
    }
