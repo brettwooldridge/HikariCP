@@ -69,7 +69,7 @@ public class HikariConfig implements HikariConfigMXBean
    private volatile long maxLifetime;
    private volatile int maxPoolSize;
    private volatile int minIdle;
-   private final AtomicReference<Credentials> credentials = new AtomicReference<>(Credentials.of(null, null));
+   private volatile Credentials credentials = Credentials.of(null, null);
 
    // Properties NOT changeable at runtime
    //
@@ -284,7 +284,7 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public String getPassword()
    {
-      return credentials.get().getPassword();
+      return this.credentials.getPassword();
    }
 
    /**
@@ -294,7 +294,8 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setPassword(String password)
    {
-      credentials.updateAndGet(current -> Credentials.of(current.getUsername(), password));
+      Credentials current = this.credentials;
+      this.credentials = Credentials.of(current.getUsername(), password);
    }
 
    /**
@@ -304,7 +305,7 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public String getUsername()
    {
-      return credentials.get().getUsername();
+      return this.credentials.getUsername();
    }
 
    /**
@@ -315,7 +316,8 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setUsername(String username)
    {
-      credentials.updateAndGet(current -> Credentials.of(username, current.getPassword()));
+      Credentials current = this.credentials;
+      this.credentials = Credentials.of(username, current.getPassword());
    }
 
    /**
@@ -326,7 +328,7 @@ public class HikariConfig implements HikariConfigMXBean
    @Override
    public void setCredentials(final Credentials credentials)
    {
-      this.credentials.set(credentials);
+      this.credentials = credentials;
    }
 
    /**
@@ -336,7 +338,7 @@ public class HikariConfig implements HikariConfigMXBean
     */
    public Credentials getCredentials()
    {
-      return credentials.get();
+      return this.credentials;
    }
 
    /** {@inheritDoc} */

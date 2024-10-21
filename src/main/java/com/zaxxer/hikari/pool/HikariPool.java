@@ -37,7 +37,6 @@ import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
 import java.util.Optional;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 import static com.zaxxer.hikari.util.ClockSource.*;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_USE;
@@ -499,7 +498,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       catch (ConnectionSetupException e) {
          if (poolState == POOL_NORMAL) { // we check POOL_NORMAL to avoid a flood of messages if shutdown() is running concurrently
             logger.error("{} - Error thrown while acquiring connection from data source", poolName, e.getCause());
-            lastConnectionFailure.set(e);
+            lastConnectionFailure = e;
          }
       }
       catch (Exception e) {
@@ -785,8 +784,6 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    private final class HouseKeeper implements Runnable
    {
       private volatile long previous = plusMillis(currentTime(), -housekeepingPeriodMs);
-      @SuppressWarnings("AtomicFieldUpdaterNotStaticFinal")
-      private final AtomicReferenceFieldUpdater<PoolBase, String> catalogUpdater = AtomicReferenceFieldUpdater.newUpdater(PoolBase.class, String.class, "catalog");
 
       @Override
       public void run()
@@ -798,7 +795,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             leakTaskFactory.updateLeakDetectionThreshold(config.getLeakDetectionThreshold());
 
             if (config.getCatalog() != null && !config.getCatalog().equals(catalog)) {
-               catalogUpdater.set(HikariPool.this, config.getCatalog());
+               HikariPool.this.catalog = config.getCatalog();
             }
 
             final var idleTimeout = config.getIdleTimeout();
