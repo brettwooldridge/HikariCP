@@ -20,7 +20,10 @@ import com.zaxxer.hikari.HikariConfig;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
+import java.time.Duration;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A class that reflectively sets bean properties on a target object.
@@ -29,6 +32,8 @@ import java.util.*;
  */
 public final class PropertyElf
 {
+   private static final Pattern DURATION_PATTERN = Pattern.compile("^(?<number>\\d+)(?<unit>ms|s|m|h|d)$");
+
    private PropertyElf() {
       // cannot be constructed
    }
@@ -140,23 +145,24 @@ public final class PropertyElf
 
       try {
          var paramClass = writeMethod.getParameterTypes()[0];
+         String value = propValue.toString();
          if (paramClass == int.class) {
-            writeMethod.invoke(target, Integer.parseInt(propValue.toString()));
+            writeMethod.invoke(target, parseDuration(value).map(duration -> (int) duration.toMillis()).orElseGet(() -> Integer.parseInt(value)));
          }
          else if (paramClass == long.class) {
-            writeMethod.invoke(target, Long.parseLong(propValue.toString()));
+            writeMethod.invoke(target, parseDuration(value).map(Duration::toMillis).orElseGet(() -> Long.parseLong(value)));
          }
          else if (paramClass == short.class) {
-            writeMethod.invoke(target, Short.parseShort(propValue.toString()));
+            writeMethod.invoke(target, Short.parseShort(value));
          }
          else if (paramClass == boolean.class || paramClass == Boolean.class) {
-            writeMethod.invoke(target, Boolean.parseBoolean(propValue.toString()));
+            writeMethod.invoke(target, Boolean.parseBoolean(value));
          }
          else if (paramClass.isArray() && char.class.isAssignableFrom(paramClass.getComponentType())) {
-            writeMethod.invoke(target, propValue.toString().toCharArray());
+            writeMethod.invoke(target, value.toCharArray());
          }
          else if (paramClass == String.class) {
-            writeMethod.invoke(target, propValue.toString());
+            writeMethod.invoke(target, value);
          }
          else {
             try {
@@ -179,5 +185,30 @@ public final class PropertyElf
    {
       // use the english locale to avoid the infamous turkish locale bug
       return propertyName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propertyName.substring(1);
+   }
+
+   private static Optional<Duration> parseDuration(String value)
+   {
+      Matcher matcher = DURATION_PATTERN.matcher(value);
+      if (matcher.matches()) {
+         long number = Long.parseLong(matcher.group("number"));
+         String unit = matcher.group("unit");
+         switch (unit) {
+            case "ms":
+               return Optional.of(Duration.ofMillis(number));
+            case "s":
+               return Optional.of(Duration.ofSeconds(number));
+            case "m":
+               return Optional.of(Duration.ofMinutes(number));
+            case "h":
+               return Optional.of(Duration.ofHours(number));
+            case "d":
+               return Optional.of(Duration.ofDays(number));
+            default:
+               throw new IllegalStateException(String.format("Could not match unit, got %s (from given value %s)", unit, value));
+         }
+      } else {
+         return Optional.empty();
+      }
    }
 }
