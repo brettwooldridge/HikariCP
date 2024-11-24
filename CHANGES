@@ -3,6 +3,7 @@ HikariCP Changes
 Changes in 6.2.2
 
  * increase keepaliveTime variance from 10% to 20%
+ * support duration values for configuration from properties, such as 10ms, 20s, 30m, 40h or 50d
 
 Changes in 6.2.1
 
@@ -17,7 +18,7 @@ Changes in 6.2.0
 
  * added new enum value, Override.MUST_EVICT, available to implementations of com.zaxxer.hikari.SQLExceptionOverride
 
- * enhanced debug logging in circumstances where the pool falls to zero size and new coonections to the database
+ * enhanced debug logging in circumstances where the pool falls to zero size and new connections to the database
    continue to fail.
 
  * update test dependencies that were flagged as having vulnerabilities
