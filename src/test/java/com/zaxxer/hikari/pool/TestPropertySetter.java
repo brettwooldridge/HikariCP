@@ -19,11 +19,12 @@ package com.zaxxer.hikari.pool;
 import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
+import java.time.Duration;
 import java.util.Properties;
 import java.util.Set;
 
@@ -90,6 +91,27 @@ public class TestPropertySetter
    }
 
    @Test
+   public void testDurationPropertiesSet() throws Exception
+   {
+      Properties durationProperties = new Properties();
+      durationProperties.load(TestPropertySetter.class.getResourceAsStream("/duration-config.properties"));
+      HikariConfig config = new HikariConfig(durationProperties);
+      config.validate();
+
+      assertEquals(Duration.ofMillis(11), Duration.ofMillis(config.getConnectionTimeout()));
+      assertEquals(Duration.ofSeconds(22), Duration.ofMillis(config.getValidationTimeout()));
+      assertEquals(Duration.ofMinutes(33), Duration.ofMillis(config.getIdleTimeout()));
+      assertEquals(Duration.ofHours(44), Duration.ofMillis(config.getLeakDetectionThreshold()));
+      assertEquals(Duration.ofDays(55), Duration.ofMillis(config.getMaxLifetime()));
+
+      Class<?> clazz = this.getClass().getClassLoader().loadClass(config.getDataSourceClassName());
+      DataSource dataSource = (DataSource) clazz.getDeclaredConstructor().newInstance();
+      PropertyElf.setTargetFromProperties(dataSource, config.getDataSourceProperties());
+
+      assertEquals(Duration.ofMinutes(47), Duration.ofMillis(dataSource.getLoginTimeout()));
+   }
+
+   @Test
    public void testGetPropertyNames() throws Exception
    {
       Set<String> propertyNames = PropertyElf.getPropertyNames(HikariConfig.class);
@@ -99,14 +121,11 @@ public class TestPropertySetter
    @Test
    public void testSetNonExistantPropertyName() throws Exception
    {
-      try {
+      RuntimeException e = assertThrows(RuntimeException.class, () -> {
          Properties props = new Properties();
          props.put("what", "happened");
          PropertyElf.setTargetFromProperties(new HikariConfig(), props);
-         fail();
-      }
-      catch (RuntimeException e) {
-         // fall-thru
-      }
+      });
+      assertEquals("Property what does not exist on target class com.zaxxer.hikari.HikariConfig", e.getMessage());
    }
 }
