@@ -252,7 +252,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          }
       }
       finally {
-         logPoolState("After shutdown ");
+         logPoolState("After  shutdown ");
          handleMBeans(this, false);
          metricsTracker.close();
       }
@@ -832,7 +832,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                      maxToRemove--;
                   }
                }
-               logPoolState("After cleanup  ");
+               logPoolState("After  cleanup ");
             }
             else
                logPoolState("Pool ");

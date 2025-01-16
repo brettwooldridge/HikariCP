@@ -517,7 +517,7 @@ public class TestConnections
 
          assertSame("Total connections not as expected", 0, pool.getTotalConnections());
 
-         pool.logPoolState("testBackfill() after close...");
+         pool.logPoolState("testBackfill() after  close...");
 
          quietlySleep(1250);
 
