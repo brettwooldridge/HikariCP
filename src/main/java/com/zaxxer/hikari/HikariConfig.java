@@ -116,7 +116,7 @@ public class HikariConfig implements HikariConfigMXBean
       healthCheckProperties = new Properties();
 
       minIdle = -1;
-      maxPoolSize = -1;
+      maxPoolSize = DEFAULT_POOL_SIZE;
       maxLifetime = MAX_LIFETIME;
       connectionTimeout = CONNECTION_TIMEOUT;
       validationTimeout = VALIDATION_TIMEOUT;
@@ -1125,10 +1125,6 @@ public class HikariConfig implements HikariConfigMXBean
       if (validationTimeout < SOFT_TIMEOUT_FLOOR) {
          LOGGER.warn("{} - validationTimeout is less than {}ms, setting to {}ms.", poolName, SOFT_TIMEOUT_FLOOR, VALIDATION_TIMEOUT);
          validationTimeout = VALIDATION_TIMEOUT;
-      }
-
-      if (maxPoolSize < 1) {
-         maxPoolSize = DEFAULT_POOL_SIZE;
       }
 
       if (minIdle < 0 || minIdle > maxPoolSize) {
