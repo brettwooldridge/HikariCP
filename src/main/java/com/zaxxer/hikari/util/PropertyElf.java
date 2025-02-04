@@ -31,6 +31,8 @@ import java.util.regex.Pattern;
  */
 public final class PropertyElf
 {
+   private static final char ESCAPE_CHAR = '\\';
+   private static final char SEPARATOR_CHAR = ',';
    private static final Pattern DURATION_PATTERN = Pattern.compile("^(?<number>\\d+)(?<unit>ms|s|m|h|d)$");
 
    private PropertyElf() {
@@ -160,6 +162,12 @@ public final class PropertyElf
          else if (paramClass.isArray() && char.class.isAssignableFrom(paramClass.getComponentType())) {
             writeMethod.invoke(target, value.toCharArray());
          }
+         else if (paramClass.isArray() && int.class.isAssignableFrom(paramClass.getComponentType())) {
+            writeMethod.invoke(target, parseIntArray(value));
+         }
+         else if (paramClass.isArray() && String.class.isAssignableFrom(paramClass.getComponentType())) {
+            writeMethod.invoke(target, new Object[]{parseStringArray(value)});
+         }
          else if (paramClass == String.class) {
             writeMethod.invoke(target, value);
          }
@@ -184,6 +192,54 @@ public final class PropertyElf
    {
       // use the english locale to avoid the infamous turkish locale bug
       return propertyName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propertyName.substring(1);
+   }
+
+   private static int[] parseIntArray(String value)
+   {
+      if (value == null || value.isEmpty() ) {
+         return new int[0];
+      }
+
+      var split = value.split(",");
+      var intArray = new int[split.length];
+      for (int i = 0; i < split.length; i++) {
+         intArray[i] = Integer.parseInt(split[i]);
+      }
+      return intArray;
+   }
+
+   private static String[] parseStringArray(String value)
+   {
+      if (value == null || value.isEmpty()) {
+         return new String[0];
+      }
+
+      var resultList = new ArrayList<String>();
+      var inEscape = false;
+      var currentField = new StringBuilder();
+      for (var c : value.toCharArray())
+      {
+         if (inEscape) {
+            currentField.append(c);
+            inEscape = false;
+         }
+         else if (c == ESCAPE_CHAR) {
+            inEscape = true;
+         } else if (c == SEPARATOR_CHAR) {
+            resultList.add(currentField.toString());
+            currentField.setLength(0);
+         }
+         else {
+            currentField.append(c);
+         }
+      }
+
+      if (inEscape) {
+         throw new IllegalArgumentException(String.format("Unterminated escape sequence in property value: %s", value));
+      }
+
+      resultList.add(currentField.toString());
+      return resultList.toArray(new String[0]);
    }
 
    private static Optional<Duration> parseDuration(String value)

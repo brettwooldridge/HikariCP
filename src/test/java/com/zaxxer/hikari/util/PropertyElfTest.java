@@ -5,10 +5,7 @@ import com.zaxxer.hikari.mocks.TestObject;
 
 import java.util.Properties;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class PropertyElfTest
 {
@@ -43,5 +40,50 @@ public class PropertyElfTest
       catch (RuntimeException e) {
          assertEquals("argument type mismatch", e.getCause().getMessage());
       }
+   }
+
+   @Test
+   public void setStringArray()
+   {
+      Properties properties = new Properties();
+      TestObject testObject = new TestObject();
+
+      properties.setProperty("stringArray", "abc,123");
+      PropertyElf.setTargetFromProperties(testObject, properties);
+      assertArrayEquals(new String[] {"abc", "123"}, testObject.getStringArray());
+
+      properties.setProperty("stringArray", "abc\\,123");
+      PropertyElf.setTargetFromProperties(testObject, properties);
+      assertArrayEquals(new String[] {"abc,123"}, testObject.getStringArray());
+
+      properties.setProperty("stringArray", "abc\\\\,123");
+      PropertyElf.setTargetFromProperties(testObject, properties);
+      assertArrayEquals(new String[] {"abc\\","123"}, testObject.getStringArray());
+
+      properties.setProperty("stringArray", "");
+      PropertyElf.setTargetFromProperties(testObject, properties);
+      assertArrayEquals(new String[] {}, testObject.getStringArray());
+
+      properties.setProperty("stringArray", "abc,12\\3");
+      PropertyElf.setTargetFromProperties(testObject, properties);
+      assertArrayEquals(new String[] {"abc","123"}, testObject.getStringArray());
+
+      properties.setProperty("stringArray", "abc,123\\");
+      assertThrows(RuntimeException.class, () -> PropertyElf.setTargetFromProperties(testObject, properties));
+   }
+
+   @Test
+   public void setIntArray()
+   {
+      Properties properties = new Properties();
+      TestObject testObject = new TestObject();
+
+      properties.setProperty("intArray", "1,2,3");
+      PropertyElf.setTargetFromProperties(testObject, properties);
+      assertArrayEquals(new int[] {1,2,3}, testObject.getIntArray());
+
+      properties.setProperty("intArray", "");
+      PropertyElf.setTargetFromProperties(testObject, properties);
+      assertArrayEquals(new int[] {}, testObject.getIntArray());
    }
 }
