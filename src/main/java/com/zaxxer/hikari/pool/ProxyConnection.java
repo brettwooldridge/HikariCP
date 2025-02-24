@@ -175,7 +175,7 @@ public abstract class ProxyConnection implements Connection
 
       if (evict) {
          var exception = (nse != null) ? nse : sqle;
-         LOGGER.warn("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
+         LOGGER.debug("{} - Connection {} marked as broken because of SQLSTATE({}), ErrorCode({})",
             poolEntry.getPoolName(), delegate, exception.getSQLState(), exception.getErrorCode(), exception);
          leakTask.cancel();
          poolEntry.evict("(connection is broken)");
@@ -219,7 +219,7 @@ public abstract class ProxyConnection implements Connection
                // automatic resource cleanup
             }
             catch (SQLException e) {
-               LOGGER.warn("{} - Connection {} marked as broken because of an exception closing open statements during Connection.close()",
+               LOGGER.debug("{} - Connection {} marked as broken because of an exception closing open statements during Connection.close()",
                            poolEntry.getPoolName(), delegate);
                leakTask.cancel();
                poolEntry.evict("(exception closing Statements during Connection.close())");
