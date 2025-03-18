@@ -505,7 +505,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             logger.debug("{} - Error thrown while acquiring connection from data source", poolName, e.getCause());
          }
       }
-      catch (Exception e) {
+      catch (Throwable e) {
          if (poolState == POOL_NORMAL) { // we check POOL_NORMAL to avoid a flood of messages if shutdown() is running concurrently
             logger.debug("{} - Cannot acquire connection from data source", poolName, e);
          }

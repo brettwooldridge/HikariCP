@@ -59,7 +59,7 @@ abstract class PoolBase
    protected final String poolName;
 
    volatile String catalog;
-   final AtomicReference<Exception> lastConnectionFailure;
+   final AtomicReference<Throwable> lastConnectionFailure;
    final AtomicLong connectionFailureTimestamp;
 
    long connectionTimeout;
@@ -186,7 +186,7 @@ abstract class PoolBase
       }
    }
 
-   Exception getLastConnectionFailure()
+   Throwable getLastConnectionFailure()
    {
       return lastConnectionFailure.get();
    }
@@ -378,12 +378,12 @@ abstract class PoolBase
          logger.debug("{} - Established new connection ({})", poolName, id);
          return connection;
       }
-      catch (Exception e) {
-         logger.debug("{} - Failed to create/setup connection ({}): {}", poolName, id, e.getMessage());
+      catch (Throwable t) {
+         logger.debug("{} - Failed to create/setup connection ({}): {}", poolName, id, t.getMessage());
 
          connectionFailureTimestamp.compareAndSet(0, start);
          if (isEmptyPool && elapsedMillis(connectionFailureTimestamp.get()) > MINUTES.toMillis(1)) {
-            logger.warn("{} - Pool is empty, failed to create/setup connection ({})", poolName, id, e);
+            logger.warn("{} - Pool is empty, failed to create/setup connection ({})", poolName, id, t);
             connectionFailureTimestamp.set(0);
          }
 
@@ -391,8 +391,8 @@ abstract class PoolBase
             quietlyCloseConnection(connection, "(Failed to create/setup connection (".concat(id.toString()).concat(")"));
          }
 
-         lastConnectionFailure.set(e);
-         throw e;
+         lastConnectionFailure.set(t);
+         throw t;
       }
       finally {
          // tracker will be null during failFast check
