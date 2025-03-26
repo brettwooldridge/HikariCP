@@ -18,6 +18,8 @@ package com.zaxxer.hikari.util;
 
 import org.junit.Test;
 
+import java.lang.reflect.Field;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -25,6 +27,18 @@ import java.util.Properties;
 import static org.junit.Assert.*;
 
 public class DriverDataSourceTest {
+
+   @Test
+   public void testDriverProperties() throws Exception {
+      Properties properties = new Properties();
+      Duration timeout = Duration.ofSeconds(60);
+      properties.put("timeout", timeout);
+      var driverDataSource = new DriverDataSource("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", null, properties, "", "");
+      Field field = DriverDataSource.class.getDeclaredField("driverProperties");
+      field.setAccessible(true);
+      Properties driverProperties = (Properties) field.get(driverDataSource);
+      assertEquals(timeout, driverProperties.get("timeout"));
+   }
 
    @Test
    public void testJdbcUrlLogging() {
