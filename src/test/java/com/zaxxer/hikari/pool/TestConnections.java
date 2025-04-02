@@ -904,6 +904,42 @@ public class TestConnections
       }
    }
 
+   @Test
+   public void testInterruptedThread() throws SQLException {
+
+      // First call to get a connection mark the thread as interrupted and throw exception
+      final StubDataSource stubDataSource = new StubDataSource() {
+         private int count = 0;
+
+         @Override
+         public Connection getConnection() {
+
+            if (count == 0) {
+               count++;
+               Thread.currentThread().interrupt();
+               throw new RuntimeException("Simulated something bad happening in the driver and thread getting the interrupt flag set");
+            }
+
+            if (Thread.currentThread().isInterrupted()) {
+               throw new RuntimeException("Simulate driver check of the interrupted flag that prevents new connections");
+            }
+
+            return new StubConnection();
+         }
+      };
+
+      HikariConfig config = newHikariConfig();
+      config.setMinimumIdle(1);
+      config.setMaximumPoolSize(2);
+      config.setConnectionTimeout(TimeUnit.SECONDS.toMillis(3));
+      config.setDataSource(stubDataSource);
+      config.setInitializationFailTimeout(-1);
+
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         assertNotNull(ds.getConnection());
+      }
+   }
+
    static class StubDataSourceWithErrorSwitch extends StubDataSource
    {
       private boolean errorOnConnection = false;

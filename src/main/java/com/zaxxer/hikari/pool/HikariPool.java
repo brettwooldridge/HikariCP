@@ -772,12 +772,13 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
       /**
        * We only create connections if we need another idle connection or have threads still waiting
-       * for a new connection.  Otherwise we bail out of the request to create.
+       * for a new connection.  Otherwise we bail out of the request to create. If the thread's interrupt flag
+       * gets set, we bail out and clear the interrupt flag.
        *
        * @return true if we should create a connection, false if the need has disappeared
        */
       private synchronized boolean shouldContinueCreating() {
-         return poolState == POOL_NORMAL && getTotalConnections() < config.getMaximumPoolSize() &&
+         return !Thread.interrupted() && poolState == POOL_NORMAL && getTotalConnections() < config.getMaximumPoolSize() &&
             (getIdleConnections() < config.getMinimumIdle() || connectionBag.getWaitingThreadCount() > getIdleConnections());
       }
    }
