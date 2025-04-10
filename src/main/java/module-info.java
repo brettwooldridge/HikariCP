@@ -4,6 +4,7 @@ module com.zaxxer.hikari
    requires java.management;
    requires java.naming;
    requires org.slf4j;
+   requires jdk.jfr;
    requires static org.hibernate.orm.core;
    requires static simpleclient;
    requires static metrics.core;
@@ -18,6 +19,7 @@ module com.zaxxer.hikari
    exports com.zaxxer.hikari.metrics.dropwizard;
    exports com.zaxxer.hikari.metrics.micrometer;
    exports com.zaxxer.hikari.metrics.prometheus;
+   exports com.zaxxer.hikari.metrics.jfr;
    exports com.zaxxer.hikari.pool;
    exports com.zaxxer.hikari.util;
 }
