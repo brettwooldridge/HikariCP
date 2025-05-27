@@ -24,11 +24,6 @@
       <!--java11.build.outputDirectory>${project.build.directory}/classes-java11</java11.build.outputDirectory -->
       <artifact.classifier />
 
-      <!-- When releasing a new version, this property controls whether the staged artifacts will be automatically
-           released in Nexus. If this is set to false (-DautoReleaseStagedArtifacts=false), artifacts will need to
-           be manually released via the Nexus UI at https://oss.sonatype.org -->
-      <autoReleaseStagedArtifacts>true</autoReleaseStagedArtifacts>
-
       <docker.maven.plugin.fabric8.version>0.45.0</docker.maven.plugin.fabric8.version>
       <felix.bundle.plugin.version>5.1.1</felix.bundle.plugin.version>
       <felix.version>7.0.5</felix.version>
@@ -309,18 +304,6 @@
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-gpg-plugin</artifactId>
                <version>3.2.7</version>
-            </plugin>
-
-            <plugin>
-               <groupId>org.apache.maven.plugins</groupId>
-               <artifactId>maven-release-plugin</artifactId>
-               <version>3.1.1</version>
-            </plugin>
-
-            <plugin>
-               <groupId>org.sonatype.plugins</groupId>
-               <artifactId>nexus-staging-maven-plugin</artifactId>
-               <version>1.6.12</version>
             </plugin>
 
             <plugin>
@@ -641,6 +624,16 @@
          </activation>
          <build>
             <plugins>
+               <!-- Maven Release Plugin -->
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-release-plugin</artifactId>
+                  <version>${maven.release.version}</version>
+                  <configuration>
+                     <goals>clean verify</goals> <!-- Prevent automatic deploy -->
+                  </configuration>
+               </plugin>
+
                <plugin>
                   <groupId>org.apache.maven.plugins</groupId>
                   <artifactId>maven-source-plugin</artifactId>
@@ -648,6 +641,7 @@
                   <executions>
                      <execution>
                         <id>attach-sources</id>
+                        <phase>verify</phase>
                         <goals>
                            <goal>jar-no-fork</goal>
                         </goals>
@@ -662,6 +656,7 @@
                   <executions>
                      <execution>
                         <id>attach-javadocs</id>
+                        <phase>verify</phase>
                         <goals>
                            <goal>jar</goal>
                         </goals>
@@ -669,8 +664,6 @@
                   </executions>
                </plugin>
 
-               <!-- For release: mvn release:perform -Darguments=-Dgpg.passphrase=PASSPHRASE
-                      With gpg2 you don't need to pass the passphrase; the GPG agent will prompt for it. -->
                <plugin>
                   <groupId>org.apache.maven.plugins</groupId>
                   <artifactId>maven-gpg-plugin</artifactId>
@@ -694,6 +687,15 @@
                      <publishingServerId>central</publishingServerId>
                      <autoPublish>false</autoPublish>
                   </configuration>
+                  <executions>
+                     <execution>
+                        <id>publish</id>
+                        <phase>deploy</phase> <!-- This line is key -->
+                        <goals>
+                           <goal>publish</goal>
+                        </goals>
+                     </execution>
+                  </executions>
                </plugin>
             </plugins>
          </build>
