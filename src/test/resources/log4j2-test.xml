@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration status="OFF">
   <appenders>
-    <Console name="Console" target="SYSTEM_ERR">
+    <Console name="Console" target="SYSTEM_OUT">
       <PatternLayout pattern="%d{ABSOLUTE_MICROS} [seq%5sn] [%-40.40t] %-5level %-20c{1} - %msg%n" />
     </Console>
   </appenders>
