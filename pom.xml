@@ -333,7 +333,7 @@
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-javadoc-plugin</artifactId>
-               <version>3.11.2</version>
+               <version>3.6.0</version>
                <configuration>
                   <show>public</show>
                   <excludePackageNames>com.zaxxer.hikari.hibernate:com.zaxxer.hikari.metrics.*:com.zaxxer.hikari.pool:com.zaxxer.hikari.util</excludePackageNames>
