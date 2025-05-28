@@ -49,7 +49,7 @@
 
    <groupId>com.zaxxer</groupId>
    <artifactId>HikariCP</artifactId>
-   <version>6.3.1</version>
+   <version>6.3.2-SNAPSHOT</version>
    <packaging>bundle</packaging>
 
    <name>HikariCP</name>
@@ -65,7 +65,7 @@
       <connection>scm:git:https://github.com/brettwooldridge/HikariCP.git</connection>
       <developerConnection>scm:git:https://github.com/brettwooldridge/HikariCP.git</developerConnection>
       <url>https://github.com/brettwooldridge/HikariCP</url>
-      <tag>HikariCP-6.3.1</tag>
+      <tag>HEAD</tag>
    </scm>
 
    <issueManagement>
