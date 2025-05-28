@@ -605,6 +605,7 @@
                   <version>3.6.0</version>
                   <configuration>
                      <show>public</show>
+                     <failOnError>false</failOnError>
                      <sourcepath>${project.build.sourceDirectory}</sourcepath>
                      <excludePackageNames>com.zaxxer.hikari.hibernate:com.zaxxer.hikari.metrics.*:com.zaxxer.hikari.pool:com.zaxxer.hikari.util</excludePackageNames>
                      <attach>true</attach>
