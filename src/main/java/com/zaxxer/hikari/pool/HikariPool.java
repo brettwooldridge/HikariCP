@@ -38,6 +38,7 @@ import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
 import java.util.Optional;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 import static com.zaxxer.hikari.util.ClockSource.*;
@@ -73,6 +74,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
    private final PoolEntryCreator poolEntryCreator = new PoolEntryCreator();
    private final PoolEntryCreator postFillPoolEntryCreator = new PoolEntryCreator("After adding ");
+
+   private final AtomicInteger connectionsInProgress = new AtomicInteger(0);
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
 
@@ -114,7 +117,13 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       ThreadFactory threadFactory = config.getThreadFactory();
 
       final int maxPoolSize = config.getMaximumPoolSize();
-      this.addConnectionExecutor = createThreadPoolExecutor(maxPoolSize, poolName + ":connection-adder", threadFactory, new CustomDiscardPolicy());
+      this.addConnectionExecutor = createCreatorThreadPoolExecutor(
+         Math.min(Runtime.getRuntime().availableProcessors() * 2, config.getMinimumIdle()),
+         Math.max(Runtime.getRuntime().availableProcessors() * 2, config.getMinimumIdle()),
+         config.getMaximumPoolSize(),
+         ":connection-adder",
+         threadFactory,
+         new CustomDiscardPolicy());
       this.closeConnectionExecutor = createThreadPoolExecutor(maxPoolSize, poolName + ":connection-closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
       this.leakTaskFactory = new ProxyLeakTaskFactory(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
@@ -122,16 +131,10 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       this.houseKeeperTask = houseKeepingExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L, housekeepingPeriodMs, MILLISECONDS);
 
       if (Boolean.getBoolean("com.zaxxer.hikari.blockUntilFilled") && config.getInitializationFailTimeout() > 1) {
-         addConnectionExecutor.setMaximumPoolSize(Math.min(16, Runtime.getRuntime().availableProcessors()));
-         addConnectionExecutor.setCorePoolSize(Math.min(16, Runtime.getRuntime().availableProcessors()));
-
          final long startTime = currentTime();
          while (elapsedMillis(startTime) < config.getInitializationFailTimeout() && getTotalConnections() < config.getMinimumIdle()) {
             quietlySleep(MILLISECONDS.toMillis(100));
          }
-
-         addConnectionExecutor.setCorePoolSize(1);
-         addConnectionExecutor.setMaximumPoolSize(1);
       }
    }
 
@@ -335,7 +338,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    @Override
    public void addBagItem(final int waiting)
    {
-      if (waiting > addConnectionExecutor.getQueue().size())
+      if (waiting > connectionsInProgress.get())
          addConnectionExecutor.submit(poolEntryCreator);
    }
 
@@ -520,10 +523,11 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    private synchronized void fillPool(final boolean isAfterAdd)
    {
       final var idle = getIdleConnections();
-      final var shouldAdd = getTotalConnections() < config.getMaximumPoolSize() && idle < config.getMinimumIdle();
+      final var connectionsInProgress = this.connectionsInProgress.get();
+      final var shouldAdd = getTotalConnections() < config.getMaximumPoolSize() - connectionsInProgress && idle < config.getMinimumIdle();
 
       if (shouldAdd) {
-         final var countToAdd = config.getMinimumIdle() - idle;
+         final var countToAdd = config.getMinimumIdle() - idle - connectionsInProgress;
          for (int i = 0; i < countToAdd; i++)
             addConnectionExecutor.submit(isAfterAdd ? postFillPoolEntryCreator : poolEntryCreator);
       }
@@ -740,26 +744,26 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       @Override
       public Boolean call()
       {
-         var backoffMs = 10L;
+         long jitterMs = ThreadLocalRandom.current().nextLong(Math.max(10, config.getConnectionTimeout() / 10));
+         if (connectionsInProgress.get() >= Runtime.getRuntime().availableProcessors()) {
+            quietlySleep(jitterMs);
+         }
          var added = false;
          try {
-            while (shouldContinueCreating()) {
+            if (!Thread.interrupted() && shouldContinueCreating()) {
                final var poolEntry = createPoolEntry();
                if (poolEntry != null) {
                   added = true;
                   connectionBag.add(poolEntry);
                   logger.debug("{} - Added connection {}", poolName, poolEntry.connection);
-                  quietlySleep(30L);
-                  break;
                } else {  // failed to get connection from db, sleep and retry
-                  if (loggingPrefix != null && backoffMs % 50 == 0)
-                     logger.debug("{} - Connection add failed, sleeping with backoff: {}ms", poolName, backoffMs);
-                  quietlySleep(backoffMs);
-                  backoffMs = Math.min(SECONDS.toMillis(5), backoffMs * 2);
+                  if (loggingPrefix != null)
+                     logger.debug("{} - Connection add failed", poolName);
                }
             }
          }
          finally {
+            connectionsInProgress.decrementAndGet();
             if (added && loggingPrefix != null)
                logPoolState(loggingPrefix);
             else if (!added)
@@ -777,8 +781,10 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
        * @return true if we should create a connection, false if the need has disappeared
        */
       private synchronized boolean shouldContinueCreating() {
-         return poolState == POOL_NORMAL && getTotalConnections() < config.getMaximumPoolSize() &&
-            (getIdleConnections() < config.getMinimumIdle() || connectionBag.getWaitingThreadCount() > getIdleConnections());
+         final int idleConnections = getIdleConnections();
+         final int connectionsInProgress = HikariPool.this.connectionsInProgress.incrementAndGet();
+         return poolState == POOL_NORMAL && getTotalConnections() + connectionsInProgress < config.getMaximumPoolSize() &&
+            (idleConnections < config.getMinimumIdle() || connectionBag.getWaitingThreadCount() > idleConnections + connectionsInProgress);
       }
    }
 
