@@ -174,6 +174,18 @@ public class HikariConfig implements HikariConfigMXBean
       this.catalog = catalog;
    }
 
+   /**
+    * Fluent-style version of {@link #setCatalog(String)}.
+    *
+    * @param catalog the catalog name, or null
+    * @return this config instance for chaining
+    */
+   public HikariConfig catalog(String catalog)
+   {
+      this.catalog = catalog;
+      return this;
+   }
+
 
    /** {@inheritDoc} */
    @Override
@@ -197,6 +209,26 @@ public class HikariConfig implements HikariConfigMXBean
       }
    }
 
+   /**
+    * Fluent-style version of {@link #setConnectionTimeout(long)}.
+    *
+    * @param connectionTimeoutMs the connection timeout in milliseconds
+    * @return this config instance for chaining
+    */
+   public HikariConfig connectionTimeout(long connectionTimeoutMs)
+   {
+      if (connectionTimeoutMs == 0) {
+         this.connectionTimeout = Integer.MAX_VALUE;
+      }
+      else if (connectionTimeoutMs < SOFT_TIMEOUT_FLOOR) {
+         throw new IllegalArgumentException("connectionTimeout cannot be less than " + SOFT_TIMEOUT_FLOOR + "ms");
+      }
+      else {
+         this.connectionTimeout = connectionTimeoutMs;
+      }
+      return this;
+   }
+
    /** {@inheritDoc} */
    @Override
    public long getIdleTimeout()
@@ -214,6 +246,21 @@ public class HikariConfig implements HikariConfigMXBean
       this.idleTimeout = idleTimeoutMs;
    }
 
+   /**
+    * Fluent-style version of {@link #setIdleTimeout(long)}.
+    *
+    * @param idleTimeoutMs the idle timeout in milliseconds
+    * @return this config instance for chaining
+    */
+   public HikariConfig idleTimeout(long idleTimeoutMs)
+   {
+      if (idleTimeoutMs < 0) {
+         throw new IllegalArgumentException("idleTimeout cannot be negative");
+      }
+      this.idleTimeout = idleTimeoutMs;
+      return this;
+   }
+
    /** {@inheritDoc} */
    @Override
    public long getLeakDetectionThreshold()
@@ -228,6 +275,18 @@ public class HikariConfig implements HikariConfigMXBean
       this.leakDetectionThreshold = leakDetectionThresholdMs;
    }
 
+   /**
+    * Fluent-style version of {@link #setLeakDetectionThreshold(long)}.
+    *
+    * @param leakDetectionThresholdMs the connection leak detection threshold in milliseconds
+    * @return this config instance for chaining
+    */
+   public HikariConfig leakDetectionThreshold(long leakDetectionThresholdMs)
+   {
+      this.leakDetectionThreshold = leakDetectionThresholdMs;
+      return this;
+   }
+
    /** {@inheritDoc} */
    @Override
    public long getMaxLifetime()
@@ -240,6 +299,18 @@ public class HikariConfig implements HikariConfigMXBean
    public void setMaxLifetime(long maxLifetimeMs)
    {
       this.maxLifetime = maxLifetimeMs;
+   }
+
+   /**
+    * Fluent-style version of {@link #setMaxLifetime(long)}.
+    *
+    * @param maxLifetimeMs the maximum connection lifetime in milliseconds
+    * @return this config instance for chaining
+    */
+   public HikariConfig maxLifetime(long maxLifetimeMs)
+   {
+      this.maxLifetime = maxLifetimeMs;
+      return this;
    }
 
    /** {@inheritDoc} */
@@ -257,6 +328,21 @@ public class HikariConfig implements HikariConfigMXBean
          throw new IllegalArgumentException("maxPoolSize cannot be less than 1");
       }
       this.maxPoolSize = maxPoolSize;
+   }
+
+   /**
+    * Fluent-style version of {@link #setMaximumPoolSize(int)}.
+    *
+    * @param maxPoolSize the maximum number of connections in the pool
+    * @return this config instance for chaining
+    */
+   public HikariConfig maximumPoolSize(int maxPoolSize)
+   {
+      if (maxPoolSize < 1) {
+         throw new IllegalArgumentException("maxPoolSize cannot be less than 1");
+      }
+      this.maxPoolSize = maxPoolSize;
+      return this;
    }
 
    /** {@inheritDoc} */
@@ -277,6 +363,21 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
+    * Fluent-style version of {@link #setMinimumIdle(int)}.
+    *
+    * @param minIdle the minimum number of idle connections in the pool to maintain
+    * @return this config instance for chaining
+    */
+   public HikariConfig minimumIdle(int minIdle)
+   {
+      if (minIdle < 0) {
+         throw new IllegalArgumentException("minimumIdle cannot be negative");
+      }
+      this.minIdle = minIdle;
+      return this;
+   }
+
+   /**
     * Get the default password to use for DataSource.getConnection(username, password) calls.
     * @return the password
     */
@@ -293,6 +394,18 @@ public class HikariConfig implements HikariConfigMXBean
    public void setPassword(String password)
    {
       credentials.updateAndGet(current -> Credentials.of(current.getUsername(), password));
+   }
+
+   /**
+    * Fluent-style version of {@link #setPassword(String)}.
+    *
+    * @param password the password
+    * @return this config instance for chaining
+    */
+   public HikariConfig password(String password)
+   {
+      credentials.updateAndGet(current -> Credentials.of(current.getUsername(), password));
+      return this;
    }
 
    /**
@@ -317,6 +430,18 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
+    * Fluent-style version of {@link #setUsername(String)}.
+    *
+    * @param username the username
+    * @return this config instance for chaining
+    */
+   public HikariConfig username(String username)
+   {
+      credentials.updateAndGet(current -> Credentials.of(username, current.getPassword()));
+      return this;
+   }
+
+   /**
     * Atomically set the default username and password to use for DataSource.getConnection(username, password) calls.
     *
     * @param credentials the username and password pair
@@ -325,6 +450,18 @@ public class HikariConfig implements HikariConfigMXBean
    public void setCredentials(final Credentials credentials)
    {
       this.credentials.set(credentials);
+   }
+
+   /**
+    * Fluent-style version of {@link #setCredentials(Credentials)}.
+    *
+    * @param credentials the username and password pair
+    * @return this config instance for chaining
+    */
+   public HikariConfig credentials(final Credentials credentials)
+   {
+      this.credentials.set(credentials);
+      return this;
    }
 
    /**
@@ -355,6 +492,22 @@ public class HikariConfig implements HikariConfigMXBean
       this.validationTimeout = validationTimeoutMs;
    }
 
+   /**
+    * Fluent-style version of {@link #setValidationTimeout(long)}.
+    *
+    * @param validationTimeoutMs the validation timeout in milliseconds
+    * @return this config instance for chaining
+    */
+   public HikariConfig validationTimeout(long validationTimeoutMs)
+   {
+      if (validationTimeoutMs < SOFT_TIMEOUT_FLOOR) {
+         throw new IllegalArgumentException("validationTimeout cannot be less than " + SOFT_TIMEOUT_FLOOR + "ms");
+      }
+
+      this.validationTimeout = validationTimeoutMs;
+      return this;
+   }
+
    // ***********************************************************************
    //                     All other configuration methods
    // ***********************************************************************
@@ -383,6 +536,19 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
+    * Fluent-style version of {@link #setConnectionTestQuery(String)}.
+    *
+    * @param connectionTestQuery a SQL query string
+    * @return this config instance for chaining
+    */
+   public HikariConfig connectionTestQuery(String connectionTestQuery)
+   {
+      checkIfSealed();
+      this.connectionTestQuery = connectionTestQuery;
+      return this;
+   }
+
+   /**
     * Get the SQL string that will be executed on all new connections when they are
     * created, before they are added to the pool.
     *
@@ -404,6 +570,19 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       this.connectionInitSql = connectionInitSql;
+   }
+
+   /**
+    * Fluent-style version of {@link #setConnectionInitSql(String)}.
+    *
+    * @param connectionInitSql the SQL to execute on new connections
+    * @return this config instance for chaining
+    */
+   public HikariConfig connectionInitSql(String connectionInitSql)
+   {
+      checkIfSealed();
+      this.connectionInitSql = connectionInitSql;
+      return this;
    }
 
    /**
@@ -430,6 +609,19 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
+    * Fluent-style version of {@link #setDataSource(DataSource)}.
+    *
+    * @param dataSource a specific {@link DataSource} to be wrapped by the pool
+    * @return this config instance for chaining
+    */
+   public HikariConfig dataSource(DataSource dataSource)
+   {
+      checkIfSealed();
+      this.dataSource = dataSource;
+      return this;
+   }
+
+   /**
     * Get the name of the JDBC {@link DataSource} class used to create Connections.
     *
     * @return the fully qualified name of the JDBC {@link DataSource} class
@@ -448,6 +640,19 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       this.dataSourceClassName = className;
+   }
+
+   /**
+    * Fluent-style version of {@link #setDataSourceClassName(String)}.
+    *
+    * @param className the fully qualified name of the JDBC {@link DataSource} class
+    * @return this config instance for chaining
+    */
+   public HikariConfig dataSourceClassName(String className)
+   {
+      checkIfSealed();
+      this.dataSourceClassName = className;
+      return this;
    }
 
    /**
@@ -480,6 +685,19 @@ public class HikariConfig implements HikariConfigMXBean
       this.dataSourceJndiName = jndiDataSource;
    }
 
+   /**
+    * Fluent-style version of {@link #setDataSourceJNDI(String)}.
+    *
+    * @param jndiDataSource the dataSource JNDI name
+    * @return this config instance for chaining
+    */
+   public HikariConfig dataSourceJNDI(String jndiDataSource)
+   {
+      checkIfSealed();
+      this.dataSourceJndiName = jndiDataSource;
+      return this;
+   }
+
    public Properties getDataSourceProperties()
    {
       return dataSourceProperties;
@@ -489,6 +707,19 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       dataSourceProperties.putAll(dsProperties);
+   }
+
+   /**
+    * Fluent-style version of {@link #setDataSourceProperties(Properties)}.
+    *
+    * @param dsProperties the dataSource properties
+    * @return this config instance for chaining
+    */
+   public HikariConfig dataSourceProperties(Properties dsProperties)
+   {
+      checkIfSealed();
+      dataSourceProperties.putAll(dsProperties);
+      return this;
    }
 
    public String getDriverClassName()
@@ -523,6 +754,41 @@ public class HikariConfig implements HikariConfigMXBean
       }
    }
 
+   /**
+    * Fluent-style version of {@link #setDriverClassName(String)}.
+    *
+    * @param driverClassName the dataSource driver class name
+    * @return this config instance for chaining
+    */
+   public HikariConfig driverClassName(String driverClassName)
+   {
+      checkIfSealed();
+
+      var driverClass = attemptFromContextLoader(driverClassName);
+      try {
+         if (driverClass == null) {
+            driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
+            LOGGER.debug("Driver class {} found in the HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
+         }
+      } catch (ClassNotFoundException e) {
+         LOGGER.error("Failed to load driver class {} from HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
+      }
+
+      if (driverClass == null) {
+         throw new RuntimeException("Failed to load driver class " + driverClassName + " in either of HikariConfig class loader or Thread context classloader");
+      }
+
+      try {
+         driverClass.getConstructor().newInstance();
+         this.driverClassName = driverClassName;
+      }
+      catch (Exception e) {
+         throw new RuntimeException("Failed to instantiate class " + driverClassName, e);
+      }
+
+      return this;
+   }
+
    public String getJdbcUrl()
    {
       return jdbcUrl;
@@ -532,6 +798,19 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       this.jdbcUrl = jdbcUrl;
+   }
+
+   /**
+    * Fluent-style version of {@link #setJdbcUrl(String)}.
+    *
+    * @param jdbcUrl the dataSource jdbc url
+    * @return this config instance for chaining
+    */
+   public HikariConfig jdbcUrl(String jdbcUrl)
+   {
+      checkIfSealed();
+      this.jdbcUrl = jdbcUrl;
+      return this;
    }
 
    /**
@@ -556,6 +835,19 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
+    * Fluent-style version of {@link #setAutoCommit(boolean)}.
+    *
+    * @param isAutoCommit the desired auto-commit default for connections
+    * @return this config instance for chaining
+    */
+   public HikariConfig autoCommit(boolean isAutoCommit)
+   {
+      checkIfSealed();
+      this.isAutoCommit = isAutoCommit;
+      return this;
+   }
+
+   /**
     * Get the pool suspension behavior (allowed or disallowed).
     *
     * @return the pool suspension behavior
@@ -576,6 +868,19 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       this.isAllowPoolSuspension = isAllowPoolSuspension;
+   }
+
+   /**
+    * Fluent-style version of {@link #setAllowPoolSuspension(boolean)}.
+    *
+    * @param isAllowPoolSuspension the desired pool suspension allowance
+    * @return this config instance for chaining
+    */
+   public HikariConfig allowPoolSuspension(boolean isAllowPoolSuspension)
+   {
+      checkIfSealed();
+      this.isAllowPoolSuspension = isAllowPoolSuspension;
+      return this;
    }
 
    /**
@@ -630,6 +935,22 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
+    * Fluent-style version of {@link #setInitializationFailTimeout(long)}.
+    *
+    * @param initializationFailTimeout the number of milliseconds before the
+    *        pool initialization fails, or 0 to validate connection setup but continue with
+    *        pool start, or less than zero to skip all initialization checks and start the
+    *        pool without delay.
+    * @return this config instance for chaining
+    */
+   public HikariConfig initializationFailTimeout(long initializationFailTimeout)
+   {
+      checkIfSealed();
+      this.initializationFailTimeout = initializationFailTimeout;
+      return this;
+   }
+
+   /**
     * Determine whether internal pool queries, principally aliveness checks, will be isolated in their own transaction
     * via {@link Connection#rollback()}.  Defaults to {@code false}.
     *
@@ -652,6 +973,19 @@ public class HikariConfig implements HikariConfigMXBean
       this.isIsolateInternalQueries = isolate;
    }
 
+   /**
+    * Fluent-style version of {@link #setIsolateInternalQueries(boolean)}.
+    *
+    * @param isolate {@code true} if internal pool queries should be isolated, {@code false} if not
+    * @return this config instance for chaining
+    */
+   public HikariConfig isolateInternalQueries(boolean isolate)
+   {
+      checkIfSealed();
+      this.isIsolateInternalQueries = isolate;
+      return this;
+   }
+
    public MetricsTrackerFactory getMetricsTrackerFactory()
    {
       return metricsTrackerFactory;
@@ -664,6 +998,22 @@ public class HikariConfig implements HikariConfigMXBean
       }
 
       this.metricsTrackerFactory = metricsTrackerFactory;
+   }
+
+   /**
+    * Fluent-style version of {@link #setMetricsTrackerFactory(MetricsTrackerFactory)}.
+    *
+    * @param metricsTrackerFactory metricsTrackerFactory
+    * @return this config instance for chaining
+    */
+   public HikariConfig metricsTrackerFactory(MetricsTrackerFactory metricsTrackerFactory)
+   {
+      if (metricRegistry != null) {
+         throw new IllegalStateException("cannot use setMetricsTrackerFactory() and setMetricRegistry() together");
+      }
+
+      this.metricsTrackerFactory = metricsTrackerFactory;
+      return this;
    }
 
    /**
@@ -702,6 +1052,33 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
+    * Fluent-style version of {@link #setMetricRegistry(Object)}.
+    *
+    * @param metricRegistry the MetricRegistry instance to use
+    * @return this config instance for chaining
+    */
+   public HikariConfig metricRegistry(Object metricRegistry)
+   {
+      if (metricsTrackerFactory != null) {
+         throw new IllegalStateException("cannot use setMetricRegistry() and setMetricsTrackerFactory() together");
+      }
+
+      if (metricRegistry != null) {
+         metricRegistry = getObjectOrPerformJndiLookup(metricRegistry);
+
+         if (!safeIsAssignableFrom(metricRegistry, "com.codahale.metrics.MetricRegistry")
+            && !(safeIsAssignableFrom(metricRegistry, "io.dropwizard.metrics5.MetricRegistry"))
+            && !(safeIsAssignableFrom(metricRegistry, "io.micrometer.core.instrument.MeterRegistry"))) {
+            throw new IllegalArgumentException("Class must be instance of com.codahale.metrics.MetricRegistry, " +
+               "io.dropwizard.metrics5.MetricRegistry, or io.micrometer.core.instrument.MeterRegistry");
+         }
+      }
+
+      this.metricRegistry = metricRegistry;
+      return this;
+   }
+
+   /**
     * Get the HealthCheckRegistry that will be used for registration of health checks by HikariCP.  Currently only
     * Codahale/DropWizard is supported for health checks.
     *
@@ -733,6 +1110,28 @@ public class HikariConfig implements HikariConfigMXBean
       this.healthCheckRegistry = healthCheckRegistry;
    }
 
+   /**
+    * Fluent-style version of {@link #setHealthCheckRegistry(Object)}.
+    *
+    * @param healthCheckRegistry the HealthCheckRegistry to be used
+    * @return this config instance for chaining
+    */
+   public HikariConfig healthCheckRegistry(Object healthCheckRegistry)
+   {
+      checkIfSealed();
+
+      if (healthCheckRegistry != null) {
+         healthCheckRegistry = getObjectOrPerformJndiLookup(healthCheckRegistry);
+
+         if (!(healthCheckRegistry instanceof HealthCheckRegistry)) {
+            throw new IllegalArgumentException("Class must be an instance of com.codahale.metrics.health.HealthCheckRegistry");
+         }
+      }
+
+      this.healthCheckRegistry = healthCheckRegistry;
+      return this;
+   }
+
    public Properties getHealthCheckProperties()
    {
       return healthCheckProperties;
@@ -742,6 +1141,19 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       this.healthCheckProperties.putAll(healthCheckProperties);
+   }
+
+   /**
+    * Fluent-style version of {@link #setHealthCheckProperties(Properties)}.
+    *
+    * @param healthCheckProperties the healthCheckProperties to be used
+    * @return this config instance for chaining
+    */
+   public HikariConfig healthCheckProperties(Properties healthCheckProperties)
+   {
+      checkIfSealed();
+      this.healthCheckProperties.putAll(healthCheckProperties);
+      return this;
    }
 
    public void addHealthCheckProperty(String key, String value)
@@ -771,6 +1183,17 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
+    * Fluent-style version of {@link #setKeepaliveTime(long)}.
+    *
+    * @param keepaliveTimeMs the interval in which connections will be tested for aliveness, thus keeping them alive by the act of checking. Value is in milliseconds, default is 0 (disabled).
+    * @return this config instance for chaining
+    */
+   public HikariConfig keepaliveTime(long keepaliveTimeMs) {
+      this.keepaliveTime = keepaliveTimeMs;
+      return this;
+   }
+
+   /**
     * Determine whether the Connections in the pool are in read-only mode.
     *
     * @return {@code true} if the Connections in the pool are read-only, {@code false} if not
@@ -789,6 +1212,19 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       this.isReadOnly = readOnly;
+   }
+
+   /**
+    * Fluent-style version of {@link #setReadOnly(boolean)}.
+    *
+    * @param readOnly {@code true} if the Connections in the pool are read-only, {@code false} if not
+    * @return this config instance for chaining
+    */
+   public HikariConfig readOnly(boolean readOnly)
+   {
+      checkIfSealed();
+      this.isReadOnly = readOnly;
+      return this;
    }
 
    /**
@@ -813,6 +1249,19 @@ public class HikariConfig implements HikariConfigMXBean
       this.isRegisterMbeans = register;
    }
 
+   /**
+    * Fluent-style version of {@link #setRegisterMbeans(boolean)}.
+    *
+    * @param register {@code true} if HikariCP should register MXBeans, {@code false} if it should not
+    * @return this config instance for chaining
+    */
+   public HikariConfig registerMbeans(boolean register)
+   {
+      checkIfSealed();
+      this.isRegisterMbeans = register;
+      return this;
+   }
+
    /** {@inheritDoc} */
    @Override
    public String getPoolName()
@@ -830,6 +1279,19 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       this.poolName = poolName;
+   }
+
+   /**
+    * Fluent-style version of {@link #setPoolName(String)}.
+    *
+    * @param poolName the name of the connection pool to use
+    * @return this config instance for chaining
+    */
+   public HikariConfig poolName(String poolName)
+   {
+      checkIfSealed();
+      this.poolName = poolName;
+      return this;
    }
 
    /**
@@ -851,6 +1313,19 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       this.scheduledExecutor = executor;
+   }
+
+   /**
+    * Fluent-style version of {@link #setScheduledExecutor(ScheduledExecutorService)}.
+    *
+    * @param executor the ScheduledExecutorService
+    * @return this config instance for chaining
+    */
+   public HikariConfig scheduledExecutor(ScheduledExecutorService executor)
+   {
+      checkIfSealed();
+      this.scheduledExecutor = executor;
+      return this;
    }
 
    public String getTransactionIsolation()
@@ -877,6 +1352,19 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       this.schema = schema;
+   }
+
+   /**
+    * Fluent-style version of {@link #setSchema(String)}.
+    *
+    * @param schema the name of the default schema
+    * @return this config instance for chaining
+    */
+   public HikariConfig schema(String schema)
+   {
+      checkIfSealed();
+      this.schema = schema;
+      return this;
    }
 
    /**
@@ -927,6 +1415,46 @@ public class HikariConfig implements HikariConfigMXBean
       }
    }
 
+   /**
+    * Fluent-style version of {@link #setExceptionOverrideClassName(String)}.
+    *
+    * @param exceptionOverrideClassName the user supplied SQLExceptionOverride class name
+    * @return this config instance for chaining
+    * @see SQLExceptionOverride
+    */
+   public HikariConfig exceptionOverrideClassName(String exceptionOverrideClassName)
+   {
+      checkIfSealed();
+
+      var overrideClass = attemptFromContextLoader(exceptionOverrideClassName);
+      try {
+         if (overrideClass == null) {
+            overrideClass = this.getClass().getClassLoader().loadClass(exceptionOverrideClassName);
+            LOGGER.debug("SQLExceptionOverride class {} found in the HikariConfig class classloader {}", exceptionOverrideClassName, this.getClass().getClassLoader());
+         }
+      } catch (ClassNotFoundException e) {
+         LOGGER.error("Failed to load SQLExceptionOverride class {} from HikariConfig class classloader {}", exceptionOverrideClassName, this.getClass().getClassLoader());
+      }
+
+      if (overrideClass == null) {
+         throw new RuntimeException("Failed to load SQLExceptionOverride class " + exceptionOverrideClassName + " in either of HikariConfig class loader or Thread context classloader");
+      }
+
+      if (!SQLExceptionOverride.class.isAssignableFrom(overrideClass)) {
+         throw new RuntimeException("Loaded SQLExceptionOverride class " + exceptionOverrideClassName + " does not implement " + SQLExceptionOverride.class.getName());
+      }
+
+      try {
+         this.exceptionOverride = (SQLExceptionOverride) overrideClass.getConstructor().newInstance();
+         this.exceptionOverrideClassName = exceptionOverrideClassName;
+      }
+      catch (Exception e) {
+         throw new RuntimeException("Failed to instantiate class " + exceptionOverrideClassName, e);
+      }
+
+      return this;
+   }
+
 
    /**
     * Get the SQLExceptionOverride instance created by {@link #setExceptionOverrideClassName(String)}.
@@ -951,6 +1479,19 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
+    * Fluent-style version of {@link #setExceptionOverride(SQLExceptionOverride)}.
+    *
+    * @param exceptionOverride the user supplied SQLExceptionOverride instance
+    * @return this config instance for chaining
+    * @see SQLExceptionOverride
+    */
+   public HikariConfig exceptionOverride(SQLExceptionOverride exceptionOverride) {
+      checkIfSealed();
+      this.exceptionOverride = exceptionOverride;
+      return this;
+   }
+
+   /**
     * Set the default transaction isolation level.  The specified value is the
     * constant name from the <code>Connection</code> class, eg.
     * <code>TRANSACTION_REPEATABLE_READ</code>.
@@ -961,6 +1502,19 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       this.transactionIsolationName = isolationLevel;
+   }
+
+   /**
+    * Fluent-style version of {@link #setTransactionIsolation(String)}.
+    *
+    * @param isolationLevel the name of the isolation level
+    * @return this config instance for chaining
+    */
+   public HikariConfig transactionIsolation(String isolationLevel)
+   {
+      checkIfSealed();
+      this.transactionIsolationName = isolationLevel;
+      return this;
    }
 
    /**
@@ -982,6 +1536,19 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       this.threadFactory = threadFactory;
+   }
+
+   /**
+    * Fluent-style version of {@link #setThreadFactory(ThreadFactory)}.
+    *
+    * @param threadFactory the thread factory (setting to null causes the default thread factory to be used)
+    * @return this config instance for chaining
+    */
+   public HikariConfig threadFactory(ThreadFactory threadFactory)
+   {
+      checkIfSealed();
+      this.threadFactory = threadFactory;
+      return this;
    }
 
    void seal()
