@@ -155,6 +155,10 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     */
    public Connection getConnection(final long hardTimeout) throws SQLException
    {
+      if (poolState == POOL_SHUTDOWN) {
+         throw new SQLException("HikariPool " + this + " has been shut down.");
+      }
+
       suspendResumeLock.acquire();
       final var startTime = currentTime();
 
