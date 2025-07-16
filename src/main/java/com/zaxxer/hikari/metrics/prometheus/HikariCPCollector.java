@@ -16,28 +16,28 @@
 
 package com.zaxxer.hikari.metrics.prometheus;
 
-import com.zaxxer.hikari.metrics.PoolStats;
-import io.prometheus.client.Collector;
-import io.prometheus.client.GaugeMetricFamily;
-
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
-class HikariCPCollector extends Collector
-{
+import com.zaxxer.hikari.metrics.PoolStats;
 
-   private static final List<String> LABEL_NAMES = Collections.singletonList("pool");
+import io.prometheus.metrics.model.registry.MultiCollector;
+import io.prometheus.metrics.model.snapshots.GaugeSnapshot;
+import io.prometheus.metrics.model.snapshots.Labels;
+import io.prometheus.metrics.model.snapshots.MetricMetadata;
+import io.prometheus.metrics.model.snapshots.MetricSnapshots;
+
+class HikariCPCollector implements MultiCollector {
 
    private final Map<String, PoolStats> poolStatsMap = new ConcurrentHashMap<>();
 
-   @Override
-   public List<MetricFamilySamples> collect()
+   public MetricSnapshots collect()
    {
-      return Arrays.asList(
+      return new MetricSnapshots(Arrays.asList(
          createGauge("hikaricp_active_connections", "Active connections",
             PoolStats::getActiveConnections),
          createGauge("hikaricp_idle_connections", "Idle connections",
@@ -50,7 +50,7 @@ class HikariCPCollector extends Collector
             PoolStats::getMaxConnections),
          createGauge("hikaricp_min_connections", "Min connections",
             PoolStats::getMinConnections)
-      );
+      ));
    }
 
    void add(String name, PoolStats poolStats)
@@ -63,14 +63,13 @@ class HikariCPCollector extends Collector
       poolStatsMap.remove(name);
    }
 
-   private GaugeMetricFamily createGauge(String metric, String help,
-                                         Function<PoolStats, Integer> metricValueFunction)
+   private GaugeSnapshot createGauge(String metric, String help,
+                                                            Function<PoolStats, Integer> metricValueFunction)
    {
-      var metricFamily = new GaugeMetricFamily(metric, help, LABEL_NAMES);
-      poolStatsMap.forEach((k, v) -> metricFamily.addMetric(
-         Collections.singletonList(k),
-         metricValueFunction.apply(v)
+      Collection<GaugeSnapshot.GaugeDataPointSnapshot> gaugeDataPointSnapshots = new ArrayList<>();
+      poolStatsMap.forEach((k, v) -> gaugeDataPointSnapshots.add(
+         new GaugeSnapshot.GaugeDataPointSnapshot(metricValueFunction.apply(v), Labels.of("pool", k), null)
       ));
-      return metricFamily;
+      return new GaugeSnapshot(new MetricMetadata(metric, help), gaugeDataPointSnapshots);
    }
 }

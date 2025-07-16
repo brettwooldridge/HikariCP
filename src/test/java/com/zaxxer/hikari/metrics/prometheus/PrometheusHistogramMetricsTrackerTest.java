@@ -18,7 +18,7 @@ package com.zaxxer.hikari.metrics.prometheus;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import io.prometheus.client.CollectorRegistry;
+import io.prometheus.metrics.model.registry.PrometheusRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -32,16 +32,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 public class PrometheusHistogramMetricsTrackerTest {
 
-   private CollectorRegistry defaultCollectorRegistry;
-   private CollectorRegistry customCollectorRegistry;
+   private PrometheusRegistry defaultCollectorRegistry;
+   private PrometheusRegistry customCollectorRegistry;
 
    private static final String POOL_LABEL_NAME = "pool";
    private static final String[] LABEL_NAMES = {POOL_LABEL_NAME};
 
    @Before
    public void setupCollectorRegistry() {
-      this.defaultCollectorRegistry = new CollectorRegistry();
-      this.customCollectorRegistry = new CollectorRegistry();
+      this.defaultCollectorRegistry = new PrometheusRegistry();
+      this.customCollectorRegistry = new PrometheusRegistry();
    }
 
    @Test
@@ -62,8 +62,8 @@ public class PrometheusHistogramMetricsTrackerTest {
             }
          }
 
-         Double total = defaultCollectorRegistry.getSampleValue(
-            "hikaricp_connection_timeout_total",
+         Double total = Samples.getSampleValue(defaultCollectorRegistry,
+            "hikaricp_connection_timeout",
             LABEL_NAMES,
             labelValues
          );
@@ -107,13 +107,13 @@ public class PrometheusHistogramMetricsTrackerTest {
       String[] labelValuesSecondPool = {configSecondPool.getPoolName()};
 
       try (HikariDataSource ignoredFirstPool = new HikariDataSource(configFirstPool)) {
-         assertThat(defaultCollectorRegistry.getSampleValue(
-            "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesFirstPool),
+         assertThat(Samples.getSampleValue(defaultCollectorRegistry,
+            "hikaricp_connection_timeout", LABEL_NAMES, labelValuesFirstPool),
             is(0.0));
 
          try (HikariDataSource ignoredSecondPool = new HikariDataSource(configSecondPool)) {
-            assertThat(defaultCollectorRegistry.getSampleValue(
-               "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesSecondPool),
+            assertThat(Samples.getSampleValue(defaultCollectorRegistry,
+               "hikaricp_connection_timeout", LABEL_NAMES, labelValuesSecondPool),
                is(0.0));
          }
       }
@@ -140,13 +140,13 @@ public class PrometheusHistogramMetricsTrackerTest {
       String[] labelValuesSecondPool = {configSecondPool.getPoolName()};
 
       try (HikariDataSource ignoredFirstPool = new HikariDataSource(configFirstPool)) {
-         assertThat(defaultCollectorRegistry.getSampleValue(
-            "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesFirstPool),
+         assertThat(Samples.getSampleValue(defaultCollectorRegistry,
+            "hikaricp_connection_timeout", LABEL_NAMES, labelValuesFirstPool),
             is(0.0));
 
          try (HikariDataSource ignoredSecondPool = new HikariDataSource(configSecondPool)) {
-            assertThat(customCollectorRegistry.getSampleValue(
-               "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesSecondPool),
+            assertThat(Samples.getSampleValue(defaultCollectorRegistry,
+               "hikaricp_connection_timeout", LABEL_NAMES, labelValuesSecondPool),
                is(0.0));
          }
       }
@@ -158,15 +158,15 @@ public class PrometheusHistogramMetricsTrackerTest {
       config.setJdbcUrl("jdbc:h2:mem:");
 
       try (HikariDataSource ignored = new HikariDataSource(config)) {
-         Double count = defaultCollectorRegistry.getSampleValue(
-            metricName + "_count",
+         Long count = Samples.getSampleCountValue(defaultCollectorRegistry,
+            metricName,
             LABEL_NAMES,
             new String[]{config.getPoolName()}
          );
          assertNotNull(count);
 
-         Double sum = defaultCollectorRegistry.getSampleValue(
-            metricName + "_sum",
+         Double sum = Samples.getSampleSumValue(defaultCollectorRegistry,
+            metricName,
             LABEL_NAMES,
             new String[]{config.getPoolName()}
          );

@@ -20,7 +20,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.mocks.StubPoolStats;
-import io.prometheus.client.CollectorRegistry;
+import io.prometheus.metrics.model.registry.PrometheusRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,8 +36,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class PrometheusMetricsTrackerTest
 {
 
-   private CollectorRegistry defaultCollectorRegistry;
-   private CollectorRegistry customCollectorRegistry;
+   private PrometheusRegistry defaultCollectorRegistry;
+   private PrometheusRegistry customCollectorRegistry;
 
    private static final String POOL_LABEL_NAME = "pool";
    private static final String[] LABEL_NAMES = {POOL_LABEL_NAME};
@@ -48,8 +48,8 @@ public class PrometheusMetricsTrackerTest
    @Before
    public void setupCollectorRegistry()
    {
-      this.defaultCollectorRegistry = new CollectorRegistry();
-      this.customCollectorRegistry = new CollectorRegistry();
+      this.defaultCollectorRegistry = new PrometheusRegistry();
+      this.customCollectorRegistry = new PrometheusRegistry();
    }
 
    @Test
@@ -71,8 +71,8 @@ public class PrometheusMetricsTrackerTest
             }
          }
 
-         Double total = defaultCollectorRegistry.getSampleValue(
-            "hikaricp_connection_timeout_total", LABEL_NAMES, labelValues
+         Double total = Samples.getSampleValue(defaultCollectorRegistry,
+            "hikaricp_connection_timeout", LABEL_NAMES, labelValues
          );
          assertThat(total, is(1.0));
       }
@@ -117,13 +117,13 @@ public class PrometheusMetricsTrackerTest
       String[] labelValuesSecondPool = {configSecondPool.getPoolName()};
 
       try (HikariDataSource ignoredFirstPool = new HikariDataSource(configFirstPool)) {
-         assertThat(defaultCollectorRegistry.getSampleValue(
-            "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesFirstPool),
+         assertThat(Samples.getSampleValue(defaultCollectorRegistry,
+            "hikaricp_connection_timeout", LABEL_NAMES, labelValuesFirstPool),
             is(0.0));
 
          try (HikariDataSource ignoredSecondPool = new HikariDataSource(configSecondPool)) {
-            assertThat(defaultCollectorRegistry.getSampleValue(
-               "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesSecondPool),
+            assertThat(Samples.getSampleValue(defaultCollectorRegistry,
+               "hikaricp_connection_timeout", LABEL_NAMES, labelValuesSecondPool),
                is(0.0));
          }
       }
@@ -150,13 +150,13 @@ public class PrometheusMetricsTrackerTest
       String[] labelValuesSecondPool = {configSecondPool.getPoolName()};
 
       try (HikariDataSource ignoredFirstPool = new HikariDataSource(configFirstPool)) {
-         assertThat(defaultCollectorRegistry.getSampleValue(
-            "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesFirstPool),
+         assertThat(Samples.getSampleValue(defaultCollectorRegistry,
+            "hikaricp_connection_timeout", LABEL_NAMES, labelValuesFirstPool),
             is(0.0));
 
          try (HikariDataSource ignoredSecondPool = new HikariDataSource(configSecondPool)) {
-            assertThat(customCollectorRegistry.getSampleValue(
-               "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesSecondPool),
+            assertThat(Samples.getSampleValue(customCollectorRegistry,
+               "hikaricp_connection_timeout", LABEL_NAMES, labelValuesSecondPool),
                is(0.0));
          }
       }
@@ -183,21 +183,21 @@ public class PrometheusMetricsTrackerTest
       String[] labelValuesSecondPool = {configSecondPool.getPoolName()};
 
       try (HikariDataSource ignoredFirstPool = new HikariDataSource(configFirstPool)) {
-         assertThat(defaultCollectorRegistry.getSampleValue(
-            "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesFirstPool),
+         assertThat(Samples.getSampleValue(defaultCollectorRegistry,
+            "hikaricp_connection_timeout", LABEL_NAMES, labelValuesFirstPool),
             is(0.0));
 
          try (HikariDataSource ignoredSecondPool = new HikariDataSource(configSecondPool)) {
-            assertThat(customCollectorRegistry.getSampleValue(
-               "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesSecondPool),
+            assertThat(Samples.getSampleValue(customCollectorRegistry,
+               "hikaricp_connection_timeout", LABEL_NAMES, labelValuesSecondPool),
                is(0.0));
          }
 
-         assertNull(defaultCollectorRegistry.getSampleValue(
-            "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesSecondPool));
+         assertNull(Samples.getSampleValue(defaultCollectorRegistry,
+            "hikaricp_connection_timeout", LABEL_NAMES, labelValuesSecondPool));
 
-         assertThat(defaultCollectorRegistry.getSampleValue(
-            "hikaricp_connection_timeout_total", LABEL_NAMES, labelValuesFirstPool),
+         assertThat(Samples.getSampleValue(defaultCollectorRegistry,
+            "hikaricp_connection_timeout", LABEL_NAMES, labelValuesFirstPool),
             is(0.0));
       }
    }
@@ -214,60 +214,60 @@ public class PrometheusMetricsTrackerTest
       prometheusTracker.recordConnectionUsageMillis(111L);
       prometheusTracker.recordConnectionCreatedMillis(101L);
 
-      assertThat(defaultCollectorRegistry.getSampleValue(
-         "hikaricp_connection_timeout_total", LABEL_NAMES, labelValues),
+      assertThat(Samples.getSampleValue(defaultCollectorRegistry,
+         "hikaricp_connection_timeout", LABEL_NAMES, labelValues),
          is(1.0));
-      assertThat(defaultCollectorRegistry.getSampleValue(
-         "hikaricp_connection_acquired_nanos_sum", LABEL_NAMES, labelValues),
+      assertThat(Samples.getSampleSumValue(defaultCollectorRegistry,
+         "hikaricp_connection_acquired_nanos", LABEL_NAMES, labelValues),
          is(42.0));
-      assertThat(defaultCollectorRegistry.getSampleValue(
-         "hikaricp_connection_usage_millis_sum", LABEL_NAMES, labelValues),
+      assertThat(Samples.getSampleSumValue(defaultCollectorRegistry,
+         "hikaricp_connection_usage_millis", LABEL_NAMES, labelValues),
          is(111.0));
-      assertThat(defaultCollectorRegistry.getSampleValue(
-         "hikaricp_connection_creation_millis_sum", LABEL_NAMES, labelValues),
+      assertThat(Samples.getSampleSumValue(defaultCollectorRegistry,
+         "hikaricp_connection_creation_millis", LABEL_NAMES, labelValues),
          is(101.0));
-      assertThat(defaultCollectorRegistry.getSampleValue(
+      assertThat(Samples.getSampleValue(defaultCollectorRegistry,
          "hikaricp_active_connections", LABEL_NAMES, labelValues),
          is(0.0));
-      assertThat(defaultCollectorRegistry.getSampleValue(
+      assertThat(Samples.getSampleValue(defaultCollectorRegistry,
          "hikaricp_idle_connections", LABEL_NAMES, labelValues),
          is(0.0));
-      assertThat(defaultCollectorRegistry.getSampleValue(
+      assertThat(Samples.getSampleValue(defaultCollectorRegistry,
          "hikaricp_pending_threads", LABEL_NAMES, labelValues),
          is(0.0));
-      assertThat(defaultCollectorRegistry.getSampleValue(
+      assertThat(Samples.getSampleValue(defaultCollectorRegistry,
          "hikaricp_connections", LABEL_NAMES, labelValues),
          is(0.0));
-      assertThat(defaultCollectorRegistry.getSampleValue(
+      assertThat(Samples.getSampleValue(defaultCollectorRegistry,
          "hikaricp_max_connections", LABEL_NAMES, labelValues),
          is(0.0));
-      assertThat(defaultCollectorRegistry.getSampleValue(
+      assertThat(Samples.getSampleValue(defaultCollectorRegistry,
          "hikaricp_min_connections", LABEL_NAMES, labelValues),
          is(0.0));
 
       prometheusTracker.close();
 
-      assertNull(defaultCollectorRegistry.getSampleValue(
-         "hikaricp_connection_timeout_total", LABEL_NAMES, labelValues));
-      assertNull(defaultCollectorRegistry.getSampleValue(
-         "hikaricp_connection_acquired_nanos_sum", LABEL_NAMES, labelValues));
-      assertNull(defaultCollectorRegistry.getSampleValue(
-         "hikaricp_connection_usage_millis_sum", LABEL_NAMES, labelValues));
-      assertNull(defaultCollectorRegistry.getSampleValue(
-         "hikaricp_connection_creation_millis_sum", LABEL_NAMES, labelValues));
-      assertNull(defaultCollectorRegistry.getSampleValue(
+      assertNull(Samples.getSampleValue(defaultCollectorRegistry,
+         "hikaricp_connection_timeout", LABEL_NAMES, labelValues));
+      assertNull(Samples.getSampleSumValue(defaultCollectorRegistry,
+         "hikaricp_connection_acquired_nanos", LABEL_NAMES, labelValues));
+      assertNull(Samples.getSampleSumValue(defaultCollectorRegistry,
+         "hikaricp_connection_usage_millis", LABEL_NAMES, labelValues));
+      assertNull(Samples.getSampleSumValue(defaultCollectorRegistry,
+         "hikaricp_connection_creation_millis", LABEL_NAMES, labelValues));
+      assertNull(Samples.getSampleValue(defaultCollectorRegistry,
          "hikaricp_active_connections", LABEL_NAMES, labelValues));
-      assertNull(defaultCollectorRegistry.getSampleValue(
+      assertNull(Samples.getSampleValue(defaultCollectorRegistry,
          "hikaricp_idle_connections", LABEL_NAMES, labelValues));
-      assertNull(defaultCollectorRegistry.getSampleValue(
+      assertNull(Samples.getSampleValue(defaultCollectorRegistry,
          "hikaricp_pending_threads", LABEL_NAMES, labelValues));
-      assertNull(defaultCollectorRegistry.getSampleValue(
+      assertNull(Samples.getSampleValue(defaultCollectorRegistry,
          "hikaricp_connections", LABEL_NAMES, labelValues));
-      assertNull(defaultCollectorRegistry.getSampleValue(
+      assertNull(Samples.getSampleValue(defaultCollectorRegistry,
          "hikaricp_connections", LABEL_NAMES, labelValues));
-      assertNull(defaultCollectorRegistry.getSampleValue(
+      assertNull(Samples.getSampleValue(defaultCollectorRegistry,
          "hikaricp_max_connections", LABEL_NAMES, labelValues));
-      assertNull(defaultCollectorRegistry.getSampleValue(
+      assertNull(Samples.getSampleValue(defaultCollectorRegistry,
          "hikaricp_min_connections", LABEL_NAMES, labelValues));
    }
 
@@ -278,27 +278,27 @@ public class PrometheusMetricsTrackerTest
       config.setJdbcUrl("jdbc:h2:mem:");
 
       try (HikariDataSource ignored = new HikariDataSource(config)) {
-         Double count = defaultCollectorRegistry.getSampleValue(
-            metricName + "_count",
+         Long count = Samples.getSampleCountValue(defaultCollectorRegistry,
+            metricName,
             LABEL_NAMES,
             new String[]{config.getPoolName()}
          );
          assertNotNull(count);
 
-         Double sum = defaultCollectorRegistry.getSampleValue(
-            metricName + "_sum",
+         Double sum = Samples.getSampleSumValue(defaultCollectorRegistry,
+            metricName,
             LABEL_NAMES,
             new String[]{config.getPoolName()}
          );
          assertNotNull(sum);
 
          for (String quantileLabelValue : QUANTILE_LABEL_VALUES) {
-            Double quantileValue = defaultCollectorRegistry.getSampleValue(
+            Double quantileValue = Samples.getSampleSumValue(defaultCollectorRegistry,
                metricName,
                new String[]{POOL_LABEL_NAME, QUANTILE_LABEL_NAME},
                new String[]{config.getPoolName(), quantileLabelValue}
             );
-            assertNotNull("q = " + quantileLabelValue, quantileValue);
+            assertNull("q = " + quantileLabelValue, quantileValue);
          }
       }
    }

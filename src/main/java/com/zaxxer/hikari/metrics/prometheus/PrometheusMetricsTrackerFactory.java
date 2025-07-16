@@ -19,8 +19,9 @@ package com.zaxxer.hikari.metrics.prometheus;
 import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.PoolStats;
-import io.prometheus.client.Collector;
-import io.prometheus.client.CollectorRegistry;
+import io.prometheus.metrics.model.registry.Collector;
+import io.prometheus.metrics.model.registry.MultiCollector;
+import io.prometheus.metrics.model.registry.PrometheusRegistry;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,11 +44,11 @@ import static com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFacto
 public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory
 {
 
-   private final static Map<CollectorRegistry, RegistrationStatus> registrationStatuses = new ConcurrentHashMap<>();
+   private final static Map<PrometheusRegistry, RegistrationStatus> registrationStatuses = new ConcurrentHashMap<>();
 
    private final HikariCPCollector collector = new HikariCPCollector();
 
-   private final CollectorRegistry collectorRegistry;
+   private final PrometheusRegistry collectorRegistry;
 
    enum RegistrationStatus
    {
@@ -60,14 +61,14 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory
     */
    public PrometheusMetricsTrackerFactory()
    {
-      this(CollectorRegistry.defaultRegistry);
+      this(PrometheusRegistry.defaultRegistry);
    }
 
    /**
-    * Constructor that allows to pass in a {@link CollectorRegistry} to which the
+    * Constructor that allows to pass in a {@link PrometheusRegistry} to which the
     * Hikari metrics are registered.
     */
-   public PrometheusMetricsTrackerFactory(CollectorRegistry collectorRegistry)
+   public PrometheusMetricsTrackerFactory(PrometheusRegistry collectorRegistry)
    {
       this.collectorRegistry = collectorRegistry;
    }
@@ -80,10 +81,10 @@ public class PrometheusMetricsTrackerFactory implements MetricsTrackerFactory
       return new PrometheusMetricsTracker(poolName, this.collectorRegistry, this.collector);
    }
 
-   private void registerCollector(Collector collector, CollectorRegistry collectorRegistry)
+   private void registerCollector(MultiCollector collector, PrometheusRegistry collectorRegistry)
    {
       if (registrationStatuses.putIfAbsent(collectorRegistry, REGISTERED) == null) {
-         collector.register(collectorRegistry);
+         collectorRegistry.register(collector);
       }
    }
 }

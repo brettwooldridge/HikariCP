@@ -5,12 +5,13 @@ module com.zaxxer.hikari
    requires java.naming;
    requires org.slf4j;
    requires static org.hibernate.orm.core;
-   requires static simpleclient;
    requires static metrics.core;
    requires static metrics.healthchecks;
    requires static io.dropwizard.metrics5;
    requires static micrometer.core;
    requires static org.javassist;
+   requires static io.prometheus.metrics.core;
+   requires static io.prometheus.metrics.model;
 
    exports com.zaxxer.hikari;
    exports com.zaxxer.hikari.hibernate;
