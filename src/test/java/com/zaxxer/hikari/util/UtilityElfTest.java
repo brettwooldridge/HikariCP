@@ -52,4 +52,29 @@ public class UtilityElfTest
       //Act
       UtilityElf.getTransactionIsolation("9999");
    }
+
+   @Test
+   public void shouldCreateInstanceOfClassWithConstructorThatAcceptsSuperClassAndInterfaceAndClassOfArguments()
+   {
+      //Act
+      UtilityElf.createInstance("com.zaxxer.hikari.util.UtilityElfTest$ClassZ",
+            Object.class,
+            new ClassB(),
+            new ClassC(),
+            new ClassD());
+   }
+
+   public static class ClassA {}
+
+   public static final class ClassB extends ClassA {}
+
+   public interface InterfaceC {}
+
+   public final static class ClassC implements InterfaceC {}
+
+   public final static class ClassD {}
+
+   public final static class ClassZ {
+      public ClassZ(ClassA _superClassA, InterfaceC _interfaceC, ClassD _classD) {}
+   }
 }
