@@ -121,16 +121,13 @@ public final class UtilityElf
             argClasses[i] = args[i].getClass();
          }
 
-         Constructor<?>[] possibleConstructors = loaded.getConstructors();
-         Constructor<?> constructor = Arrays.stream(possibleConstructors)
-            .filter(possibleConstructor -> {
-               Class<?>[] constructorParameters = possibleConstructor.getParameterTypes();
-               if (possibleConstructor.getParameterTypes().length != totalArgs) {
-                  return false;
-               }
+         Constructor<?> constructor = Arrays.stream(loaded.getConstructors())
+            .filter(c -> {
+               if (c.getParameterCount() != totalArgs) return false;
 
+               Class<?>[] params = c.getParameterTypes();
                return IntStream.range(0, totalArgs)
-                  .allMatch(i -> constructorParameters[i].isAssignableFrom(argClasses[i]));
+                  .allMatch(i -> params[i].isAssignableFrom(argClasses[i]));
             })
             .findFirst()
             .orElseThrow(() -> new RuntimeException("No suitable constructor found"));
