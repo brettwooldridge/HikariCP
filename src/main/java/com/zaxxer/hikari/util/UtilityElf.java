@@ -16,9 +16,13 @@
 
 package com.zaxxer.hikari.util;
 
+import java.lang.reflect.Constructor;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.*;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static java.lang.Thread.currentThread;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -116,7 +120,21 @@ public final class UtilityElf
          for (int i = 0; i < totalArgs; i++) {
             argClasses[i] = args[i].getClass();
          }
-         var constructor = loaded.getConstructor(argClasses);
+
+         Constructor<?>[] possibleConstructors = loaded.getConstructors();
+         Constructor<?> constructor = Arrays.stream(possibleConstructors)
+            .filter(possibleConstructor -> {
+               Class<?>[] constructorParameters = possibleConstructor.getParameterTypes();
+               if (possibleConstructor.getParameterTypes().length != totalArgs) {
+                  return false;
+               }
+
+               return IntStream.range(0, totalArgs)
+                  .allMatch(i -> constructorParameters[i].isAssignableFrom(argClasses[i]));
+            })
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("No suitable constructor found"));
+
          return clazz.cast(constructor.newInstance(args));
       }
       catch (Exception e) {
