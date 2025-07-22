@@ -15,7 +15,7 @@ Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC con
 ----------------------------------------------------
 
 > [!IMPORTANT]
-> In order to avoid a rare condition where the pool goes to zero and does not recover it is necessary to configure *TCP keepalive*. Some JDBC drivers support this via properties, for example ``tcpKeepAlive=true`` on PostgreSQL, but in any case it can also be configured at the OS-level. See [Setting OS TCP Keepalive](https://github.com/brettwooldridge/HikariCP/wiki/Setting-OS-TCP-Keepalive) and/or [TCP keepalive for a better PostgreSQL experience](https://www.cybertec-postgresql.com/en/tcp-keepalive-for-a-better-postgresql-experience/#setting-tcp-keepalive-parameters-on-the-operating-system).
+> In order to avoid a rare condition where the pool goes to zero and does not recover it is necessary to configure *TCP keepalive*. Some JDBC drivers support this via properties, for example ``tcpKeepAlive=true`` on PostgreSQL, but in any case it can also be configured at the OS-level. See [Setting OS TCP Keepalive](https://github.com/brettwooldridge/HikariCP/wiki/Setting-Driver-or-OS-TCP-Keepalive) and/or [TCP keepalive for a better PostgreSQL experience](https://www.cybertec-postgresql.com/en/tcp-keepalive-for-a-better-postgresql-experience/#setting-tcp-keepalive-parameters-on-the-operating-system).
 
 ----------------------------------------------------
 
@@ -38,12 +38,12 @@ Fast, simple, reliable.  HikariCP is a "zero-overhead" production ready JDBC con
 
 ### Artifacts
 
-_**Java 11+** maven artifact:_
+_**Java 11 or greater** maven artifact:_
 ```xml
 <dependency>
    <groupId>com.zaxxer</groupId>
    <artifactId>HikariCP</artifactId>
-   <version>6.2.1</version>
+   <version>6.3.0</version>
 </dependency>
 ```
 _Java 8 maven artifact (*deprecated*):_

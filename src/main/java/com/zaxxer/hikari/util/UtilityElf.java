@@ -18,6 +18,7 @@ package com.zaxxer.hikari.util;
 
 import java.util.Locale;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import static java.lang.Thread.currentThread;
@@ -138,6 +139,11 @@ public final class UtilityElf
       return createThreadPoolExecutor(new LinkedBlockingQueue<>(queueSize), threadName, threadFactory, policy);
    }
 
+   public static ThreadPoolExecutor createCreatorThreadPoolExecutor(final int corePoolSize, final int maxPoolSize, final int queueSize, final String threadName, ThreadFactory threadFactory, final RejectedExecutionHandler policy)
+   {
+      return createCreatorThreadPoolExecutor(corePoolSize, maxPoolSize, new LinkedBlockingQueue<>(queueSize), threadName, threadFactory, policy);
+   }
+
    /**
     * Create a ThreadPoolExecutor.
     *
@@ -154,6 +160,18 @@ public final class UtilityElf
       }
 
       var executor = new ThreadPoolExecutor(1 /*core*/, 1 /*max*/, 5 /*keepalive*/, SECONDS, queue, threadFactory, policy);
+      executor.allowCoreThreadTimeOut(true);
+      return executor;
+   }
+
+   public static ThreadPoolExecutor createCreatorThreadPoolExecutor(
+      int corePoolSize, int maxPoolSize, final BlockingQueue<Runnable> queue, final String threadName, ThreadFactory threadFactory, final RejectedExecutionHandler policy)
+   {
+      if (threadFactory == null) {
+         threadFactory = new DefaultThreadFactory(threadName);
+      }
+
+      var executor = new ThreadPoolExecutor(corePoolSize /*core*/, maxPoolSize /*max*/, 5 /*keepalive*/, SECONDS, queue, threadFactory, policy);
       executor.allowCoreThreadTimeOut(true);
       return executor;
    }
@@ -218,6 +236,7 @@ public final class UtilityElf
     */
    public static final class DefaultThreadFactory implements ThreadFactory
    {
+      private static final AtomicInteger counter = new AtomicInteger(0);
       private final String threadName;
       private final boolean daemon;
 
@@ -229,7 +248,7 @@ public final class UtilityElf
       @Override
       @SuppressWarnings("NullableProblems")
       public Thread newThread(Runnable r) {
-         var thread = new Thread(r, threadName);
+         var thread = new Thread(r, threadName + "_" + counter.incrementAndGet());
          thread.setDaemon(daemon);
          return thread;
       }
