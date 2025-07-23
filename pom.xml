@@ -42,7 +42,7 @@
       <maven.release.version>3.0.1</maven.release.version>
       <metrics.version>3.2.5</metrics.version>
       <metrics5.version>5.0.0-rc17</metrics5.version>
-      <micrometer.version>1.5.10</micrometer.version>
+      <micrometer.version>1.5.4</micrometer.version>
       <mockito.version>3.7.7</mockito.version>
       <pax.exam.version>4.14.0</pax.exam.version>
       <pax.url.version>2.5.4</pax.url.version>
