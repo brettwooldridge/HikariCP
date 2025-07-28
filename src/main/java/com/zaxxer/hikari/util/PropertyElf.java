@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
  * A class that reflectively sets bean properties on a target object.
  *
  * @author Brett Wooldridge
+ * @hidden
  */
 public final class PropertyElf
 {

@@ -16,6 +16,14 @@
 
 package com.zaxxer.hikari.util;
 
+/**
+ * An enumeration representing the various isolation levels for database transactions.
+ * Each isolation level corresponds to a specific behavior regarding visibility of changes made by other transactions.
+ * The levels are defined according to the SQL standard and may vary in implementation across different databases.
+ *
+ * @author Brett Wooldridge
+ * @hidden
+ */
 public enum IsolationLevel
 {
    TRANSACTION_NONE(0),

@@ -16,23 +16,18 @@
 
 package com.zaxxer.hikari.pool;
 
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.health.HealthCheckRegistry;
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariPoolMXBean;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.PoolStats;
-import com.zaxxer.hikari.metrics.dropwizard.CodahaleHealthChecker;
-import com.zaxxer.hikari.metrics.dropwizard.CodahaleMetricsTrackerFactory;
-import com.zaxxer.hikari.metrics.dropwizard.Dropwizard5MetricsTrackerFactory;
-import com.zaxxer.hikari.metrics.micrometer.MicrometerMetricsTrackerFactory;
 import com.zaxxer.hikari.util.ConcurrentBag;
 import com.zaxxer.hikari.util.ConcurrentBag.IBagStateListener;
 import com.zaxxer.hikari.util.SuspendResumeLock;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
@@ -52,6 +47,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * pooling behavior for HikariCP.
  *
  * @author Brett Wooldridge
+ * @hidden
  */
 public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBagStateListener
 {
@@ -282,17 +278,19 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     *
     * @param metricRegistry the metrics registry instance to use
     */
-   @SuppressWarnings("PackageAccessibility")
    public void setMetricRegistry(Object metricRegistry)
    {
       if (metricRegistry != null && safeIsAssignableFrom(metricRegistry, "com.codahale.metrics.MetricRegistry")) {
-         setMetricsTrackerFactory(new CodahaleMetricsTrackerFactory((MetricRegistry) metricRegistry));
+         setMetricsTrackerFactory(createInstance("com.zaxxer.hikari.metrics.dropwizard.CodahaleMetricsTrackerFactory",
+                                                  MetricsTrackerFactory.class, metricRegistry));
       }
       else if (metricRegistry != null && safeIsAssignableFrom(metricRegistry, "io.dropwizard.metrics5.MetricRegistry")) {
-         setMetricsTrackerFactory(new Dropwizard5MetricsTrackerFactory((io.dropwizard.metrics5.MetricRegistry) metricRegistry));
+         setMetricsTrackerFactory(createInstance("com.zaxxer.hikari.metrics.dropwizard.Dropwizard5MetricsTrackerFactory",
+                                                  MetricsTrackerFactory.class, metricRegistry));
       }
       else if (metricRegistry != null && safeIsAssignableFrom(metricRegistry, "io.micrometer.core.instrument.MeterRegistry")) {
-         setMetricsTrackerFactory(new MicrometerMetricsTrackerFactory((MeterRegistry) metricRegistry));
+         setMetricsTrackerFactory(createInstance("com.zaxxer.hikari.metrics.micrometer.MicrometerMetricsTrackerFactory",
+                                                  MetricsTrackerFactory.class, metricRegistry));
       }
       else {
          setMetricsTrackerFactory(null);
@@ -323,7 +321,14 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    public void setHealthCheckRegistry(Object healthCheckRegistry)
    {
       if (healthCheckRegistry != null) {
-         CodahaleHealthChecker.registerHealthChecks(this, config, (HealthCheckRegistry) healthCheckRegistry);
+         try {
+            Class<?> checkerClazz = HikariPool.class.getClassLoader().loadClass("com.zaxxer.hikari.metrics.dropwizard.CodahaleHealthChecker");
+            Class<?> healthCheckRegistryClazz = HikariPool.class.getClassLoader().loadClass("com.codahale.metrics.health.HealthCheckRegistry");
+            checkerClazz.getMethod("registerHealthChecks", HikariPool.class, HikariConfig.class, healthCheckRegistryClazz)
+                 .invoke(null, this, config, healthCheckRegistry);
+         } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+         }
       }
    }
 
@@ -607,7 +612,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
    /**
     * "Soft" evict a Connection (/PoolEntry) from the pool.  If this method is being called by the user directly
-    * through {@link com.zaxxer.hikari.HikariDataSource#evictConnection(Connection)} then {@code owner} is {@code true}.
+    * through {@link HikariDataSource#evictConnection(Connection)} then {@code owner} is {@code true}.
     * <p>
     * If the caller is the owner, or if the Connection is idle (i.e. can be "reserved" in the {@link ConcurrentBag}),
     * then we can close the connection immediately.  Otherwise, we leave it "marked" for eviction so that it is evicted
@@ -887,6 +892,10 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       }
    }
 
+   /**
+    * Exception thrown when the pool fails to initialize, typically due to a failure to create or validate a connection.
+    * @hidden
+    */
    public static class PoolInitializationException extends RuntimeException
    {
       private static final long serialVersionUID = 929872118275916520L;

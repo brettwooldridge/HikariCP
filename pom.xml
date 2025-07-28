@@ -29,37 +29,38 @@
            be manually released via the Nexus UI at https://oss.sonatype.org -->
       <autoReleaseStagedArtifacts>true</autoReleaseStagedArtifacts>
 
+      <commons.csv.version>1.12.0</commons.csv.version>
       <docker.maven.plugin.fabric8.version>0.45.0</docker.maven.plugin.fabric8.version>
-      <felix.bundle.plugin.version>5.1.1</felix.bundle.plugin.version>
+      <felix.bundle.plugin.version>5.1.9</felix.bundle.plugin.version>
       <felix.version>7.0.5</felix.version>
+      <h2.version>2.3.232</h2.version>
       <hibernate.version>5.4.24.Final</hibernate.version>
       <javassist.version>3.29.2-GA</javassist.version>
       <jndi.version>0.11.4.1</jndi.version>
+      <junit.version>4.13.2</junit.version>
+      <log4j.version>2.25.1</log4j.version>
       <maven.release.version>3.0.1</maven.release.version>
       <metrics.version>3.2.5</metrics.version>
       <metrics5.version>5.0.0-rc17</metrics5.version>
       <micrometer.version>1.5.10</micrometer.version>
-      <simpleclient.version>0.16.0</simpleclient.version>
       <mockito.version>3.7.7</mockito.version>
-      <pax.exam.version>4.13.5</pax.exam.version>
+      <pax.exam.version>4.14.0</pax.exam.version>
       <pax.url.version>2.5.4</pax.url.version>
-      <postgresql.version>42.7.4</postgresql.version>
-      <log4j.version>2.18.0</log4j.version>
-      <slf4j.version>1.7.36</slf4j.version>
-      <commons.csv.version>1.12.0</commons.csv.version>
-      <h2.version>2.3.232</h2.version>
-      <junit.version>4.13.2</junit.version>
+      <postgresql.version>42.7.7</postgresql.version>
+      <simpleclient.version>0.16.0</simpleclient.version>
+      <slf4j.version>2.0.17</slf4j.version>
       <testcontainers.version>1.20.3</testcontainers.version>
    </properties>
 
    <groupId>com.zaxxer</groupId>
    <artifactId>HikariCP</artifactId>
-   <version>6.3.1-SNAPSHOT</version>
+   <version>7.0.0-SNAPSHOT</version>
    <packaging>bundle</packaging>
 
    <name>HikariCP</name>
    <description>Ultimate JDBC Connection Pool</description>
    <url>https://github.com/brettwooldridge/HikariCP</url>
+   <inceptionYear>2013</inceptionYear>
 
    <organization>
       <name>Zaxxer.com</name>
@@ -126,7 +127,13 @@
       <dependency>
          <groupId>org.apache.commons</groupId>
          <artifactId>commons-compress</artifactId>
-         <version>[1.26.0,)</version>
+         <version>1.27.1</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.commons</groupId>
+         <artifactId>commons-lang3</artifactId>
+         <version>3.18.0</version>
          <scope>test</scope>
       </dependency>
       <dependency>
@@ -224,7 +231,7 @@
       </dependency>
       <dependency>
          <groupId>org.apache.logging.log4j</groupId>
-         <artifactId>log4j-slf4j-impl</artifactId>
+         <artifactId>log4j-slf4j2-impl</artifactId>
          <version>${log4j.version}</version>
          <scope>test</scope>
       </dependency>
@@ -287,14 +294,20 @@
    </dependencies>
 
    <build>
-      <resources>
-         <resource>
-            <directory>target/classes</directory>
-         </resource>
-      </resources>
-
       <pluginManagement>
          <plugins>
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-resources-plugin</artifactId>
+               <version>3.3.1</version>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-install-plugin</artifactId>
+               <version>3.1.4</version>
+            </plugin>
+
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-clean-plugin</artifactId>
@@ -344,6 +357,7 @@
                   <!-- Sets the VM argument line used when unit tests are run. -->
                   <argLine>${surefireArgLine} ${sureFireOptions11}</argLine>
                   <reuseForks>${sureFireForks11}</reuseForks>
+                  <useModulePath>false</useModulePath>
                </configuration>
             </plugin>
 
@@ -369,18 +383,27 @@
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-javadoc-plugin</artifactId>
-               <version>3.6.0</version>
+               <version>3.11.2</version>
                <configuration>
                   <show>public</show>
-                  <excludePackageNames>
-                     com.zaxxer.hikari.hibernate:com.zaxxer.hikari.metrics.*:com.zaxxer.hikari.pool:com.zaxxer.hikari.util
-                  </excludePackageNames>
                   <attach>true</attach>
                   <maxmemory>1024m</maxmemory>
+                  <legacyMode>true</legacyMode>
+                  <sourceFileExcludes>
+                     <sourceFileExclude>**\/module-info.java</sourceFileExclude>
+                     <sourceFileExclude>**\/HikariConfigurationUtil.java</sourceFileExclude>
+                     <sourceFileExclude>**\/HikariConnectionProvider.java</sourceFileExclude>
+                     <sourceFileExclude>**\/Prometheus*Tracker.java</sourceFileExclude>
+                     <sourceFileExclude>**\/Micrometer*Tracker.java</sourceFileExclude>
+                     <sourceFileExclude>**\/Dropwizard*Tracker.java</sourceFileExclude>
+                     <sourceFileExclude>**\/Coda*Tracker.java</sourceFileExclude>
+                  </sourceFileExcludes>
+                  <disableSourcepathUsage>true</disableSourcepathUsage>
+                  <bottom><![CDATA[Copyright © {inceptionYear}–{currentYear} Brett Wooldridge. All rights reserved.]]></bottom>
                </configuration>
                <executions>
                   <execution>
-                     <id>bundle-sources</id>
+                     <id>attach-javadoc</id>
                      <phase>package</phase>
                      <goals>
                         <goal>jar</goal>
@@ -427,6 +450,11 @@
                   </configuration>
                </execution>
             </executions>
+         </plugin>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
          </plugin>
 
          <plugin>
@@ -568,7 +596,7 @@
             <configuration>
                <classifier>${artifact.classifier}</classifier>
                <instructions>
-                  <Automatic-Module-Name>${automatic.module.name}</Automatic-Module-Name>
+                  <Automatic-Module-Name>com.zaxxer.hikari</Automatic-Module-Name>
                   <!-- Multi-Release>true</Multi-Release-->
                   <Bundle-Name>HikariCP</Bundle-Name>
                   <Export-Package>
@@ -580,7 +608,7 @@
                      com.zaxxer.hikari.metrics.prometheus
                   </Export-Package>
                   <Private-Package>com.zaxxer.hikari.*</Private-Package>
-                  <Include-Resource>{maven-resources}</Include-Resource>
+                  <Include-Resource>target/classes/module-info.class</Include-Resource>
                   <_exportcontents>
                      com.zaxxer.hikari.pool,
                      com.zaxxer.hikari.util
@@ -668,20 +696,6 @@
                   </executions>
                </plugin>
 
-               <plugin>
-                  <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-javadoc-plugin</artifactId>
-                  <version>3.6.0</version>
-                  <executions>
-                     <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                           <goal>jar</goal>
-                        </goals>
-                     </execution>
-                  </executions>
-               </plugin>
-
                <!-- For release: mvn release:perform -Darguments=-Dgpg.passphrase=PASSPHRASE
                       With gpg2 you don't need to pass the passphrase; the GPG agent will prompt for it. -->
                <plugin>
@@ -707,7 +721,7 @@
                   <extensions>true</extensions>
                   <configuration>
                      <autoReleaseAfterClose>${autoReleaseStagedArtifacts}</autoReleaseAfterClose>
-                     <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                     <nexusUrl>https://ossrh-staging-api.central.sonatype.com</nexusUrl>
                      <serverId>ossrh</serverId>
                   </configuration>
                </plugin>

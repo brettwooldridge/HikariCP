@@ -1,5 +1,33 @@
 HikariCP Changes
 
+Changes in 7.0.0
+
+ * merged #2340 NoSuchMethodException error that is thrown when setting a metric registry, fixes to UtilityElf
+   reflection code to use the correct method signature.
+
+ * fixed #1294 add support for HikariCredentialsProvider class
+
+Changes in 6.3.2
+
+ * fixed #2342 restore module-info.class to jar file, which was lost in 6.3.1
+
+ * fixed #2256 add support for legacy override of getUsername()/getPassword() of HikariDataSource. See project page
+   for documentation of system property com.zaxxer.hikari.legacy.supportUserPassDataSourceOverride.
+
+ * fixed #2323 right or wrong (wrt driver behavior) return to previous Connection.get/setSchema behavior
+
+ * fixed #2288 upgrade dependencies and fix build warnings
+
+Changes in 6.3.1
+
+ * fixed #2315 source jar contains also binary .class files and missing some .java files
+
+ * fixed #2307 remove improper hardcoded timout, use validationTimeout
+
+ * fixed #2305 keep properties key and values as is rather than forcing stringification. Also fixes #2286 and #2304
+
+ * upgraded various maven plugin dependencies to latest versions
+
 Changes in 6.3.0
 
  * increase keepaliveTime variance from 10% to 20%

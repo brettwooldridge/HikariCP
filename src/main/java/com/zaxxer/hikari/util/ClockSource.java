@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
  * calculations.
  *
  * @author Brett Wooldridge
+ * @hidden
  */
 public interface ClockSource
 {
@@ -142,7 +143,7 @@ public interface ClockSource
 
    /**
     * Get the TimeUnit the ClockSource is denominated in.
-    * @return
+    * @return the TimeUnit used by the ClockSource
     */
    static TimeUnit getSourceTimeUnit() {
       return CLOCK.getSourceTimeUnit0();
@@ -184,6 +185,7 @@ public interface ClockSource
 
    /**
     * Factory class used to create a platform-specific ClockSource.
+    * @hidden
     */
    class Factory
    {
@@ -197,6 +199,12 @@ public interface ClockSource
       }
    }
 
+   /**
+    * A ClockSource that uses System.currentTimeMillis() for time-stamps.
+    * This is the default implementation on Mac OS X, and is used when
+    * System.nanoTime() is not available.
+    * @hidden
+    */
    final class MillisecondClockSource implements ClockSource
    {
       /** {@inheritDoc} */
@@ -254,6 +262,11 @@ public interface ClockSource
       }
    }
 
+   /**
+    * A ClockSource that uses System.nanoTime() for time-stamps.
+    * This is the default implementation on all platforms except Mac OS X.
+    * @hidden
+    */
    class NanosecondClockSource implements ClockSource
    {
       /** {@inheritDoc} */

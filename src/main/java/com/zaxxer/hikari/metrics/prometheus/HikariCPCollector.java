@@ -27,6 +27,16 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
+/**
+ * <pre>{@code
+ * HikariConfig config = new HikariConfig();
+ * config.setMetricsTrackerFactory(new HikariCPCollector());
+ * }</pre>
+ * or
+ * <pre>{@code
+ * config.setMetricsTrackerFactory(new HikariCPCollector(new CollectorRegistry()));
+ * }</pre>
+ */
 class HikariCPCollector extends Collector
 {
 

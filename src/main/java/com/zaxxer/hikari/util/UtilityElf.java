@@ -16,19 +16,36 @@
 
 package com.zaxxer.hikari.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Constructor;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.*;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 import static java.lang.Thread.currentThread;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
+ * UtilityElf is a utility class that provides various helper methods
+ * for string manipulation, thread management, and JDBC URL handling.
+ * It includes methods for masking passwords in JDBC URLs, creating
+ * instances of classes, and creating thread pool executors.
  *
  * @author Brett Wooldridge
+ * @hidden
  */
 public final class UtilityElf
 {
+   private static final Logger LOGGER = LoggerFactory.getLogger(UtilityElf.class);
+
+   /**
+    * A pattern to match and mask passwords in JDBC URLs.
+    * It looks for the "password" parameter in the URL and replaces its value with "<masked>".
+    */
    private static final Pattern PASSWORD_MASKING_PATTERN = Pattern.compile("([?&;][^&#;=]*[pP]assword=)[^&#;]*");
 
    private UtilityElf()
@@ -42,8 +59,10 @@ public final class UtilityElf
    }
 
    /**
+    * Get a trimmed string or null if the string is null or empty.
     *
-    * @return null if string is null or empty, , trimmed string otherwise
+    * @param text the string to check
+    * @return null if string is null or empty, trimmed string otherwise
    */
    public static String getNullIfEmpty(final String text)
    {
@@ -81,6 +100,11 @@ public final class UtilityElf
       }
    }
 
+   public static <T> T createInstance(final String className, final Class<T> clazz)
+   {
+      return createInstance(className, clazz, new Object[0]);
+   }
+
    /**
     * Create and instance of the specified class using the constructor matching the specified
     * arguments.
@@ -98,7 +122,11 @@ public final class UtilityElf
       }
 
       try {
-         var loaded = UtilityElf.class.getClassLoader().loadClass(className);
+         var loaded = attemptFromContextLoader(className);
+         if (loaded == null) {
+            loaded = UtilityElf.class.getClassLoader().loadClass(className);
+            LOGGER.debug("Class {} loaded from classloader {}", className, UtilityElf.class.getClassLoader());
+         }
          var totalArgs = args.length;
 
          if (totalArgs == 0) {
@@ -109,11 +137,22 @@ public final class UtilityElf
          for (int i = 0; i < totalArgs; i++) {
             argClasses[i] = args[i].getClass();
          }
-         var constructor = loaded.getConstructor(argClasses);
+
+         Constructor<?> constructor = Arrays.stream(loaded.getConstructors())
+            .filter(c -> {
+               if (c.getParameterCount() != totalArgs) return false;
+
+               Class<?>[] params = c.getParameterTypes();
+               return IntStream.range(0, totalArgs)
+                  .allMatch(i -> params[i].isAssignableFrom(argClasses[i]));
+            })
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("No suitable constructor found for class " + className + " with arguments " + Arrays.toString(args)));
+
          return clazz.cast(constructor.newInstance(args));
       }
       catch (Exception e) {
-         throw new RuntimeException(e);
+         throw new RuntimeException("Failed to load class " + className, e);
       }
    }
 
@@ -189,6 +228,13 @@ public final class UtilityElf
       return -1;
    }
 
+   /**
+    * Custom RejectedExecutionHandler that does nothing when a task is rejected.
+    *
+    * @see java.util.concurrent.RejectedExecutionHandler
+    * @see java.util.concurrent.ThreadPoolExecutor
+    * @hidden
+    */
    public static class CustomDiscardPolicy implements RejectedExecutionHandler
    {
       @Override
@@ -196,6 +242,12 @@ public final class UtilityElf
       }
    }
 
+   /**
+    * Default ThreadFactory implementation that creates daemon threads with a specified name.
+    *
+    * @see java.util.concurrent.ThreadFactory
+    * @hidden
+    */
    public static final class DefaultThreadFactory implements ThreadFactory
    {
       private final String threadName;
@@ -213,5 +265,25 @@ public final class UtilityElf
          thread.setDaemon(daemon);
          return thread;
       }
+   }
+
+   // ***********************************************************************
+   //                          Private methods
+   // ***********************************************************************
+
+   private static Class<?> attemptFromContextLoader(final String className) {
+      final var threadContextClassLoader = Thread.currentThread().getContextClassLoader();
+      if (threadContextClassLoader != null) {
+         try {
+            final var clazz = threadContextClassLoader.loadClass(className);
+            LOGGER.debug("Class {} found in Thread context class loader {}", className, threadContextClassLoader);
+            return clazz;
+         } catch (ClassNotFoundException e) {
+            LOGGER.debug("Class {} not found in Thread context class loader {}, trying classloader {}",
+               className, threadContextClassLoader, UtilityElf.class.getClassLoader());
+         }
+      }
+
+      return null;
    }
 }

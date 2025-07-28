@@ -55,6 +55,7 @@ import static java.util.concurrent.locks.LockSupport.parkNanos;
  * @author Brett Wooldridge
  *
  * @param <T> the templated type to store in the bag
+ * @hidden
  */
 public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseable
 {
@@ -70,6 +71,12 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
 
    private final SynchronousQueue<T> handoffQueue;
 
+   /**
+    * This interface defines the contract for an entry in the ConcurrentBag.
+    * It provides methods to manage the state of the entry, which can be
+    * "not in use", "in use", "removed", or "reserved".
+    * @hidden
+    */
    public interface IConcurrentBagEntry
    {
       int STATE_NOT_IN_USE = 0;
@@ -82,6 +89,13 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
       int getState();
    }
 
+   /**
+    * This interface defines a listener that will be notified when items
+    * are added to the bag, allowing for external management of bag state.
+    * The listener is typically used to inform the pool manager about the
+    * number of items waiting for a bag item to become available.
+    * @hidden
+    */
    public interface IBagStateListener
    {
       void addBagItem(int waiting);

@@ -29,7 +29,7 @@ public class UtilityElfTest
       int expectedLevel = UtilityElf.getTransactionIsolation("TRANSACTION_SQL_SERVER_SNAPSHOT_ISOLATION_LEVEL");
 
       //Assert
-      assertEquals(expectedLevel, 4096);
+      assertEquals(4096, expectedLevel);
    }
 
    @Test(expected = IllegalArgumentException.class)
@@ -43,7 +43,7 @@ public class UtilityElfTest
    public void shouldReturnTransationIsolationLevelFromInteger()
    {
       int expectedLevel = UtilityElf.getTransactionIsolation("4096");
-      assertEquals(expectedLevel, 4096);
+      assertEquals(4096, expectedLevel);
    }
 
    @Test(expected = IllegalArgumentException.class)
@@ -51,5 +51,29 @@ public class UtilityElfTest
    {
       //Act
       UtilityElf.getTransactionIsolation("9999");
+   }
+
+   @Test
+   public void shouldCreateInstanceOfClassWithConstructorThatAcceptsSuperClassAndInterfaceAndClassOfArguments() {
+      //Act
+      UtilityElf.createInstance("com.zaxxer.hikari.util.UtilityElfTest$ClassZ",
+         Object.class,
+         new ClassB(),
+         new ClassC(),
+         new ClassD());
+   }
+
+   public static class ClassA {}
+
+   public static final class ClassB extends ClassA {}
+
+   public interface InterfaceC {}
+
+   public final static class ClassC implements InterfaceC {}
+
+   public final static class ClassD {}
+
+   public final static class ClassZ {
+      public ClassZ(ClassA _superClassA, InterfaceC _interfaceC, ClassD _classD) {}
    }
 }

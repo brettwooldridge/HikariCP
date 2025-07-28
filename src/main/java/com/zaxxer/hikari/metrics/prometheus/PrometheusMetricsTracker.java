@@ -28,6 +28,16 @@ import java.util.concurrent.TimeUnit;
 
 import static com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFactory.RegistrationStatus.REGISTERED;
 
+/**
+ * <pre>{@code
+ * HikariConfig config = new HikariConfig();
+ * config.setMetricsTrackerFactory(new PrometheusMetricsTracker());
+ * }</pre>
+ * or
+ * <pre>{@code
+ * config.setMetricsTrackerFactory(new PrometheusMetricsTracker(new CollectorRegistry()));
+ * }</pre>
+ */
 class PrometheusMetricsTracker implements IMetricsTracker
 {
    private final static Counter CONNECTION_TIMEOUT_COUNTER = Counter.build()

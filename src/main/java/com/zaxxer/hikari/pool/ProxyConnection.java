@@ -505,8 +505,11 @@ public abstract class ProxyConnection implements Connection
    public void setSchema(String schema) throws SQLException
    {
       delegate.setSchema(schema);
-      dbschema = schema;
-      dirtyBits |= DIRTY_BIT_SCHEMA;
+      var appliedSchema = delegate.getSchema();
+      if (appliedSchema != null && !appliedSchema.equals(dbschema)) {
+         dirtyBits |= DIRTY_BIT_SCHEMA;
+      }
+      dbschema = appliedSchema;
    }
 
    /** {@inheritDoc} */

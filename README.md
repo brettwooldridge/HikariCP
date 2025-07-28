@@ -43,7 +43,7 @@ _**Java 11 or greater** maven artifact:_
 <dependency>
    <groupId>com.zaxxer</groupId>
    <artifactId>HikariCP</artifactId>
-   <version>6.3.0</version>
+   <version>6.3.2</version>
 </dependency>
 ```
 _Java 8 maven artifact (*deprecated*):_
@@ -441,6 +441,7 @@ an issue of any kind if you have modified these properties. You have been warned
 | ``com.zaxxer.hikari.blockUntilFilled``        | When this property is set ``true`` *and* ``initializationFailTimeout`` is greater than 1, the pool will block during start until completely filled.                                                                                               |
 | ``com.zaxxer.hikari.enableRequestBoundaries`` | When this property is set ``true``, HikariCP will bracket connection acquisition and return with calls to ``Connection.beginRequest()`` and ``Connection.endRequest()``.                                                                          |
 | ``com.zaxxer.hikari.housekeeping.period``     | This property controls the frequency of the housekeeping thread, represented in milliseconds. Really, don't mess with this.                                                                                                                       |
+| ``com.zaxxer.hikari.legacy.supportUserPassDataSourceOverride`` | When this property is set ``true``, HikariCP will support the legacy behavior of overriding the ``getUsername()/getPassword()`` methods on *HikariDataSource*. Preferred method is overriding ``getCredentials()``.             |
 | ``com.zaxxer.hikari.useWeakReferences``       | When this property is set ``true`` it will force HikariCP to use ``WeakReference`` objects in the ``ConcurrentBag`` internal collection ThreadLocals and prevent the use of our ``FastList`` class, all to avoid TomCat warnings during redeploy. |
 
 Seriously, either don't use these properties or take on full responsibility for the consequences.

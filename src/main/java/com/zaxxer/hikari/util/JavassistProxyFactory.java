@@ -37,6 +37,7 @@ import java.util.Set;
  *
  * @author Brett Wooldridge
  * @author Yanming Zhou
+ * @hidden
  */
 public final class JavassistProxyFactory
 {

@@ -74,6 +74,7 @@ public class HikariConfig implements HikariConfigMXBean
    private long initializationFailTimeout;
    private String connectionInitSql;
    private String connectionTestQuery;
+   private String credentialsProviderClassName;
    private String dataSourceClassName;
    private String dataSourceJndiName;
    private String driverClassName;
@@ -88,6 +89,7 @@ public class HikariConfig implements HikariConfigMXBean
    private boolean isIsolateInternalQueries;
    private boolean isRegisterMbeans;
    private boolean isAllowPoolSuspension;
+   private HikariCredentialsProvider credentialsProvider;
    private DataSource dataSource;
    private Properties dataSourceProperties;
    private ThreadFactory threadFactory;
@@ -500,26 +502,12 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
 
-      var driverClass = attemptFromContextLoader(driverClassName);
       try {
-         if (driverClass == null) {
-            driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
-            LOGGER.debug("Driver class {} found in the HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
-         }
-      } catch (ClassNotFoundException e) {
-         LOGGER.error("Failed to load driver class {} from HikariConfig class classloader {}", driverClassName, this.getClass().getClassLoader());
-      }
-
-      if (driverClass == null) {
-         throw new RuntimeException("Failed to load driver class " + driverClassName + " in either of HikariConfig class loader or Thread context classloader");
-      }
-
-      try {
-         driverClass.getConstructor().newInstance();
+         createInstance(driverClassName, java.sql.Driver.class);
          this.driverClassName = driverClassName;
       }
       catch (Exception e) {
-         throw new RuntimeException("Failed to instantiate class " + driverClassName, e);
+         throw new RuntimeException("Failed to load driver class " + driverClassName, e);
       }
    }
 
@@ -880,6 +868,59 @@ public class HikariConfig implements HikariConfigMXBean
    }
 
    /**
+    * Get the class name of the {@link HikariCredentialsProvider} that will be used to get credentials at runtime.
+    *
+    * @return the class name of the credentials provider
+    * @see HikariCredentialsProvider
+    */
+   public String getCredentialsProviderClassName()
+   {
+      return credentialsProviderClassName;
+   }
+
+   /**
+    * Set the class name of the {@link HikariCredentialsProvider} that will be used to get credentials at runtime. Use this method
+    * or provide a {@link HikariCredentialsProvider} instance via the {@link #setCredentialsProvider(HikariCredentialsProvider)} method.
+    *
+    * @param credentialsProviderClassName the class name of the credentials provider
+    * @see HikariCredentialsProvider
+    */
+   public void setCredentialsProviderClassName(String credentialsProviderClassName) {
+      checkIfSealed();
+
+      try {
+         this.credentialsProvider = createInstance(credentialsProviderClassName, HikariCredentialsProvider.class);
+         this.exceptionOverrideClassName = credentialsProviderClassName;
+      }
+      catch (Exception e) {
+         throw new RuntimeException("Failed to instantiate class " + credentialsProviderClassName, e);
+      }
+   }
+
+   /**
+    * Get the {@link HikariCredentialsProvider} instance created by {@link #setCredentialsProviderClassName(String)} or specified by
+    * {@link #setCredentialsProvider(HikariCredentialsProvider)}.
+    *
+    * @return the HikariCredentialsProvider instance, or null
+    * @see HikariCredentialsProvider
+    */
+   public HikariCredentialsProvider getCredentialsProvider() {
+      return credentialsProvider;
+   }
+
+   /**
+    * Set a user supplied {@link HikariCredentialsProvider} instance. If this method is used, then the {@link #setCredentialsProviderClassName(String)}
+    * method should not be used. The {@link HikariCredentialsProvider} instance will be used to get credentials at runtime.
+    *
+    * @param credentialsProvider a user supplied HikariCredentialsProvider instance
+    * @see HikariCredentialsProvider
+    */
+   public void setCredentialsProvider(HikariCredentialsProvider credentialsProvider) {
+      checkIfSealed();
+      this.credentialsProvider = credentialsProvider;
+   }
+
+   /**
     * Get the user supplied SQLExceptionOverride class name.
     *
     * @return the user supplied SQLExceptionOverride class name
@@ -900,26 +941,8 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
 
-      var overrideClass = attemptFromContextLoader(exceptionOverrideClassName);
       try {
-         if (overrideClass == null) {
-            overrideClass = this.getClass().getClassLoader().loadClass(exceptionOverrideClassName);
-            LOGGER.debug("SQLExceptionOverride class {} found in the HikariConfig class classloader {}", exceptionOverrideClassName, this.getClass().getClassLoader());
-         }
-      } catch (ClassNotFoundException e) {
-         LOGGER.error("Failed to load SQLExceptionOverride class {} from HikariConfig class classloader {}", exceptionOverrideClassName, this.getClass().getClassLoader());
-      }
-
-      if (overrideClass == null) {
-         throw new RuntimeException("Failed to load SQLExceptionOverride class " + exceptionOverrideClassName + " in either of HikariConfig class loader or Thread context classloader");
-      }
-
-      if (!SQLExceptionOverride.class.isAssignableFrom(overrideClass)) {
-         throw new RuntimeException("Loaded SQLExceptionOverride class " + exceptionOverrideClassName + " does not implement " + SQLExceptionOverride.class.getName());
-      }
-
-      try {
-         this.exceptionOverride = (SQLExceptionOverride) overrideClass.getConstructor().newInstance();
+         this.exceptionOverride = createInstance(exceptionOverrideClassName, SQLExceptionOverride.class);
          this.exceptionOverrideClassName = exceptionOverrideClassName;
       }
       catch (Exception e) {
@@ -927,11 +950,11 @@ public class HikariConfig implements HikariConfigMXBean
       }
    }
 
-
    /**
-    * Get the SQLExceptionOverride instance created by {@link #setExceptionOverrideClassName(String)}.
+    * Get the SQLExceptionOverride instance created by {@link #setExceptionOverrideClassName(String)} or specified by
+    * {@link #setExceptionOverride(SQLExceptionOverride)}.
     *
-    * @return the SQLExceptionOverride instance, or null if {@link #setExceptionOverrideClassName(String)} is not called
+    * @return the SQLExceptionOverride instance, or null
     * @see SQLExceptionOverride
     */
    public SQLExceptionOverride getExceptionOverride()
@@ -1017,22 +1040,6 @@ public class HikariConfig implements HikariConfigMXBean
    // ***********************************************************************
    //                          Private methods
    // ***********************************************************************
-
-   private Class<?> attemptFromContextLoader(final String className) {
-      final var threadContextClassLoader = Thread.currentThread().getContextClassLoader();
-      if (threadContextClassLoader != null) {
-         try {
-            final var driverClass = threadContextClassLoader.loadClass(className);
-            LOGGER.debug("Class {} found in Thread context class loader {}", className, threadContextClassLoader);
-            return driverClass;
-         } catch (ClassNotFoundException e) {
-            LOGGER.debug("Class {} not found in Thread context class loader {}, trying classloader {}",
-               driverClassName, threadContextClassLoader, this.getClass().getClassLoader());
-         }
-      }
-
-      return null;
-   }
 
    @SuppressWarnings("StatementWithEmptyBody")
    public void validate()

@@ -53,6 +53,8 @@ public class PrometheusHistogramMetricsTrackerFactory implements MetricsTrackerF
    /**
     * Constructor that allows to pass in a {@link CollectorRegistry} to which the
     * Hikari metrics are registered.
+    *
+    * @param collectorRegistry the collector registry to register the metrics to
     */
    public PrometheusHistogramMetricsTrackerFactory(CollectorRegistry collectorRegistry) {
       this.collectorRegistry = collectorRegistry;

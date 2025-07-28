@@ -30,6 +30,13 @@ import org.slf4j.LoggerFactory;
 
 import static com.zaxxer.hikari.util.UtilityElf.maskPasswordInJdbcUrl;
 
+/**
+ * A DataSource implementation that uses a JDBC Driver to create connections.
+ * This class is used to provide a DataSource that can be configured with a
+ * specific JDBC driver and connection properties.
+ * @author Brett Wooldridge
+ * @hidden
+ */
 public final class DriverDataSource implements DataSource
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(DriverDataSource.class);
@@ -45,9 +52,7 @@ public final class DriverDataSource implements DataSource
       this.jdbcUrl = jdbcUrl;
       this.driverProperties = new Properties();
 
-      for (var entry : properties.entrySet()) {
-         driverProperties.setProperty(entry.getKey().toString(), entry.getValue().toString());
-      }
+      driverProperties.putAll(properties);
 
       if (username != null) {
          driverProperties.put(USER, driverProperties.getProperty(USER, username));

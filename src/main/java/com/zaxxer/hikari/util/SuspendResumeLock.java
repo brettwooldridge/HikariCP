@@ -26,6 +26,7 @@ import java.util.concurrent.Semaphore;
  * hopefully gets fully "optimized away" by the JIT.
  *
  * @author Brett Wooldridge
+ * @hidden
  */
 public class SuspendResumeLock
 {

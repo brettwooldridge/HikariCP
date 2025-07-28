@@ -17,9 +17,11 @@
 package com.zaxxer.hikari.pool;
 
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariCredentialsProvider;
 import com.zaxxer.hikari.SQLExceptionOverride;
 import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.pool.HikariPool.PoolInitializationException;
+import com.zaxxer.hikari.util.Credentials;
 import com.zaxxer.hikari.util.DriverDataSource;
 import com.zaxxer.hikari.util.PropertyElf;
 import com.zaxxer.hikari.util.UtilityElf;
@@ -66,12 +68,14 @@ abstract class PoolBase
    long validationTimeout;
 
    SQLExceptionOverride exceptionOverride;
+   HikariCredentialsProvider credentialsProvider;
 
    private static final String[] RESET_STATES = {"readOnly", "autoCommit", "isolation", "catalog", "netTimeout", "schema"};
    private static final int UNINITIALIZED = -1;
    private static final int TRUE = 1;
    private static final int FALSE = 0;
    private static final int MINIMUM_LOGIN_TIMEOUT = Integer.getInteger("com.zaxxer.hikari.minimumLoginTimeoutSecs", 1);
+   private static final boolean LEGACY_USERPASS_DS_OVERRIDE = Boolean.getBoolean("com.zaxxer.hikari.legacy.supportUserPassDataSourceOverride");
 
    private int networkTimeout;
    private volatile int isNetworkTimeoutSupported;
@@ -100,6 +104,7 @@ abstract class PoolBase
       this.isReadOnly = config.isReadOnly();
       this.isAutoCommit = config.isAutoCommit();
       this.exceptionOverride = config.getExceptionOverride();
+      this.credentialsProvider = config.getCredentialsProvider();
       this.transactionIsolation = UtilityElf.getTransactionIsolation(config.getTransactionIsolation());
 
       this.isQueryTimeoutSupported = UNINITIALIZED;
@@ -316,11 +321,11 @@ abstract class PoolBase
    private void initializeDataSource()
    {
       final var jdbcUrl = config.getJdbcUrl();
-      final var credentials = config.getCredentials();
       final var dsClassName = config.getDataSourceClassName();
       final var driverClassName = config.getDriverClassName();
       final var dataSourceJNDI = config.getDataSourceJNDI();
       final var dataSourceProperties = config.getDataSourceProperties();
+      final var credentials = getCredentials();
 
       var ds = config.getDataSource();
       if (dsClassName != null && ds == null) {
@@ -359,7 +364,7 @@ abstract class PoolBase
 
       Connection connection = null;
       try {
-         final var credentials = config.getCredentials();
+         final var credentials = getCredentials();
          final var username = credentials.getUsername();
          final var password = credentials.getPassword();
 
@@ -475,7 +480,7 @@ abstract class PoolBase
    {
       try {
          if (isUseJdbc4Validation) {
-            connection.isValid(1);
+            connection.isValid(Math.max(1, (int) MILLISECONDS.toSeconds(validationTimeout)));
          }
          else {
             executeSql(connection, config.getConnectionTestQuery(), false);
@@ -665,8 +670,21 @@ abstract class PoolBase
       return sb.toString();
    }
 
+   private Credentials getCredentials()
+   {
+      if (credentialsProvider != null) {
+         return credentialsProvider.getCredentials();
+      }
+
+      var credentials = config.getCredentials();
+      if (LEGACY_USERPASS_DS_OVERRIDE) {
+         credentials = Credentials.of(config.getUsername(), config.getPassword());
+      }
+      return credentials;
+   }
+
    // ***********************************************************************
-   //                      Private Static Classes
+   //                      Private Classes
    // ***********************************************************************
 
    static class ConnectionSetupException extends Exception
