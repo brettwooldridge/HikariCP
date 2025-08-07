@@ -42,12 +42,13 @@ import org.testcontainers.utility.DockerImageName;
 public class PostgresTest
 {
    private static final DockerImageName IMAGE_NAME = DockerImageName.parse("postgres:16");
+   private static final String SCHEMA_NAME = "test";
 
    private PostgreSQLContainer<?> postgres;
 
    @Before
    public void beforeTest() {
-     postgres = new PostgreSQLContainer<>(IMAGE_NAME);
+     postgres = new PostgreSQLContainer<>(IMAGE_NAME).withInitScript("postgres_init_script.sql");
      postgres.start();
    }
 
@@ -137,6 +138,31 @@ public class PostgresTest
       config.setCredentials(Credentials.of("newuser", "newpassword"));
 
       exerciseConfig(config, 3);
+   }
+
+   @Test
+   public void testSchema() throws Exception {
+      HikariConfig config = createConfig(postgres);
+      config.setMinimumIdle(1);
+      config.setMaximumPoolSize(1);
+      config.setSchema(SCHEMA_NAME);
+
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         assertTrue(ds.isRunning());
+         try (Connection connection = ds.getConnection()) {
+            // The connection should be using the schema specified in the config
+            assertEquals(SCHEMA_NAME, connection.getSchema());
+            // Explicitly set the schema to an invalid schema
+            connection.setSchema("invalid");
+            // The connection should have a null schema after setting to an invalid schema
+            assertNull(connection.getSchema());
+         }
+         try (Connection connection = ds.getConnection()) {
+            // The connection should be reset to the schema specified in the config
+            assertEquals(SCHEMA_NAME, connection.getSchema());
+         }
+         assertTrue(ds.isRunning());
+      }
    }
 
    static private void exerciseConfig(HikariConfig config, int numThreads) {
