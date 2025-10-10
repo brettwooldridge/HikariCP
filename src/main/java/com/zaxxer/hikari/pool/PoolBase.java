@@ -187,7 +187,7 @@ abstract class PoolBase
       }
       catch (Exception e) {
          lastConnectionFailure.set(e);
-         lastConnectionFailureTimestamp.set(System.currentTimeMillis());
+         lastConnectionFailureTimestamp.set(currentTime());
          logger.warn("{} - Failed to validate connection {} ({}). Possibly consider using a shorter maxLifetime value.",
                      poolName, connection, e.getMessage());
          return true;
@@ -405,7 +405,7 @@ abstract class PoolBase
          }
 
          lastConnectionFailure.set(t);
-         lastConnectionFailureTimestamp.set(System.currentTimeMillis());
+         lastConnectionFailureTimestamp.set(currentTime());
          throw t;
       }
       finally {
