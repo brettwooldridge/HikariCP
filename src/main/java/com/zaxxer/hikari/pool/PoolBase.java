@@ -198,6 +198,7 @@ abstract class PoolBase
    {
       return lastConnectionFailure.get();
    }
+
    Long getLastConnectionFailureTimestamp(){
       return lastConnectionFailureTimestamp.get();
    }
