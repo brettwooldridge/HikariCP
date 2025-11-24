@@ -742,7 +742,7 @@ public class HikariConfig implements HikariConfigMXBean
     * This property controls the keepalive interval for a connection in the pool. An in-use connection will never be
     * tested by the keepalive thread, only when it is idle will it be tested.
     *
-    * @return the interval in which connections will be tested for aliveness, thus keeping them alive by the act of checking. Value is in milliseconds, default is 0 (disabled).
+    * @return the interval in which connections will be tested for aliveness, thus keeping them alive by the act of checking. Value is in milliseconds, default is 120000 (2 minutes, set to 0 by validation if disabled).
     */
    public long getKeepaliveTime() {
       return keepaliveTime;
@@ -752,7 +752,7 @@ public class HikariConfig implements HikariConfigMXBean
     * This property controls the keepalive interval for a connection in the pool. An in-use connection will never be
     * tested by the keepalive thread, only when it is idle will it be tested.
     *
-    * @param keepaliveTimeMs the interval in which connections will be tested for aliveness, thus keeping them alive by the act of checking. Value is in milliseconds, default is 0 (disabled).
+    * @param keepaliveTimeMs the interval in which connections will be tested for aliveness, thus keeping them alive by the act of checking. Value is in milliseconds, default is 120000 (2 minutes, set to 0 by validation if disabled).
     */
    public void setKeepaliveTime(long keepaliveTimeMs) {
       this.keepaliveTime = keepaliveTimeMs;
