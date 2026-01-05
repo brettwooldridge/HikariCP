@@ -82,8 +82,8 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    {
       int STATE_NOT_IN_USE = 0;
       int STATE_IN_USE = 1;
-      int STATE_REMOVED = -1;
-      int STATE_RESERVED = -2;
+      int STATE_REMOVED = 2;
+      int STATE_RESERVED = 3;
 
       boolean compareAndSet(int expectState, int newState);
       void setState(int newState);

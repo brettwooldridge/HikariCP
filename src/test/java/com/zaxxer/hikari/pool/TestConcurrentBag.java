@@ -19,6 +19,10 @@ package com.zaxxer.hikari.pool;
 import static com.zaxxer.hikari.pool.TestElf.getPool;
 import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.pool.TestElf.setSlf4jTargetStream;
+import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_IN_USE;
+import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_NOT_IN_USE;
+import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_REMOVED;
+import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.STATE_RESERVED;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -40,6 +44,7 @@ import com.zaxxer.hikari.util.ConcurrentBag;
 /**
  *
  * @author Brett Wooldridge
+ * @author Chengang Guan
  */
 public class TestConcurrentBag
 {
@@ -112,6 +117,37 @@ public class TestConcurrentBag
          }
 
          assertNotNull(notinuse.toString());
+      }
+   }
+
+   @Test
+   public void testConcurrentBagStateCounts() throws Exception {
+      try (ConcurrentBag<PoolEntry> bag = new ConcurrentBag<>(x -> CompletableFuture.completedFuture(Boolean.TRUE))) {
+         PoolEntry inuse = pool.newPoolEntry(false);
+         bag.add(inuse);
+         bag.borrow(2, MILLISECONDS);
+
+         PoolEntry notInuse = pool.newPoolEntry(false);
+         bag.add(notInuse);
+
+         PoolEntry removed = pool.newPoolEntry(false);
+         bag.add(removed);
+         bag.reserve(removed);
+         bag.remove(removed);
+
+         PoolEntry reserved = pool.newPoolEntry(false);
+         bag.add(reserved);
+         bag.reserve(reserved);
+
+         final int SHARED_LIST_SIZE = 4;
+         final int WAITERS_COUNTS = 5;
+         int[] stateCounts = bag.getStateCounts();
+         assertEquals(1, stateCounts[STATE_NOT_IN_USE]);
+         assertEquals(1, stateCounts[STATE_IN_USE]);
+         assertEquals(0, stateCounts[STATE_REMOVED]); // no STATE_REMOVED intermediate state in a single thread
+         assertEquals(1, stateCounts[STATE_RESERVED]);
+         assertEquals(3, stateCounts[SHARED_LIST_SIZE]); // sharedList.size()
+         assertEquals(0, stateCounts[WAITERS_COUNTS]); // waiters counts
       }
    }
 }
