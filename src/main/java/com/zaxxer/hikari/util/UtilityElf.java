@@ -24,7 +24,6 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.*;
 import java.util.regex.Pattern;
-import java.util.stream.IntStream;
 
 import static java.lang.Thread.currentThread;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -138,18 +137,38 @@ public final class UtilityElf
             argClasses[i] = args[i].getClass();
          }
 
-         Constructor<?> constructor = Arrays.stream(loaded.getConstructors())
-            .filter(c -> {
-               if (c.getParameterCount() != totalArgs) return false;
+         Constructor<?> optimalConstructor = null;
+         var lastPerfectMatchCount = -1;
+         outerLoop:
+         for (Constructor<?> c : loaded.getConstructors()) {
+            if (c.getParameterCount() != totalArgs) continue;
 
-               Class<?>[] params = c.getParameterTypes();
-               return IntStream.range(0, totalArgs)
-                  .allMatch(i -> params[i].isAssignableFrom(argClasses[i]));
-            })
-            .findFirst()
-            .orElseThrow(() -> new RuntimeException("No suitable constructor found for class " + className + " with arguments " + Arrays.toString(args)));
+            var perfectMatchCount = 0;
+            Class<?>[] params = c.getParameterTypes();
+            for (int i = 0; i < params.length; i++) {
+               if (!params[i].isAssignableFrom(argClasses[i])) continue outerLoop;
 
-         return clazz.cast(constructor.newInstance(args));
+               if (params[i].equals(argClasses[i])) {
+                  perfectMatchCount++;
+               }
+            }
+            if (perfectMatchCount == totalArgs) {
+               // have found the most suitable constructor
+               optimalConstructor = c;
+               break;
+            }
+            if (perfectMatchCount > lastPerfectMatchCount) {
+               optimalConstructor = c;
+               lastPerfectMatchCount = perfectMatchCount;
+            }
+         }
+
+         if (optimalConstructor == null) {
+            throw new RuntimeException("No suitable constructor found for class " + className +
+               " with arguments " + Arrays.toString(args));
+         }
+
+         return clazz.cast(optimalConstructor.newInstance(args));
       }
       catch (Exception e) {
          throw new RuntimeException("Failed to load class " + className, e);
