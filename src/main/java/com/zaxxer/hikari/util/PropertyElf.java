@@ -200,7 +200,7 @@ public final class PropertyElf
 
    private static int[] parseIntArray(String value)
    {
-      if (value == null || value.isEmpty() ) {
+      if (value == null || value.isEmpty()) {
          return new int[0];
       }
 

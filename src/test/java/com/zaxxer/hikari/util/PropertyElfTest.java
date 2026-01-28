@@ -33,13 +33,10 @@ public class PropertyElfTest
       properties.setProperty("string", "aString");
       properties.setProperty("testObject", "it is not a class");
       TestObject testObject = new TestObject();
-      try {
-         PropertyElf.setTargetFromProperties(testObject, properties);
-         fail("Could never come here");
-      }
-      catch (RuntimeException e) {
-         assertEquals("argument type mismatch", e.getCause().getMessage());
-      }
+
+      RuntimeException e =
+         assertThrows(RuntimeException.class, () -> PropertyElf.setTargetFromProperties(testObject, properties));
+      assertEquals("argument type mismatch", e.getCause().getMessage());
    }
 
    @Test
