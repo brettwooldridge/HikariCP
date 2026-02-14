@@ -89,7 +89,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    {
       super(config);
 
-      this.connectionBag = new ConcurrentBag<>(this);
+      this.connectionBag = new ConcurrentBag<>(this, config.getMaximumPendingConnections());
       this.suspendResumeLock = config.isAllowPoolSuspension() ? new SuspendResumeLock() : SuspendResumeLock.FAUX_LOCK;
 
       this.houseKeepingExecutorService = initializeHouseKeepingExecutorService();

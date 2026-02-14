@@ -68,6 +68,7 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    private final ThreadLocal<List<Object>> threadLocalList;
    private final IBagStateListener listener;
    private final AtomicInteger waiters;
+   private final int maxWaiters;
    private volatile boolean closed;
 
    private final SynchronousQueue<T> handoffQueue;
@@ -106,10 +107,12 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
     * Construct a ConcurrentBag with the specified listener.
     *
     * @param listener the IBagStateListener to attach to this bag
+    * @param maxWaiters the maximum number of threads allowed to wait for a bag item, or 0 for unlimited
     */
-   public ConcurrentBag(final IBagStateListener listener)
+   public ConcurrentBag(final IBagStateListener listener, final int maxWaiters)
    {
       this.listener = listener;
+      this.maxWaiters = maxWaiters;
       this.useWeakThreadLocals = useWeakThreadLocals();
 
       this.handoffQueue = new SynchronousQueue<>(true);
@@ -153,6 +156,13 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
                }
                return bagEntry;
             }
+         }
+
+         // TODO: should the condition include getTotalConnections() < config.getMaximumPoolSize()?
+         //   It would allow threads to wait for the initial connection establishment, and it would
+         //   protect against the pile of the connection requests if the pool is already full.
+         if (maxWaiters > 0 && waiting > maxWaiters) {
+            return null;
          }
 
          listener.addBagItem(waiting);
