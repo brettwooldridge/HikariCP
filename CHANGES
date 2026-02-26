@@ -182,7 +182,7 @@ Changes in 4.0.0
 
 Changes in 3.4.5
 
- * fixed 1578 build change to ensure that proxies are generated using Java 8, otherwise we end
+ * fixed 1578 build change to ensure that proxies are generated using Java 8; otherwise, we end
    up with class references to Java 11 classes, which fail to load on Java 8.
 
 Changes in 3.4.4
