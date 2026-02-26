@@ -593,7 +593,7 @@ public class HikariConfig implements HikariConfigMXBean
     *       attempt to obtain a connection and validate that the {@code connectionTestQuery}
     *       and {@code connectionInitSql} are valid.  If those validations fail, an exception
     *       will be thrown.  If a connection cannot be obtained, the validation is skipped
-    *       and the the pool will start and continue to try to obtain connections in the
+    *       and the pool will start and continue to try to obtain connections in the
     *       background.  This can mean that callers to {@code DataSource#getConnection()} may
     *       encounter exceptions. </li>
     *   <li>A value less than zero will bypass any connection attempt and validation during
