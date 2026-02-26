@@ -39,7 +39,7 @@ Changes in 6.3.1
 
  * fixed #2315 source jar contains also binary .class files and missing some .java files
 
- * fixed #2307 remove improper hardcoded timout, use validationTimeout
+ * fixed #2307 remove improper hardcoded timeout, use validationTimeout
 
  * fixed #2305 keep properties key and values as is rather than forcing stringification. Also fixes #2286 and #2304
 
