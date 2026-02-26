@@ -15,7 +15,7 @@ In this environment, the application has periods of quiet, as well as sudden spi
 The questions ultimately were these:
 
 > * If the pool is sitting idle with 5 connections, and is suddenly hit with 50 requests, what should happen?
-> * Given that a each new connection is going to take 150ms to establish, and given that each request can ultimately be satisfied in ~2ms, shouldn't even a single one of the idle connections be able to handle all the of the requests in ~100ms anyway?
+> * Given that each new connection is going to take 150ms to establish, and given that each request can ultimately be satisfied in ~2ms, shouldn't even a single one of the idle connections be able to handle all the of the requests in ~100ms anyway?
 > * So, why is the pool size growing [so much]?
 
 We thought these were interesting questions, and HikariCP was indeed creating more connections than we expected...
