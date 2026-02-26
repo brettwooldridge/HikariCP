@@ -384,7 +384,7 @@ Changes in 2.7.2
 
  * pull 977 log better messages when connection is evicted.
 
- * fallback to four digit random pool suffix when SecurityManager prevents writing
+ * fall back to four digit random pool suffix when SecurityManager prevents writing
    to system properties for the purpose of JVM-wide unique pool identifiers.
 
 Changes in 2.7.1
