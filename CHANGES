@@ -649,7 +649,7 @@ Changes in 2.4.2
 
  * Performance improvements in the getConnection()/close() hot path.
 
- * issue 452: fixed race condition when creating an rapidly ramping connections in the
+ * issue 452: fixed race condition when creating a rapidly ramping connections in the
    pool.
 
  * issue 415: removed use of java.beans classes to allow use of HikariCP with the
