@@ -268,7 +268,7 @@ Changes in 3.3.0
 
 Changes in 3.2.0
 
- * check connection closed condition before attempting to set network timeout to avoid spurios exceptions
+ * check connection closed condition before attempting to set network timeout to avoid spurious exceptions
    in the log.
 
  * updated validation failure message to include recommendation to check maxLifetime value.
