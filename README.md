@@ -98,7 +98,7 @@ Microbenchmarks were created to isolate and measure the overhead of pools using 
 <a href="https://github.com/brettwooldridge/HikariCP/blob/dev/documents/Welcome-To-The-Jungle.md"><img width="400" align="right" src="https://github.com/brettwooldridge/HikariCP/wiki/Spike-Hikari.png"></a>
 Analysis of HikariCP v2.6, in comparison to other pools, in relation to a unique "spike demand" load.
 
-The customer's environment imposed a high cost of new connection acquisition, and a requirement for a dynamically-sized pool, but yet a need for responsiveness to request spikes.  Read about the spike demand handling [here](https://github.com/brettwooldridge/HikariCP/blob/dev/documents/Welcome-To-The-Jungle.md).
+The customer's environment imposed a high cost of new connection acquisition, and a requirement for a dynamically-sized pool, but yet a need for responsiveness to request spikes.  Read about [spike demand handling](https://github.com/brettwooldridge/HikariCP/blob/dev/documents/Welcome-To-The-Jungle.md).
 <br/>
 <br/>
 #### You're [probably] doing it wrong
