@@ -273,7 +273,7 @@ Changes in 3.2.0
 
  * updated validation failure message to include recommendation to check maxLifetime value.
 
- * fixed 1141 do not throw SQLException when calling isClosed() or close() on a already closed unwrapped
+ * fixed 1141 do not throw SQLException when calling isClosed() or close() on an already closed unwrapped
    Connection, as per JDBC specification.
 
  * fixed 1137 support changing user/password at runtime for DriverDataSource-wrapped driver connections.
