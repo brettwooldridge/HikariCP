@@ -448,7 +448,7 @@ Changes in 2.6.1
    official documentation for details.
 
  * issue 742 add direct MXBean accessor methods to HikariDataSource for users who do
-   not want run run JMX.
+   not want run JMX.
 
 Changes in 2.6.0
 
