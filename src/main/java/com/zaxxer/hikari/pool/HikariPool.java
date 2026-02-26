@@ -629,6 +629,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       if (owner || connectionBag.reserve(poolEntry)) {
          closeConnection(poolEntry, reason);
          return true;
+      } else {
+         logger.debug("{} - Connection is busy, but marking for eviction {}: {}", poolName, poolEntry.connection, reason);
       }
 
       return false;
