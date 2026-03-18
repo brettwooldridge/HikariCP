@@ -46,6 +46,7 @@ public abstract class ProxyConnection implements Connection
    private static final Logger LOGGER;
    private static final Set<String> ERROR_STATES;
    private static final Set<Integer> ERROR_CODES;
+   private static final boolean ROLLBACK_ON_AUTOCOMMIT_FALSE;
 
    @SuppressWarnings("WeakerAccess")
    protected Connection delegate;
@@ -80,6 +81,9 @@ public abstract class ProxyConnection implements Connection
       ERROR_CODES = new HashSet<>();
       ERROR_CODES.add(500150);
       ERROR_CODES.add(2399);
+
+      ROLLBACK_ON_AUTOCOMMIT_FALSE =
+         Boolean.parseBoolean(System.getProperty("snaplogic.transaction.control.disabled", "true"));
    }
 
    protected ProxyConnection(final PoolEntry poolEntry,
@@ -245,7 +249,7 @@ public abstract class ProxyConnection implements Connection
          leakTask.cancel();
 
          try {
-            if (isCommitStateDirty && !isAutoCommit) {
+            if (isCommitStateDirty && !isAutoCommit && ROLLBACK_ON_AUTOCOMMIT_FALSE) {
                delegate.rollback();
                LOGGER.debug("{} - Executed rollback on connection {} due to dirty commit state on close().", poolEntry.getPoolName(), delegate);
             }
