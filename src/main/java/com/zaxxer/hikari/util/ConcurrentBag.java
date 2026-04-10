@@ -34,7 +34,6 @@ import static com.zaxxer.hikari.util.ClockSource.elapsedNanos;
 import static com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry.*;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
-import static java.util.concurrent.locks.LockSupport.parkNanos;
 
 /**
  * This is a specialized concurrent bag that achieves superior performance
@@ -188,16 +187,15 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    {
       bagEntry.setState(STATE_NOT_IN_USE);
 
-      for (int i = 1, waiting = waiters.get(); waiting > 0; i++, waiting = waiters.get()) {
-         if (bagEntry.getState() != STATE_NOT_IN_USE || handoffQueue.offer(bagEntry)) {
-            return;
+      try {
+         while (waiters.get() > 0 && bagEntry.getState() == STATE_NOT_IN_USE) {
+            if (handoffQueue.offer(bagEntry, 10, MICROSECONDS)) {
+               return;
+            }
          }
-         else if ((i & 0xff) == 0xff || (waiting > 1 && i % waiting == 0)) {
-            parkNanos(MICROSECONDS.toNanos(10));
-         }
-         else {
-            Thread.yield();
-         }
+      }
+      catch (InterruptedException ie) {
+         Thread.currentThread().interrupt();
       }
 
       final var threadLocalEntries = this.threadLocalList.get();
@@ -318,17 +316,15 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    public void unreserve(final T bagEntry)
    {
       if (bagEntry.compareAndSet(STATE_RESERVED, STATE_NOT_IN_USE)) {
-         // spin until a thread takes it or none are waiting
-         for (int i = 1, waiting = waiters.get(); waiting > 0; i++, waiting = waiters.get()) {
-            if (bagEntry.getState() != STATE_NOT_IN_USE || handoffQueue.offer(bagEntry)) {
-               return;
+         try {
+            while (waiters.get() > 0 && bagEntry.getState() == STATE_NOT_IN_USE) {
+               if (handoffQueue.offer(bagEntry, 10, MICROSECONDS)) {
+                  return;
+               }
             }
-            else if ((i & 0xff) == 0xff || (waiting > 1 && i % waiting == 0)) {
-               parkNanos(MICROSECONDS.toNanos(10));
-            }
-            else {
-               Thread.yield();
-            }
+         }
+         catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
          }
       }
       else {
