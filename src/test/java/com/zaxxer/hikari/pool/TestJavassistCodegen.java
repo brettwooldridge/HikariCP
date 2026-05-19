@@ -10,7 +10,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.stream.Stream;
@@ -21,7 +20,7 @@ public class TestJavassistCodegen {
       String tmp = System.getProperty("java.io.tmpdir");
       JavassistProxyFactory.main(tmp);
 
-      Path base = Paths.get(tmp, "target/classes/com/zaxxer/hikari/pool".split("/"));
+      Path base = Path.of(tmp, "target/classes/com/zaxxer/hikari/pool".split("/"));
       Assert.assertTrue("", Files.isRegularFile(base.resolve("HikariProxyConnection.class")));
       Assert.assertTrue("", Files.isRegularFile(base.resolve("HikariProxyStatement.class")));
       Assert.assertTrue("", Files.isRegularFile(base.resolve("HikariProxyCallableStatement.class")));

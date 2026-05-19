@@ -291,6 +291,12 @@
          <version>${h2.version}</version>
          <scope>test</scope>
       </dependency>
+      <dependency>
+         <groupId>jakarta.inject</groupId>
+         <artifactId>jakarta.inject-api</artifactId>
+         <version>1.0.3</version>
+         <scope>test</scope>
+      </dependency>
    </dependencies>
 
    <build>
@@ -317,11 +323,10 @@
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-compiler-plugin</artifactId>
-               <version>3.10.1</version>
+               <version>3.15.0</version>
                <configuration>
-                  <source>11</source>
-                  <target>11</target>
                   <compilerArgs>-Xlint</compilerArgs>
+                  <release>17</release>
                </configuration>
             </plugin>
 
@@ -536,7 +541,7 @@
          <plugin>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
-            <version>0.8.8</version>
+            <version>0.8.14</version>
             <executions>
                <!-- Prepares the property pointing to the JaCoCo runtime agent which is passed as VM argument when Maven the Surefire plugin is executed. -->
                <execution>

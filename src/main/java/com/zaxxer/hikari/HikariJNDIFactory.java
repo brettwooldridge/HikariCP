@@ -35,8 +35,7 @@ public class HikariJNDIFactory implements ObjectFactory
    synchronized public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment) throws Exception
    {
       // We only know how to deal with <code>javax.naming.Reference</code> that specify a class name of "javax.sql.DataSource"
-      if (obj instanceof Reference && "javax.sql.DataSource".equals(((Reference) obj).getClassName())) {
-         var ref = (Reference) obj;
+      if (obj instanceof Reference ref && "javax.sql.DataSource".equals(ref.getClassName())) {
          var hikariPropSet = PropertyElf.getPropertyNames(HikariConfig.class);
 
          var properties = new Properties();

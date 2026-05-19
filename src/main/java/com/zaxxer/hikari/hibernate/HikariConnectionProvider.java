@@ -16,6 +16,7 @@
 
 package com.zaxxer.hikari.hibernate;
 
+import java.io.Serial;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
@@ -41,6 +42,7 @@ import javax.sql.DataSource;
  */
 public class HikariConnectionProvider implements ConnectionProvider, Configurable, Stoppable
 {
+   @Serial
    private static final long serialVersionUID = -9131625057941275711L;
 
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariConnectionProvider.class);

@@ -1178,8 +1178,8 @@ public class HikariConfig implements HikariConfigMXBean
             else if (prop.matches("scheduledExecutorService|threadFactory") && value == null) {
                value = "internal";
             }
-            else if (prop.contains("jdbcUrl") && value instanceof String) {
-               value = maskPasswordInJdbcUrl((String) value);
+            else if (prop.contains("jdbcUrl") && value instanceof String string) {
+               value = maskPasswordInJdbcUrl(string);
             }
             else if (prop.contains("password")) {
                value = "<masked>";
@@ -1255,10 +1255,10 @@ public class HikariConfig implements HikariConfigMXBean
 
    private Object getObjectOrPerformJndiLookup(Object object)
    {
-      if (object instanceof String) {
+      if (object instanceof String string) {
          try {
             var initCtx = new InitialContext();
-            return initCtx.lookup((String) object);
+            return initCtx.lookup(string);
          }
          catch (NamingException e) {
             throw new IllegalArgumentException(e);

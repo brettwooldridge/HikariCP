@@ -253,8 +253,8 @@ abstract class PoolBase
    void shutdownNetworkTimeoutExecutor()
    {
       isNetworkTimeoutSupported = UNINITIALIZED;
-      if (netTimeoutExecutor instanceof ThreadPoolExecutor) {
-         ((ThreadPoolExecutor) netTimeoutExecutor).shutdownNow();
+      if (netTimeoutExecutor instanceof ThreadPoolExecutor executor) {
+         executor.shutdownNow();
       }
    }
 

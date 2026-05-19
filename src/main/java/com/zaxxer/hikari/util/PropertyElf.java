@@ -49,8 +49,8 @@ public final class PropertyElf
       var methods = Arrays.asList(target.getClass().getMethods());
       properties.forEach((key, value) -> {
          var keyName = key.toString();
-         if (target instanceof HikariConfig && keyName.startsWith("dataSource.")) {
-            ((HikariConfig) target).addDataSourceProperty(keyName.substring("dataSource.".length()), value);
+         if (target instanceof HikariConfig config && keyName.startsWith("dataSource.")) {
+            config.addDataSourceProperty(keyName.substring("dataSource.".length()), value);
          }
          else {
             setProperty(target, keyName, value, methods);
@@ -142,7 +142,7 @@ public final class PropertyElf
 
       if (writeMethod == null) {
          logger.error("Property {} does not exist on target {}", propName, target.getClass());
-         throw new RuntimeException(String.format("Property %s does not exist on target %s", propName, target.getClass()));
+         throw new RuntimeException("Property %s does not exist on target %s".formatted(propName, target.getClass()));
       }
 
       try {
@@ -236,7 +236,7 @@ public final class PropertyElf
       }
 
       if (inEscape) {
-         throw new IllegalArgumentException(String.format("Unterminated escape sequence in property value: %s", value));
+         throw new IllegalArgumentException("Unterminated escape sequence in property value: %s".formatted(value));
       }
 
       resultList.add(currentField.toString());
@@ -261,7 +261,7 @@ public final class PropertyElf
             case "d":
                return Optional.of(Duration.ofDays(number));
             default:
-               throw new IllegalStateException(String.format("Could not match unit, got %s (from given value %s)", unit, value));
+               throw new IllegalStateException("Could not match unit, got %s (from given value %s)".formatted(unit, value));
          }
       } else {
          return Optional.empty();

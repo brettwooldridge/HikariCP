@@ -16,6 +16,7 @@
 
 package com.zaxxer.hikari.util;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.Collection;
@@ -39,6 +40,7 @@ import java.util.function.UnaryOperator;
 @SuppressWarnings("NullableProblems")
 public final class FastList<T> implements List<T>, RandomAccess, Serializable
 {
+   @Serial
    private static final long serialVersionUID = -4598088075242913858L;
 
    private final Class<?> clazz;
