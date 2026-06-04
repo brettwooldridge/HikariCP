@@ -113,6 +113,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
       final int maxPoolSize = config.getMaximumPoolSize();
       this.addConnectionExecutor = createThreadPoolExecutor(maxPoolSize, poolName + ":connection-adder", threadFactory, new CounterAwareDiscardPolicy(pendingConnectionAdds, poolName));
+      this.addConnectionExecutor.setMaximumPoolSize(2);
+      this.addConnectionExecutor.setCorePoolSize(2);
       this.closeConnectionExecutor = createThreadPoolExecutor(maxPoolSize, poolName + ":connection-closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
       this.leakTaskFactory = new ProxyLeakTaskFactory(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
@@ -128,8 +130,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             quietlySleep(MILLISECONDS.toMillis(100));
          }
 
-         addConnectionExecutor.setCorePoolSize(1);
-         addConnectionExecutor.setMaximumPoolSize(1);
+         addConnectionExecutor.setCorePoolSize(2);
+         addConnectionExecutor.setMaximumPoolSize(2);
       }
    }
 
