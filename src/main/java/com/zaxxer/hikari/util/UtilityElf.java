@@ -23,6 +23,7 @@ import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
@@ -239,6 +240,31 @@ public final class UtilityElf
    {
       @Override
       public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+      }
+   }
+
+   /**
+    * RejectedExecutionHandler that decrements a counter and logs a warning when a task is rejected.
+    * Used by addConnectionExecutor to keep pendingConnectionAdds accurate on discard.
+    *
+    * @hidden
+    */
+   public static class CounterAwareDiscardPolicy implements RejectedExecutionHandler
+   {
+      private static final Logger LOGGER = LoggerFactory.getLogger(CounterAwareDiscardPolicy.class);
+
+      private final AtomicInteger counter;
+      private final String poolName;
+
+      public CounterAwareDiscardPolicy(final AtomicInteger counter, final String poolName) {
+         this.counter = counter;
+         this.poolName = poolName;
+      }
+
+      @Override
+      public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+         counter.decrementAndGet();
+         LOGGER.warn("{} - Connection adder task rejected (queue full, size={})", poolName, executor.getQueue().size());
       }
    }
 
