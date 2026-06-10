@@ -19,6 +19,9 @@ import com.zaxxer.hikari.util.ConcurrentBag.IConcurrentBagEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,6 +64,7 @@ import static java.util.concurrent.locks.LockSupport.parkNanos;
 public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseable
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentBag.class);
+   private static final MethodHandle THREAD_IS_VIRTUAL = resolveThreadIsVirtual();
 
    private final CopyOnWriteArrayList<T> sharedList;
    private final boolean useWeakThreadLocals;
@@ -71,6 +75,31 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    private volatile boolean closed;
 
    private final SynchronousQueue<T> handoffQueue;
+
+   private static MethodHandle resolveThreadIsVirtual()
+   {
+      try {
+         return MethodHandles.publicLookup()
+            .findVirtual(Thread.class, "isVirtual", MethodType.methodType(boolean.class));
+      }
+      catch (NoSuchMethodException | IllegalAccessException e) {
+         return null;
+      }
+   }
+
+   static boolean isCurrentThreadVirtual()
+   {
+      if (THREAD_IS_VIRTUAL == null) {
+         return false;
+      }
+
+      try {
+         return (boolean) THREAD_IS_VIRTUAL.invokeExact(Thread.currentThread());
+      }
+      catch (Throwable t) {
+         return false;
+      }
+   }
 
    /**
     * This interface defines the contract for an entry in the ConcurrentBag.
@@ -188,11 +217,12 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    {
       bagEntry.setState(STATE_NOT_IN_USE);
 
+      final var isVirtualThread = isCurrentThreadVirtual();
       for (int i = 1, waiting = waiters.get(); waiting > 0; i++, waiting = waiters.get()) {
          if (bagEntry.getState() != STATE_NOT_IN_USE || handoffQueue.offer(bagEntry)) {
             return;
          }
-         else if ((i & 0xff) == 0xff || (waiting > 1 && i % waiting == 0)) {
+         else if (isVirtualThread || (i & 0xff) == 0xff || (waiting > 1 && i % waiting == 0)) {
             parkNanos(MICROSECONDS.toNanos(10));
          }
          else {
@@ -319,11 +349,12 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    {
       if (bagEntry.compareAndSet(STATE_RESERVED, STATE_NOT_IN_USE)) {
          // spin until a thread takes it or none are waiting
+         final var isVirtualThread = isCurrentThreadVirtual();
          for (int i = 1, waiting = waiters.get(); waiting > 0; i++, waiting = waiters.get()) {
             if (bagEntry.getState() != STATE_NOT_IN_USE || handoffQueue.offer(bagEntry)) {
                return;
             }
-            else if ((i & 0xff) == 0xff || (waiting > 1 && i % waiting == 0)) {
+            else if (isVirtualThread || (i & 0xff) == 0xff || (waiting > 1 && i % waiting == 0)) {
                parkNanos(MICROSECONDS.toNanos(10));
             }
             else {
