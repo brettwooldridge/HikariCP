@@ -33,13 +33,10 @@ public class PropertyElfTest
       properties.setProperty("string", "aString");
       properties.setProperty("testObject", "it is not a class");
       TestObject testObject = new TestObject();
-      try {
-         PropertyElf.setTargetFromProperties(testObject, properties);
-         fail("Could never come here");
-      }
-      catch (RuntimeException e) {
-         assertEquals("argument type mismatch", e.getCause().getMessage());
-      }
+
+      RuntimeException e =
+         assertThrows(RuntimeException.class, () -> PropertyElf.setTargetFromProperties(testObject, properties));
+      assertEquals("argument type mismatch", e.getCause().getMessage());
    }
 
    @Test
@@ -85,5 +82,32 @@ public class PropertyElfTest
       properties.setProperty("intArray", "");
       PropertyElf.setTargetFromProperties(testObject, properties);
       assertArrayEquals(new int[] {}, testObject.getIntArray());
+   }
+
+   @Test
+   public void shouldHandlePrimitiveTypeBoxing () throws Exception
+   {
+      Properties properties = new Properties();
+      TestObject testObject = new TestObject();
+
+      properties.setProperty("shortRaw", "1");
+      properties.setProperty("shortObj", "1");
+      properties.setProperty("intRaw", "2");
+      properties.setProperty("intObj", "2");
+      properties.setProperty("longRaw", "3");
+      properties.setProperty("longObj", "3");
+      properties.setProperty("boolRaw", "true");
+      properties.setProperty("boolObj", "false");
+
+      PropertyElf.setTargetFromProperties(testObject, properties);
+
+      assertEquals((short) 1, testObject.getShortRaw());
+      assertEquals(Short.valueOf("1"), testObject.getShortObj());
+      assertEquals(2, testObject.getIntRaw());
+      assertEquals(Integer.valueOf(2), testObject.getIntObj());
+      assertEquals(3L, testObject.getLongRaw());
+      assertEquals(Long.valueOf(3L), testObject.getLongObj());
+      assertTrue(testObject.getBoolRaw()); // equivalent to assertEquals(true, testObject.getBoolRaw());
+      assertEquals(Boolean.FALSE, testObject.getBoolObj());
    }
 }

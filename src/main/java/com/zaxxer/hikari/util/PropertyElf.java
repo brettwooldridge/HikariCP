@@ -148,26 +148,29 @@ public final class PropertyElf
       try {
          var paramClass = writeMethod.getParameterTypes()[0];
          String value = propValue.toString();
-         if (paramClass == int.class) {
-            writeMethod.invoke(target, Integer.parseInt(propValue.toString()));
+         if (paramClass == int.class || paramClass == Integer.class) {
+            writeMethod.invoke(target, Integer.parseInt(value));
          }
-         else if (paramClass == long.class) {
+         else if (paramClass == long.class || paramClass == Long.class) {
             writeMethod.invoke(target, parseDuration(value).map(Duration::toMillis).orElseGet(() -> Long.parseLong(value)));
          }
-         else if (paramClass == short.class) {
+         else if (paramClass == short.class || paramClass == Short.class) {
             writeMethod.invoke(target, Short.parseShort(value));
          }
          else if (paramClass == boolean.class || paramClass == Boolean.class) {
             writeMethod.invoke(target, Boolean.parseBoolean(value));
          }
-         else if (paramClass.isArray() && char.class.isAssignableFrom(paramClass.getComponentType())) {
-            writeMethod.invoke(target, value.toCharArray());
+         else if (paramClass == char[].class) {
+            Object charArray = value.toCharArray();
+            writeMethod.invoke(target, charArray);
          }
-         else if (paramClass.isArray() && int.class.isAssignableFrom(paramClass.getComponentType())) {
-            writeMethod.invoke(target, parseIntArray(value));
+         else if (paramClass == int[].class) {
+            Object intArray = parseIntArray(value);
+            writeMethod.invoke(target, intArray);
          }
-         else if (paramClass.isArray() && String.class.isAssignableFrom(paramClass.getComponentType())) {
-            writeMethod.invoke(target, new Object[]{parseStringArray(value)});
+         else if (paramClass == String[].class) {
+            Object stringArray = parseStringArray(value);
+            writeMethod.invoke(target, stringArray);
          }
          else if (paramClass == String.class) {
             writeMethod.invoke(target, value);
@@ -175,7 +178,7 @@ public final class PropertyElf
          else {
             try {
                logger.debug("Try to create a new instance of \"{}\"", propValue);
-               writeMethod.invoke(target, Class.forName(propValue.toString()).getDeclaredConstructor().newInstance());
+               writeMethod.invoke(target, Class.forName(value).getDeclaredConstructor().newInstance());
             }
             catch (InstantiationException | ClassNotFoundException e) {
                logger.debug("Class \"{}\" not found or could not instantiate it (Default constructor)", propValue);
@@ -197,7 +200,7 @@ public final class PropertyElf
 
    private static int[] parseIntArray(String value)
    {
-      if (value == null || value.isEmpty() ) {
+      if (value == null || value.isEmpty()) {
          return new int[0];
       }
 
