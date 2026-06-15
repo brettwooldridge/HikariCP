@@ -62,6 +62,7 @@ abstract class PoolBase
 
    volatile String catalog;
    final AtomicReference<Throwable> lastConnectionFailure;
+   final AtomicLong lastConnectionFailureTimestamp;
    final AtomicLong connectionFailureTimestamp;
 
    long connectionTimeout;
@@ -116,6 +117,7 @@ abstract class PoolBase
       this.connectionTimeout = config.getConnectionTimeout();
       this.validationTimeout = config.getValidationTimeout();
       this.lastConnectionFailure = new AtomicReference<>();
+      this.lastConnectionFailureTimestamp = new AtomicLong();
       this.connectionFailureTimestamp = new AtomicLong();
 
       initializeDataSource();
@@ -185,6 +187,7 @@ abstract class PoolBase
       }
       catch (Exception e) {
          lastConnectionFailure.set(e);
+         lastConnectionFailureTimestamp.set(currentTime());
          logger.warn("{} - Failed to validate connection {} ({}). Possibly consider using a shorter maxLifetime value.",
                      poolName, connection, e.getMessage());
          return true;
@@ -194,6 +197,10 @@ abstract class PoolBase
    Throwable getLastConnectionFailure()
    {
       return lastConnectionFailure.get();
+   }
+
+   Long getLastConnectionFailureTimestamp(){
+      return lastConnectionFailureTimestamp.get();
    }
 
    public DataSource getUnwrappedDataSource()
@@ -378,6 +385,7 @@ abstract class PoolBase
          setupConnection(connection);
 
          lastConnectionFailure.set(null);
+         lastConnectionFailureTimestamp.set(0);
          connectionFailureTimestamp.set(0);
 
          logger.debug("{} - Established new connection ({})", poolName, id);
@@ -397,6 +405,7 @@ abstract class PoolBase
          }
 
          lastConnectionFailure.set(t);
+         lastConnectionFailureTimestamp.set(currentTime());
          throw t;
       }
       finally {
