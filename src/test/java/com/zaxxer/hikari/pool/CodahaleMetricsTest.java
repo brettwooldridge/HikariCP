@@ -39,6 +39,7 @@ import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.pool.TestElf.newHikariDataSource;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeFalse;
@@ -95,6 +96,29 @@ public class CodahaleMetricsTest extends TestMetricsBase<MetricRegistry>
          HealthCheck.Result slaResult = healthChecks.get("testHealthChecks.pool.Connection99Percent");
          assertTrue(slaResult.isHealthy());
       }
+   }
+
+   @Test
+   public void testConnectivityHealthCheckFailsFastAfterShutdown()
+   {
+      HealthCheckRegistry healthRegistry = new HealthCheckRegistry();
+
+      HikariConfig config = newHikariConfig();
+      config.setMaximumPoolSize(1);
+      config.setMinimumIdle(0);
+      config.setHealthCheckRegistry(healthRegistry);
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+      config.addHealthCheckProperty("connectivityCheckTimeoutMs", "750");
+
+      HikariDataSource ds = new HikariDataSource(config);
+      ds.close();
+
+      final var start = System.nanoTime();
+      final var result = healthRegistry.runHealthCheck("testConnectivityHealthCheckFailsFastAfterShutdown.pool.ConnectivityCheck");
+      final var elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+      assertFalse(result.isHealthy());
+      assertTrue("Health check waited " + elapsedMs + "ms after shutdown", elapsedMs < 250);
    }
 
    @Test

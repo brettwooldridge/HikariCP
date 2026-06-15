@@ -93,6 +93,10 @@ public final class CodahaleHealthChecker
       @Override
       protected Result check() throws Exception
       {
+         if (pool.poolState == HikariPool.POOL_SHUTDOWN) {
+            return Result.unhealthy("Pool is shutdown");
+         }
+
          try (Connection connection = pool.getConnection(checkTimeoutMs)) {
             return Result.healthy();
          }
