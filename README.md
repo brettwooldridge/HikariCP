@@ -248,6 +248,16 @@ available, calls to getConnection() will block for up to ``connectionTimeout`` m
 before timing out.  Please read [about pool sizing](https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing).
 *Default: 10*
 
+&#128290;``maximumPendingConnections``<br/>
+This property controls the maximum number of threads that are allowed to simultaneously wait
+for a connection from the pool.  When this limit is exceeded, subsequent calls to
+``getConnection()`` will fail immediately with a ``SQLTransientConnectionException`` instead of
+blocking for up to ``connectionTimeout`` milliseconds.  This acts as a load-shedding mechanism
+that prevents unbounded thread accumulation during traffic spikes or database outages, avoiding
+thundering-herd timeouts and reducing the blast radius of pool exhaustion.
+A value of 0 means unlimited — all threads will wait up to ``connectionTimeout``.
+*Default: 0 (unlimited)*
+
 &#128200;``metricRegistry``<br/>
 This property is only available via programmatic configuration or IoC container.  This property
 allows you to specify an instance of a *Codahale/Dropwizard* ``MetricRegistry`` to be used by the

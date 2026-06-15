@@ -100,6 +100,7 @@ public class HikariConfig implements HikariConfigMXBean
    private Properties healthCheckProperties;
 
    private long keepaliveTime;
+   private int maximumPendingConnections;
 
    private volatile boolean sealed;
 
@@ -736,6 +737,36 @@ public class HikariConfig implements HikariConfigMXBean
    {
       checkIfSealed();
       healthCheckProperties.setProperty(key, value);
+   }
+
+   /**
+    * Get the maximum number of threads that are allowed to simultaneously wait for a connection from the pool.
+    * When this limit is exceeded, subsequent calls to {@code getConnection()} will fail immediately with a
+    * {@code SQLTransientConnectionException} instead of blocking for {@code connectionTimeout}.
+    *
+    * @return the maximum number of pending connection requests, or 0 (default) for unlimited
+    */
+   public int getMaximumPendingConnections()
+   {
+      return maximumPendingConnections;
+   }
+
+   /**
+    * Set the maximum number of threads that are allowed to simultaneously wait for a connection from the pool.
+    * When this limit is exceeded, subsequent calls to {@code getConnection()} will fail immediately with a
+    * {@code SQLTransientConnectionException} instead of blocking for {@code connectionTimeout}.
+    * <p>
+    * A value of 0 (default) means unlimited — all threads will wait up to {@code connectionTimeout}.
+    *
+    * @param maximumPendingConnections the maximum number of pending connection requests, or 0 for unlimited
+    */
+   public void setMaximumPendingConnections(int maximumPendingConnections)
+   {
+      checkIfSealed();
+      if (maximumPendingConnections < 0) {
+         throw new IllegalArgumentException("maximumPendingConnections cannot be negative");
+      }
+      this.maximumPendingConnections = maximumPendingConnections;
    }
 
    /**
