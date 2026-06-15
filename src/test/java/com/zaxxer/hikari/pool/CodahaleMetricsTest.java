@@ -220,7 +220,7 @@ public class CodahaleMetricsTest extends TestMetricsBase<MetricRegistry>
 
          assertEquals(1, histo.getCount());
          double seventyFifth = histo.getSnapshot().get75thPercentile();
-         assertTrue("Seventy-fith percentile less than 250ms: " + seventyFifth, seventyFifth >= 250.0);
+         assertTrue("Seventy-fifth percentile less than 250ms: " + seventyFifth, seventyFifth >= 250.0);
       }
    }
 

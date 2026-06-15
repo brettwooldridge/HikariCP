@@ -68,7 +68,7 @@ public class ConnectionPoolSizeVsThreadsTest {
 
    @Test
    public void testSlowConnectionTimeBurstyWork() throws Exception {
-      // setup a bursty work load, 50 threads all needing to do around 100 units of work.
+      // set up a bursty work load, 50 threads all needing to do around 100 units of work.
       // Using a more realistic time for connection startup of 250 ms and only 5 seconds worth of work will mean that we end up finishing
       // all of the work before we actually have setup 50 connections even though we have requested 50 connections
       final int threadCount = 50;

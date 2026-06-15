@@ -40,7 +40,7 @@ public class UtilityElfTest
    }
 
    @Test
-   public void shouldReturnTransationIsolationLevelFromInteger()
+   public void shouldReturnTransactionIsolationLevelFromInteger()
    {
       int expectedLevel = UtilityElf.getTransactionIsolation("4096");
       assertEquals(4096, expectedLevel);

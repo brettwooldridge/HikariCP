@@ -44,7 +44,7 @@ Changes in 6.3.1
 
  * fixed #2315 source jar contains also binary .class files and missing some .java files
 
- * fixed #2307 remove improper hardcoded timout, use validationTimeout
+ * fixed #2307 remove improper hardcoded timeout, use validationTimeout
 
  * fixed #2305 keep properties key and values as is rather than forcing stringification. Also fixes #2286 and #2304
 
@@ -187,7 +187,7 @@ Changes in 4.0.0
 
 Changes in 3.4.5
 
- * fixed 1578 build change to ensure that proxies are generated using Java 8, otherwise we end
+ * fixed 1578 build change to ensure that proxies are generated using Java 8; otherwise, we end
    up with class references to Java 11 classes, which fail to load on Java 8.
 
 Changes in 3.4.4
@@ -273,12 +273,12 @@ Changes in 3.3.0
 
 Changes in 3.2.0
 
- * check connection closed condition before attempting to set network timeout to avoid spurios exceptions
+ * check connection closed condition before attempting to set network timeout to avoid spurious exceptions
    in the log.
 
  * updated validation failure message to include recommendation to check maxLifetime value.
 
- * fixed 1141 do not throw SQLException when calling isClosed() or close() on a already closed unwrapped
+ * fixed 1141 do not throw SQLException when calling isClosed() or close() on an already closed unwrapped
    Connection, as per JDBC specification.
 
  * fixed 1137 support changing user/password at runtime for DriverDataSource-wrapped driver connections.
@@ -389,7 +389,7 @@ Changes in 2.7.2
 
  * pull 977 log better messages when connection is evicted.
 
- * fallback to four digit random pool suffix when SecurityManager prevents writing
+ * fall back to four digit random pool suffix when SecurityManager prevents writing
    to system properties for the purpose of JVM-wide unique pool identifiers.
 
 Changes in 2.7.1
@@ -453,7 +453,7 @@ Changes in 2.6.1
    official documentation for details.
 
  * issue 742 add direct MXBean accessor methods to HikariDataSource for users who do
-   not want run run JMX.
+   not want run JMX.
 
 Changes in 2.6.0
 
@@ -654,7 +654,7 @@ Changes in 2.4.2
 
  * Performance improvements in the getConnection()/close() hot path.
 
- * issue 452: fixed race condition when creating an rapidly ramping connections in the
+ * issue 452: fixed race condition when creating a rapidly ramping connections in the
    pool.
 
  * issue 415: removed use of java.beans classes to allow use of HikariCP with the
@@ -675,7 +675,7 @@ Changes in 2.4.1
    ScheduledExecutorService instance.
 
  * issue 340: rollback change that elides setting the readonly property if the user
-   never explicitly configured it.  See discussion in the Github issue tracker.  Also
+   never explicitly configured it.  See discussion in the GitHub issue tracker.  Also
    fixes binary ABI breakage between 2.3.9 and 2.4.0.
 
  * issue 379: stop closing idle connections, to keep minimumIdle connections in pool
@@ -769,7 +769,7 @@ Changes in 2.3.4
 
 Changes in 2.3.3
 
- * Fixed bad interaction with PostgeSQL JDBC driver whereby a SQLException thrown by
+ * Fixed bad interaction with PostgreSQL JDBC driver whereby a SQLException thrown by
    PostgreSQL where the getNextException() call returns the original exception and causes
    an infinite loop in HikariCP (and eventual stack overflow).
 
@@ -781,7 +781,7 @@ Changes in 2.3.3
 Changes in 2.3.2
 
  * Add support for Dropwizard HealthChecks through the introduction of two initial health
-   checks: ConnectivityCheck and Connection99Percent.  See the Github project wiki for
+   checks: ConnectivityCheck and Connection99Percent.  See the GitHub project wiki for
    documentation.
 
  * Allow a lower maxLifetime setting of 30 seconds (compared to previous 120 second limit)
