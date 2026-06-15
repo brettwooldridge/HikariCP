@@ -33,6 +33,7 @@ import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
 import java.util.Optional;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 import static com.zaxxer.hikari.util.ClockSource.*;
@@ -71,6 +72,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    private final PoolEntryCreator postFillPoolEntryCreator = new PoolEntryCreator("After adding ");
    private final ThreadPoolExecutor addConnectionExecutor;
    private final ThreadPoolExecutor closeConnectionExecutor;
+   private final AtomicInteger pendingConnectionAdds = new AtomicInteger(0);
 
    private final ConcurrentBag<PoolEntry> connectionBag;
 
@@ -110,7 +112,9 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       ThreadFactory threadFactory = config.getThreadFactory();
 
       final int maxPoolSize = config.getMaximumPoolSize();
-      this.addConnectionExecutor = createThreadPoolExecutor(maxPoolSize, poolName + ":connection-adder", threadFactory, new CustomDiscardPolicy());
+      this.addConnectionExecutor = createThreadPoolExecutor(maxPoolSize, poolName + ":connection-adder", threadFactory, new CounterAwareDiscardPolicy(pendingConnectionAdds, poolName));
+      this.addConnectionExecutor.setMaximumPoolSize(2);
+      this.addConnectionExecutor.setCorePoolSize(2);
       this.closeConnectionExecutor = createThreadPoolExecutor(maxPoolSize, poolName + ":connection-closer", threadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
       this.leakTaskFactory = new ProxyLeakTaskFactory(config.getLeakDetectionThreshold(), houseKeepingExecutorService);
@@ -126,8 +130,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
             quietlySleep(MILLISECONDS.toMillis(100));
          }
 
-         addConnectionExecutor.setCorePoolSize(1);
-         addConnectionExecutor.setMaximumPoolSize(1);
+         addConnectionExecutor.setCorePoolSize(2);
+         addConnectionExecutor.setMaximumPoolSize(2);
       }
    }
 
@@ -340,8 +344,8 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    @Override
    public void addBagItem(final int waiting)
    {
-      if (waiting > addConnectionExecutor.getQueue().size())
-         addConnectionExecutor.submit(poolEntryCreator);
+      if (waiting > pendingConnectionAdds.get())
+         submitConnectionAdder(poolEntryCreator);
    }
 
    // ***********************************************************************
@@ -530,11 +534,24 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
       if (shouldAdd) {
          final var countToAdd = config.getMinimumIdle() - idle;
          for (int i = 0; i < countToAdd; i++)
-            addConnectionExecutor.submit(isAfterAdd ? postFillPoolEntryCreator : poolEntryCreator);
+            submitConnectionAdder(isAfterAdd ? postFillPoolEntryCreator : poolEntryCreator);
       }
       else if (isAfterAdd) {
          logger.debug("{} - Fill pool skipped, pool has sufficient level or currently being filled.", poolName);
       }
+   }
+
+   private void submitConnectionAdder(final Callable<Boolean> creator)
+   {
+      pendingConnectionAdds.incrementAndGet();
+      addConnectionExecutor.submit(() -> {
+         try {
+            return creator.call();
+         }
+         finally {
+            pendingConnectionAdds.decrementAndGet();
+         }
+      });
    }
 
    /**
