@@ -77,9 +77,11 @@ class ProxyLeakTask implements Runnable
       isLeaked = true;
 
       final var stackTrace = exception.getStackTrace();
-      final var trace = new StackTraceElement[stackTrace.length - 5];
+      final var trace = new StackTraceElement[Math.max(0, stackTrace.length - 5)];
 
-      System.arraycopy(stackTrace, 5, trace, 0, trace.length);
+      if (trace.length > 0) {
+         System.arraycopy(stackTrace, 5, trace, 0, trace.length);
+      }
 
       exception.setStackTrace(trace);
       LOGGER.warn("Connection leak detection triggered for {} on thread {}, stack trace follows", connectionName, threadName, exception);
