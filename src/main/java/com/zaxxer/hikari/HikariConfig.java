@@ -890,7 +890,7 @@ public class HikariConfig implements HikariConfigMXBean
 
       try {
          this.credentialsProvider = createInstance(credentialsProviderClassName, HikariCredentialsProvider.class);
-         this.exceptionOverrideClassName = credentialsProviderClassName;
+         this.credentialsProviderClassName = credentialsProviderClassName;
       }
       catch (Exception e) {
          throw new RuntimeException("Failed to instantiate class " + credentialsProviderClassName, e);

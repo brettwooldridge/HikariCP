@@ -99,4 +99,18 @@ public class HikariConfigTest {
          return log;
       }
    }
+
+   @Test
+   public void testSetCredentialsProviderClassNameSetsItsOwnField() {
+      HikariConfig config = new HikariConfig();
+      String providerClass = "com.zaxxer.hikari.pool.TestCredentials$TestCredentialsProvider";
+
+      config.setCredentialsProviderClassName(providerClass);
+
+      // the setter must record the credentials-provider class name
+      assertEquals(providerClass, config.getCredentialsProviderClassName());
+      // ...and must NOT overwrite the unrelated SQLExceptionOverride class name
+      assertNull(config.getExceptionOverrideClassName());
+   }
+
 }
