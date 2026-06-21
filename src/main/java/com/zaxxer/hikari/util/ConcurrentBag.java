@@ -399,7 +399,10 @@ public class ConcurrentBag<T extends IConcurrentBagEntry> implements AutoCloseab
    {
       final var states = new int[6];
       for (var e : sharedList) {
-         ++states[e.getState()];
+         final var state = e.getState();
+         if (state >= 0) {
+            ++states[state];
+         }
       }
       states[4] = sharedList.size();
       states[5] = waiters.get();

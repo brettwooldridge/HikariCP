@@ -114,4 +114,19 @@ public class TestConcurrentBag
          assertNotNull(notinuse.toString());
       }
    }
+
+   @Test
+   public void testGetStateCountsWithReservedEntry() throws Exception
+   {
+      try (ConcurrentBag<PoolEntry> bag = new ConcurrentBag<>(x -> CompletableFuture.completedFuture(Boolean.TRUE))) {
+         PoolEntry entry = pool.newPoolEntry(false);
+         bag.add(entry);
+         assertTrue(bag.reserve(entry)); // STATE_RESERVED, still in the shared list
+
+         // getStateCounts() iterates the shared list; a reserved (or transiently removed) entry has a
+         // negative state and must not crash the diagnostic with an ArrayIndexOutOfBoundsException.
+         int[] counts = bag.getStateCounts();
+         assertEquals(6, counts.length);
+      }
+   }
 }
