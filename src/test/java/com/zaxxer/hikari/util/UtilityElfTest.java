@@ -18,6 +18,9 @@ package com.zaxxer.hikari.util;
 
 import org.junit.Test;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
 import static org.junit.Assert.assertEquals;
 
 public class UtilityElfTest
@@ -63,6 +66,33 @@ public class UtilityElfTest
          new ClassD());
    }
 
+   @Test
+   public void shouldCreateInstanceFindTheMostSuitableConstructor() {
+      Integer i = 1;
+      Long l = 2L;
+      Float f = 3.0F;
+      Double d = 4.0;
+      BigInteger bi = BigInteger.valueOf(5);
+      BigDecimal bd = BigDecimal.valueOf(6);
+
+      MultipleConstructorsClass integerInstance =
+         UtilityElf.createInstance("com.zaxxer.hikari.util.UtilityElfTest$MultipleConstructorsClass",
+            MultipleConstructorsClass.class,
+            i, f);
+      MultipleConstructorsClass longInstance =
+         UtilityElf.createInstance("com.zaxxer.hikari.util.UtilityElfTest$MultipleConstructorsClass",
+            MultipleConstructorsClass.class,
+            l, bi);
+      MultipleConstructorsClass numberInstance =
+         UtilityElf.createInstance("com.zaxxer.hikari.util.UtilityElfTest$MultipleConstructorsClass",
+            MultipleConstructorsClass.class,
+            d, bd);
+
+      assertEquals(Integer.class, integerInstance.cls);
+      assertEquals(Long.class, longInstance.cls);
+      assertEquals(Number.class, numberInstance.cls);
+   }
+
    public static class ClassA {}
 
    public static final class ClassB extends ClassA {}
@@ -73,7 +103,32 @@ public class UtilityElfTest
 
    public final static class ClassD {}
 
+   @SuppressWarnings("unused")
    public final static class ClassZ {
       public ClassZ(ClassA _superClassA, InterfaceC _interfaceC, ClassD _classD) {}
+   }
+
+   @SuppressWarnings("unused")
+   public final static class MultipleConstructorsClass {
+      Number num1, num2;
+      Class<?> cls; // to map which constructor is called
+
+      public MultipleConstructorsClass(Number num1, Number num2) {
+         cls = Number.class;
+         this.num1 = num1;
+         this.num2 = num2;
+      }
+
+      public MultipleConstructorsClass(Integer i, Float num2) {
+         cls = Integer.class;
+         this.num1 = i;
+         this.num2 = num2;
+      }
+
+      public MultipleConstructorsClass(Long l, Number num2) {
+         cls = Long.class;
+         this.num1 = l;
+         this.num2 = num2;
+      }
    }
 }
