@@ -32,6 +32,7 @@ import java.sql.Statement;
 public class StubStatement implements Statement
 {
    public static volatile boolean oldDriver;
+   public static volatile boolean returnNullGeneratedKeys;
 
    private static volatile long simulatedQueryTime;
    private boolean closed;
@@ -297,7 +298,7 @@ public class StubStatement implements Statement
    public ResultSet getGeneratedKeys() throws SQLException
    {
       checkClosed();
-      return new StubResultSet();
+      return returnNullGeneratedKeys ? null : new StubResultSet();
    }
 
    /** {@inheritDoc} */
