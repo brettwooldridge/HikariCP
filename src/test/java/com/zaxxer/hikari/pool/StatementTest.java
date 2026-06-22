@@ -22,8 +22,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import com.zaxxer.hikari.mocks.StubStatement;
 
 import org.junit.After;
 import org.junit.Before;
@@ -132,6 +135,26 @@ public class StatementTest
             Statement statement2 = connection.createStatement()) {
          statement1.close();
          statement2.close();
+      }
+   }
+
+   @Test
+   public void testGetGeneratedKeysReturnsNull() throws SQLException
+   {
+      StubStatement.returnNullGeneratedKeys = true;
+      try (Connection connection = ds.getConnection()) {
+         assertNotNull(connection);
+
+         Statement statement = connection.createStatement();
+         assertNotNull(statement);
+
+         // Some JDBC drivers return null from getGeneratedKeys().
+         // The proxy should handle this gracefully without NPE.
+         ResultSet rs = statement.getGeneratedKeys();
+         assertTrue(rs == null);
+      }
+      finally {
+         StubStatement.returnNullGeneratedKeys = false;
       }
    }
 }
