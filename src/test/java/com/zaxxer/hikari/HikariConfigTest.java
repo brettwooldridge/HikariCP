@@ -99,4 +99,12 @@ public class HikariConfigTest {
          return log;
       }
    }
+
+   @Test
+   public void testCredentialsProviderClassNameRoundTrip() {
+      String className = "com.zaxxer.hikari.pool.TestCredentials$TestCredentialsProvider";
+      HikariConfig config = new HikariConfig();
+      config.setCredentialsProviderClassName(className);
+      assertEquals("setCredentialsProviderClassName should store the class name", className, config.getCredentialsProviderClassName());
+   }
 }
