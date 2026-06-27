@@ -1255,15 +1255,33 @@ public class HikariConfig implements HikariConfigMXBean
 
    private Object getObjectOrPerformJndiLookup(Object object)
    {
-      if (object instanceof String) {
+      if (object instanceof String lookupName) {
+         validateJndiName(lookupName);
          try {
             var initCtx = new InitialContext();
-            return initCtx.lookup((String) object);
+            return initCtx.lookup(lookupName);
          }
          catch (NamingException e) {
             throw new IllegalArgumentException(e);
          }
       }
       return object;
+   }
+
+   private static void validateJndiName(String name)
+   {
+      if (name == null || name.isBlank()) {
+         throw new IllegalArgumentException("JNDI name must not be null or blank");
+      }
+
+      var lower = name.toLowerCase();
+      if (lower.startsWith("ldap:") || lower.startsWith("ldaps:") ||
+          lower.startsWith("rmi:") || lower.startsWith("iiop:") ||
+          lower.startsWith("corba:") || lower.startsWith("dns:") ||
+          lower.startsWith("http:") || lower.startsWith("https:")) {
+         throw new IllegalArgumentException(
+            "JNDI names with remote protocol schemes (ldap, rmi, http, etc.) are not allowed "
+            + "to prevent JNDI injection attacks. Use java:comp/env/ names or pass the object directly.");
+      }
    }
 }
