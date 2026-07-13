@@ -47,6 +47,16 @@ public class HikariConfig implements HikariConfigMXBean
    private static final Logger LOGGER = LoggerFactory.getLogger(HikariConfig.class);
 
    private static final char[] ID_CHARACTERS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+   // The pool-number counter is kept in a JVM-global system property so that pool numbers do not
+   // overlap across class loaders (e.g. two wars in one JVM). Making the read-increment-write of
+   // that property atomic requires a monitor shared by every class loader, but it must NOT be
+   // System.getProperties(): the JVM and third-party code lock that same Properties object (via
+   // System.getProperty(), class initialization, etc.), so holding its monitor across our critical
+   // section opens a lock-ordering window that can deadlock (see #2104). Instead we synchronize on
+   // this interned String constant, which is unique to HikariCP yet resolves to the same instance
+   // in every class loader, and we only touch the Properties object through its own
+   // already-synchronized accessors.
+   private static final String POOL_NUMBER_PROPERTY = "com.zaxxer.hikari.pool_number";
    private static final long CONNECTION_TIMEOUT = SECONDS.toMillis(30);
    private static final long VALIDATION_TIMEOUT = SECONDS.toMillis(5);
    private static final long SOFT_TIMEOUT_FLOOR = Long.getLong("com.zaxxer.hikari.timeoutMs.floor", 250L);
@@ -1231,10 +1241,12 @@ public class HikariConfig implements HikariConfigMXBean
    {
       final var prefix = "HikariPool-";
       try {
-         // Pool number is global to the VM to avoid overlapping pool numbers in classloader scoped environments
-         synchronized (System.getProperties()) {
-            final var next = String.valueOf(Integer.getInteger("com.zaxxer.hikari.pool_number", 0) + 1);
-            System.setProperty("com.zaxxer.hikari.pool_number", next);
+         // Synchronize on POOL_NUMBER_PROPERTY (an interned constant), not System.getProperties()
+         // (see #2104), so the read-increment-write stays atomic without holding the shared
+         // Properties monitor across our critical section.
+         synchronized (POOL_NUMBER_PROPERTY) {
+            final var next = String.valueOf(Integer.getInteger(POOL_NUMBER_PROPERTY, 0) + 1);
+            System.setProperty(POOL_NUMBER_PROPERTY, next);
             return prefix + next;
          }
       } catch (AccessControlException e) {
