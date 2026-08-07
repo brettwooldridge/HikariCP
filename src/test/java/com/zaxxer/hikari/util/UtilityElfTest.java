@@ -63,6 +63,42 @@ public class UtilityElfTest
          new ClassD());
    }
 
+   @Test
+   public void shouldMaskQueryParameterPasswordInJdbcUrl()
+   {
+      assertEquals("jdbc:mysql://host/db?password=<masked>",
+         UtilityElf.maskPasswordInJdbcUrl("jdbc:mysql://host/db?password=secret"));
+      assertEquals("jdbc:postgresql://host/d_dlq?user=USER&password=<masked>",
+         UtilityElf.maskPasswordInJdbcUrl("jdbc:postgresql://host/d_dlq?user=USER&password=SECRET"));
+      assertEquals("jdbc:postgresql://host/d_dlq?a=b&sslpassword=<masked>&user=USER",
+         UtilityElf.maskPasswordInJdbcUrl("jdbc:postgresql://host/d_dlq?a=b&sslpassword=SECRET&user=USER"));
+   }
+
+   @Test
+   public void shouldMaskAuthorityEmbeddedPasswordInJdbcUrl()
+   {
+      assertEquals("jdbc:postgresql://admin:<masked>@db.internal:5432/prod",
+         UtilityElf.maskPasswordInJdbcUrl("jdbc:postgresql://admin:s3cret@db.internal:5432/prod"));
+      assertEquals("jdbc:mysql://root:<masked>@localhost:3306/app",
+         UtilityElf.maskPasswordInJdbcUrl("jdbc:mysql://root:p%40ss@localhost:3306/app"));
+   }
+
+   @Test
+   public void shouldMaskBothAuthorityAndQueryParameterPasswords()
+   {
+      assertEquals("jdbc:postgresql://admin:<masked>@host:5432/db?password=<masked>",
+         UtilityElf.maskPasswordInJdbcUrl("jdbc:postgresql://admin:s3cret@host:5432/db?password=querySecret"));
+   }
+
+   @Test
+   public void shouldNotMaskJdbcUrlWithoutPassword()
+   {
+      assertEquals("jdbc:postgresql://host:5432/db",
+         UtilityElf.maskPasswordInJdbcUrl("jdbc:postgresql://host:5432/db"));
+      assertEquals("jdbc:postgresql://admin@host:5432/db",
+         UtilityElf.maskPasswordInJdbcUrl("jdbc:postgresql://admin@host:5432/db"));
+   }
+
    public static class ClassA {}
 
    public static final class ClassB extends ClassA {}

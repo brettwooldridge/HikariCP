@@ -71,6 +71,16 @@ public class HikariConfigTest {
       }
    }
 
+   @Test
+   public void testJdbcUrlAuthorityPasswordLogging() {
+      HikariConfig config = newHikariConfig();
+      config.setJdbcUrl("jdbc:postgresql://admin:s3cret@db.internal:5432/prod");
+      config.validate();
+
+      assertTrue(testAppender.getLog().contains("jdbc:postgresql://admin:<masked>@db.internal:5432/prod"));
+      assertFalse("Log should not contain authority password", testAppender.getLog().contains("s3cret"));
+   }
+
    private void testJdbcUrl(String jdbcUrl) {
       HikariConfig config = newHikariConfig();
       config.setJdbcUrl(jdbcUrl);
