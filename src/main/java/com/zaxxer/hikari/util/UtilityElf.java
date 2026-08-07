@@ -48,6 +48,12 @@ public final class UtilityElf
     */
    private static final Pattern PASSWORD_MASKING_PATTERN = Pattern.compile("([?&;][^&#;=]*[pP]assword=)[^&#;]*");
 
+   /**
+    * A pattern to match and mask authority-embedded credentials (user:password@host).
+    * Captures {@code //} + username + {@code :}; the password runs up to the following {@code @}.
+    */
+   private static final Pattern USERINFO_PASSWORD_MASKING_PATTERN = Pattern.compile("(//[^/@:]+:)[^@]+@");
+
    private UtilityElf()
    {
       // non-constructable
@@ -55,7 +61,8 @@ public final class UtilityElf
 
    public static String maskPasswordInJdbcUrl(String jdbcUrl)
    {
-      return PASSWORD_MASKING_PATTERN.matcher(jdbcUrl).replaceAll("$1<masked>");
+      var masked = PASSWORD_MASKING_PATTERN.matcher(jdbcUrl).replaceAll("$1<masked>");
+      return USERINFO_PASSWORD_MASKING_PATTERN.matcher(masked).replaceAll("$1<masked>@");
    }
 
    /**
