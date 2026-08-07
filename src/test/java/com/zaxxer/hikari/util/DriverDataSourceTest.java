@@ -41,6 +41,18 @@ public class DriverDataSourceTest {
    }
 
    @Test
+   public void testLoginTimeoutIsNotSharedBetweenDataSources() throws Exception {
+      var dataSourceA = new DriverDataSource("jdbc:h2:mem:loginTimeoutA;DB_CLOSE_DELAY=-1", null, new Properties(), "", "");
+      var dataSourceB = new DriverDataSource("jdbc:h2:mem:loginTimeoutB;DB_CLOSE_DELAY=-1", null, new Properties(), "", "");
+
+      dataSourceA.setLoginTimeout(10);
+      dataSourceB.setLoginTimeout(20);
+
+      assertEquals(10, dataSourceA.getLoginTimeout());
+      assertEquals(20, dataSourceB.getLoginTimeout());
+   }
+
+   @Test
    public void testJdbcUrlLogging() {
       List<String> urls = Arrays.asList(
          "jdbc:invalid://host/d_dlq?user=USER&password=SECRET",

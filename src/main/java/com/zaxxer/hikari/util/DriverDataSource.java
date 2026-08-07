@@ -46,6 +46,7 @@ public final class DriverDataSource implements DataSource
    private final String jdbcUrl;
    private final Properties driverProperties;
    private Driver driver;
+   private int loginTimeout;
 
    public DriverDataSource(String jdbcUrl, String driverClassName, Properties properties, String username, String password)
    {
@@ -156,16 +157,23 @@ public final class DriverDataSource implements DataSource
       throw new SQLFeatureNotSupportedException();
    }
 
+   /**
+    * {@inheritDoc}
+    * <p>
+    * The value is kept per-instance rather than written through to {@link DriverManager#setLoginTimeout(int)},
+    * which is global to the JVM: the last pool to initialize would otherwise dictate the login timeout of every
+    * other {@code jdbcUrl}-configured pool, and of any unrelated JDBC code sharing the JVM.
+    */
    @Override
    public void setLoginTimeout(int seconds) throws SQLException
    {
-      DriverManager.setLoginTimeout(seconds);
+      loginTimeout = seconds;
    }
 
    @Override
    public int getLoginTimeout() throws SQLException
    {
-      return DriverManager.getLoginTimeout();
+      return loginTimeout;
    }
 
    @Override
