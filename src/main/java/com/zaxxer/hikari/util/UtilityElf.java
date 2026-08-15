@@ -43,10 +43,19 @@ public final class UtilityElf
    private static final Logger LOGGER = LoggerFactory.getLogger(UtilityElf.class);
 
    /**
-    * A pattern to match and mask passwords in JDBC URLs.
-    * It looks for the "password" parameter in the URL and replaces its value with "<masked>".
+    * A pattern to mask the password query parameter in JDBC URLs (e.g. {@code ?password=secret}).
     */
    private static final Pattern PASSWORD_MASKING_PATTERN = Pattern.compile("([?&;][^&#;=]*[pP]assword=)[^&#;]*");
+
+   /**
+    * A pattern to mask the password embedded in the authority of JDBC URLs
+    * (e.g. {@code jdbc:postgresql://user:password@host}). Only the secret that follows the
+    * first colon of the userinfo is masked; the username is preserved for log readability.
+    * The password component is delimited by the URI reserved delimiters {@code / ? # @} per
+    * RFC 3986, so a query value containing an at-sign (e.g. {@code ?user=admin@corp.com})
+    * is never swallowed; passwords containing those delimiters unencoded are left as-is.
+    */
+   private static final Pattern AUTHORITY_PASSWORD_MASKING_PATTERN = Pattern.compile("(://[^/?#@:]*:)[^/?#@]*(@)");
 
    private UtilityElf()
    {
@@ -55,7 +64,8 @@ public final class UtilityElf
 
    public static String maskPasswordInJdbcUrl(String jdbcUrl)
    {
-      return PASSWORD_MASKING_PATTERN.matcher(jdbcUrl).replaceAll("$1<masked>");
+      String masked = PASSWORD_MASKING_PATTERN.matcher(jdbcUrl).replaceAll("$1<masked>");
+      return AUTHORITY_PASSWORD_MASKING_PATTERN.matcher(masked).replaceAll("$1<masked>$2");
    }
 
    /**
