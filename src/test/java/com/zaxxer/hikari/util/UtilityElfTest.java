@@ -187,6 +187,20 @@ public class UtilityElfTest
       assertEquals(urlWithHash, maskedHash);
    }
 
+   @Test
+   public void shouldMaskPasswordContainingAtSignInAuthority()
+   {
+      //Arrange: the password may contain at-signs, so the userinfo ends at the last
+      //at-sign before the path delimiter, not at the first one.
+      String url = "jdbc:mysql://app:p@ss@host/db";
+
+      //Act
+      String masked = UtilityElf.maskPasswordInJdbcUrl(url);
+
+      //Assert
+      assertEquals("jdbc:mysql://app:<masked>@host/db", masked);
+   }
+
    public static class ClassA {}
 
    public static final class ClassB extends ClassA {}

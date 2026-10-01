@@ -51,11 +51,12 @@ public final class UtilityElf
     * A pattern to mask the password embedded in the authority of JDBC URLs
     * (e.g. {@code jdbc:postgresql://user:password@host}). Only the secret that follows the
     * first colon of the userinfo is masked; the username is preserved for log readability.
-    * The password component is delimited by the URI reserved delimiters {@code / ? # @} per
-    * RFC 3986, so a query value containing an at-sign (e.g. {@code ?user=admin@corp.com})
-    * is never swallowed; passwords containing those delimiters unencoded are left as-is.
+    * The password may itself contain at-signs, so the match extends to the last at-sign
+    * before the first path, query or fragment delimiter ({@code / ? #}); a query value
+    * containing an at-sign (e.g. {@code ?user=admin@corp.com}) is never swallowed, and
+    * passwords containing those delimiters unencoded are left as-is.
     */
-   private static final Pattern AUTHORITY_PASSWORD_MASKING_PATTERN = Pattern.compile("(://[^/?#@:]*:)[^/?#@]*(@)");
+   private static final Pattern AUTHORITY_PASSWORD_MASKING_PATTERN = Pattern.compile("(://[^/?#@:]*:)[^/?#]*(@)");
 
    private UtilityElf()
    {
