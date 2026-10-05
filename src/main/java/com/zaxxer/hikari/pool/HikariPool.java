@@ -340,7 +340,9 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    @Override
    public void addBagItem(final int waiting)
    {
-      if (waiting > addConnectionExecutor.getQueue().size())
+      // Waiter counts are snapshots and callbacks can arrive out of order. Let the
+      // bounded executor queue and PoolEntryCreator limit connection creation.
+      if (waiting > 0)
          addConnectionExecutor.submit(poolEntryCreator);
    }
 
@@ -458,6 +460,10 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
    {
       if (connectionBag.remove(poolEntry)) {
          final var connection = poolEntry.close();
+         // A creator may have exited while this connection still occupied a slot.
+         if (poolState == POOL_NORMAL) {
+            addBagItem(connectionBag.getWaitingThreadCount());
+         }
          closeConnectionExecutor.execute(() -> {
             quietlyCloseConnection(connection, closureReason);
             if (poolState == POOL_NORMAL) {
@@ -621,17 +627,13 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
     * @param poolEntry the PoolEntry (/Connection) to "soft" evict from the pool
     * @param reason the reason that the connection is being evicted
     * @param owner true if the caller is the owner of the connection, false otherwise
-    * @return true if the connection was evicted (closed), false if it was merely marked for eviction
     */
-   private boolean softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
+   private void softEvictConnection(final PoolEntry poolEntry, final String reason, final boolean owner)
    {
       poolEntry.markEvicted();
       if (owner || connectionBag.reserve(poolEntry)) {
          closeConnection(poolEntry, reason);
-         return true;
       }
-
-      return false;
    }
 
    /**
@@ -833,8 +835,14 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                var maxToRemove = notInUse.size() - config.getMinimumIdle();
                for (PoolEntry entry : notInUse) {
                   if (maxToRemove > 0 && elapsedMillis(entry.lastAccessed, now) > idleTimeout && connectionBag.reserve(entry)) {
-                     closeConnection(entry, "(connection has passed idleTimeout)");
-                     maxToRemove--;
+                     // The connection may have been borrowed and returned before reservation.
+                     if (elapsedMillis(entry.lastAccessed, now) > idleTimeout) {
+                        closeConnection(entry, "(connection has passed idleTimeout)");
+                        maxToRemove--;
+                     }
+                     else {
+                        connectionBag.unreserve(entry);
+                     }
                   }
                }
                logPoolState("After  cleanup ");
@@ -861,9 +869,7 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
 
       public void run()
       {
-         if (softEvictConnection(poolEntry, "(connection has passed maxLifetime)", false /* not owner */)) {
-            addBagItem(connectionBag.getWaitingThreadCount());
-         }
+         softEvictConnection(poolEntry, "(connection has passed maxLifetime)", false /* not owner */);
       }
    }
 
@@ -881,7 +887,6 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          if (connectionBag.reserve(poolEntry)) {
             if (isConnectionDead(poolEntry.connection)) {
                softEvictConnection(poolEntry, DEAD_CONNECTION_MESSAGE, true);
-               addBagItem(connectionBag.getWaitingThreadCount());
             }
             else {
                connectionBag.unreserve(poolEntry);
