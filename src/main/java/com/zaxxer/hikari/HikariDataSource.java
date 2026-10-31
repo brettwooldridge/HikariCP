@@ -345,6 +345,7 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
 
       var p = pool;
       if (p != null) {
+         final var wasInterrupted = Thread.interrupted();
          try {
             LOGGER.info("{} - Shutdown initiated...", getPoolName());
             p.shutdown();
@@ -353,6 +354,11 @@ public class HikariDataSource extends HikariConfig implements DataSource, Closea
          catch (InterruptedException e) {
             LOGGER.warn("{} - Interrupted during closing", getPoolName(), e);
             Thread.currentThread().interrupt();
+         }
+         finally {
+            if (wasInterrupted) {
+               Thread.currentThread().interrupt();
+            }
          }
       }
    }
