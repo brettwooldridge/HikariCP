@@ -29,6 +29,12 @@ import static org.junit.Assert.assertTrue;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.logging.log4j.Level;
 import org.junit.After;
@@ -39,6 +45,7 @@ import org.junit.Test;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.mocks.StubConnection;
+import com.zaxxer.hikari.mocks.StubDataSource;
 import com.zaxxer.hikari.util.UtilityElf;
 
 /**
@@ -225,6 +232,135 @@ public class ShutdownTest
          Assert.assertSame("Active connection count not as expected, ", 0, pool.getActiveConnections());
          Assert.assertSame("Idle connection count not as expected, ", 0, pool.getIdleConnections());
          Assert.assertSame("Total connection count not as expected, ", 0, pool.getTotalConnections());
+      }
+   }
+
+   @Test
+   public void testShutdownWithInterruptedCaller() throws Exception
+   {
+      checkInterruptedShutdown(false, true);
+   }
+
+   @Test
+   public void testShutdownWithInterruptedCallerAndPendingConnection() throws Exception
+   {
+      checkInterruptedShutdown(true, true);
+   }
+
+   @Test
+   public void testNewInterruptDuringShutdownIsPreserved() throws Exception
+   {
+      checkInterruptedShutdown(true, false);
+   }
+
+   private void checkInterruptedShutdown(boolean pendingConnection, boolean interruptedAtEntry) throws Exception
+   {
+      final var creationEntered = new CountDownLatch(1);
+      final var releaseCreation = new CountDownLatch(1);
+      final var connectionClosed = new CountDownLatch(1);
+      final var acquisitionCount = new AtomicInteger();
+      final List<StubConnection> physicalConnections = new CopyOnWriteArrayList<>();
+      final List<Thread> poolThreads = new CopyOnWriteArrayList<>();
+      final var config = newHikariConfig();
+      config.setMinimumIdle(pendingConnection ? 2 : 1);
+      config.setMaximumPoolSize(pendingConnection ? 2 : 1);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSource(new StubDataSource() {
+         @Override
+         public Connection getConnection() throws SQLException
+         {
+            if (pendingConnection && acquisitionCount.incrementAndGet() == 2) {
+               creationEntered.countDown();
+               try {
+                  if (!releaseCreation.await(5, SECONDS)) {
+                     throw new SQLException("Timed out waiting to release connection creation");
+                  }
+               }
+               catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                  throw new SQLException(e);
+               }
+            }
+            final var connection = new StubConnection() {
+               private volatile boolean closed;
+
+               @Override
+               public void close()
+               {
+                  closed = true;
+                  connectionClosed.countDown();
+               }
+
+               @Override
+               public boolean isClosed()
+               {
+                  return closed;
+               }
+            };
+            physicalConnections.add(connection);
+            return connection;
+         }
+      });
+      config.setThreadFactory(task -> {
+         final var thread = new Thread(task, "interrupted-shutdown-" + poolThreads.size());
+         thread.setDaemon(true);
+         poolThreads.add(thread);
+         return thread;
+      });
+
+      try (var ds = new HikariDataSource(config)) {
+         final var pool = getPool(ds);
+         final var interruptPreserved = new AtomicBoolean();
+         final var failure = new AtomicReference<Throwable>();
+         final var closeStarted = new CountDownLatch(1);
+         final var closer = new Thread(() -> {
+            try {
+               if (interruptedAtEntry) {
+                  Thread.currentThread().interrupt();
+               }
+               closeStarted.countDown();
+               ds.close();
+               interruptPreserved.set(Thread.currentThread().isInterrupted());
+            }
+            catch (Throwable e) {
+               failure.set(e);
+            }
+         });
+         try {
+            if (pendingConnection) {
+               assertTrue("Connection creation did not start", creationEntered.await(5, SECONDS));
+            }
+            closer.start();
+            assertTrue("Close caller did not start", closeStarted.await(5, SECONDS));
+            if (interruptedAtEntry) {
+               closer.join(100);
+            }
+            else {
+               assertTrue("Shutdown did not reach connection eviction", connectionClosed.await(5, SECONDS));
+               closer.interrupt();
+            }
+            releaseCreation.countDown();
+            closer.join(5000);
+            Assert.assertFalse("Close caller did not finish", closer.isAlive());
+            Assert.assertNull(failure.get());
+            assertTrue("Caller interrupt was cleared", interruptPreserved.get());
+            if (!interruptedAtEntry) {
+               return;
+            }
+            for (Thread thread : poolThreads) {
+               thread.join(1000);
+               Assert.assertFalse("Pool thread survived close: " + thread.getName(), thread.isAlive());
+            }
+            for (Connection connection : physicalConnections) {
+               assertTrue("Physical connection survived close", connection.isClosed());
+            }
+            assertSame("Connections remained in the pool", 0, pool.getTotalConnections());
+         }
+         finally {
+            releaseCreation.countDown();
+            closer.join(5000);
+            pool.shutdown();
+         }
       }
    }
 
