@@ -63,6 +63,7 @@ public abstract class ProxyConnection implements Connection
    private int transactionIsolation;
    private String dbcatalog;
    private String dbschema;
+   private boolean isSchemaResolved;
 
    // static initializer
    static {
@@ -495,6 +496,10 @@ public abstract class ProxyConnection implements Connection
    public String getSchema() throws SQLException
    {
       if ((dirtyBits & DIRTY_BIT_SCHEMA) != 0) {
+         if (!isSchemaResolved) {
+            dbschema = delegate.getSchema();
+            isSchemaResolved = true;
+         }
          return dbschema;
       }
       return delegate.getSchema();
@@ -505,7 +510,10 @@ public abstract class ProxyConnection implements Connection
    public void setSchema(String schema) throws SQLException
    {
       delegate.setSchema(schema);
-      dbschema = delegate.getSchema();
+      // Resolve only on demand: some drivers query the database in getSchema().
+      // A null state also ensures an unread schema is reset when the connection is returned.
+      dbschema = null;
+      isSchemaResolved = false;
       dirtyBits |= DIRTY_BIT_SCHEMA;
    }
 

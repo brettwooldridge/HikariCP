@@ -107,6 +107,7 @@ public class TestStates
          conn.setCatalog("catalog");
          conn.setNetworkTimeout(null, 10);
          conn.setSchema("schema");
+         conn.getSchema(); // Resolve the schema before testing the cached getter.
 
          stub.throwException = true;
 
