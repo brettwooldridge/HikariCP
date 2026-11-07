@@ -165,6 +165,52 @@ public class PostgresTest
       }
    }
 
+   @Test
+   public void testSchemaResetWithoutRead() throws Exception {
+      HikariConfig config = createConfig(postgres);
+      config.setMinimumIdle(1);
+      config.setMaximumPoolSize(1);
+      config.setSchema(SCHEMA_NAME);
+
+      try (HikariDataSource ds = new HikariDataSource(config)) {
+         for (String schema : new String[] {"public", "invalid", null}) {
+            Connection delegate;
+            try (Connection connection = ds.getConnection()) {
+               delegate = connection.unwrap(Connection.class);
+               connection.setSchema(schema);
+               // Return the connection without ever resolving its changed schema.
+            }
+            try (Connection connection = ds.getConnection()) {
+               assertSame(delegate, connection.unwrap(Connection.class));
+               assertEquals(SCHEMA_NAME, connection.getSchema());
+            }
+         }
+      }
+   }
+
+   @Test
+   public void testRepeatedSchemaChanges() throws Exception {
+      HikariConfig config = createConfig(postgres);
+      config.setMinimumIdle(1);
+      config.setMaximumPoolSize(1);
+      config.setSchema(SCHEMA_NAME);
+
+      try (HikariDataSource ds = new HikariDataSource(config); Connection connection = ds.getConnection()) {
+         connection.setSchema("public");
+         assertEquals("public", connection.getSchema());
+
+         connection.setSchema("invalid");
+         assertNull(connection.getSchema());
+         assertNull(connection.getSchema());
+
+         connection.setSchema(null);
+         assertEquals("public", connection.getSchema());
+
+         connection.setSchema(SCHEMA_NAME);
+         assertEquals(SCHEMA_NAME, connection.getSchema());
+      }
+   }
+
    static private void exerciseConfig(HikariConfig config, int numThreads) {
       try (final HikariDataSource ds = new HikariDataSource(config)) {
          assertTrue(ds.isRunning());
