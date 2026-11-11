@@ -16,15 +16,14 @@
 
 package com.zaxxer.hikari.pool;
 
-import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.pool.TestElf.getPool;
+import static com.zaxxer.hikari.pool.TestElf.newHikariConfig;
 import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertEquals;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -32,44 +31,65 @@ import com.zaxxer.hikari.HikariDataSource;
 
 public class RampUpDown
 {
-    @Test
-    public void rampUpDownTest() throws SQLException
-    {
-        HikariConfig config = newHikariConfig();
-        config.setMinimumIdle(5);
-        config.setMaximumPoolSize(60);
-        config.setInitializationFailTimeout(0);
-        config.setConnectionTestQuery("VALUES 1");
-        config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
+   private static final long IDLE_TIMEOUT_MS = 1000;
+   private static final long WAIT_TIMEOUT_MS = 10_000;
 
-        System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "250");
+   @Test
+   public void rampUpDownTest() throws SQLException
+   {
+      HikariConfig config = newHikariConfig();
+      config.setMinimumIdle(5);
+      config.setMaximumPoolSize(60);
+      config.setInitializationFailTimeout(0);
+      config.setConnectionTestQuery("VALUES 1");
+      config.setDataSourceClassName("com.zaxxer.hikari.mocks.StubDataSource");
 
-        try (HikariDataSource ds = new HikariDataSource(config)) {
+      System.setProperty("com.zaxxer.hikari.housekeeping.periodMs", "250");
 
-           ds.setIdleTimeout(1000);
-           HikariPool pool = getPool(ds);
+      try (HikariDataSource ds = new HikariDataSource(config)) {
 
-           // wait two housekeeping periods so we don't fail if this part of test runs too quickly
-           quietlySleep(500);
+         ds.setIdleTimeout(IDLE_TIMEOUT_MS);
+         HikariPool pool = getPool(ds);
 
-           Assert.assertSame("Total connections not as expected", 5, pool.getTotalConnections());
+         awaitTotalConnections(pool, 5);
 
-           Connection[] connections = new Connection[ds.getMaximumPoolSize()];
-           for (int i = 0; i < connections.length; i++)
-           {
-               connections[i] = ds.getConnection();
-           }
+         assertPoolState(pool, 5, 5, 0);
 
-           assertSame("Total connections not as expected", 60, pool.getTotalConnections());
+         Connection[] connections = new Connection[ds.getMaximumPoolSize()];
+         for (int i = 0; i < connections.length; i++)
+         {
+            connections[i] = ds.getConnection();
+         }
 
-           for (Connection connection : connections)
-           {
-               connection.close();
-           }
+         assertPoolState(pool, 60, 0, 60);
 
-           quietlySleep(500);
+         for (Connection connection : connections)
+         {
+            connection.close();
+         }
 
-           assertSame("Total connections not as expected", 5, pool.getTotalConnections());
-        }
-    }
+         assertPoolState(pool, 60, 60, 0);
+
+         awaitTotalConnections(pool, 5);
+
+         assertPoolState(pool, 5, 5, 0);
+      }
+   }
+
+   private static void awaitTotalConnections(final HikariPool pool, final int expected)
+   {
+      final var deadline = System.currentTimeMillis() + WAIT_TIMEOUT_MS;
+      while (pool.getTotalConnections() != expected && System.currentTimeMillis() < deadline) {
+         quietlySleep(50);
+      }
+
+      assertEquals("Total connections not as expected", expected, pool.getTotalConnections());
+   }
+
+   private static void assertPoolState(final HikariPool pool, final int total, final int idle, final int active)
+   {
+      assertEquals("Total connections not as expected", total, pool.getTotalConnections());
+      assertEquals("Idle connections not as expected", idle, pool.getIdleConnections());
+      assertEquals("Active connections not as expected", active, pool.getActiveConnections());
+   }
 }
