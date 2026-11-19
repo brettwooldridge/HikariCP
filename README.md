@@ -187,6 +187,11 @@ This property controls the default auto-commit behavior of connections returned 
 It is a boolean value.
 *Default: true*
 
+For transactions on a pooled connection, use `Connection.setAutoCommit(false)` to manage
+transactions manually, then call `Connection.commit()` or `Connection.rollback()`. HikariCP uses
+the JDBC connection state it tracks to roll back unfinished work and restore the configured
+auto-commit setting when the connection returns to the pool.
+
 &#9203;``connectionTimeout``<br/>
 This property controls the maximum number of milliseconds that a client (that's you) will wait
 for a connection from the pool.  If this time is exceeded without a connection becoming
