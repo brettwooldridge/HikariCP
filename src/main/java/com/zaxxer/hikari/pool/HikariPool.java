@@ -576,8 +576,9 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
          final var poolEntry = createPoolEntry();
          if (poolEntry != null) {
             if (config.getMinimumIdle() > 0) {
+               final var con = poolEntry.connection;
                connectionBag.add(poolEntry);
-               logger.info("{} - Added connection {}", poolName, poolEntry.connection);
+               logger.info("{} - Added connection {}", poolName, con);
             }
             else {
                quietlyCloseConnection(poolEntry.close(), "(initialization check complete and minimumIdle is zero)");
@@ -752,8 +753,9 @@ public final class HikariPool extends PoolBase implements HikariPoolMXBean, IBag
                final var poolEntry = createPoolEntry();
                if (poolEntry != null) {
                   added = true;
+                  final var con = poolEntry.connection;
                   connectionBag.add(poolEntry);
-                  logger.debug("{} - Added connection {}", poolName, poolEntry.connection);
+                  logger.debug("{} - Added connection {}", poolName, con);
                   quietlySleep(30L);
                   break;
                } else {  // failed to get connection from db, sleep and retry
