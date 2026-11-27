@@ -26,6 +26,7 @@ import java.sql.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import static com.zaxxer.hikari.SQLExceptionOverride.Override.*;
 
@@ -47,8 +48,16 @@ public abstract class ProxyConnection implements Connection
    private static final Set<String> ERROR_STATES;
    private static final Set<Integer> ERROR_CODES;
 
+   // Only one close() call may return the pool entry to the pool, even when
+   // two threads close the same connection concurrently.
+   private static final AtomicIntegerFieldUpdater<ProxyConnection> CLOSING_UPDATER =
+      AtomicIntegerFieldUpdater.newUpdater(ProxyConnection.class, "closing");
+
    @SuppressWarnings("WeakerAccess")
    protected Connection delegate;
+
+   @SuppressWarnings("unused") // accessed via CLOSING_UPDATER
+   private volatile int closing;
 
    private final PoolEntry poolEntry;
    private final ProxyLeakTask leakTask;
@@ -242,7 +251,11 @@ public abstract class ProxyConnection implements Connection
       // Closing statements can cause connection eviction, so this must run before the conditional below
       closeStatements();
 
-      if (delegate != ClosedConnection.CLOSED_CONNECTION) {
+      // The delegate check alone is not sufficient: two threads can both pass it
+      // before either one swaps in CLOSED_CONNECTION, and both would recycle the
+      // pool entry. The CAS makes close() atomic -- concurrent calls after the
+      // first one are no-ops, as required by the Connection.close() contract.
+      if (delegate != ClosedConnection.CLOSED_CONNECTION && CLOSING_UPDATER.compareAndSet(this, 0, 1)) {
          leakTask.cancel();
 
          try {
