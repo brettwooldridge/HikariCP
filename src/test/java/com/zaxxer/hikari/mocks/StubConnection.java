@@ -49,6 +49,7 @@ public class StubConnection extends StubBaseConnection
    public static volatile boolean slowCreate;
    public static volatile boolean oldDriver;
    public static volatile Callable<Void> networkTimeoutSetter;
+   public static volatile Callable<Void> clearWarningsHook;
    private volatile boolean isClosed = false;
 
    private static long foo;
@@ -276,6 +277,17 @@ public class StubConnection extends StubBaseConnection
    {
       if (throwException) {
          throw new SQLException();
+      }
+      if (clearWarningsHook != null) {
+         try {
+            clearWarningsHook.call();
+         }
+         catch (SQLException e) {
+            throw e;
+         }
+         catch (Exception e) {
+            throw new RuntimeException(e);
+         }
       }
    }
 
